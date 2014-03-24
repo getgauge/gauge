@@ -1,4 +1,8 @@
-twist2
+Twist2
 ======
 
-The new twist
+Building
+------------
+* make
+
+This will generate twist2 in the root directory

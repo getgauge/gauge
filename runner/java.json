@@ -1,0 +1,8 @@
+{
+	"name": "Java runner",
+	"command": {
+		"windows": "twist-java.bat",
+		"linux": "java/twist-java.sh",
+		"darwin": "java/twist-java.sh"
+	}
+}
