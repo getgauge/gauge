@@ -2,14 +2,29 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 )
 
 type testRunner struct {
 	cmd *exec.Cmd
+}
+
+func getLanguageJSONFilePath(manifest *manifest) (string, error) {
+	searchPaths := getSearchPathForSharedFiles()
+	for _, p := range searchPaths {
+		languageJson := filepath.Join(p, "languages", fmt.Sprintf("%s.json", manifest.Language))
+		_, err := os.Stat(languageJson)
+		if err == nil {
+			return languageJson, nil
+		}
+	}
+
+	return "", errors.New(fmt.Sprintf("Failed to find the implementation for: %s", manifest.Language))
 }
 
 // Looks for a runner configuration inside the runner directory
@@ -25,8 +40,13 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 	}
 
 	var r runner
-	contents := readFileContents(fmt.Sprintf("runner/%s.json", manifest.Language))
-	err := json.Unmarshal([]byte(contents), &r)
+	languageJsonFilePath, err := getLanguageJSONFilePath(manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	contents := readFileContents(languageJsonFilePath)
+	err = json.Unmarshal([]byte(contents), &r)
 	if err != nil {
 		return nil, err
 	}
