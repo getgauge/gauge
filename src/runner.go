@@ -2,11 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"runtime"
 )
 
@@ -14,33 +12,62 @@ type testRunner struct {
 	cmd *exec.Cmd
 }
 
-func getLanguageJSONFilePath(manifest *manifest) (string, error) {
-	searchPaths := getSearchPathForSharedFiles()
-	for _, p := range searchPaths {
-		languageJson := filepath.Join(p, "languages", fmt.Sprintf("%s.json", manifest.Language))
-		_, err := os.Stat(languageJson)
-		if err == nil {
-			return languageJson, nil
-		}
+type runner struct {
+	Name string
+	Run  struct {
+		Windows string
+		Linux   string
+		Darwin  string
+	}
+	Init struct {
+		Windows string
+		Linux   string
+		Darwin  string
+	}
+}
+
+func executeInitHookForRunner(language string) error {
+	var r runner
+	languageJsonFilePath, err := getLanguageJSONFilePath(language)
+	if err != nil {
+		return err
 	}
 
-	return "", errors.New(fmt.Sprintf("Failed to find the implementation for: %s", manifest.Language))
+	contents := readFileContents(languageJsonFilePath)
+	err = json.Unmarshal([]byte(contents), &r)
+	if err != nil {
+		return err
+	}
+
+	command := ""
+	switch runtime.GOOS {
+	case "windows":
+		command = r.Init.Windows
+		break
+	case "darwin":
+		command = r.Init.Darwin
+		break
+	default:
+		command = r.Init.Linux
+		break
+	}
+
+	cmd := exec.Command(command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	return cmd.Wait()
 }
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func startRunner(manifest *manifest) (*testRunner, error) {
-	type runner struct {
-		Name    string
-		Command struct {
-			Windows string
-			Linux   string
-			Darwin  string
-		}
-	}
-
 	var r runner
-	languageJsonFilePath, err := getLanguageJSONFilePath(manifest)
+	languageJsonFilePath, err := getLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return nil, err
 	}
@@ -54,13 +81,13 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 	command := ""
 	switch runtime.GOOS {
 	case "windows":
-		command = r.Command.Windows
+		command = r.Run.Windows
 		break
 	case "darwin":
-		command = r.Command.Darwin
+		command = r.Run.Darwin
 		break
 	default:
-		command = r.Command.Linux
+		command = r.Run.Linux
 		break
 	}
 

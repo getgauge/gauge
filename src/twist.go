@@ -3,9 +3,11 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +18,8 @@ import (
 
 const (
 	manifestFile = "manifest.json"
+	specsDirName = "specs"
+	skelFileName = "hello_world.spec"
 )
 
 type step struct {
@@ -107,31 +111,50 @@ func startAPIService() {
 	log.Fatal(http.ListenAndServe(":8889", nil))
 }
 
-func createProjectTemplate(projectName string) {
-	if exist, _ := exists(projectName); !exist {
-		fmt.Println("Creating directory ", projectName)
-		err := os.Mkdir(projectName, 0766)
+func createProjectTemplate(language string) error {
+	if !isASupportedLanguage(language) {
+		return errors.New(fmt.Sprintf("%s is not a supported language", language))
+	}
+
+	// Create the project manifest
+	if fileExists(manifestFile) {
+		return errors.New(fmt.Sprintf("%s file already exists", manifestFile))
+	}
+	manifest := &manifest{Language: language}
+	b, err := json.Marshal(manifest)
+	if err != nil {
+		return err
+	}
+	ioutil.WriteFile(manifestFile, b, 0664)
+
+	// creating the spec directory
+	if !dirExists(specsDirName) {
+		err = os.Mkdir(specsDirName, 0755)
 		if err != nil {
-			panic(err)
+			return err
 		}
 	}
-}
 
-func exists(path string) (bool, error) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true, nil
+	// Copying the skeleton file
+	skelFile, err := getSkeletonFilePath(skelFileName)
+	if err != nil {
+		return err
 	}
-	if os.IsNotExist(err) {
-		return false, nil
+	specFile := fmt.Sprintf("%s/%s", specsDirName, skelFileName)
+	if fileExists(specFile) {
+		return errors.New(fmt.Sprintf("%s already exists", specFile))
 	}
-	return false, err
+	err = copyFile(skelFile, specFile)
+	if err != nil {
+		return err
+	}
+
+	return executeInitHookForRunner(language)
 }
 
 // Command line flags
 var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
-var create = flag.String("create", "", "Create a template")
-var wd = flag.String("wd", "", "the working directory from which the executable has to run")
+var initialize = flag.String("init", "", "Initializes project structure in the current directory")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: twist [options] scenario\n")
@@ -141,17 +164,17 @@ func printUsage() {
 
 func main() {
 	flag.Parse()
-	if *wd != "" {
-		os.Chdir(*wd)
-		value, _ := os.Getwd()
-		fmt.Println("Current working dir", value)
-	}
 
 	if *daemonize {
 		makeListOfAvailableSteps()
 		startAPIService()
-	} else if *create != "" {
-		createProjectTemplate(*create)
+	} else if *initialize != "" {
+		err := createProjectTemplate(*initialize)
+		if err != nil {
+			fmt.Printf("Failed to initialize. %s\n", err.Error())
+			os.Exit(1)
+		}
+		fmt.Println("Successfully initialized the project")
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
