@@ -17,9 +17,11 @@ import (
 )
 
 const (
-	manifestFile = "manifest.json"
-	specsDirName = "specs"
-	skelFileName = "hello_world.spec"
+	manifestFile      = "manifest.json"
+	specsDirName      = "specs"
+	skelFileName      = "hello_world.spec"
+	envDirName        = "env"
+	envDefaultDirName = "default"
 )
 
 type step struct {
@@ -34,6 +36,12 @@ var availableSteps []*step
 
 type manifest struct {
 	Language string
+}
+
+// All the environment variables loaded from the
+// current environments JSON files will live here
+type environmentVariables struct {
+	Variables map[string]string
 }
 
 func getProjectManifest() *manifest {
@@ -125,11 +133,11 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(manifestFile, b, 0664)
+	ioutil.WriteFile(manifestFile, b, newFilePermissions)
 
 	// creating the spec directory
 	if !dirExists(specsDirName) {
-		err = os.Mkdir(specsDirName, 0755)
+		err = os.Mkdir(specsDirName, newDirectoryPermissions)
 		if err != nil {
 			return err
 		}
@@ -140,7 +148,7 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		return err
 	}
-	specFile := fmt.Sprintf("%s/%s", specsDirName, skelFileName)
+	specFile := path.Join(specsDirName, skelFileName)
 	if fileExists(specFile) {
 		return errors.New(fmt.Sprintf("%s already exists", specFile))
 	}
@@ -149,7 +157,63 @@ func createProjectTemplate(language string) error {
 		return err
 	}
 
+	// Creating the env directory
+	if !dirExists(envDirName) {
+		err = os.Mkdir(envDirName, newDirectoryPermissions)
+		if err != nil {
+			return err
+		}
+	}
+	defaultEnv := path.Join(envDirName, envDefaultDirName)
+	if !dirExists(defaultEnv) {
+		err = os.Mkdir(defaultEnv, newDirectoryPermissions)
+		if err != nil {
+			return err
+		}
+	}
+	defaultJson, err := getSkeletonFilePath(path.Join(envDirectoryName, defaultEnvJSONFileName))
+	if err != nil {
+		return err
+	}
+	err = copyFile(defaultJson, path.Join(defaultEnv, defaultEnvJSONFileName))
+	if err != nil {
+		return err
+	}
+
 	return executeInitHookForRunner(language)
+}
+
+// Loads all the json files available in the specified env directory
+func loadEnvironment(env string) error {
+	dirToRead := path.Join(envDirectoryName, env)
+	if !dirExists(dirToRead) {
+		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
+	}
+
+	isJson := func(fileName string) bool {
+		return filepath.Ext(fileName) == ".json"
+	}
+
+	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
+		if isJson(path) {
+			var e environmentVariables
+			contents := readFileContents(path)
+			err := json.Unmarshal([]byte(contents), &e)
+			if err != nil {
+				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, err.Error()))
+			}
+
+			for k, v := range e.Variables {
+				err := setEnvVariable(k, string(v))
+				if err != nil {
+					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
+				}
+			}
+		}
+		return nil
+	})
+
+	return err
 }
 
 // Command line flags
@@ -178,6 +242,12 @@ func main() {
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
+		}
+
+		err := loadEnvironment("default")
+		if err != nil {
+			fmt.Printf("Failed to load the environment. %s\n", err.Error())
+			os.Exit(1)
 		}
 
 		scenarioFile := flag.Arg(0)

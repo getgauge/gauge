@@ -7,7 +7,15 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
+)
+
+const (
+	newDirectoryPermissions = 0755
+	newFilePermissions      = 0644
+	defaultEnvJSONFileName  = "default.json"
+	envDirectoryName        = "env"
 )
 
 func getSearchPathForSharedFiles() []string {
@@ -88,9 +96,28 @@ func copyFile(src, dest string) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(dest, b, 0664)
+	err = ioutil.WriteFile(dest, b, newFilePermissions)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// A wrapper around os.SetEnv
+// This handles duplicate env variable assignments and fails
+func setEnvVariable(key, value string) error {
+	existingValue := os.Getenv(key)
+	if existingValue == "" {
+		if strings.TrimSpace(value) == "" {
+			return nil
+		}
+		err := os.Setenv(key, value)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Failed to set: %s = %s. %s", key, value, err.Error()))
+		}
+	} else {
+		return errors.New(fmt.Sprintf("Failed to set: %s = %s. It is already assigned a value '%s'. Multiple assignments to same variable is not allowed", key, value, existingValue))
 	}
 
 	return nil
