@@ -2,10 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 )
 
 type testRunner struct {
@@ -52,7 +54,7 @@ func executeInitHookForRunner(language string) error {
 		break
 	}
 
-	cmd := exec.Command(command)
+	cmd := getExecutableCommand(command)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
@@ -61,6 +63,19 @@ func executeInitHookForRunner(language string) error {
 	}
 
 	return cmd.Wait()
+}
+
+func getExecutableCommand(command string) *exec.Cmd {
+	var cmd *exec.Cmd
+	cmdParts := strings.Split(command, " ")
+	if len(cmdParts) == 0 {
+		panic(errors.New("Invalid executable command"))
+	} else if len(cmdParts) > 1 {
+		cmd = exec.Command(cmdParts[0], cmdParts[1:]...)
+	} else {
+		cmd = exec.Command(cmdParts[0])
+	}
+	return cmd
 }
 
 // Looks for a runner configuration inside the runner directory
@@ -91,7 +106,7 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		break
 	}
 
-	cmd := exec.Command(command)
+	cmd := getExecutableCommand(command)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()

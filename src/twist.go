@@ -119,14 +119,19 @@ func startAPIService() {
 	log.Fatal(http.ListenAndServe(":8889", nil))
 }
 
+func showMessage(action, filename string) {
+	fmt.Printf(" %s  %s\n", action, filename)
+}
+
 func createProjectTemplate(language string) error {
 	if !isASupportedLanguage(language) {
 		return errors.New(fmt.Sprintf("%s is not a supported language", language))
 	}
 
 	// Create the project manifest
+	showMessage("create", manifestFile)
 	if fileExists(manifestFile) {
-		return errors.New(fmt.Sprintf("%s file already exists", manifestFile))
+		showMessage("skip", manifestFile)
 	}
 	manifest := &manifest{Language: language}
 	b, err := json.Marshal(manifest)
@@ -136,11 +141,14 @@ func createProjectTemplate(language string) error {
 	ioutil.WriteFile(manifestFile, b, newFilePermissions)
 
 	// creating the spec directory
+	showMessage("create", specsDirName)
 	if !dirExists(specsDirName) {
 		err = os.Mkdir(specsDirName, newDirectoryPermissions)
 		if err != nil {
-			return err
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
 		}
+	} else {
+		showMessage("skip", specsDirName)
 	}
 
 	// Copying the skeleton file
@@ -149,35 +157,41 @@ func createProjectTemplate(language string) error {
 		return err
 	}
 	specFile := path.Join(specsDirName, skelFileName)
+	showMessage("create", specFile)
 	if fileExists(specFile) {
-		return errors.New(fmt.Sprintf("%s already exists", specFile))
-	}
-	err = copyFile(skelFile, specFile)
-	if err != nil {
-		return err
+		showMessage("skip", specFile)
+	} else {
+		err = copyFile(skelFile, specFile)
+		if err != nil {
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specFile, err.Error()))
+		}
 	}
 
 	// Creating the env directory
+	showMessage("create", envDirName)
 	if !dirExists(envDirName) {
 		err = os.Mkdir(envDirName, newDirectoryPermissions)
 		if err != nil {
-			return err
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", envDirName, err.Error()))
 		}
 	}
 	defaultEnv := path.Join(envDirName, envDefaultDirName)
+	showMessage("create", defaultEnv)
 	if !dirExists(defaultEnv) {
 		err = os.Mkdir(defaultEnv, newDirectoryPermissions)
 		if err != nil {
-			return err
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
 	}
 	defaultJson, err := getSkeletonFilePath(path.Join(envDirectoryName, defaultEnvJSONFileName))
 	if err != nil {
 		return err
 	}
-	err = copyFile(defaultJson, path.Join(defaultEnv, defaultEnvJSONFileName))
+	defaultJsonDest := path.Join(defaultEnv, defaultEnvJSONFileName)
+	showMessage("create", defaultJsonDest)
+	err = copyFile(defaultJson, defaultJsonDest)
 	if err != nil {
-		return err
+		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJsonDest, err.Error()))
 	}
 
 	return executeInitHookForRunner(language)
