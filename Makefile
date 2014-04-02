@@ -6,7 +6,7 @@ endif
 PROGRAM_NAME=twist2
 
 build:
-	export GOPATH=`pwd` && cd src && go build && mv src ../twist2
+	export GOPATH=$(GOPATH):`pwd` && cd src && go build && mv src ../twist2
 
 install:
 	install -m 755 -d $(prefix)/bin

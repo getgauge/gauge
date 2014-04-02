@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/twist2/common"
 	"io"
 	"io/ioutil"
 	"log"
@@ -45,7 +46,7 @@ type environmentVariables struct {
 }
 
 func getProjectManifest() *manifest {
-	contents := readFileContents(manifestFile)
+	contents := common.ReadFileContents(manifestFile)
 	dec := json.NewDecoder(strings.NewReader(contents))
 
 	var m manifest
@@ -86,7 +87,7 @@ func parseScenarioFiles(fileChan <-chan string) {
 			break
 		}
 
-		tokens, err := parse(readFileContents(scenarioFilePath))
+		tokens, err := parse(common.ReadFileContents(scenarioFilePath))
 		if se, ok := err.(*syntaxError); ok {
 			fmt.Printf("%s:%d:%d %s\n", scenarioFilePath, se.lineNo, se.colNo, se.message)
 		} else {
@@ -124,13 +125,13 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
-	if !isASupportedLanguage(language) {
+	if !common.IsASupportedLanguage(language) {
 		return errors.New(fmt.Sprintf("%s is not a supported language", language))
 	}
 
 	// Create the project manifest
 	showMessage("create", manifestFile)
-	if fileExists(manifestFile) {
+	if common.FileExists(manifestFile) {
 		showMessage("skip", manifestFile)
 	}
 	manifest := &manifest{Language: language}
@@ -138,12 +139,12 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(manifestFile, b, newFilePermissions)
+	ioutil.WriteFile(manifestFile, b, common.NewFilePermissions)
 
 	// creating the spec directory
 	showMessage("create", specsDirName)
-	if !dirExists(specsDirName) {
-		err = os.Mkdir(specsDirName, newDirectoryPermissions)
+	if !common.DirExists(specsDirName) {
+		err = os.Mkdir(specsDirName, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
 		}
@@ -152,16 +153,16 @@ func createProjectTemplate(language string) error {
 	}
 
 	// Copying the skeleton file
-	skelFile, err := getSkeletonFilePath(skelFileName)
+	skelFile, err := common.GetSkeletonFilePath(skelFileName)
 	if err != nil {
 		return err
 	}
 	specFile := path.Join(specsDirName, skelFileName)
 	showMessage("create", specFile)
-	if fileExists(specFile) {
+	if common.FileExists(specFile) {
 		showMessage("skip", specFile)
 	} else {
-		err = copyFile(skelFile, specFile)
+		err = common.CopyFile(skelFile, specFile)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specFile, err.Error()))
 		}
@@ -169,27 +170,27 @@ func createProjectTemplate(language string) error {
 
 	// Creating the env directory
 	showMessage("create", envDirName)
-	if !dirExists(envDirName) {
-		err = os.Mkdir(envDirName, newDirectoryPermissions)
+	if !common.DirExists(envDirName) {
+		err = os.Mkdir(envDirName, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", envDirName, err.Error()))
 		}
 	}
 	defaultEnv := path.Join(envDirName, envDefaultDirName)
 	showMessage("create", defaultEnv)
-	if !dirExists(defaultEnv) {
-		err = os.Mkdir(defaultEnv, newDirectoryPermissions)
+	if !common.DirExists(defaultEnv) {
+		err = os.Mkdir(defaultEnv, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
 	}
-	defaultJson, err := getSkeletonFilePath(path.Join(envDirectoryName, defaultEnvJSONFileName))
+	defaultJson, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvJSONFileName))
 	if err != nil {
 		return err
 	}
-	defaultJsonDest := path.Join(defaultEnv, defaultEnvJSONFileName)
+	defaultJsonDest := path.Join(defaultEnv, common.DefaultEnvJSONFileName)
 	showMessage("create", defaultJsonDest)
-	err = copyFile(defaultJson, defaultJsonDest)
+	err = common.CopyFile(defaultJson, defaultJsonDest)
 	if err != nil {
 		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJsonDest, err.Error()))
 	}
@@ -199,8 +200,8 @@ func createProjectTemplate(language string) error {
 
 // Loads all the json files available in the specified env directory
 func loadEnvironment(env string) error {
-	dirToRead := path.Join(envDirectoryName, env)
-	if !dirExists(dirToRead) {
+	dirToRead := path.Join(common.EnvDirectoryName, env)
+	if !common.DirExists(dirToRead) {
 		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
 	}
 
@@ -211,14 +212,14 @@ func loadEnvironment(env string) error {
 	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
 		if isJson(path) {
 			var e environmentVariables
-			contents := readFileContents(path)
+			contents := common.ReadFileContents(path)
 			err := json.Unmarshal([]byte(contents), &e)
 			if err != nil {
 				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, err.Error()))
 			}
 
 			for k, v := range e.Variables {
-				err := setEnvVariable(k, string(v))
+				err := common.SetEnvVariable(k, string(v))
 				if err != nil {
 					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
 				}
@@ -265,7 +266,7 @@ func main() {
 		}
 
 		scenarioFile := flag.Arg(0)
-		tokens, err := parse(readFileContents(scenarioFile))
+		tokens, err := parse(common.ReadFileContents(scenarioFile))
 		if se, ok := err.(*syntaxError); ok {
 			fmt.Printf("%s:%d:%d %s\n", scenarioFile, se.lineNo, se.colNo, se.message)
 			os.Exit(1)

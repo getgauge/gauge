@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
+	"github.com/twist2/common"
 	"io"
 	"log"
 	"net"
@@ -68,7 +69,7 @@ func acceptConnection() (net.Conn, error) {
 // encoded using protobuf'd varint format
 func getResponse(conn net.Conn, message *Message) (*Message, error) {
 	responseChan := make(chan *Message)
-	messageId := getUniqueId()
+	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 	pendingRequests[*message.MessageId] = responseChan
 

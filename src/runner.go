@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/twist2/common"
 	"os"
 	"os/exec"
 	"runtime"
@@ -30,12 +31,12 @@ type runner struct {
 
 func executeInitHookForRunner(language string) error {
 	var r runner
-	languageJsonFilePath, err := getLanguageJSONFilePath(language)
+	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
 	if err != nil {
 		return err
 	}
 
-	contents := readFileContents(languageJsonFilePath)
+	contents := common.ReadFileContents(languageJsonFilePath)
 	err = json.Unmarshal([]byte(contents), &r)
 	if err != nil {
 		return err
@@ -82,12 +83,12 @@ func getExecutableCommand(command string) *exec.Cmd {
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func startRunner(manifest *manifest) (*testRunner, error) {
 	var r runner
-	languageJsonFilePath, err := getLanguageJSONFilePath(manifest.Language)
+	languageJsonFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return nil, err
 	}
 
-	contents := readFileContents(languageJsonFilePath)
+	contents := common.ReadFileContents(languageJsonFilePath)
 	err = json.Unmarshal([]byte(contents), &r)
 	if err != nil {
 		return nil, err
