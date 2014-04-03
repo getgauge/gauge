@@ -234,6 +234,7 @@ func loadEnvironment(env string) error {
 // Command line flags
 var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
 var initialize = flag.String("init", "", "Initializes project structure in the current directory")
+var currentEnv = flag.String("env", "default", "Specifies the environment")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: twist [options] scenario\n")
@@ -259,7 +260,7 @@ func main() {
 			printUsage()
 		}
 
-		err := loadEnvironment("default")
+		err := loadEnvironment(*currentEnv)
 		if err != nil {
 			fmt.Printf("Failed to load the environment. %s\n", err.Error())
 			os.Exit(1)
