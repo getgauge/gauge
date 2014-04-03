@@ -54,7 +54,7 @@ func getProjectManifest() *manifest {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			fmt.Printf("Failed to read: %s. %s\n", manifestFile, err.Error())
+			common.PrintError(fmt.Sprintf("Failed to read: %s. %s\n", manifestFile, err.Error()))
 			os.Exit(1)
 		}
 	}

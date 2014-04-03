@@ -3,11 +3,11 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"fmt"
 	"github.com/twist2/common"
 	"io/ioutil"
 	"net"
 	"os"
+	"fmt"
 )
 
 type execution struct {
@@ -23,7 +23,7 @@ func newExecution(manifest *manifest, tokens []*token, conn net.Conn) *execution
 
 func (e *execution) startScenarioExecution() error {
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
-		ExecutionStartingRequest: &ExecutionStartingRequest{ScenarioFile: proto.String("sample.sc")}}
+		ExecutionStartingRequest: &ExecutionStartingRequest{ScenarioFile: proto.String("sample.scn")}}
 
 	_, err := getResponse(e.connection, message)
 	if err != nil {
@@ -37,7 +37,7 @@ func (e *execution) startStepExecution(token *token) (bool, error) {
 	message := &Message{MessageType: Message_ExecuteStep.Enum(),
 		ExecuteStepRequest: &ExecuteStepRequest{StepText: proto.String(token.value), Args: token.args}}
 
-	fmt.Printf("=> %s\n", token.line)
+	common.PrintExecutionStart(token.line)
 
 	response, err := getResponse(e.connection, message)
 	if err != nil {
@@ -48,12 +48,10 @@ func (e *execution) startStepExecution(token *token) (bool, error) {
 		stepResponse := response.GetExecuteStepResponse()
 		if stepResponse.GetPassed() != true {
 			ioutil.WriteFile("/tmp/twist-screenshot.png", stepResponse.GetScreenShot(), 0644)
-			fmt.Print("=> ")
-			common.PrintFailure(token.line, stepResponse.GetErrorMessage(), stepResponse.GetStackTrace())
+			common.PrintExecutionFailed(token.line, stepResponse.GetErrorMessage(), stepResponse.GetStackTrace())
 			return false, nil
 		} else {
-			fmt.Print("=> ")
-			common.PrintSuccess(token.line)
+			common.PrintExecutionPassed(token.line)
 		}
 	}
 
@@ -100,7 +98,7 @@ func (e *execution) start() error {
 		case typeWorkflowStep:
 			valid, err := e.validateStep(token)
 			if !valid {
-				fmt.Printf("Error. Unimplemented step: %s\n", token.line)
+				common.PrintError(fmt.Sprintf("Error: Unimplemented step: %s", token.line))
 				quit = true
 				err = err
 			} else {
@@ -112,7 +110,7 @@ func (e *execution) start() error {
 		}
 
 		if err != nil {
-			fmt.Printf("Failed to execute step. %s\n", err.Error())
+			common.PrintError(fmt.Sprintf("Failed to execute step. %s", err.Error()))
 			os.Exit(1)
 		}
 
