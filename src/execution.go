@@ -4,7 +4,6 @@ package main
 import (
 	"code.google.com/p/goprotobuf/proto"
 	"fmt"
-	"github.com/twist2/common"
 	"io/ioutil"
 	"net"
 	"os"
@@ -49,11 +48,11 @@ func (e *execution) startStepExecution(token *token) (bool, error) {
 		if stepResponse.GetPassed() != true {
 			ioutil.WriteFile("/tmp/twist-screenshot.png", stepResponse.GetScreenShot(), 0644)
 			fmt.Print("=> ")
-			common.PrintFailure(token.line, stepResponse.GetErrorMessage(), stepResponse.GetStackTrace())
+			printFailure(token.line, stepResponse.GetErrorMessage(), stepResponse.GetStackTrace())
 			return false, nil
 		} else {
 			fmt.Print("=> ")
-			common.PrintSuccess(token.line)
+			printSuccess(token.line)
 		}
 	}
 
