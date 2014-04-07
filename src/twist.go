@@ -18,7 +18,6 @@ import (
 )
 
 const (
-	manifestFile      = "manifest.json"
 	specsDirName      = "specs"
 	skelFileName      = "hello_world.spec"
 	envDirName        = "env"
@@ -46,7 +45,8 @@ type environmentVariables struct {
 }
 
 func getProjectManifest() *manifest {
-	contents := common.ReadFileContents(manifestFile)
+	projectRoot := common.GetProjectRoot()
+	contents := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
 	dec := json.NewDecoder(strings.NewReader(contents))
 
 	var m manifest
@@ -54,7 +54,8 @@ func getProjectManifest() *manifest {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			fmt.Printf("Failed to read: %s. %s\n", manifestFile, err.Error())
+			fmt.Printf("Failed to read manifest. %s\n", err.Error())
+			// common.PrintError(fmt.Sprintf("Failed to read: %s. %s\n", manifestFile, err.Error()))
 			os.Exit(1)
 		}
 	}
@@ -130,16 +131,16 @@ func createProjectTemplate(language string) error {
 	}
 
 	// Create the project manifest
-	showMessage("create", manifestFile)
-	if common.FileExists(manifestFile) {
-		showMessage("skip", manifestFile)
+	showMessage("create", common.ManifestFile)
+	if common.FileExists(common.ManifestFile) {
+		showMessage("skip", common.ManifestFile)
 	}
 	manifest := &manifest{Language: language}
 	b, err := json.Marshal(manifest)
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(manifestFile, b, common.NewFilePermissions)
+	ioutil.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
 
 	// creating the spec directory
 	showMessage("create", specsDirName)
@@ -200,7 +201,8 @@ func createProjectTemplate(language string) error {
 
 // Loads all the json files available in the specified env directory
 func loadEnvironment(env string) error {
-	dirToRead := path.Join(common.EnvDirectoryName, env)
+	projectRoot := common.GetProjectRoot()
+	dirToRead := path.Join(projectRoot, common.EnvDirectoryName, env)
 	if !common.DirExists(dirToRead) {
 		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
 	}
