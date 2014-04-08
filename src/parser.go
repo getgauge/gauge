@@ -243,14 +243,14 @@ func (p *parser) run() error {
 			if len(scenarioName) == 0 {
 				return &syntaxError{lineNo: p.lineNo, line: line, message: "Scenario should have a name"}
 			}
-			token := &token{kind: typeScenario, lineNo: p.lineNo, line: trimmedLine, value: scenarioName}
+			token := &token{kind: typeScenario, lineNo: p.lineNo, line: line, value: scenarioName}
 			err := p.accept(token)
 			if err != nil {
 				return err
 			}
 		} else if strings.HasPrefix(trimmedLine, workflowPrefix) {
 			workflowName := getNameForTerminalSymbol(trimmedLine)
-			token := &token{kind: typeWorkflow, lineNo: p.lineNo, line: trimmedLine, value: workflowName}
+			token := &token{kind: typeWorkflow, lineNo: p.lineNo, line: line, value: workflowName}
 			err := p.accept(token)
 			if err != nil {
 				return err
@@ -267,7 +267,7 @@ func (p *parser) run() error {
 				continue
 			}
 
-			token, err := makeWokflowStepToken(p, trimmedLine)
+			token, err := makeWokflowStepToken(p, line)
 			if err != nil {
 				return err
 			}

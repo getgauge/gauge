@@ -47,12 +47,12 @@ func (e *execution) startStepExecution(token *token) (bool, error) {
 		stepResponse := response.GetExecuteStepResponse()
 		if stepResponse.GetPassed() != true {
 			ioutil.WriteFile("/tmp/twist-screenshot.png", stepResponse.GetScreenShot(), 0644)
-			fmt.Print("=> ")
-			printFailure(token.line, stepResponse.GetErrorMessage(), stepResponse.GetStackTrace())
+			fmt.Printf("=> \x1b[31;1m%s\n\x1b[0m", token.line)
+			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetErrorMessage())
+			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetStackTrace())
 			return false, nil
 		} else {
-			fmt.Print("=> ")
-			printSuccess(token.line)
+			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", token.line)
 		}
 	}
 
