@@ -237,6 +237,7 @@ func loadEnvironment(env string) error {
 var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
 var initialize = flag.String("init", "", "Initializes project structure in the current directory")
 var currentEnv = flag.String("env", "default", "Specifies the environment")
+var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the current project")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: twist [options] scenario\n")
@@ -257,6 +258,16 @@ func main() {
 			os.Exit(1)
 		}
 		fmt.Println("Successfully initialized the project")
+	} else if *addPlugin != "" {
+		pluginName := *addPlugin
+		pluginVersion := ""
+		if len(flag.Args()) > 0 {
+			pluginVersion = flag.Args()[0]
+		}
+		if err := addPluginToTheProject(pluginName, pluginVersion); err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
