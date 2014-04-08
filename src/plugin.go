@@ -9,6 +9,7 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 type pluginDescriptor struct {
@@ -21,7 +22,8 @@ type pluginDescriptor struct {
 		Linux   string
 		Darwin  string
 	}
-	Scope []string
+	Scope      []string
+	pluginPath string
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
@@ -92,6 +94,7 @@ func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, e
 	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
 		return nil, errors.New(fmt.Sprintf("%s: %s", pluginJson, err.Error()))
 	}
+	pd.pluginPath = strings.Replace(pluginJson, filepath.Base(pluginJson), "", -1)
 
 	return &pd, nil
 }
@@ -114,7 +117,7 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
 		return err
 	}
 
-	cmd := common.GetExecutableCommand(command)
+	cmd := common.GetExecutableCommand(path.Join(pd.pluginPath, command))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
