@@ -1,13 +1,28 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/twist2/common"
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 )
+
+type pluginDescriptor struct {
+	Id          string
+	Version     string
+	Name        string
+	Description string
+	Command     struct {
+		Windows string
+		Linux   string
+		Darwin  string
+	}
+	Scope []string
+}
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
 	pluginsPath, err := common.GetPluginsPath()
@@ -66,9 +81,60 @@ func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
 	}
 }
 
-func addPluginToTheProject(pluginName, pluginVersion string) error {
-	_, err := getPluginJsonPath(pluginName, pluginVersion)
+func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, error) {
+	pluginJson, err := getPluginJsonPath(pluginName, pluginVersion)
 	if err != nil {
+		return nil, err
+	}
+
+	pluginJsonContents := common.ReadFileContents(pluginJson)
+	var pd pluginDescriptor
+	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
+		return nil, errors.New(fmt.Sprintf("%s: %s", pluginJson, err.Error()))
+	}
+
+	return &pd, nil
+}
+
+func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
+	command := ""
+	switch runtime.GOOS {
+	case "windows":
+		command = pd.Command.Windows
+		break
+	case "darwin":
+		command = pd.Command.Darwin
+		break
+	default:
+		command = pd.Command.Linux
+		break
+	}
+
+	if err := os.Setenv(fmt.Sprintf("%s_action", pd.Id), action); err != nil {
+		return err
+	}
+
+	cmd := common.GetExecutableCommand(command)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+
+	if wait {
+		return cmd.Wait()
+	}
+
+	return nil
+}
+
+func addPluginToTheProject(pluginName, pluginVersion string) error {
+	pd, err := getPluginDescriptor(pluginName, pluginVersion)
+	if err != nil {
+		return err
+	}
+
+	if err := startPlugin(pd, "setup", true); err != nil {
 		return err
 	}
 
