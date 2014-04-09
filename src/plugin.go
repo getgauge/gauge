@@ -113,10 +113,6 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
 		break
 	}
 
-	if err := os.Setenv(fmt.Sprintf("%s_action", pd.Id), action); err != nil {
-		return err
-	}
-
 	cmd := common.GetExecutableCommand(path.Join(pd.pluginPath, command))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -131,15 +127,26 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
 	return nil
 }
 
-func addPluginToTheProject(pluginName, pluginVersion string) error {
-	pd, err := getPluginDescriptor(pluginName, pluginVersion)
+func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginArgs map[string]string) {
+	os.Setenv(fmt.Sprintf("%s_action", pd.Id), action)
+	os.Setenv("test_language", manifest.Language)
+	for k, v := range pluginArgs {
+		os.Setenv(k, v)
+	}
+}
+
+func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest) error {
+	pd, err := getPluginDescriptor(pluginName, pluginArgs["version"])
 	if err != nil {
 		return err
 	}
 
-	if err := startPlugin(pd, "setup", true); err != nil {
+	action := "setup"
+	setEnvForPlugin(action, pd, manifest, pluginArgs)
+	if err := startPlugin(pd, action, true); err != nil {
 		return err
 	}
 
-	return nil
+	manifest.Plugins = append(manifest.Plugins, pluginDetails{Id: pd.Id, Version: pd.Version})
+	return manifest.save()
 }

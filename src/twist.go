@@ -34,8 +34,22 @@ type step struct {
 
 var availableSteps []*step
 
+type pluginDetails struct {
+	Id      string
+	Version string
+}
+
 type manifest struct {
 	Language string
+	Plugins  []pluginDetails
+}
+
+func (m *manifest) save() error {
+	b, err := json.Marshal(m)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
 }
 
 // All the environment variables loaded from the
@@ -136,16 +150,14 @@ func createProjectTemplate(language string) error {
 		showMessage("skip", common.ManifestFile)
 	}
 	manifest := &manifest{Language: language}
-	b, err := json.Marshal(manifest)
-	if err != nil {
+	if err := manifest.save(); err != nil {
 		return err
 	}
-	ioutil.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
 
 	// creating the spec directory
 	showMessage("create", specsDirName)
 	if !common.DirExists(specsDirName) {
-		err = os.Mkdir(specsDirName, common.NewDirectoryPermissions)
+		err := os.Mkdir(specsDirName, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
 		}
@@ -238,6 +250,7 @@ var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
 var initialize = flag.String("init", "", "Initializes project structure in the current directory")
 var currentEnv = flag.String("env", "default", "Specifies the environment")
 var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the current project")
+var pluginArgs = flag.String("plugin-args", "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: twist [options] scenario\n")
@@ -260,11 +273,19 @@ func main() {
 		fmt.Println("Successfully initialized the project")
 	} else if *addPlugin != "" {
 		pluginName := *addPlugin
-		pluginVersion := ""
-		if len(flag.Args()) > 0 {
-			pluginVersion = flag.Args()[0]
+		additionalArgs := make(map[string]string)
+		if *pluginArgs != "" {
+			// plugin args will be comma separated values
+			// eg: version=1.0, foo_version = 2.41
+			args := strings.Split(*pluginArgs, ",")
+			for _, arg := range args {
+				keyValuePair := strings.Split(arg, "=")
+				if len(keyValuePair) == 2 {
+					additionalArgs[strings.TrimSpace(keyValuePair[0])] = strings.TrimSpace(keyValuePair[1])
+				}
+			}
 		}
-		if err := addPluginToTheProject(pluginName, pluginVersion); err != nil {
+		if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest()); err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
 		}
