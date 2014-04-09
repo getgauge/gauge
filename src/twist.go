@@ -45,7 +45,7 @@ type manifest struct {
 }
 
 func (m *manifest) save() error {
-	b, err := json.Marshal(m)
+	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return err
 	}
