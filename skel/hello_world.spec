@@ -1,12 +1,15 @@
+Welcome to the yet unnamed product
+===================================
 
-This is how a twist2 spec file looks like. 
+This is an executable specification file. Every heading in this file denotes a scenario. Every bulleted points denotes a step. 
 
-To execute this, run
+To execute this specification, use
 
-twist2 spec/hello_world.spec
+	twist2 spec/hello_world.spec
 
-Scenario: Hello to twist2
+Say hello to the yet unnamed product
+------------------------------------
 
-Workflow:
-	Say hello to "twist2"	
+tags: hello world, first test
 
+* Say "hello" to the "unnamed product"
