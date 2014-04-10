@@ -1,0 +1,72 @@
+package main;
+
+message ExecutionStartingRequest {
+	required string specFile = 1;
+}
+
+message ExecuteStepRequest {
+	required string stepText = 1;
+	optional bool scenarioFailing = 2;
+	repeated Argument args = 3;
+}
+
+message ProtoTable {
+    repeated TableRow rows = 1;
+}
+
+message TableRow {
+    repeated string cells = 1;
+}
+
+message Argument {
+    required string type = 1;
+    optional string value = 2;
+    optional ProtoTable table  = 3;
+}
+
+message ExecuteStepResponse {
+	required bool passed = 2;
+	optional bool recoverableError = 3;
+	optional string errorMessage = 4;
+	optional string stackTrace = 5;
+	optional bytes screenShot = 6;
+}
+
+message StepValidateRequest {
+	required string stepText = 1;
+}
+
+message StepValidateResponse {
+	required bool isValid = 1;
+}
+
+message ExecutionEndingRequest {
+}
+
+// This is the message which gets transferred all the time 
+// with proper message type set
+message Message {
+	enum MessageType {
+	    ExecutionStarting = 0;
+	    ExecuteStep = 1;
+	    ExecuteStepResponse = 2;
+	    ExecutionEnding = 3;
+	    StepValidateRequest = 4;
+	    StepValidateResponse = 5;
+	}
+  	
+  	required MessageType messageType = 1;
+  	
+	// A unique id to represent this message. A response to the message should copy over this value
+	// this is used to synchronize messages & responses
+  	required int64 messageId = 2;
+
+  	// One of the following will have a value
+  	optional ExecutionStartingRequest executionStartingRequest = 3;
+  	optional ExecuteStepRequest executeStepRequest = 4;
+  	optional ExecuteStepResponse executeStepResponse = 5;
+  	optional ExecutionEndingRequest executionEndingRequest = 6;
+  	optional StepValidateRequest stepValidateRequest = 7;
+  	optional StepValidateResponse stepValidateResponse = 8;
+}
+

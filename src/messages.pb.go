@@ -11,6 +11,9 @@ It is generated from these files:
 It has these top-level messages:
 	ExecutionStartingRequest
 	ExecuteStepRequest
+	ProtoTable
+	TableRow
+	Argument
 	ExecuteStepResponse
 	StepValidateRequest
 	StepValidateResponse
@@ -74,7 +77,7 @@ func (x *Message_MessageType) UnmarshalJSON(data []byte) error {
 }
 
 type ExecutionStartingRequest struct {
-	ScenarioFile     *string `protobuf:"bytes,1,req,name=scenarioFile" json:"scenarioFile,omitempty"`
+	SpecFile         *string `protobuf:"bytes,1,req,name=specFile" json:"specFile,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -82,18 +85,18 @@ func (m *ExecutionStartingRequest) Reset()         { *m = ExecutionStartingReque
 func (m *ExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecutionStartingRequest) ProtoMessage()    {}
 
-func (m *ExecutionStartingRequest) GetScenarioFile() string {
-	if m != nil && m.ScenarioFile != nil {
-		return *m.ScenarioFile
+func (m *ExecutionStartingRequest) GetSpecFile() string {
+	if m != nil && m.SpecFile != nil {
+		return *m.SpecFile
 	}
 	return ""
 }
 
 type ExecuteStepRequest struct {
-	StepText         *string  `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
-	ScenarioFailing  *bool    `protobuf:"varint,2,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
-	Args             []string `protobuf:"bytes,3,rep,name=args" json:"args,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	StepText         *string     `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
+	ScenarioFailing  *bool       `protobuf:"varint,2,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
+	Args             []*Argument `protobuf:"bytes,3,rep,name=args" json:"args,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
 }
 
 func (m *ExecuteStepRequest) Reset()         { *m = ExecuteStepRequest{} }
@@ -114,9 +117,73 @@ func (m *ExecuteStepRequest) GetScenarioFailing() bool {
 	return false
 }
 
-func (m *ExecuteStepRequest) GetArgs() []string {
+func (m *ExecuteStepRequest) GetArgs() []*Argument {
 	if m != nil {
 		return m.Args
+	}
+	return nil
+}
+
+type ProtoTable struct {
+	Rows             []*TableRow `protobuf:"bytes,1,rep,name=rows" json:"rows,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *ProtoTable) Reset()         { *m = ProtoTable{} }
+func (m *ProtoTable) String() string { return proto.CompactTextString(m) }
+func (*ProtoTable) ProtoMessage()    {}
+
+func (m *ProtoTable) GetRows() []*TableRow {
+	if m != nil {
+		return m.Rows
+	}
+	return nil
+}
+
+type TableRow struct {
+	Cells            []string `protobuf:"bytes,1,rep,name=cells" json:"cells,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *TableRow) Reset()         { *m = TableRow{} }
+func (m *TableRow) String() string { return proto.CompactTextString(m) }
+func (*TableRow) ProtoMessage()    {}
+
+func (m *TableRow) GetCells() []string {
+	if m != nil {
+		return m.Cells
+	}
+	return nil
+}
+
+type Argument struct {
+	Type             *string     `protobuf:"bytes,1,req,name=type" json:"type,omitempty"`
+	Value            *string     `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
+	Table            *ProtoTable `protobuf:"bytes,3,opt,name=table" json:"table,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
+}
+
+func (m *Argument) Reset()         { *m = Argument{} }
+func (m *Argument) String() string { return proto.CompactTextString(m) }
+func (*Argument) ProtoMessage()    {}
+
+func (m *Argument) GetType() string {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ""
+}
+
+func (m *Argument) GetValue() string {
+	if m != nil && m.Value != nil {
+		return *m.Value
+	}
+	return ""
+}
+
+func (m *Argument) GetTable() *ProtoTable {
+	if m != nil {
+		return m.Table
 	}
 	return nil
 }
