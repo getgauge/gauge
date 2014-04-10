@@ -11,7 +11,7 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 		&token{kind: stepKind, value: "Example step", lineNo: 3},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.lineNo, Equals, 1)
@@ -34,7 +34,7 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 		&token{kind: commentKind, value: "Third comment", lineNo: 6},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.value, Equals, "Spec Heading")
@@ -64,7 +64,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 3, args: []string{"user"}},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	step := spec.scenarios[0].steps[0]
@@ -88,7 +88,7 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 		&token{kind: stepKind, value: "sample {static} and {dynamic}", lineNo: 3, args: []string{"name"}},
 	}
 
-	_, result := Specification(tokens)
+	_, result := newSpecification(tokens)
 
 	c.Assert(result, NotNil)
 	c.Assert(result.ok, Equals, false)
@@ -102,7 +102,7 @@ func (s *MySuite) TestContextWithKeywords(c *C) {
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
 	}
 
-	_, result := Specification(tokens)
+	_, result := newSpecification(tokens)
 
 	c.Assert(result, NotNil)
 	c.Assert(result.ok, Equals, false)
@@ -119,7 +119,7 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 		&token{kind: commentKind, value: "Comment before data table"},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.dataTable, NotNil)
@@ -141,7 +141,7 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 		&token{kind: tableRow, args: []string{"2", "bar"}},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	inlineTable := spec.scenarios[0].steps[0].inlineTable
@@ -164,7 +164,7 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 		&token{kind: scenarioKind, value: "Scenario Heading"},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	inlineTable := spec.contexts[0].inlineTable
@@ -191,7 +191,7 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 		&token{kind: tableRow, args: []string{"2"}},
 	}
 
-	_, result := Specification(tokens)
+	_, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(len(result.warnings), Equals, 1)
@@ -213,7 +213,7 @@ func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 		&token{kind: tableRow, args: []string{"2"}},
 	}
 
-	_, result := Specification(tokens)
+	_, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(len(result.warnings), Equals, 2)
@@ -229,7 +229,7 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 
@@ -246,7 +246,7 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 		&token{kind: scenarioTag, args: []string{"tag3", "tag4"}, lineNo: 2},
 	}
 
-	spec, result := Specification(tokens)
+	spec, result := newSpecification(tokens)
 
 	c.Assert(result.ok, Equals, true)
 
