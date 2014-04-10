@@ -85,7 +85,7 @@ func parseScenarioFiles(fileChan <-chan string) {
 		if se, ok := err.(*syntaxError); ok {
 			fmt.Printf("%s:%d: %s\n", scenarioFilePath, se.lineNo, se.message)
 		} else {
-			specification, result := Specification(tokens)
+			specification, result := newSpecification(tokens)
 			if result.ok {
 				availableSteps = append(availableSteps, specification.contexts...)
 				for _, scenario := range specification.scenarios {
@@ -284,7 +284,7 @@ func main() {
 			fmt.Printf("%s:%d: %s\n", specFile, se.lineNo, se.message)
 			os.Exit(1)
 		}
-		parsedSpec, result := Specification(tokens)
+		parsedSpec, result := newSpecification(tokens)
 		if !result.ok {
 			fmt.Println(result.error.message)
 			os.Exit(1)

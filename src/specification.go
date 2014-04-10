@@ -85,7 +85,7 @@ func converterFn(predicate func(token token, state *int) bool, apply func(token 
 
 }
 
-func Specification(tokens []*token) (*specification, cumulativeResult) {
+func newSpecification(tokens []*token) (*specification, cumulativeResult) {
 
 	converters := initalizeConverters()
 	specification := &specification{}
