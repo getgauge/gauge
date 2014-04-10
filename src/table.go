@@ -36,7 +36,6 @@ func (table *table) addRowValues(rowValues []string) {
 	}
 }
 
-
 func (table *table) getRowCount() int {
 	if table.isInitialized() {
 		return len(table.columns[0])

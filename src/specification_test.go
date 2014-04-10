@@ -221,3 +221,40 @@ func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 	c.Assert(result.warnings[1].value, Equals, "table not associated with a step, ignoring table at line no: 8")
 
 }
+
+func (s *MySuite) TestAddSpecTags(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: specTag, args: []string{"tag1", "tag2"}, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
+	}
+
+	spec, result := Specification(tokens)
+
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.tags), Equals, 2)
+	c.Assert(spec.tags[0], Equals, "tag1")
+	c.Assert(spec.tags[1], Equals, "tag2")
+}
+
+func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: specTag, args: []string{"tag1", "tag2"}, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
+		&token{kind: scenarioTag, args: []string{"tag3", "tag4"}, lineNo: 2},
+	}
+
+	spec, result := Specification(tokens)
+
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.tags), Equals, 2)
+	c.Assert(spec.tags[0], Equals, "tag1")
+	c.Assert(spec.tags[1], Equals, "tag2")
+
+	c.Assert(len(spec.scenarios[0].tags), Equals, 2)
+	c.Assert(spec.scenarios[0].tags[0], Equals, "tag3")
+	c.Assert(spec.scenarios[0].tags[1], Equals, "tag4")
+}

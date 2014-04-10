@@ -21,10 +21,10 @@ func (executor *specExecutor) execute() error {
 
 	dataTableRowCount := executor.specification.dataTable.getRowCount()
 	if dataTableRowCount == 0 {
-		return executor.executeScenarios();
+		return executor.executeScenarios()
 	} else {
 		for executor.dataTableIndex = 0; executor.dataTableIndex < dataTableRowCount; executor.dataTableIndex++ {
-			executor.executeScenarios();
+			executor.executeScenarios()
 		}
 	}
 

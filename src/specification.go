@@ -9,6 +9,7 @@ import (
 type scenario struct {
 	heading line
 	steps   []*step
+	tags    []string
 }
 
 type argType int
@@ -41,6 +42,7 @@ type specification struct {
 	dataTable table
 	contexts  []*step
 	fileName  string
+	tags      []string
 }
 
 type line struct {
@@ -207,8 +209,20 @@ func initalizeConverters() []func(token, *int, *specification) result {
 		return result{ok: true}
 	})
 
+	tagConverter := converterFn(func(token token, state *int) bool {
+		return (token.kind == specTag) || (token.kind == scenarioTag)
+	}, func(token token, spec *specification, state *int) result {
+		if token.kind == specTag {
+			spec.tags = token.args
+		} else if token.kind == scenarioTag {
+			latestScenario := spec.scenarios[len(spec.scenarios)-1]
+			latestScenario.tags = token.args
+		}
+		return result{ok: true}
+	})
+
 	converter := []func(token, *int, *specification) result{
-		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter,
+		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter,
 	}
 
 	return converter
