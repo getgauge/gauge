@@ -24,14 +24,6 @@ const (
 	envDefaultDirName = "default"
 )
 
-type step struct {
-	File          string
-	RawText       string
-	ProcessedText string
-	LineNo        int
-	Args          []string
-}
-
 var availableSteps []*step
 
 type manifest struct {
@@ -88,16 +80,21 @@ func parseScenarioFiles(fileChan <-chan string) {
 			break
 		}
 
-		tokens, err := parse(common.ReadFileContents(scenarioFilePath))
+		parser := new(specParser)
+		tokens, err := parser.parse(common.ReadFileContents(scenarioFilePath))
 		if se, ok := err.(*syntaxError); ok {
-			fmt.Printf("%s:%d:%d %s\n", scenarioFilePath, se.lineNo, se.colNo, se.message)
+			fmt.Printf("%s:%d: %s\n", scenarioFilePath, se.lineNo, se.message)
 		} else {
-			for _, token := range tokens {
-				if token.kind == typeWorkflowStep {
-					s := &step{File: scenarioFilePath, RawText: token.line, ProcessedText: token.value, LineNo: token.lineNo, Args: token.args}
-					availableSteps = append(availableSteps, s)
+			specification, result := Specification(tokens)
+			if result.ok {
+				availableSteps = append(availableSteps, specification.contexts...)
+				for _, scenario := range specification.scenarios {
+					availableSteps = append(availableSteps, scenario.steps...)
 				}
+			} else {
+				fmt.Println(result.error.message)
 			}
+
 		}
 	}
 }
@@ -244,6 +241,19 @@ func printUsage() {
 	os.Exit(2)
 }
 
+func handleWarnings(warnings []*specwarning) {
+	if len(warnings) > 0 {
+		displayWarnings(warnings)
+	}
+}
+
+func displayWarnings(warnings []*specwarning) {
+	fmt.Println("%d warnings found")
+	for _, warning := range warnings {
+		fmt.Println(warning.value)
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -268,15 +278,21 @@ func main() {
 			os.Exit(1)
 		}
 
-		scenarioFile := flag.Arg(0)
-		tokens, err := parse(common.ReadFileContents(scenarioFile))
+		specFile := flag.Arg(0)
+		tokens, err := new(specParser).parse(common.ReadFileContents(specFile))
 		if se, ok := err.(*syntaxError); ok {
-			fmt.Printf("%s:%d:%d %s\n", scenarioFile, se.lineNo, se.colNo, se.message)
+			fmt.Printf("%s:%d: %s\n", specFile, se.lineNo, se.message)
+			os.Exit(1)
+		}
+		parsedSpec, result := Specification(tokens)
+		if !result.ok {
+			fmt.Println(result.error.message)
 			os.Exit(1)
 		}
 
+		handleWarnings(result.warnings)
 		manifest := getProjectManifest()
-
+		parsedSpec.fileName = specFile
 		_, err = startRunner(manifest)
 		if err != nil {
 			fmt.Printf("Failed to start a runner. %s\n", err.Error())
@@ -289,7 +305,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		execution := newExecution(manifest, tokens, conn)
+		execution := newExecution(manifest, []*specification{parsedSpec}, conn)
 		err = execution.start()
 		if err != nil {
 			fmt.Printf("Execution failed. %s\n", err.Error())
