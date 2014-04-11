@@ -25,6 +25,12 @@ const (
 )
 
 var availableSteps []*step
+var acceptedExtensions = make(map[string]bool)
+
+func init() {
+	acceptedExtensions[".spec"] = true
+	acceptedExtensions[".md"] = true
+}
 
 type manifest struct {
 	Language string
@@ -55,7 +61,7 @@ func getProjectManifest() *manifest {
 	return &m
 }
 
-func findScenarioFiles(fileChan chan<- string) {
+func findScenarioFiles(fileChan chan <- string) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -107,14 +113,14 @@ func makeListOfAvailableSteps() {
 
 func startAPIService() {
 	http.HandleFunc("/steps", func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.Marshal(availableSteps)
-		if err != nil {
-			io.WriteString(w, err.Error())
-		} else {
-			w.Header()["Content-Type"] = []string{"application/json"}
-			w.Write(js)
-		}
-	})
+			js, err := json.Marshal(availableSteps)
+			if err != nil {
+				io.WriteString(w, err.Error())
+			} else {
+				w.Header()["Content-Type"] = []string{"application/json"}
+				w.Write(js)
+			}
+		})
 	log.Fatal(http.ListenAndServe(":8889", nil))
 }
 
@@ -209,23 +215,23 @@ func loadEnvironment(env string) error {
 	}
 
 	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
-		if isJson(path) {
-			var e environmentVariables
-			contents := common.ReadFileContents(path)
-			err := json.Unmarshal([]byte(contents), &e)
-			if err != nil {
-				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, err.Error()))
-			}
-
-			for k, v := range e.Variables {
-				err := common.SetEnvVariable(k, string(v))
+			if isJson(path) {
+				var e environmentVariables
+				contents := common.ReadFileContents(path)
+				err := json.Unmarshal([]byte(contents), &e)
 				if err != nil {
-					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
+					return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, err.Error()))
+				}
+
+				for k, v := range e.Variables {
+					err := common.SetEnvVariable(k, string(v))
+					if err != nil {
+						return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
+					}
 				}
 			}
-		}
-		return nil
-	})
+			return nil
+		})
 
 	return err
 }
@@ -278,21 +284,14 @@ func main() {
 			os.Exit(1)
 		}
 
-		specFile := flag.Arg(0)
-		tokens, err := new(specParser).parse(common.ReadFileContents(specFile))
-		if se, ok := err.(*syntaxError); ok {
-			fmt.Printf("%s:%d: %s\n", specFile, se.lineNo, se.message)
-			os.Exit(1)
-		}
-		parsedSpec, result := newSpecification(tokens)
-		if !result.ok {
-			fmt.Println(result.error.message)
+		specSource := flag.Arg(0)
+		specs, err := findSpecs(specSource)
+		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		handleWarnings(result.warnings)
 		manifest := getProjectManifest()
-		parsedSpec.fileName = specFile
 		_, err = startRunner(manifest)
 		if err != nil {
 			fmt.Printf("Failed to start a runner. %s\n", err.Error())
@@ -305,11 +304,57 @@ func main() {
 			os.Exit(1)
 		}
 
-		execution := newExecution(manifest, []*specification{parsedSpec}, conn)
+		execution := newExecution(manifest, specs, conn)
 		err = execution.start()
 		if err != nil {
 			fmt.Printf("Execution failed. %s\n", err.Error())
 			os.Exit(1)
 		}
 	}
+}
+
+func findSpecs(specSource string) ([]*specification, error) {
+	specFiles := make([]string, 0)
+	if (common.DirExists(specSource)) {
+		specFiles = append(specFiles, findSpecsFilesIn(specSource)...)
+	} else if (common.FileExists(specSource) && isValidSpecExtension(specSource)) {
+		specFile, _ := filepath.Abs(specSource)
+		specFiles = append(specFiles, specFile)
+	} else {
+		return nil, errors.New(fmt.Sprintf("Spec file or directory does not exist: %s", specSource))
+	}
+
+	specs := make([]*specification, 0)
+	for _, specFile := range specFiles {
+		tokens, err := new(specParser).parse(common.ReadFileContents(specFile))
+		if (err != nil) {
+			return nil, err
+		}
+		parsedSpec, result := newSpecification(tokens)
+		if !result.ok {
+			return nil, result.error
+		}
+		handleWarnings(result.warnings)
+		parsedSpec.fileName = specFile
+		specs = append(specs, parsedSpec)
+	}
+	return specs, nil;
+}
+
+func findSpecsFilesIn(dirRoot string) ([]string) {
+	specFiles := make([]string, 0)
+
+
+	absRoot, _ := filepath.Abs(dirRoot)
+	filepath.Walk(absRoot, func(path string, f os.FileInfo, err error) error {
+			if err == nil && !f.IsDir() && isValidSpecExtension(f.Name()) {
+				specFiles = append(specFiles, path)
+			}
+			return err
+		})
+	return specFiles
+}
+
+func isValidSpecExtension(path string) bool {
+	return acceptedExtensions[filepath.Ext(path)]
 }
