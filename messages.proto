@@ -8,6 +8,11 @@ message ExecutionStatus {
 	optional bytes screenShot = 5;
 }
 
+// Sends to any request which needs a execution status as response
+message ExecutionStatusResponse {
+	required ExecutionStatus executionStatus = 1;
+}
+
 message ExecutionStartingRequest {
 	required string specFile = 1;
 }
@@ -17,8 +22,9 @@ message SpecExecutionStartingRequest {
 	required string specFile = 2;
 }
 
-message SpecExecutionStartingResponse {
-	required ExecutionStatus executionStatus = 1;
+message SpecExecutionEndingRequest {
+	required string specName = 1;
+	required string specFile = 2;
 }
 
 message ExecuteStepRequest {
@@ -66,12 +72,13 @@ message Message {
 	enum MessageType {
 	    ExecutionStarting = 0;
 	    SpecExecutionStarting = 1;
-	    SpecExecutionStartingResponse = 2;
+	    SpecExecutionEnding = 2;	    
 	    ExecuteStep = 3;
 	    ExecuteStepResponse = 4;
 	    ExecutionEnding = 5;
 	    StepValidateRequest = 6;
-	    StepValidateResponse = 7;	    
+	    StepValidateResponse = 7;
+	    ExecutionStatusResponse = 8;
 	}
   	
   	required MessageType messageType = 1;
@@ -82,12 +89,13 @@ message Message {
 
   	// One of the following will have a value
   	optional ExecutionStartingRequest executionStartingRequest = 3;
-  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;
-  	optional SpecExecutionStartingResponse specExecutionStartingResponse = 5;
+  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;  	
+  	optional SpecExecutionEndingRequest specExecutionEndingRequest = 5;  	
   	optional ExecuteStepRequest executeStepRequest = 6;
   	optional ExecuteStepResponse executeStepResponse = 7;
   	optional ExecutionEndingRequest executionEndingRequest = 8;
   	optional StepValidateRequest stepValidateRequest = 9;
-  	optional StepValidateResponse stepValidateResponse = 10;  	
+  	optional StepValidateResponse stepValidateResponse = 10;
+  	optional ExecutionStatusResponse executionStatusResponse = 11;
 }
 

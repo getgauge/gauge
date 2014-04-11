@@ -18,6 +18,7 @@ func (executor *specExecutor) execute() error {
 	if err := executor.startSpecExecution(); err != nil {
 		return err
 	}
+	defer executor.stopSpecExecution()
 
 	dataTableRowCount := executor.specification.dataTable.getRowCount()
 	if dataTableRowCount == 0 {
@@ -71,6 +72,18 @@ func (executor *specExecutor) executeSteps(steps []*step) error {
 func (e *specExecutor) startSpecExecution() error {
 	message := &Message{MessageType: Message_SpecExecutionStarting.Enum(),
 		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{SpecName: proto.String(e.specification.heading.value),
+			SpecFile: proto.String(e.specification.fileName)}}
+
+	if _, err := getResponse(e.connection, message); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *specExecutor) stopSpecExecution() error {
+	message := &Message{MessageType: Message_SpecExecutionEnding.Enum(),
+		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{SpecName: proto.String(e.specification.heading.value),
 			SpecFile: proto.String(e.specification.fileName)}}
 
 	if _, err := getResponse(e.connection, message); err != nil {
