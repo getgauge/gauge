@@ -1,5 +1,9 @@
 package main
 
+import (
+	"fmt"
+)
+
 type table struct {
 	headerIndexMap map[string]int
 	columns        [][]string
@@ -10,8 +14,20 @@ func (table *table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
-func (table *table) get(columnName string) []string {
-	return table.columns[table.headerIndexMap[columnName]]
+func (table *table) get(header string) []string {
+	if !table.headerExists(header) {
+		panic(fmt.Sprintf("Table column %s not found", header))
+	}
+	return table.columns[table.headerIndexMap[header]]
+}
+
+func (table *table) headerExists(header string) bool {
+	valueIndex := table.headerIndexMap[header]
+	if valueIndex == 0 && table.headers[0] != header {
+		return false
+	} else {
+		return true
+	}
 }
 
 func (table *table) addHeaders(columns []string) {

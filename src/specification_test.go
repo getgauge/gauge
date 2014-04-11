@@ -59,9 +59,10 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 func (s *MySuite) TestStepsWithParam(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
-		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 3, args: []string{"user", "id"}},
-		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 3, args: []string{"user"}},
+		&token{kind: tableHeader, args: []string{"id"}, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
+		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 4, args: []string{"user", "id"}},
+		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 5, args: []string{"user"}},
 	}
 
 	spec, result := newSpecification(tokens)
@@ -69,7 +70,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 	c.Assert(result.ok, Equals, true)
 	step := spec.scenarios[0].steps[0]
 	c.Assert(step.value, Equals, "enter {} with {}")
-	c.Assert(step.lineNo, Equals, 3)
+	c.Assert(step.lineNo, Equals, 4)
 	c.Assert(len(step.args), Equals, 2)
 	c.Assert(step.args[0].value, Equals, "user")
 	c.Assert(step.args[0].argType, Equals, static)
@@ -257,4 +258,34 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 	c.Assert(len(spec.scenarios[0].tags), Equals, 2)
 	c.Assert(spec.scenarios[0].tags[0], Equals, "tag3")
 	c.Assert(spec.scenarios[0].tags[1], Equals, "tag4")
+}
+
+func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Step with a {dynamic}", args: []string{"foo"}, lineNo: 3, lineText: "*Step with a <foo>"},
+	}
+
+	_, result := newSpecification(tokens)
+
+	c.Assert(result.ok, Equals, false)
+	c.Assert(result.error.message, Equals, "No data table found for dynamic paramter <foo> : *Step with a <foo> lineNo: 3")
+
+}
+
+func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"id, name"}, lineNo: 2},
+		&token{kind: tableRow, args: []string{"123, hello"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
+		&token{kind: stepKind, value: "Step with a {dynamic}", args: []string{"foo"}, lineNo: 5, lineText: "*Step with a <foo>"},
+	}
+
+	_, result := newSpecification(tokens)
+
+	c.Assert(result.ok, Equals, false)
+	c.Assert(result.error.message, Equals, "No data table column found for dynamic paramter <foo> : *Step with a <foo> lineNo: 5")
+
 }

@@ -98,7 +98,7 @@ func (executor *specExecutor) executeStep(step *step) (bool, error) {
 			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetStackTrace())
 			return false, nil
 		} else {
-			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.value)
+			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.lineText)
 		}
 	}
 
