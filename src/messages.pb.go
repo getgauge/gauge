@@ -9,7 +9,10 @@ It is generated from these files:
 	messages.proto
 
 It has these top-level messages:
+	ExecutionStatus
 	ExecutionStartingRequest
+	SpecExecutionStartingRequest
+	SpecExecutionStartingResponse
 	ExecuteStepRequest
 	ProtoTable
 	TableRow
@@ -34,29 +37,35 @@ var _ = math.Inf
 type Message_MessageType int32
 
 const (
-	Message_ExecutionStarting    Message_MessageType = 0
-	Message_ExecuteStep          Message_MessageType = 1
-	Message_ExecuteStepResponse  Message_MessageType = 2
-	Message_ExecutionEnding      Message_MessageType = 3
-	Message_StepValidateRequest  Message_MessageType = 4
-	Message_StepValidateResponse Message_MessageType = 5
+	Message_ExecutionStarting             Message_MessageType = 0
+	Message_SpecExecutionStarting         Message_MessageType = 1
+	Message_SpecExecutionStartingResponse Message_MessageType = 2
+	Message_ExecuteStep                   Message_MessageType = 3
+	Message_ExecuteStepResponse           Message_MessageType = 4
+	Message_ExecutionEnding               Message_MessageType = 5
+	Message_StepValidateRequest           Message_MessageType = 6
+	Message_StepValidateResponse          Message_MessageType = 7
 )
 
 var Message_MessageType_name = map[int32]string{
 	0: "ExecutionStarting",
-	1: "ExecuteStep",
-	2: "ExecuteStepResponse",
-	3: "ExecutionEnding",
-	4: "StepValidateRequest",
-	5: "StepValidateResponse",
+	1: "SpecExecutionStarting",
+	2: "SpecExecutionStartingResponse",
+	3: "ExecuteStep",
+	4: "ExecuteStepResponse",
+	5: "ExecutionEnding",
+	6: "StepValidateRequest",
+	7: "StepValidateResponse",
 }
 var Message_MessageType_value = map[string]int32{
-	"ExecutionStarting":    0,
-	"ExecuteStep":          1,
-	"ExecuteStepResponse":  2,
-	"ExecutionEnding":      3,
-	"StepValidateRequest":  4,
-	"StepValidateResponse": 5,
+	"ExecutionStarting":             0,
+	"SpecExecutionStarting":         1,
+	"SpecExecutionStartingResponse": 2,
+	"ExecuteStep":                   3,
+	"ExecuteStepResponse":           4,
+	"ExecutionEnding":               5,
+	"StepValidateRequest":           6,
+	"StepValidateResponse":          7,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -76,6 +85,54 @@ func (x *Message_MessageType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ExecutionStatus struct {
+	Passed           *bool   `protobuf:"varint,1,req,name=passed" json:"passed,omitempty"`
+	RecoverableError *bool   `protobuf:"varint,2,opt,name=recoverableError" json:"recoverableError,omitempty"`
+	ErrorMessage     *string `protobuf:"bytes,3,opt,name=errorMessage" json:"errorMessage,omitempty"`
+	StackTrace       *string `protobuf:"bytes,4,opt,name=stackTrace" json:"stackTrace,omitempty"`
+	ScreenShot       []byte  `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ExecutionStatus) Reset()         { *m = ExecutionStatus{} }
+func (m *ExecutionStatus) String() string { return proto.CompactTextString(m) }
+func (*ExecutionStatus) ProtoMessage()    {}
+
+func (m *ExecutionStatus) GetPassed() bool {
+	if m != nil && m.Passed != nil {
+		return *m.Passed
+	}
+	return false
+}
+
+func (m *ExecutionStatus) GetRecoverableError() bool {
+	if m != nil && m.RecoverableError != nil {
+		return *m.RecoverableError
+	}
+	return false
+}
+
+func (m *ExecutionStatus) GetErrorMessage() string {
+	if m != nil && m.ErrorMessage != nil {
+		return *m.ErrorMessage
+	}
+	return ""
+}
+
+func (m *ExecutionStatus) GetStackTrace() string {
+	if m != nil && m.StackTrace != nil {
+		return *m.StackTrace
+	}
+	return ""
+}
+
+func (m *ExecutionStatus) GetScreenShot() []byte {
+	if m != nil {
+		return m.ScreenShot
+	}
+	return nil
+}
+
 type ExecutionStartingRequest struct {
 	SpecFile         *string `protobuf:"bytes,1,req,name=specFile" json:"specFile,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -90,6 +147,46 @@ func (m *ExecutionStartingRequest) GetSpecFile() string {
 		return *m.SpecFile
 	}
 	return ""
+}
+
+type SpecExecutionStartingRequest struct {
+	SpecName         *string `protobuf:"bytes,1,req,name=specName" json:"specName,omitempty"`
+	SpecFile         *string `protobuf:"bytes,2,req,name=specFile" json:"specFile,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *SpecExecutionStartingRequest) Reset()         { *m = SpecExecutionStartingRequest{} }
+func (m *SpecExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
+func (*SpecExecutionStartingRequest) ProtoMessage()    {}
+
+func (m *SpecExecutionStartingRequest) GetSpecName() string {
+	if m != nil && m.SpecName != nil {
+		return *m.SpecName
+	}
+	return ""
+}
+
+func (m *SpecExecutionStartingRequest) GetSpecFile() string {
+	if m != nil && m.SpecFile != nil {
+		return *m.SpecFile
+	}
+	return ""
+}
+
+type SpecExecutionStartingResponse struct {
+	ExecutionStatus  *ExecutionStatus `protobuf:"bytes,1,req,name=executionStatus" json:"executionStatus,omitempty"`
+	XXX_unrecognized []byte           `json:"-"`
+}
+
+func (m *SpecExecutionStartingResponse) Reset()         { *m = SpecExecutionStartingResponse{} }
+func (m *SpecExecutionStartingResponse) String() string { return proto.CompactTextString(m) }
+func (*SpecExecutionStartingResponse) ProtoMessage()    {}
+
+func (m *SpecExecutionStartingResponse) GetExecutionStatus() *ExecutionStatus {
+	if m != nil {
+		return m.ExecutionStatus
+	}
+	return nil
 }
 
 type ExecuteStepRequest struct {
@@ -284,13 +381,15 @@ type Message struct {
 	// this is used to synchronize messages & responses
 	MessageId *int64 `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
 	// One of the following will have a value
-	ExecutionStartingRequest *ExecutionStartingRequest `protobuf:"bytes,3,opt,name=executionStartingRequest" json:"executionStartingRequest,omitempty"`
-	ExecuteStepRequest       *ExecuteStepRequest       `protobuf:"bytes,4,opt,name=executeStepRequest" json:"executeStepRequest,omitempty"`
-	ExecuteStepResponse      *ExecuteStepResponse      `protobuf:"bytes,5,opt,name=executeStepResponse" json:"executeStepResponse,omitempty"`
-	ExecutionEndingRequest   *ExecutionEndingRequest   `protobuf:"bytes,6,opt,name=executionEndingRequest" json:"executionEndingRequest,omitempty"`
-	StepValidateRequest      *StepValidateRequest      `protobuf:"bytes,7,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
-	StepValidateResponse     *StepValidateResponse     `protobuf:"bytes,8,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
-	XXX_unrecognized         []byte                    `json:"-"`
+	ExecutionStartingRequest      *ExecutionStartingRequest      `protobuf:"bytes,3,opt,name=executionStartingRequest" json:"executionStartingRequest,omitempty"`
+	SpecExecutionStartingRequest  *SpecExecutionStartingRequest  `protobuf:"bytes,4,opt,name=specExecutionStartingRequest" json:"specExecutionStartingRequest,omitempty"`
+	SpecExecutionStartingResponse *SpecExecutionStartingResponse `protobuf:"bytes,5,opt,name=specExecutionStartingResponse" json:"specExecutionStartingResponse,omitempty"`
+	ExecuteStepRequest            *ExecuteStepRequest            `protobuf:"bytes,6,opt,name=executeStepRequest" json:"executeStepRequest,omitempty"`
+	ExecuteStepResponse           *ExecuteStepResponse           `protobuf:"bytes,7,opt,name=executeStepResponse" json:"executeStepResponse,omitempty"`
+	ExecutionEndingRequest        *ExecutionEndingRequest        `protobuf:"bytes,8,opt,name=executionEndingRequest" json:"executionEndingRequest,omitempty"`
+	StepValidateRequest           *StepValidateRequest           `protobuf:"bytes,9,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
+	StepValidateResponse          *StepValidateResponse          `protobuf:"bytes,10,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
+	XXX_unrecognized              []byte                         `json:"-"`
 }
 
 func (m *Message) Reset()         { *m = Message{} }
@@ -314,6 +413,20 @@ func (m *Message) GetMessageId() int64 {
 func (m *Message) GetExecutionStartingRequest() *ExecutionStartingRequest {
 	if m != nil {
 		return m.ExecutionStartingRequest
+	}
+	return nil
+}
+
+func (m *Message) GetSpecExecutionStartingRequest() *SpecExecutionStartingRequest {
+	if m != nil {
+		return m.SpecExecutionStartingRequest
+	}
+	return nil
+}
+
+func (m *Message) GetSpecExecutionStartingResponse() *SpecExecutionStartingResponse {
+	if m != nil {
+		return m.SpecExecutionStartingResponse
 	}
 	return nil
 }

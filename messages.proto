@@ -1,13 +1,44 @@
 package main;
 
+message ExecutionStatus {
+	required bool passed = 1;
+	optional bool recoverableError = 2;
+	optional string errorMessage = 3;
+	optional string stackTrace = 4;
+	optional bytes screenShot = 5;
+}
+
 message ExecutionStartingRequest {
-	required string scenarioFile = 1;
+	required string specFile = 1;
+}
+
+message SpecExecutionStartingRequest {
+	required string specName = 1;
+	required string specFile = 2;
+}
+
+message SpecExecutionStartingResponse {
+	required ExecutionStatus executionStatus = 1;
 }
 
 message ExecuteStepRequest {
 	required string stepText = 1;
 	optional bool scenarioFailing = 2;
-	repeated string args = 3;
+	repeated Argument args = 3;
+}
+
+message ProtoTable {
+    repeated TableRow rows = 1;
+}
+
+message TableRow {
+    repeated string cells = 1;
+}
+
+message Argument {
+    required string type = 1;
+    optional string value = 2;
+    optional ProtoTable table  = 3;
 }
 
 message ExecuteStepResponse {
@@ -34,11 +65,13 @@ message ExecutionEndingRequest {
 message Message {
 	enum MessageType {
 	    ExecutionStarting = 0;
-	    ExecuteStep = 1;
-	    ExecuteStepResponse = 2;
-	    ExecutionEnding = 3;
-	    StepValidateRequest = 4;
-	    StepValidateResponse = 5;
+	    SpecExecutionStarting = 1;
+	    SpecExecutionStartingResponse = 2;
+	    ExecuteStep = 3;
+	    ExecuteStepResponse = 4;
+	    ExecutionEnding = 5;
+	    StepValidateRequest = 6;
+	    StepValidateResponse = 7;	    
 	}
   	
   	required MessageType messageType = 1;
@@ -49,10 +82,12 @@ message Message {
 
   	// One of the following will have a value
   	optional ExecutionStartingRequest executionStartingRequest = 3;
-  	optional ExecuteStepRequest executeStepRequest = 4;
-  	optional ExecuteStepResponse executeStepResponse = 5;
-  	optional ExecutionEndingRequest executionEndingRequest = 6;
-  	optional StepValidateRequest stepValidateRequest = 7;
-  	optional StepValidateResponse stepValidateResponse = 8;
+  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;
+  	optional SpecExecutionStartingResponse specExecutionStartingResponse = 5;
+  	optional ExecuteStepRequest executeStepRequest = 6;
+  	optional ExecuteStepResponse executeStepResponse = 7;
+  	optional ExecutionEndingRequest executionEndingRequest = 8;
+  	optional StepValidateRequest stepValidateRequest = 9;
+  	optional StepValidateResponse stepValidateResponse = 10;  	
 }
 

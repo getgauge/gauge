@@ -60,7 +60,6 @@ func (executor *specExecutor) executeSteps(steps []*step) error {
 		}
 
 		shouldContinue, err := executor.executeStep(step)
-
 		if !shouldContinue {
 			return err
 		}
@@ -70,8 +69,9 @@ func (executor *specExecutor) executeSteps(steps []*step) error {
 }
 
 func (e *specExecutor) startSpecExecution() error {
-	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
-		ExecutionStartingRequest: &ExecutionStartingRequest{SpecFile: proto.String(e.specification.fileName)}}
+	message := &Message{MessageType: Message_SpecExecutionStarting.Enum(),
+		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{SpecName: proto.String(e.specification.heading.value),
+			SpecFile: proto.String(e.specification.fileName)}}
 
 	if _, err := getResponse(e.connection, message); err != nil {
 		return err

@@ -1,3 +1,3 @@
-PATH=$PATH:$GOPATH/bin protoc --go_out=. messages.proto
-protoc --java_out=java/src messages.proto 
-ruby-protoc -o ruby messages.proto 
+PATH=$PATH:$GOPATH/bin protoc --go_out=src/ messages.proto
+protoc --java_out=../twist2-java/src/main/java/ messages.proto 
+#ruby-protoc -o ruby messages.proto 
