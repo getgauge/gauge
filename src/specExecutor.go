@@ -108,9 +108,14 @@ func (e *specExecutor) stopSpecExecution() error {
 }
 
 func (executor *specExecutor) executeStep(step *step) (bool, error) {
+	message := &Message{MessageType: Message_StepExecutionStarting.Enum(),
+		StepExecutionStartingRequest: &StepExecutionStartingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return false, err
+	}
 
 	stepRequest := executor.createStepRequest(step)
-	message := &Message{MessageType: Message_ExecuteStep.Enum(),
+	message = &Message{MessageType: Message_ExecuteStep.Enum(),
 		ExecuteStepRequest: stepRequest}
 
 	response, err := getResponse(executor.connection, message)
@@ -118,8 +123,8 @@ func (executor *specExecutor) executeStep(step *step) (bool, error) {
 		return false, err
 	}
 
-	if response.GetMessageType() == Message_ExecuteStepResponse {
-		stepResponse := response.GetExecuteStepResponse()
+	if response.GetMessageType() == Message_ExecutionStatusResponse {
+		stepResponse := response.GetExecutionStatusResponse().GetExecutionStatus()
 		if stepResponse.GetPassed() != true {
 			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetErrorMessage())
 			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetStackTrace())
@@ -127,6 +132,12 @@ func (executor *specExecutor) executeStep(step *step) (bool, error) {
 		} else {
 			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.lineText)
 		}
+	}
+
+	message = &Message{MessageType: Message_StepExecutionEnding.Enum(),
+		StepExecutionEndingRequest: &StepExecutionEndingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return false, err
 	}
 
 	return true, nil

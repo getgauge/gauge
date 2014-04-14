@@ -78,7 +78,8 @@ func getResponse(conn net.Conn, message *Message) (*Message, error) {
 		delete(pendingRequests, *message.MessageId)
 		return nil, err
 	}
-	data = append(proto.EncodeVarint(uint64(len(data))), data...)
+	dataLength := proto.EncodeVarint(uint64(len(data)))
+	data = append(dataLength, data...)
 
 	_, err = conn.Write(data)
 	if err != nil {
