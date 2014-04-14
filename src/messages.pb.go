@@ -14,6 +14,8 @@ It has these top-level messages:
 	ExecutionStartingRequest
 	SpecExecutionStartingRequest
 	SpecExecutionEndingRequest
+	ScenarioExecutionStartingRequest
+	ScenarioExecutionEndingRequest
 	ExecuteStepRequest
 	ProtoTable
 	TableRow
@@ -38,38 +40,44 @@ var _ = math.Inf
 type Message_MessageType int32
 
 const (
-	Message_ExecutionStarting       Message_MessageType = 0
-	Message_SpecExecutionStarting   Message_MessageType = 1
-	Message_SpecExecutionEnding     Message_MessageType = 2
-	Message_ExecuteStep             Message_MessageType = 3
-	Message_ExecuteStepResponse     Message_MessageType = 4
-	Message_ExecutionEnding         Message_MessageType = 5
-	Message_StepValidateRequest     Message_MessageType = 6
-	Message_StepValidateResponse    Message_MessageType = 7
-	Message_ExecutionStatusResponse Message_MessageType = 8
+	Message_ExecutionStarting         Message_MessageType = 0
+	Message_SpecExecutionStarting     Message_MessageType = 1
+	Message_SpecExecutionEnding       Message_MessageType = 2
+	Message_ScenarioExecutionStarting Message_MessageType = 3
+	Message_ScenarioExecutionEnding   Message_MessageType = 4
+	Message_ExecuteStep               Message_MessageType = 5
+	Message_ExecuteStepResponse       Message_MessageType = 6
+	Message_ExecutionEnding           Message_MessageType = 7
+	Message_StepValidateRequest       Message_MessageType = 8
+	Message_StepValidateResponse      Message_MessageType = 9
+	Message_ExecutionStatusResponse   Message_MessageType = 10
 )
 
 var Message_MessageType_name = map[int32]string{
-	0: "ExecutionStarting",
-	1: "SpecExecutionStarting",
-	2: "SpecExecutionEnding",
-	3: "ExecuteStep",
-	4: "ExecuteStepResponse",
-	5: "ExecutionEnding",
-	6: "StepValidateRequest",
-	7: "StepValidateResponse",
-	8: "ExecutionStatusResponse",
+	0:  "ExecutionStarting",
+	1:  "SpecExecutionStarting",
+	2:  "SpecExecutionEnding",
+	3:  "ScenarioExecutionStarting",
+	4:  "ScenarioExecutionEnding",
+	5:  "ExecuteStep",
+	6:  "ExecuteStepResponse",
+	7:  "ExecutionEnding",
+	8:  "StepValidateRequest",
+	9:  "StepValidateResponse",
+	10: "ExecutionStatusResponse",
 }
 var Message_MessageType_value = map[string]int32{
-	"ExecutionStarting":       0,
-	"SpecExecutionStarting":   1,
-	"SpecExecutionEnding":     2,
-	"ExecuteStep":             3,
-	"ExecuteStepResponse":     4,
-	"ExecutionEnding":         5,
-	"StepValidateRequest":     6,
-	"StepValidateResponse":    7,
-	"ExecutionStatusResponse": 8,
+	"ExecutionStarting":         0,
+	"SpecExecutionStarting":     1,
+	"SpecExecutionEnding":       2,
+	"ScenarioExecutionStarting": 3,
+	"ScenarioExecutionEnding":   4,
+	"ExecuteStep":               5,
+	"ExecuteStepResponse":       6,
+	"ExecutionEnding":           7,
+	"StepValidateRequest":       8,
+	"StepValidateResponse":      9,
+	"ExecutionStatusResponse":   10,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -217,6 +225,22 @@ func (m *SpecExecutionEndingRequest) GetSpecFile() string {
 	}
 	return ""
 }
+
+type ScenarioExecutionStartingRequest struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *ScenarioExecutionStartingRequest) Reset()         { *m = ScenarioExecutionStartingRequest{} }
+func (m *ScenarioExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
+func (*ScenarioExecutionStartingRequest) ProtoMessage()    {}
+
+type ScenarioExecutionEndingRequest struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *ScenarioExecutionEndingRequest) Reset()         { *m = ScenarioExecutionEndingRequest{} }
+func (m *ScenarioExecutionEndingRequest) String() string { return proto.CompactTextString(m) }
+func (*ScenarioExecutionEndingRequest) ProtoMessage()    {}
 
 type ExecuteStepRequest struct {
 	StepText         *string     `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
@@ -410,16 +434,18 @@ type Message struct {
 	// this is used to synchronize messages & responses
 	MessageId *int64 `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
 	// One of the following will have a value
-	ExecutionStartingRequest     *ExecutionStartingRequest     `protobuf:"bytes,3,opt,name=executionStartingRequest" json:"executionStartingRequest,omitempty"`
-	SpecExecutionStartingRequest *SpecExecutionStartingRequest `protobuf:"bytes,4,opt,name=specExecutionStartingRequest" json:"specExecutionStartingRequest,omitempty"`
-	SpecExecutionEndingRequest   *SpecExecutionEndingRequest   `protobuf:"bytes,5,opt,name=specExecutionEndingRequest" json:"specExecutionEndingRequest,omitempty"`
-	ExecuteStepRequest           *ExecuteStepRequest           `protobuf:"bytes,6,opt,name=executeStepRequest" json:"executeStepRequest,omitempty"`
-	ExecuteStepResponse          *ExecuteStepResponse          `protobuf:"bytes,7,opt,name=executeStepResponse" json:"executeStepResponse,omitempty"`
-	ExecutionEndingRequest       *ExecutionEndingRequest       `protobuf:"bytes,8,opt,name=executionEndingRequest" json:"executionEndingRequest,omitempty"`
-	StepValidateRequest          *StepValidateRequest          `protobuf:"bytes,9,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
-	StepValidateResponse         *StepValidateResponse         `protobuf:"bytes,10,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
-	ExecutionStatusResponse      *ExecutionStatusResponse      `protobuf:"bytes,11,opt,name=executionStatusResponse" json:"executionStatusResponse,omitempty"`
-	XXX_unrecognized             []byte                        `json:"-"`
+	ExecutionStartingRequest         *ExecutionStartingRequest         `protobuf:"bytes,3,opt,name=executionStartingRequest" json:"executionStartingRequest,omitempty"`
+	SpecExecutionStartingRequest     *SpecExecutionStartingRequest     `protobuf:"bytes,4,opt,name=specExecutionStartingRequest" json:"specExecutionStartingRequest,omitempty"`
+	SpecExecutionEndingRequest       *SpecExecutionEndingRequest       `protobuf:"bytes,5,opt,name=specExecutionEndingRequest" json:"specExecutionEndingRequest,omitempty"`
+	ScenarioExecutionStartingRequest *ScenarioExecutionStartingRequest `protobuf:"bytes,6,opt,name=scenarioExecutionStartingRequest" json:"scenarioExecutionStartingRequest,omitempty"`
+	ScenarioExecutionEndingRequest   *ScenarioExecutionEndingRequest   `protobuf:"bytes,7,opt,name=scenarioExecutionEndingRequest" json:"scenarioExecutionEndingRequest,omitempty"`
+	ExecuteStepRequest               *ExecuteStepRequest               `protobuf:"bytes,8,opt,name=executeStepRequest" json:"executeStepRequest,omitempty"`
+	ExecuteStepResponse              *ExecuteStepResponse              `protobuf:"bytes,9,opt,name=executeStepResponse" json:"executeStepResponse,omitempty"`
+	ExecutionEndingRequest           *ExecutionEndingRequest           `protobuf:"bytes,10,opt,name=executionEndingRequest" json:"executionEndingRequest,omitempty"`
+	StepValidateRequest              *StepValidateRequest              `protobuf:"bytes,11,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
+	StepValidateResponse             *StepValidateResponse             `protobuf:"bytes,12,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
+	ExecutionStatusResponse          *ExecutionStatusResponse          `protobuf:"bytes,13,opt,name=executionStatusResponse" json:"executionStatusResponse,omitempty"`
+	XXX_unrecognized                 []byte                            `json:"-"`
 }
 
 func (m *Message) Reset()         { *m = Message{} }
@@ -457,6 +483,20 @@ func (m *Message) GetSpecExecutionStartingRequest() *SpecExecutionStartingReques
 func (m *Message) GetSpecExecutionEndingRequest() *SpecExecutionEndingRequest {
 	if m != nil {
 		return m.SpecExecutionEndingRequest
+	}
+	return nil
+}
+
+func (m *Message) GetScenarioExecutionStartingRequest() *ScenarioExecutionStartingRequest {
+	if m != nil {
+		return m.ScenarioExecutionStartingRequest
+	}
+	return nil
+}
+
+func (m *Message) GetScenarioExecutionEndingRequest() *ScenarioExecutionEndingRequest {
+	if m != nil {
+		return m.ScenarioExecutionEndingRequest
 	}
 	return nil
 }

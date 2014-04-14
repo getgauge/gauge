@@ -46,11 +46,25 @@ func (executor *specExecutor) executeScenarios() error {
 }
 
 func (executor *specExecutor) executeContext() error {
+	message := &Message{MessageType: Message_ScenarioExecutionStarting.Enum(),
+		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return err
+	}
+
 	return executor.executeSteps(executor.specification.contexts)
 }
 
 func (executor *specExecutor) executeScenario(scenario *scenario) error {
-	return executor.executeSteps(scenario.steps)
+	//TODO: do error checking
+	err := executor.executeSteps(scenario.steps)
+	message := &Message{MessageType: Message_ScenarioExecutionEnding.Enum(),
+		ScenarioExecutionEndingRequest: &ScenarioExecutionEndingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (executor *specExecutor) executeSteps(steps []*step) error {

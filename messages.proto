@@ -27,6 +27,12 @@ message SpecExecutionEndingRequest {
 	required string specFile = 2;
 }
 
+message ScenarioExecutionStartingRequest {
+}
+
+message ScenarioExecutionEndingRequest {	
+}
+
 message ExecuteStepRequest {
 	required string stepText = 1;
 	optional bool scenarioFailing = 2;
@@ -72,13 +78,15 @@ message Message {
 	enum MessageType {
 	    ExecutionStarting = 0;
 	    SpecExecutionStarting = 1;
-	    SpecExecutionEnding = 2;	    
-	    ExecuteStep = 3;
-	    ExecuteStepResponse = 4;
-	    ExecutionEnding = 5;
-	    StepValidateRequest = 6;
-	    StepValidateResponse = 7;
-	    ExecutionStatusResponse = 8;
+	    SpecExecutionEnding = 2;
+	    ScenarioExecutionStarting = 3;
+	    ScenarioExecutionEnding = 4;
+	    ExecuteStep = 5;
+	    ExecuteStepResponse = 6;
+	    ExecutionEnding = 7;
+	    StepValidateRequest = 8;
+	    StepValidateResponse = 9;
+	    ExecutionStatusResponse = 10;
 	}
   	
   	required MessageType messageType = 1;
@@ -89,13 +97,15 @@ message Message {
 
   	// One of the following will have a value
   	optional ExecutionStartingRequest executionStartingRequest = 3;
-  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;  	
-  	optional SpecExecutionEndingRequest specExecutionEndingRequest = 5;  	
-  	optional ExecuteStepRequest executeStepRequest = 6;
-  	optional ExecuteStepResponse executeStepResponse = 7;
-  	optional ExecutionEndingRequest executionEndingRequest = 8;
-  	optional StepValidateRequest stepValidateRequest = 9;
-  	optional StepValidateResponse stepValidateResponse = 10;
-  	optional ExecutionStatusResponse executionStatusResponse = 11;
+  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;
+  	optional SpecExecutionEndingRequest specExecutionEndingRequest = 5;
+  	optional ScenarioExecutionStartingRequest scenarioExecutionStartingRequest = 6;
+  	optional ScenarioExecutionEndingRequest scenarioExecutionEndingRequest = 7;
+  	optional ExecuteStepRequest executeStepRequest = 8;
+  	optional ExecuteStepResponse executeStepResponse = 9;
+  	optional ExecutionEndingRequest executionEndingRequest = 10;
+  	optional StepValidateRequest stepValidateRequest = 11;
+  	optional StepValidateResponse stepValidateResponse = 12;
+  	optional ExecutionStatusResponse executionStatusResponse = 13;
 }
 
