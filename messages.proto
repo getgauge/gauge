@@ -1,21 +1,63 @@
 package main;
 
+message ExecutionStatus {
+	required bool passed = 1;
+	optional bool recoverableError = 2;
+	optional string errorMessage = 3;
+	optional string stackTrace = 4;
+	optional bytes screenShot = 5;
+}
+
+// Sends to any request which needs a execution status as response
+// usually step execution, hooks etc will return this
+message ExecutionStatusResponse {
+	required ExecutionStatus executionStatus = 1;
+}
+
 message ExecutionStartingRequest {
-	required string scenarioFile = 1;
+	required string specFile = 1;
+}
+
+message SpecExecutionStartingRequest {
+	required string specName = 1;
+	required string specFile = 2;
+}
+
+message SpecExecutionEndingRequest {
+	required string specName = 1;
+	required string specFile = 2;
+}
+
+message ScenarioExecutionStartingRequest {
+}
+
+message ScenarioExecutionEndingRequest {	
+}
+
+message StepExecutionStartingRequest {
+}
+
+message StepExecutionEndingRequest {
 }
 
 message ExecuteStepRequest {
 	required string stepText = 1;
 	optional bool scenarioFailing = 2;
-	repeated string args = 3;
+	repeated Argument args = 3;
 }
 
-message ExecuteStepResponse {
-	required bool passed = 2;
-	optional bool recoverableError = 3;
-	optional string errorMessage = 4;
-	optional string stackTrace = 5;
-	optional bytes screenShot = 6;
+message ProtoTable {
+    repeated TableRow rows = 1;
+}
+
+message TableRow {
+    repeated string cells = 1;
+}
+
+message Argument {
+    required string type = 1;
+    optional string value = 2;
+    optional ProtoTable table  = 3;
 }
 
 message StepValidateRequest {
@@ -34,11 +76,17 @@ message ExecutionEndingRequest {
 message Message {
 	enum MessageType {
 	    ExecutionStarting = 0;
-	    ExecuteStep = 1;
-	    ExecuteStepResponse = 2;
-	    ExecutionEnding = 3;
-	    StepValidateRequest = 4;
-	    StepValidateResponse = 5;
+	    SpecExecutionStarting = 1;
+	    SpecExecutionEnding = 2;
+	    ScenarioExecutionStarting = 3;
+	    ScenarioExecutionEnding = 4;
+	    StepExecutionStarting = 5;
+	    StepExecutionEnding = 6;
+	    ExecuteStep = 7;	    
+	    ExecutionEnding = 8;
+	    StepValidateRequest = 9;
+	    StepValidateResponse = 10;
+	    ExecutionStatusResponse = 11;
 	}
   	
   	required MessageType messageType = 1;
@@ -49,10 +97,16 @@ message Message {
 
   	// One of the following will have a value
   	optional ExecutionStartingRequest executionStartingRequest = 3;
-  	optional ExecuteStepRequest executeStepRequest = 4;
-  	optional ExecuteStepResponse executeStepResponse = 5;
-  	optional ExecutionEndingRequest executionEndingRequest = 6;
-  	optional StepValidateRequest stepValidateRequest = 7;
-  	optional StepValidateResponse stepValidateResponse = 8;
+  	optional SpecExecutionStartingRequest specExecutionStartingRequest = 4;
+  	optional SpecExecutionEndingRequest specExecutionEndingRequest = 5;
+  	optional ScenarioExecutionStartingRequest scenarioExecutionStartingRequest = 6;
+  	optional ScenarioExecutionEndingRequest scenarioExecutionEndingRequest = 7;
+  	optional StepExecutionStartingRequest stepExecutionStartingRequest = 8;
+  	optional StepExecutionEndingRequest stepExecutionEndingRequest = 9;
+  	optional ExecuteStepRequest executeStepRequest = 10;  	
+  	optional ExecutionEndingRequest executionEndingRequest = 11;
+  	optional StepValidateRequest stepValidateRequest = 12;
+  	optional StepValidateResponse stepValidateResponse = 13;
+  	optional ExecutionStatusResponse executionStatusResponse = 14;
 }
 

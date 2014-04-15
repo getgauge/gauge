@@ -25,6 +25,12 @@ const (
 )
 
 var availableSteps []*step
+var acceptedExtensions = make(map[string]bool)
+
+func init() {
+	acceptedExtensions[".spec"] = true
+	acceptedExtensions[".md"] = true
+}
 
 type pluginDetails struct {
 	Id      string
@@ -95,21 +101,17 @@ func parseScenarioFiles(fileChan <-chan string) {
 		}
 
 		parser := new(specParser)
-		tokens, err := parser.parse(common.ReadFileContents(scenarioFilePath))
-		if se, ok := err.(*syntaxError); ok {
-			fmt.Printf("%s:%d: %s\n", scenarioFilePath, se.lineNo, se.message)
-		} else {
-			specification, result := Specification(tokens)
-			if result.ok {
-				availableSteps = append(availableSteps, specification.contexts...)
-				for _, scenario := range specification.scenarios {
-					availableSteps = append(availableSteps, scenario.steps...)
-				}
-			} else {
-				fmt.Println(result.error.message)
-			}
+		specification, result := parser.parse(common.ReadFileContents(scenarioFilePath))
 
+		if result.ok {
+			availableSteps = append(availableSteps, specification.contexts...)
+			for _, scenario := range specification.scenarios {
+				availableSteps = append(availableSteps, scenario.steps...)
+			}
+		} else {
+			fmt.Println(result.error.message)
 		}
+
 	}
 }
 
@@ -255,16 +257,11 @@ func printUsage() {
 	os.Exit(2)
 }
 
-func handleWarnings(warnings []*specwarning) {
-	if len(warnings) > 0 {
-		displayWarnings(warnings)
-	}
-}
-
-func displayWarnings(warnings []*specwarning) {
-	fmt.Println("%d warnings found")
-	for _, warning := range warnings {
-		fmt.Println(warning.value)
+func handleWarnings(result *parseResult) {
+	if result.warnings != nil {
+		for _, warning := range result.warnings {
+			fmt.Println(fmt.Sprintf("[Warning] %s : %s", result.specFile, warning))
+		}
 	}
 }
 
@@ -310,21 +307,14 @@ func main() {
 			os.Exit(1)
 		}
 
-		specFile := flag.Arg(0)
-		tokens, err := new(specParser).parse(common.ReadFileContents(specFile))
-		if se, ok := err.(*syntaxError); ok {
-			fmt.Printf("%s:%d: %s\n", specFile, se.lineNo, se.message)
-			os.Exit(1)
-		}
-		parsedSpec, result := Specification(tokens)
-		if !result.ok {
-			fmt.Println(result.error.message)
+		specSource := flag.Arg(0)
+		specs, err := findSpecs(specSource)
+		if err != nil {
+			fmt.Println(err)
 			os.Exit(1)
 		}
 
-		handleWarnings(result.warnings)
 		manifest := getProjectManifest()
-		parsedSpec.fileName = specFile
 		_, err = startRunner(manifest)
 		if err != nil {
 			fmt.Printf("Failed to start a runner. %s\n", err.Error())
@@ -337,11 +327,54 @@ func main() {
 			os.Exit(1)
 		}
 
-		execution := newExecution(manifest, []*specification{parsedSpec}, conn)
+		execution := newExecution(manifest, specs, conn)
 		err = execution.start()
 		if err != nil {
 			fmt.Printf("Execution failed. %s\n", err.Error())
 			os.Exit(1)
 		}
 	}
+}
+
+func findSpecs(specSource string) ([]*specification, error) {
+	specFiles := make([]string, 0)
+	if common.DirExists(specSource) {
+		specFiles = append(specFiles, findSpecsFilesIn(specSource)...)
+	} else if common.FileExists(specSource) && isValidSpecExtension(specSource) {
+		specFile, _ := filepath.Abs(specSource)
+		specFiles = append(specFiles, specFile)
+	} else {
+		return nil, errors.New(fmt.Sprintf("Spec file or directory does not exist: %s", specSource))
+	}
+
+	specs := make([]*specification, 0)
+	for _, specFile := range specFiles {
+		spec, parseResult := new(specParser).parse(common.ReadFileContents(specFile))
+		if !parseResult.ok {
+			return nil, errors.New(fmt.Sprintf("%s : %s", specFile, parseResult.error.Error()))
+		}
+		parseResult.specFile = specFile
+		spec.fileName = specFile
+
+		handleWarnings(parseResult)
+		specs = append(specs, spec)
+	}
+	return specs, nil
+}
+
+func findSpecsFilesIn(dirRoot string) []string {
+	specFiles := make([]string, 0)
+
+	absRoot, _ := filepath.Abs(dirRoot)
+	filepath.Walk(absRoot, func(path string, f os.FileInfo, err error) error {
+		if err == nil && !f.IsDir() && isValidSpecExtension(f.Name()) {
+			specFiles = append(specFiles, path)
+		}
+		return err
+	})
+	return specFiles
+}
+
+func isValidSpecExtension(path string) bool {
+	return acceptedExtensions[filepath.Ext(path)]
 }

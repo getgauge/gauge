@@ -8,6 +8,9 @@ PROGRAM_NAME=twist2
 build:
 	export GOPATH=$(GOPATH):`pwd` && cd src && go build && mv src ../twist2
 
+test:
+	export GOPATH=$(GOPATH):`pwd` && cd src && go test
+
 install:
 	install -m 755 -d $(prefix)/bin
 	install -m 755 twist2 $(prefix)/bin

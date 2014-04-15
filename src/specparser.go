@@ -76,7 +76,15 @@ func (parser *specParser) initialize() {
 	parser.processors[tableRow] = processTable
 }
 
-func (parser *specParser) parse(specText string) ([]*token, error) {
+func (parser *specParser) parse(specText string) (*specification, *parseResult) {
+	tokens, err := parser.generateTokens(specText)
+	if err != nil {
+		return nil, &parseResult{error: &specerror{message: err.Error()}, ok: false}
+	}
+	return parser.createSpecification(tokens)
+}
+
+func (parser *specParser) generateTokens(specText string) ([]*token, error) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial

@@ -18,13 +18,14 @@ func (executor *specExecutor) execute() error {
 	if err := executor.startSpecExecution(); err != nil {
 		return err
 	}
+	defer executor.stopSpecExecution()
 
 	dataTableRowCount := executor.specification.dataTable.getRowCount()
 	if dataTableRowCount == 0 {
-		return executor.executeScenarios();
+		return executor.executeScenarios()
 	} else {
 		for executor.dataTableIndex = 0; executor.dataTableIndex < dataTableRowCount; executor.dataTableIndex++ {
-			executor.executeScenarios();
+			executor.executeScenarios()
 		}
 	}
 
@@ -45,11 +46,25 @@ func (executor *specExecutor) executeScenarios() error {
 }
 
 func (executor *specExecutor) executeContext() error {
+	message := &Message{MessageType: Message_ScenarioExecutionStarting.Enum(),
+		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return err
+	}
+
 	return executor.executeSteps(executor.specification.contexts)
 }
 
 func (executor *specExecutor) executeScenario(scenario *scenario) error {
-	return executor.executeSteps(scenario.steps)
+	//TODO: do error checking
+	err := executor.executeSteps(scenario.steps)
+	message := &Message{MessageType: Message_ScenarioExecutionEnding.Enum(),
+		ScenarioExecutionEndingRequest: &ScenarioExecutionEndingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return err
+	}
+
+	return err
 }
 
 func (executor *specExecutor) executeSteps(steps []*step) error {
@@ -60,7 +75,6 @@ func (executor *specExecutor) executeSteps(steps []*step) error {
 		}
 
 		shouldContinue, err := executor.executeStep(step)
-
 		if !shouldContinue {
 			return err
 		}
@@ -70,8 +84,21 @@ func (executor *specExecutor) executeSteps(steps []*step) error {
 }
 
 func (e *specExecutor) startSpecExecution() error {
-	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
-		ExecutionStartingRequest: &ExecutionStartingRequest{SpecFile: proto.String(e.specification.fileName)}}
+	message := &Message{MessageType: Message_SpecExecutionStarting.Enum(),
+		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{SpecName: proto.String(e.specification.heading.value),
+			SpecFile: proto.String(e.specification.fileName)}}
+
+	if _, err := getResponse(e.connection, message); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (e *specExecutor) stopSpecExecution() error {
+	message := &Message{MessageType: Message_SpecExecutionEnding.Enum(),
+		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{SpecName: proto.String(e.specification.heading.value),
+			SpecFile: proto.String(e.specification.fileName)}}
 
 	if _, err := getResponse(e.connection, message); err != nil {
 		return err
@@ -81,9 +108,14 @@ func (e *specExecutor) startSpecExecution() error {
 }
 
 func (executor *specExecutor) executeStep(step *step) (bool, error) {
+	message := &Message{MessageType: Message_StepExecutionStarting.Enum(),
+		StepExecutionStartingRequest: &StepExecutionStartingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return false, err
+	}
 
 	stepRequest := executor.createStepRequest(step)
-	message := &Message{MessageType: Message_ExecuteStep.Enum(),
+	message = &Message{MessageType: Message_ExecuteStep.Enum(),
 		ExecuteStepRequest: stepRequest}
 
 	response, err := getResponse(executor.connection, message)
@@ -91,15 +123,21 @@ func (executor *specExecutor) executeStep(step *step) (bool, error) {
 		return false, err
 	}
 
-	if response.GetMessageType() == Message_ExecuteStepResponse {
-		stepResponse := response.GetExecuteStepResponse()
+	if response.GetMessageType() == Message_ExecutionStatusResponse {
+		stepResponse := response.GetExecutionStatusResponse().GetExecutionStatus()
 		if stepResponse.GetPassed() != true {
 			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetErrorMessage())
 			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", stepResponse.GetStackTrace())
 			return false, nil
 		} else {
-			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.value)
+			fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.lineText)
 		}
+	}
+
+	message = &Message{MessageType: Message_StepExecutionEnding.Enum(),
+		StepExecutionEndingRequest: &StepExecutionEndingRequest{}}
+	if _, err := getResponse(executor.connection, message); err != nil {
+		return false, err
 	}
 
 	return true, nil

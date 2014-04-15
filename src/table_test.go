@@ -52,3 +52,26 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	c.Assert(column3[1], Equals, "jack")
 
 }
+
+func (s *MySuite) TestCoulmnNameExists(c *C) {
+	var table table
+
+	table.addHeaders([]string{"one", "two", "three"})
+	table.addRowValues([]string{"foo", "bar", "baz"})
+	table.addRowValues([]string{"john", "jim", "jack"})
+
+	c.Assert(table.headerExists("one"), Equals, true)
+	c.Assert(table.headerExists("two"), Equals, true)
+	c.Assert(table.headerExists("four"), Equals, false)
+
+}
+
+func (s *MySuite) TestGetInvalidColumn(c *C) {
+	var table table
+
+	table.addHeaders([]string{"one", "two", "three"})
+	table.addRowValues([]string{"foo", "bar", "baz"})
+	table.addRowValues([]string{"john", "jim", "jack"})
+
+	c.Assert(func() { table.get("four") }, Panics, "Table column four not found")
+}
