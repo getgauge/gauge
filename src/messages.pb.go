@@ -168,20 +168,12 @@ func (m *ExecutionStatusResponse) GetExecutionStatus() *ExecutionStatus {
 }
 
 type ExecutionStartingRequest struct {
-	SpecFile         *string `protobuf:"bytes,1,req,name=specFile" json:"specFile,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ExecutionStartingRequest) Reset()         { *m = ExecutionStartingRequest{} }
 func (m *ExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecutionStartingRequest) ProtoMessage()    {}
-
-func (m *ExecutionStartingRequest) GetSpecFile() string {
-	if m != nil && m.SpecFile != nil {
-		return *m.SpecFile
-	}
-	return ""
-}
 
 type SpecExecutionStartingRequest struct {
 	SpecName         *string `protobuf:"bytes,1,req,name=specName" json:"specName,omitempty"`

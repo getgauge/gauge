@@ -14,16 +14,18 @@ func newExecution(manifest *manifest, specifications []*specification, conn net.
 	return &e
 }
 
-func (e *execution) stopExecution() error {
+func (e *execution) startExecution() *ExecutionStatus {
+	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
+		ExecutionStartingRequest: &ExecutionStartingRequest{}}
+
+	return executeAndGetStatus(e.connection, message)
+}
+
+func (e *execution) stopExecution() *ExecutionStatus {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{}}
 
-	_, err := getResponse(e.connection, message)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return executeAndGetStatus(e.connection, message)
 }
 
 type testExecutionStatus struct {
@@ -50,17 +52,20 @@ func (t *testExecutionStatus) isFailed() bool {
 	return false
 }
 
-//TODO: Before execution and after execution hooks
 func (exe *execution) start() *testExecutionStatus {
 	testExecutionStatus := &testExecutionStatus{specifications: exe.specifications}
-	for _, specificationToExecute := range exe.specifications {
-		executor := &specExecutor{specification: specificationToExecute, connection: exe.connection}
-		specExecutionStatus := executor.execute()
-		testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
-		testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
+	beforeSuiteHookExecStatus := exe.startExecution()
+	if beforeSuiteHookExecStatus.GetPassed() {
+		for _, specificationToExecute := range exe.specifications {
+			executor := &specExecutor{specification: specificationToExecute, connection: exe.connection}
+			specExecutionStatus := executor.execute()
+			testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
+			testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
+		}
 	}
-	//TODO: error check when hooks are in place
-	exe.stopExecution()
+
+	afterSuiteHookExecStatus := exe.stopExecution()
+	testExecutionStatus.hooksExecutionStatuses = append(testExecutionStatus.hooksExecutionStatuses, beforeSuiteHookExecStatus, afterSuiteHookExecStatus)
 
 	return testExecutionStatus
 }

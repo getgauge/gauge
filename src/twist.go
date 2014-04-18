@@ -312,7 +312,6 @@ func printExecutionStatus(status *testExecutionStatus) {
 		for _, hookStatus := range status.hooksExecutionStatuses {
 			if !hookStatus.GetPassed() {
 				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
-				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetStackTrace())
 			}
 		}
 
@@ -323,7 +322,6 @@ func printExecutionStatus(status *testExecutionStatus) {
 		for _, hookStatus := range specExecStatus.hooksExecutionStatuses {
 			if !hookStatus.GetPassed() {
 				fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, hookStatus.GetErrorMessage())
-				fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, hookStatus.GetStackTrace())
 			}
 		}
 
@@ -333,8 +331,6 @@ func printExecutionStatus(status *testExecutionStatus) {
 					if !hookStatus.GetPassed() {
 						fmt.Printf("\x1b[31;1m%s:%s:%s\n\x1b[0m", specExecStatus.specification.fileName,
 							scenarioExecStatus.scenario.heading.value, hookStatus.GetErrorMessage())
-						fmt.Printf("\x1b[31;1m%s:%s:%s\n\x1b[0m", specExecStatus.specification.fileName,
-							scenarioExecStatus.scenario.heading.value, hookStatus.GetStackTrace())
 					}
 				}
 
@@ -342,7 +338,6 @@ func printExecutionStatus(status *testExecutionStatus) {
 					for _, executionStatus := range stepExecStatus.executionStatus {
 						if !executionStatus.GetPassed() {
 							fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, executionStatus.GetErrorMessage())
-							fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, executionStatus.GetStackTrace())
 						}
 					}
 				}
