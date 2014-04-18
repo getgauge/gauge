@@ -26,10 +26,41 @@ func (e *execution) stopExecution() error {
 	return nil
 }
 
-func (exe *execution) start() error {
+type testExecutionStatus struct {
+	specifications         []*specification
+	specExecutionStatuses  []*specExecutionStatus
+	hooksExecutionStatuses []*ExecutionStatus
+}
+
+func (t *testExecutionStatus) isFailed() bool {
+	if t.hooksExecutionStatuses != nil {
+		for _, s := range t.hooksExecutionStatuses {
+			if !s.GetPassed() {
+				return true
+			}
+		}
+	}
+
+	for _, specStatus := range t.specExecutionStatuses {
+		if specStatus.isFailed() {
+			return true
+		}
+	}
+
+	return false
+}
+
+//TODO: Before execution and after execution hooks
+func (exe *execution) start() *testExecutionStatus {
+	testExecutionStatus := &testExecutionStatus{specifications: exe.specifications}
 	for _, specificationToExecute := range exe.specifications {
 		executor := &specExecutor{specification: specificationToExecute, connection: exe.connection}
-		executor.execute()
+		specExecutionStatus := executor.execute()
+		testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
+		testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
 	}
-	return exe.stopExecution()
+	//TODO: error check when hooks are in place
+	exe.stopExecution()
+
+	return testExecutionStatus
 }
