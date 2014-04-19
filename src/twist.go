@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"github.com/dmotylev/goproperties"
 	"github.com/twist2/common"
 	"io"
 	"io/ioutil"
@@ -184,11 +185,11 @@ func createProjectTemplate(language string) error {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
 	}
-	defaultJson, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvJSONFileName))
+	defaultJson, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvFileName))
 	if err != nil {
 		return err
 	}
-	defaultJsonDest := path.Join(defaultEnv, common.DefaultEnvJSONFileName)
+	defaultJsonDest := path.Join(defaultEnv, common.DefaultEnvFileName)
 	showMessage("create", defaultJsonDest)
 	err = common.CopyFile(defaultJson, defaultJsonDest)
 	if err != nil {
@@ -198,7 +199,7 @@ func createProjectTemplate(language string) error {
 	return executeInitHookForRunner(language)
 }
 
-// Loads all the json files available in the specified env directory
+// Loads all the properties files available in the specified env directory
 func loadEnvironment(env string) error {
 	projectRoot := common.GetProjectRoot()
 	dirToRead := path.Join(projectRoot, common.EnvDirectoryName, env)
@@ -206,21 +207,19 @@ func loadEnvironment(env string) error {
 		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
 	}
 
-	isJson := func(fileName string) bool {
-		return filepath.Ext(fileName) == ".json"
+	isProperties := func(fileName string) bool {
+		return filepath.Ext(fileName) == ".properties"
 	}
 
 	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
-		if isJson(path) {
-			var e environmentVariables
-			contents := common.ReadFileContents(path)
-			err := json.Unmarshal([]byte(contents), &e)
-			if err != nil {
-				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, err.Error()))
+		if isProperties(path) {
+			p, e := properties.Load(path)
+			if e != nil {
+				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, e.Error()))
 			}
 
-			for k, v := range e.Variables {
-				err := common.SetEnvVariable(k, string(v))
+			for k, v := range p {
+				err := common.SetEnvVariable(k, v)
 				if err != nil {
 					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
 				}
@@ -269,10 +268,20 @@ func main() {
 			printUsage()
 		}
 
-		err := loadEnvironment(*currentEnv)
+		// Loading default environment and loading user specified env
+		// this way user specified env variable can override default if required
+		err := loadEnvironment(envDefaultDirName)
 		if err != nil {
-			fmt.Printf("Failed to load the environment. %s\n", err.Error())
+			fmt.Printf("Failed to load the default environment. %s\n", err.Error())
 			os.Exit(1)
+		}
+
+		if *currentEnv != envDefaultDirName {
+			err := loadEnvironment(*currentEnv)
+			if err != nil {
+				fmt.Printf("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
+				os.Exit(1)
+			}
 		}
 
 		specSource := flag.Arg(0)
