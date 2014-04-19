@@ -24,7 +24,6 @@ func handleConnection(conn net.Conn) {
 		n, err := conn.Read(data)
 		if err != nil {
 			if err == io.EOF {
-				log.Println("Client exited")
 				return
 			}
 			log.Println(err.Error())

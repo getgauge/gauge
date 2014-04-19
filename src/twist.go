@@ -297,54 +297,85 @@ func main() {
 
 		execution := newExecution(manifest, specs, conn)
 		status := execution.start()
-		printExecutionStatus(status)
-		if status.isFailed() {
-			os.Exit(1)
-		}
+		exitCode := printExecutionStatus(status)
+		os.Exit(exitCode)
 	}
 }
 
-func printExecutionStatus(status *testExecutionStatus) {
+func printExecutionStatus(status *testExecutionStatus) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
-	if status.hooksExecutionStatuses != nil {
-		// execution hook failed. So none of the specification would have executed
-		for _, hookStatus := range status.hooksExecutionStatuses {
-			if !hookStatus.GetPassed() {
-				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
-			}
-		}
+	noOfSpecificationsExecuted := len(status.specExecutionStatuses)
+	noOfScenariosExecuted := 0
+	noOfSpecificationsFailed := 0
+	noOfScenariosFailed := 0
+	exitCode := 0
+	if status.isFailed() {
+		fmt.Println("\nThe following failures occured:\n")
+		exitCode = 1
+	}
 
-		return
+	for _, hookStatus := range status.hooksExecutionStatuses {
+		if !hookStatus.GetPassed() {
+			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
+			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetStackTrace())
+		}
 	}
 
 	for _, specExecStatus := range status.specExecutionStatuses {
+		specFailing := false
 		for _, hookStatus := range specExecStatus.hooksExecutionStatuses {
 			if !hookStatus.GetPassed() {
-				fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, hookStatus.GetErrorMessage())
+				specFailing = true
+				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", specExecStatus.specification.fileName)
+				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
+				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetStackTrace())
 			}
 		}
 
-		for _, scenariosExecStatuses := range specExecStatus.scenariosExecutionStatuses {
-			for _, scenarioExecStatus := range scenariosExecStatuses {
-				for _, hookStatus := range scenarioExecStatus.hooksExecutionStatuses {
-					if !hookStatus.GetPassed() {
-						fmt.Printf("\x1b[31;1m%s:%s:%s\n\x1b[0m", specExecStatus.specification.fileName,
-							scenarioExecStatus.scenario.heading.value, hookStatus.GetErrorMessage())
-					}
-				}
+		noOfScenariosExecuted += len(specExecStatus.scenariosExecutionStatuses[0])
+		scenariosFailedInThisSpec := printScenarioExecutionStatus(specExecStatus.scenariosExecutionStatuses[0], specExecStatus.specification)
+		if scenariosFailedInThisSpec > 0 {
+			specFailing = true
+			noOfScenariosFailed += scenariosFailedInThisSpec
+		}
 
-				for _, stepExecStatus := range scenarioExecStatus.stepExecutionStatuses {
-					for _, executionStatus := range stepExecStatus.executionStatus {
-						if !executionStatus.GetPassed() {
-							fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specExecStatus.specification.fileName, executionStatus.GetErrorMessage())
-						}
-					}
-				}
-			}
-
+		if specFailing {
+			noOfSpecificationsFailed += 1
 		}
 	}
+
+	fmt.Printf("\n\n%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
+	fmt.Printf("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
+	return exitCode
+}
+
+func printScenarioExecutionStatus(scenariosExecStatuses []*scenarioExecutionStatus, specification *specification) int {
+	noOfScenariosFailed := 0
+	scenarioFailing := false
+	for _, scenarioExecStatus := range scenariosExecStatuses {
+		for _, hookStatus := range scenarioExecStatus.hooksExecutionStatuses {
+			if !hookStatus.GetPassed() {
+				scenarioFailing = true
+				fmt.Printf("\x1b[31;1m%s:%s:%s\n\x1b[0m", specification.fileName,
+					scenarioExecStatus.scenario.heading.value, hookStatus.GetErrorMessage())
+			}
+		}
+
+		for _, stepExecStatus := range scenarioExecStatus.stepExecutionStatuses {
+			for _, executionStatus := range stepExecStatus.executionStatus {
+				if !executionStatus.GetPassed() {
+					scenarioFailing = true
+					fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specification.fileName, executionStatus.GetErrorMessage())
+				}
+			}
+		}
+		if scenarioFailing {
+			noOfScenariosFailed += 1
+		}
+	}
+
+	return noOfScenariosFailed
 }
 
 func findSpecs(specSource string) ([]*specification, error) {
