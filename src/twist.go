@@ -305,9 +305,25 @@ func main() {
 		}
 
 		execution := newExecution(manifest, specs, conn)
-		status := execution.start()
-		exitCode := printExecutionStatus(status)
-		os.Exit(exitCode)
+		validationErrors := execution.validate()
+		if len(validationErrors) > 0 {
+			fmt.Println("Validation failed. The following steps are not implemented")
+			for spec, stepValidationErrors := range validationErrors {
+				for _, stepValidationError := range stepValidationErrors {
+					s := stepValidationError.step
+					fmt.Printf("\x1b[31;1m  %s:%d: %s\n\x1b[0m", spec.fileName, s.lineNo, s.lineText)
+				}
+			}
+			err := execution.killProcess()
+			if err != nil {
+				fmt.Printf("Failed to kill the process. %s\n", err.Error())
+			}
+			os.Exit(1)
+		} else {
+			status := execution.start()
+			exitCode := printExecutionStatus(status)
+			os.Exit(exitCode)
+		}
 	}
 }
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"errors"
 	"fmt"
 	"net"
 )
@@ -19,6 +18,15 @@ type specExecutionStatus struct {
 	// if no datatable, 0th key points to the execution status
 	scenariosExecutionStatuses map[int][]*scenarioExecutionStatus
 	hooksExecutionStatuses     []*ExecutionStatus
+}
+
+type stepValidationError struct {
+	step    *step
+	message string
+}
+
+func (e *stepValidationError) Error() string {
+	return e.message
 }
 
 func (status *specExecutionStatus) isFailed() bool {
@@ -102,6 +110,48 @@ func (status *scenarioExecutionStatus) isFailed() bool {
 	}
 
 	return false
+}
+
+func (executor *specExecutor) validateSpecification() []*stepValidationError {
+	var validationErrors []*stepValidationError
+	contextSteps := executor.specification.contexts
+	for _, step := range contextSteps {
+		err := executor.validateStep(step)
+		if err != nil {
+			validationErrors = append(validationErrors, err)
+		}
+	}
+
+	for _, scenario := range executor.specification.scenarios {
+		for _, step := range scenario.steps {
+			err := executor.validateStep(step)
+			if err != nil {
+				validationErrors = append(validationErrors, err)
+			}
+		}
+	}
+
+	return validationErrors
+}
+
+func (executor *specExecutor) validateStep(step *step) *stepValidationError {
+	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
+		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value)}}
+	response, err := getResponse(executor.connection, message)
+	if err != nil {
+		return &stepValidationError{step: step, message: err.Error()}
+	}
+
+	if response.GetMessageType() == Message_StepValidateResponse {
+		validateResponse := response.GetStepValidateResponse()
+		if !validateResponse.GetIsValid() {
+			return &stepValidationError{step: step, message: ""}
+		}
+	} else {
+		panic("Expected a validate step response")
+	}
+
+	return nil
 }
 
 func (executor *specExecutor) executeBeforeScenarioHook() *ExecutionStatus {
@@ -222,26 +272,6 @@ func (executor *specExecutor) executeStep(step *step) *stepExecutionStatus {
 	}
 
 	return stepExecStatus
-}
-
-func (executor *specExecutor) validateStep(step *step) error {
-	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value)}}
-	response, err := getResponse(executor.connection, message)
-	if err != nil {
-		return err
-	}
-
-	if response.GetMessageType() == Message_StepValidateResponse {
-		validateResponse := response.GetStepValidateResponse()
-		if !validateResponse.GetIsValid() {
-			fmt.Println("Not implemented")
-			return errors.New("Step is not implemented")
-		}
-		return nil
-	} else {
-		panic("Expected a validate step response")
-	}
 }
 
 func (executor *specExecutor) createStepRequest(step *step) *ExecuteStepRequest {

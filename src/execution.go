@@ -28,6 +28,14 @@ func (e *execution) stopExecution() *ExecutionStatus {
 	return executeAndGetStatus(e.connection, message)
 }
 
+func (e *execution) killProcess() error {
+	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &KillProcessRequest{}}
+
+	_, err := getResponse(e.connection, message)
+	return err
+}
+
 type testExecutionStatus struct {
 	specifications         []*specification
 	specExecutionStatuses  []*specExecutionStatus
@@ -50,6 +58,24 @@ func (t *testExecutionStatus) isFailed() bool {
 	}
 
 	return false
+}
+
+type executionValidationErrors map[*specification][]*stepValidationError
+
+func (exe *execution) validate() executionValidationErrors {
+	validationStatus := make(executionValidationErrors)
+	for _, spec := range exe.specifications {
+		executor := &specExecutor{specification: spec, connection: exe.connection}
+		validationErrors := executor.validateSpecification()
+		if validationErrors != nil {
+			validationStatus[spec] = validationErrors
+		}
+	}
+	if len(validationStatus) > 0 {
+		return validationStatus
+	} else {
+		return nil
+	}
 }
 
 func (exe *execution) start() *testExecutionStatus {
