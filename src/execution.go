@@ -62,12 +62,12 @@ func (t *testExecutionStatus) isFailed() bool {
 
 type executionValidationErrors map[*specification][]*stepValidationError
 
-func (exe *execution) validate() executionValidationErrors {
+func (exe *execution) validate(conceptDictionary *conceptDictionary) executionValidationErrors {
 	validationStatus := make(executionValidationErrors)
 	for _, spec := range exe.specifications {
-		executor := &specExecutor{specification: spec, connection: exe.connection}
+		executor := &specExecutor{specification: spec, connection: exe.connection, conceptDictionary: conceptDictionary}
 		validationErrors := executor.validateSpecification()
-		if validationErrors != nil {
+		if len(validationErrors) != 0 {
 			validationStatus[spec] = validationErrors
 		}
 	}

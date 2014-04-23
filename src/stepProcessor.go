@@ -49,13 +49,10 @@ func simpleAcceptor(start rune, end rune, after func(int), inState int) acceptFn
 	return acceptor(start, end, onEach, after, inState)
 }
 
-func processStep(parser *specParser, token *token) (error, bool) {
-	if !isInState(parser.currentState, specScope) {
-		return &syntaxError{lineNo: token.lineNo, lineText: token.lineText, message: "Spec heading is not present"}, true
-	}
+func processStep(parser *specParser, token *token) (*parseError, bool) {
 
 	if len(token.value) == 0 {
-		return &syntaxError{lineNo: token.lineNo, lineText: token.lineText, message: "Step should not be blank"}, true
+		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "Step should not be blank"}, true
 	}
 	reservedChars := map[rune]struct{}{'{': {}, '}': {}}
 	var stepText, argText bytes.Buffer
@@ -107,7 +104,7 @@ func processStep(parser *specParser, token *token) (error, bool) {
 		} else if currentState, inParamBoundary = acceptStaticParam(element, currentState); inParamBoundary {
 			continue
 		} else if _, isReservedChar := reservedChars[element]; currentState == inDefault && isReservedChar {
-			return &syntaxError{lineNo: token.lineNo, lineText: token.lineText, message: fmt.Sprintf("'%c' is a reserved character and should be escaped", element)}, true
+			return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: fmt.Sprintf("'%c' is a reserved character and should be escaped", element)}, true
 		}
 
 		curBuffer(currentState).WriteRune(element)
@@ -115,13 +112,12 @@ func processStep(parser *specParser, token *token) (error, bool) {
 
 	// If it is a valid step, the state should be default when the control reaches here
 	if currentState == inQuotes {
-		return &syntaxError{lineNo: token.lineNo, lineText: token.lineText, message: "String not terminated"}, true
+		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "String not terminated"}, true
 	} else if isInState(currentState, inDynamicParam) {
-		return &syntaxError{lineNo: token.lineNo, lineText: token.lineText, message: "Dynamic parameter not terminated"}, true
+		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "Dynamic parameter not terminated"}, true
 	}
 
 	token.value = strings.TrimSpace(stepText.String())
 	token.args = args
-	retainStates(&parser.currentState, specScope, scenarioScope)
 	return nil, false
 }

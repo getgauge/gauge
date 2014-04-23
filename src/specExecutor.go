@@ -7,9 +7,10 @@ import (
 )
 
 type specExecutor struct {
-	specification  *specification
-	dataTableIndex int
-	connection     net.Conn
+	specification     *specification
+	dataTableIndex    int
+	connection        net.Conn
+	conceptDictionary *conceptDictionary
 }
 
 type specExecutionStatus struct {
@@ -21,8 +22,9 @@ type specExecutionStatus struct {
 }
 
 type stepValidationError struct {
-	step    *step
-	message string
+	step     *step
+	message  string
+	fileName string
 }
 
 func (e *stepValidationError) Error() string {
@@ -113,24 +115,43 @@ func (status *scenarioExecutionStatus) isFailed() bool {
 }
 
 func (executor *specExecutor) validateSpecification() []*stepValidationError {
-	var validationErrors []*stepValidationError
+	validationErrors := make([]*stepValidationError, 0)
+
 	contextSteps := executor.specification.contexts
-	for _, step := range contextSteps {
-		err := executor.validateStep(step)
-		if err != nil {
-			validationErrors = append(validationErrors, err)
-		}
-	}
+	contextStepsValidationErrors := executor.validateSteps(contextSteps)
+	validationErrors = append(validationErrors, contextStepsValidationErrors...)
 
 	for _, scenario := range executor.specification.scenarios {
-		for _, step := range scenario.steps {
+		stepValidationErrors := executor.validateSteps(scenario.steps)
+		validationErrors = append(validationErrors, stepValidationErrors...)
+	}
+	return validationErrors
+}
+
+func (executor *specExecutor) validateSteps(steps []*step) []*stepValidationError {
+	validationErrors := make([]*stepValidationError, 0)
+	for _, step := range steps {
+		if step.isConcept {
+			errors := executor.validateConcept(step)
+			validationErrors = append(validationErrors, errors...)
+		} else {
 			err := executor.validateStep(step)
 			if err != nil {
 				validationErrors = append(validationErrors, err)
 			}
 		}
 	}
+	return validationErrors
+}
 
+func (executor *specExecutor) validateConcept(concept *step) []*stepValidationError {
+	validationErrors := make([]*stepValidationError, 0)
+	for _, conceptStep := range concept.conceptSteps {
+		if err := executor.validateStep(conceptStep); err != nil {
+			err.fileName = executor.conceptDictionary.search(concept.value).fileName
+			validationErrors = append(validationErrors, err)
+		}
+	}
 	return validationErrors
 }
 
@@ -139,13 +160,13 @@ func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value)}}
 	response, err := getResponse(executor.connection, message)
 	if err != nil {
-		return &stepValidationError{step: step, message: err.Error()}
+		return &stepValidationError{step: step, message: err.Error(), fileName: executor.specification.fileName}
 	}
 
 	if response.GetMessageType() == Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			return &stepValidationError{step: step, message: ""}
+			return &stepValidationError{step: step, message: "", fileName: executor.specification.fileName}
 		}
 	} else {
 		panic("Expected a validate step response")
@@ -168,18 +189,19 @@ func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
 
 func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 	var scenarioExecutionStatuses []*scenarioExecutionStatus
+	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 	for _, scenario := range executor.specification.scenarios {
-		status := executor.executeScenario(scenario)
+		status := executor.executeScenario(scenario, argLookup)
 		scenarioExecutionStatuses = append(scenarioExecutionStatuses, status)
 	}
 	return scenarioExecutionStatuses
 }
 
-func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecutionStatus {
+func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *argLookup) *scenarioExecutionStatus {
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook()
 	if beforeHookExecutionStatus.GetPassed() {
-		contextStepsExecutionStatuses := executor.executeSteps(executor.specification.contexts)
+		contextStepsExecutionStatuses := executor.executeSteps(executor.specification.contexts, argLookup)
 		scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, contextStepsExecutionStatuses...)
 		contextFailed := false
 		for _, s := range contextStepsExecutionStatuses {
@@ -190,7 +212,7 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecu
 		}
 
 		if !contextFailed {
-			stepExecutionStatuses := executor.executeSteps(scenario.steps)
+			stepExecutionStatuses := executor.executeSteps(scenario.steps, argLookup)
 			scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, stepExecutionStatuses...)
 		}
 	}
@@ -201,10 +223,12 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecu
 }
 
 type stepExecutionStatus struct {
-	step            *step
-	resolvedArgs    []*Argument
-	executionStatus []*ExecutionStatus
-	passed          bool
+	step                  *step
+	resolvedArgs          []*Argument
+	executionStatus       []*ExecutionStatus
+	passed                bool
+	isConcept             bool
+	stepExecutionStatuses []*stepExecutionStatus
 }
 
 func (s *stepExecutionStatus) addExecutionStatus(executionStatus *ExecutionStatus) {
@@ -214,15 +238,15 @@ func (s *stepExecutionStatus) addExecutionStatus(executionStatus *ExecutionStatu
 	s.executionStatus = append(s.executionStatus, executionStatus)
 }
 
-func (executor *specExecutor) executeSteps(steps []*step) []*stepExecutionStatus {
+func (executor *specExecutor) executeSteps(steps []*step, argLookup *argLookup) []*stepExecutionStatus {
+	var status *stepExecutionStatus
 	var statuses []*stepExecutionStatus
 	for _, step := range steps {
-		if validationErr := executor.validateStep(step); validationErr != nil {
-			//TODO: this will be moved from here when bug #15 is fixed
-			return nil
+		if step.isConcept {
+			status = executor.executeConcept(step, argLookup)
+		} else {
+			status = executor.executeStep(step, argLookup)
 		}
-
-		status := executor.executeStep(step)
 		statuses = append(statuses, status)
 		// TODO: handle recoverable error when verification API is done
 		if !status.passed {
@@ -231,8 +255,21 @@ func (executor *specExecutor) executeSteps(steps []*step) []*stepExecutionStatus
 	}
 	return statuses
 }
+func (executor *specExecutor) executeConcept(concept *step, dataTableLookup *argLookup) *stepExecutionStatus {
+	conceptExecutionStatus := &stepExecutionStatus{passed: true, isConcept: true}
+	conceptLookup := concept.lookup.getCopy()
+	executor.populateConceptDynamicParams(conceptLookup, dataTableLookup)
+	conceptExecutionStatus.stepExecutionStatuses = executor.executeSteps(concept.conceptSteps, conceptLookup)
+	for _, status := range conceptExecutionStatus.stepExecutionStatuses {
+		if !status.passed {
+			conceptExecutionStatus.passed = false
+			break
+		}
+	}
+	return conceptExecutionStatus
 
-func (executor *specExecutor) executeStep(step *step) *stepExecutionStatus {
+}
+func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *stepExecutionStatus {
 	stepExecStatus := &stepExecutionStatus{passed: true}
 	printStatus := func(execStatus *ExecutionStatus) {
 		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execStatus.GetErrorMessage())
@@ -244,7 +281,7 @@ func (executor *specExecutor) executeStep(step *step) *stepExecutionStatus {
 	var status *ExecutionStatus
 	status = executeAndGetStatus(executor.connection, message)
 	if status.GetPassed() {
-		stepRequest := executor.createStepRequest(step)
+		stepRequest := executor.createStepRequest(step, argLookup)
 		message = &Message{MessageType: Message_ExecuteStep.Enum(),
 			ExecuteStepRequest: stepRequest}
 		status = executeAndGetStatus(executor.connection, message)
@@ -274,13 +311,13 @@ func (executor *specExecutor) executeStep(step *step) *stepExecutionStatus {
 	return stepExecStatus
 }
 
-func (executor *specExecutor) createStepRequest(step *step) *ExecuteStepRequest {
+func (executor *specExecutor) createStepRequest(step *step, argLookup *argLookup) *ExecuteStepRequest {
 	stepRequest := &ExecuteStepRequest{StepText: proto.String(step.value)}
-	stepRequest.Args = executor.createStepArgs(step.args, step.inlineTable)
+	stepRequest.Args = executor.createStepArgs(step.args, step.inlineTable, argLookup)
 	return stepRequest
 }
 
-func (executor *specExecutor) createStepArgs(args []*stepArg, inlineTable table) []*Argument {
+func (executor *specExecutor) createStepArgs(args []*stepArg, inlineTable table, argLookup *argLookup) []*Argument {
 	arguments := make([]*Argument, 0)
 	for _, arg := range args {
 		argument := new(Argument)
@@ -288,18 +325,24 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, inlineTable table)
 			argument.Type = proto.String("string")
 			argument.Value = proto.String(arg.value)
 		} else if arg.argType == dynamic {
-			argument.Type = proto.String("string")
-			value := executor.getCurrentDataTableValueFor(arg.value)
-			argument.Value = proto.String(value)
+			resolvedArg := argLookup.getArg(arg.value)
+			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
+			if resolvedArg.table.isInitialized() {
+				argument.Type = proto.String("table")
+				argument.Table = executor.createStepTable(&resolvedArg.table)
+			} else {
+				argument.Type = proto.String("string")
+				argument.Value = proto.String(resolvedArg.value)
+			}
 		} else {
 			argument.Type = proto.String("table")
-			argument.Table = executor.createStepTable(arg.table)
+			argument.Table = executor.createStepTable(&arg.table)
 		}
 		arguments = append(arguments, argument)
 	}
 
 	if inlineTable.isInitialized() {
-		inlineTableArg := executor.createStepTable(inlineTable)
+		inlineTableArg := executor.createStepTable(&inlineTable)
 		arguments = append(arguments, &Argument{Type: proto.String("table"), Table: inlineTableArg})
 	}
 	return arguments
@@ -309,7 +352,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex]
 }
 
-func (executor *specExecutor) createStepTable(table table) *ProtoTable {
+func (executor *specExecutor) createStepTable(table *table) *ProtoTable {
 	protoTable := new(ProtoTable)
 	tableRows := make([]*TableRow, 0)
 	tableRows = append(tableRows, &TableRow{Cells: table.headers})
@@ -338,5 +381,15 @@ func executeAndGetStatus(connection net.Conn, message *Message) *ExecutionStatus
 		return status
 	} else {
 		panic("Expected ExecutionStatusResponse")
+	}
+}
+
+func (executor *specExecutor) populateConceptDynamicParams(conceptLookup *argLookup, dataTableLookup *argLookup) {
+	for key, _ := range conceptLookup.paramIndexMap {
+		conceptLookupArg := conceptLookup.getArg(key)
+		if conceptLookupArg.argType == dynamic {
+			resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
+			conceptLookup.addArgValue(key, resolvedArg)
+		}
 	}
 }

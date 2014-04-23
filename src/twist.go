@@ -21,7 +21,6 @@ import (
 const (
 	specsDirName      = "specs"
 	skelFileName      = "hello_world.spec"
-	envDirName        = "env"
 	envDefaultDirName = "default"
 )
 
@@ -44,7 +43,11 @@ type environmentVariables struct {
 }
 
 func getProjectManifest() *manifest {
-	projectRoot := common.GetProjectRoot()
+	projectRoot, err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Printf("Failed to read manifest: %s \n", err.Error())
+		os.Exit(1)
+	}
 	contents := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
 	dec := json.NewDecoder(strings.NewReader(contents))
 
@@ -88,7 +91,8 @@ func parseScenarioFiles(fileChan <-chan string) {
 		}
 
 		parser := new(specParser)
-		specification, result := parser.parse(common.ReadFileContents(scenarioFilePath))
+		//todo: parse concepts
+		specification, result := parser.parse(common.ReadFileContents(scenarioFilePath), new(conceptDictionary))
 
 		if result.ok {
 			availableSteps = append(availableSteps, specification.contexts...)
@@ -170,14 +174,14 @@ func createProjectTemplate(language string) error {
 	}
 
 	// Creating the env directory
-	showMessage("create", envDirName)
-	if !common.DirExists(envDirName) {
-		err = os.Mkdir(envDirName, common.NewDirectoryPermissions)
+	showMessage("create", common.EnvDirectoryName)
+	if !common.DirExists(common.EnvDirectoryName) {
+		err = os.Mkdir(common.EnvDirectoryName, common.NewDirectoryPermissions)
 		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to create %s. %s", envDirName, err.Error()))
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", common.EnvDirectoryName, err.Error()))
 		}
 	}
-	defaultEnv := path.Join(envDirName, envDefaultDirName)
+	defaultEnv := path.Join(common.EnvDirectoryName, envDefaultDirName)
 	showMessage("create", defaultEnv)
 	if !common.DirExists(defaultEnv) {
 		err = os.Mkdir(defaultEnv, common.NewDirectoryPermissions)
@@ -201,8 +205,13 @@ func createProjectTemplate(language string) error {
 
 // Loads all the properties files available in the specified env directory
 func loadEnvironment(env string) error {
-	projectRoot := common.GetProjectRoot()
-	dirToRead := path.Join(projectRoot, common.EnvDirectoryName, env)
+	envDir, err := common.GetDirInProject(common.EnvDirectoryName)
+	if err != nil {
+		fmt.Printf("Failed to Load environment: %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	dirToRead := path.Join(envDir, env)
 	if !common.DirExists(dirToRead) {
 		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
 	}
@@ -211,7 +220,7 @@ func loadEnvironment(env string) error {
 		return filepath.Ext(fileName) == ".properties"
 	}
 
-	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
 		if isProperties(path) {
 			p, e := properties.Load(path)
 			if e != nil {
@@ -242,10 +251,16 @@ func printUsage() {
 	os.Exit(2)
 }
 
-func handleWarnings(result *parseResult) {
-	if result.warnings != nil {
-		for _, warning := range result.warnings {
-			fmt.Println(fmt.Sprintf("[Warning] %s : %s", result.specFile, warning))
+func handleParseResult(results ...*parseResult) {
+	for _, result := range results {
+		if !result.ok {
+			fmt.Println(fmt.Sprintf("[ParseError] %s : %s", result.fileName, result.error.Error()))
+			os.Exit(1)
+		}
+		if result.warnings != nil {
+			for _, warning := range result.warnings {
+				fmt.Println(fmt.Sprintf("[Warning] %s : %v", result.fileName, warning))
+			}
 		}
 	}
 }
@@ -285,33 +300,34 @@ func main() {
 		}
 
 		specSource := flag.Arg(0)
-		specs, err := findSpecs(specSource)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
-		}
+
+		concepts, conceptParseResult := createConceptsDictionary()
+		handleParseResult(conceptParseResult)
+
+		specs, specParseResults := findSpecs(specSource, concepts)
+		handleParseResult(specParseResults...)
 
 		manifest := getProjectManifest()
-		_, err = startRunner(manifest)
-		if err != nil {
-			fmt.Printf("Failed to start a runner. %s\n", err.Error())
+		_, runnerError := startRunner(manifest)
+		if runnerError != nil {
+			fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 			os.Exit(1)
 		}
 
-		conn, err := acceptConnection()
-		if err != nil {
-			fmt.Printf("Failed to get a runner. %s\n", err.Error())
+		conn, connectionError := acceptConnection()
+		if connectionError != nil {
+			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())
 			os.Exit(1)
 		}
 
 		execution := newExecution(manifest, specs, conn)
-		validationErrors := execution.validate()
+		validationErrors := execution.validate(concepts)
 		if len(validationErrors) > 0 {
 			fmt.Println("Validation failed. The following steps are not implemented")
-			for spec, stepValidationErrors := range validationErrors {
+			for _, stepValidationErrors := range validationErrors {
 				for _, stepValidationError := range stepValidationErrors {
 					s := stepValidationError.step
-					fmt.Printf("\x1b[31;1m  %s:%d: %s\n\x1b[0m", spec.fileName, s.lineNo, s.lineText)
+					fmt.Printf("\x1b[31;1m  %s:%d: %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, s.lineText)
 				}
 			}
 			err := execution.killProcess()
@@ -403,43 +419,71 @@ func printScenarioExecutionStatus(scenariosExecStatuses []*scenarioExecutionStat
 	return noOfScenariosFailed
 }
 
-func findSpecs(specSource string) ([]*specification, error) {
+func findConceptFiles() []string {
+	conceptsDir, err := common.GetDirInProject(common.ConceptsDirectoryName)
+	if err != nil {
+		fmt.Printf("Failed to find concepts directory. %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	return common.FindFilesInDir(conceptsDir, func(path string) bool {
+		return filepath.Ext(path) == common.ConceptFileExtension
+	})
+
+}
+
+func createConceptsDictionary() (*conceptDictionary, *parseResult) {
+	conceptFiles := findConceptFiles()
+	conceptsDictionary := new(conceptDictionary)
+	for _, conceptFile := range conceptFiles {
+		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
+			return nil, &parseResult{error: err, fileName: conceptFile}
+		}
+	}
+	return conceptsDictionary, &parseResult{ok: true}
+}
+
+func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *parseError {
+	fileText := common.ReadFileContents(conceptFile)
+	concepts, err := new(conceptParser).parse(fileText)
+	if err != nil {
+		return err
+	}
+	err = conceptDictionary.add(concepts, conceptFile)
+	return err
+}
+
+func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specFiles := make([]string, 0)
+	parseResults := make([]*parseResult, 0)
 	if common.DirExists(specSource) {
 		specFiles = append(specFiles, findSpecsFilesIn(specSource)...)
 	} else if common.FileExists(specSource) && isValidSpecExtension(specSource) {
 		specFile, _ := filepath.Abs(specSource)
 		specFiles = append(specFiles, specFile)
 	} else {
-		return nil, errors.New(fmt.Sprintf("Spec file or directory does not exist: %s", specSource))
+		fmt.Printf("Spec file or directory does not exist: %s", specSource)
+		os.Exit(1)
 	}
 
 	specs := make([]*specification, 0)
 	for _, specFile := range specFiles {
-		spec, parseResult := new(specParser).parse(common.ReadFileContents(specFile))
+		specFileContent := common.ReadFileContents(specFile)
+		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
+		parseResult.fileName = specFile
 		if !parseResult.ok {
-			return nil, errors.New(fmt.Sprintf("%s : %s", specFile, parseResult.error.Error()))
+			return nil, append(parseResults, parseResult)
+		} else {
+			parseResults = append(parseResults, parseResult)
 		}
-		parseResult.specFile = specFile
-		spec.fileName = specFile
-
-		handleWarnings(parseResult)
 		specs = append(specs, spec)
 	}
-	return specs, nil
+	return specs, parseResults
 }
 
 func findSpecsFilesIn(dirRoot string) []string {
-	specFiles := make([]string, 0)
-
 	absRoot, _ := filepath.Abs(dirRoot)
-	filepath.Walk(absRoot, func(path string, f os.FileInfo, err error) error {
-		if err == nil && !f.IsDir() && isValidSpecExtension(f.Name()) {
-			specFiles = append(specFiles, path)
-		}
-		return err
-	})
-	return specFiles
+	return common.FindFilesInDir(absRoot, isValidSpecExtension)
 }
 
 func isValidSpecExtension(path string) bool {
