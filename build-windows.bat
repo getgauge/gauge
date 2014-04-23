@@ -10,12 +10,12 @@ if "%1" == "install" (
 	copy skel\default.properties "%APPDATA%\gauge\share\twist2\skel\env"
 	echo Installation successful
 ) else if "%1" == "test" (
-	SET GOPATH=%GOPATH%;%cd%
+	SET GOPATH="%cd%"
 	cd src
 	go test
 	cd ..
 ) else (
-	SET GOPATH=%GOPATH%;%cd%
+	SET GOPATH="%cd%"
 	cd src
 	go build
 	copy src.exe ..\twist2.exe
