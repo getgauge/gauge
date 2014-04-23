@@ -1,0 +1,3 @@
+[submodule "src/github.com/twist2/common"]
+	path = src/github.com/twist2/common
+	url = https://github.com/twist2/common.git

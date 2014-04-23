@@ -21,4 +21,5 @@ _testmain.go
 
 *.exe
 twist2
+!src/github.com/twist2
 tags
