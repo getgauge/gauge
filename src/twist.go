@@ -420,10 +420,9 @@ func printScenarioExecutionStatus(scenariosExecStatuses []*scenarioExecutionStat
 }
 
 func findConceptFiles() []string {
-	conceptsDir, err := common.GetDirInProject(common.ConceptsDirectoryName)
+	conceptsDir, err := common.GetDirInProject(common.SpecsDirectoryName)
 	if err != nil {
-		fmt.Printf("Failed to find concepts directory. %s\n", err.Error())
-		os.Exit(1)
+		return []string{}
 	}
 
 	return common.FindFilesInDir(conceptsDir, func(path string) bool {
@@ -471,6 +470,7 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 		specFileContent := common.ReadFileContents(specFile)
 		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
 		parseResult.fileName = specFile
+		spec.fileName = specFile
 		if !parseResult.ok {
 			return nil, append(parseResults, parseResult)
 		} else {
