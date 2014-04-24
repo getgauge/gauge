@@ -104,7 +104,7 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 			newToken.kind = scenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
-			newToken = &token{kind: stepKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &token{kind: stepKind, lineNo: parser.lineNo, lineText: strings.TrimSpace(trimmedLine[1:]), value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found {
 			newToken = &token{kind: tagKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[startIndex:])}
 		} else if parser.isTableRow(trimmedLine) {
