@@ -26,11 +26,12 @@ func (parser *conceptParser) parse(text string) ([]*step, *parseError) {
 }
 
 func (parser *conceptParser) resetState() {
-	parser.currentState = 0
+	parser.currentState = initial
 	parser.currentConcept = nil
 }
 
 func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseError) {
+	parser.currentState = initial
 	concepts := make([]*step, 0)
 	var error *parseError
 	for _, token := range tokens {
@@ -65,10 +66,14 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			}
 		}
 	}
-	if !isInState(parser.currentState, stepScope) {
+	if !isInState(parser.currentState, stepScope) && parser.currentState != initial{
 		return nil, &parseError{lineNo: parser.currentConcept.lineNo, message: "Concept should have atleast one step", lineText: parser.currentConcept.lineText}
 	}
-	return append(concepts, parser.currentConcept), nil
+
+	if (parser.currentConcept != nil) {
+		concepts = append(concepts, parser.currentConcept)
+	}
+	return concepts, nil
 }
 
 func (parser *conceptParser) isConceptHeading(token *token) bool {
