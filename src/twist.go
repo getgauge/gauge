@@ -58,7 +58,11 @@ type environmentVariables struct {
 }
 
 func getProjectManifest() *manifest {
-	projectRoot := common.GetProjectRoot()
+	projectRoot,err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Printf("Failed to locate the project root : %s\n",err.Error())
+		os.Exit(1)
+	}
 	contents := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
 	dec := json.NewDecoder(strings.NewReader(contents))
 
@@ -213,7 +217,11 @@ func createProjectTemplate(language string) error {
 
 // Loads all the properties files available in the specified env directory
 func loadEnvironment(env string) error {
-	projectRoot := common.GetProjectRoot()
+	projectRoot,err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Printf("Failed to locate the project root : %s\n",err.Error())
+		os.Exit(1)
+	}
 	dirToRead := path.Join(projectRoot, common.EnvDirectoryName, env)
 	if !common.DirExists(dirToRead) {
 		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
@@ -223,7 +231,7 @@ func loadEnvironment(env string) error {
 		return filepath.Ext(fileName) == ".properties"
 	}
 
-	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
 		if isProperties(path) {
 			p, e := properties.Load(path)
 			if e != nil {
