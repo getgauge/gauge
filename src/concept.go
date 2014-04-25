@@ -116,13 +116,13 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 func (parser *conceptParser) processTableHeader(token *token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
-	currentStep.inlineTable.addHeaders(token.args)
+	addInlineTableHeader(currentStep, token)
 }
 
 func (parser *conceptParser) processTableDataRow(token *token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
-	currentStep.inlineTable.addRowValues(token.args)
+	addInlineTableRow(currentStep, token)
 }
 
 func (parser *conceptParser) hasOnlyDynamicParams(concept *step) bool {

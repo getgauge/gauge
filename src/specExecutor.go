@@ -313,11 +313,11 @@ func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *ste
 
 func (executor *specExecutor) createStepRequest(step *step, argLookup *argLookup) *ExecuteStepRequest {
 	stepRequest := &ExecuteStepRequest{StepText: proto.String(step.value)}
-	stepRequest.Args = executor.createStepArgs(step.args, step.inlineTable, argLookup)
+	stepRequest.Args = executor.createStepArgs(step.args, argLookup)
 	return stepRequest
 }
 
-func (executor *specExecutor) createStepArgs(args []*stepArg, inlineTable table, argLookup *argLookup) []*Argument {
+func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLookup) []*Argument {
 	arguments := make([]*Argument, 0)
 	for _, arg := range args {
 		argument := new(Argument)
@@ -341,10 +341,6 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, inlineTable table,
 		arguments = append(arguments, argument)
 	}
 
-	if inlineTable.isInitialized() {
-		inlineTableArg := executor.createStepTable(&inlineTable)
-		arguments = append(arguments, &Argument{Type: proto.String("table"), Table: inlineTableArg})
-	}
 	return arguments
 }
 

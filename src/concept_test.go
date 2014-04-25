@@ -160,7 +160,7 @@ func (s *MySuite) TestParsingMultipleConcept(c *C) {
 
 func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	parser := new(conceptParser)
-	concepts, err := parser.parse("# my concept \n * first step with inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
+	concepts, err := parser.parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
 	c.Assert(err, IsNil)
 	c.Assert(len(concepts), Equals, 1)
@@ -169,8 +169,12 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 
 	c.Assert(concept.isConcept, Equals, true)
 	c.Assert(len(concept.conceptSteps), Equals, 1)
-	c.Assert(concept.conceptSteps[0].value, Equals, "first step with inline table")
-	inlineTable := concept.conceptSteps[0].inlineTable
+	c.Assert(concept.conceptSteps[0].value, Equals, "first step with {} and inline table {}")
+
+	tableArg := concept.conceptSteps[0].args[1]
+	c.Assert(tableArg.argType, Equals, specialTable)
+
+	inlineTable := tableArg.table
 	c.Assert(inlineTable.isInitialized(), Equals, true)
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)

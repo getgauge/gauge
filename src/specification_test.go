@@ -175,8 +175,13 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
-	inlineTable := spec.scenarios[0].steps[0].inlineTable
+	step := spec.scenarios[0].steps[0]
+
+	c.Assert(step.args[0].argType, Equals, specialTable)
+	inlineTable := step.args[0].table
 	c.Assert(inlineTable, NotNil)
+
+	c.Assert(step.value, Equals, "Step with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
 	c.Assert(inlineTable.get("id")[0], Equals, "1")
@@ -198,9 +203,13 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
-	inlineTable := spec.contexts[0].inlineTable
+	context := spec.contexts[0]
+
+	c.Assert(context.args[0].argType, Equals, specialTable)
+	inlineTable := context.args[0].table
 
 	c.Assert(inlineTable, NotNil)
+	c.Assert(context.value, Equals, "Context with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
 	c.Assert(inlineTable.get("id")[0], Equals, "1")

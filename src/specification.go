@@ -42,7 +42,6 @@ type step struct {
 	value        string
 	lineText     string
 	args         []*stepArg
-	inlineTable  table
 	isConcept    bool
 	lookup       argLookup
 	conceptSteps []*step
@@ -188,12 +187,10 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 		if isInState(*state, stepScope) {
 			latestScenario := spec.scenarios[len(spec.scenarios)-1]
 			latestStep := latestScenario.steps[len(latestScenario.steps)-1]
-			latestStep.inlineTable.lineNo = token.lineNo
-			latestStep.inlineTable.addHeaders(token.args)
+			addInlineTableHeader(latestStep, token)
 		} else if isInState(*state, contextScope) {
-			inlineTable := &spec.contexts[len(spec.contexts)-1].inlineTable
-			inlineTable.lineNo = token.lineNo
-			inlineTable.addHeaders(token.args)
+			latestContext := spec.contexts[len(spec.contexts)-1]
+			addInlineTableHeader(latestContext, token)
 		} else if !isInState(*state, scenarioScope) {
 			if !spec.dataTable.isInitialized() {
 				spec.dataTable.lineNo = token.lineNo
@@ -217,9 +214,10 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 		if isInState(*state, stepScope) {
 			latestScenario := spec.scenarios[len(spec.scenarios)-1]
 			latestStep := latestScenario.steps[len(latestScenario.steps)-1]
-			latestStep.inlineTable.addRowValues(token.args)
+			addInlineTableRow(latestStep, token)
 		} else if isInState(*state, contextScope) {
-			spec.contexts[len(spec.contexts)-1].inlineTable.addRowValues(token.args)
+			latestContext := spec.contexts[len(spec.contexts)-1]
+			addInlineTableRow(latestContext, token)
 		} else {
 			spec.dataTable.addRowValues(token.args)
 		}
@@ -344,6 +342,19 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 		stepArgument = &stepArg{argType: dynamic, value: argValue}
 		return stepArgument, nil
 	}
+}
+
+//Step value is modified when inline table is found to account for the new parameter by appending {}
+func addInlineTableHeader(step *step, token *token) {
+	tableArg := &stepArg{argType: specialTable}
+	tableArg.table.addHeaders(token.args)
+	step.args = append(step.args, tableArg)
+	step.value = fmt.Sprintf("%s {}", step.value)
+}
+
+func addInlineTableRow(step *step, token *token) {
+	tableArg := step.args[len(step.args)-1]
+	tableArg.table.addRowValues(token.args)
 }
 
 //concept header will have dynamic param and should not be resolved through lookup, so passing nil lookup
