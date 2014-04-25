@@ -17,8 +17,8 @@ type argType int
 const (
 	static        argType = iota
 	dynamic       argType = iota
+	tableArg      argType = iota
 	specialString argType = iota
-	specialTable  argType = iota
 )
 
 type stepArg struct {
@@ -346,7 +346,7 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 
 //Step value is modified when inline table is found to account for the new parameter by appending {}
 func addInlineTableHeader(step *step, token *token) {
-	tableArg := &stepArg{argType: specialTable}
+	tableArg := &stepArg{argType: tableArg}
 	tableArg.table.addHeaders(token.args)
 	step.args = append(step.args, tableArg)
 	step.value = fmt.Sprintf("%s {}", step.value)

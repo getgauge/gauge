@@ -171,10 +171,10 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	c.Assert(len(concept.conceptSteps), Equals, 1)
 	c.Assert(concept.conceptSteps[0].value, Equals, "first step with {} and inline table {}")
 
-	tableArg := concept.conceptSteps[0].args[1]
-	c.Assert(tableArg.argType, Equals, specialTable)
+	tableArgument := concept.conceptSteps[0].args[1]
+	c.Assert(tableArgument.argType, Equals, tableArg)
 
-	inlineTable := tableArg.table
+	inlineTable := tableArgument.table
 	c.Assert(inlineTable.isInitialized(), Equals, true)
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)

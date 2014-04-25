@@ -177,7 +177,7 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 	c.Assert(result.ok, Equals, true)
 	step := spec.scenarios[0].steps[0]
 
-	c.Assert(step.args[0].argType, Equals, specialTable)
+	c.Assert(step.args[0].argType, Equals, tableArg)
 	inlineTable := step.args[0].table
 	c.Assert(inlineTable, NotNil)
 
@@ -205,7 +205,7 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 	c.Assert(result.ok, Equals, true)
 	context := spec.contexts[0]
 
-	c.Assert(context.args[0].argType, Equals, specialTable)
+	c.Assert(context.args[0].argType, Equals, tableArg)
 	inlineTable := context.args[0].table
 
 	c.Assert(inlineTable, NotNil)
