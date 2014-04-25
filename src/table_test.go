@@ -33,7 +33,7 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
-	table.addRowValues([]string{"john", "jim", "jack"})
+	table.addRowValues([]string{"john", "jim"})
 
 	c.Assert(table.getRowCount(), Equals, 2)
 	column1 := table.get("one")
@@ -49,7 +49,7 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	column3 := table.get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0], Equals, "baz")
-	c.Assert(column3[1], Equals, "jack")
+	c.Assert(column3[1], Equals, "")
 
 }
 

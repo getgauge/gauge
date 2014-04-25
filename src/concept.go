@@ -56,21 +56,17 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			if !isInState(parser.currentState, stepScope) {
 				return nil, &parseError{lineNo: token.lineNo, message: "Table doesn't belong to any step", lineText: token.lineText}
 			}
-			if err := parser.processTableHeader(token); err != nil {
-				return nil, err
-			}
+			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
 		} else if parser.isTableDataRow(token) {
-			if err := parser.processTableDataRow(token); err != nil {
-				return nil, err
-			}
+			parser.processTableDataRow(token)
 		}
 	}
-	if !isInState(parser.currentState, stepScope) && parser.currentState != initial{
+	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
 		return nil, &parseError{lineNo: parser.currentConcept.lineNo, message: "Concept should have atleast one step", lineText: parser.currentConcept.lineText}
 	}
 
-	if (parser.currentConcept != nil) {
+	if parser.currentConcept != nil {
 		concepts = append(concepts, parser.currentConcept)
 	}
 	return concepts, nil
@@ -117,18 +113,16 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 	return nil
 }
 
-func (parser *conceptParser) processTableHeader(token *token) *parseError {
+func (parser *conceptParser) processTableHeader(token *token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	currentStep.inlineTable.addHeaders(token.args)
-	return nil
 }
 
-func (parser *conceptParser) processTableDataRow(token *token) *parseError {
+func (parser *conceptParser) processTableDataRow(token *token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	currentStep.inlineTable.addRowValues(token.args)
-	return nil
 }
 
 func (parser *conceptParser) hasOnlyDynamicParams(concept *step) bool {
