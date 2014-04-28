@@ -10,6 +10,7 @@ It is generated from these files:
 
 It has these top-level messages:
 	ExecutionStatus
+	KillProcessRequest
 	ExecutionStatusResponse
 	ExecutionStartingRequest
 	SpecExecutionStartingRequest
@@ -53,6 +54,7 @@ const (
 	Message_StepValidateRequest       Message_MessageType = 9
 	Message_StepValidateResponse      Message_MessageType = 10
 	Message_ExecutionStatusResponse   Message_MessageType = 11
+	Message_KillProcessRequest        Message_MessageType = 12
 )
 
 var Message_MessageType_name = map[int32]string{
@@ -68,6 +70,7 @@ var Message_MessageType_name = map[int32]string{
 	9:  "StepValidateRequest",
 	10: "StepValidateResponse",
 	11: "ExecutionStatusResponse",
+	12: "KillProcessRequest",
 }
 var Message_MessageType_value = map[string]int32{
 	"ExecutionStarting":         0,
@@ -82,6 +85,7 @@ var Message_MessageType_value = map[string]int32{
 	"StepValidateRequest":       9,
 	"StepValidateResponse":      10,
 	"ExecutionStatusResponse":   11,
+	"KillProcessRequest":        12,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -148,6 +152,14 @@ func (m *ExecutionStatus) GetScreenShot() []byte {
 	}
 	return nil
 }
+
+type KillProcessRequest struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *KillProcessRequest) Reset()         { *m = KillProcessRequest{} }
+func (m *KillProcessRequest) String() string { return proto.CompactTextString(m) }
+func (*KillProcessRequest) ProtoMessage()    {}
 
 // Sends to any request which needs a execution status as response
 // usually step execution, hooks etc will return this
@@ -411,6 +423,7 @@ type Message struct {
 	StepValidateRequest              *StepValidateRequest              `protobuf:"bytes,12,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
 	StepValidateResponse             *StepValidateResponse             `protobuf:"bytes,13,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
 	ExecutionStatusResponse          *ExecutionStatusResponse          `protobuf:"bytes,14,opt,name=executionStatusResponse" json:"executionStatusResponse,omitempty"`
+	KillProcessRequest               *KillProcessRequest               `protobuf:"bytes,15,opt,name=killProcessRequest" json:"killProcessRequest,omitempty"`
 	XXX_unrecognized                 []byte                            `json:"-"`
 }
 
@@ -512,6 +525,13 @@ func (m *Message) GetStepValidateResponse() *StepValidateResponse {
 func (m *Message) GetExecutionStatusResponse() *ExecutionStatusResponse {
 	if m != nil {
 		return m.ExecutionStatusResponse
+	}
+	return nil
+}
+
+func (m *Message) GetKillProcessRequest() *KillProcessRequest {
+	if m != nil {
+		return m.KillProcessRequest
 	}
 	return nil
 }

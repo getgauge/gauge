@@ -18,7 +18,7 @@ func (s *MySuite) TestParsingSpecHeading(c *C) {
 	specText := SpecBuilder().specHeading("Spec Heading").String()
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
 	c.Assert(tokens[0].kind, Equals, specKind)
 	c.Assert(tokens[0].value, Equals, "Spec Heading")
@@ -28,9 +28,14 @@ func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().specHeading("Spec Heading").specHeading("Another Spec Heading").String()
 
-	_, err := parser.generateTokens(specText)
+	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Multiple spec headings found in same file on line: 2")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 2)
+	c.Assert(tokens[0].kind, Equals, specKind)
+	c.Assert(tokens[0].value, Equals, "Spec Heading")
+	c.Assert(tokens[1].kind, Equals, specKind)
+	c.Assert(tokens[1].value, Equals, "Another Spec Heading")
 }
 
 func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
@@ -40,7 +45,7 @@ func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Spec heading should have at least one character on line: 1")
+	c.Assert(err.Error(), Equals, "line no: 1, Spec heading should have at least one character")
 }
 
 func (s *MySuite) TestParsingScenarioHeading(c *C) {
@@ -49,7 +54,7 @@ func (s *MySuite) TestParsingScenarioHeading(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 	c.Assert(tokens[1].kind, Equals, scenarioKind)
 	c.Assert(tokens[1].value, Equals, "First scenario")
@@ -62,16 +67,18 @@ func (s *MySuite) TestParsingThrowErrorForEmptyScenarioHeading(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Scenario heading should have at least one character on line: 2")
+	c.Assert(err.Error(), Equals, "line no: 2, Scenario heading should have at least one character")
 }
 
 func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().scenarioHeading("Scenario Heading").String()
 
-	_, err := parser.generateTokens(specText)
+	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Scenario should be defined after the spec heading on line: 1")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+	c.Assert(tokens[0].kind, Equals, scenarioKind)
 }
 
 func (s *MySuite) TestParsingComments(c *C) {
@@ -80,7 +87,7 @@ func (s *MySuite) TestParsingComments(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	c.Assert(tokens[1].kind, Equals, commentKind)
@@ -96,7 +103,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineOneChar(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
@@ -110,7 +117,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineMultipleChar(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
@@ -124,7 +131,7 @@ func (s *MySuite) TestParsingCommentWithUnderlineAndInvalidCharacters(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
 	c.Assert(tokens[0].kind, Equals, commentKind)
@@ -140,7 +147,7 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderline(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
@@ -157,7 +164,7 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderlineMultipleChar(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
@@ -174,7 +181,7 @@ func (s *MySuite) TestParsingHeadingWithUnderlineAndHash(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
@@ -197,10 +204,10 @@ func (s *MySuite) TestParseSpecTags(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].kind, Equals, specTag)
+	c.Assert(tokens[1].kind, Equals, tagKind)
 	c.Assert(len(tokens[1].args), Equals, 2)
 	c.Assert(tokens[1].args[0], Equals, "tag1")
 	c.Assert(tokens[1].args[1], Equals, "tag2")
@@ -214,10 +221,10 @@ func (s *MySuite) TestParseSpecTagsWithSpace(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].kind, Equals, specTag)
+	c.Assert(tokens[1].kind, Equals, tagKind)
 	c.Assert(len(tokens[1].args), Equals, 2)
 	c.Assert(tokens[1].args[0], Equals, "tag1")
 	c.Assert(tokens[1].args[1], Equals, "tag2")
@@ -230,10 +237,10 @@ func (s *MySuite) TestParseEmptyTags(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading with hash ").tags("tag1", "", "tag2", "").scenarioHeading("Scenario Heading").String()
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].kind, Equals, specTag)
+	c.Assert(tokens[1].kind, Equals, tagKind)
 	c.Assert(len(tokens[1].args), Equals, 2)
 	c.Assert(tokens[1].args[0], Equals, "tag1")
 	c.Assert(tokens[1].args[1], Equals, "tag2")
@@ -247,10 +254,10 @@ func (s *MySuite) TestParseScenarioTags(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[2].kind, Equals, scenarioTag)
+	c.Assert(tokens[2].kind, Equals, tagKind)
 	c.Assert(len(tokens[2].args), Equals, 2)
 	c.Assert(tokens[2].args[0], Equals, "tag1")
 	c.Assert(tokens[2].args[1], Equals, "tag2")
@@ -264,10 +271,10 @@ func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
-	c.Assert(tokens[0].kind, Equals, specTag)
+	c.Assert(tokens[0].kind, Equals, tagKind)
 	c.Assert(len(tokens[0].args), Equals, 1)
 	c.Assert(tokens[0].args[0], Equals, "tag1")
 	c.Assert(tokens[0].lineText, Equals, "tags: tag1 ")
@@ -279,7 +286,7 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|007|").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
@@ -304,7 +311,7 @@ func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|||").text("|john|123|").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
@@ -324,7 +331,7 @@ func (s *MySuite) TestParsingDataTableRowEscapingPipe(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id | address| phone|").text("| escape \\| pipe |second|third|").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
@@ -348,7 +355,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithEmptyHeader(c *C) {
 
 	_, err := parser.generateTokens(specText)
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Table header should not be blank on line: 2")
+	c.Assert(err.Error(), Equals, "line no: 2, Table header should not be blank")
 }
 
 func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
@@ -357,7 +364,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
 
 	_, err := parser.generateTokens(specText)
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Table header cannot have repeated column values on line: 2")
+	c.Assert(err.Error(), Equals, "line no: 2, Table header cannot have repeated column values")
 }
 
 func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
@@ -365,7 +372,7 @@ func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("|---|--|-|").text("|---|--|-|").text("|---|--|-|").text("| escape \\| pipe |second|third|").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
@@ -401,20 +408,20 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 		step("another").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 13)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
 	c.Assert(tokens[1].kind, Equals, commentKind)
 
-	c.Assert(tokens[2].kind, Equals, context)
+	c.Assert(tokens[2].kind, Equals, stepKind)
 	c.Assert(tokens[2].value, Equals, "Context step with {static} and {special}")
 
 	c.Assert(tokens[3].kind, Equals, tableHeader)
 	c.Assert(tokens[4].kind, Equals, tableRow)
-	c.Assert(tokens[5].kind, Equals, specTag)
+	c.Assert(tokens[5].kind, Equals, tagKind)
 	c.Assert(tokens[6].kind, Equals, scenarioKind)
-	c.Assert(tokens[7].kind, Equals, scenarioTag)
+	c.Assert(tokens[7].kind, Equals, tagKind)
 
 	c.Assert(tokens[8].kind, Equals, stepKind)
 	c.Assert(tokens[8].value, Equals, "first with {static} and {dynamic}")

@@ -1,8 +1,36 @@
 package main
 
-import (
-	. "launchpad.net/gocheck"
-)
+import . "launchpad.net/gocheck"
+
+func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Example step", lineNo: 3},
+		&token{kind: specKind, value: "Another Heading", lineNo: 4},
+	}
+
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(result.ok, Equals, false)
+
+	c.Assert(result.error.message, Equals, "Parse error: Multiple spec headings found in same file")
+	c.Assert(result.error.lineNo, Equals, 4)
+}
+
+func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
+	tokens := []*token{
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 1},
+		&token{kind: stepKind, value: "Example step", lineNo: 2},
+	}
+
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(result.ok, Equals, false)
+
+	c.Assert(result.error.message, Equals, "Parse error: Scenario should be defined after the spec heading")
+	c.Assert(result.error.lineNo, Equals, 1)
+}
 
 func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 	tokens := []*token{
@@ -11,7 +39,7 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 		&token{kind: stepKind, value: "Example step", lineNo: 3},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.lineNo, Equals, 1)
@@ -34,7 +62,7 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 		&token{kind: commentKind, value: "Third comment", lineNo: 6},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.value, Equals, "Spec Heading")
@@ -60,17 +88,17 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
 		&token{kind: tableHeader, args: []string{"id"}, lineNo: 2},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
-		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 4, args: []string{"user", "id"}},
-		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 5, args: []string{"user"}},
+		&token{kind: tableRow, args: []string{"1"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
+		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 5, args: []string{"user", "id"}},
+		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 6},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
-
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	c.Assert(result.ok, Equals, true)
 	step := spec.scenarios[0].steps[0]
 	c.Assert(step.value, Equals, "enter {} with {}")
-	c.Assert(step.lineNo, Equals, 4)
+	c.Assert(step.lineNo, Equals, 5)
 	c.Assert(len(step.args), Equals, 2)
 	c.Assert(step.args[0].value, Equals, "user")
 	c.Assert(step.args[0].argType, Equals, static)
@@ -89,25 +117,27 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 		&token{kind: stepKind, value: "sample {static} and {dynamic}", lineNo: 3, args: []string{"name"}},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result, NotNil)
 	c.Assert(result.ok, Equals, false)
-	c.Assert(result.error.message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}' on line: 3")
+	c.Assert(result.error.message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
+	c.Assert(result.error.lineNo, Equals, 3)
 }
 
 func (s *MySuite) TestContextWithKeywords(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: context, value: "sample {static} and {dynamic}", lineNo: 3, args: []string{"name"}},
+		&token{kind: stepKind, value: "sample {static} and {dynamic}", lineNo: 3, args: []string{"name"}},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result, NotNil)
 	c.Assert(result.ok, Equals, false)
-	c.Assert(result.error.message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}' on line: 3")
+	c.Assert(result.error.message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
+	c.Assert(result.error.lineNo, Equals, 3)
 }
 
 func (s *MySuite) TestSpecWithDataTable(c *C) {
@@ -120,7 +150,7 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 		&token{kind: commentKind, value: "Comment before data table"},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.dataTable, NotNil)
@@ -142,11 +172,16 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 		&token{kind: tableRow, args: []string{"2", "bar"}},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
-	inlineTable := spec.scenarios[0].steps[0].inlineTable
+	step := spec.scenarios[0].steps[0]
+
+	c.Assert(step.args[0].argType, Equals, tableArg)
+	inlineTable := step.args[0].table
 	c.Assert(inlineTable, NotNil)
+
+	c.Assert(step.value, Equals, "Step with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
 	c.Assert(inlineTable.get("id")[0], Equals, "1")
@@ -158,25 +193,43 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 func (s *MySuite) TestContextWithInlineTable(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading"},
-		&token{kind: context, value: "Context with inline table"},
+		&token{kind: stepKind, value: "Context with inline table"},
 		&token{kind: tableHeader, args: []string{"id", "name"}},
 		&token{kind: tableRow, args: []string{"1", "foo"}},
 		&token{kind: tableRow, args: []string{"2", "bar"}},
 		&token{kind: scenarioKind, value: "Scenario Heading"},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
-	inlineTable := spec.contexts[0].inlineTable
+	context := spec.contexts[0]
+
+	c.Assert(context.args[0].argType, Equals, tableArg)
+	inlineTable := context.args[0].table
 
 	c.Assert(inlineTable, NotNil)
+	c.Assert(context.value, Equals, "Context with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
 	c.Assert(inlineTable.get("id")[0], Equals, "1")
 	c.Assert(inlineTable.get("id")[1], Equals, "2")
 	c.Assert(inlineTable.get("name")[0], Equals, "foo")
 	c.Assert(inlineTable.get("name")[1], Equals, "bar")
+}
+
+func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading"},
+		&token{kind: tableHeader, args: []string{"id", "name"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading"},
+	}
+
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(result.ok, Equals, false)
+	c.Assert(result.error.message, Equals, "Data table should have at least 1 data row")
+	c.Assert(result.error.lineNo, Equals, 3)
 }
 
 func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
@@ -192,11 +245,11 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 		&token{kind: tableRow, args: []string{"2"}},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(len(result.warnings), Equals, 1)
-	c.Assert(result.warnings[0], Equals, "multiple data table present, ignoring table at line no: 7")
+	c.Assert(result.warnings[0].String(), Equals, "line no: 7, Multiple data table present, ignoring table")
 
 }
 
@@ -214,23 +267,23 @@ func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 		&token{kind: tableRow, args: []string{"2"}},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(len(result.warnings), Equals, 2)
-	c.Assert(result.warnings[0], Equals, "table not associated with a step, ignoring table at line no: 3")
-	c.Assert(result.warnings[1], Equals, "table not associated with a step, ignoring table at line no: 8")
+	c.Assert(result.warnings[0].String(), Equals, "line no: 3, Table not associated with a step, ignoring table")
+	c.Assert(result.warnings[1].String(), Equals, "line no: 8, Table not associated with a step, ignoring table")
 
 }
 
 func (s *MySuite) TestAddSpecTags(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: specTag, args: []string{"tag1", "tag2"}, lineNo: 2},
+		&token{kind: tagKind, args: []string{"tag1", "tag2"}, lineNo: 2},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 
@@ -242,12 +295,12 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: specTag, args: []string{"tag1", "tag2"}, lineNo: 2},
+		&token{kind: tagKind, args: []string{"tag1", "tag2"}, lineNo: 2},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
-		&token{kind: scenarioTag, args: []string{"tag3", "tag4"}, lineNo: 2},
+		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 2},
 	}
 
-	spec, result := new(specParser).createSpecification(tokens)
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, true)
 
@@ -267,10 +320,11 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 		&token{kind: stepKind, value: "Step with a {dynamic}", args: []string{"foo"}, lineNo: 3, lineText: "*Step with a <foo>"},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, false)
-	c.Assert(result.error.message, Equals, "No data table found for dynamic paramter <foo> : *Step with a <foo> lineNo: 3")
+	c.Assert(result.error.message, Equals, "Dynamic parameter <foo> could not be resolved")
+	c.Assert(result.error.lineNo, Equals, 3)
 
 }
 
@@ -283,9 +337,205 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 		&token{kind: stepKind, value: "Step with a {dynamic}", args: []string{"foo"}, lineNo: 5, lineText: "*Step with a <foo>"},
 	}
 
-	_, result := new(specParser).createSpecification(tokens)
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
 	c.Assert(result.ok, Equals, false)
-	c.Assert(result.error.message, Equals, "No data table column found for dynamic paramter <foo> : *Step with a <foo> lineNo: 5")
+	c.Assert(result.error.message, Equals, "Dynamic parameter <foo> could not be resolved")
+	c.Assert(result.error.lineNo, Equals, 5)
+
+}
+
+func (s *MySuite) TestLookupaddArg(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgName("param2")
+
+	c.Assert(lookup.paramIndexMap["param1"], Equals, 0)
+	c.Assert(lookup.paramIndexMap["param2"], Equals, 1)
+	c.Assert(len(lookup.paramValue), Equals, 2)
+	c.Assert(lookup.paramValue[0].name, Equals, "param1")
+	c.Assert(lookup.paramValue[1].name, Equals, "param2")
+
+}
+
+func (s *MySuite) TestLookupContainsArg(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgName("param2")
+
+	c.Assert(lookup.containsArg("param1"), Equals, true)
+	c.Assert(lookup.containsArg("param2"), Equals, true)
+	c.Assert(lookup.containsArg("param3"), Equals, false)
+}
+
+func (s *MySuite) TestaddArgValue(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
+	lookup.addArgName("param2")
+	lookup.addArgValue("param2", &stepArg{value: "value2", argType: dynamic})
+
+	c.Assert(lookup.getArg("param1").value, Equals, "value1")
+	c.Assert(lookup.getArg("param2").value, Equals, "value2")
+}
+
+func (s *MySuite) TestPanicForInvalidArg(c *C) {
+	lookup := new(argLookup)
+
+	c.Assert(func() { lookup.addArgValue("param1", &stepArg{value: "value1", argType: static}) }, Panics, "Accessing an invalid parameter (param1)")
+	c.Assert(func() { lookup.getArg("param1") }, Panics, "Accessing an invalid parameter (param1)")
+}
+
+func (s *MySuite) TestGetLookupCopy(c *C) {
+	originalLookup := new(argLookup)
+	originalLookup.addArgName("param1")
+	originalLookup.addArgValue("param1", &stepArg{value: "oldValue", argType: dynamic})
+
+	copiedLookup := originalLookup.getCopy()
+	copiedLookup.addArgValue("param1", &stepArg{value: "new value", argType: static})
+
+	c.Assert(copiedLookup.getArg("param1").value, Equals, "new value")
+	c.Assert(originalLookup.getArg("param1").value, Equals, "oldValue")
+}
+
+func (s *MySuite) TestGetLookupFromTableRow(c *C) {
+	dataTable := new(table)
+	dataTable.addHeaders([]string{"id", "name"})
+	dataTable.addRowValues([]string{"1", "admin"})
+	dataTable.addRowValues([]string{"2", "root"})
+
+	emptyLookup := new(argLookup).fromDataTableRow(new(table), 0)
+	lookup1 := new(argLookup).fromDataTableRow(dataTable, 0)
+	lookup2 := new(argLookup).fromDataTableRow(dataTable, 1)
+
+	c.Assert(emptyLookup.paramIndexMap, IsNil)
+
+	c.Assert(lookup1.getArg("id").value, Equals, "1")
+	c.Assert(lookup1.getArg("id").argType, Equals, static)
+	c.Assert(lookup1.getArg("name").value, Equals, "admin")
+	c.Assert(lookup1.getArg("name").argType, Equals, static)
+
+	c.Assert(lookup2.getArg("id").value, Equals, "2")
+	c.Assert(lookup2.getArg("id").argType, Equals, static)
+	c.Assert(lookup2.getArg("name").value, Equals, "root")
+	c.Assert(lookup2.getArg("name").argType, Equals, static)
+}
+
+func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "concept step", lineNo: 3},
+	}
+
+	conceptDictionary := new(conceptDictionary)
+	firstStep := &step{value: "step 1"}
+	secondStep := &step{value: "step 2"}
+	conceptStep := &step{value: "concept step", isConcept: true, conceptSteps: []*step{firstStep, secondStep}}
+	conceptDictionary.add([]*step{conceptStep}, "file.cpt")
+	spec, result := new(specParser).createSpecification(tokens, conceptDictionary)
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.scenarios[0].steps), Equals, 1)
+	specConceptStep := spec.scenarios[0].steps[0]
+	c.Assert(specConceptStep.isConcept, Equals, true)
+	c.Assert(specConceptStep.conceptSteps[0], Equals, firstStep)
+	c.Assert(specConceptStep.conceptSteps[1], Equals, secondStep)
+}
+
+func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "create user {static}", args: []string{"foo"}, lineNo: 3},
+		&token{kind: stepKind, value: "create user {static}", args: []string{"bar"}, lineNo: 4},
+	}
+
+	concepts, _ := new(conceptParser).parse("#create user <username> \n * enter user <username> \n *select \"finish\"")
+	conceptsDictionary := new(conceptDictionary)
+	conceptsDictionary.add(concepts, "file.cpt")
+
+	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
+
+	firstConceptStep := spec.scenarios[0].steps[0]
+	c.Assert(firstConceptStep.isConcept, Equals, true)
+	c.Assert(firstConceptStep.conceptSteps[0].value, Equals, "enter user {}")
+	c.Assert(firstConceptStep.conceptSteps[0].args[0].value, Equals, "username")
+	c.Assert(firstConceptStep.conceptSteps[1].value, Equals, "select {}")
+	c.Assert(firstConceptStep.conceptSteps[1].args[0].value, Equals, "finish")
+	c.Assert(len(firstConceptStep.lookup.paramValue), Equals, 1)
+	c.Assert(firstConceptStep.lookup.paramValue[0].name, Equals, "username")
+	c.Assert(firstConceptStep.lookup.paramValue[0].stepArg.value, Equals, "foo")
+
+	secondConceptStep := spec.scenarios[0].steps[1]
+	c.Assert(secondConceptStep.isConcept, Equals, true)
+	c.Assert(secondConceptStep.conceptSteps[0].value, Equals, "enter user {}")
+	c.Assert(secondConceptStep.conceptSteps[0].args[0].value, Equals, "username")
+	c.Assert(secondConceptStep.conceptSteps[1].value, Equals, "select {}")
+	c.Assert(secondConceptStep.conceptSteps[1].args[0].value, Equals, "finish")
+	c.Assert(len(secondConceptStep.lookup.paramValue), Equals, 1)
+	c.Assert(secondConceptStep.lookup.paramValue[0].name, Equals, "username")
+	c.Assert(secondConceptStep.lookup.paramValue[0].stepArg.value, Equals, "bar")
+
+}
+
+func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"id, description"}, lineNo: 2},
+		&token{kind: tableRow, args: []string{"123, Admin fellow"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
+		&token{kind: stepKind, value: "create user {dynamic} and {dynamic}", args: []string{"id", "description"}, lineNo: 5},
+		&token{kind: stepKind, value: "create user {static} and {static}", args: []string{"456", "Regular fellow"}, lineNo: 6},
+	}
+
+	concepts, _ := new(conceptParser).parse("#create user <user-id> and <user-description> \n * enter user <user-id> and <user-description> \n *select \"finish\"")
+	conceptsDictionary := new(conceptDictionary)
+	conceptsDictionary.add(concepts, "file.cpt")
+	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
+
+	firstConcept := spec.scenarios[0].steps[0]
+	c.Assert(firstConcept.isConcept, Equals, true)
+	c.Assert(firstConcept.conceptSteps[0].value, Equals, "enter user {} and {}")
+	c.Assert(firstConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
+	c.Assert(firstConcept.conceptSteps[0].args[0].value, Equals, "user-id")
+	c.Assert(firstConcept.conceptSteps[0].args[1].argType, Equals, dynamic)
+	c.Assert(firstConcept.conceptSteps[0].args[1].value, Equals, "user-description")
+	c.Assert(firstConcept.conceptSteps[1].value, Equals, "select {}")
+	c.Assert(firstConcept.conceptSteps[1].args[0].value, Equals, "finish")
+	c.Assert(firstConcept.conceptSteps[1].args[0].argType, Equals, static)
+
+	c.Assert(len(firstConcept.lookup.paramValue), Equals, 2)
+	c.Assert(firstConcept.lookup.paramValue[0].name, Equals, "user-id")
+	c.Assert(firstConcept.lookup.paramValue[0].stepArg.value, Equals, "id")
+	c.Assert(firstConcept.lookup.paramValue[0].stepArg.argType, Equals, dynamic)
+	c.Assert(firstConcept.lookup.paramValue[1].name, Equals, "user-description")
+	c.Assert(firstConcept.lookup.paramValue[1].stepArg.value, Equals, "description")
+	c.Assert(firstConcept.lookup.paramValue[1].stepArg.argType, Equals, dynamic)
+
+	secondConcept := spec.scenarios[0].steps[1]
+	c.Assert(secondConcept.isConcept, Equals, true)
+	c.Assert(secondConcept.conceptSteps[0].value, Equals, "enter user {} and {}")
+	c.Assert(secondConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
+	c.Assert(secondConcept.conceptSteps[0].args[0].value, Equals, "user-id")
+	c.Assert(secondConcept.conceptSteps[0].args[1].argType, Equals, dynamic)
+	c.Assert(secondConcept.conceptSteps[0].args[1].value, Equals, "user-description")
+	c.Assert(secondConcept.conceptSteps[1].value, Equals, "select {}")
+	c.Assert(secondConcept.conceptSteps[1].args[0].value, Equals, "finish")
+	c.Assert(secondConcept.conceptSteps[1].args[0].argType, Equals, static)
+
+	c.Assert(len(secondConcept.lookup.paramValue), Equals, 2)
+	c.Assert(secondConcept.lookup.paramValue[0].name, Equals, "user-id")
+	c.Assert(secondConcept.lookup.paramValue[0].stepArg.value, Equals, "456")
+	c.Assert(secondConcept.lookup.paramValue[0].stepArg.argType, Equals, static)
+	c.Assert(secondConcept.lookup.paramValue[1].name, Equals, "user-description")
+	c.Assert(secondConcept.lookup.paramValue[1].stepArg.value, Equals, "Regular fellow")
+	c.Assert(secondConcept.lookup.paramValue[1].stepArg.argType, Equals, static)
 
 }

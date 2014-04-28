@@ -10,7 +10,7 @@ func (s *MySuite) TestParsingSimpleStep(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
@@ -25,7 +25,7 @@ func (s *MySuite) TestParsingEmptyStepTextShouldThrowError(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Step should not be blank on line: 3")
+	c.Assert(err.Error(), Equals, "line no: 3, Step should not be blank")
 }
 
 func (s *MySuite) TestParsingStepWithParams(c *C) {
@@ -34,7 +34,7 @@ func (s *MySuite) TestParsingStepWithParams(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
@@ -50,7 +50,7 @@ func (s *MySuite) TestParsingStepWithParametersWithQuotes(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
 	firstStepToken := tokens[2]
@@ -75,7 +75,7 @@ func (s *MySuite) TestParsingStepWithUnmatchedOpeningQuote(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, String not terminated on line: 3")
+	c.Assert(err.Error(), Equals, "line no: 3, String not terminated")
 }
 
 func (s *MySuite) TestParsingStepWithEscaping(c *C) {
@@ -84,7 +84,7 @@ func (s *MySuite) TestParsingStepWithEscaping(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	stepToken := tokens[2]
 	c.Assert(stepToken.value, Equals, "step with")
 }
@@ -96,7 +96,7 @@ func (s *MySuite) TestParsingExceptionIfStepContainsReservedChars(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, '{' is a reserved character and should be escaped on line: 3")
+	c.Assert(err.Error(), Equals, "line no: 3, '{' is a reserved character and should be escaped")
 }
 
 func (s *MySuite) TestParsingStepContainsEscapedReservedChars(c *C) {
@@ -105,7 +105,7 @@ func (s *MySuite) TestParsingStepContainsEscapedReservedChars(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	stepToken := tokens[2]
 	c.Assert(stepToken.value, Equals, "step with {braces}")
 }
@@ -115,7 +115,7 @@ func (s *MySuite) TestParsingSimpleStepWithDynamicParameter(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("Step with \"static param\" and <name1>").String()
 
 	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
@@ -131,7 +131,7 @@ func (s *MySuite) TestParsingStepWithUnmatchedDynamicParameterCharacter(c *C) {
 	_, err := parser.generateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Dynamic parameter not terminated on line: 3")
+	c.Assert(err.Error(), Equals, "line no: 3, Dynamic parameter not terminated")
 
 }
 
@@ -141,9 +141,9 @@ func (s *MySuite) TestParsingContext(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	contextToken := tokens[1]
-	c.Assert(contextToken.kind, Equals, context)
+	c.Assert(contextToken.kind, Equals, stepKind)
 	c.Assert(contextToken.value, Equals, "Context with {static}")
 	c.Assert(contextToken.args[0], Equals, "param")
 }
@@ -152,10 +152,12 @@ func (s *MySuite) TestParsingThrowsErrorWhenStepIsPresentWithoutStep(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().step("step without spec heading").String()
 
-	_, err := parser.generateTokens(specText)
+	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "Parse error: syntax error, Spec heading is not present on line: 1")
+	c.Assert(err, IsNil)
+	c.Assert(tokens[0].kind, Equals, stepKind)
+	c.Assert(tokens[0].value, Equals, "step without spec heading")
+
 }
 
 func (s *MySuite) TestParsingStepWithSimpleSpecialParameter(c *C) {
@@ -164,7 +166,7 @@ func (s *MySuite) TestParsingStepWithSimpleSpecialParameter(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
 	c.Assert(tokens[2].kind, Equals, stepKind)
@@ -179,16 +181,16 @@ func (s *MySuite) TestParsingStepWithSpecialParametersWithWhiteSpaces(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 
-	c.Assert(err, Equals, nil)
+	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].kind, Equals, context)
+	c.Assert(tokens[1].kind, Equals, stepKind)
 	c.Assert(tokens[1].value, Equals, "Step with {static} and special parameter {special}")
 	c.Assert(len(tokens[1].args), Equals, 2)
 	c.Assert(tokens[1].args[0], Equals, "first")
 	c.Assert(tokens[1].args[1], Equals, "table : user.csv")
 
-	c.Assert(tokens[2].kind, Equals, context)
+	c.Assert(tokens[2].kind, Equals, stepKind)
 	c.Assert(tokens[2].value, Equals, "Another with {dynamic} and {special}")
 	c.Assert(len(tokens[2].args), Equals, 2)
 	c.Assert(tokens[2].args[0], Equals, "name")

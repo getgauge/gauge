@@ -8,6 +8,9 @@ PROGRAM_NAME=twist2
 build:
 	export GOPATH=$(GOPATH):`pwd` && cd src && go build && mv src ../twist2
 
+build-debug:
+	export GOPATH=$(GOPATH):`pwd` && cd src && go build -gcflags "-N -l" && mv src ../twist2
+
 test:
 	export GOPATH=$(GOPATH):`pwd` && cd src && go test
 

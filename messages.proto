@@ -8,6 +8,9 @@ message ExecutionStatus {
 	optional bytes screenShot = 5;
 }
 
+message KillProcessRequest {
+}
+
 // Sends to any request which needs a execution status as response
 // usually step execution, hooks etc will return this
 message ExecutionStatusResponse {
@@ -86,6 +89,7 @@ message Message {
 	    StepValidateRequest = 9;
 	    StepValidateResponse = 10;
 	    ExecutionStatusResponse = 11;
+        KillProcessRequest = 12;
 	}
   	
   	required MessageType messageType = 1;
@@ -107,5 +111,6 @@ message Message {
   	optional StepValidateRequest stepValidateRequest = 12;
   	optional StepValidateResponse stepValidateResponse = 13;
   	optional ExecutionStatusResponse executionStatusResponse = 14;
+  	optional KillProcessRequest killProcessRequest = 15;
 }
 
