@@ -47,8 +47,8 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func acceptConnection() (net.Conn, error) {
-	listener, err := net.Listen("tcp", port)
+func acceptConnection(portNo string) (net.Conn, error) {
+	listener, err := net.Listen("tcp", portNo)
 	if err != nil {
 		return nil, err
 	}
@@ -90,4 +90,23 @@ func getResponse(conn net.Conn, message *Message) (*Message, error) {
 	case response := <-responseChan:
 		return response, nil
 	}
+}
+
+//Sends a specified message and does not wait for any response
+func writeMessage(conn net.Conn, message *Message)(error) {
+	messageId := common.GetUniqueId()
+	message.MessageId = &messageId
+
+	data, err := proto.Marshal(message)
+	if err != nil {
+		return err
+	}
+	dataLength := proto.EncodeVarint(uint64(len(data)))
+	data = append(dataLength, data...)
+
+	_, err = conn.Write(data)
+	if err != nil {
+		return err
+	}
+	return nil
 }

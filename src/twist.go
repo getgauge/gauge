@@ -341,20 +341,26 @@ func main() {
 		handleParseResult(specParseResults...)
 
 		manifest := getProjectManifest()
+
+		pluginHandler, warnings := startPluginsForExecution(manifest)
+		handleWarningMessages(warnings)
+
 		_, runnerError := startRunner(manifest)
 		if runnerError != nil {
 			fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 			os.Exit(1)
 		}
 
-		conn, connectionError := acceptConnection()
+		runnerConnection, connectionError := acceptConnection(port)
+
 		if connectionError != nil {
 			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())
 			os.Exit(1)
 		}
 
-		execution := newExecution(manifest, specs, conn)
+		execution := newExecution(manifest, specs, runnerConnection, pluginHandler)
 		validationErrors := execution.validate(concepts)
+
 		if len(validationErrors) > 0 {
 			fmt.Println("Validation failed. The following steps are not implemented")
 			for _, stepValidationErrors := range validationErrors {
@@ -521,4 +527,10 @@ func findSpecsFilesIn(dirRoot string) []string {
 
 func isValidSpecExtension(path string) bool {
 	return acceptedExtensions[filepath.Ext(path)]
+}
+
+func handleWarningMessages(warnings []string) {
+	for _, warning := range warnings {
+		fmt.Println(fmt.Sprintf("[Warning] %s", warning))
+	}
 }

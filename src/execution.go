@@ -7,16 +7,20 @@ type execution struct {
 	manifest       *manifest
 	connection     net.Conn
 	specifications []*specification
+	pluginHandler  *pluginHandler
 }
 
-func newExecution(manifest *manifest, specifications []*specification, conn net.Conn) *execution {
-	e := execution{manifest: manifest, specifications: specifications, connection: conn}
+func newExecution(manifest *manifest, specifications []*specification, conn net.Conn, pluginHandler *pluginHandler) *execution {
+	e := execution{manifest: manifest, specifications: specifications, connection: conn, pluginHandler: pluginHandler}
 	return &e
 }
 
 func (e *execution) startExecution() *ExecutionStatus {
+
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &ExecutionStartingRequest{}}
+
+	e.pluginHandler.notifyPlugins(message)
 
 	return executeAndGetStatus(e.connection, message)
 }
@@ -83,7 +87,7 @@ func (exe *execution) start() *testExecutionStatus {
 	beforeSuiteHookExecStatus := exe.startExecution()
 	if beforeSuiteHookExecStatus.GetPassed() {
 		for _, specificationToExecute := range exe.specifications {
-			executor := &specExecutor{specification: specificationToExecute, connection: exe.connection}
+			executor := &specExecutor{specification: specificationToExecute, connection: exe.connection, pluginHandler: exe.pluginHandler}
 			specExecutionStatus := executor.execute()
 			testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
 			testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)

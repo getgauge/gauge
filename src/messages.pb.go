@@ -236,12 +236,28 @@ func (m *SpecExecutionEndingRequest) GetSpecFile() string {
 }
 
 type ScenarioExecutionStartingRequest struct {
-	XXX_unrecognized []byte `json:"-"`
+	ScenarioName     *string `protobuf:"bytes,1,req,name=scenarioName" json:"scenarioName,omitempty"`
+	SpecFile         *string `protobuf:"bytes,2,req,name=specFile" json:"specFile,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *ScenarioExecutionStartingRequest) Reset()         { *m = ScenarioExecutionStartingRequest{} }
 func (m *ScenarioExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
 func (*ScenarioExecutionStartingRequest) ProtoMessage()    {}
+
+func (m *ScenarioExecutionStartingRequest) GetScenarioName() string {
+	if m != nil && m.ScenarioName != nil {
+		return *m.ScenarioName
+	}
+	return ""
+}
+
+func (m *ScenarioExecutionStartingRequest) GetSpecFile() string {
+	if m != nil && m.SpecFile != nil {
+		return *m.SpecFile
+	}
+	return ""
+}
 
 type ScenarioExecutionEndingRequest struct {
 	XXX_unrecognized []byte `json:"-"`

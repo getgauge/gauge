@@ -31,6 +31,8 @@ message SpecExecutionEndingRequest {
 }
 
 message ScenarioExecutionStartingRequest {
+    required string scenarioName =  1;
+    required string specFile =  2   ;
 }
 
 message ScenarioExecutionEndingRequest {	

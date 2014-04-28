@@ -11,6 +11,7 @@ type specExecutor struct {
 	dataTableIndex    int
 	connection        net.Conn
 	conceptDictionary *conceptDictionary
+	pluginHandler     *pluginHandler
 }
 
 type specExecutionStatus struct {
@@ -56,6 +57,7 @@ func (e *specExecutor) executeBeforeSpecHook() *ExecutionStatus {
 		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{SpecName: proto.String(e.specification.heading.value),
 			SpecFile: proto.String(e.specification.fileName)}}
 
+	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
 }
 
@@ -69,7 +71,6 @@ func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 
 func (executor *specExecutor) execute() *specExecutionStatus {
 	specExecutionStatus := &specExecutionStatus{specification: executor.specification, scenariosExecutionStatuses: make(map[int][]*scenarioExecutionStatus)}
-
 	beforeSpecHookStatus := executor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetPassed() {
 		dataTableRowCount := executor.specification.dataTable.getRowCount()
@@ -175,10 +176,11 @@ func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 	return nil
 }
 
-func (executor *specExecutor) executeBeforeScenarioHook() *ExecutionStatus {
+func (e *specExecutor) executeBeforeScenarioHook(scenario *scenario) *ExecutionStatus {
 	message := &Message{MessageType: Message_ScenarioExecutionStarting.Enum(),
-		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{}}
-	return executeAndGetStatus(executor.connection, message)
+		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{ScenarioName:proto.String(scenario.heading.value), SpecFile:proto.String(e.specification.heading.value)}}
+	e.pluginHandler.notifyPlugins(message)
+	return executeAndGetStatus(e.connection, message)
 }
 
 func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
@@ -199,7 +201,7 @@ func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 
 func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *argLookup) *scenarioExecutionStatus {
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
-	beforeHookExecutionStatus := executor.executeBeforeScenarioHook()
+	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenario)
 	if beforeHookExecutionStatus.GetPassed() {
 		contextStepsExecutionStatuses := executor.executeSteps(executor.specification.contexts, argLookup)
 		scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, contextStepsExecutionStatuses...)

@@ -5,11 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"github.com/twist2/common"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
+)
+
+const (
+	executionScope       = "execution"
+	pluginConnectionPort = ":8889"
 )
 
 type pluginDescriptor struct {
@@ -24,6 +30,16 @@ type pluginDescriptor struct {
 	}
 	Scope      []string
 	pluginPath string
+}
+
+type pluginHandler struct {
+	pluginsMap map[string]*plugin
+}
+
+type plugin struct {
+	connection net.Conn
+	process    *os.Process
+	descriptor *pluginDescriptor
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
@@ -99,7 +115,7 @@ func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, e
 	return &pd, nil
 }
 
-func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
+func startPlugin(pd *pluginDescriptor, action string, wait bool) (*os.Process, error) {
 	command := ""
 	switch runtime.GOOS {
 	case "windows":
@@ -117,20 +133,24 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Start(); err != nil {
-		return err
+		return nil, err
 	}
 
 	if wait {
-		return cmd.Wait()
+		return cmd.Process, cmd.Wait()
 	}
 
-	return nil
+	return cmd.Process, nil
 }
 
 func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginArgs map[string]string) {
 	os.Setenv(fmt.Sprintf("%s_action", pd.Id), action)
 	os.Setenv("test_language", manifest.Language)
-	for k, v := range pluginArgs {
+	setEnvironmentProperties(pluginArgs)
+}
+
+func setEnvironmentProperties(properties map[string]string) {
+	for k, v := range properties {
 		os.Setenv(k, v)
 	}
 }
@@ -143,10 +163,82 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 
 	action := "setup"
 	setEnvForPlugin(action, pd, manifest, pluginArgs)
-	if err := startPlugin(pd, action, true); err != nil {
+	if _, err := startPlugin(pd, action, true); err != nil {
 		return err
 	}
 
 	manifest.Plugins = append(manifest.Plugins, pluginDetails{Id: pd.Id, Version: pd.Version})
 	return manifest.save()
 }
+
+func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
+	handler := &pluginHandler{}
+	warnings := make([]string, 0)
+	envProperties := make(map[string]string)
+	envProperties["plugin_connection_port"] = pluginConnectionPort
+
+	for _, pluginDetails := range manifest.Plugins {
+		pd, err := getPluginDescriptor(pluginDetails.Id, pluginDetails.Version)
+		if err != nil {
+			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to get plugin.json. %s", pd.Name, pluginDetails.Version, err.Error()))
+			continue
+		}
+		if isExecutionScopePlugin(pd) {
+			setEnvForPlugin(executionScope, pd, manifest, envProperties)
+
+			pluginProcess, err := startPlugin(pd, executionScope, false)
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
+				continue
+			}
+			pluginConnection, err := acceptConnection(pluginConnectionPort)
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
+				pluginProcess.Kill()
+				continue
+			}
+			handler.addPlugin(pluginDetails.Id, &plugin{connection: pluginConnection, process: pluginProcess, descriptor: pd})
+		}
+
+	}
+	return handler, warnings
+}
+
+func isExecutionScopePlugin(pd *pluginDescriptor) bool {
+	for _, scope := range pd.Scope {
+		if strings.ToLower(scope) == executionScope {
+			return true
+		}
+	}
+	return false
+}
+
+func (handler *pluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
+	if handler.pluginsMap == nil {
+		handler.pluginsMap = make(map[string]*plugin)
+	}
+	handler.pluginsMap[pluginId] = pluginToAdd
+}
+
+
+func (handler *pluginHandler) notifyPlugins(message *Message) {
+ 	for id, plugin := range handler.pluginsMap{
+		err := writeMessage(plugin.connection, message)
+		if (err != nil) {
+			fmt.Printf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		    handler.killPlugin(id)
+		}
+	}
+}
+
+func (handler *pluginHandler) killPlugin(pluginId string) {
+	plugin := handler.pluginsMap[pluginId]
+	fmt.Printf("Killing Plugin %s %s", plugin.descriptor.Name, plugin.descriptor.Version)
+	plugin.connection.Close()
+	err := plugin.process.Kill()
+	if (err != nil) {
+		fmt.Printf("Killing Plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+	}
+}
+
+
