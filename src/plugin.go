@@ -11,11 +11,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
 
 const (
-	executionScope       = "execution"
-	pluginConnectionPort = ":8889"
+	executionScope          = "execution"
+	pluginConnectionPort    = ":8889"
+	pluginConnectionTimeout = time.Second * 3
 )
 
 type pluginDescriptor struct {
@@ -180,7 +182,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	for _, pluginDetails := range manifest.Plugins {
 		pd, err := getPluginDescriptor(pluginDetails.Id, pluginDetails.Version)
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to get plugin.json. %s", pd.Name, pluginDetails.Version, err.Error()))
+			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to get plugin.json. %s", pluginDetails.Id, pluginDetails.Version, err.Error()))
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
@@ -191,7 +193,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := acceptConnection(pluginConnectionPort)
+			pluginConnection, err := acceptConnection(pluginConnectionPort, pluginConnectionTimeout)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
 				pluginProcess.Kill()
@@ -220,13 +222,12 @@ func (handler *pluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
 	handler.pluginsMap[pluginId] = pluginToAdd
 }
 
-
 func (handler *pluginHandler) notifyPlugins(message *Message) {
- 	for id, plugin := range handler.pluginsMap{
+	for id, plugin := range handler.pluginsMap {
 		err := writeMessage(plugin.connection, message)
-		if (err != nil) {
+		if err != nil {
 			fmt.Printf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
-		    handler.killPlugin(id)
+			handler.killPlugin(id)
 		}
 	}
 }
@@ -236,9 +237,7 @@ func (handler *pluginHandler) killPlugin(pluginId string) {
 	fmt.Printf("Killing Plugin %s %s", plugin.descriptor.Name, plugin.descriptor.Version)
 	plugin.connection.Close()
 	err := plugin.process.Kill()
-	if (err != nil) {
+	if err != nil {
 		fmt.Printf("Killing Plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 }
-
-

@@ -7,11 +7,12 @@ import (
 )
 
 type specExecutor struct {
-	specification     *specification
-	dataTableIndex    int
-	connection        net.Conn
-	conceptDictionary *conceptDictionary
-	pluginHandler     *pluginHandler
+	specification        *specification
+	dataTableIndex       int
+	connection           net.Conn
+	conceptDictionary    *conceptDictionary
+	pluginHandler        *pluginHandler
+	currentExecutionInfo *ExecutionInfo
 }
 
 type specExecutionStatus struct {
@@ -54,8 +55,7 @@ func (status *specExecutionStatus) isFailed() bool {
 
 func (e *specExecutor) executeBeforeSpecHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_SpecExecutionStarting.Enum(),
-		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{SpecName: proto.String(e.specification.heading.value),
-			SpecFile: proto.String(e.specification.fileName)}}
+		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 
 	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
@@ -63,13 +63,15 @@ func (e *specExecutor) executeBeforeSpecHook() *ExecutionStatus {
 
 func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_SpecExecutionEnding.Enum(),
-		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{SpecName: proto.String(e.specification.heading.value),
-			SpecFile: proto.String(e.specification.fileName)}}
+		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{}}
 
 	return executeAndGetStatus(e.connection, message)
 }
 
 func (executor *specExecutor) execute() *specExecutionStatus {
+	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value), FileName: proto.String(executor.specification.fileName), IsFailed: proto.Bool(false), Tags: executor.specification.tags}
+	executor.currentExecutionInfo = &ExecutionInfo{CurrentSpec: specInfo}
+
 	specExecutionStatus := &specExecutionStatus{specification: executor.specification, scenariosExecutionStatuses: make(map[int][]*scenarioExecutionStatus)}
 	beforeSpecHookStatus := executor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetPassed() {
@@ -178,7 +180,7 @@ func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 
 func (e *specExecutor) executeBeforeScenarioHook(scenario *scenario) *ExecutionStatus {
 	message := &Message{MessageType: Message_ScenarioExecutionStarting.Enum(),
-		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{ScenarioName:proto.String(scenario.heading.value), SpecFile:proto.String(e.specification.heading.value)}}
+		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
 }
@@ -200,6 +202,8 @@ func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 }
 
 func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *argLookup) *scenarioExecutionStatus {
+	executor.currentExecutionInfo.CurrentScenario = &ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: scenario.tags, IsFailed: proto.Bool(false)}
+
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenario)
 	if beforeHookExecutionStatus.GetPassed() {

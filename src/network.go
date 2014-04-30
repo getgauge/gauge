@@ -3,15 +3,18 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
+	"errors"
+	"fmt"
 	"github.com/twist2/common"
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 const (
-	port             = ":8888"
-	timeoutInSeconds = 30
+	runnerConnectionPort    = ":8888"
+	runnerConnectionTimeOut = time.Second * 5
 )
 
 // MessageId -> Callback
@@ -47,19 +50,31 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func acceptConnection(portNo string) (net.Conn, error) {
+func acceptConnection(portNo string, connectionTimeOut time.Duration) (net.Conn, error) {
 	listener, err := net.Listen("tcp", portNo)
 	if err != nil {
 		return nil, err
 	}
+	errChannel := make(chan error, 1)
+	connectionChannel := make(chan net.Conn, 1)
 
-	conn, err := listener.Accept()
-	if err != nil {
+	go func() {
+		connection, err := listener.Accept()
+		errChannel <- err
+		connectionChannel <- connection
+
+	}()
+
+	select {
+	case err := <-errChannel:
 		return nil, err
+	case conn := <-connectionChannel:
+		go handleConnection(conn)
+		return conn, nil
+	case <-time.After(connectionTimeOut):
+		return nil, errors.New(fmt.Sprintf("Timed out connecting to port %s", portNo))
 	}
 
-	go handleConnection(conn)
-	return conn, nil
 }
 
 // Sends the specified message and waits for a response
@@ -93,7 +108,7 @@ func getResponse(conn net.Conn, message *Message) (*Message, error) {
 }
 
 //Sends a specified message and does not wait for any response
-func writeMessage(conn net.Conn, message *Message)(error) {
+func writeMessage(conn net.Conn, message *Message) error {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 

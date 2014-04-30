@@ -18,30 +18,50 @@ message ExecutionStatusResponse {
 }
 
 message ExecutionStartingRequest {
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 message SpecExecutionStartingRequest {
-	required string specName = 1;
-	required string specFile = 2;
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 message SpecExecutionEndingRequest {
-	required string specName = 1;
-	required string specFile = 2;
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 message ScenarioExecutionStartingRequest {
-    required string scenarioName =  1;
-    required string specFile =  2   ;
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
-message ScenarioExecutionEndingRequest {	
+message ScenarioExecutionEndingRequest {
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 message StepExecutionStartingRequest {
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 message StepExecutionEndingRequest {
+    optional ExecutionInfo currentExecutionInfo = 1;
+}
+
+message ExecutionInfo {
+    optional SpecInfo currentSpec = 1;
+    optional ScenarioInfo currentScenario = 2;
+    optional string stacktrace = 3;
+}
+
+message SpecInfo {
+    required string name = 1;
+    required string fileName = 2;
+    required bool isFailed = 3;
+    repeated string  tags = 4;
+}
+
+message ScenarioInfo {
+    required string name = 1;
+    required bool isFailed = 2;
+    repeated string  tags = 3;
 }
 
 message ExecuteStepRequest {
@@ -73,6 +93,7 @@ message StepValidateResponse {
 }
 
 message ExecutionEndingRequest {
+    optional ExecutionInfo currentExecutionInfo = 1;
 }
 
 // This is the message which gets transferred all the time 

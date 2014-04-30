@@ -351,7 +351,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		runnerConnection, connectionError := acceptConnection(port)
+		runnerConnection, connectionError := acceptConnection(runnerConnectionPort, runnerConnectionTimeOut)
 
 		if connectionError != nil {
 			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())

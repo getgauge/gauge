@@ -4,10 +4,15 @@ package main
 import "net"
 
 type execution struct {
-	manifest       *manifest
-	connection     net.Conn
-	specifications []*specification
-	pluginHandler  *pluginHandler
+	manifest             *manifest
+	connection           net.Conn
+	specifications       []*specification
+	pluginHandler        *pluginHandler
+	currentExecutionInfo *ExecutionInfo
+}
+
+type executionInfo struct {
+	currentSpec specification
 }
 
 func newExecution(manifest *manifest, specifications []*specification, conn net.Conn, pluginHandler *pluginHandler) *execution {
@@ -16,18 +21,16 @@ func newExecution(manifest *manifest, specifications []*specification, conn net.
 }
 
 func (e *execution) startExecution() *ExecutionStatus {
-
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &ExecutionStartingRequest{}}
 
 	e.pluginHandler.notifyPlugins(message)
-
 	return executeAndGetStatus(e.connection, message)
 }
 
 func (e *execution) stopExecution() *ExecutionStatus {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
-		ExecutionEndingRequest: &ExecutionEndingRequest{}}
+		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 
 	return executeAndGetStatus(e.connection, message)
 }
@@ -93,7 +96,6 @@ func (exe *execution) start() *testExecutionStatus {
 			testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
 		}
 	}
-
 	afterSuiteHookExecStatus := exe.stopExecution()
 	testExecutionStatus.hooksExecutionStatuses = append(testExecutionStatus.hooksExecutionStatuses, beforeSuiteHookExecStatus, afterSuiteHookExecStatus)
 
