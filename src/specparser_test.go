@@ -306,6 +306,40 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 
 }
 
+func (s *MySuite) TestParsingMultipleDataTable(c *C) {
+	parser := new(specParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|007|").step("Example step").text("|user|role|").text("|root | admin|").String()
+
+	tokens, err := parser.generateTokens(specText)
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 7)
+
+	c.Assert(tokens[1].kind, Equals, tableHeader)
+	c.Assert(len(tokens[1].args), Equals, 2)
+	c.Assert(tokens[1].args[0], Equals, "name")
+	c.Assert(tokens[1].args[1], Equals, "id")
+
+	c.Assert(tokens[2].kind, Equals, tableRow)
+	c.Assert(len(tokens[2].args), Equals, 2)
+	c.Assert(tokens[2].args[0], Equals, "john")
+	c.Assert(tokens[2].args[1], Equals, "123")
+
+	c.Assert(tokens[3].kind, Equals, tableRow)
+	c.Assert(len(tokens[3].args), Equals, 2)
+	c.Assert(tokens[3].args[0], Equals, "james")
+	c.Assert(tokens[3].args[1], Equals, "007")
+
+	c.Assert(tokens[5].kind, Equals, tableHeader)
+	c.Assert(len(tokens[5].args), Equals, 2)
+	c.Assert(tokens[5].args[0], Equals, "user")
+	c.Assert(tokens[5].args[1], Equals, "role")
+
+	c.Assert(tokens[6].kind, Equals, tableRow)
+	c.Assert(len(tokens[6].args), Equals, 2)
+	c.Assert(tokens[6].args[0], Equals, "root")
+	c.Assert(tokens[6].args[1], Equals, "admin")
+}
+
 func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|||").text("|john|123|").String()

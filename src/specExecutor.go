@@ -348,7 +348,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
 }
 
-func (executor *specExecutor) createStepTable(table *table, argLookup *argLookup) *ProtoTable {
+func (executor *specExecutor) createStepTable(table *table, lookup *argLookup) *ProtoTable {
 	protoTable := new(ProtoTable)
 	tableRows := make([]*TableRow, 0)
 	tableRows = append(tableRows, &TableRow{Cells: table.headers})
@@ -358,7 +358,14 @@ func (executor *specExecutor) createStepTable(table *table, argLookup *argLookup
 			tableCell := table.get(header)[i]
 			value := tableCell.value
 			if tableCell.cellType == dynamic {
-				value = argLookup.getArg(tableCell.value).value
+				if lookup.containsArg(tableCell.value) {
+					value = lookup.getArg(tableCell.value).value
+				} else {
+					//if concept has a table with dynamic cell, arglookup won't have the table value, so fetch from datatable itself
+					//todo cleanup
+					tableLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+					value = tableLookup.getArg(tableCell.value).value
+				}
 			}
 			row = append(row, value)
 		}

@@ -565,8 +565,8 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: tableHeader, args: []string{"id, description"}, lineNo: 2},
-		&token{kind: tableRow, args: []string{"123, Admin fellow"}, lineNo: 3},
+		&token{kind: tableHeader, args: []string{"id", "description"}, lineNo: 2},
+		&token{kind: tableRow, args: []string{"123", "Admin fellow"}, lineNo: 3},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
 		&token{kind: stepKind, value: "create user {dynamic} and {dynamic}", args: []string{"id", "description"}, lineNo: 5},
 		&token{kind: stepKind, value: "create user {static} and {static}", args: []string{"456", "Regular fellow"}, lineNo: 6},
@@ -618,4 +618,67 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(secondConcept.lookup.paramValue[1].stepArg.value, Equals, "Regular fellow")
 	c.Assert(secondConcept.lookup.paramValue[1].stepArg.argType, Equals, static)
 
+}
+
+func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
+		&token{kind: stepKind, value: "create users", lineNo: 3},
+		&token{kind: tableHeader, args: []string{"id", "description"}, lineNo: 4},
+		&token{kind: tableRow, args: []string{"123", "Admin"}, lineNo: 5},
+		&token{kind: tableRow, args: []string{"456", "normal fellow"}, lineNo: 6},
+	}
+
+	concepts, _ := new(conceptParser).parse("#create users <table> \n * enter details from <table> \n *select \"finish\"")
+	conceptsDictionary := new(conceptDictionary)
+	conceptsDictionary.add(concepts, "file.cpt")
+	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
+	c.Assert(result.ok, Equals, true)
+
+	steps := spec.scenarios[0].steps
+	c.Assert(len(steps), Equals, 1)
+	c.Assert(steps[0].isConcept, Equals, true)
+	c.Assert(steps[0].value, Equals, "create users {}")
+	c.Assert(len(steps[0].args), Equals, 1)
+	c.Assert(steps[0].args[0].argType, Equals, tableArg)
+	c.Assert(len(steps[0].conceptSteps), Equals, 2)
+}
+
+func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"id", "description"}, lineNo: 2},
+		&token{kind: tableRow, args: []string{"123", "Admin"}, lineNo: 3},
+		&token{kind: tableRow, args: []string{"456", "normal fellow"}, lineNo: 4},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 5},
+		&token{kind: stepKind, value: "create users", lineNo: 6},
+		&token{kind: tableHeader, args: []string{"user-id", "description", "name"}, lineNo: 7},
+		&token{kind: tableRow, args: []string{"<id>", "<description>", "root"}, lineNo: 8},
+		&token{kind: stepKind, value: "create users", lineNo: 9},
+		&token{kind: tableHeader, args: []string{"user-id", "description", "name"}, lineNo: 10},
+		&token{kind: tableRow, args: []string{"1", "normal", "wheel"}, lineNo: 11},
+	}
+
+	concepts, _ := new(conceptParser).parse("#create users <id> \n * enter details from <id> \n *select \"finish\"")
+	conceptsDictionary := new(conceptDictionary)
+	conceptsDictionary.add(concepts, "file.cpt")
+	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
+	c.Assert(result.ok, Equals, true)
+
+	steps := spec.scenarios[0].steps
+	c.Assert(len(steps), Equals, 2)
+	c.Assert(steps[0].isConcept, Equals, true)
+	c.Assert(steps[1].isConcept, Equals, true)
+	c.Assert(steps[0].value, Equals, "create users {}")
+	c.Assert(len(steps[0].args), Equals, 1)
+	c.Assert(steps[0].args[0].argType, Equals, tableArg)
+	table := steps[0].args[0].table
+	c.Assert(table.get("user-id")[0].value, Equals, "id")
+	c.Assert(table.get("user-id")[0].cellType, Equals, dynamic)
+	c.Assert(table.get("description")[0].value, Equals, "description")
+	c.Assert(table.get("description")[0].cellType, Equals, dynamic)
+	c.Assert(table.get("name")[0].value, Equals, "root")
+	c.Assert(table.get("name")[0].cellType, Equals, static)
+	c.Assert(len(steps[0].conceptSteps), Equals, 2)
 }

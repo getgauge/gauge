@@ -111,6 +111,7 @@ func (specParser *specParser) createSpecification(tokens []*token, conceptDictio
 		}
 	}
 	//todo move resolution of concepts after processing table headers since it modifies step value
+	specification.processConceptStepsFrom(conceptDictionary)
 	validationError := specParser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.ok = false
@@ -156,7 +157,7 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 		return token.kind == stepKind && isInState(*state, scenarioScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
 		latestScenario := spec.scenarios[len(spec.scenarios)-1]
-		err := spec.addStep(token, &latestScenario.steps, specParser.conceptDictionary)
+		err := spec.addStep(token, &latestScenario.steps)
 		if err != nil {
 			return parseResult{error: err, ok: false}
 		}
@@ -168,7 +169,7 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 	contextConverter := converterFn(func(token *token, state *int) bool {
 		return token.kind == stepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
-		err := spec.addStep(token, &spec.contexts, specParser.conceptDictionary)
+		err := spec.addStep(token, &spec.contexts)
 		if err != nil {
 			return parseResult{error: err, ok: false}
 		}
@@ -253,34 +254,16 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 	return converter
 }
 
-func (spec *specification) addStep(stepToken *token, addTo *[]*step, conceptDictionary *conceptDictionary) *parseError {
+func (spec *specification) addStep(stepToken *token, addTo *[]*step) *parseError {
 	var stepToAdd *step
 	var err *parseError
-	stepValue, _ := spec.extractStepValueAndParameterTypes(stepToken.value)
-	if conceptFromDictionary := conceptDictionary.search(stepValue); conceptFromDictionary != nil {
-		stepToAdd, err = spec.createConceptStep(conceptFromDictionary.conceptStep, stepToken)
-	} else {
-		dataTableLookup := new(argLookup).fromDataTable(&spec.dataTable)
-		stepToAdd, err = spec.createStep(stepToken, dataTableLookup)
-	}
+	dataTableLookup := new(argLookup).fromDataTable(&spec.dataTable)
+	stepToAdd, err = spec.createStep(stepToken, dataTableLookup)
 	if err != nil {
 		return err
 	}
 	*addTo = append(*addTo, stepToAdd)
 	return nil
-}
-
-func (spec *specification) createConceptStep(conceptFromDictionary *step, stepToken *token) (*step, *parseError) {
-	lookup := conceptFromDictionary.lookup.getCopy()
-	conceptStep, err := spec.createStep(stepToken, nil)
-	conceptStep.isConcept = true
-	if err != nil {
-		return nil, err
-	}
-	conceptStep.conceptSteps = conceptFromDictionary.conceptSteps
-	spec.populateConceptLookup(lookup, conceptFromDictionary.args, conceptStep.args)
-	conceptStep.lookup = *lookup
-	return conceptStep, nil
 }
 
 func (spec *specification) createStep(stepToken *token, lookup *argLookup) (*step, *parseError) {
@@ -299,6 +282,30 @@ func (spec *specification) createStep(stepToken *token, lookup *argLookup) (*ste
 		step.args = append(step.args, argument)
 	}
 	return step, nil
+}
+func (specification *specification) processConceptStepsFrom(conceptDictionary *conceptDictionary) {
+	for _, step := range specification.contexts {
+		specification.processConceptStep(step, conceptDictionary)
+	}
+	for _, scenario := range specification.scenarios {
+		for _, step := range scenario.steps {
+			specification.processConceptStep(step, conceptDictionary)
+		}
+	}
+}
+
+func (specification *specification) processConceptStep(step *step, conceptDictionary *conceptDictionary) {
+	if conceptFromDictionary := conceptDictionary.search(step.value); conceptFromDictionary != nil {
+		specification.createConceptStep(conceptFromDictionary.conceptStep, step)
+	}
+}
+
+func (specification *specification) createConceptStep(conceptFromDictionary *step, originalStep *step) {
+	lookup := conceptFromDictionary.lookup.getCopy()
+	originalStep.isConcept = true
+	originalStep.conceptSteps = conceptFromDictionary.conceptSteps
+	specification.populateConceptLookup(lookup, conceptFromDictionary.args, originalStep.args)
+	originalStep.lookup = *lookup
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {

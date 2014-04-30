@@ -119,5 +119,6 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 
 	token.value = strings.TrimSpace(stepText.String())
 	token.args = args
+	parser.clearState()
 	return nil, false
 }
