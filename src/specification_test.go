@@ -32,6 +32,22 @@ func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 	c.Assert(result.error.lineNo, Equals, 1)
 }
 
+func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Example step", lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
+	}
+
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(result.ok, Equals, false)
+
+	c.Assert(result.error.message, Equals, "Parse error: Duplicate scenario definitions are not allowed in the same specification")
+	c.Assert(result.error.lineNo, Equals, 4)
+}
+
 func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},

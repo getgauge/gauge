@@ -139,6 +139,11 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 		if spec.heading.value == "" {
 			return parseResult{ok: false, error: &parseError{token.lineNo, "Parse error: Scenario should be defined after the spec heading", token.lineText}}
 		}
+		for _, scenario := range spec.scenarios {
+			if strings.ToLower(scenario.heading.value) == strings.ToLower(token.value) {
+				return parseResult{ok: false, error: &parseError{token.lineNo, "Parse error: Duplicate scenario definitions are not allowed in the same specification", token.lineText}}
+			}
+		}
 		scenarioHeading := line{token.value, token.lineNo}
 		scenario := &scenario{heading: scenarioHeading}
 		spec.scenarios = append(spec.scenarios, scenario)
