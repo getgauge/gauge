@@ -156,10 +156,14 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	c.Assert(spec.dataTable, NotNil)
 	c.Assert(len(spec.dataTable.get("id")), Equals, 2)
 	c.Assert(len(spec.dataTable.get("name")), Equals, 2)
-	c.Assert(spec.dataTable.get("id")[0], Equals, "1")
-	c.Assert(spec.dataTable.get("id")[1], Equals, "2")
-	c.Assert(spec.dataTable.get("name")[0], Equals, "foo")
-	c.Assert(spec.dataTable.get("name")[1], Equals, "bar")
+	c.Assert(spec.dataTable.get("id")[0].value, Equals, "1")
+	c.Assert(spec.dataTable.get("id")[0].cellType, Equals, static)
+	c.Assert(spec.dataTable.get("id")[1].value, Equals, "2")
+	c.Assert(spec.dataTable.get("id")[1].cellType, Equals, static)
+	c.Assert(spec.dataTable.get("name")[0].value, Equals, "foo")
+	c.Assert(spec.dataTable.get("name")[0].cellType, Equals, static)
+	c.Assert(spec.dataTable.get("name")[1].value, Equals, "bar")
+	c.Assert(spec.dataTable.get("name")[1].cellType, Equals, static)
 }
 
 func (s *MySuite) TestStepWithInlineTable(c *C) {
@@ -184,10 +188,66 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 	c.Assert(step.value, Equals, "Step with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
-	c.Assert(inlineTable.get("id")[0], Equals, "1")
-	c.Assert(inlineTable.get("id")[1], Equals, "2")
-	c.Assert(inlineTable.get("name")[0], Equals, "foo")
-	c.Assert(inlineTable.get("name")[1], Equals, "bar")
+	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
+	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
+	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[0].value, Equals, "foo")
+	c.Assert(inlineTable.get("name")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[1].value, Equals, "bar")
+	c.Assert(inlineTable.get("name")[1].cellType, Equals, static)
+}
+
+func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"type1", "type2"}},
+		&token{kind: tableRow, args: []string{"1", "2"}},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Step with inline table", lineNo: 3},
+		&token{kind: tableHeader, args: []string{"id", "name"}},
+		&token{kind: tableRow, args: []string{"1", "<type1>"}},
+		&token{kind: tableRow, args: []string{"2", "<type2>"}},
+	}
+
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(result.ok, Equals, true)
+	step := spec.scenarios[0].steps[0]
+
+	c.Assert(step.args[0].argType, Equals, tableArg)
+	inlineTable := step.args[0].table
+	c.Assert(inlineTable, NotNil)
+
+	c.Assert(step.value, Equals, "Step with inline table {}")
+	c.Assert(len(inlineTable.get("id")), Equals, 2)
+	c.Assert(len(inlineTable.get("name")), Equals, 2)
+	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
+	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
+	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[0].value, Equals, "type1")
+	c.Assert(inlineTable.get("name")[0].cellType, Equals, dynamic)
+	c.Assert(inlineTable.get("name")[1].value, Equals, "type2")
+	c.Assert(inlineTable.get("name")[1].cellType, Equals, dynamic)
+}
+
+func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"type1", "type2"}},
+		&token{kind: tableRow, args: []string{"1", "2"}},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Step with inline table", lineNo: 3},
+		&token{kind: tableHeader, args: []string{"id", "name"}},
+		&token{kind: tableRow, args: []string{"1", "<invalid>"}},
+		&token{kind: tableRow, args: []string{"2", "<type2>"}},
+	}
+
+	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(result.ok, Equals, false)
+	c.Assert(result.error.message, Equals, "Dynamic param <invalid> could not be resolved")
+
 }
 
 func (s *MySuite) TestContextWithInlineTable(c *C) {
@@ -212,10 +272,14 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 	c.Assert(context.value, Equals, "Context with inline table {}")
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
-	c.Assert(inlineTable.get("id")[0], Equals, "1")
-	c.Assert(inlineTable.get("id")[1], Equals, "2")
-	c.Assert(inlineTable.get("name")[0], Equals, "foo")
-	c.Assert(inlineTable.get("name")[1], Equals, "bar")
+	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
+	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
+	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[0].value, Equals, "foo")
+	c.Assert(inlineTable.get("name")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[1].value, Equals, "bar")
+	c.Assert(inlineTable.get("name")[1].cellType, Equals, static)
 }
 
 func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {

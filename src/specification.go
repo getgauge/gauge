@@ -110,6 +110,7 @@ func (specParser *specParser) createSpecification(tokens []*token, conceptDictio
 			}
 		}
 	}
+	//todo move resolution of concepts after processing table headers since it modifies step value
 	validationError := specParser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.ok = false
@@ -211,18 +212,21 @@ func (specParser *specParser) initalizeConverters() []func(*token, *int, *specif
 	tableRowConverter := converterFn(func(token *token, state *int) bool {
 		return token.kind == tableRow && isInState(*state, tableScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
+		var result parseResult
 		if isInState(*state, stepScope) {
 			latestScenario := spec.scenarios[len(spec.scenarios)-1]
 			latestStep := latestScenario.steps[len(latestScenario.steps)-1]
-			addInlineTableRow(latestStep, token)
+			result = addInlineTableRow(latestStep, token, new(argLookup).fromDataTable(&spec.dataTable))
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.contexts[len(spec.contexts)-1]
-			addInlineTableRow(latestContext, token)
+			result = addInlineTableRow(latestContext, token, new(argLookup).fromDataTable(&spec.dataTable))
 		} else {
+			//todo validate datatable rows also
 			spec.dataTable.addRowValues(token.args)
+			result = parseResult{ok: true}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tableScope)
-		return parseResult{ok: true}
+		return result
 	})
 
 	tagConverter := converterFn(func(token *token, state *int) bool {
@@ -345,6 +349,7 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 }
 
 //Step value is modified when inline table is found to account for the new parameter by appending {}
+//todo validate headers for dynamic
 func addInlineTableHeader(step *step, token *token) {
 	tableArg := &stepArg{argType: tableArg}
 	tableArg.table.addHeaders(token.args)
@@ -352,9 +357,24 @@ func addInlineTableHeader(step *step, token *token) {
 	step.value = fmt.Sprintf("%s {}", step.value)
 }
 
-func addInlineTableRow(step *step, token *token) {
+func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResult {
+	dynamicArgMatcher := regexp.MustCompile("<(.*)>")
 	tableArg := step.args[len(step.args)-1]
-	tableArg.table.addRowValues(token.args)
+	tableValues := make([]tableCell, 0)
+	for _, tableValue := range token.args {
+		if dynamicArgMatcher.MatchString(tableValue) {
+			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
+			param := match[0][1]
+			if !argLookup.containsArg(param) {
+				return parseResult{ok: false, error: &parseError{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved", param), lineText: token.lineText}}
+			}
+			tableValues = append(tableValues, tableCell{value: param, cellType: dynamic})
+		} else {
+			tableValues = append(tableValues, tableCell{value: tableValue, cellType: static})
+		}
+	}
+	tableArg.table.addRows(tableValues)
+	return parseResult{ok: true}
 }
 
 //concept header will have dynamic param and should not be resolved through lookup, so passing nil lookup
@@ -418,7 +438,7 @@ func (lookup *argLookup) fromDataTableRow(datatable *table, index int) *argLooku
 	}
 	for _, header := range datatable.headers {
 		dataTableLookup.addArgName(header)
-		dataTableLookup.addArgValue(header, &stepArg{value: datatable.get(header)[index], argType: static})
+		dataTableLookup.addArgValue(header, &stepArg{value: datatable.get(header)[index].value, argType: static})
 	}
 	return dataTableLookup
 }

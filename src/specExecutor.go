@@ -329,14 +329,14 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLook
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			if resolvedArg.table.isInitialized() {
 				argument.Type = proto.String("table")
-				argument.Table = executor.createStepTable(&resolvedArg.table)
+				argument.Table = executor.createStepTable(&resolvedArg.table, argLookup)
 			} else {
 				argument.Type = proto.String("string")
 				argument.Value = proto.String(resolvedArg.value)
 			}
 		} else {
 			argument.Type = proto.String("table")
-			argument.Table = executor.createStepTable(&arg.table)
+			argument.Table = executor.createStepTable(&arg.table, argLookup)
 		}
 		arguments = append(arguments, argument)
 	}
@@ -345,17 +345,22 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLook
 }
 
 func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex]
+	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
 }
 
-func (executor *specExecutor) createStepTable(table *table) *ProtoTable {
+func (executor *specExecutor) createStepTable(table *table, argLookup *argLookup) *ProtoTable {
 	protoTable := new(ProtoTable)
 	tableRows := make([]*TableRow, 0)
 	tableRows = append(tableRows, &TableRow{Cells: table.headers})
 	for i := 0; i < len(table.columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.headers {
-			row = append(row, table.get(header)[i])
+			tableCell := table.get(header)[i]
+			value := tableCell.value
+			if tableCell.cellType == dynamic {
+				value = argLookup.getArg(tableCell.value).value
+			}
+			row = append(row, value)
 		}
 		tableRows = append(tableRows, &TableRow{Cells: row})
 	}

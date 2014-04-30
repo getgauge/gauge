@@ -6,16 +6,21 @@ import (
 
 type table struct {
 	headerIndexMap map[string]int
-	columns        [][]string
+	columns        [][]tableCell
 	headers        []string
 	lineNo         int
+}
+
+type tableCell struct {
+	value    string
+	cellType argType
 }
 
 func (table *table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
-func (table *table) get(header string) []string {
+func (table *table) get(header string) []tableCell {
 	if !table.headerExists(header) {
 		panic(fmt.Sprintf("Table column %s not found", header))
 	}
@@ -30,21 +35,32 @@ func (table *table) headerExists(header string) bool {
 func (table *table) addHeaders(columns []string) {
 	table.headerIndexMap = make(map[string]int)
 	table.headers = make([]string, len(columns))
-	table.columns = make([][]string, len(columns))
+	table.columns = make([][]tableCell, len(columns))
 	for i, column := range columns {
 		table.headers[i] = columns[i]
 		table.headerIndexMap[column] = i
-		table.columns[i] = make([]string, 0)
+		table.columns[i] = make([]tableCell, 0)
 	}
 }
 
 func (table *table) addRowValues(rowValues []string) {
 	for i, value := range rowValues {
-		table.columns[i] = append(table.columns[i], value)
+		table.columns[i] = append(table.columns[i], getTableCell(value))
 	}
 	if len(table.headers) > len(rowValues) {
 		for i := len(rowValues); i < len(table.headers); i++ {
-			table.columns[i] = append(table.columns[i], "")
+			table.columns[i] = append(table.columns[i], getDefaultTableCell())
+		}
+	}
+}
+
+func (table *table) addRows(rows []tableCell) {
+	for i, value := range rows {
+		table.columns[i] = append(table.columns[i], value)
+	}
+	if len(table.headers) > len(rows) {
+		for i := len(rows); i < len(table.headers); i++ {
+			table.columns[i] = append(table.columns[i], getDefaultTableCell())
 		}
 	}
 }
@@ -56,4 +72,12 @@ func (table *table) getRowCount() int {
 		return 0
 	}
 
+}
+
+func getTableCell(value string) tableCell {
+	return tableCell{value: value, cellType: static}
+}
+
+func getDefaultTableCell() tableCell {
+	return tableCell{value: "", cellType: static}
 }

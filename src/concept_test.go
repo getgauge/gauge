@@ -178,10 +178,14 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	c.Assert(inlineTable.isInitialized(), Equals, true)
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
-	c.Assert(inlineTable.get("id")[0], Equals, "1")
-	c.Assert(inlineTable.get("id")[1], Equals, "2")
-	c.Assert(inlineTable.get("name")[0], Equals, "vishnu")
-	c.Assert(inlineTable.get("name")[1], Equals, "prateek")
+	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
+	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
+	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[0].value, Equals, "vishnu")
+	c.Assert(inlineTable.get("name")[0].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[1].value, Equals, "prateek")
+	c.Assert(inlineTable.get("name")[1].cellType, Equals, static)
 }
 
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {

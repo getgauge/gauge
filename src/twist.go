@@ -470,12 +470,12 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 		specFileContent := common.ReadFileContents(specFile)
 		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
 		parseResult.fileName = specFile
-		spec.fileName = specFile
 		if !parseResult.ok {
 			return nil, append(parseResults, parseResult)
 		} else {
 			parseResults = append(parseResults, parseResult)
 		}
+		spec.fileName = specFile
 		specs = append(specs, spec)
 	}
 	return specs, parseResults
