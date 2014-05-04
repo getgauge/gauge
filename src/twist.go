@@ -307,6 +307,12 @@ func main() {
 		specs, specParseResults := findSpecs(specSource, concepts)
 		handleParseResult(specParseResults...)
 
+		listener, listenerErr := newListener()
+		if listenerErr != nil {
+			fmt.Printf("Failed to start a runner. %s\n", listenerErr.Error())
+			os.Exit(1)
+		}
+
 		manifest := getProjectManifest()
 		_, runnerError := startRunner(manifest)
 		if runnerError != nil {
@@ -314,7 +320,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		conn, connectionError := acceptConnection()
+		conn, connectionError := listener.acceptConnection()
 		if connectionError != nil {
 			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())
 			os.Exit(1)

@@ -3,14 +3,17 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
+	"errors"
+	"fmt"
 	"github.com/twist2/common"
 	"io"
 	"log"
 	"net"
+	"os"
+	"strconv"
 )
 
 const (
-	port             = ":8888"
 	timeoutInSeconds = 30
 )
 
@@ -47,13 +50,36 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func acceptConnection() (net.Conn, error) {
-	listener, err := net.Listen("tcp", port)
+type gaugeListener struct {
+	tcpListener *net.TCPListener
+}
+
+func newListener() (*gaugeListener, error) {
+	// if GAUGE_PORT is set, use that. Else ListenTCP will assign a free port and set that to GAUGE_ROOT
+	// port = 0 means GO will find a unused port
+	port := 0
+	if gaugePort := os.Getenv(common.GaugePortEnvName); gaugePort != "" {
+		gport, err := strconv.Atoi(gaugePort)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("%s is not a valid port", gaugePort))
+		}
+		port = gport
+	}
+
+	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
 		return nil, err
 	}
 
-	conn, err := listener.Accept()
+	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)); err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
+	}
+
+	return &gaugeListener{tcpListener: listener}, nil
+}
+
+func (listener *gaugeListener) acceptConnection() (net.Conn, error) {
+	conn, err := listener.tcpListener.Accept()
 	if err != nil {
 		return nil, err
 	}
