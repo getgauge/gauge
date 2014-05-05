@@ -74,6 +74,10 @@ func (table *table) getRowCount() int {
 
 }
 
+func (table *table) kind() tokenKind {
+	return tableKind
+}
+
 func getTableCell(value string) tableCell {
 	return tableCell{value: value, cellType: static}
 }

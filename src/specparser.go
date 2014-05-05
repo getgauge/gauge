@@ -60,6 +60,8 @@ const (
 	stepKind
 	tableHeader
 	tableRow
+	headingKind
+	tableKind
 )
 
 func (parser *specParser) initialize() {

@@ -57,6 +57,13 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
+	c.Assert(len(spec.items), Equals, 2)
+	c.Assert(spec.items[0], Equals, spec.heading)
+	c.Assert(spec.items[1], Equals, spec.scenarios[0])
+	scenarioItems := (spec.items[1]).(*scenario).items
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
+	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
+
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.lineNo, Equals, 1)
 	c.Assert(spec.heading.value, Equals, "Spec Heading")
@@ -79,22 +86,34 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 	}
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(len(spec.items), Equals, 3)
+	c.Assert(spec.items[0], Equals, spec.heading)
+	c.Assert(spec.items[1], Equals, spec.comments[0])
+	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+
+	scenarioItems := (spec.items[2]).(*scenario).items
+	c.Assert(4, Equals, len(scenarioItems))
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
+	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].comments[0])
+	c.Assert(scenarioItems[2], Equals, spec.scenarios[0].steps[0])
+	c.Assert(scenarioItems[3], Equals, spec.scenarios[0].comments[1])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.value, Equals, "Spec Heading")
 
-	c.Assert(len(spec.comments), Equals, 3)
+	c.Assert(len(spec.comments), Equals, 1)
 	c.Assert(spec.comments[0].lineNo, Equals, 2)
 	c.Assert(spec.comments[0].value, Equals, "A comment with some text and **bold** characters")
 
 	c.Assert(len(spec.scenarios), Equals, 1)
 	scenario := spec.scenarios[0]
 
-	c.Assert(spec.comments[1].lineNo, Equals, 4)
-	c.Assert(spec.comments[1].value, Equals, "Another comment")
+	c.Assert(2, Equals, len(scenario.comments))
+	c.Assert(scenario.comments[0].lineNo, Equals, 4)
+	c.Assert(scenario.comments[0].value, Equals, "Another comment")
 
-	c.Assert(spec.comments[2].lineNo, Equals, 6)
-	c.Assert(spec.comments[2].value, Equals, "Third comment")
+	c.Assert(scenario.comments[1].lineNo, Equals, 6)
+	c.Assert(scenario.comments[1].value, Equals, "Third comment")
 
 	c.Assert(scenario.heading.value, Equals, "Scenario Heading")
 	c.Assert(len(scenario.steps), Equals, 1)
@@ -167,6 +186,12 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	}
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+
+	c.Assert(len(spec.items), Equals, 4)
+	c.Assert(spec.items[0], Equals, spec.heading)
+	c.Assert(spec.items[1], Equals, spec.comments[0])
+	c.Assert(spec.items[2], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[3], Equals, spec.comments[1])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.dataTable, NotNil)
@@ -278,6 +303,11 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
+	c.Assert(len(spec.items), Equals, 3)
+	c.Assert(spec.items[0], Equals, spec.heading)
+	c.Assert(spec.items[1], DeepEquals, spec.contexts[0])
+	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+
 	c.Assert(result.ok, Equals, true)
 	context := spec.contexts[0]
 
@@ -367,9 +397,9 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 
 	c.Assert(result.ok, Equals, true)
 
-	c.Assert(len(spec.tags), Equals, 2)
-	c.Assert(spec.tags[0], Equals, "tag1")
-	c.Assert(spec.tags[1], Equals, "tag2")
+	c.Assert(len(spec.tags.values), Equals, 2)
+	c.Assert(spec.tags.values[0], Equals, "tag1")
+	c.Assert(spec.tags.values[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
@@ -384,13 +414,14 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 
 	c.Assert(result.ok, Equals, true)
 
-	c.Assert(len(spec.tags), Equals, 2)
-	c.Assert(spec.tags[0], Equals, "tag1")
-	c.Assert(spec.tags[1], Equals, "tag2")
+	c.Assert(len(spec.tags.values), Equals, 2)
+	c.Assert(spec.tags.values[0], Equals, "tag1")
+	c.Assert(spec.tags.values[1], Equals, "tag2")
 
-	c.Assert(len(spec.scenarios[0].tags), Equals, 2)
-	c.Assert(spec.scenarios[0].tags[0], Equals, "tag3")
-	c.Assert(spec.scenarios[0].tags[1], Equals, "tag4")
+	tags := spec.scenarios[0].tags
+	c.Assert(len(tags.values), Equals, 2)
+	c.Assert(tags.values[0], Equals, "tag3")
+	c.Assert(tags.values[1], Equals, "tag4")
 }
 
 func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
@@ -577,6 +608,16 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	conceptsDictionary.add(concepts, "file.cpt")
 	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
 	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.items), Equals, 3)
+	c.Assert(spec.items[0], Equals, spec.heading)
+	c.Assert(spec.items[1], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+
+	scenarioItems := (spec.items[2]).(*scenario).items
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
+	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
+	c.Assert(scenarioItems[2], DeepEquals, spec.scenarios[0].steps[1])
 
 	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
 
