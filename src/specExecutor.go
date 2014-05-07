@@ -6,11 +6,45 @@ import (
 	"net"
 )
 
+type itemExecutor func(item, *specExecutor) *stepExecutionStatus
+
 type specExecutor struct {
 	specification     *specification
 	dataTableIndex    int
 	connection        net.Conn
 	conceptDictionary *conceptDictionary
+	itemExecutors     map[tokenKind]itemExecutor
+}
+
+func (specExecutor *specExecutor) initialize(specificationToExecute *specification, connection net.Conn) {
+	specExecutor.specification = specificationToExecute
+	specExecutor.connection = connection
+	specExecutor.itemExecutors = getItemExecutors()
+}
+
+func getItemExecutors() map[tokenKind]itemExecutor {
+	return map[tokenKind]itemExecutor{
+		//add item executor for tokenKinds if necessary
+		stepKind: func(item item, executor *specExecutor) *stepExecutionStatus {
+			argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+			step := item.(*step)
+			if step.isConcept {
+				return executor.executeConcept(step, argLookup)
+			} else {
+				return executor.executeStep(step, argLookup)
+			}
+		},
+		commentKind :func(item item, executor *specExecutor) *stepExecutionStatus {
+			comment := item.(*comment)
+			fmt.Printf("\x1b[30;1m%s\n\x1b[0m", comment.value)
+			return nil
+		},
+		headingKind :func(item item, executor *specExecutor) *stepExecutionStatus {
+			heading := item.(*heading)
+			fmt.Printf("\x1b[33;1m%s\n\x1b[0m", heading.value)
+			return nil
+		},
+	}
 }
 
 type specExecutionStatus struct {
@@ -189,30 +223,22 @@ func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
 
 func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 	var scenarioExecutionStatuses []*scenarioExecutionStatus
-	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 	for _, scenario := range executor.specification.scenarios {
-		status := executor.executeScenario(scenario, argLookup)
+		status := executor.executeScenario(scenario)
 		scenarioExecutionStatuses = append(scenarioExecutionStatuses, status)
 	}
 	return scenarioExecutionStatuses
 }
 
-func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *argLookup) *scenarioExecutionStatus {
+func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecutionStatus {
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook()
 	if beforeHookExecutionStatus.GetPassed() {
-		contextStepsExecutionStatuses := executor.executeSteps(executor.specification.contexts, argLookup)
+		contextStepsExecutionStatuses, passed := executor.executeItems(executor.specification.items)
 		scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, contextStepsExecutionStatuses...)
-		contextFailed := false
-		for _, s := range contextStepsExecutionStatuses {
-			if !s.passed {
-				contextFailed = true
-				break
-			}
-		}
 
-		if !contextFailed {
-			stepExecutionStatuses := executor.executeSteps(scenario.steps, argLookup)
+		if passed {
+			stepExecutionStatuses, _ := executor.executeItems(scenario.items)
 			scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, stepExecutionStatuses...)
 		}
 	}
@@ -220,6 +246,25 @@ func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *arg
 	afterHookExecutionStatus := executor.executeAfterScenarioHook()
 	scenarioExecutionStatus.hooksExecutionStatuses = append(scenarioExecutionStatus.hooksExecutionStatuses, afterHookExecutionStatus)
 	return scenarioExecutionStatus
+}
+
+func (executor *specExecutor) executeItems(items []item) ([]*stepExecutionStatus, bool) {
+	isFailure := false
+	executionStatuses := make([]*stepExecutionStatus, 0)
+	for _, item := range items {
+		executeFn, found := executor.itemExecutors[item.kind()]
+		if found {
+			executionStatus := executeFn(item, executor)
+			if executionStatus != nil {
+				executionStatuses = append(executionStatuses, executionStatus)
+				if !executionStatus.passed {
+					isFailure = true
+					break
+				}
+			}
+		}
+	}
+	return executionStatuses, !isFailure
 }
 
 type stepExecutionStatus struct {
@@ -239,14 +284,9 @@ func (s *stepExecutionStatus) addExecutionStatus(executionStatus *ExecutionStatu
 }
 
 func (executor *specExecutor) executeSteps(steps []*step, argLookup *argLookup) []*stepExecutionStatus {
-	var status *stepExecutionStatus
 	var statuses []*stepExecutionStatus
 	for _, step := range steps {
-		if step.isConcept {
-			status = executor.executeConcept(step, argLookup)
-		} else {
-			status = executor.executeStep(step, argLookup)
-		}
+		status := executor.executeStep(step, argLookup)
 		statuses = append(statuses, status)
 		// TODO: handle recoverable error when verification API is done
 		if !status.passed {
@@ -255,6 +295,7 @@ func (executor *specExecutor) executeSteps(steps []*step, argLookup *argLookup) 
 	}
 	return statuses
 }
+
 func (executor *specExecutor) executeConcept(concept *step, dataTableLookup *argLookup) *stepExecutionStatus {
 	conceptExecutionStatus := &stepExecutionStatus{passed: true, isConcept: true}
 	conceptLookup := concept.lookup.getCopy()
@@ -303,7 +344,7 @@ func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *ste
 	}
 
 	if stepExecStatus.passed {
-		fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.lineText)
+		fmt.Printf("\x1b[32;1m%s\n\x1b[0m", step.lineText)
 	} else {
 		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", step.lineText)
 	}
