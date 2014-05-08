@@ -79,7 +79,7 @@ func getProjectManifest() *manifest {
 	return &m
 }
 
-func findScenarioFiles(fileChan chan <- string) {
+func findScenarioFiles(fileChan chan<- string) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -339,7 +339,6 @@ func main() {
 		specs, specParseResults := findSpecs(specSource, concepts)
 		handleParseResult(specParseResults...)
 
-
 		manifest := getProjectManifest()
 
 		pluginHandler, warnings := startPluginsForExecution(manifest)
@@ -350,7 +349,6 @@ func main() {
 			fmt.Printf("Failed to start a runner. %s\n", listenerErr.Error())
 			os.Exit(1)
 		}
-
 
 		_, runnerError := startRunner(manifest)
 		if runnerError != nil {

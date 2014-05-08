@@ -10,13 +10,13 @@ import (
 	"path"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const (
 	executionScope          = "execution"
-	pluginConnectionPort    = ":8889"
 	pluginConnectionTimeout = time.Second * 3
 )
 
@@ -42,6 +42,14 @@ type plugin struct {
 	connection net.Conn
 	process    *os.Process
 	descriptor *pluginDescriptor
+}
+
+func (plugin *plugin) kill() error {
+	err := plugin.connection.Close()
+	if err != nil {
+		return err
+	}
+	return plugin.process.Kill()
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
@@ -177,8 +185,8 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	handler := &pluginHandler{}
 	warnings := make([]string, 0)
 	envProperties := make(map[string]string)
-	envProperties["plugin_connection_port"] = pluginConnectionPort
 	pluginListener, err := newListener()
+	envProperties["plugin_connection_port"] = strconv.Itoa((pluginListener.tcpListener.Addr().(*net.TCPAddr).Port))
 	if err != nil {
 		warnings = append(warnings, err.Error())
 		return nil, warnings
@@ -227,6 +235,10 @@ func (handler *pluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
 	handler.pluginsMap[pluginId] = pluginToAdd
 }
 
+func (handler *pluginHandler) removePlugin(pluginId string) {
+	delete(handler.pluginsMap, pluginId)
+}
+
 func (handler *pluginHandler) notifyPlugins(message *Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := writeMessage(plugin.connection, message)
@@ -239,10 +251,10 @@ func (handler *pluginHandler) notifyPlugins(message *Message) {
 
 func (handler *pluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
-	fmt.Printf("Killing Plugin %s %s", plugin.descriptor.Name, plugin.descriptor.Version)
-	plugin.connection.Close()
-	err := plugin.process.Kill()
+	fmt.Printf("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	err := plugin.kill()
 	if err != nil {
-		fmt.Printf("Killing Plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		fmt.Printf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
+	handler.removePlugin(pluginId)
 }

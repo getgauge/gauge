@@ -22,6 +22,7 @@ It has these top-level messages:
 	ExecutionInfo
 	SpecInfo
 	ScenarioInfo
+	StepInfo
 	ExecuteStepRequest
 	ProtoTable
 	TableRow
@@ -297,7 +298,8 @@ func (m *StepExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 type ExecutionInfo struct {
 	CurrentSpec      *SpecInfo     `protobuf:"bytes,1,opt,name=currentSpec" json:"currentSpec,omitempty"`
 	CurrentScenario  *ScenarioInfo `protobuf:"bytes,2,opt,name=currentScenario" json:"currentScenario,omitempty"`
-	Stacktrace       *string       `protobuf:"bytes,3,opt,name=stacktrace" json:"stacktrace,omitempty"`
+	CurrentStep      *StepInfo     `protobuf:"bytes,3,opt,name=currentStep" json:"currentStep,omitempty"`
+	Stacktrace       *string       `protobuf:"bytes,4,opt,name=stacktrace" json:"stacktrace,omitempty"`
 	XXX_unrecognized []byte        `json:"-"`
 }
 
@@ -315,6 +317,13 @@ func (m *ExecutionInfo) GetCurrentSpec() *SpecInfo {
 func (m *ExecutionInfo) GetCurrentScenario() *ScenarioInfo {
 	if m != nil {
 		return m.CurrentScenario
+	}
+	return nil
+}
+
+func (m *ExecutionInfo) GetCurrentStep() *StepInfo {
+	if m != nil {
+		return m.CurrentStep
 	}
 	return nil
 }
@@ -398,10 +407,35 @@ func (m *ScenarioInfo) GetTags() []string {
 	return nil
 }
 
+type StepInfo struct {
+	Step             *ExecuteStepRequest `protobuf:"bytes,1,req,name=step" json:"step,omitempty"`
+	IsFailed         *bool               `protobuf:"varint,2,req,name=isFailed" json:"isFailed,omitempty"`
+	XXX_unrecognized []byte              `json:"-"`
+}
+
+func (m *StepInfo) Reset()         { *m = StepInfo{} }
+func (m *StepInfo) String() string { return proto.CompactTextString(m) }
+func (*StepInfo) ProtoMessage()    {}
+
+func (m *StepInfo) GetStep() *ExecuteStepRequest {
+	if m != nil {
+		return m.Step
+	}
+	return nil
+}
+
+func (m *StepInfo) GetIsFailed() bool {
+	if m != nil && m.IsFailed != nil {
+		return *m.IsFailed
+	}
+	return false
+}
+
 type ExecuteStepRequest struct {
-	StepText         *string     `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
-	ScenarioFailing  *bool       `protobuf:"varint,2,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
-	Args             []*Argument `protobuf:"bytes,3,rep,name=args" json:"args,omitempty"`
+	ActualStepText   *string     `protobuf:"bytes,1,req,name=actualStepText" json:"actualStepText,omitempty"`
+	ParsedStepText   *string     `protobuf:"bytes,2,req,name=parsedStepText" json:"parsedStepText,omitempty"`
+	ScenarioFailing  *bool       `protobuf:"varint,3,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
+	Args             []*Argument `protobuf:"bytes,4,rep,name=args" json:"args,omitempty"`
 	XXX_unrecognized []byte      `json:"-"`
 }
 
@@ -409,9 +443,16 @@ func (m *ExecuteStepRequest) Reset()         { *m = ExecuteStepRequest{} }
 func (m *ExecuteStepRequest) String() string { return proto.CompactTextString(m) }
 func (*ExecuteStepRequest) ProtoMessage()    {}
 
-func (m *ExecuteStepRequest) GetStepText() string {
-	if m != nil && m.StepText != nil {
-		return *m.StepText
+func (m *ExecuteStepRequest) GetActualStepText() string {
+	if m != nil && m.ActualStepText != nil {
+		return *m.ActualStepText
+	}
+	return ""
+}
+
+func (m *ExecuteStepRequest) GetParsedStepText() string {
+	if m != nil && m.ParsedStepText != nil {
+		return *m.ParsedStepText
 	}
 	return ""
 }

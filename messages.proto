@@ -48,7 +48,8 @@ message StepExecutionEndingRequest {
 message ExecutionInfo {
     optional SpecInfo currentSpec = 1;
     optional ScenarioInfo currentScenario = 2;
-    optional string stacktrace = 3;
+    optional StepInfo currentStep = 3;
+    optional string stacktrace = 4;
 }
 
 message SpecInfo {
@@ -64,10 +65,16 @@ message ScenarioInfo {
     repeated string  tags = 3;
 }
 
+message StepInfo {
+    required ExecuteStepRequest step = 1;
+    required bool isFailed = 2;
+}
+
 message ExecuteStepRequest {
-	required string stepText = 1;
-	optional bool scenarioFailing = 2;
-	repeated Argument args = 3;
+	required string actualStepText = 1;
+    required string parsedStepText = 2;
+	optional bool scenarioFailing = 3;
+	repeated Argument args = 4;
 }
 
 message ProtoTable {

@@ -9,9 +9,9 @@ import (
 	"io"
 	"log"
 	"net"
-	"time"
 	"os"
 	"strconv"
+	"time"
 )
 
 const (
@@ -86,10 +86,10 @@ func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration)
 
 	go func() {
 		connection, err := listener.tcpListener.Accept()
-		if (err != nil) {
+		if err != nil {
 			errChannel <- err
 		}
-		if (connection != nil) {
+		if connection != nil {
 			connectionChannel <- connection
 		}
 	}()
