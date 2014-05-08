@@ -10,11 +10,13 @@ import (
 	"log"
 	"net"
 	"time"
+	"os"
+	"strconv"
 )
 
 const (
 	runnerConnectionPort    = ":8888"
-	runnerConnectionTimeOut = time.Second * 5
+	runnerConnectionTimeOut = time.Second * 10
 )
 
 // MessageId -> Callback
@@ -50,19 +52,46 @@ func handleConnection(conn net.Conn) {
 	}
 }
 
-func acceptConnection(portNo string, connectionTimeOut time.Duration) (net.Conn, error) {
-	listener, err := net.Listen("tcp", portNo)
+type gaugeListener struct {
+	tcpListener *net.TCPListener
+}
+
+func newListener() (*gaugeListener, error) {
+	// if GAUGE_PORT is set, use that. Else ListenTCP will assign a free port and set that to GAUGE_ROOT
+	// port = 0 means GO will find a unused port
+	port := 0
+	if gaugePort := os.Getenv(common.GaugePortEnvName); gaugePort != "" {
+		gport, err := strconv.Atoi(gaugePort)
+		if err != nil {
+			return nil, errors.New(fmt.Sprintf("%s is not a valid port", gaugePort))
+		}
+		port = gport
+	}
+
+	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
 		return nil, err
 	}
+
+	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)); err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
+	}
+
+	return &gaugeListener{tcpListener: listener}, nil
+}
+
+func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {
 	errChannel := make(chan error, 1)
 	connectionChannel := make(chan net.Conn, 1)
 
 	go func() {
-		connection, err := listener.Accept()
-		errChannel <- err
-		connectionChannel <- connection
-
+		connection, err := listener.tcpListener.Accept()
+		if (err != nil) {
+			errChannel <- err
+		}
+		if (connection != nil) {
+			connectionChannel <- connection
+		}
 	}()
 
 	select {
@@ -72,7 +101,7 @@ func acceptConnection(portNo string, connectionTimeOut time.Duration) (net.Conn,
 		go handleConnection(conn)
 		return conn, nil
 	case <-time.After(connectionTimeOut):
-		return nil, errors.New(fmt.Sprintf("Timed out connecting to port %s", portNo))
+		return nil, errors.New(fmt.Sprintf("Timed out connecting to %v", listener.tcpListener.Addr()))
 	}
 
 }

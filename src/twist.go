@@ -21,7 +21,6 @@ import (
 const (
 	specsDirName      = "specs"
 	skelFileName      = "hello_world.spec"
-	envDirName        = "env"
 	envDefaultDirName = "default"
 )
 
@@ -80,7 +79,7 @@ func getProjectManifest() *manifest {
 	return &m
 }
 
-func findScenarioFiles(fileChan chan<- string) {
+func findScenarioFiles(fileChan chan <- string) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		panic(err)
@@ -340,10 +339,18 @@ func main() {
 		specs, specParseResults := findSpecs(specSource, concepts)
 		handleParseResult(specParseResults...)
 
+
 		manifest := getProjectManifest()
 
 		pluginHandler, warnings := startPluginsForExecution(manifest)
 		handleWarningMessages(warnings)
+
+		listener, listenerErr := newListener()
+		if listenerErr != nil {
+			fmt.Printf("Failed to start a runner. %s\n", listenerErr.Error())
+			os.Exit(1)
+		}
+
 
 		_, runnerError := startRunner(manifest)
 		if runnerError != nil {
@@ -351,8 +358,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		runnerConnection, connectionError := acceptConnection(runnerConnectionPort, runnerConnectionTimeOut)
-
+		runnerConnection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
 		if connectionError != nil {
 			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())
 			os.Exit(1)
@@ -360,7 +366,6 @@ func main() {
 
 		execution := newExecution(manifest, specs, runnerConnection, pluginHandler)
 		validationErrors := execution.validate(concepts)
-
 		if len(validationErrors) > 0 {
 			fmt.Println("Validation failed. The following steps are not implemented")
 			for _, stepValidationErrors := range validationErrors {
@@ -509,12 +514,12 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 		specFileContent := common.ReadFileContents(specFile)
 		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
 		parseResult.fileName = specFile
-		spec.fileName = specFile
 		if !parseResult.ok {
 			return nil, append(parseResults, parseResult)
 		} else {
 			parseResults = append(parseResults, parseResult)
 		}
+		spec.fileName = specFile
 		specs = append(specs, spec)
 	}
 	return specs, parseResults

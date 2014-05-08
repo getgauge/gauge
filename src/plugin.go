@@ -30,8 +30,8 @@ type pluginDescriptor struct {
 		Linux   string
 		Darwin  string
 	}
-	Scope      []string
-	pluginPath string
+	Scope       []string
+	pluginPath  string
 }
 
 type pluginHandler struct {
@@ -178,6 +178,11 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	warnings := make([]string, 0)
 	envProperties := make(map[string]string)
 	envProperties["plugin_connection_port"] = pluginConnectionPort
+	pluginListener, err := newListener()
+	if err != nil {
+		warnings = append(warnings, err.Error())
+		return nil, warnings
+	}
 
 	for _, pluginDetails := range manifest.Plugins {
 		pd, err := getPluginDescriptor(pluginDetails.Id, pluginDetails.Version)
@@ -193,7 +198,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := acceptConnection(pluginConnectionPort, pluginConnectionTimeout)
+			pluginConnection, err := pluginListener.acceptConnection(pluginConnectionTimeout)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
 				pluginProcess.Kill()

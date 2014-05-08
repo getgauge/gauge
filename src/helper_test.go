@@ -1,9 +1,65 @@
 package main
 
 import (
+	"fmt"
 	. "launchpad.net/gocheck"
 )
 
+type specBuilder struct {
+	lines []string
+}
+
+func SpecBuilder() *specBuilder {
+	return &specBuilder{lines: make([]string, 0)}
+}
+
+func (specBuilder *specBuilder) addPrefix(prefix string, line string) string {
+	return fmt.Sprintf("%s%s\n", prefix, line)
+}
+
+func (specBuilder *specBuilder) String() string {
+	var result string
+	for _, line := range specBuilder.lines {
+		result = fmt.Sprintf("%s%s", result, line)
+	}
+	return result
+}
+
+func (specBuilder *specBuilder) specHeading(heading string) *specBuilder {
+	line := specBuilder.addPrefix("#", heading)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) scenarioHeading(heading string) *specBuilder {
+	line := specBuilder.addPrefix("##", heading)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) step(stepText string) *specBuilder {
+	line := specBuilder.addPrefix("* ", stepText)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) tags(tags ...string) *specBuilder {
+	tagText := ""
+	for i, tag := range tags {
+		tagText = fmt.Sprintf("%s%s", tagText, tag)
+		if i != len(tags)-1 {
+			tagText = fmt.Sprintf("%s,", tagText)
+		}
+	}
+	line := specBuilder.addPrefix("tags: ", tagText)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) text(comment string) *specBuilder {
+	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", comment))
+	return specBuilder
+}
 func (s *MySuite) TestIsInState(c *C) {
 	c.Assert(isInState(1, 1), Equals, true)
 	c.Assert(isInState(1, 3, 2), Equals, true)

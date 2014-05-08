@@ -6,6 +6,8 @@ import (
 	"net"
 )
 
+type itemExecutor func(item, *specExecutor) *stepExecutionStatus
+
 type specExecutor struct {
 	specification        *specification
 	dataTableIndex       int
@@ -13,6 +15,39 @@ type specExecutor struct {
 	conceptDictionary    *conceptDictionary
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *ExecutionInfo
+	itemExecutors        map[tokenKind]itemExecutor
+}
+
+func (specExecutor *specExecutor) initialize(specificationToExecute *specification, connection net.Conn, pluginHandler *pluginHandler) {
+	specExecutor.specification = specificationToExecute
+	specExecutor.connection = connection
+	specExecutor.pluginHandler = pluginHandler
+	specExecutor.itemExecutors = getItemExecutors()
+}
+
+func getItemExecutors() map[tokenKind]itemExecutor {
+	return map[tokenKind]itemExecutor{
+		//add item executor for tokenKinds if necessary
+		stepKind: func(item item, executor *specExecutor) *stepExecutionStatus {
+			argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+			step := item.(*step)
+			if step.isConcept {
+				return executor.executeConcept(step, argLookup)
+			} else {
+				return executor.executeStep(step, argLookup)
+			}
+		},
+		commentKind :func(item item, executor *specExecutor) *stepExecutionStatus {
+			comment := item.(*comment)
+			fmt.Printf("\x1b[30;1m%s\n\x1b[0m", comment.value)
+			return nil
+		},
+		headingKind :func(item item, executor *specExecutor) *stepExecutionStatus {
+			heading := item.(*heading)
+			fmt.Printf("\x1b[33;1m%s\n\x1b[0m", heading.value)
+			return nil
+		},
+	}
 }
 
 type specExecutionStatus struct {
@@ -69,7 +104,8 @@ func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 }
 
 func (executor *specExecutor) execute() *specExecutionStatus {
-	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value), FileName: proto.String(executor.specification.fileName), IsFailed: proto.Bool(false), Tags: executor.specification.tags}
+
+	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value), FileName: proto.String(executor.specification.fileName), IsFailed: proto.Bool(false), Tags: getTagValue(executor.specification.tags)}
 	executor.currentExecutionInfo = &ExecutionInfo{CurrentSpec: specInfo}
 
 	specExecutionStatus := &specExecutionStatus{specification: executor.specification, scenariosExecutionStatuses: make(map[int][]*scenarioExecutionStatus)}
@@ -91,6 +127,14 @@ func (executor *specExecutor) execute() *specExecutionStatus {
 	specExecutionStatus.hooksExecutionStatuses = append(specExecutionStatus.hooksExecutionStatuses, beforeSpecHookStatus, afterSpecHookStatus)
 
 	return specExecutionStatus
+}
+
+func getTagValue(tags *tags) []string {
+	tagValues := make([]string, 0)
+	if tags != nil {
+		tagValues = append(tagValues, tags.values...)
+	}
+	return tagValues
 }
 
 type scenarioExecutionStatus struct {
@@ -193,32 +237,23 @@ func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
 
 func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 	var scenarioExecutionStatuses []*scenarioExecutionStatus
-	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 	for _, scenario := range executor.specification.scenarios {
-		status := executor.executeScenario(scenario, argLookup)
+		status := executor.executeScenario(scenario)
 		scenarioExecutionStatuses = append(scenarioExecutionStatuses, status)
 	}
 	return scenarioExecutionStatuses
 }
 
-func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *argLookup) *scenarioExecutionStatus {
-	executor.currentExecutionInfo.CurrentScenario = &ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: scenario.tags, IsFailed: proto.Bool(false)}
-
+func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecutionStatus {
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
+	executor.currentExecutionInfo.CurrentScenario = &ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: getTagValue(scenario.tags), IsFailed: proto.Bool(false)}
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenario)
 	if beforeHookExecutionStatus.GetPassed() {
-		contextStepsExecutionStatuses := executor.executeSteps(executor.specification.contexts, argLookup)
+		contextStepsExecutionStatuses, passed := executor.executeItems(executor.specification.items)
 		scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, contextStepsExecutionStatuses...)
-		contextFailed := false
-		for _, s := range contextStepsExecutionStatuses {
-			if !s.passed {
-				contextFailed = true
-				break
-			}
-		}
 
-		if !contextFailed {
-			stepExecutionStatuses := executor.executeSteps(scenario.steps, argLookup)
+		if passed {
+			stepExecutionStatuses, _ := executor.executeItems(scenario.items)
 			scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, stepExecutionStatuses...)
 		}
 	}
@@ -226,6 +261,25 @@ func (executor *specExecutor) executeScenario(scenario *scenario, argLookup *arg
 	afterHookExecutionStatus := executor.executeAfterScenarioHook()
 	scenarioExecutionStatus.hooksExecutionStatuses = append(scenarioExecutionStatus.hooksExecutionStatuses, afterHookExecutionStatus)
 	return scenarioExecutionStatus
+}
+
+func (executor *specExecutor) executeItems(items []item) ([]*stepExecutionStatus, bool) {
+	isFailure := false
+	executionStatuses := make([]*stepExecutionStatus, 0)
+	for _, item := range items {
+		executeFn, found := executor.itemExecutors[item.kind()]
+		if found {
+			executionStatus := executeFn(item, executor)
+			if executionStatus != nil {
+				executionStatuses = append(executionStatuses, executionStatus)
+				if !executionStatus.passed {
+					isFailure = true
+					break
+				}
+			}
+		}
+	}
+	return executionStatuses, !isFailure
 }
 
 type stepExecutionStatus struct {
@@ -245,14 +299,9 @@ func (s *stepExecutionStatus) addExecutionStatus(executionStatus *ExecutionStatu
 }
 
 func (executor *specExecutor) executeSteps(steps []*step, argLookup *argLookup) []*stepExecutionStatus {
-	var status *stepExecutionStatus
 	var statuses []*stepExecutionStatus
 	for _, step := range steps {
-		if step.isConcept {
-			status = executor.executeConcept(step, argLookup)
-		} else {
-			status = executor.executeStep(step, argLookup)
-		}
+		status := executor.executeStep(step, argLookup)
 		statuses = append(statuses, status)
 		// TODO: handle recoverable error when verification API is done
 		if !status.passed {
@@ -309,7 +358,7 @@ func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *ste
 	}
 
 	if stepExecStatus.passed {
-		fmt.Printf("=> \x1b[32;1m%s\n\x1b[0m", step.lineText)
+		fmt.Printf("\x1b[32;1m%s\n\x1b[0m", step.lineText)
 	} else {
 		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", step.lineText)
 	}
@@ -335,14 +384,14 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLook
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			if resolvedArg.table.isInitialized() {
 				argument.Type = proto.String("table")
-				argument.Table = executor.createStepTable(&resolvedArg.table)
+				argument.Table = executor.createStepTable(&resolvedArg.table, argLookup)
 			} else {
 				argument.Type = proto.String("string")
 				argument.Value = proto.String(resolvedArg.value)
 			}
 		} else {
 			argument.Type = proto.String("table")
-			argument.Table = executor.createStepTable(&arg.table)
+			argument.Table = executor.createStepTable(&arg.table, argLookup)
 		}
 		arguments = append(arguments, argument)
 	}
@@ -351,17 +400,29 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLook
 }
 
 func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex]
+	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
 }
 
-func (executor *specExecutor) createStepTable(table *table) *ProtoTable {
+func (executor *specExecutor) createStepTable(table *table, lookup *argLookup) *ProtoTable {
 	protoTable := new(ProtoTable)
 	tableRows := make([]*TableRow, 0)
 	tableRows = append(tableRows, &TableRow{Cells: table.headers})
 	for i := 0; i < len(table.columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.headers {
-			row = append(row, table.get(header)[i])
+			tableCell := table.get(header)[i]
+			value := tableCell.value
+			if tableCell.cellType == dynamic {
+				if lookup.containsArg(tableCell.value) {
+					value = lookup.getArg(tableCell.value).value
+				} else {
+					//if concept has a table with dynamic cell, arglookup won't have the table value, so fetch from datatable itself
+					//todo cleanup
+					tableLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+					value = tableLookup.getArg(tableCell.value).value
+				}
+			}
+			row = append(row, value)
 		}
 		tableRows = append(tableRows, &TableRow{Cells: row})
 	}

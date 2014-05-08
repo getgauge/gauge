@@ -90,14 +90,21 @@ func (exe *execution) start() *testExecutionStatus {
 	beforeSuiteHookExecStatus := exe.startExecution()
 	if beforeSuiteHookExecStatus.GetPassed() {
 		for _, specificationToExecute := range exe.specifications {
-			executor := &specExecutor{specification: specificationToExecute, connection: exe.connection, pluginHandler: exe.pluginHandler}
+			executor := newSpecExecutor(specificationToExecute, exe.connection, exe.pluginHandler)
 			specExecutionStatus := executor.execute()
 			testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
 			testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
 		}
 	}
+
 	afterSuiteHookExecStatus := exe.stopExecution()
 	testExecutionStatus.hooksExecutionStatuses = append(testExecutionStatus.hooksExecutionStatuses, beforeSuiteHookExecStatus, afterSuiteHookExecStatus)
 
 	return testExecutionStatus
+}
+
+func newSpecExecutor(specToExecute *specification, connection net.Conn, pluginHandler *pluginHandler) *specExecutor {
+	specExecutor := new(specExecutor)
+	specExecutor.initialize(specToExecute, connection, pluginHandler)
+	return specExecutor
 }

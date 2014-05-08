@@ -38,18 +38,24 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	c.Assert(table.getRowCount(), Equals, 2)
 	column1 := table.get("one")
 	c.Assert(len(column1), Equals, 2)
-	c.Assert(column1[0], Equals, "foo")
-	c.Assert(column1[1], Equals, "john")
+	c.Assert(column1[0].value, Equals, "foo")
+	c.Assert(column1[0].cellType, Equals, static)
+	c.Assert(column1[1].value, Equals, "john")
+	c.Assert(column1[1].cellType, Equals, static)
 
 	column2 := table.get("two")
 	c.Assert(len(column2), Equals, 2)
-	c.Assert(column2[0], Equals, "bar")
-	c.Assert(column2[1], Equals, "jim")
+	c.Assert(column2[0].value, Equals, "bar")
+	c.Assert(column2[0].cellType, Equals, static)
+	c.Assert(column2[1].value, Equals, "jim")
+	c.Assert(column2[1].cellType, Equals, static)
 
 	column3 := table.get("three")
 	c.Assert(len(column3), Equals, 2)
-	c.Assert(column3[0], Equals, "baz")
-	c.Assert(column3[1], Equals, "")
+	c.Assert(column3[0].value, Equals, "baz")
+	c.Assert(column3[0].cellType, Equals, static)
+	c.Assert(column3[1].value, Equals, "")
+	c.Assert(column3[1].cellType, Equals, static)
 
 }
 
