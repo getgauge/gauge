@@ -28,12 +28,21 @@ func (e *execution) startExecution() *ExecutionStatus {
 	return executeAndGetStatus(e.connection, message)
 }
 
-func (e *execution) stopExecution() *ExecutionStatus {
+func (e *execution) endExecution() *ExecutionStatus {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 
 	return executeAndGetStatus(e.connection, message)
 }
+
+func (e *execution) notifyExecutionStop() {
+	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &KillProcessRequest{}}
+
+	e.pluginHandler.notifyPlugins(message)
+	e.pluginHandler.gracefullyKillPlugins()
+}
+
 
 func (e *execution) killProcess() error {
 	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
@@ -41,6 +50,10 @@ func (e *execution) killProcess() error {
 
 	_, err := getResponse(e.connection, message)
 	return err
+}
+
+func (e *execution) killPlugins() {
+	e.pluginHandler.gracefullyKillPlugins()
 }
 
 type testExecutionStatus struct {
@@ -97,9 +110,10 @@ func (exe *execution) start() *testExecutionStatus {
 		}
 	}
 
-	afterSuiteHookExecStatus := exe.stopExecution()
+	afterSuiteHookExecStatus := exe.endExecution()
 	testExecutionStatus.hooksExecutionStatuses = append(testExecutionStatus.hooksExecutionStatuses, beforeSuiteHookExecStatus, afterSuiteHookExecStatus)
 
+	exe.notifyExecutionStop()
 	return testExecutionStatus
 }
 

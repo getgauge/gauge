@@ -28,6 +28,7 @@ func handleConnection(conn net.Conn) {
 	for {
 		n, err := conn.Read(data)
 		if err != nil {
+			conn.Close()
 			if err == io.EOF {
 				return
 			}

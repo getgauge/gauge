@@ -99,12 +99,11 @@ func (e *specExecutor) executeBeforeSpecHook() *ExecutionStatus {
 func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_SpecExecutionEnding.Enum(),
 		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{}}
-
+	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
 }
 
 func (executor *specExecutor) execute() *specExecutionStatus {
-
 	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value), FileName: proto.String(executor.specification.fileName), IsFailed: proto.Bool(false), Tags: getTagValue(executor.specification.tags)}
 	executor.currentExecutionInfo = &ExecutionInfo{CurrentSpec: specInfo}
 
@@ -234,6 +233,7 @@ func (e *specExecutor) executeBeforeScenarioHook(scenario *scenario) *ExecutionS
 func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_ScenarioExecutionEnding.Enum(),
 		ScenarioExecutionEndingRequest: &ScenarioExecutionEndingRequest{}}
+	executor.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(executor.connection, message)
 }
 

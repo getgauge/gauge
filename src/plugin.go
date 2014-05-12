@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"sync"
 )
 
 const (
@@ -44,12 +45,35 @@ type plugin struct {
 	descriptor *pluginDescriptor
 }
 
-func (plugin *plugin) kill() error {
+func (plugin *plugin) kill(wg *sync.WaitGroup) error {
+	defer wg.Done();
+	readyToClose := make(chan bool)
+	go plugin.readTillClose(readyToClose)
+	fmt.Println(fmt.Sprintf("Waiting for plugin [%s] with pid [%d] to close connection", plugin.descriptor.Name, plugin.process.Pid))
+	select {
+	case <-readyToClose: {
+		fmt.Println(fmt.Sprintf("Plugin [%s] has closed the connection", plugin.descriptor.Name))
+		break
+	}
+	case <-time.After(pluginConnectionTimeout): {
+		fmt.Println(fmt.Sprintf("Plugin [%s] did not respond after %f seconds", plugin.descriptor.Name, pluginConnectionTimeout.Seconds()))
+		break
+	}
+	}
+
 	err := plugin.connection.Close()
 	if err != nil {
 		return err
 	}
-	return plugin.process.Kill()
+	fmt.Println(fmt.Sprintf("Killing plugin [%s] with pid [%d]", plugin.descriptor.Name, plugin.process.Pid))
+	err = plugin.process.Kill()
+	return err
+}
+func (plugin *plugin) readTillClose(readyToClose chan bool) {
+	data := make([]byte, 1024)
+	//sees if plugin has closed the connection
+	plugin.connection.Read(data)
+	readyToClose <- true
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
@@ -252,9 +276,18 @@ func (handler *pluginHandler) notifyPlugins(message *Message) {
 func (handler *pluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
 	fmt.Printf("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
-	err := plugin.kill()
+	err := plugin.process.Kill()
 	if err != nil {
 		fmt.Printf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginId)
+}
+
+func (handler *pluginHandler) gracefullyKillPlugins() {
+	var wg sync.WaitGroup
+	for _, plugin := range handler.pluginsMap {
+		wg.Add(1)
+		go plugin.kill(&wg)
+	}
+	wg.Wait()
 }
