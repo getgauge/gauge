@@ -379,6 +379,12 @@ func (specification *specification) latestContext() *step {
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {
+	if len(specification.items) == 0 {
+		return &parseError{lineNo: 1, message: "Spec does not have any elements"}
+	}
+	if (specification.heading == nil) {
+		return &parseError{lineNo: 1, message: "Spec heading not found"}
+	}
 	dataTable := specification.dataTable
 	if dataTable.isInitialized() && dataTable.getRowCount() == 0 {
 		return &parseError{lineNo: dataTable.lineNo, message: "Data table should have at least 1 data row"}
