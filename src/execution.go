@@ -43,7 +43,6 @@ func (e *execution) notifyExecutionStop() {
 	e.pluginHandler.gracefullyKillPlugins()
 }
 
-
 func (e *execution) killProcess() error {
 	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}

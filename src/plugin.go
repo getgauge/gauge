@@ -12,8 +12,8 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
-	"time"
 	"sync"
+	"time"
 )
 
 const (
@@ -31,8 +31,8 @@ type pluginDescriptor struct {
 		Linux   string
 		Darwin  string
 	}
-	Scope       []string
-	pluginPath  string
+	Scope      []string
+	pluginPath string
 }
 
 type pluginHandler struct {
@@ -46,19 +46,21 @@ type plugin struct {
 }
 
 func (plugin *plugin) kill(wg *sync.WaitGroup) error {
-	defer wg.Done();
+	defer wg.Done()
 	readyToClose := make(chan bool)
 	go plugin.readTillClose(readyToClose)
 	fmt.Println(fmt.Sprintf("Waiting for plugin [%s] with pid [%d] to close connection", plugin.descriptor.Name, plugin.process.Pid))
 	select {
-	case <-readyToClose: {
-		fmt.Println(fmt.Sprintf("Plugin [%s] has closed the connection", plugin.descriptor.Name))
-		break
-	}
-	case <-time.After(pluginConnectionTimeout): {
-		fmt.Println(fmt.Sprintf("Plugin [%s] did not respond after %f seconds", plugin.descriptor.Name, pluginConnectionTimeout.Seconds()))
-		break
-	}
+	case <-readyToClose:
+		{
+			fmt.Println(fmt.Sprintf("Plugin [%s] has closed the connection", plugin.descriptor.Name))
+			break
+		}
+	case <-time.After(pluginConnectionTimeout):
+		{
+			fmt.Println(fmt.Sprintf("Plugin [%s] did not respond after %f seconds", plugin.descriptor.Name, pluginConnectionTimeout.Seconds()))
+			break
+		}
 	}
 
 	err := plugin.connection.Close()

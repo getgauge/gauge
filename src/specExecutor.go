@@ -98,7 +98,7 @@ func (e *specExecutor) executeBeforeSpecHook() *ExecutionStatus {
 
 func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_SpecExecutionEnding.Enum(),
-		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{}}
+		SpecExecutionEndingRequest: &SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
 }
@@ -232,7 +232,7 @@ func (e *specExecutor) executeBeforeScenarioHook(scenario *scenario) *ExecutionS
 
 func (executor *specExecutor) executeAfterScenarioHook() *ExecutionStatus {
 	message := &Message{MessageType: Message_ScenarioExecutionEnding.Enum(),
-		ScenarioExecutionEndingRequest: &ScenarioExecutionEndingRequest{}}
+		ScenarioExecutionEndingRequest: &ScenarioExecutionEndingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	executor.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(executor.connection, message)
 }
