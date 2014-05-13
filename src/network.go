@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/twist2/common"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -29,10 +28,8 @@ func handleConnection(conn net.Conn) {
 		n, err := conn.Read(data)
 		if err != nil {
 			conn.Close()
-			if err == io.EOF {
-				return
-			}
-			log.Println(err.Error())
+			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error()))
+			return
 		}
 
 		buffer.Write(data[0:n])

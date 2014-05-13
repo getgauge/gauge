@@ -49,16 +49,16 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
 	readyToClose := make(chan bool)
 	go plugin.readTillClose(readyToClose)
-	fmt.Println(fmt.Sprintf("Waiting for plugin [%s] with pid [%d] to close connection", plugin.descriptor.Name, plugin.process.Pid))
+	fmt.Println(fmt.Sprintf("Waiting for plugin [%s] with pid [%d] to close connection [%s]", plugin.descriptor.Name, plugin.process.Pid, plugin.connection.RemoteAddr()))
 	select {
 	case <-readyToClose:
 		{
-			fmt.Println(fmt.Sprintf("Plugin [%s] has closed the connection", plugin.descriptor.Name))
+			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] has closed the connection [%s]", plugin.descriptor.Name, plugin.process.Pid, plugin.connection.RemoteAddr()))
 			break
 		}
 	case <-time.After(pluginConnectionTimeout):
 		{
-			fmt.Println(fmt.Sprintf("Plugin [%s] did not respond after %f seconds", plugin.descriptor.Name, pluginConnectionTimeout.Seconds()))
+			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not respond after %.2f seconds", plugin.descriptor.Name, plugin.process.Pid, pluginConnectionTimeout.Seconds()))
 			break
 		}
 	}
