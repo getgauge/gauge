@@ -395,7 +395,7 @@ func (executor *specExecutor) createStepArgs(args []*stepArg, argLookup *argLook
 	arguments := make([]*Argument, 0)
 	for _, arg := range args {
 		argument := new(Argument)
-		if arg.argType == static || arg.argType == specialString {
+		if arg.argType == static {
 			argument.Type = proto.String("string")
 			argument.Value = proto.String(arg.value)
 		} else if arg.argType == dynamic {

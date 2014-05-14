@@ -32,6 +32,7 @@ func (e *execution) endExecution() *ExecutionStatus {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 
+	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
 }
 

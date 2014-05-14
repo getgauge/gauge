@@ -424,7 +424,7 @@ func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs 
 func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseError) {
 	var stepArgument *stepArg
 	if typeOfArg == "special" {
-		return new(specialTypeResolver).resolve(argValue), nil
+		return newSpecialTypeResolver().resolve(argValue), nil
 	} else if typeOfArg == "static" {
 		return &stepArg{argType: static, value: argValue}, nil
 	} else {
@@ -468,13 +468,6 @@ func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResu
 //concept header will have dynamic param and should not be resolved through lookup, so passing nil lookup
 func isConceptHeader(lookup *argLookup) bool {
 	return lookup == nil
-}
-
-type specialTypeResolver struct {
-}
-
-func (resolver *specialTypeResolver) resolve(value string) *stepArg {
-	return &stepArg{argType: specialString, value: ""}
 }
 
 func (lookup *argLookup) addArgName(argName string) {
