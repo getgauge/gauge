@@ -62,7 +62,11 @@ func getProjectManifest() *manifest {
 		fmt.Printf("Failed to read manifest: %s \n", err.Error())
 		os.Exit(1)
 	}
-	contents := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
+	contents, err := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 	dec := json.NewDecoder(strings.NewReader(contents))
 
 	var m manifest
@@ -106,7 +110,11 @@ func parseScenarioFiles(fileChan <-chan string) {
 
 		parser := new(specParser)
 		//todo: parse concepts
-		specification, result := parser.parse(common.ReadFileContents(scenarioFilePath), new(conceptDictionary))
+		scenarioContent, err := common.ReadFileContents(scenarioFilePath)
+		if err != nil {
+			fmt.Println(err)
+		}
+		specification, result := parser.parse(scenarioContent, new(conceptDictionary))
 
 		if result.ok {
 			availableSteps = append(availableSteps, specification.contexts...)
@@ -485,7 +493,10 @@ func createConceptsDictionary() (*conceptDictionary, *parseResult) {
 }
 
 func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *parseError {
-	fileText := common.ReadFileContents(conceptFile)
+	fileText, fileReadErr := common.ReadFileContents(conceptFile)
+	if fileReadErr != nil {
+		return &parseError{message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
+	}
 	concepts, err := new(conceptParser).parse(fileText)
 	if err != nil {
 		return err
@@ -509,7 +520,11 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 
 	specs := make([]*specification, 0)
 	for _, specFile := range specFiles {
-		specFileContent := common.ReadFileContents(specFile)
+		specFileContent, err := common.ReadFileContents(specFile)
+		if err != nil {
+			fmt.Println(err)
+			parseResults = append(parseResults, &parseResult{error: &parseError{message: err.Error()}, ok: false, fileName: specFile})
+		}
 		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
 		parseResult.fileName = specFile
 		if !parseResult.ok {

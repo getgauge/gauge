@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 )
 
 type table struct {
@@ -32,20 +33,21 @@ func (table *table) headerExists(header string) bool {
 	return ok
 }
 
-func (table *table) addHeaders(columns []string) {
+func (table *table) addHeaders(columnNames []string) {
 	table.headerIndexMap = make(map[string]int)
-	table.headers = make([]string, len(columns))
-	table.columns = make([][]tableCell, len(columns))
-	for i, column := range columns {
-		table.headers[i] = columns[i]
-		table.headerIndexMap[column] = i
+	table.headers = make([]string, len(columnNames))
+	table.columns = make([][]tableCell, len(columnNames))
+	for i, column := range columnNames {
+		trimmedHeader := strings.TrimSpace(column)
+		table.headers[i] = trimmedHeader
+		table.headerIndexMap[trimmedHeader] = i
 		table.columns[i] = make([]tableCell, 0)
 	}
 }
 
 func (table *table) addRowValues(rowValues []string) {
 	for i, value := range rowValues {
-		table.columns[i] = append(table.columns[i], getTableCell(value))
+		table.columns[i] = append(table.columns[i], getTableCell(strings.TrimSpace(value)))
 	}
 	if len(table.headers) > len(rowValues) {
 		for i := len(rowValues); i < len(table.headers); i++ {

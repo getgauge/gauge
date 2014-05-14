@@ -34,7 +34,11 @@ func executeInitHookForRunner(language string) error {
 		return err
 	}
 
-	contents := common.ReadFileContents(languageJsonFilePath)
+	contents, err := common.ReadFileContents(languageJsonFilePath)
+	if err != nil {
+		return err
+	}
+
 	err = json.Unmarshal([]byte(contents), &r)
 	if err != nil {
 		return err
@@ -73,7 +77,11 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 
-	contents := common.ReadFileContents(languageJsonFilePath)
+	contents, err := common.ReadFileContents(languageJsonFilePath)
+	if err != nil {
+		return nil, err
+	}
+
 	err = json.Unmarshal([]byte(contents), &r)
 	if err != nil {
 		return nil, err

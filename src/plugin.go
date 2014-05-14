@@ -141,7 +141,10 @@ func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, e
 		return nil, err
 	}
 
-	pluginJsonContents := common.ReadFileContents(pluginJson)
+	pluginJsonContents, err := common.ReadFileContents(pluginJson)
+	if err != nil {
+		return nil, err
+	}
 	var pd pluginDescriptor
 	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
 		return nil, errors.New(fmt.Sprintf("%s: %s", pluginJson, err.Error()))

@@ -17,10 +17,9 @@ type scenario struct {
 type argType int
 
 const (
-	static        argType = iota
-	dynamic       argType = iota
-	tableArg      argType = iota
-	specialString argType = iota
+	static   argType = iota
+	dynamic  argType = iota
+	tableArg argType = iota
 )
 
 type stepArg struct {
@@ -424,7 +423,11 @@ func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs 
 func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseError) {
 	var stepArgument *stepArg
 	if typeOfArg == "special" {
-		return newSpecialTypeResolver().resolve(argValue), nil
+		resolvedArgValue, err := newSpecialTypeResolver().resolve(argValue)
+		if err != nil {
+			return nil, &parseError{lineNo: token.lineNo, message: err.Error(), lineText: token.lineText}
+		}
+		return resolvedArgValue, nil
 	} else if typeOfArg == "static" {
 		return &stepArg{argType: static, value: argValue}, nil
 	} else {

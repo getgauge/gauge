@@ -90,14 +90,14 @@ func (parser *conceptParser) isTableDataRow(token *token) bool {
 
 func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseError) {
 	processStep(new(specParser), token)
+	if !parser.hasOnlyDynamicParams(token) {
+		return nil, &parseError{lineNo: token.lineNo, message: "Concept heading can have only Dynamic Parameters"}
+	}
 	concept, err := new(specification).createStepUsingLookup(token, nil)
 	if err != nil {
 		return nil, err
 	}
 	concept.isConcept = true
-	if !parser.hasOnlyDynamicParams(concept) {
-		return nil, &parseError{lineNo: concept.lineNo, message: "Concept heading can have only Dynamic Parameters"}
-	}
 	parser.createConceptLookup(concept)
 	return concept, nil
 
@@ -125,9 +125,10 @@ func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLoo
 	addInlineTableRow(currentStep, token, argLookup)
 }
 
-func (parser *conceptParser) hasOnlyDynamicParams(concept *step) bool {
-	for _, arg := range concept.args {
-		if arg.argType != dynamic {
+func (parser *conceptParser) hasOnlyDynamicParams(token *token) bool {
+	_, kinds := new(specification).extractStepValueAndParameterTypes(token.value)
+	for _, argKind := range kinds {
+		if argKind != "dynamic" {
 			return false
 		}
 	}
