@@ -93,10 +93,12 @@ message Argument {
 
 message StepValidateRequest {
 	required string stepText = 1;
+    required int32 numberOfArguments = 2;
 }
 
 message StepValidateResponse {
 	required bool isValid = 1;
+    optional string errorMessage = 2;
 }
 
 message ExecutionEndingRequest {

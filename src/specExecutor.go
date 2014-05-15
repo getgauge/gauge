@@ -205,7 +205,7 @@ func (executor *specExecutor) validateConcept(concept *step) []*stepValidationEr
 
 func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value)}}
+		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value), NumberOfArguments: proto.Int(len(step.args))}}
 	response, err := getResponse(executor.connection, message)
 	if err != nil {
 		return &stepValidationError{step: step, message: err.Error(), fileName: executor.specification.fileName}
@@ -214,7 +214,7 @@ func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 	if response.GetMessageType() == Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			return &stepValidationError{step: step, message: "", fileName: executor.specification.fileName}
+			return &stepValidationError{step: step, message: validateResponse.GetErrorMessage(), fileName: executor.specification.fileName}
 		}
 	} else {
 		panic("Expected a validate step response")

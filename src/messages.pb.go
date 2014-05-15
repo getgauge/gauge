@@ -536,8 +536,9 @@ func (m *Argument) GetTable() *ProtoTable {
 }
 
 type StepValidateRequest struct {
-	StepText         *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	StepText          *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
+	NumberOfArguments *int32  `protobuf:"varint,2,req,name=numberOfArguments" json:"numberOfArguments,omitempty"`
+	XXX_unrecognized  []byte  `json:"-"`
 }
 
 func (m *StepValidateRequest) Reset()         { *m = StepValidateRequest{} }
@@ -551,9 +552,17 @@ func (m *StepValidateRequest) GetStepText() string {
 	return ""
 }
 
+func (m *StepValidateRequest) GetNumberOfArguments() int32 {
+	if m != nil && m.NumberOfArguments != nil {
+		return *m.NumberOfArguments
+	}
+	return 0
+}
+
 type StepValidateResponse struct {
-	IsValid          *bool  `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	IsValid          *bool   `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
+	ErrorMessage     *string `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *StepValidateResponse) Reset()         { *m = StepValidateResponse{} }
@@ -565,6 +574,13 @@ func (m *StepValidateResponse) GetIsValid() bool {
 		return *m.IsValid
 	}
 	return false
+}
+
+func (m *StepValidateResponse) GetErrorMessage() string {
+	if m != nil && m.ErrorMessage != nil {
+		return *m.ErrorMessage
+	}
+	return ""
 }
 
 type ExecutionEndingRequest struct {

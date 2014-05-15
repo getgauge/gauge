@@ -373,11 +373,11 @@ func main() {
 		execution := newExecution(manifest, specs, runnerConnection, pluginHandler)
 		validationErrors := execution.validate(concepts)
 		if len(validationErrors) > 0 {
-			fmt.Println("Validation failed. The following steps are not implemented")
+			fmt.Println("Validation failed. The following steps have errors")
 			for _, stepValidationErrors := range validationErrors {
 				for _, stepValidationError := range stepValidationErrors {
 					s := stepValidationError.step
-					fmt.Printf("\x1b[31;1m  %s:%d: %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, s.lineText)
+					fmt.Printf("\x1b[31;1m  %s:%d: %s. %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText)
 				}
 			}
 			err := execution.killProcess()
