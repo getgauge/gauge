@@ -2,12 +2,12 @@
 @ECHO OFF
 setlocal
 
-
+set programName="gauge"
 if "%1" == "install" (	
-	md "%APPDATA%\gauge\share\twist2\skel\env"
-	copy twist2.exe "%APPDATA%\gauge"
-	copy skel\hello_world.spec "%APPDATA%\gauge\share\twist2\skel"
-	copy skel\default.properties "%APPDATA%\gauge\share\twist2\skel\env"
+	md "%APPDATA%\%programName%\share\%programName%\skel\env"
+	copy %programName%.exe "%APPDATA%\%programName%"
+	copy skel\hello_world.spec "%APPDATA%\%programName%\share\%programName%\skel"
+	copy skel\default.properties "%APPDATA%\%programName%\share\%programName%\skel\env"
 	echo Installation successful
 ) else if "%1" == "test" (
 	SET GOPATH="%cd%"
@@ -18,7 +18,7 @@ if "%1" == "install" (
 	SET GOPATH="%cd%"
 	cd src
 	go build
-	copy src.exe ..\twist2.exe
+	copy src.exe ..\%programName%.exe
 	cd ..
 )
 

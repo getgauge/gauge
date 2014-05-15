@@ -3,20 +3,20 @@ ifndef prefix
 prefix=/usr/local
 endif
 
-PROGRAM_NAME=twist2
+PROGRAM_NAME=gauge
 
 build:
-	export GOPATH=$(GOPATH):`pwd` && cd src && go build && mv src ../twist2
+	export GOPATH=$(GOPATH):`pwd` && cd src && go build && mv src ../$(PROGRAM_NAME)
 
 build-debug:
-	export GOPATH=$(GOPATH):`pwd` && cd src && go build -gcflags "-N -l" && mv src ../twist2
+	export GOPATH=$(GOPATH):`pwd` && cd src && go build -gcflags "-N -l" && mv src ../$(PROGRAM_NAME)
 
 test:
 	export GOPATH=$(GOPATH):`pwd` && cd src && go test
 
 install:
 	install -m 755 -d $(prefix)/bin
-	install -m 755 twist2 $(prefix)/bin
+	install -m 755 $(PROGRAM_NAME) $(prefix)/bin
 	install -m 755 -d $(prefix)/share/$(PROGRAM_NAME)/skel
 	install -m 755 -d $(prefix)/share/$(PROGRAM_NAME)/skel/env
 	install -m 644 skel/hello_world.spec $(prefix)/share/$(PROGRAM_NAME)/skel
