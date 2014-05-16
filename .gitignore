@@ -21,5 +21,6 @@ _testmain.go
 
 *.exe
 twist2
+gauge
 !src/github.com/twist2
 tags
