@@ -5,7 +5,7 @@ This is an executable specification file. Every heading in this file denotes a s
 
 To execute this specification, use
 
-	twist2 spec/hello_world.spec
+	gauge spec/hello_world.spec
 
 Say hello to the yet unnamed product
 ------------------------------------

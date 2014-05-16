@@ -268,7 +268,7 @@ var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the 
 var pluginArgs = flag.String("plugin-args", "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: twist [options] scenario\n")
+	fmt.Fprintf(os.Stderr, "usage: gauge [options] scenario\n")
 	flag.PrintDefaults()
 	os.Exit(2)
 }

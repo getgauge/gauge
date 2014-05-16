@@ -1,8 +1,8 @@
-Twist2
+Gauge
 ======
 
 Building
 ------------
 * make
 
-This will generate twist2 in the root directory
+This will generate gauge in the root directory
