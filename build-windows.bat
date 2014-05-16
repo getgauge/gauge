@@ -5,7 +5,8 @@ setlocal
 set programName="gauge"
 if "%1" == "install" (	
 	md "%APPDATA%\%programName%\share\%programName%\skel\env"
-	copy %programName%.exe "%APPDATA%\%programName%"
+	md "%APPDATA%\%programName%\bin"
+	copy %programName%.exe "%APPDATA%\%programName%\bin"
 	copy skel\hello_world.spec "%APPDATA%\%programName%\share\%programName%\skel"
 	copy skel\default.properties "%APPDATA%\%programName%\share\%programName%\skel\env"
 	echo Installation successful
