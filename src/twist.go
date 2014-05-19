@@ -4,13 +4,13 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"github.com/dmotylev/goproperties"
 	"github.com/twist2/common"
 	"io"
 	"io/ioutil"
 	"log"
+	flag "mflag"
 	"net/http"
 	"os"
 	"path"
@@ -261,13 +261,13 @@ func loadEnvironment(env string) error {
 }
 
 // Command line flags
-var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
-var version = flag.Bool("version", false, "Print the current version")
-var initialize = flag.String("init", "", "Initializes project structure in the current directory")
-var currentEnv = flag.String("env", "default", "Specifies the environment")
-var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the current project")
-var pluginArgs = flag.String("plugin-args", "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var noColors = flag.Bool("no-colors", false, "Specify true if console don't have ANSI color support")
+var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
+var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version")
+var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory")
+var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment")
+var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
+var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
+var noColors = flag.Bool([]string{"-no-colors"}, false, "Specify true if console don't have ANSI color support")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: gauge [options] scenario\n")
