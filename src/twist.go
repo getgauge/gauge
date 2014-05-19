@@ -262,7 +262,7 @@ func loadEnvironment(env string) error {
 
 // Command line flags
 var daemonize = flag.Bool("daemonize", false, "Run as a daemon")
-var version = flag.Bool("v", false, "Current version")
+var version = flag.Bool("version", false, "Print the current version")
 var initialize = flag.String("init", "", "Initializes project structure in the current directory")
 var currentEnv = flag.String("env", "default", "Specifies the environment")
 var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the current project")
