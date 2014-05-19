@@ -28,7 +28,8 @@ func handleConnection(conn net.Conn) {
 		n, err := conn.Read(data)
 		if err != nil {
 			conn.Close()
-			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error()))
+			//TODO: Move to file
+			//log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error()))
 			return
 		}
 

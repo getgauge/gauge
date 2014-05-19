@@ -81,3 +81,23 @@ func (s *MySuite) TestGetInvalidColumn(c *C) {
 
 	c.Assert(func() { table.get("four") }, Panics, "Table column four not found")
 }
+
+func (s *MySuite) TestGetRows(c *C) {
+	var table table
+
+	table.addHeaders([]string{"one", "two", "three"})
+	table.addRowValues([]string{"foo", "bar", "baz"})
+	table.addRowValues([]string{"john", "jim", "jack"})
+
+	rows := table.getRows()
+	c.Assert(len(rows), Equals, 2)
+	firstRow := rows[0]
+	c.Assert(firstRow[0], Equals, "foo")
+	c.Assert(firstRow[1], Equals, "bar")
+	c.Assert(firstRow[2], Equals, "baz")
+
+	secondRow := rows[1]
+	c.Assert(secondRow[0], Equals, "john")
+	c.Assert(secondRow[1], Equals, "jim")
+	c.Assert(secondRow[2], Equals, "jack")
+}

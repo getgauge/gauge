@@ -2,7 +2,6 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"fmt"
 	"net"
 )
 
@@ -15,39 +14,12 @@ type specExecutor struct {
 	conceptDictionary    *conceptDictionary
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *ExecutionInfo
-	itemExecutors        map[tokenKind]itemExecutor
 }
 
 func (specExecutor *specExecutor) initialize(specificationToExecute *specification, connection net.Conn, pluginHandler *pluginHandler) {
 	specExecutor.specification = specificationToExecute
 	specExecutor.connection = connection
 	specExecutor.pluginHandler = pluginHandler
-	specExecutor.itemExecutors = getItemExecutors()
-}
-
-func getItemExecutors() map[tokenKind]itemExecutor {
-	return map[tokenKind]itemExecutor{
-		//add item executor for tokenKinds if necessary
-		stepKind: func(item item, executor *specExecutor) *stepExecutionStatus {
-			argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
-			step := item.(*step)
-			if step.isConcept {
-				return executor.executeConcept(step, argLookup)
-			} else {
-				return executor.executeStep(step, argLookup)
-			}
-		},
-		commentKind: func(item item, executor *specExecutor) *stepExecutionStatus {
-			comment := item.(*comment)
-			fmt.Printf("\x1b[30;1m%s\n\x1b[0m", comment.value)
-			return nil
-		},
-		headingKind: func(item item, executor *specExecutor) *stepExecutionStatus {
-			heading := item.(*heading)
-			fmt.Printf("\x1b[33;1m%s\n\x1b[0m", heading.value)
-			return nil
-		},
-	}
 }
 
 type specExecutionStatus struct {
@@ -104,12 +76,16 @@ func (e *specExecutor) executeAfterSpecHook() *ExecutionStatus {
 }
 
 func (executor *specExecutor) execute() *specExecutionStatus {
-	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value), FileName: proto.String(executor.specification.fileName), IsFailed: proto.Bool(false), Tags: getTagValue(executor.specification.tags)}
+	specInfo := &SpecInfo{Name: proto.String(executor.specification.heading.value),
+		FileName: proto.String(executor.specification.fileName),
+		IsFailed: proto.Bool(false), Tags: getTagValue(executor.specification.tags)}
 	executor.currentExecutionInfo = &ExecutionInfo{CurrentSpec: specInfo}
+	getCurrentConsole().writeSpecHeading(executor.specification)
 
 	specExecutionStatus := &specExecutionStatus{specification: executor.specification, scenariosExecutionStatuses: make(map[int][]*scenarioExecutionStatus)}
 	beforeSpecHookStatus := executor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetPassed() {
+		getCurrentConsole().writeItems(executor.specification.items)
 		dataTableRowCount := executor.specification.dataTable.getRowCount()
 		if dataTableRowCount == 0 {
 			scenariosExecutionStatuses := executor.executeScenarios()
@@ -249,10 +225,11 @@ func (executor *specExecutor) executeScenarios() []*scenarioExecutionStatus {
 func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecutionStatus {
 	scenarioExecutionStatus := &scenarioExecutionStatus{scenario: scenario}
 	executor.currentExecutionInfo.CurrentScenario = &ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: getTagValue(scenario.tags), IsFailed: proto.Bool(false)}
+	getCurrentConsole().writeScenarioHeading(scenario.heading.value)
 
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenario)
 	if beforeHookExecutionStatus.GetPassed() {
-		contextStepsExecutionStatuses, passed := executor.executeItems(executor.specification.items)
+		contextStepsExecutionStatuses, passed := executor.executeContext()
 		scenarioExecutionStatus.stepExecutionStatuses = append(scenarioExecutionStatus.stepExecutionStatuses, contextStepsExecutionStatuses...)
 
 		if passed {
@@ -268,23 +245,43 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioExecu
 	return scenarioExecutionStatus
 }
 
+func (executor *specExecutor) executeContext() ([]*stepExecutionStatus, bool) {
+	contextSteps := executor.specification.contexts
+	items := make([]item, len(contextSteps))
+	for i, context := range contextSteps {
+		items[i] = context
+	}
+	return executor.executeItems(items)
+}
+
 func (executor *specExecutor) executeItems(items []item) ([]*stepExecutionStatus, bool) {
 	isFailure := false
 	executionStatuses := make([]*stepExecutionStatus, 0)
 	for _, item := range items {
-		executeFn, found := executor.itemExecutors[item.kind()]
-		if found {
-			executionStatus := executeFn(item, executor)
-			if executionStatus != nil {
-				executionStatuses = append(executionStatuses, executionStatus)
-				if !executionStatus.passed {
-					isFailure = true
-					break
-				}
+		executionStatus := executor.executeItem(item)
+		if executionStatus != nil {
+			executionStatuses = append(executionStatuses, executionStatus)
+			if !executionStatus.passed {
+				isFailure = true
+				break
 			}
 		}
 	}
 	return executionStatuses, !isFailure
+}
+
+func (executor *specExecutor) executeItem(item item) *stepExecutionStatus {
+	if item.kind() != stepKind {
+		return nil
+	}
+
+	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+	step := item.(*step)
+	if step.isConcept {
+		return executor.executeConcept(step, argLookup)
+	} else {
+		return executor.executeStep(step, argLookup)
+	}
 }
 
 type stepExecutionStatus struct {
@@ -331,13 +328,17 @@ func (executor *specExecutor) executeConcept(concept *step, dataTableLookup *arg
 }
 
 func printStatus(execStatus *ExecutionStatus) {
-	fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execStatus.GetErrorMessage())
-	fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execStatus.GetStackTrace())
+	getCurrentConsole().writeError(execStatus.GetErrorMessage())
+	getCurrentConsole().writeError(execStatus.GetStackTrace())
 }
 
 func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *stepExecutionStatus {
-	stepExecStatus := &stepExecutionStatus{passed: true}
 	stepRequest := executor.createStepRequest(step, argLookup)
+	stepWithResolvedArgs := createStepFromStepRequest(stepRequest)
+	console := getCurrentConsole()
+	console.writeStep(stepWithResolvedArgs)
+
+	stepExecStatus := &stepExecutionStatus{passed: true}
 	executor.currentExecutionInfo.CurrentStep = &StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 
 	beforeHookStatus := executor.executeBeforeStepHook()
@@ -362,12 +363,7 @@ func (executor *specExecutor) executeStep(step *step, argLookup *argLookup) *ste
 		stepExecStatus.addExecutionStatus(afterStepHookStatus)
 	}
 
-	if stepExecStatus.passed {
-		fmt.Printf("\x1b[32;1m%s\n\x1b[0m", step.lineText)
-	} else {
-		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", step.lineText)
-	}
-
+	console.writeStepFinished(stepWithResolvedArgs, stepExecStatus.passed)
 	return stepExecStatus
 }
 

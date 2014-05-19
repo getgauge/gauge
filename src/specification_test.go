@@ -57,12 +57,10 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
-	c.Assert(len(spec.items), Equals, 2)
-	c.Assert(spec.items[0], Equals, spec.heading)
-	c.Assert(spec.items[1], Equals, spec.scenarios[0])
-	scenarioItems := (spec.items[1]).(*scenario).items
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
-	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
+	c.Assert(len(spec.items), Equals, 1)
+	c.Assert(spec.items[0], Equals, spec.scenarios[0])
+	scenarioItems := (spec.items[0]).(*scenario).items
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].steps[0])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.lineNo, Equals, 1)
@@ -86,17 +84,15 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 	}
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
-	c.Assert(len(spec.items), Equals, 3)
-	c.Assert(spec.items[0], Equals, spec.heading)
-	c.Assert(spec.items[1], Equals, spec.comments[0])
-	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+	c.Assert(len(spec.items), Equals, 2)
+	c.Assert(spec.items[0], Equals, spec.comments[0])
+	c.Assert(spec.items[1], Equals, spec.scenarios[0])
 
-	scenarioItems := (spec.items[2]).(*scenario).items
-	c.Assert(4, Equals, len(scenarioItems))
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
-	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].comments[0])
-	c.Assert(scenarioItems[2], Equals, spec.scenarios[0].steps[0])
-	c.Assert(scenarioItems[3], Equals, spec.scenarios[0].comments[1])
+	scenarioItems := (spec.items[1]).(*scenario).items
+	c.Assert(3, Equals, len(scenarioItems))
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].comments[0])
+	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
+	c.Assert(scenarioItems[2], Equals, spec.scenarios[0].comments[1])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.heading.value, Equals, "Spec Heading")
@@ -187,11 +183,10 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
-	c.Assert(len(spec.items), Equals, 4)
-	c.Assert(spec.items[0], Equals, spec.heading)
-	c.Assert(spec.items[1], Equals, spec.comments[0])
-	c.Assert(spec.items[2], DeepEquals, &spec.dataTable)
-	c.Assert(spec.items[3], Equals, spec.comments[1])
+	c.Assert(len(spec.items), Equals, 3)
+	c.Assert(spec.items[0], Equals, spec.comments[0])
+	c.Assert(spec.items[1], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[2], Equals, spec.comments[1])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.dataTable, NotNil)
@@ -303,10 +298,9 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 
-	c.Assert(len(spec.items), Equals, 3)
-	c.Assert(spec.items[0], Equals, spec.heading)
-	c.Assert(spec.items[1], DeepEquals, spec.contexts[0])
-	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+	c.Assert(len(spec.items), Equals, 2)
+	c.Assert(spec.items[0], DeepEquals, spec.contexts[0])
+	c.Assert(spec.items[1], Equals, spec.scenarios[0])
 
 	c.Assert(result.ok, Equals, true)
 	context := spec.contexts[0]
@@ -609,15 +603,13 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	spec, result := new(specParser).createSpecification(tokens, conceptsDictionary)
 	c.Assert(result.ok, Equals, true)
 
-	c.Assert(len(spec.items), Equals, 3)
-	c.Assert(spec.items[0], Equals, spec.heading)
-	c.Assert(spec.items[1], DeepEquals, &spec.dataTable)
-	c.Assert(spec.items[2], Equals, spec.scenarios[0])
+	c.Assert(len(spec.items), Equals, 2)
+	c.Assert(spec.items[0], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[1], Equals, spec.scenarios[0])
 
-	scenarioItems := (spec.items[2]).(*scenario).items
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].heading)
-	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
-	c.Assert(scenarioItems[2], DeepEquals, spec.scenarios[0].steps[1])
+	scenarioItems := (spec.items[1]).(*scenario).items
+	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].steps[0])
+	c.Assert(scenarioItems[1], DeepEquals, spec.scenarios[0].steps[1])
 
 	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
 

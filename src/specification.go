@@ -17,9 +17,10 @@ type scenario struct {
 type argType int
 
 const (
-	static   argType = iota
-	dynamic  argType = iota
-	tableArg argType = iota
+	static                argType = iota
+	dynamic               argType = iota
+	tableArg              argType = iota
+	PARAMETER_PLACEHOLDER         = "{}"
 )
 
 type stepArg struct {
@@ -48,6 +49,21 @@ type step struct {
 	conceptSteps []*step
 }
 
+func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
+	var args []*stepArg
+	for _, arg := range stepReq.GetArgs() {
+		var a *stepArg
+		if arg.GetType() == "table" {
+			a = &stepArg{value: arg.GetValue(), argType: tableArg, table: *(tableFrom(arg.GetTable()))}
+		} else {
+			a = &stepArg{value: arg.GetValue(), argType: static}
+		}
+		args = append(args, a)
+	}
+	return &step{value: stepReq.GetParsedStepText(),
+		lineText: stepReq.GetActualStepText(), args: args}
+}
+
 type specification struct {
 	heading   *heading
 	scenarios []*scenario
@@ -63,9 +79,17 @@ type item interface {
 	kind() tokenKind
 }
 
+type headingType int
+
+const (
+	specHeading     = 0
+	scenarioHeading = 1
+)
+
 type heading struct {
-	value  string
-	lineNo int
+	value       string
+	lineNo      int
+	headingType headingType
 }
 
 type comment struct {
@@ -162,7 +186,7 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 			}
 		}
 		scenario := &scenario{}
-		scenario.addHeading(&heading{token.value, token.lineNo})
+		scenario.addHeading(&heading{value: token.value, lineNo: token.lineNo})
 		spec.addScenario(scenario)
 
 		retainStates(state, specScope)
@@ -340,8 +364,8 @@ func (specification *specification) addItem(itemToAdd item) {
 }
 
 func (specification *specification) addHeading(heading *heading) {
+	heading.headingType = specHeading
 	specification.heading = heading
-	specification.addItem(heading)
 }
 
 func (specification *specification) addScenario(scenario *scenario) {
@@ -411,7 +435,7 @@ func (spec *specification) extractStepValueAndParameterTypes(stepTokenValue stri
 		//arg[1] extracts the first group
 		argsType = append(argsType, arg[1])
 	}
-	return r.ReplaceAllString(stepTokenValue, "{}"), argsType
+	return r.ReplaceAllString(stepTokenValue, PARAMETER_PLACEHOLDER), argsType
 }
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {
@@ -445,7 +469,7 @@ func addInlineTableHeader(step *step, token *token) {
 	tableArg := &stepArg{argType: tableArg}
 	tableArg.table.addHeaders(token.args)
 	step.args = append(step.args, tableArg)
-	step.value = fmt.Sprintf("%s {}", step.value)
+	step.value = fmt.Sprintf("%s %s", step.value, PARAMETER_PLACEHOLDER)
 }
 
 func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResult {
@@ -548,8 +572,8 @@ func (scenario scenario) kind() tokenKind {
 }
 
 func (scenario *scenario) addHeading(heading *heading) {
+	heading.headingType = scenarioHeading
 	scenario.heading = heading
-	scenario.addItem(heading)
 }
 
 func (scenario *scenario) addStep(step *step) {
@@ -590,6 +614,6 @@ func (tags *tags) kind() tokenKind {
 	return tagKind
 }
 
-func (step *step) kind() tokenKind {
+func (step step) kind() tokenKind {
 	return stepKind
 }

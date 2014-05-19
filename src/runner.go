@@ -101,8 +101,8 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 	}
 
 	cmd := common.GetExecutableCommand(command)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	cmd.Stdout = getCurrentConsole()
+	cmd.Stderr = getCurrentConsole()
 	err = cmd.Start()
 	if err != nil {
 		return nil, err

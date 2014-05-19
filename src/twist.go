@@ -267,6 +267,7 @@ var initialize = flag.String("init", "", "Initializes project structure in the c
 var currentEnv = flag.String("env", "default", "Specifies the environment")
 var addPlugin = flag.String("add-plugin", "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String("plugin-args", "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
+var noColors = flag.Bool("no-colors", false, "Specify true if console don't have ANSI color support")
 
 func printUsage() {
 	fmt.Fprintf(os.Stderr, "usage: gauge [options] scenario\n")

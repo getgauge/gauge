@@ -67,13 +67,30 @@ func (table *table) addRows(rows []tableCell) {
 	}
 }
 
+func (table *table) getRows() [][]string {
+	if !table.isInitialized() {
+		return nil
+	}
+
+	tableRows := make([][]string, 0)
+	for i := 0; i < len(table.columns[0]); i++ {
+		row := make([]string, 0)
+		for _, header := range table.headers {
+			tableCell := table.get(header)[i]
+			value := tableCell.value
+			row = append(row, value)
+		}
+		tableRows = append(tableRows, row)
+	}
+	return tableRows
+}
+
 func (table *table) getRowCount() int {
 	if table.isInitialized() {
 		return len(table.columns[0])
 	} else {
 		return 0
 	}
-
 }
 
 func (table *table) kind() tokenKind {
@@ -86,4 +103,16 @@ func getTableCell(value string) tableCell {
 
 func getDefaultTableCell() tableCell {
 	return tableCell{value: "", cellType: static}
+}
+
+func tableFrom(protoTable *ProtoTable) *table {
+	table := &table{}
+	for i, row := range protoTable.GetRows() {
+		if i == 0 {
+			table.addHeaders(row.GetCells())
+		} else {
+			table.addRowValues(row.GetCells())
+		}
+	}
+	return table
 }
