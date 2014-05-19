@@ -28,7 +28,7 @@ func formatScenarioHeading(scenarioHeading string) string {
 }
 
 func formatStepText(stepText string) string {
-	return fmt.Sprintf("* %s", stepText)
+	return fmt.Sprintf("* %s\n", stepText)
 }
 
 func formatHeading(heading, headingChar string) string {

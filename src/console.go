@@ -79,26 +79,30 @@ func (writer *consoleWriter) writeScenarioHeading(scenarioHeading string) {
 }
 
 func (writer *consoleWriter) writeStep(step *step) {
-	terminal.Stdout.Colorf("@b%s\n", formatStep(step))
+	terminal.Stdout.Colorf("@b%s", formatStep(step))
 	writer.isInsideStep = true
 }
 
 func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
 	stepText := formatStep(step)
-	terminal.Stdout.Up(writer.linesAfterLastStep + 1)
+	linesInStepText := strings.Count(stepText, "\n")
+	if linesInStepText == 0 {
+		linesInStepText = 1
+	}
+	terminal.Stdout.Up(writer.linesAfterLastStep + linesInStepText)
 	if isPassed {
 		terminal.Stdout.Colorf("@g%s\n", stepText)
 	} else {
 		terminal.Stdout.Colorf("@r%s\n", stepText)
 	}
-	terminal.Stdout.Down(writer.linesAfterLastStep + 1)
+	terminal.Stdout.Down(writer.linesAfterLastStep + linesInStepText)
 	writer.linesAfterLastStep = 0
 	writer.isInsideStep = false
 }
 
 func (writer *consoleWriter) writeTable(table *table) {
 	formattedTable := formatTable(table)
-	terminal.Stdout.Colorf("@m%s\n", formattedTable)
+	terminal.Stdout.Colorf("@m%s", formattedTable)
 }
 
 func formatStep(step *step) string {
