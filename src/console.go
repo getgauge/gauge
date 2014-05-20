@@ -81,6 +81,7 @@ func (writer *consoleWriter) writeScenarioHeading(scenarioHeading string) {
 func (writer *consoleWriter) writeStep(step *step) {
 	terminal.Stdout.Colorf("@b%s", formatStep(step))
 	writer.isInsideStep = true
+	writer.linesAfterLastStep = 0
 }
 
 func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
@@ -91,12 +92,11 @@ func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
 	}
 	terminal.Stdout.Up(writer.linesAfterLastStep + linesInStepText)
 	if isPassed {
-		terminal.Stdout.Colorf("@g%s\n", stepText)
+		terminal.Stdout.Colorf("@g%s", stepText)
 	} else {
-		terminal.Stdout.Colorf("@r%s\n", stepText)
+		terminal.Stdout.Colorf("@r%s", stepText)
 	}
 	terminal.Stdout.Down(writer.linesAfterLastStep + linesInStepText)
-	writer.linesAfterLastStep = 0
 	writer.isInsideStep = false
 }
 

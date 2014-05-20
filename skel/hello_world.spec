@@ -20,10 +20,9 @@ tags: hello world, first test
 Getting started with Gauge
 ---------------------------
 
+This is the second scenario in this specification
+
 * Say "hello again" to "gauge"
-
-Gauge steps can take tables
-
 * Step that takes a table
     |product|description                 |
     |-------|----------------------------|

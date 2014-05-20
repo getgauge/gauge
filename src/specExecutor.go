@@ -272,6 +272,7 @@ func (executor *specExecutor) executeItems(items []item) ([]*stepExecutionStatus
 
 func (executor *specExecutor) executeItem(item item) *stepExecutionStatus {
 	if item.kind() != stepKind {
+		getCurrentConsole().writeItem(item)
 		return nil
 	}
 
