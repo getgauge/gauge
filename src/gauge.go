@@ -262,15 +262,19 @@ func loadEnvironment(env string) error {
 
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version")
-var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory")
-var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment")
+var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit")
+var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
+var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var noColors = flag.Bool([]string{"-no-colors"}, false, "Specify true if console don't have ANSI color support")
 
 func printUsage() {
-	fmt.Fprintf(os.Stderr, "usage: gauge [options] scenario\n")
+	fmt.Printf("gauge - version %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
+	fmt.Println("Copyright 2014 Thoughtworks\n")
+	fmt.Println("Usage:")
+	fmt.Println("\tgauge specs/")
+	fmt.Println("\tgauge specs/spec_name.spec")
+	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
 	os.Exit(2)
 }
@@ -303,7 +307,7 @@ func main() {
 			fmt.Printf("Failed to initialize. %s\n", err.Error())
 			os.Exit(1)
 		}
-		fmt.Println("Successfully initialized the project")
+		fmt.Println("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 	} else if *addPlugin != "" {
 		pluginName := *addPlugin
 		additionalArgs := make(map[string]string)
