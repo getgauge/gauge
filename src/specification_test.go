@@ -293,11 +293,11 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 		&token{kind: tableHeader, args: []string{"id", "name"}},
 		&token{kind: tableRow, args: []string{"1", "foo"}},
 		&token{kind: tableRow, args: []string{"2", "bar"}},
+		&token{kind: tableRow, args: []string{"3", "not a <dynamic>"}},
 		&token{kind: scenarioKind, value: "Scenario Heading"},
 	}
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
-
 	c.Assert(len(spec.items), Equals, 2)
 	c.Assert(spec.items[0], DeepEquals, spec.contexts[0])
 	c.Assert(spec.items[1], Equals, spec.scenarios[0])
@@ -310,16 +310,20 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 	c.Assert(inlineTable, NotNil)
 	c.Assert(context.value, Equals, "Context with inline table {}")
-	c.Assert(len(inlineTable.get("id")), Equals, 2)
-	c.Assert(len(inlineTable.get("name")), Equals, 2)
+	c.Assert(len(inlineTable.get("id")), Equals, 3)
+	c.Assert(len(inlineTable.get("name")), Equals, 3)
 	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
 	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
 	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
 	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[2].value, Equals, "3")
+	c.Assert(inlineTable.get("id")[2].cellType, Equals, static)
 	c.Assert(inlineTable.get("name")[0].value, Equals, "foo")
 	c.Assert(inlineTable.get("name")[0].cellType, Equals, static)
 	c.Assert(inlineTable.get("name")[1].value, Equals, "bar")
 	c.Assert(inlineTable.get("name")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("name")[2].value, Equals, "not a <dynamic>")
+	c.Assert(inlineTable.get("name")[2].cellType, Equals, static)
 }
 
 func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {

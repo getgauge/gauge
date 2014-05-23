@@ -473,7 +473,7 @@ func addInlineTableHeader(step *step, token *token) {
 }
 
 func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResult {
-	dynamicArgMatcher := regexp.MustCompile("<(.*)>")
+	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
 	tableArg := step.args[len(step.args)-1]
 	tableValues := make([]tableCell, 0)
 	for _, tableValue := range token.args {
