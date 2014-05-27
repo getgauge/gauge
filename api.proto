@@ -1,0 +1,24 @@
+package main;
+
+// Defines communication messages for API
+// Every API call will have a Request & Response pair
+
+message GetProjectRootRequest {
+}
+
+message GetProjectRootResponse {
+    required string projectRoot = 1;
+}
+
+message APIMessage {
+    enum APIMessageType {
+        GetProjectRootRequest = 1;
+        GetProjectRootResponse = 2;
+    }
+
+    required APIMessageType messageType = 1;
+    required int64 messageId = 2;
+
+    optional GetProjectRootRequest projectRootRequest = 3;
+    optional GetProjectRootResponse projectRootResponse = 4;
+}

@@ -9,12 +9,12 @@ import (
 	"github.com/getgauge/common"
 	"io"
 	"io/ioutil"
-	"log"
 	flag "mflag"
-	"net/http"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -81,70 +81,6 @@ func getProjectManifest() *manifest {
 	}
 
 	return &m
-}
-
-func findScenarioFiles(fileChan chan<- string) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	walkFn := func(filePath string, info os.FileInfo, err error) error {
-		ext := path.Ext(info.Name())
-		if strings.ToLower(ext) == ".scn" {
-			fileChan <- filePath
-		}
-		return nil
-	}
-
-	filepath.Walk(pwd, walkFn)
-	fileChan <- "done"
-}
-
-func parseScenarioFiles(fileChan <-chan string) {
-	for {
-		scenarioFilePath := <-fileChan
-		if scenarioFilePath == "done" {
-			break
-		}
-
-		parser := new(specParser)
-		//todo: parse concepts
-		scenarioContent, err := common.ReadFileContents(scenarioFilePath)
-		if err != nil {
-			fmt.Println(err)
-		}
-		specification, result := parser.parse(scenarioContent, new(conceptDictionary))
-
-		if result.ok {
-			availableSteps = append(availableSteps, specification.contexts...)
-			for _, scenario := range specification.scenarios {
-				availableSteps = append(availableSteps, scenario.steps...)
-			}
-		} else {
-			fmt.Println(result.error.message)
-		}
-
-	}
-}
-
-func makeListOfAvailableSteps() {
-	fileChan := make(chan string)
-	go findScenarioFiles(fileChan)
-	go parseScenarioFiles(fileChan)
-}
-
-func startAPIService() {
-	http.HandleFunc("/steps", func(w http.ResponseWriter, r *http.Request) {
-		js, err := json.Marshal(availableSteps)
-		if err != nil {
-			io.WriteString(w, err.Error())
-		} else {
-			w.Header()["Content-Type"] = []string{"application/json"}
-			w.Write(js)
-		}
-	})
-	log.Fatal(http.ListenAndServe(":8889", nil))
 }
 
 func showMessage(action, filename string) {
@@ -360,9 +296,14 @@ func main() {
 		pluginHandler, warnings := startPluginsForExecution(manifest)
 		handleWarningMessages(warnings)
 
-		listener, listenerErr := newListener()
+		listener, listenerErr := newGaugeListener(common.GaugePortEnvName, 0)
 		if listenerErr != nil {
 			fmt.Printf("Failed to start a runner. %s\n", listenerErr.Error())
+			os.Exit(1)
+		}
+
+		if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.tcpListener.Addr().(*net.TCPAddr).Port)); err != nil {
+			fmt.Printf("Failed to set %s. %s", common.GaugePortEnvName, err.Error())
 			os.Exit(1)
 		}
 

@@ -214,7 +214,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	handler := &pluginHandler{}
 	warnings := make([]string, 0)
 	envProperties := make(map[string]string)
-	pluginListener, err := newListener()
+	pluginListener, err := newGaugeListener("", 0)
 	envProperties["plugin_connection_port"] = strconv.Itoa((pluginListener.tcpListener.Addr().(*net.TCPAddr).Port))
 	if err != nil {
 		warnings = append(warnings, err.Error())

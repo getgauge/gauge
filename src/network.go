@@ -18,6 +18,10 @@ const (
 	runnerConnectionTimeOut = time.Second * 10
 )
 
+type MessageHandler interface {
+	messageReceived([]byte)
+}
+
 // MessageId -> Callback
 var pendingRequests = make(map[int64]chan<- *Message)
 
@@ -55,28 +59,33 @@ type gaugeListener struct {
 	tcpListener *net.TCPListener
 }
 
-func newListener() (*gaugeListener, error) {
-	// if GAUGE_PORT is set, use that. Else ListenTCP will assign a free port and set that to GAUGE_ROOT
+func newGaugeListener(portEnvVariable string, staticBackupPort int) (*gaugeListener, error) {
+	// if portEnvVariable is set, use that. Else try backup port. or Finally ListenTCP will assign a free port
 	// port = 0 means GO will find a unused port
-	port := 0
-	if gaugePort := os.Getenv(common.GaugePortEnvName); gaugePort != "" {
-		gport, err := strconv.Atoi(gaugePort)
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("%s is not a valid port", gaugePort))
-		}
-		port = gport
+	port, err := getPortFromEnvironmentVariable(portEnvVariable)
+	if err != nil {
+		return nil, err
+	}
+	if port == 0 {
+		port = staticBackupPort
 	}
 
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
 		return nil, err
 	}
-
-	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.Addr().(*net.TCPAddr).Port)); err != nil {
-		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
-	}
-
 	return &gaugeListener{tcpListener: listener}, nil
+}
+
+func getPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
+	if port := os.Getenv(portEnvVariable); port != "" {
+		gport, err := strconv.Atoi(port)
+		if err != nil {
+			return 0, errors.New(fmt.Sprintf("%s is not a valid port", port))
+		}
+		return gport, nil
+	}
+	return 0, nil
 }
 
 func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {
@@ -103,6 +112,52 @@ func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration)
 		return nil, errors.New(fmt.Sprintf("Timed out connecting to %v", listener.tcpListener.Addr()))
 	}
 
+}
+
+func (listener *gaugeListener) acceptAndHandleMultipleConnections(messageHandler MessageHandler) {
+	connectionChannel := make(chan net.Conn, 1)
+	go listener.acceptConnections(connectionChannel)
+	go listener.handleConnections(connectionChannel, messageHandler)
+}
+
+func (listener *gaugeListener) acceptConnections(connectionChannel chan<- net.Conn) {
+	go func() {
+		for {
+			connection, err := listener.tcpListener.Accept()
+			if err == nil {
+				connectionChannel <- connection
+			}
+		}
+	}()
+}
+
+func (listener *gaugeListener) handleConnections(connectionChannel <-chan net.Conn, messageHandler MessageHandler) {
+	for {
+		connection := <-connectionChannel
+		go listener.handleConnection(connection, messageHandler)
+	}
+}
+
+func (gaugeListener *gaugeListener) handleConnection(conn net.Conn, messageHandler MessageHandler) {
+	buffer := new(bytes.Buffer)
+	data := make([]byte, 8192)
+	for {
+		n, err := conn.Read(data)
+		if err != nil {
+			conn.Close()
+			//TODO: Move to file
+			//log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error()))
+			return
+		}
+
+		buffer.Write(data[0:n])
+
+		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
+		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
+			messageHandler.messageReceived(buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)])
+			buffer.Reset()
+		}
+	}
 }
 
 // Sends the specified message and waits for a response
