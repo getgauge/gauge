@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dmotylev/goproperties"
-	"github.com/twist2/common"
+	"github.com/getgauge/common"
 	"io"
 	"io/ioutil"
 	"log"

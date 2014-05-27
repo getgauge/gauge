@@ -5,7 +5,7 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"errors"
 	"fmt"
-	"github.com/twist2/common"
+	"github.com/getgauge/common"
 	"log"
 	"net"
 	"os"

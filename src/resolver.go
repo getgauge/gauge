@@ -4,7 +4,7 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/twist2/common"
+	"github.com/getgauge/common"
 	"regexp"
 	"strings"
 )

@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/twist2/common"
+	"github.com/getgauge/common"
 	"os"
 	"os/exec"
 	"runtime"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/twist2/common"
+	"github.com/getgauge/common"
 	"net"
 	"os"
 	"path"
