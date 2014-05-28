@@ -2,12 +2,8 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"encoding/json"
 	"fmt"
-	"github.com/twist2/common"
-	"io"
-	"log"
-	"net/http"
+	"github.com/getgauge/common"
 	"os"
 	"path"
 	"path/filepath"
