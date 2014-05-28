@@ -6,10 +6,6 @@ import (
 	"github.com/getgauge/common"
 	"log"
 	"net"
-	"os"
-	"path"
-	"path/filepath"
-	"strings"
 )
 
 const (
@@ -17,36 +13,12 @@ const (
 	API_STATIC_PORT        = 8889
 )
 
-func findScenarioFiles(fileChan chan<- string) {
-	pwd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-
-	walkFn := func(filePath string, info os.FileInfo, err error) error {
-		ext := path.Ext(info.Name())
-		if strings.ToLower(ext) == ".scn" {
-			fileChan <- filePath
-		}
-		return nil
-	}
-
-	filepath.Walk(pwd, walkFn)
-	fileChan <- "done"
-}
-
-func parseScenarioFiles(fileChan <-chan string) {
-	for {
-		scenarioFilePath := <-fileChan
-		if scenarioFilePath == "done" {
-			break
-		}
-
-		parser := new(specParser)
-		//todo: parse concepts
-		scenarioContent, err := common.ReadFileContents(scenarioFilePath)
+func findStepsInSpecFiles(specFiles []string) {
+	parser := new(specParser)
+	for _, file := range specFiles {
+		scenarioContent, err := common.ReadFileContents(file)
 		if err != nil {
-			fmt.Println(err)
+			continue
 		}
 		specification, result := parser.parse(scenarioContent, new(conceptDictionary))
 
@@ -55,17 +27,13 @@ func parseScenarioFiles(fileChan <-chan string) {
 			for _, scenario := range specification.scenarios {
 				availableSteps = append(availableSteps, scenario.steps...)
 			}
-		} else {
-			fmt.Println(result.error.message)
 		}
-
 	}
 }
 
 func makeListOfAvailableSteps() {
-	fileChan := make(chan string)
-	go findScenarioFiles(fileChan)
-	go parseScenarioFiles(fileChan)
+	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
+	go findStepsInSpecFiles(specFiles)
 }
 
 func startAPIService() {
@@ -76,8 +44,7 @@ func startAPIService() {
 	gaugeListener.acceptAndHandleMultipleConnections(&GaugeApiMessageHandler{})
 }
 
-type GaugeApiMessageHandler struct {
-}
+type GaugeApiMessageHandler struct{}
 
 func (handler *GaugeApiMessageHandler) messageReceived(bytesRead []byte, conn net.Conn) {
 	apiMessage := &APIMessage{}
