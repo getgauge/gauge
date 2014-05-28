@@ -24,7 +24,7 @@ const (
 	envDefaultDirName = "default"
 )
 
-var availableSteps []*step
+var availableStepNames []string
 var acceptedExtensions = make(map[string]bool)
 
 func init() {

@@ -11,6 +11,8 @@ It is generated from these files:
 It has these top-level messages:
 	GetProjectRootRequest
 	GetProjectRootResponse
+	GetAllStepsRequest
+	GetAllStepsResponse
 	APIMessage
 */
 package main
@@ -29,15 +31,21 @@ type APIMessage_APIMessageType int32
 const (
 	APIMessage_GetProjectRootRequest  APIMessage_APIMessageType = 1
 	APIMessage_GetProjectRootResponse APIMessage_APIMessageType = 2
+	APIMessage_GetAllStepsRequest     APIMessage_APIMessageType = 3
+	APIMessage_GetAllStepResponse     APIMessage_APIMessageType = 4
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
 	1: "GetProjectRootRequest",
 	2: "GetProjectRootResponse",
+	3: "GetAllStepsRequest",
+	4: "GetAllStepResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":  1,
 	"GetProjectRootResponse": 2,
+	"GetAllStepsRequest":     3,
+	"GetAllStepResponse":     4,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -81,11 +89,37 @@ func (m *GetProjectRootResponse) GetProjectRoot() string {
 	return ""
 }
 
+type GetAllStepsRequest struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *GetAllStepsRequest) Reset()         { *m = GetAllStepsRequest{} }
+func (m *GetAllStepsRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAllStepsRequest) ProtoMessage()    {}
+
+type GetAllStepsResponse struct {
+	Steps            []string `protobuf:"bytes,1,rep,name=steps" json:"steps,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *GetAllStepsResponse) Reset()         { *m = GetAllStepsResponse{} }
+func (m *GetAllStepsResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAllStepsResponse) ProtoMessage()    {}
+
+func (m *GetAllStepsResponse) GetSteps() []string {
+	if m != nil {
+		return m.Steps
+	}
+	return nil
+}
+
 type APIMessage struct {
 	MessageType         *APIMessage_APIMessageType `protobuf:"varint,1,req,name=messageType,enum=main.APIMessage_APIMessageType" json:"messageType,omitempty"`
 	MessageId           *int64                     `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
 	ProjectRootRequest  *GetProjectRootRequest     `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
 	ProjectRootResponse *GetProjectRootResponse    `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
+	AllStepsRequest     *GetAllStepsRequest        `protobuf:"bytes,5,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
+	AllStepsResponse    *GetAllStepsResponse       `protobuf:"bytes,6,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
 	XXX_unrecognized    []byte                     `json:"-"`
 }
 
@@ -117,6 +151,20 @@ func (m *APIMessage) GetProjectRootRequest() *GetProjectRootRequest {
 func (m *APIMessage) GetProjectRootResponse() *GetProjectRootResponse {
 	if m != nil {
 		return m.ProjectRootResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetAllStepsRequest() *GetAllStepsRequest {
+	if m != nil {
+		return m.AllStepsRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetAllStepsResponse() *GetAllStepsResponse {
+	if m != nil {
+		return m.AllStepsResponse
 	}
 	return nil
 }

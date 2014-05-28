@@ -23,12 +23,20 @@ func findStepsInSpecFiles(specFiles []string) {
 		specification, result := parser.parse(scenarioContent, new(conceptDictionary))
 
 		if result.ok {
-			availableSteps = append(availableSteps, specification.contexts...)
+			availableStepNames = append(availableStepNames, getStepValues(specification.contexts)...)
 			for _, scenario := range specification.scenarios {
-				availableSteps = append(availableSteps, scenario.steps...)
+				availableStepNames = append(availableStepNames, getStepValues(scenario.steps)...)
 			}
 		}
 	}
+}
+
+func getStepValues(steps []*step) []string {
+	stepValues := make([]string, 0)
+	for _, step := range steps {
+		stepValues = append(stepValues, step.value)
+	}
+	return stepValues
 }
 
 func makeListOfAvailableSteps() {
@@ -56,6 +64,10 @@ func (handler *GaugeApiMessageHandler) messageReceived(bytesRead []byte, conn ne
 		switch messageType {
 		case APIMessage_GetProjectRootRequest:
 			handler.respondToProjectRootRequest(apiMessage, conn)
+			break
+		case APIMessage_GetAllStepsRequest:
+			handler.respondToGetAllStepsRequest(apiMessage, conn)
+			break
 		}
 	}
 }
@@ -68,7 +80,17 @@ func (handler *GaugeApiMessageHandler) respondToProjectRootRequest(message *APIM
 	}
 	projectRootResponse := &GetProjectRootResponse{ProjectRoot: proto.String(root)}
 	responseApiMessage := &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
-	if err := writeMessage(conn, responseApiMessage); err != nil {
+	handler.sendMessage(responseApiMessage, conn)
+}
+
+func (handler *GaugeApiMessageHandler) respondToGetAllStepsRequest(message *APIMessage, conn net.Conn) {
+	getAllStepsResponse := &GetAllStepsResponse{Steps: availableStepNames}
+	responseApiMessage := &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
+	handler.sendMessage(responseApiMessage, conn)
+}
+
+func (handler *GaugeApiMessageHandler) sendMessage(message *APIMessage, conn net.Conn) {
+	if err := writeMessage(conn, message); err != nil {
 		fmt.Printf("[Warning] Failed to respond to API request. %s\n", err.Error())
 	}
 }

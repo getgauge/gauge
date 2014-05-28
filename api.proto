@@ -10,10 +10,19 @@ message GetProjectRootResponse {
     required string projectRoot = 1;
 }
 
+message GetAllStepsRequest {
+}
+
+message GetAllStepsResponse {
+    repeated string steps = 1;
+}
+
 message APIMessage {
     enum APIMessageType {
         GetProjectRootRequest = 1;
         GetProjectRootResponse = 2;
+        GetAllStepsRequest = 3;
+        GetAllStepResponse = 4;
     }
 
     required APIMessageType messageType = 1;
@@ -21,4 +30,6 @@ message APIMessage {
 
     optional GetProjectRootRequest projectRootRequest = 3;
     optional GetProjectRootResponse projectRootResponse = 4;
+    optional GetAllStepsRequest allStepsRequest = 5;
+    optional GetAllStepsResponse allStepsResponse = 6;
 }
