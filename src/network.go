@@ -19,7 +19,7 @@ const (
 )
 
 type MessageHandler interface {
-	messageReceived([]byte)
+	messageReceived([]byte, net.Conn)
 }
 
 // MessageId -> Callback
@@ -154,7 +154,7 @@ func (gaugeListener *gaugeListener) handleConnection(conn net.Conn, messageHandl
 
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
-			messageHandler.messageReceived(buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)])
+			messageHandler.messageReceived(buffer.Bytes()[bytesRead:messageLength+uint64(bytesRead)], conn)
 			buffer.Reset()
 		}
 	}
@@ -191,10 +191,7 @@ func getResponse(conn net.Conn, message *Message) (*Message, error) {
 }
 
 //Sends a specified message and does not wait for any response
-func writeMessage(conn net.Conn, message *Message) error {
-	messageId := common.GetUniqueId()
-	message.MessageId = &messageId
-
+func writeMessage(conn net.Conn, message proto.Message) error {
 	data, err := proto.Marshal(message)
 	if err != nil {
 		return err

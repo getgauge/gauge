@@ -270,12 +270,18 @@ func (handler *pluginHandler) removePlugin(pluginId string) {
 
 func (handler *pluginHandler) notifyPlugins(message *Message) {
 	for id, plugin := range handler.pluginsMap {
-		err := writeMessage(plugin.connection, message)
+		err := handler.sendMessage(plugin.connection, message)
 		if err != nil {
 			fmt.Printf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 			handler.killPlugin(id)
 		}
 	}
+}
+
+func (handler *pluginHandler) sendMessage(conn net.Conn, message *Message) error {
+	messageId := common.GetUniqueId()
+	message.MessageId = &messageId
+	return writeMessage(conn, message)
 }
 
 func (handler *pluginHandler) killPlugin(pluginId string) {

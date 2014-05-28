@@ -4,6 +4,8 @@ import (
 	"code.google.com/p/goprotobuf/proto"
 	"fmt"
 	"github.com/getgauge/common"
+	"log"
+	"net"
 	"os"
 	"path"
 	"path/filepath"
@@ -77,7 +79,29 @@ func startAPIService() {
 type GaugeApiMessageHandler struct {
 }
 
-func (handler *GaugeApiMessageHandler) messageReceived(bytesRead []byte) {
+func (handler *GaugeApiMessageHandler) messageReceived(bytesRead []byte, conn net.Conn) {
 	apiMessage := &APIMessage{}
-	proto.Unmarshal(bytesRead, apiMessage)
+	err := proto.Unmarshal(bytesRead, apiMessage)
+	if err != nil {
+		log.Printf("[Warning] Failed to read proto message: %s\n", err.Error())
+	} else {
+		messageType := apiMessage.GetMessageType()
+		switch messageType {
+		case APIMessage_GetProjectRootRequest:
+			handler.respondToProjectRootRequest(apiMessage, conn)
+		}
+	}
+}
+
+func (handler *GaugeApiMessageHandler) respondToProjectRootRequest(message *APIMessage, conn net.Conn) {
+	root, err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Printf("[Warning] Failed to find project root while responding to API request. %s\n", err.Error())
+		root = ""
+	}
+	projectRootResponse := &GetProjectRootResponse{ProjectRoot: proto.String(root)}
+	responseApiMessage := &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
+	if err := writeMessage(conn, responseApiMessage); err != nil {
+		fmt.Printf("[Warning] Failed to respond to API request. %s\n", err.Error())
+	}
 }
