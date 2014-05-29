@@ -24,7 +24,6 @@ const (
 	envDefaultDirName = "default"
 )
 
-var availableStepNames []string
 var acceptedExtensions = make(map[string]bool)
 
 func init() {
@@ -233,8 +232,10 @@ func main() {
 	flag.Parse()
 
 	if *daemonize {
+		loadGaugeEnvironment()
 		makeListOfAvailableSteps()
 		startAPIService()
+		runInfinitely()
 	} else if *version {
 		printVersion()
 	} else if *initialize != "" {
@@ -267,21 +268,7 @@ func main() {
 			printUsage()
 		}
 
-		// Loading default environment and loading user specified env
-		// this way user specified env variable can override default if required
-		err := loadEnvironment(envDefaultDirName)
-		if err != nil {
-			fmt.Printf("Failed to load the default environment. %s\n", err.Error())
-			os.Exit(1)
-		}
-
-		if *currentEnv != envDefaultDirName {
-			err := loadEnvironment(*currentEnv)
-			if err != nil {
-				fmt.Printf("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
-				os.Exit(1)
-			}
-		}
+		loadGaugeEnvironment()
 
 		specSource := flag.Arg(0)
 
@@ -296,26 +283,9 @@ func main() {
 		pluginHandler, warnings := startPluginsForExecution(manifest)
 		handleWarningMessages(warnings)
 
-		listener, listenerErr := newGaugeListener(common.GaugePortEnvName, 0)
-		if listenerErr != nil {
-			fmt.Printf("Failed to start a runner. %s\n", listenerErr.Error())
-			os.Exit(1)
-		}
-
-		if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.tcpListener.Addr().(*net.TCPAddr).Port)); err != nil {
-			fmt.Printf("Failed to set %s. %s", common.GaugePortEnvName, err.Error())
-			os.Exit(1)
-		}
-
-		_, runnerError := startRunner(manifest)
+		runnerConnection, runnerError := startRunnerAndMakeConnection(manifest)
 		if runnerError != nil {
 			fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
-			os.Exit(1)
-		}
-
-		runnerConnection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
-		if connectionError != nil {
-			fmt.Printf("Failed to get a runner. %s\n", connectionError.Error())
 			os.Exit(1)
 		}
 
@@ -340,6 +310,52 @@ func main() {
 			os.Exit(exitCode)
 		}
 	}
+}
+
+func loadGaugeEnvironment() {
+	// Loading default environment and loading user specified env
+	// this way user specified env variable can override default if required
+	err := loadEnvironment(envDefaultDirName)
+	if err != nil {
+		fmt.Printf("Failed to load the default environment. %s\n", err.Error())
+		os.Exit(1)
+	}
+
+	if *currentEnv != envDefaultDirName {
+		err := loadEnvironment(*currentEnv)
+		if err != nil {
+			fmt.Printf("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
+			os.Exit(1)
+		}
+	}
+
+}
+
+func runInfinitely() {
+	for {
+	}
+}
+
+func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {
+	listener, listenerErr := newGaugeListener(common.GaugePortEnvName, 0)
+	if listenerErr != nil {
+		return nil, listenerErr
+	}
+	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(listener.tcpListener.Addr().(*net.TCPAddr).Port)); err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
+	}
+
+	testRunner, err := startRunner(manifest)
+	if err != nil {
+		return nil, err
+	}
+
+	runnerConnection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
+	if connectionError != nil {
+		testRunner.cmd.Process.Kill()
+		return nil, connectionError
+	}
+	return runnerConnection, nil
 }
 
 func printExecutionStatus(status *testExecutionStatus) int {

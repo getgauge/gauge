@@ -30,6 +30,8 @@ It has these top-level messages:
 	StepValidateRequest
 	StepValidateResponse
 	ExecutionEndingRequest
+	StepNamesRequest
+	StepNamesResponse
 	Message
 */
 package main
@@ -58,7 +60,9 @@ const (
 	Message_StepValidateRequest       Message_MessageType = 9
 	Message_StepValidateResponse      Message_MessageType = 10
 	Message_ExecutionStatusResponse   Message_MessageType = 11
-	Message_KillProcessRequest        Message_MessageType = 12
+	Message_StepNamesRequest          Message_MessageType = 12
+	Message_StepNamesResponse         Message_MessageType = 13
+	Message_KillProcessRequest        Message_MessageType = 14
 )
 
 var Message_MessageType_name = map[int32]string{
@@ -74,7 +78,9 @@ var Message_MessageType_name = map[int32]string{
 	9:  "StepValidateRequest",
 	10: "StepValidateResponse",
 	11: "ExecutionStatusResponse",
-	12: "KillProcessRequest",
+	12: "StepNamesRequest",
+	13: "StepNamesResponse",
+	14: "KillProcessRequest",
 }
 var Message_MessageType_value = map[string]int32{
 	"ExecutionStarting":         0,
@@ -89,7 +95,9 @@ var Message_MessageType_value = map[string]int32{
 	"StepValidateRequest":       9,
 	"StepValidateResponse":      10,
 	"ExecutionStatusResponse":   11,
-	"KillProcessRequest":        12,
+	"StepNamesRequest":          12,
+	"StepNamesResponse":         13,
+	"KillProcessRequest":        14,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -599,6 +607,30 @@ func (m *ExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	return nil
 }
 
+type StepNamesRequest struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *StepNamesRequest) Reset()         { *m = StepNamesRequest{} }
+func (m *StepNamesRequest) String() string { return proto.CompactTextString(m) }
+func (*StepNamesRequest) ProtoMessage()    {}
+
+type StepNamesResponse struct {
+	Steps            []string `protobuf:"bytes,1,rep,name=steps" json:"steps,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *StepNamesResponse) Reset()         { *m = StepNamesResponse{} }
+func (m *StepNamesResponse) String() string { return proto.CompactTextString(m) }
+func (*StepNamesResponse) ProtoMessage()    {}
+
+func (m *StepNamesResponse) GetSteps() []string {
+	if m != nil {
+		return m.Steps
+	}
+	return nil
+}
+
 // This is the message which gets transferred all the time
 // with proper message type set
 type Message struct {
@@ -619,7 +651,9 @@ type Message struct {
 	StepValidateRequest              *StepValidateRequest              `protobuf:"bytes,12,opt,name=stepValidateRequest" json:"stepValidateRequest,omitempty"`
 	StepValidateResponse             *StepValidateResponse             `protobuf:"bytes,13,opt,name=stepValidateResponse" json:"stepValidateResponse,omitempty"`
 	ExecutionStatusResponse          *ExecutionStatusResponse          `protobuf:"bytes,14,opt,name=executionStatusResponse" json:"executionStatusResponse,omitempty"`
-	KillProcessRequest               *KillProcessRequest               `protobuf:"bytes,15,opt,name=killProcessRequest" json:"killProcessRequest,omitempty"`
+	StepNamesRequest                 *StepNamesRequest                 `protobuf:"bytes,15,opt,name=stepNamesRequest" json:"stepNamesRequest,omitempty"`
+	StepNamesResponse                *StepNamesResponse                `protobuf:"bytes,16,opt,name=stepNamesResponse" json:"stepNamesResponse,omitempty"`
+	KillProcessRequest               *KillProcessRequest               `protobuf:"bytes,17,opt,name=killProcessRequest" json:"killProcessRequest,omitempty"`
 	XXX_unrecognized                 []byte                            `json:"-"`
 }
 
@@ -721,6 +755,20 @@ func (m *Message) GetStepValidateResponse() *StepValidateResponse {
 func (m *Message) GetExecutionStatusResponse() *ExecutionStatusResponse {
 	if m != nil {
 		return m.ExecutionStatusResponse
+	}
+	return nil
+}
+
+func (m *Message) GetStepNamesRequest() *StepNamesRequest {
+	if m != nil {
+		return m.StepNamesRequest
+	}
+	return nil
+}
+
+func (m *Message) GetStepNamesResponse() *StepNamesResponse {
+	if m != nil {
+		return m.StepNamesResponse
 	}
 	return nil
 }

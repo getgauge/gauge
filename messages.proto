@@ -105,6 +105,13 @@ message ExecutionEndingRequest {
     optional ExecutionInfo currentExecutionInfo = 1;
 }
 
+message StepNamesRequest {
+}
+
+message StepNamesResponse {
+    repeated string steps = 1;
+}
+
 // This is the message which gets transferred all the time 
 // with proper message type set
 message Message {
@@ -121,7 +128,9 @@ message Message {
 	    StepValidateRequest = 9;
 	    StepValidateResponse = 10;
 	    ExecutionStatusResponse = 11;
-        KillProcessRequest = 12;
+        StepNamesRequest = 12;
+        StepNamesResponse = 13;
+        KillProcessRequest = 14;
 	}
   	
   	required MessageType messageType = 1;
@@ -143,6 +152,8 @@ message Message {
   	optional StepValidateRequest stepValidateRequest = 12;
   	optional StepValidateResponse stepValidateResponse = 13;
   	optional ExecutionStatusResponse executionStatusResponse = 14;
-  	optional KillProcessRequest killProcessRequest = 15;
+    optional StepNamesRequest stepNamesRequest = 15;
+    optional StepNamesResponse stepNamesResponse = 16;
+  	optional KillProcessRequest killProcessRequest = 17;
 }
 
