@@ -235,7 +235,6 @@ func main() {
 		loadGaugeEnvironment()
 		makeListOfAvailableSteps()
 		startAPIService()
-		runInfinitely()
 	} else if *version {
 		printVersion()
 	} else if *initialize != "" {
@@ -329,11 +328,6 @@ func loadGaugeEnvironment() {
 		}
 	}
 
-}
-
-func runInfinitely() {
-	for {
-	}
 }
 
 func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {

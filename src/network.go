@@ -114,31 +114,16 @@ func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration)
 
 }
 
-func (listener *gaugeListener) acceptAndHandleMultipleConnections(messageHandler MessageHandler) {
-	connectionChannel := make(chan net.Conn, 1)
-	go listener.acceptConnections(connectionChannel)
-	go listener.handleConnections(connectionChannel, messageHandler)
-}
-
-func (listener *gaugeListener) acceptConnections(connectionChannel chan<- net.Conn) {
-	go func() {
-		for {
-			connection, err := listener.tcpListener.Accept()
-			if err == nil {
-				connectionChannel <- connection
-			}
-		}
-	}()
-}
-
-func (listener *gaugeListener) handleConnections(connectionChannel <-chan net.Conn, messageHandler MessageHandler) {
+func (listener *gaugeListener) acceptConnections(messageHandler MessageHandler) {
 	for {
-		connection := <-connectionChannel
-		go listener.handleConnection(connection, messageHandler)
+		connection, err := listener.tcpListener.Accept()
+		if err == nil {
+			go listener.handleConnection(connection, messageHandler)
+		}
 	}
 }
 
-func (gaugeListener *gaugeListener) handleConnection(conn net.Conn, messageHandler MessageHandler) {
+func (listener *gaugeListener) handleConnection(conn net.Conn, messageHandler MessageHandler) {
 	buffer := new(bytes.Buffer)
 	data := make([]byte, 8192)
 	for {

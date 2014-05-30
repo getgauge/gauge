@@ -83,11 +83,11 @@ func getStepsFromRunner() []string {
 }
 
 func killRunner(connection net.Conn) error {
-	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
+	id := common.GetUniqueId()
+	message := &Message{MessageId: &id, MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
 
-	_, err := getResponse(connection, message)
-	return err
+	return writeMessage(connection, message)
 }
 
 func createGetStepValueRequest() *Message {
@@ -99,7 +99,7 @@ func startAPIService() {
 	if err != nil {
 		fmt.Printf("[Error] Failed to start API. %s\n", err.Error())
 	}
-	gaugeListener.acceptAndHandleMultipleConnections(&GaugeApiMessageHandler{})
+	gaugeListener.acceptConnections(&GaugeApiMessageHandler{})
 }
 
 type GaugeApiMessageHandler struct{}
@@ -135,7 +135,7 @@ func (handler *GaugeApiMessageHandler) respondToProjectRootRequest(message *APIM
 
 func (handler *GaugeApiMessageHandler) respondToGetAllStepsRequest(message *APIMessage, conn net.Conn) {
 	getAllStepsResponse := &GetAllStepsResponse{Steps: getAvailableStepNames()}
-	responseApiMessage := &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
+	responseApiMessage := &APIMessage{MessageType: APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 	handler.sendMessage(responseApiMessage, conn)
 }
 
