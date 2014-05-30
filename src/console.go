@@ -104,21 +104,3 @@ func (writer *consoleWriter) writeTable(table *table) {
 	formattedTable := formatTable(table)
 	terminal.Stdout.Colorf("@m%s", formattedTable)
 }
-
-func formatStep(step *step) string {
-	text := step.value
-	paramCount := strings.Count(text, PARAMETER_PLACEHOLDER)
-	for i := 0; i < paramCount; i++ {
-		argument := step.args[i]
-		formattedArg := ""
-		if argument.argType == tableArg {
-			formattedTable := formatTable(&argument.table)
-			formattedArg = fmt.Sprintf("\n%s", formattedTable)
-		} else {
-			formattedArg = fmt.Sprintf("\"%s\"", argument.value)
-		}
-		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
-	}
-
-	return formatStepText(text)
-}

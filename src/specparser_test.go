@@ -443,31 +443,32 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 13)
+	c.Assert(len(tokens), Equals, 14)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
 	c.Assert(tokens[1].kind, Equals, commentKind)
+	c.Assert(tokens[2].kind, Equals, commentKind)
 
-	c.Assert(tokens[2].kind, Equals, stepKind)
-	c.Assert(tokens[2].value, Equals, "Context step with {static} and {special}")
+	c.Assert(tokens[3].kind, Equals, stepKind)
+	c.Assert(tokens[3].value, Equals, "Context step with {static} and {special}")
 
-	c.Assert(tokens[3].kind, Equals, tableHeader)
-	c.Assert(tokens[4].kind, Equals, tableRow)
-	c.Assert(tokens[5].kind, Equals, tagKind)
-	c.Assert(tokens[6].kind, Equals, scenarioKind)
-	c.Assert(tokens[7].kind, Equals, tagKind)
+	c.Assert(tokens[4].kind, Equals, tableHeader)
+	c.Assert(tokens[5].kind, Equals, tableRow)
+	c.Assert(tokens[6].kind, Equals, tagKind)
+	c.Assert(tokens[7].kind, Equals, scenarioKind)
+	c.Assert(tokens[8].kind, Equals, tagKind)
 
-	c.Assert(tokens[8].kind, Equals, stepKind)
-	c.Assert(tokens[8].value, Equals, "first with {static} and {dynamic}")
+	c.Assert(tokens[9].kind, Equals, stepKind)
+	c.Assert(tokens[9].value, Equals, "first with {static} and {dynamic}")
 
-	c.Assert(tokens[9].kind, Equals, commentKind)
+	c.Assert(tokens[10].kind, Equals, commentKind)
 
-	c.Assert(tokens[10].kind, Equals, stepKind)
-	c.Assert(tokens[10].value, Equals, "{special} and {dynamic} with {static}")
+	c.Assert(tokens[11].kind, Equals, stepKind)
+	c.Assert(tokens[11].value, Equals, "{special} and {dynamic} with {static}")
 
-	c.Assert(tokens[11].kind, Equals, scenarioKind)
+	c.Assert(tokens[12].kind, Equals, scenarioKind)
 
-	c.Assert(tokens[12].kind, Equals, stepKind)
-	c.Assert(tokens[12].value, Equals, "another")
+	c.Assert(tokens[13].kind, Equals, stepKind)
+	c.Assert(tokens[13].value, Equals, "another")
 
 }

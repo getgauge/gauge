@@ -3,11 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 const (
 	HEADING_UNDERLINE_LENGTH = 20
-	TABLE_LEFT_SPACING       = 10
+	TABLE_LEFT_SPACING       = 5
 )
 
 func getRepeatedChars(character string, repeatCount int) string {
@@ -15,7 +16,6 @@ func getRepeatedChars(character string, repeatCount int) string {
 	for i := 0; i < repeatCount; i++ {
 		formatted = fmt.Sprintf("%s%s", formatted, character)
 	}
-
 	return formatted
 }
 
@@ -24,11 +24,27 @@ func formatSpecHeading(specHeading string) string {
 }
 
 func formatScenarioHeading(scenarioHeading string) string {
-	return fmt.Sprintf("\n%s", formatHeading(scenarioHeading, "-"))
+	return fmt.Sprintf("%s", formatHeading(scenarioHeading, "-"))
 }
 
-func formatStepText(stepText string) string {
-	return fmt.Sprintf("* %s\n", stepText)
+func formatStep(step *step) string {
+	text := step.value
+	paramCount := strings.Count(text, PARAMETER_PLACEHOLDER)
+	for i := 0; i < paramCount; i++ {
+		argument := step.args[i]
+		formattedArg := ""
+		if argument.argType == tableArg {
+			formattedTable := formatTable(&argument.table)
+			formattedArg = fmt.Sprintf("\n%s", formattedTable)
+		} else if argument.argType == dynamic {
+			formattedArg = fmt.Sprintf("<%s>", argument.value)
+		} else {
+			formattedArg = fmt.Sprintf("\"%s\"", argument.value)
+		}
+		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
+	}
+	stepText := fmt.Sprintf("* %s\n", text)
+	return stepText
 }
 
 func formatHeading(heading, headingChar string) string {
@@ -37,7 +53,7 @@ func formatHeading(heading, headingChar string) string {
 		length = HEADING_UNDERLINE_LENGTH
 	}
 
-	return fmt.Sprintf("%s\n%s\n\n", heading, getRepeatedChars(headingChar, length))
+	return fmt.Sprintf("%s\n%s\n", heading, getRepeatedChars(headingChar, length))
 }
 
 func formatTable(table *table) string {
@@ -90,4 +106,55 @@ func findLongestCellWidth(columnCells []tableCell, minValue int) int {
 		}
 	}
 	return longestLength
+}
+
+func formatItem(item item) string {
+	switch item.kind() {
+	case commentKind:
+		comment := item.(*comment)
+		if comment.value == "\n" {
+			return comment.value
+		}
+		return fmt.Sprintf("%s\n", comment.value)
+	case stepKind:
+		step := item.(*step)
+		return formatStep(step)
+	case tableKind:
+		table := item.(*table)
+		return formatTable(table)
+	case scenarioKind:
+		scenario := item.(*scenario)
+		var b bytes.Buffer
+		b.WriteString(formatScenarioHeading(scenario.heading.value))
+		b.WriteString(formatItems(scenario.items))
+		return string(b.Bytes())
+	case tagKind:
+		tags := item.(*tags)
+		var b bytes.Buffer
+		b.WriteString("tags: ")
+		for i, tag := range tags.values {
+			b.WriteString(tag)
+			if (i + 1) != len(tags.values) {
+				b.WriteString(", ")
+			}
+		}
+		b.WriteString("\n")
+		return string(b.Bytes())
+	}
+	return ""
+}
+
+func formatItems(items []item) string {
+	var result bytes.Buffer
+	for _, item := range items {
+		result.WriteString(formatItem(item))
+	}
+	return string(result.Bytes())
+}
+
+func formatSpecification(specification *specification) string {
+	var formattedText bytes.Buffer
+	formattedText.WriteString(formatSpecHeading(specification.heading.value))
+	formattedText.WriteString(formatItems(specification.items))
+	return string(formattedText.Bytes())
 }

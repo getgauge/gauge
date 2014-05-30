@@ -202,6 +202,7 @@ var initialize = flag.String([]string{"-init"}, "", "Initializes project structu
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
+var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 
 func printUsage() {
 	fmt.Printf("gauge - version %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
@@ -237,6 +238,23 @@ func main() {
 		startAPIService()
 	} else if *version {
 		printVersion()
+	} else if *specFilesToFormat != "" {
+		specs, specParseResults := findSpecs(*specFilesToFormat, &conceptDictionary{})
+		handleParseResult(specParseResults...)
+		failed := false
+		for _, spec := range specs {
+			formatted := formatSpecification(spec)
+			err := common.SaveFile(spec.fileName, formatted, true)
+			if err != nil {
+				failed = true
+				fmt.Printf("Failed to format '%s': %s\n", spec.fileName)
+			}
+		}
+		if failed {
+			os.Exit(1)
+		} else {
+			os.Exit(0)
+		}
 	} else if *initialize != "" {
 		err := createProjectTemplate(*initialize)
 		if err != nil {
