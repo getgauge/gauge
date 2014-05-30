@@ -22,7 +22,6 @@ func makeListOfAvailableSteps() {
 }
 
 func findStepsInSpecFiles(specFiles []string) {
-	parser := new(specParser)
 	for _, file := range specFiles {
 		specContent, err := common.ReadFileContents(file)
 		if err != nil {
