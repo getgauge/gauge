@@ -24,11 +24,12 @@ func makeListOfAvailableSteps() {
 func findStepsInSpecFiles(specFiles []string) {
 	parser := new(specParser)
 	for _, file := range specFiles {
-		scenarioContent, err := common.ReadFileContents(file)
+		specContent, err := common.ReadFileContents(file)
 		if err != nil {
 			continue
 		}
-		specification, result := parser.parse(scenarioContent, new(conceptDictionary))
+		parser := new(specParser)
+		specification, result := parser.parse(specContent, new(conceptDictionary))
 
 		if result.ok {
 			addStepsToAvailableSteps(specification.contexts)
