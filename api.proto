@@ -1,5 +1,4 @@
 package main;
-
 // Defines communication messages for API
 // Every API call will have a Request & Response pair
 
@@ -17,12 +16,104 @@ message GetAllStepsResponse {
     repeated string steps = 1;
 }
 
+message GetAllSpecsRequest {
+}
+
+message GetAllSpecsResponse {
+    repeated ProtoSpec specs = 1;
+}
+
+message ProtoSpec {
+    repeated ProtoItem items = 1;
+}
+
+message ProtoItem {
+    enum ItemType {
+        Heading = 1;
+        Step = 2;
+        Concept = 4;
+        Scenario = 5;
+        Comment = 6;
+        Table = 7;
+        Tags = 8;
+    }
+    required ItemType itemType = 1;
+    optional ProtoHeading heading = 2;
+    optional ProtoStep step = 3;
+    optional ProtoConcept concept = 4;
+    optional ProtoScenario scenario = 5;
+    optional ProtoComment comment = 6;
+    optional ProtoTableParam table = 7;
+    optional ProtoTags tags = 8;
+}
+
+message ProtoHeading {
+    enum HeadingType {
+        Spec = 1;
+        Scenario = 2;
+    }
+    required HeadingType headingType = 1;
+    required string text = 2;
+}
+
+message ProtoScenario {
+    repeated ProtoItem scenarioItems = 1;
+}
+
+message ProtoStep {
+    required string text = 1;
+    repeated Parameter parameters = 2;
+    repeated Fragment fragments = 3;
+}
+
+message ProtoConcept {
+    required ProtoStep conceptStep = 1;
+    repeated ProtoStep steps = 2;
+}
+
+message Fragment {
+    enum FragmentType {
+        Text = 1;
+        Parameter = 2;
+    }
+    required FragmentType fragmentType = 1;
+    optional string text = 2;
+    optional Parameter parameter = 3;
+}
+
+message Parameter {
+    enum ParameterType {
+        Static = 1;
+        Dynamic = 2;
+        Special = 3;
+        Table = 4;
+    }
+    required ParameterType parameterType = 1;
+    optional string value = 2;
+    optional ProtoTableParam table = 3;
+}
+
+message ProtoComment {
+    required string text = 1;
+}
+
+message ProtoTableParam {
+    required ProtoTableRow headers = 1;
+    repeated ProtoTableRow rows = 2;
+}
+
+message ProtoTableRow {
+    repeated string cells = 1;
+}
+
 message APIMessage {
     enum APIMessageType {
         GetProjectRootRequest = 1;
         GetProjectRootResponse = 2;
         GetAllStepsRequest = 3;
         GetAllStepResponse = 4;
+        GetAllSpecsRequest = 5;
+        GetAllSpecsResponse = 6;
     }
 
     required APIMessageType messageType = 1;
@@ -32,4 +123,11 @@ message APIMessage {
     optional GetProjectRootResponse projectRootResponse = 4;
     optional GetAllStepsRequest allStepsRequest = 5;
     optional GetAllStepsResponse allStepsResponse = 6;
+    optional GetAllSpecsRequest allSpecsRequest = 7;
+    optional GetAllSpecsResponse allSpecsResponse = 8;
+
+}
+
+message ProtoTags {
+    repeated string tags = 1;
 }

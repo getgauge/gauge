@@ -24,6 +24,8 @@ const (
 	envDefaultDirName = "default"
 )
 
+var availableSpecs = make([]*specification, 0)
+var availableStepsMap = make(map[string]bool)
 var acceptedExtensions = make(map[string]bool)
 
 func init() {
@@ -289,7 +291,7 @@ func main() {
 
 		specSource := flag.Arg(0)
 
-		concepts, conceptParseResult := createConceptsDictionary()
+		concepts, conceptParseResult := createConceptsDictionary(false)
 		handleParseResult(conceptParseResult)
 
 		specs, specParseResults := findSpecs(specSource, concepts)
@@ -458,11 +460,14 @@ func findConceptFiles() []string {
 
 }
 
-func createConceptsDictionary() (*conceptDictionary, *parseResult) {
+func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
 	conceptFiles := findConceptFiles()
 	conceptsDictionary := new(conceptDictionary)
 	for _, conceptFile := range conceptFiles {
 		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
+			if shouldIgnoreErrors {
+				continue
+			}
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}
