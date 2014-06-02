@@ -59,16 +59,8 @@ type gaugeListener struct {
 	tcpListener *net.TCPListener
 }
 
-func newGaugeListener(portEnvVariable string, staticBackupPort int) (*gaugeListener, error) {
-	// if portEnvVariable is set, use that. Else try backup port. or Finally ListenTCP will assign a free port
+func newGaugeListener(port int) (*gaugeListener, error) {
 	// port = 0 means GO will find a unused port
-	port, err := getPortFromEnvironmentVariable(portEnvVariable)
-	if err != nil {
-		return nil, err
-	}
-	if port == 0 {
-		port = staticBackupPort
-	}
 
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
@@ -85,7 +77,7 @@ func getPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 		}
 		return gport, nil
 	}
-	return 0, nil
+	return 0, errors.New(fmt.Sprintf("%s Environment variable not set", portEnvVariable))
 }
 
 func (listener *gaugeListener) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {

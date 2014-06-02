@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
@@ -236,8 +237,17 @@ func main() {
 
 	if *daemonize {
 		loadGaugeEnvironment()
-		makeListOfAvailableSteps()
-		startAPIService()
+		makeListOfAvailableSteps(nil)
+		port, err := getPortFromEnvironmentVariable(apiPortEnvVariableName)
+		if err != nil {
+			fmt.Printf("Failed to start API Service. %s", err.Error())
+			os.Exit(1)
+		}
+		apiChannel := make(chan bool, 1)
+		var wg sync.WaitGroup
+		wg.Add(1)
+		go startAPIService(port, apiChannel, &wg)
+		wg.Wait()
 	} else if *version {
 		printVersion()
 	} else if *specFilesToFormat != "" {
@@ -288,28 +298,33 @@ func main() {
 		}
 
 		loadGaugeEnvironment()
-
 		specSource := flag.Arg(0)
 
-		concepts, conceptParseResult := createConceptsDictionary(false)
+		conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 		handleParseResult(conceptParseResult)
 
-		specs, specParseResults := findSpecs(specSource, concepts)
+		specs, specParseResults := findSpecs(specSource, conceptsDictionary)
 		handleParseResult(specParseResults...)
 
 		manifest := getProjectManifest()
-
-		pluginHandler, warnings := startPluginsForExecution(manifest)
-		handleWarningMessages(warnings)
-
 		runnerConnection, runnerError := startRunnerAndMakeConnection(manifest)
 		if runnerError != nil {
 			fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 			os.Exit(1)
 		}
 
+		makeListOfAvailableSteps(runnerConnection)
+
+		var wg sync.WaitGroup
+		apiChannel := make(chan bool, 1)
+		wg.Add(1)
+		go startAPIService(0, apiChannel, &wg)
+
+		pluginHandler, warnings := startPluginsForExecution(manifest, apiChannel)
+		handleWarningMessages(warnings)
+
 		execution := newExecution(manifest, specs, runnerConnection, pluginHandler)
-		validationErrors := execution.validate(concepts)
+		validationErrors := execution.validate(conceptsDictionary)
 		if len(validationErrors) > 0 {
 			fmt.Println("Validation failed. The following steps have errors")
 			for _, stepValidationErrors := range validationErrors {
@@ -320,7 +335,7 @@ func main() {
 			}
 			err := execution.killProcess()
 			if err != nil {
-				fmt.Printf("Failed to kill the process. %s\n", err.Error())
+				fmt.Printf("Failed to kill Runner. %s\n", err.Error())
 			}
 			os.Exit(1)
 		} else {
@@ -351,7 +366,11 @@ func loadGaugeEnvironment() {
 }
 
 func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {
-	listener, listenerErr := newGaugeListener(common.GaugePortEnvName, 0)
+	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
+	if err != nil {
+		port = 0
+	}
+	listener, listenerErr := newGaugeListener(port)
 	if listenerErr != nil {
 		return nil, listenerErr
 	}

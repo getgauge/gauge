@@ -6,6 +6,8 @@ import (
 	"github.com/getgauge/common"
 	"log"
 	"net"
+	"strconv"
+	"sync"
 )
 
 const (
@@ -13,8 +15,8 @@ const (
 	API_STATIC_PORT        = 8889
 )
 
-func makeListOfAvailableSteps() {
-	addStepValuesToAvailableSteps(getStepsFromRunner())
+func makeListOfAvailableSteps(runnerConn net.Conn) {
+	addStepValuesToAvailableSteps(getStepsFromRunner(runnerConn))
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	availableSpecs = parseSpecFiles(specFiles, dictionary)
@@ -75,19 +77,28 @@ func getAvailableStepNames() []string {
 	return stepNames
 }
 
-func getStepsFromRunner() []string {
+func getStepsFromRunner(runnerConnection net.Conn) []string {
 	steps := make([]string, 0)
-	runnerConnection, connErr := startRunnerAndMakeConnection(getProjectManifest())
-	if connErr == nil {
-		message, err := getResponse(runnerConnection, createGetStepValueRequest())
-		if err == nil {
-			allStepsResponse := message.GetStepNamesResponse()
-			steps = append(steps, allStepsResponse.GetSteps()...)
+	if runnerConnection == nil {
+		var connErr error
+		runnerConnection, connErr = startRunnerAndMakeConnection(getProjectManifest())
+		if connErr == nil {
+			steps = append(steps, requestForSteps(runnerConnection)...)
+			killRunner(runnerConnection)
 		}
-		killRunner(runnerConnection)
+	} else {
+		steps = append(steps, requestForSteps(runnerConnection)...)
 	}
 	return steps
+}
 
+func requestForSteps(connection net.Conn) []string {
+	message, err := getResponse(connection, createGetStepNamesRequest())
+	if err == nil {
+		allStepsResponse := message.GetStepNamesResponse()
+		return allStepsResponse.GetSteps()
+	}
+	return make([]string, 0)
 }
 
 func killRunner(connection net.Conn) error {
@@ -98,15 +109,25 @@ func killRunner(connection net.Conn) error {
 	return writeMessage(connection, message)
 }
 
-func createGetStepValueRequest() *Message {
+func createGetStepNamesRequest() *Message {
 	return &Message{MessageType: Message_StepNamesRequest.Enum(), StepNamesRequest: &StepNamesRequest{}}
 }
 
-func startAPIService() {
-	gaugeListener, err := newGaugeListener(apiPortEnvVariableName, API_STATIC_PORT)
+func startAPIService(port int, apiChannel chan bool, wg *sync.WaitGroup) {
+	defer wg.Done()
+	gaugeListener, err := newGaugeListener(port)
 	if err != nil {
 		fmt.Printf("[Error] Failed to start API. %s\n", err.Error())
+		apiChannel <- false
 	}
+	if port == 0 {
+		if err := common.SetEnvVariable(apiPortEnvVariableName, strconv.Itoa(gaugeListener.tcpListener.Addr().(*net.TCPAddr).Port)); err != nil {
+			fmt.Printf("Failed to set Env variable %s. %s", apiPortEnvVariableName, err.Error())
+			apiChannel <- false
+			return
+		}
+	}
+	apiChannel <- true
 	gaugeListener.acceptConnections(&GaugeApiMessageHandler{})
 }
 
