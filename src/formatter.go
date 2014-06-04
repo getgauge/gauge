@@ -43,7 +43,12 @@ func formatStep(step *step) string {
 		}
 		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
 	}
-	stepText := fmt.Sprintf("* %s\n", text)
+	stepText := ""
+	if strings.HasSuffix(text, "\n") {
+		stepText = fmt.Sprintf("* %s", text)
+	} else {
+		stepText = fmt.Sprintf("* %s\n", text)
+	}
 	return stepText
 }
 
