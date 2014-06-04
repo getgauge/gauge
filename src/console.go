@@ -70,7 +70,7 @@ func (writer *consoleWriter) writeItem(item item) {
 }
 
 func (writer *consoleWriter) writeComment(comment *comment) {
-	terminal.Stdout.Colorf("@k%s\n\n", comment.value)
+	terminal.Stdout.Colorf("@k%s", formatItem(comment))
 }
 
 func (writer *consoleWriter) writeScenarioHeading(scenarioHeading string) {
