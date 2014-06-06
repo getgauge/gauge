@@ -97,13 +97,14 @@ func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
 	if linesInStepText == 0 {
 		linesInStepText = 1
 	}
-	terminal.Stdout.Up(writer.linesAfterLastStep + linesInStepText)
+	linesToMoveUp := writer.linesAfterLastStep + linesInStepText
+	terminal.Stdout.Up(linesToMoveUp)
 	if isPassed {
 		terminal.Stdout.Colorf("@g%s", stepText)
 	} else {
 		terminal.Stdout.Colorf("@r%s", stepText)
 	}
-	terminal.Stdout.Down(writer.linesAfterLastStep + linesInStepText)
+	terminal.Stdout.Down(linesToMoveUp)
 	writer.isInsideStep = false
 }
 
