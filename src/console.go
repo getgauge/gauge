@@ -55,6 +55,12 @@ func (writer *consoleWriter) writeItems(items []item) {
 	}
 }
 
+func (writer *consoleWriter) writeSteps(steps []*step) {
+	for _, step := range steps {
+		writer.writeItem(step)
+	}
+}
+
 func (writer *consoleWriter) writeItem(item item) {
 	switch item.kind() {
 	case commentKind:
@@ -70,16 +76,17 @@ func (writer *consoleWriter) writeItem(item item) {
 }
 
 func (writer *consoleWriter) writeComment(comment *comment) {
-	terminal.Stdout.Colorf("@k%s", formatItem(comment))
+	terminal.Stdout.Colorf("%s", formatItem(comment))
 }
 
 func (writer *consoleWriter) writeScenarioHeading(scenarioHeading string) {
 	formattedHeading := formatScenarioHeading(scenarioHeading)
-	writer.Write([]byte(formattedHeading))
+	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
 func (writer *consoleWriter) writeStep(step *step) {
-	terminal.Stdout.Colorf("@b%s", formatStep(step))
+	stepText := formatStep(step)
+	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
 }

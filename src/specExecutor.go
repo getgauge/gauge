@@ -85,7 +85,7 @@ func (executor *specExecutor) execute() *specExecutionStatus {
 	specExecutionStatus := &specExecutionStatus{specification: executor.specification, scenariosExecutionStatuses: make(map[int][]*scenarioExecutionStatus)}
 	beforeSpecHookStatus := executor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetPassed() {
-		getCurrentConsole().writeItems(executor.specification.items)
+		getCurrentConsole().writeSteps(executor.specification.contexts)
 		dataTableRowCount := executor.specification.dataTable.getRowCount()
 		if dataTableRowCount == 0 {
 			scenariosExecutionStatuses := executor.executeScenarios()
@@ -272,7 +272,6 @@ func (executor *specExecutor) executeItems(items []item) ([]*stepExecutionStatus
 
 func (executor *specExecutor) executeItem(item item) *stepExecutionStatus {
 	if item.kind() != stepKind {
-		getCurrentConsole().writeItem(item)
 		return nil
 	}
 
