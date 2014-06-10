@@ -1,10 +1,10 @@
 package main
 
 import (
+	"common"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
 	"net"
 	"os"
 	"path"

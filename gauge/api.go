@@ -2,8 +2,8 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
+	"common"
 	"fmt"
-	"github.com/getgauge/common"
 	"log"
 	"net"
 	"strconv"

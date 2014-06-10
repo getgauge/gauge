@@ -1,10 +1,10 @@
 package main
 
 import (
+	"common"
 	"encoding/csv"
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
 	"regexp"
 	"strings"
 )

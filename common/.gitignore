@@ -20,8 +20,5 @@ _cgo_export.*
 _testmain.go
 
 *.exe
-twist2
-!src/github.com/twist2
+*.test
 tags
-tmp
-bin/

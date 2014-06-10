@@ -3,9 +3,9 @@ package main
 import (
 	"bytes"
 	"code.google.com/p/goprotobuf/proto"
+	"common"
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
 	"log"
 	"net"
 	"os"
