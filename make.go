@@ -289,6 +289,7 @@ func installGaugeJavaFiles() {
 	}
 	files[filepath.Join("gauge-java", "java.json")] = filepath.Join("share", "gauge", "languages")
 	files[filepath.Join("gauge-java", "skel", "StepImplementation.java")] = filepath.Join("share", "gauge", "skel", "java")
+	files[filepath.Join("gauge-java", "skel", "java.properties")] = filepath.Join("share", "gauge", "skel", "env")
 	files[filepath.Join("gauge-java", "libs")] = filepath.Join("lib", "gauge", "java", "libs")
 	files[filepath.Join("gauge-java", "build", "jar")] = filepath.Join("lib", "gauge", "java")
 	installFiles(files)
