@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 )
 
 const (
@@ -269,7 +270,11 @@ func hasChanges(h, dir string) bool {
 
 func installGaugeFiles() {
 	files := make(map[string]string)
-	files[filepath.Join("bin", "gauge")] = "bin"
+	if runtime.GOOS == "windows" {
+		files[filepath.Join("bin", "gauge.exe")] = "bin"
+	} else {
+		files[filepath.Join("bin", "gauge")] = "bin"
+	}
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
 	installFiles(files)
@@ -277,7 +282,11 @@ func installGaugeFiles() {
 
 func installGaugeJavaFiles() {
 	files := make(map[string]string)
-	files[filepath.Join("bin", "gauge-java")] = "bin"
+	if runtime.GOOS == "windows" {
+		files[filepath.Join("bin", "gauge-java.exe")] = "bin"
+	} else {
+		files[filepath.Join("bin", "gauge-java")] = "bin"
+	}
 	files[filepath.Join("gauge-java", "java.json")] = filepath.Join("share", "gauge", "languages")
 	files[filepath.Join("gauge-java", "skel", "StepImplementation.java")] = filepath.Join("share", "gauge", "skel", "java")
 	files[filepath.Join("gauge-java", "libs")] = filepath.Join("lib", "gauge", "java", "libs")
@@ -332,7 +341,15 @@ func main() {
 		runTests("gauge")
 	} else if *install {
 		if *installPrefix == "" {
-			*installPrefix = "/usr/local"
+			if runtime.GOOS == "windows" {
+				*installPrefix = os.Getenv("PROGRAMFILES")
+				if *installPrefix == "" {
+					panic(fmt.Errorf("Failed to find programfiles"))
+				}
+				*installPrefix = filepath.Join(*installPrefix, "gauge")
+			} else {
+				*installPrefix = "/usr/local"
+			}
 		}
 		installGaugeFiles()
 		installGaugeJavaFiles()
