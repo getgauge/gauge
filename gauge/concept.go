@@ -126,7 +126,7 @@ func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLoo
 }
 
 func (parser *conceptParser) hasOnlyDynamicParams(token *token) bool {
-	_, kinds := new(specification).extractStepValueAndParameterTypes(token.value)
+	_, kinds := extractStepValueAndParameterTypes(token.value)
 	for _, argKind := range kinds {
 		if argKind != "dynamic" {
 			return false

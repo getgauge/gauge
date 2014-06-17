@@ -1,6 +1,0 @@
-{
-	"name": "Ruby runner",
-	"command": {
-		"darwin": "ruby/twist-ruby.sh"
-	}
-}

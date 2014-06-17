@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -54,8 +55,20 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 	if len(token.value) == 0 {
 		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "Step should not be blank"}, true
 	}
+
+	stepValue, args, err := processStepText(token.value)
+	if err != nil {
+		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: err.Error()}, true
+	}
+	token.value = stepValue
+	token.args = args
+	parser.clearState()
+	return nil, false
+}
+
+func processStepText(text string) (string, []string, error) {
 	reservedChars := map[rune]struct{}{'{': {}, '}': {}}
-	var stepText, argText bytes.Buffer
+	var stepValue, argText bytes.Buffer
 
 	var args []string
 
@@ -63,7 +76,7 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 		if isInAnyState(state, inQuotes, inDynamicParam) {
 			return &argText
 		} else {
-			return &stepText
+			return &stepValue
 		}
 	}
 
@@ -71,7 +84,7 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 	lastState := -1
 
 	acceptStaticParam := simpleAcceptor(rune(quotes), rune(quotes), func(int) {
-		stepText.WriteString("{static}")
+		stepValue.WriteString("{static}")
 		args = append(args, argText.String())
 		argText.Reset()
 	}, inQuotes)
@@ -83,16 +96,16 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 		return state
 	}, func(currentState int) {
 		if isInState(currentState, inSpecialParam) {
-			stepText.WriteString("{special}")
+			stepValue.WriteString("{special}")
 		} else {
-			stepText.WriteString("{dynamic}")
+			stepValue.WriteString("{dynamic}")
 		}
 		args = append(args, argText.String())
 		argText.Reset()
 	}, inDynamicParam)
 
 	var inParamBoundary bool
-	for _, element := range token.value {
+	for _, element := range text {
 		if currentState == inEscape {
 			currentState = lastState
 		} else if element == escape {
@@ -104,7 +117,7 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 		} else if currentState, inParamBoundary = acceptStaticParam(element, currentState); inParamBoundary {
 			continue
 		} else if _, isReservedChar := reservedChars[element]; currentState == inDefault && isReservedChar {
-			return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: fmt.Sprintf("'%c' is a reserved character and should be escaped", element)}, true
+			return "", nil, errors.New(fmt.Sprintf("'%c' is a reserved character and should be escaped", element))
 		}
 
 		curBuffer(currentState).WriteRune(element)
@@ -112,13 +125,11 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 
 	// If it is a valid step, the state should be default when the control reaches here
 	if currentState == inQuotes {
-		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "String not terminated"}, true
+		return "", nil, errors.New(fmt.Sprintf("String not terminated"))
 	} else if isInState(currentState, inDynamicParam) {
-		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "Dynamic parameter not terminated"}, true
+		return "", nil, errors.New(fmt.Sprintf("Dynamic parameter not terminated"))
 	}
 
-	token.value = strings.TrimSpace(stepText.String())
-	token.args = args
-	parser.clearState()
-	return nil, false
+	return strings.TrimSpace(stepValue.String()), args, nil
+
 }

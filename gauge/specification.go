@@ -313,7 +313,7 @@ func (spec *specification) createStep(stepToken *token) (*step, *parseError) {
 }
 
 func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLookup) (*step, *parseError) {
-	stepValue, argsType := spec.extractStepValueAndParameterTypes(stepToken.value)
+	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.value)
 	if argsType != nil && len(argsType) != len(stepToken.args) {
 		return nil, &parseError{stepToken.lineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.lineText}
 	}
@@ -415,7 +415,7 @@ func (specParser *specParser) validateSpec(specification *specification) *parseE
 	return nil
 }
 
-func (spec *specification) extractStepValueAndParameterTypes(stepTokenValue string) (string, []string) {
+func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string) {
 	argsType := make([]string, 0)
 	r := regexp.MustCompile("{(dynamic|static|special)}")
 	/*

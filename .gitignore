@@ -23,5 +23,7 @@ _testmain.go
 twist2
 !src/github.com/twist2
 tags
+.bundle
 tmp
 bin/
+gauge-ruby/*.gem

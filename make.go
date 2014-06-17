@@ -23,8 +23,7 @@ var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, "bin")
 var BUILD_DIR_SRC = filepath.Join(BUILD_DIR, "src")
 var BUILD_DIR_PKG = filepath.Join(BUILD_DIR, "pkg")
 
-var gaugePackages = []string{"common"}
-var gaugeExecutables = []string{"gauge", "gauge-java"}
+var gaugePackages = []string{"common", "gauge", "gauge-java", "gauge-ruby"}
 
 func hashDir(dirPath string) string {
 	var b bytes.Buffer
@@ -148,12 +147,6 @@ func copyGaugePackagesToGoPath() {
 			panic(err)
 		}
 	}
-	for _, p := range gaugeExecutables {
-		err := mirrorDir(p, filepath.Join(BUILD_DIR_SRC, p))
-		if err != nil {
-			panic(err)
-		}
-	}
 }
 
 func setGoPath() {
@@ -168,17 +161,11 @@ func setGoPath() {
 	}
 }
 
-func compilePackages() {
-	setGoPath()
-	args := []string{"install", "-v"}
-	for _, p := range gaugeExecutables {
-		args = append(args, p)
-	}
-
-	cmd := exec.Command("go", args...)
+func runProcess(command string, workingDirectory string, arg ...string) {
+	cmd := exec.Command(command, arg...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.Dir = BUILD_DIR
+	cmd.Dir = workingDirectory
 	log.Printf("Execute %v\n", cmd.Args)
 	err := cmd.Run()
 	if err != nil {
@@ -186,29 +173,27 @@ func compilePackages() {
 	}
 }
 
-func compileJavaClasses() {
-	cmd := exec.Command("ant", "jar")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = "gauge-java"
-	log.Printf("Execute %v\n", cmd.Args)
-	err := cmd.Run()
-	if err != nil {
-		panic(err)
-	}
+func compileGoPackage(packageName string) {
+	setGoPath()
+	runProcess("go", BUILD_DIR, "install", "-v", packageName)
+}
+
+func compileGauge() {
+	compileGoPackage("gauge")
+}
+
+func compileGaugeJava() {
+	compileGoPackage("gauge-java")
+	runProcess("ant", "gauge-java", "jar")
+}
+
+func compileGaugeRuby() {
+	compileGoPackage("gauge-ruby")
 }
 
 func runTests(packageName string) {
 	setGoPath()
-	cmd := exec.Command("go", "test", packageName)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	cmd.Dir = BUILD_DIR
-	log.Printf("Execute %v\n", cmd.Args)
-	err := cmd.Run()
-	if err != nil {
-		panic(err)
-	}
+	runProcess("go", BUILD_DIR, "test", packageName)
 }
 
 func copyBinaries() {
@@ -295,6 +280,24 @@ func installGaugeJavaFiles() {
 	installFiles(files)
 }
 
+func installGaugeRubyFiles() {
+	files := make(map[string]string)
+	if runtime.GOOS == "windows" {
+		files[filepath.Join("bin", "gauge-ruby.exe")] = "bin"
+	} else {
+		files[filepath.Join("bin", "gauge-ruby")] = "bin"
+	}
+
+	files[filepath.Join("gauge-ruby", "ruby.json")] = filepath.Join("share", "gauge", "languages")
+	files[filepath.Join("gauge-ruby", "skel", "step_implementation.rb")] = filepath.Join("share", "gauge", "skel", "ruby")
+	files[filepath.Join("gauge-ruby", "skel", "ruby.properties")] = filepath.Join("share", "gauge", "skel", "env")
+	installFiles(files)
+
+	// packaging ruby gems
+	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
+	runProcess("gem", "gauge-ruby", "install", "gauge-ruby-0.0.1.gem")
+}
+
 // Executes the specified target
 // It also keeps a hash of all the contents in the target directory and avoid recompilation if contents are not changed
 func executeTarget(target string) {
@@ -328,8 +331,9 @@ type targetOpts struct {
 // Defines all the compile targets
 // Each target name is the directory name
 var targets = map[string]*targetOpts{
-	"gauge":      &targetOpts{lookForChanges: true, targetFunc: compilePackages},
-	"gauge-java": &targetOpts{lookForChanges: true, targetFunc: compileJavaClasses},
+	"gauge":      &targetOpts{lookForChanges: true, targetFunc: compileGauge},
+	"gauge-java": &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
+	"gauge-ruby": &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
 }
 
 func main() {
@@ -354,6 +358,7 @@ func main() {
 		}
 		installGaugeFiles()
 		installGaugeJavaFiles()
+		installGaugeRubyFiles()
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {

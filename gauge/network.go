@@ -167,6 +167,14 @@ func getResponse(conn net.Conn, message *Message) (*Message, error) {
 	}
 }
 
+func (listener *gaugeListener) portNumber() string {
+	if listener.tcpListener != nil {
+		return strconv.Itoa(listener.tcpListener.Addr().(*net.TCPAddr).Port)
+	} else {
+		return ""
+	}
+}
+
 //Sends a specified message and does not wait for any response
 func writeMessage(conn net.Conn, message proto.Message) error {
 	data, err := proto.Marshal(message)

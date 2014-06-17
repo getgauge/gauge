@@ -210,15 +210,8 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	return manifest.save()
 }
 
-func startPluginsForExecution(manifest *manifest, apiChannel chan bool) (*pluginHandler, []string) {
+func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	warnings := make([]string, 0)
-
-	done := <-apiChannel
-	if !done {
-		warnings = append(warnings, fmt.Sprintf("Unable to start Plugins. API service did not start."))
-		return nil, warnings
-	}
-
 	handler := &pluginHandler{}
 	envProperties := make(map[string]string)
 	pluginListener, err := newGaugeListener(0)
