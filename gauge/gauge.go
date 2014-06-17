@@ -395,80 +395,104 @@ func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {
 	return runnerConnection, nil
 }
 
-func printExecutionStatus(status *testExecutionStatus) int {
+func printExecutionStatus(suiteResult *suiteResult) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
-	noOfSpecificationsExecuted := len(status.specExecutionStatuses)
+
+	noOfSpecificationsExecuted := len(suiteResult.specResults)
 	noOfScenariosExecuted := 0
-	noOfSpecificationsFailed := 0
+	noOfSpecificationsFailed := suiteResult.specsFailedCount
 	noOfScenariosFailed := 0
 	exitCode := 0
-	if status.isFailed() {
+	if suiteResult.isFailed {
 		fmt.Println("\nThe following failures occured:\n")
 		exitCode = 1
 	}
 
-	for _, hookStatus := range status.hooksExecutionStatuses {
-		if !hookStatus.GetPassed() {
-			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
-			fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetStackTrace())
-		}
+	printHookError(suiteResult.preSuite)
+
+	for _, specResult := range suiteResult.specResults {
+		noOfScenariosExecuted += specResult.scenarioCount
+		noOfScenariosFailed += specResult.scenarioFailedCount
+		printSpecFailure(specResult)
 	}
 
-	for _, specExecStatus := range status.specExecutionStatuses {
-		specFailing := false
-		for _, hookStatus := range specExecStatus.hooksExecutionStatuses {
-			if !hookStatus.GetPassed() {
-				specFailing = true
-				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", specExecStatus.specification.fileName)
-				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetErrorMessage())
-				fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hookStatus.GetStackTrace())
-			}
-		}
-
-		noOfScenariosExecuted += len(specExecStatus.scenariosExecutionStatuses[0])
-		scenariosFailedInThisSpec := printScenarioExecutionStatus(specExecStatus.scenariosExecutionStatuses[0], specExecStatus.specification)
-		if scenariosFailedInThisSpec > 0 {
-			specFailing = true
-			noOfScenariosFailed += scenariosFailedInThisSpec
-		}
-
-		if specFailing {
-			noOfSpecificationsFailed += 1
-		}
-	}
-
+	printHookError(suiteResult.postSuite)
 	fmt.Printf("\n\n%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
 	fmt.Printf("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
 	return exitCode
 }
 
-func printScenarioExecutionStatus(scenariosExecStatuses []*scenarioExecutionStatus, specification *specification) int {
-	noOfScenariosFailed := 0
-	scenarioFailing := false
-	for _, scenarioExecStatus := range scenariosExecStatuses {
-		for _, hookStatus := range scenarioExecStatus.hooksExecutionStatuses {
-			if !hookStatus.GetPassed() {
-				scenarioFailing = true
-				fmt.Printf("\x1b[31;1m%s:%s:%s\n\x1b[0m", specification.fileName,
-					scenarioExecStatus.scenario.heading.value, hookStatus.GetErrorMessage())
+func printHookError(hook *ProtoHookFailure) {
+	if hook != nil {
+		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hook.GetErrorMessage())
+		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hook.GetStackTrace())
+	}
+}
+
+func printError(execResult *ProtoExecutionResult) {
+	if execResult.GetFailed() {
+		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execResult.GetErrorMessage())
+		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execResult.GetStackTrace())
+	}
+}
+
+func printSpecFailure(specResult *specResult) {
+	if specResult.isFailed {
+		fmt.Printf("\x1b[31;1m%s : %s \n\x1b[0m", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading())
+		printHookError(specResult.protoSpec.GetPreHookFailure())
+
+		for _, specItem := range specResult.protoSpec.Items {
+			if specItem.GetItemType() == ProtoItem_Scenario {
+				printScenarioFailure(specItem.GetScenario())
+			} else if specItem.GetItemType() == ProtoItem_TableDrivenScenario {
+				printTableDrivenScenarioFailure(specItem.GetTableDrivenScenario())
 			}
 		}
 
-		for _, stepExecStatus := range scenarioExecStatus.stepExecutionStatuses {
-			for _, executionStatus := range stepExecStatus.executionStatus {
-				if !executionStatus.GetPassed() {
-					scenarioFailing = true
-					fmt.Printf("\x1b[31;1m%s:%s\n\x1b[0m", specification.fileName, executionStatus.GetErrorMessage())
-				}
+		printHookError(specResult.protoSpec.GetPostHookFailure())
+	}
+}
+
+func printTableDrivenScenarioFailure(tableDrivenScenario *ProtoTableDrivenScenario) {
+	for _, scenario := range tableDrivenScenario.GetScenarios() {
+		printScenarioFailure(scenario)
+	}
+}
+
+func printScenarioFailure(scenario *ProtoScenario) {
+	if scenario.GetFailed() {
+		fmt.Printf("\x1b[31;1m%s:\n\x1b[0m", scenario.GetScenarioHeading())
+		printHookError(scenario.GetPreHookFailure())
+
+		for _, scenarioItem := range scenario.GetScenarioItems() {
+			if scenarioItem.GetItemType() == ProtoItem_Step {
+				printStepFailure(scenarioItem.GetStep())
+			} else if scenarioItem.GetItemType() == ProtoItem_Concept {
+				printConceptFailure(scenarioItem.GetConcept())
 			}
 		}
-		if scenarioFailing {
-			noOfScenariosFailed += 1
-		}
+		printHookError(scenario.GetPostHookFailure())
 	}
 
-	return noOfScenariosFailed
+}
+
+func printStepFailure(step *ProtoStep) {
+	stepExecResult := step.StepExecutionResult
+	if stepExecResult.ExecutionResult.GetFailed() {
+		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", step.GetActualText())
+		printHookError(stepExecResult.GetPreHookFailure())
+		printError(stepExecResult.ExecutionResult)
+		printHookError(stepExecResult.GetPostHookFailure())
+	}
+}
+
+func printConceptFailure(concept *ProtoConcept) {
+	conceptExecResult := concept.ConceptExecutionResult
+	if concept.GetFailed() {
+		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", concept.ConceptStep.GetActualText())
+		printError(conceptExecResult.ExecutionResult)
+	}
 }
 
 func findConceptFiles() []string {

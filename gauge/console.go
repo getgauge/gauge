@@ -44,8 +44,8 @@ func (writer *consoleWriter) writeError(value string) {
 	terminal.Stdout.Colorf("@r%s", value)
 }
 
-func (writer *consoleWriter) writeSpecHeading(spec *specification) {
-	formattedHeading := formatSpecHeading(spec.heading.value)
+func (writer *consoleWriter) writeSpecHeading(heading string) {
+	formattedHeading := formatSpecHeading(heading)
 	writer.Write([]byte(formattedHeading))
 }
 
@@ -91,7 +91,8 @@ func (writer *consoleWriter) writeStep(step *step) {
 	writer.linesAfterLastStep = 0
 }
 
-func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
+//todo: pass protostep instead
+func (writer *consoleWriter) writeStepFinished(step *step, failed bool) {
 	stepText := formatStep(step)
 	linesInStepText := strings.Count(stepText, "\n")
 	if linesInStepText == 0 {
@@ -99,10 +100,10 @@ func (writer *consoleWriter) writeStepFinished(step *step, isPassed bool) {
 	}
 	linesToMoveUp := writer.linesAfterLastStep + linesInStepText
 	terminal.Stdout.Up(linesToMoveUp)
-	if isPassed {
-		terminal.Stdout.Colorf("@g%s", stepText)
-	} else {
+	if failed {
 		terminal.Stdout.Colorf("@r%s", stepText)
+	} else {
+		terminal.Stdout.Colorf("@g%s", stepText)
 	}
 	terminal.Stdout.Down(linesToMoveUp)
 	writer.isInsideStep = false

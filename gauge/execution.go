@@ -9,6 +9,7 @@ type execution struct {
 	specifications       []*specification
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *ExecutionInfo
+	suiteResult          *suiteResult
 }
 
 type executionInfo struct {
@@ -20,7 +21,7 @@ func newExecution(manifest *manifest, specifications []*specification, conn net.
 	return &e
 }
 
-func (e *execution) startExecution() *ExecutionStatus {
+func (e *execution) startExecution() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &ExecutionStartingRequest{}}
 
@@ -28,12 +29,18 @@ func (e *execution) startExecution() *ExecutionStatus {
 	return executeAndGetStatus(e.connection, message)
 }
 
-func (e *execution) endExecution() *ExecutionStatus {
+func (e *execution) endExecution() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 
 	e.pluginHandler.notifyPlugins(message)
 	return executeAndGetStatus(e.connection, message)
+}
+
+func (e *execution) notifyExecutionResult() {
+	message := &Message{MessageType: Message_SuiteExecutionResult.Enum(),
+		SuiteExecutionResult: &SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.suiteResult)}}
+	e.pluginHandler.notifyPlugins(message)
 }
 
 func (e *execution) notifyExecutionStop() {
@@ -56,30 +63,6 @@ func (e *execution) killPlugins() {
 	e.pluginHandler.gracefullyKillPlugins()
 }
 
-type testExecutionStatus struct {
-	specifications         []*specification
-	specExecutionStatuses  []*specExecutionStatus
-	hooksExecutionStatuses []*ExecutionStatus
-}
-
-func (t *testExecutionStatus) isFailed() bool {
-	if t.hooksExecutionStatuses != nil {
-		for _, s := range t.hooksExecutionStatuses {
-			if !s.GetPassed() {
-				return true
-			}
-		}
-	}
-
-	for _, specStatus := range t.specExecutionStatuses {
-		if specStatus.isFailed() {
-			return true
-		}
-	}
-
-	return false
-}
-
 type executionValidationErrors map[*specification][]*stepValidationError
 
 func (exe *execution) validate(conceptDictionary *conceptDictionary) executionValidationErrors {
@@ -98,23 +81,24 @@ func (exe *execution) validate(conceptDictionary *conceptDictionary) executionVa
 	}
 }
 
-func (exe *execution) start() *testExecutionStatus {
-	testExecutionStatus := &testExecutionStatus{specifications: exe.specifications}
+func (exe *execution) start() *suiteResult {
 	beforeSuiteHookExecStatus := exe.startExecution()
-	if beforeSuiteHookExecStatus.GetPassed() {
+	exe.suiteResult = newSuiteResult()
+	if beforeSuiteHookExecStatus.GetFailed() {
+		addPreHook(exe.suiteResult, beforeSuiteHookExecStatus)
+	} else {
 		for _, specificationToExecute := range exe.specifications {
 			executor := newSpecExecutor(specificationToExecute, exe.connection, exe.pluginHandler)
-			specExecutionStatus := executor.execute()
-			testExecutionStatus.specifications = append(testExecutionStatus.specifications, specificationToExecute)
-			testExecutionStatus.specExecutionStatuses = append(testExecutionStatus.specExecutionStatuses, specExecutionStatus)
+			protoSpecResult := executor.execute()
+			exe.suiteResult.addSpecResult(protoSpecResult)
 		}
 	}
 
-	afterSuiteHookExecStatus := exe.endExecution()
-	testExecutionStatus.hooksExecutionStatuses = append(testExecutionStatus.hooksExecutionStatuses, beforeSuiteHookExecStatus, afterSuiteHookExecStatus)
+	addPostHook(exe.suiteResult, exe.endExecution())
 
+	exe.notifyExecutionResult()
 	exe.notifyExecutionStop()
-	return testExecutionStatus
+	return exe.suiteResult
 }
 
 func newSpecExecutor(specToExecute *specification, connection net.Conn, pluginHandler *pluginHandler) *specExecutor {

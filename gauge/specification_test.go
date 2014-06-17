@@ -719,3 +719,56 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 	c.Assert(table.get("name")[0].cellType, Equals, static)
 	c.Assert(len(steps[0].conceptSteps), Equals, 2)
 }
+
+func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
+	step := &step{value: "This is a simple step"}
+
+	step.populateFragments()
+
+	c.Assert(len(step.fragments), Equals, 1)
+	fragment := step.fragments[0]
+	c.Assert(fragment.GetText(), Equals, "This is a simple step")
+	c.Assert(fragment.GetFragmentType(), Equals, Fragment_Text)
+}
+
+func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
+	arg1 := &stepArg{value: "first", argType: static}
+	arg2 := &stepArg{value: "second", argType: dynamic}
+	argTable := new(table)
+	headers := []string{"header1", "header2"}
+	row1 := []string{"row1", "row2"}
+	argTable.addHeaders(headers)
+	argTable.addRowValues(row1)
+	arg3 := &stepArg{table: *argTable, argType: tableArg}
+	stepArgs := []*stepArg{arg1, arg2, arg3}
+	step := &step{value: "{} step with {}, {} works", args: stepArgs}
+
+	step.populateFragments()
+
+	c.Assert(len(step.fragments), Equals, 6)
+	fragment1 := step.fragments[0]
+	c.Assert(fragment1.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment1.GetParameter().GetValue(), Equals, "first")
+	c.Assert(fragment1.GetParameter().GetParameterType(), Equals, Parameter_Static)
+
+	fragment2 := step.fragments[1]
+	c.Assert(fragment2.GetText(), Equals, " step with ")
+	c.Assert(fragment2.GetFragmentType(), Equals, Fragment_Text)
+
+	fragment3 := step.fragments[2]
+	c.Assert(fragment3.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment3.GetParameter().GetValue(), Equals, "second")
+	c.Assert(fragment3.GetParameter().GetParameterType(), Equals, Parameter_Dynamic)
+
+	fragment4 := step.fragments[3]
+	c.Assert(fragment4.GetText(), Equals, ", ")
+	c.Assert(fragment4.GetFragmentType(), Equals, Fragment_Text)
+
+	fragment5 := step.fragments[4]
+	c.Assert(fragment5.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment5.GetParameter().GetParameterType(), Equals, Parameter_Table)
+	protoTable := fragment5.GetParameter().GetTable()
+	c.Assert(protoTable.GetHeaders().GetCells(), DeepEquals, headers)
+	c.Assert(len(protoTable.GetRows()), Equals, 1)
+	c.Assert(protoTable.GetRows()[0].GetCells(), DeepEquals, row1)
+}

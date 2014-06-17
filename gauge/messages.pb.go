@@ -9,7 +9,6 @@ It is generated from these files:
 	messages.proto
 
 It has these top-level messages:
-	ExecutionStatus
 	KillProcessRequest
 	ExecutionStatusResponse
 	ExecutionStartingRequest
@@ -24,12 +23,10 @@ It has these top-level messages:
 	ScenarioInfo
 	StepInfo
 	ExecuteStepRequest
-	ProtoTable
-	TableRow
-	Argument
 	StepValidateRequest
 	StepValidateResponse
 	ExecutionEndingRequest
+	SuiteExecutionResult
 	StepNamesRequest
 	StepNamesResponse
 	Message
@@ -63,6 +60,7 @@ const (
 	Message_StepNamesRequest          Message_MessageType = 12
 	Message_StepNamesResponse         Message_MessageType = 13
 	Message_KillProcessRequest        Message_MessageType = 14
+	Message_SuiteExecutionResult      Message_MessageType = 15
 )
 
 var Message_MessageType_name = map[int32]string{
@@ -81,6 +79,7 @@ var Message_MessageType_name = map[int32]string{
 	12: "StepNamesRequest",
 	13: "StepNamesResponse",
 	14: "KillProcessRequest",
+	15: "SuiteExecutionResult",
 }
 var Message_MessageType_value = map[string]int32{
 	"ExecutionStarting":         0,
@@ -98,6 +97,7 @@ var Message_MessageType_value = map[string]int32{
 	"StepNamesRequest":          12,
 	"StepNamesResponse":         13,
 	"KillProcessRequest":        14,
+	"SuiteExecutionResult":      15,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -117,54 +117,6 @@ func (x *Message_MessageType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-type ExecutionStatus struct {
-	Passed           *bool   `protobuf:"varint,1,req,name=passed" json:"passed,omitempty"`
-	RecoverableError *bool   `protobuf:"varint,2,opt,name=recoverableError" json:"recoverableError,omitempty"`
-	ErrorMessage     *string `protobuf:"bytes,3,opt,name=errorMessage" json:"errorMessage,omitempty"`
-	StackTrace       *string `protobuf:"bytes,4,opt,name=stackTrace" json:"stackTrace,omitempty"`
-	ScreenShot       []byte  `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
-}
-
-func (m *ExecutionStatus) Reset()         { *m = ExecutionStatus{} }
-func (m *ExecutionStatus) String() string { return proto.CompactTextString(m) }
-func (*ExecutionStatus) ProtoMessage()    {}
-
-func (m *ExecutionStatus) GetPassed() bool {
-	if m != nil && m.Passed != nil {
-		return *m.Passed
-	}
-	return false
-}
-
-func (m *ExecutionStatus) GetRecoverableError() bool {
-	if m != nil && m.RecoverableError != nil {
-		return *m.RecoverableError
-	}
-	return false
-}
-
-func (m *ExecutionStatus) GetErrorMessage() string {
-	if m != nil && m.ErrorMessage != nil {
-		return *m.ErrorMessage
-	}
-	return ""
-}
-
-func (m *ExecutionStatus) GetStackTrace() string {
-	if m != nil && m.StackTrace != nil {
-		return *m.StackTrace
-	}
-	return ""
-}
-
-func (m *ExecutionStatus) GetScreenShot() []byte {
-	if m != nil {
-		return m.ScreenShot
-	}
-	return nil
-}
-
 type KillProcessRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -176,17 +128,17 @@ func (*KillProcessRequest) ProtoMessage()    {}
 // Sends to any request which needs a execution status as response
 // usually step execution, hooks etc will return this
 type ExecutionStatusResponse struct {
-	ExecutionStatus  *ExecutionStatus `protobuf:"bytes,1,req,name=executionStatus" json:"executionStatus,omitempty"`
-	XXX_unrecognized []byte           `json:"-"`
+	ExecutionResult  *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
+	XXX_unrecognized []byte                      `json:"-"`
 }
 
 func (m *ExecutionStatusResponse) Reset()         { *m = ExecutionStatusResponse{} }
 func (m *ExecutionStatusResponse) String() string { return proto.CompactTextString(m) }
 func (*ExecutionStatusResponse) ProtoMessage()    {}
 
-func (m *ExecutionStatusResponse) GetExecutionStatus() *ExecutionStatus {
+func (m *ExecutionStatusResponse) GetExecutionResult() *ProtoExecutionResult {
 	if m != nil {
-		return m.ExecutionStatus
+		return m.ExecutionResult
 	}
 	return nil
 }
@@ -440,11 +392,11 @@ func (m *StepInfo) GetIsFailed() bool {
 }
 
 type ExecuteStepRequest struct {
-	ActualStepText   *string     `protobuf:"bytes,1,req,name=actualStepText" json:"actualStepText,omitempty"`
-	ParsedStepText   *string     `protobuf:"bytes,2,req,name=parsedStepText" json:"parsedStepText,omitempty"`
-	ScenarioFailing  *bool       `protobuf:"varint,3,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
+	ActualStepText   *string           `protobuf:"bytes,1,req,name=actualStepText" json:"actualStepText,omitempty"`
+	ParsedStepText   *string           `protobuf:"bytes,2,req,name=parsedStepText" json:"parsedStepText,omitempty"`
+	ScenarioFailing  *bool             `protobuf:"varint,3,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
 	Args             []*Argument `protobuf:"bytes,4,rep,name=args" json:"args,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
+	XXX_unrecognized []byte            `json:"-"`
 }
 
 func (m *ExecuteStepRequest) Reset()         { *m = ExecuteStepRequest{} }
@@ -475,70 +427,6 @@ func (m *ExecuteStepRequest) GetScenarioFailing() bool {
 func (m *ExecuteStepRequest) GetArgs() []*Argument {
 	if m != nil {
 		return m.Args
-	}
-	return nil
-}
-
-type ProtoTable struct {
-	Rows             []*TableRow `protobuf:"bytes,1,rep,name=rows" json:"rows,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *ProtoTable) Reset()         { *m = ProtoTable{} }
-func (m *ProtoTable) String() string { return proto.CompactTextString(m) }
-func (*ProtoTable) ProtoMessage()    {}
-
-func (m *ProtoTable) GetRows() []*TableRow {
-	if m != nil {
-		return m.Rows
-	}
-	return nil
-}
-
-type TableRow struct {
-	Cells            []string `protobuf:"bytes,1,rep,name=cells" json:"cells,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
-}
-
-func (m *TableRow) Reset()         { *m = TableRow{} }
-func (m *TableRow) String() string { return proto.CompactTextString(m) }
-func (*TableRow) ProtoMessage()    {}
-
-func (m *TableRow) GetCells() []string {
-	if m != nil {
-		return m.Cells
-	}
-	return nil
-}
-
-type Argument struct {
-	Type             *string     `protobuf:"bytes,1,req,name=type" json:"type,omitempty"`
-	Value            *string     `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	Table            *ProtoTable `protobuf:"bytes,3,opt,name=table" json:"table,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *Argument) Reset()         { *m = Argument{} }
-func (m *Argument) String() string { return proto.CompactTextString(m) }
-func (*Argument) ProtoMessage()    {}
-
-func (m *Argument) GetType() string {
-	if m != nil && m.Type != nil {
-		return *m.Type
-	}
-	return ""
-}
-
-func (m *Argument) GetValue() string {
-	if m != nil && m.Value != nil {
-		return *m.Value
-	}
-	return ""
-}
-
-func (m *Argument) GetTable() *ProtoTable {
-	if m != nil {
-		return m.Table
 	}
 	return nil
 }
@@ -607,6 +495,22 @@ func (m *ExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	return nil
 }
 
+type SuiteExecutionResult struct {
+	SuiteResult      *ProtoSuiteResult `protobuf:"bytes,1,req,name=suiteResult" json:"suiteResult,omitempty"`
+	XXX_unrecognized []byte                  `json:"-"`
+}
+
+func (m *SuiteExecutionResult) Reset()         { *m = SuiteExecutionResult{} }
+func (m *SuiteExecutionResult) String() string { return proto.CompactTextString(m) }
+func (*SuiteExecutionResult) ProtoMessage()    {}
+
+func (m *SuiteExecutionResult) GetSuiteResult() *ProtoSuiteResult {
+	if m != nil {
+		return m.SuiteResult
+	}
+	return nil
+}
+
 type StepNamesRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -653,7 +557,8 @@ type Message struct {
 	ExecutionStatusResponse          *ExecutionStatusResponse          `protobuf:"bytes,14,opt,name=executionStatusResponse" json:"executionStatusResponse,omitempty"`
 	StepNamesRequest                 *StepNamesRequest                 `protobuf:"bytes,15,opt,name=stepNamesRequest" json:"stepNamesRequest,omitempty"`
 	StepNamesResponse                *StepNamesResponse                `protobuf:"bytes,16,opt,name=stepNamesResponse" json:"stepNamesResponse,omitempty"`
-	KillProcessRequest               *KillProcessRequest               `protobuf:"bytes,17,opt,name=killProcessRequest" json:"killProcessRequest,omitempty"`
+	SuiteExecutionResult             *SuiteExecutionResult             `protobuf:"bytes,17,opt,name=suiteExecutionResult" json:"suiteExecutionResult,omitempty"`
+	KillProcessRequest               *KillProcessRequest               `protobuf:"bytes,18,opt,name=killProcessRequest" json:"killProcessRequest,omitempty"`
 	XXX_unrecognized                 []byte                            `json:"-"`
 }
 
@@ -769,6 +674,13 @@ func (m *Message) GetStepNamesRequest() *StepNamesRequest {
 func (m *Message) GetStepNamesResponse() *StepNamesResponse {
 	if m != nil {
 		return m.StepNamesResponse
+	}
+	return nil
+}
+
+func (m *Message) GetSuiteExecutionResult() *SuiteExecutionResult {
+	if m != nil {
+		return m.SuiteExecutionResult
 	}
 	return nil
 }

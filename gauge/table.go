@@ -107,12 +107,9 @@ func getDefaultTableCell() tableCell {
 
 func tableFrom(protoTable *ProtoTable) *table {
 	table := &table{}
-	for i, row := range protoTable.GetRows() {
-		if i == 0 {
-			table.addHeaders(row.GetCells())
-		} else {
-			table.addRowValues(row.GetCells())
-		}
+	table.addHeaders(protoTable.GetHeaders().GetCells())
+	for _, row := range protoTable.GetRows() {
+		table.addRowValues(row.GetCells())
 	}
 	return table
 }

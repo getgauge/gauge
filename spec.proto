@@ -1,0 +1,137 @@
+package main;
+
+message ProtoSpec {
+    required string specHeading = 1;
+    repeated ProtoItem items = 2;
+    required bool isTableDriven = 3;
+    optional ProtoHookFailure preHookFailure = 4;
+    optional ProtoHookFailure postHookFailure = 5;
+    required string fileName = 6;
+}
+
+message ProtoItem {
+    enum ItemType {
+        Step = 1;
+        Concept = 2;
+        Scenario = 3;
+        TableDrivenScenario = 4;
+        Comment = 5;
+        Table = 6;
+        Tags = 7;
+    }
+    required ItemType itemType = 1;
+    optional ProtoStep step = 2;
+    optional ProtoConcept concept = 3;
+    optional ProtoScenario scenario = 4;
+    optional ProtoTableDrivenScenario tableDrivenScenario = 5;
+    optional ProtoComment comment = 6;
+    optional ProtoTable table = 7;
+    optional ProtoTags tags = 8;
+}
+
+
+message ProtoScenario {
+    required string scenarioHeading = 1;
+    required bool failed = 2;
+    repeated ProtoItem scenarioItems = 3;
+    optional ProtoHookFailure preHookFailure = 4;
+    optional ProtoHookFailure postHookFailure = 5;
+}
+
+message ProtoTableDrivenScenario {
+    repeated ProtoScenario scenarios = 1;
+}
+
+message ProtoStep {
+    required string actualText = 1;
+    required string parsedText = 2;
+    repeated Fragment fragments = 3;
+    optional ProtoStepExecutionResult stepExecutionResult = 4;
+}
+
+message ProtoConcept {
+    required ProtoStep conceptStep = 1;
+    repeated ProtoStep steps = 2;
+    required bool failed = 3;
+    optional ProtoStepExecutionResult conceptExecutionResult = 4;
+}
+
+message ProtoTags {
+    repeated string tags = 1;
+}
+
+message Fragment {
+    enum FragmentType {
+        Text = 1;
+        Parameter = 2;
+    }
+    required FragmentType fragmentType = 1;
+    optional string text = 2;
+    optional Parameter parameter = 3;
+}
+
+message Parameter {
+    enum ParameterType {
+        Static = 1;
+        Dynamic = 2;
+        Special = 3;
+        Table = 4;
+    }
+    required ParameterType parameterType = 1;
+    optional string value = 2;
+    optional ProtoTable table = 3;
+}
+
+message Argument {
+    required string type = 1;
+    optional string value = 2;
+    optional ProtoTable table = 3;
+}
+
+message ProtoComment {
+    required string text = 1;
+}
+
+message ProtoTable {
+    required ProtoTableRow headers = 1;
+    repeated ProtoTableRow rows = 2;
+}
+
+message ProtoTableRow {
+    repeated string cells = 1;
+}
+
+message ProtoStepExecutionResult {
+    required ProtoExecutionResult executionResult = 1;
+    optional ProtoHookFailure preHookFailure = 2;
+    optional ProtoHookFailure postHookFailure = 3;
+}
+
+message ProtoExecutionResult {
+    required bool failed = 1;
+    optional bool recoverableError = 2;
+    optional string errorMessage = 3;
+    optional string stackTrace = 4;
+    optional bytes screenShot = 5;
+}
+
+message ProtoHookFailure {
+    required string stackTrace = 1;
+    required string errorMessage = 2;
+    optional bytes screenShot = 3;
+}
+
+message ProtoSuiteResult {
+    repeated ProtoSpecResult specResults = 1;
+    optional ProtoHookFailure preHookFailure = 2;
+    optional ProtoHookFailure postHookFailure = 3;
+    required bool isFailed = 4;
+    required int32 specsFailedCount = 5;
+}
+
+message ProtoSpecResult {
+    required ProtoSpec protoSpec = 1;
+    required int32 scenarioCount = 2;
+    required int32 scenarioFailedCount = 3;
+    required bool ifFailed = 4;
+}

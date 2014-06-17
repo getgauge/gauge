@@ -1,6 +1,7 @@
 package main
 
 import (
+	"code.google.com/p/goprotobuf/proto"
 	"fmt"
 	"regexp"
 	"strings"
@@ -14,12 +15,13 @@ type scenario struct {
 	items    []item
 }
 
-type argType int
+type argType string
 
 const (
-	static                argType = iota
-	dynamic               argType = iota
-	tableArg              argType = iota
+	static                argType = "static"
+	dynamic               argType = "dynamic"
+	tableArg              argType = "table"
+	special               argType = "special"
 	PARAMETER_PLACEHOLDER         = "{}"
 )
 
@@ -47,21 +49,27 @@ type step struct {
 	isConcept    bool
 	lookup       argLookup
 	conceptSteps []*step
+	fragments    []*Fragment
 }
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
-	var args []*stepArg
-	for _, arg := range stepReq.GetArgs() {
+	args := createStepArgsFromProtoArguments(stepReq.Args)
+	return &step{value: stepReq.GetParsedStepText(),
+		lineText: stepReq.GetActualStepText(), args: args}
+}
+
+func createStepArgsFromProtoArguments(arguments []*Argument) []*stepArg {
+	args := make([]*stepArg, 0)
+	for _, arguments := range arguments {
 		var a *stepArg
-		if arg.GetType() == "table" {
-			a = &stepArg{value: arg.GetValue(), argType: tableArg, table: *(tableFrom(arg.GetTable()))}
+		if arguments.GetType() == "table" {
+			a = &stepArg{value: arguments.GetValue(), argType: tableArg, table: *(tableFrom(arguments.GetTable()))}
 		} else {
-			a = &stepArg{value: arg.GetValue(), argType: static}
+			a = &stepArg{value: arguments.GetValue(), argType: static}
 		}
 		args = append(args, a)
 	}
-	return &step{value: stepReq.GetParsedStepText(),
-		lineText: stepReq.GetActualStepText(), args: args}
+	return args
 }
 
 type specification struct {
@@ -149,7 +157,7 @@ func (specParser *specParser) createSpecification(tokens []*token, conceptDictio
 			}
 		}
 	}
-	//todo move resolution of concepts after processing table headers since it modifies step value
+
 	specification.processConceptStepsFrom(conceptDictionary)
 	validationError := specParser.validateSpec(specification)
 	if validationError != nil {
@@ -327,6 +335,7 @@ func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLo
 		}
 		step.args = append(step.args, argument)
 	}
+	step.populateFragments()
 	return step, nil
 }
 
@@ -436,6 +445,34 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 		argsType = append(argsType, arg[1])
 	}
 	return r.ReplaceAllString(stepTokenValue, PARAMETER_PLACEHOLDER), argsType
+}
+
+func (step *step) populateFragments() {
+	r := regexp.MustCompile(PARAMETER_PLACEHOLDER)
+	/*
+		enter {} and {} bar
+		returns
+		[[6 8] [13 15]]
+	*/
+	argSplitIndices := r.FindAllStringSubmatchIndex(step.value, -1)
+	if len(step.args) == 0 {
+		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value)})
+		return
+	}
+
+	textStartIndex := 0
+	for argIndex, argIndices := range argSplitIndices {
+		if textStartIndex < argIndices[0] {
+			step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:argIndices[0]])})
+		}
+		parameter := convertToProtoParameter(step.args[argIndex])
+		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: parameter})
+		textStartIndex = argIndices[1]
+	}
+	if textStartIndex < len(step.value) {
+		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:len(step.value)])})
+	}
+
 }
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {

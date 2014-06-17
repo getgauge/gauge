@@ -1,12 +1,5 @@
 package main;
-
-message ExecutionStatus {
-	required bool passed = 1;
-	optional bool recoverableError = 2;
-	optional string errorMessage = 3;
-	optional string stackTrace = 4;
-	optional bytes screenShot = 5;
-}
+import "spec.proto";
 
 message KillProcessRequest {
 }
@@ -14,7 +7,7 @@ message KillProcessRequest {
 // Sends to any request which needs a execution status as response
 // usually step execution, hooks etc will return this
 message ExecutionStatusResponse {
-	required ExecutionStatus executionStatus = 1;
+	required ProtoExecutionResult executionResult = 1;
 }
 
 message ExecutionStartingRequest {
@@ -77,20 +70,6 @@ message ExecuteStepRequest {
 	repeated Argument args = 4;
 }
 
-message ProtoTable {
-    repeated TableRow rows = 1;
-}
-
-message TableRow {
-    repeated string cells = 1;
-}
-
-message Argument {
-    required string type = 1;
-    optional string value = 2;
-    optional ProtoTable table  = 3;
-}
-
 message StepValidateRequest {
 	required string stepText = 1;
     required int32 numberOfArguments = 2;
@@ -103,6 +82,10 @@ message StepValidateResponse {
 
 message ExecutionEndingRequest {
     optional ExecutionInfo currentExecutionInfo = 1;
+}
+
+message SuiteExecutionResult {
+    required ProtoSuiteResult suiteResult = 1;
 }
 
 message StepNamesRequest {
@@ -123,7 +106,7 @@ message Message {
 	    ScenarioExecutionEnding = 4;
 	    StepExecutionStarting = 5;
 	    StepExecutionEnding = 6;
-	    ExecuteStep = 7;	    
+	    ExecuteStep = 7;
 	    ExecutionEnding = 8;
 	    StepValidateRequest = 9;
 	    StepValidateResponse = 10;
@@ -131,10 +114,11 @@ message Message {
         StepNamesRequest = 12;
         StepNamesResponse = 13;
         KillProcessRequest = 14;
+        SuiteExecutionResult = 15;
 	}
-  	
+
   	required MessageType messageType = 1;
-  	
+
 	// A unique id to represent this message. A response to the message should copy over this value
 	// this is used to synchronize messages & responses
   	required int64 messageId = 2;
@@ -147,13 +131,14 @@ message Message {
   	optional ScenarioExecutionEndingRequest scenarioExecutionEndingRequest = 7;
   	optional StepExecutionStartingRequest stepExecutionStartingRequest = 8;
   	optional StepExecutionEndingRequest stepExecutionEndingRequest = 9;
-  	optional ExecuteStepRequest executeStepRequest = 10;  	
+  	optional ExecuteStepRequest executeStepRequest = 10;
   	optional ExecutionEndingRequest executionEndingRequest = 11;
   	optional StepValidateRequest stepValidateRequest = 12;
   	optional StepValidateResponse stepValidateResponse = 13;
   	optional ExecutionStatusResponse executionStatusResponse = 14;
     optional StepNamesRequest stepNamesRequest = 15;
     optional StepNamesResponse stepNamesResponse = 16;
-  	optional KillProcessRequest killProcessRequest = 17;
+  	optional SuiteExecutionResult suiteExecutionResult = 17;
+  	optional KillProcessRequest killProcessRequest = 18;
 }
 
