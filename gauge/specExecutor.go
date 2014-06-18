@@ -211,11 +211,11 @@ func (executor *specExecutor) executeContext() ([]*ProtoItem, bool) {
 	for i, context := range contextSteps {
 		items[i] = context
 	}
-	contextStepItems := executor.executeItems(items)
+	contextStepItems, failure := executor.executeItems(items)
 	for _, contextItem := range contextStepItems {
 		contextItem.ItemType = ProtoItem_Context.Enum()
 	}
-	return contextStepItems
+	return contextStepItems, failure
 }
 
 func (executor *specExecutor) executeItems(items []item) ([]*ProtoItem, bool) {
