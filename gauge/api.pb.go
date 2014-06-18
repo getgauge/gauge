@@ -143,7 +143,7 @@ func (*GetAllSpecsRequest) ProtoMessage()    {}
 
 type GetAllSpecsResponse struct {
 	Specs            []*ProtoSpec `protobuf:"bytes,1,rep,name=specs" json:"specs,omitempty"`
-	XXX_unrecognized []byte             `json:"-"`
+	XXX_unrecognized []byte       `json:"-"`
 }
 
 func (m *GetAllSpecsResponse) Reset()         { *m = GetAllSpecsResponse{} }

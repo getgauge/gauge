@@ -54,8 +54,10 @@ type step struct {
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
 	args := createStepArgsFromProtoArguments(stepReq.Args)
-	return &step{value: stepReq.GetParsedStepText(),
+	step := &step{value: stepReq.GetParsedStepText(),
 		lineText: stepReq.GetActualStepText(), args: args}
+	step.populateFragments()
+	return step
 }
 
 func createStepArgsFromProtoArguments(arguments []*Argument) []*stepArg {
@@ -447,6 +449,7 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 	return r.ReplaceAllString(stepTokenValue, PARAMETER_PLACEHOLDER), argsType
 }
 
+//todo: trigger populateFragments when args are added so that we don't forget to call it when we set step.args
 func (step *step) populateFragments() {
 	r := regexp.MustCompile(PARAMETER_PLACEHOLDER)
 	/*

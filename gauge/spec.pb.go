@@ -43,31 +43,34 @@ type ProtoItem_ItemType int32
 
 const (
 	ProtoItem_Step                ProtoItem_ItemType = 1
-	ProtoItem_Concept             ProtoItem_ItemType = 2
-	ProtoItem_Scenario            ProtoItem_ItemType = 3
-	ProtoItem_TableDrivenScenario ProtoItem_ItemType = 4
-	ProtoItem_Comment             ProtoItem_ItemType = 5
-	ProtoItem_Table               ProtoItem_ItemType = 6
-	ProtoItem_Tags                ProtoItem_ItemType = 7
+	ProtoItem_Comment             ProtoItem_ItemType = 2
+	ProtoItem_Concept             ProtoItem_ItemType = 3
+	ProtoItem_Scenario            ProtoItem_ItemType = 4
+	ProtoItem_TableDrivenScenario ProtoItem_ItemType = 5
+	ProtoItem_Context             ProtoItem_ItemType = 6
+	ProtoItem_Table               ProtoItem_ItemType = 7
+	ProtoItem_Tags                ProtoItem_ItemType = 8
 )
 
 var ProtoItem_ItemType_name = map[int32]string{
 	1: "Step",
-	2: "Concept",
-	3: "Scenario",
-	4: "TableDrivenScenario",
-	5: "Comment",
-	6: "Table",
-	7: "Tags",
+	2: "Comment",
+	3: "Concept",
+	4: "Scenario",
+	5: "TableDrivenScenario",
+	6: "Context",
+	7: "Table",
+	8: "Tags",
 }
 var ProtoItem_ItemType_value = map[string]int32{
 	"Step":                1,
-	"Concept":             2,
-	"Scenario":            3,
-	"TableDrivenScenario": 4,
-	"Comment":             5,
-	"Table":               6,
-	"Tags":                7,
+	"Comment":             2,
+	"Concept":             3,
+	"Scenario":            4,
+	"TableDrivenScenario": 5,
+	"Context":             6,
+	"Table":               7,
+	"Tags":                8,
 }
 
 func (x ProtoItem_ItemType) Enum() *ProtoItem_ItemType {

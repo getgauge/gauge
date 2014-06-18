@@ -211,7 +211,11 @@ func (executor *specExecutor) executeContext() ([]*ProtoItem, bool) {
 	for i, context := range contextSteps {
 		items[i] = context
 	}
-	return executor.executeItems(items)
+	contextStepItems := executor.executeItems(items)
+	for _, contextItem := range contextStepItems {
+		contextItem.ItemType = ProtoItem_Context.Enum()
+	}
+	return contextStepItems
 }
 
 func (executor *specExecutor) executeItems(items []item) ([]*ProtoItem, bool) {
@@ -264,6 +268,7 @@ func (executor *specExecutor) executeConcept(concept *step, dataTableLookup *arg
 	conceptLookup := concept.lookup.getCopy()
 	executor.populateConceptDynamicParams(conceptLookup, dataTableLookup)
 
+	executor.populateConceptStepsWithResolvedArgs(concept, conceptLookup)
 	protoConcept := &ProtoConcept{ConceptStep: convertToProtoStep(concept)}
 	protoConcept.Steps = executor.executeSteps(concept.conceptSteps, conceptLookup)
 	for _, step := range protoConcept.Steps {
@@ -281,6 +286,7 @@ func (executor *specExecutor) executeConcept(concept *step, dataTableLookup *arg
 func (executor *specExecutor) populateConceptStepsWithResolvedArgs(concept *step, conceptLookup *argLookup) {
 	resolvedArgs := executor.createStepArgs(concept.args, conceptLookup)
 	concept.args = createStepArgsFromProtoArguments(resolvedArgs)
+	concept.populateFragments()
 }
 
 func printStatus(executionResult *ProtoExecutionResult) {
