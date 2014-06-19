@@ -103,7 +103,7 @@ func convertToProtoSuiteResult(suiteResult *suiteResult) *ProtoSuiteResult {
 	protoSuiteResult := &ProtoSuiteResult{
 		PreHookFailure:   suiteResult.preSuite,
 		PostHookFailure:  suiteResult.postSuite,
-		IsFailed:         proto.Bool(suiteResult.isFailed),
+		Failed:           proto.Bool(suiteResult.isFailed),
 		SpecsFailedCount: proto.Int32(int32(suiteResult.specsFailedCount)),
 		SpecResults:      convertToProtoSpecResult(suiteResult.specResults),
 	}
@@ -117,7 +117,7 @@ func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
 			ProtoSpec:           specResult.protoSpec,
 			ScenarioCount:       proto.Int32(int32(specResult.scenarioCount)),
 			ScenarioFailedCount: proto.Int32(int32(specResult.scenarioFailedCount)),
-			IfFailed:            proto.Bool(specResult.isFailed),
+			Failed:              proto.Bool(specResult.isFailed),
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}

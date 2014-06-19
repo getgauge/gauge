@@ -718,7 +718,7 @@ type ProtoSuiteResult struct {
 	SpecResults      []*ProtoSpecResult `protobuf:"bytes,1,rep,name=specResults" json:"specResults,omitempty"`
 	PreHookFailure   *ProtoHookFailure  `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	PostHookFailure  *ProtoHookFailure  `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
-	IsFailed         *bool              `protobuf:"varint,4,req,name=isFailed" json:"isFailed,omitempty"`
+	Failed           *bool              `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
 	SpecsFailedCount *int32             `protobuf:"varint,5,req,name=specsFailedCount" json:"specsFailedCount,omitempty"`
 	XXX_unrecognized []byte             `json:"-"`
 }
@@ -748,9 +748,9 @@ func (m *ProtoSuiteResult) GetPostHookFailure() *ProtoHookFailure {
 	return nil
 }
 
-func (m *ProtoSuiteResult) GetIsFailed() bool {
-	if m != nil && m.IsFailed != nil {
-		return *m.IsFailed
+func (m *ProtoSuiteResult) GetFailed() bool {
+	if m != nil && m.Failed != nil {
+		return *m.Failed
 	}
 	return false
 }
@@ -766,7 +766,7 @@ type ProtoSpecResult struct {
 	ProtoSpec           *ProtoSpec `protobuf:"bytes,1,req,name=protoSpec" json:"protoSpec,omitempty"`
 	ScenarioCount       *int32     `protobuf:"varint,2,req,name=scenarioCount" json:"scenarioCount,omitempty"`
 	ScenarioFailedCount *int32     `protobuf:"varint,3,req,name=scenarioFailedCount" json:"scenarioFailedCount,omitempty"`
-	IfFailed            *bool      `protobuf:"varint,4,req,name=ifFailed" json:"ifFailed,omitempty"`
+	Failed              *bool      `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
 	XXX_unrecognized    []byte     `json:"-"`
 }
 
@@ -795,9 +795,9 @@ func (m *ProtoSpecResult) GetScenarioFailedCount() int32 {
 	return 0
 }
 
-func (m *ProtoSpecResult) GetIfFailed() bool {
-	if m != nil && m.IfFailed != nil {
-		return *m.IfFailed
+func (m *ProtoSpecResult) GetFailed() bool {
+	if m != nil && m.Failed != nil {
+		return *m.Failed
 	}
 	return false
 }
