@@ -49,7 +49,6 @@ const (
 	ProtoItem_TableDrivenScenario ProtoItem_ItemType = 5
 	ProtoItem_Context             ProtoItem_ItemType = 6
 	ProtoItem_Table               ProtoItem_ItemType = 7
-	ProtoItem_Tags                ProtoItem_ItemType = 8
 )
 
 var ProtoItem_ItemType_name = map[int32]string{
@@ -60,7 +59,6 @@ var ProtoItem_ItemType_name = map[int32]string{
 	5: "TableDrivenScenario",
 	6: "Context",
 	7: "Table",
-	8: "Tags",
 }
 var ProtoItem_ItemType_value = map[string]int32{
 	"Step":                1,
@@ -70,7 +68,6 @@ var ProtoItem_ItemType_value = map[string]int32{
 	"TableDrivenScenario": 5,
 	"Context":             6,
 	"Table":               7,
-	"Tags":                8,
 }
 
 func (x ProtoItem_ItemType) Enum() *ProtoItem_ItemType {
@@ -169,6 +166,7 @@ type ProtoSpec struct {
 	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,4,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,5,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
 	FileName         *string           `protobuf:"bytes,6,req,name=fileName" json:"fileName,omitempty"`
+	Tags             []string          `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
 
@@ -218,6 +216,13 @@ func (m *ProtoSpec) GetFileName() string {
 	return ""
 }
 
+func (m *ProtoSpec) GetTags() []string {
+	if m != nil {
+		return m.Tags
+	}
+	return nil
+}
+
 type ProtoItem struct {
 	ItemType            *ProtoItem_ItemType       `protobuf:"varint,1,req,name=itemType,enum=main.ProtoItem_ItemType" json:"itemType,omitempty"`
 	Step                *ProtoStep                `protobuf:"bytes,2,opt,name=step" json:"step,omitempty"`
@@ -226,7 +231,6 @@ type ProtoItem struct {
 	TableDrivenScenario *ProtoTableDrivenScenario `protobuf:"bytes,5,opt,name=tableDrivenScenario" json:"tableDrivenScenario,omitempty"`
 	Comment             *ProtoComment             `protobuf:"bytes,6,opt,name=comment" json:"comment,omitempty"`
 	Table               *ProtoTable               `protobuf:"bytes,7,opt,name=table" json:"table,omitempty"`
-	Tags                *ProtoTags                `protobuf:"bytes,8,opt,name=tags" json:"tags,omitempty"`
 	XXX_unrecognized    []byte                    `json:"-"`
 }
 
@@ -283,19 +287,13 @@ func (m *ProtoItem) GetTable() *ProtoTable {
 	return nil
 }
 
-func (m *ProtoItem) GetTags() *ProtoTags {
-	if m != nil {
-		return m.Tags
-	}
-	return nil
-}
-
 type ProtoScenario struct {
 	ScenarioHeading  *string           `protobuf:"bytes,1,req,name=scenarioHeading" json:"scenarioHeading,omitempty"`
 	Failed           *bool             `protobuf:"varint,2,req,name=failed" json:"failed,omitempty"`
 	ScenarioItems    []*ProtoItem      `protobuf:"bytes,3,rep,name=scenarioItems" json:"scenarioItems,omitempty"`
 	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,4,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,5,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	Tags             []string          `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
 
@@ -334,6 +332,13 @@ func (m *ProtoScenario) GetPreHookFailure() *ProtoHookFailure {
 func (m *ProtoScenario) GetPostHookFailure() *ProtoHookFailure {
 	if m != nil {
 		return m.PostHookFailure
+	}
+	return nil
+}
+
+func (m *ProtoScenario) GetTags() []string {
+	if m != nil {
+		return m.Tags
 	}
 	return nil
 }

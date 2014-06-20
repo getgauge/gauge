@@ -10,8 +10,6 @@ func convertToProtoItem(item item) *ProtoItem {
 		return convertToProtoStepItem(item.(*step))
 	case commentKind:
 		return convertToProtoCommentItem(item.(*comment))
-	case tagKind:
-		return convertToProtoTagsItem(item.(*tags))
 	case tableKind:
 		return convertToProtoTableItem(item.(*table))
 	}
@@ -54,10 +52,6 @@ func convertToProtoSteps(steps []*step) []*ProtoStep {
 
 func convertToProtoCommentItem(comment *comment) *ProtoItem {
 	return &ProtoItem{ItemType: ProtoItem_Comment.Enum(), Comment: &ProtoComment{Text: proto.String(comment.value)}}
-}
-
-func convertToProtoTagsItem(tags *tags) *ProtoItem {
-	return &ProtoItem{ItemType: ProtoItem_Tags.Enum(), Tags: &ProtoTags{Tags: tags.values}}
 }
 
 func convertToProtoTableItem(table *table) *ProtoItem {
@@ -135,13 +129,29 @@ func convertToProtoSpec(spec *specification) *ProtoSpec {
 }
 
 func newProtoSpec(specification *specification) *ProtoSpec {
+
 	return &ProtoSpec{
 		Items:         make([]*ProtoItem, 0),
 		SpecHeading:   proto.String(specification.heading.value),
 		IsTableDriven: proto.Bool(false),
-		FileName:      proto.String(specification.fileName)}
+		FileName:      proto.String(specification.fileName),
+		Tags:          getTags(specification.tags),
+	}
+
 }
 
 func newProtoScenario(scenario *scenario) *ProtoScenario {
-	return &ProtoScenario{ScenarioHeading: proto.String(scenario.heading.value), Failed: proto.Bool(false)}
+	return &ProtoScenario{
+		ScenarioHeading: proto.String(scenario.heading.value),
+		Failed:          proto.Bool(false),
+		Tags:            getTags(scenario.tags),
+	}
+}
+
+func getTags(tags *tags) []string {
+	if tags != nil {
+		return tags.values
+	} else {
+		return make([]string, 0)
+	}
 }
