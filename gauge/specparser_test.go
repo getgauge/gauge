@@ -24,6 +24,15 @@ func (s *MySuite) TestParsingSpecHeading(c *C) {
 	c.Assert(tokens[0].value, Equals, "Spec Heading")
 }
 
+func (s *MySuite) TestParsingASingleStep(c *C) {
+	parser := new(specParser)
+	tokens, err := parser.generateTokens("* test step \"arg\" ")
+
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+	c.Assert(tokens[0].kind, Equals, stepKind)
+}
+
 func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().specHeading("Spec Heading").specHeading("Another Spec Heading").String()
