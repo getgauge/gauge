@@ -112,6 +112,7 @@ func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
 			ScenarioCount:       proto.Int32(int32(specResult.scenarioCount)),
 			ScenarioFailedCount: proto.Int32(int32(specResult.scenarioFailedCount)),
 			Failed:              proto.Bool(specResult.isFailed),
+			FailedDataTableRows :specResult.failedDataTableRows,
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}
@@ -126,6 +127,13 @@ func convertToProtoSpec(spec *specification) *ProtoSpec {
 	}
 	protoSpec.Items = protoItems
 	return protoSpec
+}
+
+func newSpecResult(specification *specification) *specResult {
+	return &specResult{
+		protoSpec: newProtoSpec(specification),
+		failedDataTableRows: make([]int32, 0),
+	}
 }
 
 func newProtoSpec(specification *specification) *ProtoSpec {

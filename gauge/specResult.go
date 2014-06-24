@@ -14,9 +14,10 @@ type suiteResult struct {
 
 type specResult struct {
 	protoSpec           *ProtoSpec
-	scenarioFailedCount int
-	scenarioCount       int
-	isFailed            bool
+	scenarioFailedCount    int
+	scenarioCount          int
+	isFailed               bool
+	failedDataTableRows    []int32
 }
 
 type scenarioResult struct {
@@ -124,13 +125,14 @@ func (specResult *specResult) addScenarioResults(scenarioResults []*scenarioResu
 func (specResult *specResult) addTableDrivenScenarioResult(scenarioResults [][](*scenarioResult)) {
 	numberOfScenarios := len(scenarioResults[0])
 
-	for i := 0; i < numberOfScenarios; i++ {
+	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
 		protoTableDrivenScenario := &ProtoTableDrivenScenario{Scenarios: make([]*ProtoScenario, 0)}
 		scenarioFailed := false
-		for _, eachRow := range scenarioResults {
-			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), eachRow[i].protoScenario)
-			if eachRow[i].protoScenario.GetFailed() {
+		for rowIndex, eachRow := range scenarioResults {
+			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), eachRow[scenarioIndex].protoScenario)
+			if eachRow[scenarioIndex].protoScenario.GetFailed() {
 				scenarioFailed = true
+				specResult.failedDataTableRows = append(specResult.failedDataTableRows, int32(rowIndex))
 			}
 		}
 		if scenarioFailed {

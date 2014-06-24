@@ -479,7 +479,7 @@ func printScenarioFailure(scenario *ProtoScenario) {
 
 func printStepFailure(step *ProtoStep) {
 	stepExecResult := step.StepExecutionResult
-	if stepExecResult.ExecutionResult.GetFailed() {
+	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
 		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", step.GetActualText())
 		printHookError(stepExecResult.GetPreHookFailure())
 		printError(stepExecResult.ExecutionResult)

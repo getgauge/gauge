@@ -772,6 +772,7 @@ type ProtoSpecResult struct {
 	ScenarioCount       *int32     `protobuf:"varint,2,req,name=scenarioCount" json:"scenarioCount,omitempty"`
 	ScenarioFailedCount *int32     `protobuf:"varint,3,req,name=scenarioFailedCount" json:"scenarioFailedCount,omitempty"`
 	Failed              *bool      `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
+	FailedDataTableRows []int32    `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
 	XXX_unrecognized    []byte     `json:"-"`
 }
 
@@ -805,6 +806,13 @@ func (m *ProtoSpecResult) GetFailed() bool {
 		return *m.Failed
 	}
 	return false
+}
+
+func (m *ProtoSpecResult) GetFailedDataTableRows() []int32 {
+	if m != nil {
+		return m.FailedDataTableRows
+	}
+	return nil
 }
 
 func init() {
