@@ -54,7 +54,7 @@ func (specExecutor *specExecutor) execute() *specResult {
 
 	getCurrentConsole().writeSpecHeading(specInfo.GetName())
 
-	specExecutor.specResult = &specResult{protoSpec: newProtoSpec(specExecutor.specification)}
+	specExecutor.specResult = newSpecResult(specExecutor.specification)
 	specExecutor.specResult.addSpecItems(specExecutor.specification)
 
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
@@ -222,12 +222,15 @@ func (executor *specExecutor) executeItems(items []item) ([]*ProtoItem, bool) {
 	protoItems := make([]*ProtoItem, 0)
 	isFailure := false
 	for _, item := range items {
-		protoItem := executor.executeItem(item)
-		protoItems = append(protoItems, protoItem)
-		if protoItem.GetItemType() == ProtoItem_Step || protoItem.GetItemType() == ProtoItem_Concept {
-			if stepFailed := protoItem.GetStep().GetStepExecutionResult().GetExecutionResult().GetFailed(); stepFailed {
-				isFailure = true
-				break
+		if (isFailure) {
+			protoItems = append(protoItems, convertToProtoItem(item))
+		} else {
+			protoItem := executor.executeItem(item)
+			protoItems = append(protoItems, protoItem)
+			if protoItem.GetItemType() == ProtoItem_Step || protoItem.GetItemType() == ProtoItem_Concept {
+				if stepFailed := protoItem.GetStep().GetStepExecutionResult().GetExecutionResult().GetFailed(); stepFailed {
+					isFailure = true
+				}
 			}
 		}
 	}
