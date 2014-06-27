@@ -18,7 +18,6 @@ It has these top-level messages:
 	ProtoTags
 	Fragment
 	Parameter
-	Argument
 	ProtoComment
 	ProtoTable
 	ProtoTableRow
@@ -47,8 +46,7 @@ const (
 	ProtoItem_Concept             ProtoItem_ItemType = 3
 	ProtoItem_Scenario            ProtoItem_ItemType = 4
 	ProtoItem_TableDrivenScenario ProtoItem_ItemType = 5
-	ProtoItem_Context             ProtoItem_ItemType = 6
-	ProtoItem_Table               ProtoItem_ItemType = 7
+	ProtoItem_Table               ProtoItem_ItemType = 6
 )
 
 var ProtoItem_ItemType_name = map[int32]string{
@@ -57,8 +55,7 @@ var ProtoItem_ItemType_name = map[int32]string{
 	3: "Concept",
 	4: "Scenario",
 	5: "TableDrivenScenario",
-	6: "Context",
-	7: "Table",
+	6: "Table",
 }
 var ProtoItem_ItemType_value = map[string]int32{
 	"Step":                1,
@@ -66,8 +63,7 @@ var ProtoItem_ItemType_value = map[string]int32{
 	"Concept":             3,
 	"Scenario":            4,
 	"TableDrivenScenario": 5,
-	"Context":             6,
-	"Table":               7,
+	"Table":               6,
 }
 
 func (x ProtoItem_ItemType) Enum() *ProtoItem_ItemType {
@@ -123,23 +119,26 @@ func (x *Fragment_FragmentType) UnmarshalJSON(data []byte) error {
 type Parameter_ParameterType int32
 
 const (
-	Parameter_Static  Parameter_ParameterType = 1
-	Parameter_Dynamic Parameter_ParameterType = 2
-	Parameter_Special Parameter_ParameterType = 3
-	Parameter_Table   Parameter_ParameterType = 4
+	Parameter_Static         Parameter_ParameterType = 1
+	Parameter_Dynamic        Parameter_ParameterType = 2
+	Parameter_Special_String Parameter_ParameterType = 3
+	Parameter_Special_Table  Parameter_ParameterType = 4
+	Parameter_Table          Parameter_ParameterType = 5
 )
 
 var Parameter_ParameterType_name = map[int32]string{
 	1: "Static",
 	2: "Dynamic",
-	3: "Special",
-	4: "Table",
+	3: "Special_String",
+	4: "Special_Table",
+	5: "Table",
 }
 var Parameter_ParameterType_value = map[string]int32{
-	"Static":  1,
-	"Dynamic": 2,
-	"Special": 3,
-	"Table":   4,
+	"Static":         1,
+	"Dynamic":        2,
+	"Special_String": 3,
+	"Special_Table":  4,
+	"Table":          5,
 }
 
 func (x Parameter_ParameterType) Enum() *Parameter_ParameterType {
@@ -290,10 +289,12 @@ func (m *ProtoItem) GetTable() *ProtoTable {
 type ProtoScenario struct {
 	ScenarioHeading  *string           `protobuf:"bytes,1,req,name=scenarioHeading" json:"scenarioHeading,omitempty"`
 	Failed           *bool             `protobuf:"varint,2,req,name=failed" json:"failed,omitempty"`
-	ScenarioItems    []*ProtoItem      `protobuf:"bytes,3,rep,name=scenarioItems" json:"scenarioItems,omitempty"`
-	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,4,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
-	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,5,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	Contexts         []*ProtoItem      `protobuf:"bytes,3,rep,name=contexts" json:"contexts,omitempty"`
+	ScenarioItems    []*ProtoItem      `protobuf:"bytes,4,rep,name=scenarioItems" json:"scenarioItems,omitempty"`
+	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,5,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
+	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,6,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
 	Tags             []string          `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
+	ExecutionTime    *int64            `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
 
@@ -313,6 +314,13 @@ func (m *ProtoScenario) GetFailed() bool {
 		return *m.Failed
 	}
 	return false
+}
+
+func (m *ProtoScenario) GetContexts() []*ProtoItem {
+	if m != nil {
+		return m.Contexts
+	}
+	return nil
 }
 
 func (m *ProtoScenario) GetScenarioItems() []*ProtoItem {
@@ -341,6 +349,13 @@ func (m *ProtoScenario) GetTags() []string {
 		return m.Tags
 	}
 	return nil
+}
+
+func (m *ProtoScenario) GetExecutionTime() int64 {
+	if m != nil && m.ExecutionTime != nil {
+		return *m.ExecutionTime
+	}
+	return 0
 }
 
 type ProtoTableDrivenScenario struct {
@@ -402,8 +417,7 @@ func (m *ProtoStep) GetStepExecutionResult() *ProtoStepExecutionResult {
 type ProtoConcept struct {
 	ConceptStep            *ProtoStep                `protobuf:"bytes,1,req,name=conceptStep" json:"conceptStep,omitempty"`
 	Steps                  []*ProtoStep              `protobuf:"bytes,2,rep,name=steps" json:"steps,omitempty"`
-	Failed                 *bool                     `protobuf:"varint,3,req,name=failed" json:"failed,omitempty"`
-	ConceptExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,4,opt,name=conceptExecutionResult" json:"conceptExecutionResult,omitempty"`
+	ConceptExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,3,opt,name=conceptExecutionResult" json:"conceptExecutionResult,omitempty"`
 	XXX_unrecognized       []byte                    `json:"-"`
 }
 
@@ -423,13 +437,6 @@ func (m *ProtoConcept) GetSteps() []*ProtoStep {
 		return m.Steps
 	}
 	return nil
-}
-
-func (m *ProtoConcept) GetFailed() bool {
-	if m != nil && m.Failed != nil {
-		return *m.Failed
-	}
-	return false
 }
 
 func (m *ProtoConcept) GetConceptExecutionResult() *ProtoStepExecutionResult {
@@ -490,7 +497,8 @@ func (m *Fragment) GetParameter() *Parameter {
 type Parameter struct {
 	ParameterType    *Parameter_ParameterType `protobuf:"varint,1,req,name=parameterType,enum=main.Parameter_ParameterType" json:"parameterType,omitempty"`
 	Value            *string                  `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	Table            *ProtoTable              `protobuf:"bytes,3,opt,name=table" json:"table,omitempty"`
+	Name             *string                  `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	Table            *ProtoTable              `protobuf:"bytes,4,opt,name=table" json:"table,omitempty"`
 	XXX_unrecognized []byte                   `json:"-"`
 }
 
@@ -512,39 +520,14 @@ func (m *Parameter) GetValue() string {
 	return ""
 }
 
+func (m *Parameter) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
 func (m *Parameter) GetTable() *ProtoTable {
-	if m != nil {
-		return m.Table
-	}
-	return nil
-}
-
-type Argument struct {
-	Type             *string     `protobuf:"bytes,1,req,name=type" json:"type,omitempty"`
-	Value            *string     `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	Table            *ProtoTable `protobuf:"bytes,3,opt,name=table" json:"table,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
-}
-
-func (m *Argument) Reset()         { *m = Argument{} }
-func (m *Argument) String() string { return proto.CompactTextString(m) }
-func (*Argument) ProtoMessage()    {}
-
-func (m *Argument) GetType() string {
-	if m != nil && m.Type != nil {
-		return *m.Type
-	}
-	return ""
-}
-
-func (m *Argument) GetValue() string {
-	if m != nil && m.Value != nil {
-		return *m.Value
-	}
-	return ""
-}
-
-func (m *Argument) GetTable() *ProtoTable {
 	if m != nil {
 		return m.Table
 	}
@@ -645,6 +628,7 @@ type ProtoExecutionResult struct {
 	ErrorMessage     *string `protobuf:"bytes,3,opt,name=errorMessage" json:"errorMessage,omitempty"`
 	StackTrace       *string `protobuf:"bytes,4,opt,name=stackTrace" json:"stackTrace,omitempty"`
 	ScreenShot       []byte  `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
+	ExecutionTime    *int64  `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -687,6 +671,13 @@ func (m *ProtoExecutionResult) GetScreenShot() []byte {
 	return nil
 }
 
+func (m *ProtoExecutionResult) GetExecutionTime() int64 {
+	if m != nil && m.ExecutionTime != nil {
+		return *m.ExecutionTime
+	}
+	return 0
+}
+
 type ProtoHookFailure struct {
 	StackTrace       *string `protobuf:"bytes,1,req,name=stackTrace" json:"stackTrace,omitempty"`
 	ErrorMessage     *string `protobuf:"bytes,2,req,name=errorMessage" json:"errorMessage,omitempty"`
@@ -725,6 +716,8 @@ type ProtoSuiteResult struct {
 	PostHookFailure  *ProtoHookFailure  `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
 	Failed           *bool              `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
 	SpecsFailedCount *int32             `protobuf:"varint,5,req,name=specsFailedCount" json:"specsFailedCount,omitempty"`
+	ExecutionTime    *int64             `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
+	SuccessRate      *float32           `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
 	XXX_unrecognized []byte             `json:"-"`
 }
 
@@ -767,12 +760,27 @@ func (m *ProtoSuiteResult) GetSpecsFailedCount() int32 {
 	return 0
 }
 
+func (m *ProtoSuiteResult) GetExecutionTime() int64 {
+	if m != nil && m.ExecutionTime != nil {
+		return *m.ExecutionTime
+	}
+	return 0
+}
+
+func (m *ProtoSuiteResult) GetSuccessRate() float32 {
+	if m != nil && m.SuccessRate != nil {
+		return *m.SuccessRate
+	}
+	return 0
+}
+
 type ProtoSpecResult struct {
 	ProtoSpec           *ProtoSpec `protobuf:"bytes,1,req,name=protoSpec" json:"protoSpec,omitempty"`
 	ScenarioCount       *int32     `protobuf:"varint,2,req,name=scenarioCount" json:"scenarioCount,omitempty"`
 	ScenarioFailedCount *int32     `protobuf:"varint,3,req,name=scenarioFailedCount" json:"scenarioFailedCount,omitempty"`
 	Failed              *bool      `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
 	FailedDataTableRows []int32    `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
+	ExecutionTime       *int64     `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
 	XXX_unrecognized    []byte     `json:"-"`
 }
 
@@ -813,6 +821,13 @@ func (m *ProtoSpecResult) GetFailedDataTableRows() []int32 {
 		return m.FailedDataTableRows
 	}
 	return nil
+}
+
+func (m *ProtoSpecResult) GetExecutionTime() int64 {
+	if m != nil && m.ExecutionTime != nil {
+		return *m.ExecutionTime
+	}
+	return 0
 }
 
 func init() {

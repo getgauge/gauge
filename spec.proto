@@ -17,8 +17,7 @@ message ProtoItem {
         Concept = 3;
         Scenario = 4;
         TableDrivenScenario = 5;
-        Context = 6;
-        Table = 7;
+        Table = 6;
     }
     required ItemType itemType = 1;
     optional ProtoStep step = 2;
@@ -33,10 +32,12 @@ message ProtoItem {
 message ProtoScenario {
     required string scenarioHeading = 1;
     required bool failed = 2;
-    repeated ProtoItem scenarioItems = 3;
-    optional ProtoHookFailure preHookFailure = 4;
-    optional ProtoHookFailure postHookFailure = 5;
+    repeated ProtoItem contexts = 3;
+    repeated ProtoItem scenarioItems = 4;
+    optional ProtoHookFailure preHookFailure = 5;
+    optional ProtoHookFailure postHookFailure = 6;
     repeated string tags = 7;
+    optional int64 executionTime = 8;
 }
 
 message ProtoTableDrivenScenario {
@@ -53,8 +54,7 @@ message ProtoStep {
 message ProtoConcept {
     required ProtoStep conceptStep = 1;
     repeated ProtoStep steps = 2;
-    required bool failed = 3;
-    optional ProtoStepExecutionResult conceptExecutionResult = 4;
+    optional ProtoStepExecutionResult conceptExecutionResult = 3;
 }
 
 message ProtoTags {
@@ -75,18 +75,14 @@ message Parameter {
     enum ParameterType {
         Static = 1;
         Dynamic = 2;
-        Special = 3;
-        Table = 4;
+        Special_String = 3;
+        Special_Table = 4;
+        Table = 5;
     }
     required ParameterType parameterType = 1;
     optional string value = 2;
-    optional ProtoTable table = 3;
-}
-
-message Argument {
-    required string type = 1;
-    optional string value = 2;
-    optional ProtoTable table = 3;
+    optional string name = 3;
+    optional ProtoTable table = 4;
 }
 
 message ProtoComment {
@@ -114,6 +110,7 @@ message ProtoExecutionResult {
     optional string errorMessage = 3;
     optional string stackTrace = 4;
     optional bytes screenShot = 5;
+    required int64 executionTime = 6;
 }
 
 message ProtoHookFailure {
@@ -128,6 +125,8 @@ message ProtoSuiteResult {
     optional ProtoHookFailure postHookFailure = 3;
     required bool failed = 4;
     required int32 specsFailedCount = 5;
+    optional int64 executionTime = 6;
+    required float successRate = 7;
 }
 
 message ProtoSpecResult {
@@ -136,4 +135,5 @@ message ProtoSpecResult {
     required int32 scenarioFailedCount = 3;
     required bool failed = 4;
     repeated int32 failedDataTableRows = 5;
+    optional int64 executionTime = 6;
 }

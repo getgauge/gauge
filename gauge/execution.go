@@ -24,17 +24,24 @@ func newExecution(manifest *manifest, specifications []*specification, conn net.
 func (e *execution) startExecution() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &ExecutionStartingRequest{}}
-
-	e.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(e.connection, message)
+	return e.executeHook(message)
 }
 
 func (e *execution) endExecution() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message)
+}
 
+func (e *execution) executeHook(message *Message) *ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(e.connection, message)
+	executionResult := executeAndGetStatus(e.connection, message)
+	e.addExecTime(executionResult.GetExecutionTime())
+	return executionResult
+}
+
+func (e *execution) addExecTime(execTime int64) {
+	e.suiteResult.executionTime += execTime
 }
 
 func (e *execution) notifyExecutionResult() {
@@ -82,20 +89,22 @@ func (exe *execution) validate(conceptDictionary *conceptDictionary) executionVa
 }
 
 func (exe *execution) start() *suiteResult {
-	beforeSuiteHookExecStatus := exe.startExecution()
 	exe.suiteResult = newSuiteResult()
-	if beforeSuiteHookExecStatus.GetFailed() {
-		addPreHook(exe.suiteResult, beforeSuiteHookExecStatus)
-	} else {
-		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.connection, exe.pluginHandler)
-			protoSpecResult := executor.execute()
-			exe.suiteResult.addSpecResult(protoSpecResult)
-		}
+	beforeSuiteHookExecResult := exe.startExecution()
+	if beforeSuiteHookExecResult.GetFailed() {
+		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
+		exe.suiteResult.setFailure()
 	}
-
-	addPostHook(exe.suiteResult, exe.endExecution())
-
+	for _, specificationToExecute := range exe.specifications {
+		executor := newSpecExecutor(specificationToExecute, exe.connection, exe.pluginHandler)
+		protoSpecResult := executor.execute()
+		exe.suiteResult.addSpecResult(protoSpecResult)
+	}
+	afterSuiteHookExecResult := exe.endExecution()
+	if afterSuiteHookExecResult.GetFailed() {
+		addPostHook(exe.suiteResult, afterSuiteHookExecResult)
+		exe.suiteResult.setFailure()
+	}
 	exe.notifyExecutionResult()
 	exe.notifyExecutionStop()
 	return exe.suiteResult

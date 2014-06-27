@@ -10,14 +10,16 @@ type suiteResult struct {
 	postSuite        *ProtoHookFailure
 	isFailed         bool
 	specsFailedCount int
+	executionTime    int64
 }
 
 type specResult struct {
 	protoSpec           *ProtoSpec
-	scenarioFailedCount    int
-	scenarioCount          int
-	isFailed               bool
-	failedDataTableRows    []int32
+	scenarioFailedCount int
+	scenarioCount       int
+	isFailed            bool
+	failedDataTableRows []int32
+	executionTime       int64
 }
 
 type scenarioResult struct {
@@ -28,6 +30,10 @@ type result interface {
 	getPreHook() **ProtoHookFailure
 	getPostHook() **ProtoHookFailure
 	setFailure()
+}
+
+type execTimeTracker interface {
+	addExecTime(int64)
 }
 
 func (suiteResult *suiteResult) getPreHook() **ProtoHookFailure {
@@ -99,6 +105,7 @@ func (suiteResult *suiteResult) addSpecResult(specResult *specResult) {
 	if specResult.isFailed {
 		suiteResult.specsFailedCount++
 	}
+	suiteResult.executionTime += specResult.executionTime
 	suiteResult.specResults = append(suiteResult.specResults, specResult)
 
 }
@@ -117,6 +124,7 @@ func (specResult *specResult) addScenarioResults(scenarioResults []*scenarioResu
 			specResult.isFailed = true
 			specResult.scenarioFailedCount++
 		}
+		specResult.addExecTime(scenarioResult.protoScenario.GetExecutionTime())
 		specResult.protoSpec.Items = append(specResult.protoSpec.Items, &ProtoItem{ItemType: ProtoItem_Scenario.Enum(), Scenario: scenarioResult.protoScenario})
 	}
 	specResult.scenarioCount += len(scenarioResults)
@@ -129,8 +137,10 @@ func (specResult *specResult) addTableDrivenScenarioResult(scenarioResults [][](
 		protoTableDrivenScenario := &ProtoTableDrivenScenario{Scenarios: make([]*ProtoScenario, 0)}
 		scenarioFailed := false
 		for rowIndex, eachRow := range scenarioResults {
-			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), eachRow[scenarioIndex].protoScenario)
-			if eachRow[scenarioIndex].protoScenario.GetFailed() {
+			protoScenario := eachRow[scenarioIndex].protoScenario
+			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), protoScenario)
+			specResult.addExecTime(protoScenario.GetExecutionTime())
+			if protoScenario.GetFailed() {
 				scenarioFailed = true
 				specResult.failedDataTableRows = append(specResult.failedDataTableRows, int32(rowIndex))
 			}
@@ -146,6 +156,33 @@ func (specResult *specResult) addTableDrivenScenarioResult(scenarioResults [][](
 	specResult.scenarioCount += numberOfScenarios
 }
 
+func (specResult *specResult) addExecTime(execTime int64) {
+	specResult.executionTime += execTime
+}
+
 func (scenarioResult *scenarioResult) addItems(protoItems []*ProtoItem) {
 	scenarioResult.protoScenario.ScenarioItems = append(scenarioResult.protoScenario.ScenarioItems, protoItems...)
+	scenarioResult.updateExecutionTime(protoItems)
+}
+
+func (scenarioResult *scenarioResult) addContexts(contextProtoItems []*ProtoItem) {
+	scenarioResult.protoScenario.Contexts = append(scenarioResult.protoScenario.Contexts, contextProtoItems...)
+	scenarioResult.updateExecutionTime(contextProtoItems)
+}
+
+func (scenarioResult *scenarioResult) updateExecutionTime(protoItems []*ProtoItem) {
+	for _, item := range protoItems {
+		if item.GetItemType() == ProtoItem_Step {
+			stepExecTime := item.GetStep().GetStepExecutionResult().GetExecutionResult().GetExecutionTime()
+			scenarioResult.addExecTime(stepExecTime)
+		} else if item.GetItemType() == ProtoItem_Concept {
+			conceptExecTime := item.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetExecutionTime()
+			scenarioResult.addExecTime(conceptExecTime)
+		}
+	}
+}
+
+func (scenarioResult *scenarioResult) addExecTime(execTime int64) {
+	currentScenarioExecTime := scenarioResult.protoScenario.GetExecutionTime()
+	scenarioResult.protoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime+execTime)
 }

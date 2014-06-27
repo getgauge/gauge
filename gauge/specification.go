@@ -21,7 +21,8 @@ const (
 	static                argType = "static"
 	dynamic               argType = "dynamic"
 	tableArg              argType = "table"
-	special               argType = "special"
+	specialString         argType = "special_string"
+	specialTable          argType = "special_table"
 	PARAMETER_PLACEHOLDER         = "{}"
 )
 
@@ -53,25 +54,37 @@ type step struct {
 }
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
-	args := createStepArgsFromProtoArguments(stepReq.Args)
+	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
 	step := &step{value: stepReq.GetParsedStepText(),
 		lineText: stepReq.GetActualStepText()}
 	step.addArgs(args...)
 	return step
 }
 
-func createStepArgsFromProtoArguments(arguments []*Argument) []*stepArg {
-	args := make([]*stepArg, 0)
-	for _, arguments := range arguments {
-		var a *stepArg
-		if arguments.GetType() == "table" {
-			a = &stepArg{value: arguments.GetValue(), argType: tableArg, table: *(tableFrom(arguments.GetTable()))}
-		} else {
-			a = &stepArg{value: arguments.GetValue(), argType: static}
+func createStepArgsFromProtoArguments(parameters []*Parameter) []*stepArg {
+	stepArgs := make([]*stepArg, 0)
+	for _, parameter := range parameters {
+		var arg *stepArg
+		switch parameter.GetParameterType() {
+		case Parameter_Static:
+			arg = &stepArg{argType: static, value: parameter.GetValue()}
+			break
+		case Parameter_Dynamic:
+			arg = &stepArg{argType: dynamic, value: parameter.GetValue()}
+			break
+		case Parameter_Special_String:
+			arg = &stepArg{argType: specialString, value: parameter.GetValue()}
+			break
+		case Parameter_Table:
+			arg = &stepArg{argType: tableArg, table: *(tableFrom(parameter.GetTable()))}
+			break
+		case Parameter_Special_Table:
+			arg = &stepArg{argType: specialTable, table:*(tableFrom(parameter.GetTable()))}
+			break
 		}
-		args = append(args, a)
+		stepArgs = append(stepArgs, arg)
 	}
-	return args
+	return stepArgs
 }
 
 type specification struct {
@@ -334,7 +347,7 @@ func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLo
 		if err != nil {
 			return nil, err
 		}
-		arguments = append(arguments,argument)
+		arguments = append(arguments, argument)
 	}
 	step.addArgs(arguments...)
 	return step, nil
@@ -447,7 +460,7 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 	return r.ReplaceAllString(stepTokenValue, PARAMETER_PLACEHOLDER), argsType
 }
 
-func (step *step) addArgs(args... *stepArg) {
+func (step *step) addArgs(args ...*stepArg) {
 	step.args = append(step.args, args...)
 	step.populateFragments()
 }
@@ -492,6 +505,7 @@ func (step *step) populateFragments() {
 	}
 
 }
+
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {
 	for i, arg := range stepArgs {

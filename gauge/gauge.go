@@ -489,7 +489,7 @@ func printStepFailure(step *ProtoStep) {
 
 func printConceptFailure(concept *ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
-	if concept.GetFailed() {
+	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
 		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", concept.ConceptStep.GetActualText())
 		printError(conceptExecResult.ExecutionResult)
 	}

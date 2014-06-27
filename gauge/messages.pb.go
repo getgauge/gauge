@@ -129,7 +129,7 @@ func (*KillProcessRequest) ProtoMessage()    {}
 // usually step execution, hooks etc will return this
 type ExecutionStatusResponse struct {
 	ExecutionResult  *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
-	XXX_unrecognized []byte                `json:"-"`
+	XXX_unrecognized []byte                      `json:"-"`
 }
 
 func (m *ExecutionStatusResponse) Reset()         { *m = ExecutionStatusResponse{} }
@@ -392,11 +392,11 @@ func (m *StepInfo) GetIsFailed() bool {
 }
 
 type ExecuteStepRequest struct {
-	ActualStepText   *string     `protobuf:"bytes,1,req,name=actualStepText" json:"actualStepText,omitempty"`
-	ParsedStepText   *string     `protobuf:"bytes,2,req,name=parsedStepText" json:"parsedStepText,omitempty"`
-	ScenarioFailing  *bool       `protobuf:"varint,3,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
-	Args             []*Argument `protobuf:"bytes,4,rep,name=args" json:"args,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
+	ActualStepText   *string            `protobuf:"bytes,1,req,name=actualStepText" json:"actualStepText,omitempty"`
+	ParsedStepText   *string            `protobuf:"bytes,2,req,name=parsedStepText" json:"parsedStepText,omitempty"`
+	ScenarioFailing  *bool              `protobuf:"varint,3,opt,name=scenarioFailing" json:"scenarioFailing,omitempty"`
+	Parameters       []*Parameter `protobuf:"bytes,4,rep,name=parameters" json:"parameters,omitempty"`
+	XXX_unrecognized []byte             `json:"-"`
 }
 
 func (m *ExecuteStepRequest) Reset()         { *m = ExecuteStepRequest{} }
@@ -424,17 +424,17 @@ func (m *ExecuteStepRequest) GetScenarioFailing() bool {
 	return false
 }
 
-func (m *ExecuteStepRequest) GetArgs() []*Argument {
+func (m *ExecuteStepRequest) GetParameters() []*Parameter {
 	if m != nil {
-		return m.Args
+		return m.Parameters
 	}
 	return nil
 }
 
 type StepValidateRequest struct {
-	StepText          *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
-	NumberOfArguments *int32  `protobuf:"varint,2,req,name=numberOfArguments" json:"numberOfArguments,omitempty"`
-	XXX_unrecognized  []byte  `json:"-"`
+	StepText           *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
+	NumberOfParameters *int32  `protobuf:"varint,2,req,name=numberOfParameters" json:"numberOfParameters,omitempty"`
+	XXX_unrecognized   []byte  `json:"-"`
 }
 
 func (m *StepValidateRequest) Reset()         { *m = StepValidateRequest{} }
@@ -448,9 +448,9 @@ func (m *StepValidateRequest) GetStepText() string {
 	return ""
 }
 
-func (m *StepValidateRequest) GetNumberOfArguments() int32 {
-	if m != nil && m.NumberOfArguments != nil {
-		return *m.NumberOfArguments
+func (m *StepValidateRequest) GetNumberOfParameters() int32 {
+	if m != nil && m.NumberOfParameters != nil {
+		return *m.NumberOfParameters
 	}
 	return 0
 }
@@ -497,7 +497,7 @@ func (m *ExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 
 type SuiteExecutionResult struct {
 	SuiteResult      *ProtoSuiteResult `protobuf:"bytes,1,req,name=suiteResult" json:"suiteResult,omitempty"`
-	XXX_unrecognized []byte            `json:"-"`
+	XXX_unrecognized []byte                  `json:"-"`
 }
 
 func (m *SuiteExecutionResult) Reset()         { *m = SuiteExecutionResult{} }

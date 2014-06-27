@@ -99,9 +99,15 @@ func convertToProtoSuiteResult(suiteResult *suiteResult) *ProtoSuiteResult {
 		PostHookFailure:  suiteResult.postSuite,
 		Failed:           proto.Bool(suiteResult.isFailed),
 		SpecsFailedCount: proto.Int32(int32(suiteResult.specsFailedCount)),
+		ExecutionTime :   proto.Int64(suiteResult.executionTime),
 		SpecResults:      convertToProtoSpecResult(suiteResult.specResults),
+		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.specResults), suiteResult.specsFailedCount)),
 	}
 	return protoSuiteResult
+}
+
+func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
+	return (float32)(100.0 * (totalSpecs - failedSpecs) / totalSpecs)
 }
 
 func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
@@ -112,7 +118,8 @@ func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
 			ScenarioCount:       proto.Int32(int32(specResult.scenarioCount)),
 			ScenarioFailedCount: proto.Int32(int32(specResult.scenarioFailedCount)),
 			Failed:              proto.Bool(specResult.isFailed),
-			FailedDataTableRows :specResult.failedDataTableRows,
+			FailedDataTableRows: specResult.failedDataTableRows,
+			ExecutionTime : proto.Int64(specResult.executionTime),
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}
@@ -131,7 +138,7 @@ func convertToProtoSpec(spec *specification) *ProtoSpec {
 
 func newSpecResult(specification *specification) *specResult {
 	return &specResult{
-		protoSpec: newProtoSpec(specification),
+		protoSpec:           newProtoSpec(specification),
 		failedDataTableRows: make([]int32, 0),
 	}
 }
@@ -153,6 +160,8 @@ func newProtoScenario(scenario *scenario) *ProtoScenario {
 		ScenarioHeading: proto.String(scenario.heading.value),
 		Failed:          proto.Bool(false),
 		Tags:            getTags(scenario.tags),
+		Contexts:        make([]*ProtoItem, 0),
+		ExecutionTime:    proto.Int64(0),
 	}
 }
 
