@@ -79,7 +79,7 @@ func createStepArgsFromProtoArguments(parameters []*Parameter) []*stepArg {
 			arg = &stepArg{argType: tableArg, table: *(tableFrom(parameter.GetTable()))}
 			break
 		case Parameter_Special_Table:
-			arg = &stepArg{argType: specialTable, table:*(tableFrom(parameter.GetTable()))}
+			arg = &stepArg{argType: specialTable, table: *(tableFrom(parameter.GetTable()))}
 			break
 		}
 		stepArgs = append(stepArgs, arg)
@@ -416,11 +416,11 @@ func (specification *specification) addTags(tags *tags) {
 }
 
 func (specification *specification) latestScenario() *scenario {
-	return specification.scenarios[len(specification.scenarios) - 1]
+	return specification.scenarios[len(specification.scenarios)-1]
 }
 
 func (specification *specification) latestContext() *step {
-	return specification.contexts[len(specification.contexts) - 1]
+	return specification.contexts[len(specification.contexts)-1]
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {
@@ -472,7 +472,7 @@ func (step *step) addInlineTableHeaders(headers []string) {
 }
 
 func (step *step) addInlineTableRow(row []tableCell) {
-	lastArg := step.args[len(step.args) - 1]
+	lastArg := step.args[len(step.args)-1]
 	lastArg.table.addRows(row)
 	step.populateFragments()
 }
@@ -505,7 +505,6 @@ func (step *step) populateFragments() {
 	}
 
 }
-
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {
 	for i, arg := range stepArgs {
@@ -664,7 +663,7 @@ func (scenario *scenario) addItem(itemToAdd item) {
 }
 
 func (scenario *scenario) latestStep() *step {
-	return scenario.steps[len(scenario.steps) - 1]
+	return scenario.steps[len(scenario.steps)-1]
 }
 
 func (heading *heading) kind() tokenKind {

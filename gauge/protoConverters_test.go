@@ -1,14 +1,15 @@
 package main
 
-import (. "launchpad.net/gocheck"
+import (
 	"code.google.com/p/goprotobuf/proto"
+	. "launchpad.net/gocheck"
 )
 
 func (s *MySuite) TestCopyingFragments(c *C) {
-	text1 := &Fragment{FragmentType:Fragment_Text.Enum(), Text:proto.String("step with")}
-	staticParam := &Fragment{FragmentType:Fragment_Parameter.Enum(), Parameter:&Parameter{ParameterType:Parameter_Static.Enum(), Value:proto.String("param0") }}
-	text2 := &Fragment{FragmentType:Fragment_Text.Enum(), Text:proto.String("and")}
-	dynamicParam := &Fragment{FragmentType:Fragment_Parameter.Enum(), Parameter: &Parameter{ParameterType:Parameter_Dynamic.Enum(), Value:proto.String("param1") }}
+	text1 := &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String("step with")}
+	staticParam := &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String("param0")}}
+	text2 := &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String("and")}
+	dynamicParam := &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String("param1")}}
 	fragments := []*Fragment{text1, staticParam, text2, dynamicParam}
 
 	copiedFragments := makeFragmentsCopy(fragments)
@@ -27,7 +28,7 @@ func (s *MySuite) TestCopyingProtoTable(c *C) {
 	row1 := &ProtoTableRow{Cells: []string{"123", "abc", "first description"}}
 	row2 := &ProtoTableRow{Cells: []string{"456", "def", "second description"}}
 
-	table := &ProtoTable{Headers:headers, Rows:[]*ProtoTableRow{row1, row2}}
+	table := &ProtoTable{Headers: headers, Rows: []*ProtoTableRow{row1, row2}}
 	copiedTable := makeTableCopy(table)
 
 	compareTable(table, copiedTable, c)
@@ -69,15 +70,14 @@ func compareParameter(parameter1 *Parameter, parameter2 *Parameter, c *C) {
 	}
 }
 
-
 func compareTable(table1 *ProtoTable, table2 *ProtoTable, c *C) {
 	compareTableRow(table1.GetHeaders(), table2.GetHeaders(), c)
 	c.Assert(len(table1.GetRows()), Equals, len(table2.GetRows()))
-	for i,row := range table1.GetRows() {
+	for i, row := range table1.GetRows() {
 		compareTableRow(row, table2.GetRows()[i], c)
 	}
 }
 
 func compareTableRow(row1 *ProtoTableRow, row2 *ProtoTableRow, c *C) {
-	c.Assert(row1.GetCells(), DeepEquals, row2.GetCells() )
+	c.Assert(row1.GetCells(), DeepEquals, row2.GetCells())
 }

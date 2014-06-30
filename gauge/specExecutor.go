@@ -192,14 +192,16 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 		addPreHook(scenarioResult, beforeHookExecutionStatus)
 		executor.currentExecutionInfo.setScenarioFailure()
 	} else {
-		contextProtoItems, failed := executor.executeContext()
-		scenarioResult.addContexts(contextProtoItems)
-		if !failed {
-			scenarioProtoItems, isFailure := executor.executeItems(scenario.items)
+		contextFailure := executor.executeContext(scenarioResult)
+		resolvedProtoItems := executor.resolveItems(scenario.items)
+		scenarioResult.addItems(resolvedProtoItems)
+		if !contextFailure {
+			isFailure := executor.executeItems(resolvedProtoItems)
 			if isFailure {
 				scenarioResult.setFailure()
 			}
-			scenarioResult.addItems(scenarioProtoItems)
+		} else {
+			scenarioResult.setFailure()
 		}
 	}
 
@@ -208,30 +210,35 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 	return scenarioResult
 }
 
-func (executor *specExecutor) executeContext() ([]*ProtoItem, bool) {
+func (executor *specExecutor) executeContext(scenarioResult *scenarioResult) bool {
 	contextSteps := executor.specification.contexts
 	items := make([]item, len(contextSteps))
 	for i, context := range contextSteps {
 		items[i] = context
 	}
-	contextStepItems, failure := executor.executeItems(items)
-	return contextStepItems, failure
+	contextProtoItems := executor.resolveItems(items)
+	scenarioResult.addContexts(contextProtoItems)
+
+	return executor.executeItems(contextProtoItems)
 }
 
-func (executor *specExecutor) executeItems(items []item) ([]*ProtoItem, bool) {
+func (executor *specExecutor) resolveItems(items []item) []*ProtoItem {
 	protoItems := make([]*ProtoItem, 0)
 	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 	for _, item := range items {
 		protoItems = append(protoItems, executor.resolveToProtoItem(item, argLookup))
 	}
+	return protoItems
+}
 
-	for _, protoItem := range protoItems {
+func (executor *specExecutor) executeItems(executingItems []*ProtoItem) bool {
+	for _, protoItem := range executingItems {
 		failure := executor.executeItem(protoItem)
 		if failure == true {
-			return protoItems, true
+			return true
 		}
 	}
-	return protoItems, false
+	return false
 }
 
 func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *ProtoItem {
@@ -245,7 +252,8 @@ func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *
 		}
 		break
 
-	default : protoItem = convertToProtoItem(item)
+	default:
+		protoItem = convertToProtoItem(item)
 	}
 	return protoItem
 }
@@ -278,7 +286,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *a
 func updateProtoStepParameters(protoStep *ProtoStep, parameters []*Parameter) {
 	paramIndex := 0
 	for fragmentIndex, fragment := range protoStep.Fragments {
-		if (fragment.GetFragmentType() == Fragment_Parameter) {
+		if fragment.GetFragmentType() == Fragment_Parameter {
 			protoStep.Fragments[fragmentIndex].Parameter = parameters[paramIndex]
 			paramIndex++
 		}
@@ -288,7 +296,6 @@ func updateProtoStepParameters(protoStep *ProtoStep, parameters []*Parameter) {
 func (executor *specExecutor) dataTableLookup() *argLookup {
 	return new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 }
-
 
 func (executor *specExecutor) executeItem(protoItem *ProtoItem) bool {
 	if protoItem.GetItemType() == ProtoItem_Concept {
@@ -382,7 +389,7 @@ func addExecutionTimes(stepExecResult *ProtoStepExecutionResult, execResults ...
 		if currentScenarioExecTime == nil {
 			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
 		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime+execResult.GetExecutionTime())
+			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
 		}
 	}
 }

@@ -52,24 +52,24 @@ func makeFragmentsCopy(fragments []*Fragment) []*Fragment {
 
 func makeFragmentCopy(fragment *Fragment) *Fragment {
 	if fragment.GetFragmentType() == Fragment_Text {
-		return &Fragment{FragmentType: Fragment_Text.Enum(), Text:proto.String(fragment.GetText())}
+		return &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(fragment.GetText())}
 	} else {
-		return &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter:makeParameterCopy(fragment.Parameter)}
+		return &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: makeParameterCopy(fragment.Parameter)}
 	}
 }
 
 func makeParameterCopy(parameter *Parameter) *Parameter {
-	switch (parameter.GetParameterType()) {
+	switch parameter.GetParameterType() {
 	case Parameter_Static:
-		return &Parameter{ParameterType:Parameter_Static.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+		return &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
 	case Parameter_Dynamic:
-		return &Parameter{ParameterType:Parameter_Dynamic.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+		return &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
 	case Parameter_Table:
-		return &Parameter{ParameterType:Parameter_Table.Enum(), Table:makeTableCopy(parameter.GetTable()), Name:proto.String(parameter.GetName())}
+		return &Parameter{ParameterType: Parameter_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
 	case Parameter_Special_String:
-		return &Parameter{ParameterType:Parameter_Special_String.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+		return &Parameter{ParameterType: Parameter_Special_String.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
 	case Parameter_Special_Table:
-		return &Parameter{ParameterType:Parameter_Special_Table.Enum(), Table:makeTableCopy(parameter.GetTable()), Name:proto.String(parameter.GetName())}
+		return &Parameter{ParameterType: Parameter_Special_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
 	}
 	return parameter
 }
@@ -88,7 +88,7 @@ func makeTableCopy(table *ProtoTable) *ProtoTable {
 
 func makeProtoTableRowCopy(tableRow *ProtoTableRow) *ProtoTableRow {
 	copiedCells := make([]string, 0)
-	return &ProtoTableRow{Cells:append(copiedCells, tableRow.GetCells()...)}
+	return &ProtoTableRow{Cells: append(copiedCells, tableRow.GetCells()...)}
 }
 
 func convertToProtoSteps(steps []*step) []*ProtoStep {
@@ -148,9 +148,9 @@ func convertToProtoSuiteResult(suiteResult *suiteResult) *ProtoSuiteResult {
 		PostHookFailure:  suiteResult.postSuite,
 		Failed:           proto.Bool(suiteResult.isFailed),
 		SpecsFailedCount: proto.Int32(int32(suiteResult.specsFailedCount)),
-		ExecutionTime :   proto.Int64(suiteResult.executionTime),
+		ExecutionTime:    proto.Int64(suiteResult.executionTime),
 		SpecResults:      convertToProtoSpecResult(suiteResult.specResults),
-		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.specResults), suiteResult.specsFailedCount)),
+		SuccessRate:      proto.Float32(getSuccessRate(len(suiteResult.specResults), suiteResult.specsFailedCount)),
 	}
 	return protoSuiteResult
 }
@@ -168,7 +168,7 @@ func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
 			ScenarioFailedCount: proto.Int32(int32(specResult.scenarioFailedCount)),
 			Failed:              proto.Bool(specResult.isFailed),
 			FailedDataTableRows: specResult.failedDataTableRows,
-			ExecutionTime : proto.Int64(specResult.executionTime),
+			ExecutionTime:       proto.Int64(specResult.executionTime),
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}
@@ -210,7 +210,7 @@ func newProtoScenario(scenario *scenario) *ProtoScenario {
 		Failed:          proto.Bool(false),
 		Tags:            getTags(scenario.tags),
 		Contexts:        make([]*ProtoItem, 0),
-		ExecutionTime:    proto.Int64(0),
+		ExecutionTime:   proto.Int64(0),
 	}
 }
 

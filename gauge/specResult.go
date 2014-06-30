@@ -184,5 +184,5 @@ func (scenarioResult *scenarioResult) updateExecutionTime(protoItems []*ProtoIte
 
 func (scenarioResult *scenarioResult) addExecTime(execTime int64) {
 	currentScenarioExecTime := scenarioResult.protoScenario.GetExecutionTime()
-	scenarioResult.protoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime+execTime)
+	scenarioResult.protoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
 }

@@ -1,13 +1,13 @@
 package main
 
 import (
+	"code.google.com/p/goprotobuf/proto"
 	"common"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"regexp"
 	"strings"
-	"code.google.com/p/goprotobuf/proto"
 )
 
 type resolverFn func(string) (*stepArg, error)
@@ -16,7 +16,6 @@ type specialTypeResolver struct {
 }
 
 type paramResolver struct {
-
 }
 
 func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, lookup *argLookup, dataTableLookup *argLookup) []*Parameter {
@@ -52,7 +51,6 @@ func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, looku
 	return parameters
 
 }
-
 
 func (resolver *paramResolver) createProtoStepTable(table *table, lookup *argLookup, dataTableLookup *argLookup) *ProtoTable {
 	protoTable := new(ProtoTable)
