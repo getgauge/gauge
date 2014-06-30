@@ -57,10 +57,14 @@ func (specExecutor *specExecutor) execute() *specResult {
 	specExecutor.currentExecutionInfo = &ExecutionInfo{CurrentSpec: specInfo}
 
 	getCurrentConsole().writeSpecHeading(specInfo.GetName())
-
+	dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 	specExecutor.specResult = newSpecResult(specExecutor.specification)
-	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.getSpecItems())
-	specExecutor.specResult.addSpecItems(resolvedSpecItems)
+	if dataTableRowCount == 0 {
+		resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.getSpecItems())
+		specExecutor.specResult.addResolvedSpecItems(resolvedSpecItems)
+	} else {
+		specExecutor.specResult.addUnResolvedSpecItems(specExecutor.specification.getSpecItems())
+	}
 
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
@@ -68,7 +72,7 @@ func (specExecutor *specExecutor) execute() *specResult {
 		specExecutor.currentExecutionInfo.setSpecFailure()
 	} else {
 		getCurrentConsole().writeSteps(specExecutor.specification.contexts)
-		dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
+
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
 			specExecutor.specResult.addScenarioResults(scenarioResult)

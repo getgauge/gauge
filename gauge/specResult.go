@@ -72,8 +72,14 @@ func (scenarioResult *scenarioResult) setFailure() {
 	scenarioResult.protoScenario.Failed = proto.Bool(true)
 }
 
-func (specResult *specResult) addSpecItems(resolvedItems []*ProtoItem) {
+func (specResult *specResult) addResolvedSpecItems(resolvedItems []*ProtoItem) {
 	specResult.protoSpec.Items = append(specResult.protoSpec.Items, resolvedItems...)
+}
+
+func (specResult *specResult) addUnResolvedSpecItems(items []item) {
+	for _, item := range items {
+		specResult.protoSpec.Items = append(specResult.protoSpec.Items, convertToProtoItem(item))
+	}
 }
 
 func newSuiteResult() *suiteResult {
