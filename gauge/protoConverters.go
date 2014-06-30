@@ -39,7 +39,56 @@ func convertToProtoConcept(concept *step) *ProtoItem {
 }
 
 func convertToProtoStep(step *step) *ProtoStep {
-	return &ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: step.fragments}
+	return &ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: makeFragmentsCopy(step.fragments)}
+}
+
+func makeFragmentsCopy(fragments []*Fragment) []*Fragment {
+	copiedFragments := make([]*Fragment, 0)
+	for _, fragment := range fragments {
+		copiedFragments = append(copiedFragments, makeFragmentCopy(fragment))
+	}
+	return copiedFragments
+}
+
+func makeFragmentCopy(fragment *Fragment) *Fragment {
+	if fragment.GetFragmentType() == Fragment_Text {
+		return &Fragment{FragmentType: Fragment_Text.Enum(), Text:proto.String(fragment.GetText())}
+	} else {
+		return &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter:makeParameterCopy(fragment.Parameter)}
+	}
+}
+
+func makeParameterCopy(parameter *Parameter) *Parameter {
+	switch (parameter.GetParameterType()) {
+	case Parameter_Static:
+		return &Parameter{ParameterType:Parameter_Static.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+	case Parameter_Dynamic:
+		return &Parameter{ParameterType:Parameter_Dynamic.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+	case Parameter_Table:
+		return &Parameter{ParameterType:Parameter_Table.Enum(), Table:makeTableCopy(parameter.GetTable()), Name:proto.String(parameter.GetName())}
+	case Parameter_Special_String:
+		return &Parameter{ParameterType:Parameter_Special_String.Enum(), Value:proto.String(parameter.GetValue()), Name:proto.String(parameter.GetName())}
+	case Parameter_Special_Table:
+		return &Parameter{ParameterType:Parameter_Special_Table.Enum(), Table:makeTableCopy(parameter.GetTable()), Name:proto.String(parameter.GetName())}
+	}
+	return parameter
+}
+
+func makeTableCopy(table *ProtoTable) *ProtoTable {
+	copiedTable := &ProtoTable{}
+	copiedTable.Headers = makeProtoTableRowCopy(table.GetHeaders())
+
+	copiedRows := make([]*ProtoTableRow, 0)
+	for _, tableRow := range table.GetRows() {
+		copiedRows = append(copiedRows, makeProtoTableRowCopy(tableRow))
+	}
+	copiedTable.Rows = copiedRows
+	return copiedTable
+}
+
+func makeProtoTableRowCopy(tableRow *ProtoTableRow) *ProtoTableRow {
+	copiedCells := make([]string, 0)
+	return &ProtoTableRow{Cells:append(copiedCells, tableRow.GetCells()...)}
 }
 
 func convertToProtoSteps(steps []*step) []*ProtoStep {
