@@ -72,12 +72,8 @@ func (scenarioResult *scenarioResult) setFailure() {
 	scenarioResult.protoScenario.Failed = proto.Bool(true)
 }
 
-func (specResult *specResult) addSpecItems(spec *specification) {
-	for _, item := range spec.items {
-		if item.kind() != scenarioKind {
-			specResult.protoSpec.Items = append(specResult.protoSpec.Items, convertToProtoItem(item))
-		}
-	}
+func (specResult *specResult) addSpecItems(resolvedItems []*ProtoItem) {
+	specResult.protoSpec.Items = append(specResult.protoSpec.Items, resolvedItems...)
 }
 
 func newSuiteResult() *suiteResult {
@@ -184,5 +180,5 @@ func (scenarioResult *scenarioResult) updateExecutionTime(protoItems []*ProtoIte
 
 func (scenarioResult *scenarioResult) addExecTime(execTime int64) {
 	currentScenarioExecTime := scenarioResult.protoScenario.GetExecutionTime()
-	scenarioResult.protoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
+	scenarioResult.protoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime+execTime)
 }

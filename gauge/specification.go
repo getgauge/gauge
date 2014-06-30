@@ -416,11 +416,11 @@ func (specification *specification) addTags(tags *tags) {
 }
 
 func (specification *specification) latestScenario() *scenario {
-	return specification.scenarios[len(specification.scenarios)-1]
+	return specification.scenarios[len(specification.scenarios) - 1]
 }
 
 func (specification *specification) latestContext() *step {
-	return specification.contexts[len(specification.contexts)-1]
+	return specification.contexts[len(specification.contexts) - 1]
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {
@@ -472,7 +472,7 @@ func (step *step) addInlineTableHeaders(headers []string) {
 }
 
 func (step *step) addInlineTableRow(row []tableCell) {
-	lastArg := step.args[len(step.args)-1]
+	lastArg := step.args[len(step.args) - 1]
 	lastArg.table.addRows(row)
 	step.populateFragments()
 }
@@ -663,7 +663,7 @@ func (scenario *scenario) addItem(itemToAdd item) {
 }
 
 func (scenario *scenario) latestStep() *step {
-	return scenario.steps[len(scenario.steps)-1]
+	return scenario.steps[len(scenario.steps) - 1]
 }
 
 func (heading *heading) kind() tokenKind {
@@ -680,4 +680,14 @@ func (tags *tags) kind() tokenKind {
 
 func (step step) kind() tokenKind {
 	return stepKind
+}
+
+func (specification *specification) getSpecItems() []item {
+	specItems := make([]item, 0)
+	for _, item := range specification.items {
+		if item.kind() != scenarioKind {
+			specItems = append(specItems, item)
+		}
+	}
+	return specItems
 }

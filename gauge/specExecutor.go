@@ -59,7 +59,8 @@ func (specExecutor *specExecutor) execute() *specResult {
 	getCurrentConsole().writeSpecHeading(specInfo.GetName())
 
 	specExecutor.specResult = newSpecResult(specExecutor.specification)
-	specExecutor.specResult.addSpecItems(specExecutor.specification)
+	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.getSpecItems())
+	specExecutor.specResult.addSpecItems(resolvedSpecItems)
 
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
