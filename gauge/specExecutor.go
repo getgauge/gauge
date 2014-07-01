@@ -377,6 +377,7 @@ func (executor *specExecutor) executeStep(protoStep *ProtoStep) bool {
 		executor.currentExecutionInfo.setStepFailure()
 		printStatus(afterStepHookStatus)
 		protoStepExecResult.PostHookFailure = getProtoHookFailure(afterStepHookStatus)
+		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
 
 	console.writeStepFinished(stepWithResolvedArgs, protoStepExecResult.GetExecutionResult().GetFailed())
