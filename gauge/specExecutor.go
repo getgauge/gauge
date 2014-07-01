@@ -195,7 +195,6 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 	} else {
 		contextFailure := executor.executeContext(scenarioResult)
 		resolvedProtoItems := executor.resolveItems(scenario.items)
-		scenarioResult.addItems(resolvedProtoItems)
 		if !contextFailure {
 			isFailure := executor.executeItems(resolvedProtoItems)
 			if isFailure {
@@ -204,10 +203,12 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 		} else {
 			scenarioResult.setFailure()
 		}
+		scenarioResult.addItems(resolvedProtoItems)
 	}
 
 	afterHookExecutionStatus := executor.executeAfterScenarioHook(scenarioResult)
 	addPostHook(scenarioResult, afterHookExecutionStatus)
+
 	return scenarioResult
 }
 
@@ -218,9 +219,10 @@ func (executor *specExecutor) executeContext(scenarioResult *scenarioResult) boo
 		items[i] = context
 	}
 	contextProtoItems := executor.resolveItems(items)
+	failed := executor.executeItems(contextProtoItems)
 	scenarioResult.addContexts(contextProtoItems)
 
-	return executor.executeItems(contextProtoItems)
+	return failed
 }
 
 func (executor *specExecutor) resolveItems(items []item) []*ProtoItem {
@@ -391,7 +393,7 @@ func addExecutionTimes(stepExecResult *ProtoStepExecutionResult, execResults ...
 		if currentScenarioExecTime == nil {
 			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
 		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
+			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime+execResult.GetExecutionTime())
 		}
 	}
 }
