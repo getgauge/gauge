@@ -39,7 +39,7 @@ func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, looku
 			parameter.ParameterType = Parameter_Special_String.Enum()
 			parameter.Value = proto.String(arg.value)
 		} else if arg.argType == specialTable {
-			parameter.ParameterType = Parameter_Table.Enum()
+			parameter.ParameterType = Parameter_Special_Table.Enum()
 			parameter.Table = paramResolver.createProtoStepTable(&arg.table, lookup, dataTableLookup)
 		} else {
 			parameter.ParameterType = Parameter_Table.Enum()
