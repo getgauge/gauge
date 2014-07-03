@@ -72,6 +72,10 @@ func (scenarioResult *scenarioResult) setFailure() {
 	scenarioResult.protoScenario.Failed = proto.Bool(true)
 }
 
+func (scenarioResult *scenarioResult) getFailure() bool {
+	return scenarioResult.protoScenario.GetFailed()
+}
+
 func (specResult *specResult) addSpecItems(resolvedItems []*ProtoItem) {
 	specResult.protoSpec.Items = append(specResult.protoSpec.Items, resolvedItems...)
 }
@@ -158,15 +162,18 @@ func (specResult *specResult) addExecTime(execTime int64) {
 
 func (scenarioResult *scenarioResult) addItems(protoItems []*ProtoItem) {
 	scenarioResult.protoScenario.ScenarioItems = append(scenarioResult.protoScenario.ScenarioItems, protoItems...)
-	scenarioResult.updateExecutionTime(protoItems)
 }
 
 func (scenarioResult *scenarioResult) addContexts(contextProtoItems []*ProtoItem) {
 	scenarioResult.protoScenario.Contexts = append(scenarioResult.protoScenario.Contexts, contextProtoItems...)
-	scenarioResult.updateExecutionTime(contextProtoItems)
 }
 
-func (scenarioResult *scenarioResult) updateExecutionTime(protoItems []*ProtoItem) {
+func (scenarioResult *scenarioResult) updateExecutionTime() {
+	scenarioResult.updateExecutionTimeFromItems(scenarioResult.protoScenario.GetContexts())
+	scenarioResult.updateExecutionTimeFromItems(scenarioResult.protoScenario.GetScenarioItems())
+}
+
+func (scenarioResult *scenarioResult) updateExecutionTimeFromItems(protoItems []*ProtoItem) {
 	for _, item := range protoItems {
 		if item.GetItemType() == ProtoItem_Step {
 			stepExecTime := item.GetStep().GetStepExecutionResult().GetExecutionResult().GetExecutionTime()
