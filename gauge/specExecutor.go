@@ -206,12 +206,10 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 	return scenarioResult
 }
 
-
-func (executor *specExecutor) addAllItemsForScenarioExecution(scenario *scenario, scenarioResult * scenarioResult) {
+func (executor *specExecutor) addAllItemsForScenarioExecution(scenario *scenario, scenarioResult *scenarioResult) {
 	scenarioResult.addContexts(executor.getContextItemsForScenarioExecution(executor.specification))
 	scenarioResult.addItems(executor.resolveItems(scenario.items))
 }
-
 
 func (executor *specExecutor) getContextItemsForScenarioExecution(specification *specification) []*ProtoItem {
 	contextSteps := specification.contexts
@@ -405,7 +403,7 @@ func addExecutionTimes(stepExecResult *ProtoStepExecutionResult, execResults ...
 		if currentScenarioExecTime == nil {
 			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
 		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime+execResult.GetExecutionTime())
+			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
 		}
 	}
 }

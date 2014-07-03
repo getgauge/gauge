@@ -128,7 +128,11 @@ func (resolver *specialTypeResolver) resolve(arg string) (*stepArg, error) {
 	match := regEx.FindAllStringSubmatch(arg, -1)
 	specialType := strings.TrimSpace(match[0][1])
 	value := strings.TrimSpace(match[0][2])
-	return resolver.getStepArg(specialType, value, arg)
+	stepArg, err := resolver.getStepArg(specialType, value, arg)
+	if err == nil {
+		stepArg.name = arg
+	}
+	return stepArg, err
 }
 
 func (resolver *specialTypeResolver) getStepArg(specialType string, value string, arg string) (*stepArg, error) {

@@ -13,6 +13,7 @@ func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	stepArg, _ := resolver.resolve("file:foo")
 	c.Assert(stepArg.value, Equals, "dummy")
 	c.Assert(stepArg.argType, Equals, static)
+	c.Assert(stepArg.name, Equals, "file:foo")
 }
 
 func (s *MySuite) TestConvertCsvToTable(c *C) {

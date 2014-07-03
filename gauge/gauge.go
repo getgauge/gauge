@@ -549,7 +549,7 @@ func getSpecFiles(specSource string) []string {
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[string]*specification, []*parseResult) {
 	specFiles := getSpecFiles(specSource)
-	if specFiles == nil  {
+	if specFiles == nil {
 		fmt.Printf("Spec file or directory does not exist: %s\n", specSource)
 		os.Exit(1)
 	} else if len(specFiles) == 0 {

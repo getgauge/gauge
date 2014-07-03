@@ -118,11 +118,15 @@ func convertToProtoParameters(args []*stepArg) []*Parameter {
 func convertToProtoParameter(arg *stepArg) *Parameter {
 	switch arg.argType {
 	case static:
-		return &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String(arg.value)}
+		return &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
 	case dynamic:
-		return &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String(arg.value)}
+		return &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
 	case tableArg:
-		return &Parameter{ParameterType: Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.table)}
+		return &Parameter{ParameterType: Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
+	case specialString:
+		return &Parameter{ParameterType: Parameter_Special_String.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+	case specialTable:
+		return &Parameter{ParameterType: Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
 	}
 	return nil
 }
