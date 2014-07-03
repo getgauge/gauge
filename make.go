@@ -193,7 +193,8 @@ func compileGaugeRuby() {
 
 func runTests(packageName string) {
 	setGoPath()
-	runProcess("go", BUILD_DIR, "test", packageName)
+	runProcess("go", BUILD_DIR, "test", "-covermode=count", "-coverprofile=count.out", packageName)
+	runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
 }
 
 func copyBinaries() {
