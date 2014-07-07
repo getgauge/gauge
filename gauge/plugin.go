@@ -19,6 +19,7 @@ import (
 const (
 	executionScope          = "execution"
 	pluginConnectionTimeout = time.Second * 3
+	setupScope              = "setup"
 )
 
 type pluginDescriptor struct {
@@ -208,7 +209,10 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return err
 	}
 
-	action := "setup"
+	if isPluginAdded(manifest, pd) {
+		return errors.New("Plugin " + pd.Name + " is already added")
+	}
+	action := setupScope
 	setEnvForPlugin(action, pd, manifest, pluginArgs)
 	if _, err := startPlugin(pd, action, true); err != nil {
 		return err
@@ -216,6 +220,15 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 
 	manifest.Plugins = append(manifest.Plugins, pluginDetails{Id: pd.Id, Version: pd.Version})
 	return manifest.save()
+}
+
+func isPluginAdded(manifest *manifest, descriptor *pluginDescriptor) bool {
+	for _, pluginDetails := range manifest.Plugins {
+		if pluginDetails.Id == descriptor.Id && pluginDetails.Version == descriptor.Version {
+			return true
+		}
+	}
+	return false
 }
 
 func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {

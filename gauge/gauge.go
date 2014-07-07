@@ -43,6 +43,166 @@ type manifest struct {
 	Plugins  []pluginDetails
 }
 
+func main() {
+	flag.Parse()
+	if *daemonize {
+		runInBackground()
+	} else if *version {
+		printVersion()
+	} else if *specFilesToFormat != "" {
+		formatSpecFiles(*specFilesToFormat)
+	} else if *initialize != "" {
+		initializeProject(*initialize)
+	} else if *addPlugin != "" {
+		addPluginToProject(*addPlugin)
+	} else {
+		executeSpecs()
+	}
+}
+
+// Command line flags
+var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
+var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit")
+var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
+var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
+var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
+var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
+var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
+
+func printUsage() {
+	fmt.Printf("gauge - version %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
+	fmt.Println("Copyright 2014 Thoughtworks\n")
+	fmt.Println("Usage:")
+	fmt.Println("\tgauge specs/")
+	fmt.Println("\tgauge specs/spec_name.spec")
+	fmt.Println("\nOptions:")
+	flag.PrintDefaults()
+	os.Exit(2)
+}
+
+func runInBackground() {
+	loadGaugeEnvironment()
+	port, err := getPortFromEnvironmentVariable(apiPortEnvVariableName)
+	if err != nil {
+		fmt.Printf("Failed to start API Service. %s", err.Error())
+		os.Exit(1)
+	}
+	var wg sync.WaitGroup
+	runAPIServiceIndefinitely(port, &wg)
+	makeListOfAvailableSteps(nil)
+	wg.Wait()
+}
+
+func formatSpecFiles(filesToFormat string) {
+	specs, specParseResults := findSpecs(filesToFormat, &conceptDictionary{})
+	handleParseResult(specParseResults...)
+	failed := false
+	for _, spec := range specs {
+		formatted := formatSpecification(spec)
+		err := common.SaveFile(spec.fileName, formatted, true)
+		if err != nil {
+			failed = true
+			fmt.Printf("Failed to format '%s': %s\n", spec.fileName)
+		}
+	}
+	if failed {
+		os.Exit(1)
+	} else {
+		os.Exit(0)
+	}
+}
+
+func initializeProject(language string) {
+	err := createProjectTemplate(language)
+	if err != nil {
+		fmt.Printf("Failed to initialize. %s\n", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
+}
+
+func addPluginToProject(pluginName string) {
+	additionalArgs := make(map[string]string)
+	if *pluginArgs != "" {
+		// plugin args will be comma separated values
+		// eg: version=1.0, foo_version = 2.41
+		args := strings.Split(*pluginArgs, ",")
+		for _, arg := range args {
+			keyValuePair := strings.Split(arg, "=")
+			if len(keyValuePair) == 2 {
+				additionalArgs[strings.TrimSpace(keyValuePair[0])] = strings.TrimSpace(keyValuePair[1])
+			}
+		}
+	}
+	if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest()); err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
+	} else {
+		fmt.Printf("Plugin %s was successfully added to the project\n", pluginName)
+	}
+}
+
+func executeSpecs() {
+	if len(flag.Args()) == 0 {
+		printUsage()
+	}
+
+	loadGaugeEnvironment()
+
+	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
+	handleParseResult(conceptParseResult)
+
+	allSpecs := make(map[string]*specification)
+	for _, arg := range flag.Args() {
+		specSource := arg
+		parsedSpecs, specParseResults := findSpecs(specSource, conceptsDictionary)
+		handleParseResult(specParseResults...)
+		for fileName, parsedSpec := range parsedSpecs {
+			_, exists := allSpecs[fileName]
+			if !exists {
+				allSpecs[fileName] = parsedSpec
+			}
+		}
+	}
+	manifest := getProjectManifest()
+
+	err := startAPIService(0)
+	if err != nil {
+		fmt.Printf("Failed to start gauge API. %s\n", err.Error())
+		os.Exit(1)
+	}
+	runnerConnection, runnerError := startRunnerAndMakeConnection(manifest)
+	if runnerError != nil {
+		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
+		os.Exit(1)
+	}
+	makeListOfAvailableSteps(runnerConnection)
+
+	pluginHandler, warnings := startPluginsForExecution(manifest)
+	handleWarningMessages(warnings)
+	specsToExecute := convertMapToArray(allSpecs)
+	execution := newExecution(manifest, specsToExecute, runnerConnection, pluginHandler)
+	validationErrors := execution.validate(conceptsDictionary)
+	if len(validationErrors) > 0 {
+		fmt.Println("Validation failed. The following steps have errors")
+		for _, stepValidationErrors := range validationErrors {
+			for _, stepValidationError := range stepValidationErrors {
+				s := stepValidationError.step
+				fmt.Printf("\x1b[31;1m  %s:%d: %s. %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText)
+			}
+		}
+		err := execution.killProcess()
+		if err != nil {
+			fmt.Printf("Failed to kill Runner. %s\n", err.Error())
+		}
+		os.Exit(1)
+	} else {
+		status := execution.start()
+		exitCode := printExecutionStatus(status)
+		os.Exit(exitCode)
+	}
+}
+
 func (m *manifest) save() error {
 	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
@@ -197,26 +357,6 @@ func loadEnvironment(env string) error {
 	return err
 }
 
-// Command line flags
-var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit")
-var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
-var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
-var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
-
-func printUsage() {
-	fmt.Printf("gauge - version %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
-	fmt.Println("Copyright 2014 Thoughtworks\n")
-	fmt.Println("Usage:")
-	fmt.Println("\tgauge specs/")
-	fmt.Println("\tgauge specs/spec_name.spec")
-	fmt.Println("\nOptions:")
-	flag.PrintDefaults()
-	os.Exit(2)
-}
-
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
 		if !result.ok {
@@ -227,125 +367,6 @@ func handleParseResult(results ...*parseResult) {
 			for _, warning := range result.warnings {
 				fmt.Println(fmt.Sprintf("[Warning] %s : %v", result.fileName, warning))
 			}
-		}
-	}
-}
-
-func main() {
-	flag.Parse()
-	if *daemonize {
-		loadGaugeEnvironment()
-		port, err := getPortFromEnvironmentVariable(apiPortEnvVariableName)
-		if err != nil {
-			fmt.Printf("Failed to start API Service. %s", err.Error())
-			os.Exit(1)
-		}
-		var wg sync.WaitGroup
-		runAPIServiceIndefinitely(port, &wg)
-		makeListOfAvailableSteps(nil)
-		wg.Wait()
-	} else if *version {
-		printVersion()
-	} else if *specFilesToFormat != "" {
-		specs, specParseResults := findSpecs(*specFilesToFormat, &conceptDictionary{})
-		handleParseResult(specParseResults...)
-		failed := false
-		for _, spec := range specs {
-			formatted := formatSpecification(spec)
-			err := common.SaveFile(spec.fileName, formatted, true)
-			if err != nil {
-				failed = true
-				fmt.Printf("Failed to format '%s': %s\n", spec.fileName)
-			}
-		}
-		if failed {
-			os.Exit(1)
-		} else {
-			os.Exit(0)
-		}
-	} else if *initialize != "" {
-		err := createProjectTemplate(*initialize)
-		if err != nil {
-			fmt.Printf("Failed to initialize. %s\n", err.Error())
-			os.Exit(1)
-		}
-		fmt.Println("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
-	} else if *addPlugin != "" {
-		pluginName := *addPlugin
-		additionalArgs := make(map[string]string)
-		if *pluginArgs != "" {
-			// plugin args will be comma separated values
-			// eg: version=1.0, foo_version = 2.41
-			args := strings.Split(*pluginArgs, ",")
-			for _, arg := range args {
-				keyValuePair := strings.Split(arg, "=")
-				if len(keyValuePair) == 2 {
-					additionalArgs[strings.TrimSpace(keyValuePair[0])] = strings.TrimSpace(keyValuePair[1])
-				}
-			}
-		}
-		if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest()); err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-	} else {
-		if len(flag.Args()) == 0 {
-			printUsage()
-		}
-
-		loadGaugeEnvironment()
-
-		conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
-		handleParseResult(conceptParseResult)
-
-		allSpecs := make(map[string]*specification)
-		for _, arg := range flag.Args() {
-			specSource := arg
-			parsedSpecs, specParseResults := findSpecs(specSource, conceptsDictionary)
-			handleParseResult(specParseResults...)
-			for fileName, parsedSpec := range parsedSpecs {
-				_, exists := allSpecs[fileName]
-				if !exists {
-					allSpecs[fileName] = parsedSpec
-				}
-			}
-		}
-		manifest := getProjectManifest()
-
-		err := startAPIService(0)
-		if err != nil {
-			fmt.Printf("Failed to start gauge API. %s\n", err.Error())
-			os.Exit(1)
-		}
-		runnerConnection, runnerError := startRunnerAndMakeConnection(manifest)
-		if runnerError != nil {
-			fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
-			os.Exit(1)
-		}
-		makeListOfAvailableSteps(runnerConnection)
-
-		pluginHandler, warnings := startPluginsForExecution(manifest)
-		handleWarningMessages(warnings)
-		specsToExecute := convertMapToArray(allSpecs)
-		execution := newExecution(manifest, specsToExecute, runnerConnection, pluginHandler)
-		validationErrors := execution.validate(conceptsDictionary)
-		if len(validationErrors) > 0 {
-			fmt.Println("Validation failed. The following steps have errors")
-			for _, stepValidationErrors := range validationErrors {
-				for _, stepValidationError := range stepValidationErrors {
-					s := stepValidationError.step
-					fmt.Printf("\x1b[31;1m  %s:%d: %s. %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText)
-				}
-			}
-			err := execution.killProcess()
-			if err != nil {
-				fmt.Printf("Failed to kill Runner. %s\n", err.Error())
-			}
-			os.Exit(1)
-		} else {
-			status := execution.start()
-			exitCode := printExecutionStatus(status)
-			os.Exit(exitCode)
 		}
 	}
 }
