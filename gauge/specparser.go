@@ -3,8 +3,8 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"common"
 	"fmt"
+	"github.com/getgauge/common"
 	"strings"
 )
 

@@ -1,9 +1,9 @@
 package main
 
 import (
-	"common"
 	"encoding/json"
 	"fmt"
+	"github.com/getgauge/common"
 	"os"
 	"os/exec"
 	"runtime"

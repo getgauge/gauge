@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/sha1"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 const (
@@ -19,11 +21,16 @@ const (
 	BUILD_DIR = "tmp"
 )
 
+const (
+	HTML_PLUGIN_ID = "html-report"
+)
+
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, "bin")
 var BUILD_DIR_SRC = filepath.Join(BUILD_DIR, "src")
 var BUILD_DIR_PKG = filepath.Join(BUILD_DIR, "pkg")
 
-var gaugePackages = []string{"common", "gauge", "gauge-java", "gauge-ruby"}
+var gaugePackages = []string{"gauge", "gauge-java", "gauge-ruby"}
+var gaugePlugins = []string{HTML_PLUGIN_ID}
 
 func hashDir(dirPath string) string {
 	var b bytes.Buffer
@@ -149,6 +156,15 @@ func copyGaugePackagesToGoPath() {
 	}
 }
 
+func copyGaugePluginsToGoPath() {
+	for _, pluginName := range gaugePlugins {
+		err := mirrorDir(filepath.Join("plugins", pluginName), filepath.Join(BUILD_DIR_SRC, pluginName))
+		if err != nil {
+			panic(err)
+		}
+	}
+}
+
 func setGoPath() {
 	absBuildDir, err := filepath.Abs(BUILD_DIR)
 	if err != nil {
@@ -180,6 +196,10 @@ func compileGoPackage(packageName string) {
 
 func compileGauge() {
 	compileGoPackage("gauge")
+}
+
+func compileHtmlPlugin() {
+	compileGoPackage(HTML_PLUGIN_ID)
 }
 
 func compileGaugeJava() {
@@ -217,10 +237,10 @@ func copyBinaries() {
 }
 
 // key will be the source file and value will be the target
-func installFiles(files map[string]string) {
+func installFiles(files map[string]string, installDir string) {
 	for src, dst := range files {
 		base := filepath.Base(src)
-		installDst := filepath.Join(*installPrefix, dst)
+		installDst := filepath.Join(installDir, dst)
 		log.Printf("Install %s -> %s\n", src, installDst)
 		stat, err := os.Stat(src)
 		if err != nil {
@@ -238,7 +258,7 @@ func installFiles(files map[string]string) {
 }
 
 func saveHash(h, dir string) {
-	hashFile := filepath.Join(BUILD_DIR, "."+dir)
+	hashFile := getHasHFile(dir)
 	err := ioutil.WriteFile(hashFile, []byte(h), 0644)
 	if err != nil {
 		log.Println(err.Error())
@@ -246,12 +266,20 @@ func saveHash(h, dir string) {
 }
 
 func hasChanges(h, dir string) bool {
-	hashFile := filepath.Join(BUILD_DIR, "."+dir)
+	hashFile := getHasHFile(dir)
 	contents, err := ioutil.ReadFile(hashFile)
 	if err != nil {
 		return true
 	}
 	return string(contents) != h
+}
+
+func getHasHFile(dir string) string {
+	if strings.Contains(dir, "plugins/") {
+		return filepath.Join(BUILD_DIR, "."+strings.Trim(dir, "plugins/"))
+	} else {
+		return filepath.Join(BUILD_DIR, "."+dir)
+	}
 }
 
 func installGaugeFiles() {
@@ -263,7 +291,7 @@ func installGaugeFiles() {
 	}
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
-	installFiles(files)
+	installFiles(files, *installPrefix)
 }
 
 func installGaugeJavaFiles() {
@@ -278,7 +306,7 @@ func installGaugeJavaFiles() {
 	files[filepath.Join("gauge-java", "skel", "java.properties")] = filepath.Join("share", "gauge", "skel", "env")
 	files[filepath.Join("gauge-java", "libs")] = filepath.Join("lib", "gauge", "java", "libs")
 	files[filepath.Join("gauge-java", "build", "jar")] = filepath.Join("lib", "gauge", "java")
-	installFiles(files)
+	installFiles(files, *installPrefix)
 }
 
 func installGaugeRubyFiles() {
@@ -292,11 +320,23 @@ func installGaugeRubyFiles() {
 	files[filepath.Join("gauge-ruby", "ruby.json")] = filepath.Join("share", "gauge", "languages")
 	files[filepath.Join("gauge-ruby", "skel", "step_implementation.rb")] = filepath.Join("share", "gauge", "skel", "ruby")
 	files[filepath.Join("gauge-ruby", "skel", "ruby.properties")] = filepath.Join("share", "gauge", "skel", "env")
-	installFiles(files)
+	installFiles(files, *installPrefix)
 
 	// packaging ruby gems
 	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
 	runProcess("gem", "gauge-ruby", "install", "gauge-ruby-0.0.1.gem")
+}
+
+func installPlugins() {
+	for pluginName, pluginInstaller := range pluginInstallers {
+		fmt.Printf("Installing plugin %s\n", pluginName)
+		err := pluginInstaller(*installPrefix)
+		if err != nil {
+			fmt.Printf("Could not install plugin %s : %s\n", pluginName, err)
+		} else {
+			fmt.Printf("Successfully installed plugin %s\n", pluginName)
+		}
+	}
 }
 
 // Executes the specified target
@@ -331,10 +371,54 @@ type targetOpts struct {
 
 // Defines all the compile targets
 // Each target name is the directory name
-var targets = map[string]*targetOpts{
-	"gauge":      &targetOpts{lookForChanges: true, targetFunc: compileGauge},
-	"gauge-java": &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
-	"gauge-ruby": &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
+
+var (
+	targets = map[string]*targetOpts{
+		"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
+		"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
+		"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
+		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
+	}
+)
+
+var (
+	pluginInstallers = map[string]func(string) error{
+		HTML_PLUGIN_ID: installHtmlPlugin,
+	}
+)
+
+func installHtmlPlugin(installPath string) error {
+	pluginSrcBasePath := filepath.Join("plugins", HTML_PLUGIN_ID)
+	pluginPropertiesJson, err := ioutil.ReadFile(filepath.Join(pluginSrcBasePath, "plugin.json"))
+	if err != nil {
+		fmt.Printf("Could not read plugin.json: %s\n", err)
+		return err
+	}
+	var pluginJson interface{}
+	if err = json.Unmarshal([]byte(pluginPropertiesJson), &pluginJson); err != nil {
+		fmt.Printf("Could not read plugin.json: %s\n", err)
+		return err
+	}
+	pluginProperties := pluginJson.(map[string]interface{})
+	pluginRelativePath := filepath.Join("share", "gauge", "plugins", pluginProperties["id"].(string), pluginProperties["version"].(string))
+	pluginInstallPath := filepath.Join(installPath, pluginRelativePath)
+	err = os.MkdirAll(pluginInstallPath, 0755)
+	if err != nil {
+		fmt.Printf("Could not create %s: %s\n", pluginInstallPath, err)
+		return err
+	}
+
+	files := make(map[string]string)
+	if runtime.GOOS == "windows" {
+		files[filepath.Join("bin", HTML_PLUGIN_ID+".exe")] = pluginRelativePath
+	} else {
+		files[filepath.Join("bin", HTML_PLUGIN_ID)] = pluginRelativePath
+	}
+	files[filepath.Join(pluginSrcBasePath, "plugin.json")] = pluginRelativePath
+	files[filepath.Join(pluginSrcBasePath, "report-template")] = filepath.Join(pluginRelativePath, "report-template")
+	fmt.Println(files)
+	installFiles(files, installPath)
+	return nil
 }
 
 func main() {
@@ -342,6 +426,7 @@ func main() {
 	createGoPathForBuild()
 	copyDepsToGoPath()
 	copyGaugePackagesToGoPath()
+	copyGaugePluginsToGoPath()
 
 	if *test {
 		runTests("gauge")
@@ -360,6 +445,7 @@ func main() {
 		installGaugeFiles()
 		installGaugeJavaFiles()
 		installGaugeRubyFiles()
+		installPlugins()
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {

@@ -2,11 +2,11 @@
 package main
 
 import (
-	"common"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/dmotylev/goproperties"
+	"github.com/getgauge/common"
 	"io"
 	"io/ioutil"
 	flag "mflag"

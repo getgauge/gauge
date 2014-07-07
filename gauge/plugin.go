@@ -1,10 +1,10 @@
 package main
 
 import (
-	"common"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/getgauge/common"
 	"net"
 	"os"
 	"path"
@@ -185,6 +185,14 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*os.Process, e
 func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginArgs map[string]string) {
 	os.Setenv(fmt.Sprintf("%s_action", pd.Id), action)
 	os.Setenv("test_language", manifest.Language)
+	projRoot, err := common.GetProjectRoot()
+	if err == nil {
+		os.Setenv("project_root", projRoot)
+	}
+	pluginPath, err := common.GetPluginsPath()
+	if err == nil {
+		os.Setenv("plugin_root", path.Join(pluginPath, pd.Id, pd.Version))
+	}
 	setEnvironmentProperties(pluginArgs)
 }
 
