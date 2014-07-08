@@ -18,7 +18,7 @@ import (
 
 const (
 	executionScope          = "execution"
-	pluginConnectionTimeout = time.Second * 3
+	pluginConnectionTimeout = time.Second * 10
 	setupScope              = "setup"
 )
 
