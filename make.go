@@ -416,7 +416,6 @@ func installHtmlPlugin(installPath string) error {
 	}
 	files[filepath.Join(pluginSrcBasePath, "plugin.json")] = pluginRelativePath
 	files[filepath.Join(pluginSrcBasePath, "report-template")] = filepath.Join(pluginRelativePath, "report-template")
-	fmt.Println(files)
 	installFiles(files, installPath)
 	return nil
 }
