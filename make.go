@@ -52,7 +52,7 @@ func hashDir(dirPath string) string {
 }
 
 func isExecMode(mode os.FileMode) bool {
-	return (mode & 0111) != 0
+	return (mode&0111) != 0
 }
 
 func mirrorFile(src, dst string) error {
@@ -66,7 +66,7 @@ func mirrorFile(src, dst string) error {
 	dfi, err := os.Stat(dst)
 	if err == nil &&
 		isExecMode(sfi.Mode()) == isExecMode(dfi.Mode()) &&
-		(dfi.Mode()&os.ModeType == 0) &&
+			(dfi.Mode()&os.ModeType == 0) &&
 		dfi.Size() == sfi.Size() &&
 		dfi.ModTime().Unix() == sfi.ModTime().Unix() {
 		// Seems to not be modified.
@@ -217,10 +217,12 @@ func compileGaugeRuby() {
 	compileGoPackage("gauge-ruby")
 }
 
-func runTests(packageName string) {
+func runTests(packageName string, coverage bool) {
 	setGoPath()
 	runProcess("go", BUILD_DIR, "test", "-covermode=count", "-coverprofile=count.out", packageName)
-	runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
+	if coverage {
+		runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
+	}
 }
 
 func copyBinaries() {
@@ -391,6 +393,7 @@ func executeTarget(target string) {
 type compileFunc func()
 
 var test = flag.Bool("test", false, "Run the test cases")
+var coverage = flag.Bool("test-coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
 var installPrefix = flag.String("prefix", "", "Specifies the prefix where files will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
@@ -405,17 +408,17 @@ type targetOpts struct {
 
 var (
 	targets = map[string]*targetOpts{
-		"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
-		"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
-		"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
-		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
-	}
+	"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
+	"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
+	"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
+	"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
+}
 )
 
 var (
 	pluginInstallers = map[string]func(string) error{
-		HTML_PLUGIN_ID: installHtmlPlugin,
-	}
+	HTML_PLUGIN_ID: installHtmlPlugin,
+}
 )
 
 func installHtmlPlugin(installPath string) error {
@@ -459,7 +462,9 @@ func main() {
 	copyGaugePluginsToGoPath()
 
 	if *test {
-		runTests("gauge")
+		runTests("gauge", false)
+	} else if *coverage {
+		runTests("gauge", true)
 	} else if *install {
 		if *installPrefix == "" {
 			if runtime.GOOS == "windows" {
