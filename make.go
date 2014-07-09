@@ -192,7 +192,7 @@ func runProcess(command string, workingDirectory string, arg ...string) {
 func runCommand(command string, arg ...string) (string, error) {
 	cmd := exec.Command(command, arg...)
 	bytes, err := cmd.Output()
-	return fmt.Sprintf("%s", bytes), err
+	return strings.TrimSpace(fmt.Sprintf("%s", bytes)), err
 }
 
 func compileGoPackage(packageName string) {
@@ -340,6 +340,7 @@ func installGaugeRubyGem() {
 	if gemHome == "" {
 		runProcess("gem", "gauge-ruby", "install", "--user-install", "gauge-ruby-0.0.1.gem")
 	} else {
+		gemHome = filepath.Join(gemHome, "gems")
 		runProcess("gem", "gauge-ruby", "install", "gauge-ruby-0.0.1.gem", "--install-dir", gemHome)
 	}
 }
@@ -353,7 +354,7 @@ func getGemHome() string {
 }
 
 func gemHomeFromRvm() string {
-	output, err := runCommand("abc", "gemdir")
+	output, err := runCommand("rvm", "gemdir")
 	if err == nil {
 		return output
 	}
