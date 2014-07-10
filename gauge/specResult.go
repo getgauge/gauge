@@ -101,8 +101,8 @@ func addPostHook(result result, executionResult *ProtoExecutionResult) {
 }
 
 func (suiteResult *suiteResult) addSpecResult(specResult *specResult) {
-	suiteResult.isFailed = specResult.isFailed
 	if specResult.isFailed {
+		suiteResult.isFailed = true
 		suiteResult.specsFailedCount++
 	}
 	suiteResult.executionTime += specResult.executionTime
