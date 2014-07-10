@@ -22,7 +22,8 @@ const (
 )
 
 const (
-	HTML_PLUGIN_ID = "html-report"
+	HTML_PLUGIN_ID     = "html-report"
+	GAUGE_RUBY_GEMFILE = "gauge-ruby-*.gem"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, "bin")
@@ -338,19 +339,19 @@ func installGaugeRubyFiles() {
 func installGaugeRubyGem() {
 	gemHome := getGemHome()
 	if gemHome == "" {
-		runProcess("gem", "gauge-ruby", "install", "--user-install", "gauge-ruby-0.0.1.gem")
+		runProcess("gem", "gauge-ruby", "install", "--user-install", GAUGE_RUBY_GEMFILE)
 	} else {
-		gemHome = filepath.Join(gemHome, "gems")
-		runProcess("gem", "gauge-ruby", "install", "gauge-ruby-0.0.1.gem", "--install-dir", gemHome)
+		runProcess("gem", "gauge-ruby", "install", GAUGE_RUBY_GEMFILE, "--install-dir", gemHome)
 	}
 }
 
 func getGemHome() string {
 	gemHome := os.Getenv("GEM_HOME")
-	if gemHome == "" {
+	if gemHome != "" {
+		return gemHome
+	} else {
 		return gemHomeFromRvm()
 	}
-	return ""
 }
 
 func gemHomeFromRvm() string {
