@@ -350,8 +350,7 @@ func getGemFile(dir string) string {
 		os.Exit(1)
 	} else {
 		for _, file := range files {
-			fmt.Println(file.Name())
-			if strings.Contains(file.Name(), ".gem") {
+			if filepath.Ext(filepath.Join(dir, file.Name())) == ".gem" {
 				return file.Name()
 			}
 		}
