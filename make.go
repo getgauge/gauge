@@ -329,11 +329,34 @@ func installGaugeRubyFiles() {
 	files[filepath.Join("gauge-ruby", "ruby.json")] = filepath.Join("share", "gauge", "languages")
 	files[filepath.Join("gauge-ruby", "skel", "step_implementation.rb")] = filepath.Join("share", "gauge", "skel", "ruby")
 	files[filepath.Join("gauge-ruby", "skel", "ruby.properties")] = filepath.Join("share", "gauge", "skel", "env")
-	installFiles(files, *installPrefix)
+	gemFile := getGemFile("gauge-ruby")
+	if gemFile == "" {
+		fmt.Println("Could not find .gem file")
+		os.Exit(1)
+	}
+	files[filepath.Join("gauge-ruby", gemFile)] = filepath.Join("share", "gauge")
 
 	// packaging ruby gems
 	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
+
+	installFiles(files, *installPrefix)
 	installGaugeRubyGem()
+}
+
+func getGemFile(dir string) string {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		fmt.Println("Could not find .gem file")
+		os.Exit(1)
+	} else {
+		for _, file := range files {
+			fmt.Println(file.Name())
+			if strings.Contains(file.Name(), ".gem") {
+				return file.Name()
+			}
+		}
+	}
+	return ""
 }
 
 func installGaugeRubyGem() {
@@ -399,6 +422,7 @@ var coverage = flag.Bool("test-coverage", false, "Run the test cases and show th
 var install = flag.Bool("install", false, "Install to the specified prefix")
 var installPrefix = flag.String("prefix", "", "Specifies the prefix where files will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
+var language = flag.String("language", "", "Specifies the language of runner to be executed")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -422,6 +446,21 @@ var (
 	HTML_PLUGIN_ID: installHtmlPlugin,
 }
 )
+
+func installRunners(language string) {
+	runnerInstallers := map[string]func() {
+		"java": installGaugeJavaFiles,
+		"ruby": installGaugeRubyFiles,
+	}
+
+	if installer, found := runnerInstallers[language]; found {
+		installer()
+	} else {
+		for _, installer := range runnerInstallers {
+			installer()
+		}
+	}
+}
 
 func installHtmlPlugin(installPath string) error {
 	pluginSrcBasePath := filepath.Join("plugins", HTML_PLUGIN_ID)
@@ -480,9 +519,8 @@ func main() {
 			}
 		}
 		installGaugeFiles()
-		installGaugeJavaFiles()
-		installGaugeRubyFiles()
 		installPlugins()
+		installRunners(*language)
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {
