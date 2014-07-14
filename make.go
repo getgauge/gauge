@@ -319,6 +319,8 @@ func installGaugeJavaFiles() {
 }
 
 func installGaugeRubyFiles() {
+	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
+
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
 		files[filepath.Join("bin", "gauge-ruby.exe")] = "bin"
@@ -335,9 +337,6 @@ func installGaugeRubyFiles() {
 		os.Exit(1)
 	}
 	files[filepath.Join("gauge-ruby", gemFile)] = filepath.Join("share", "gauge")
-
-	// packaging ruby gems
-	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
 
 	installFiles(files, *installPrefix)
 	installGaugeRubyGem()
