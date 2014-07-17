@@ -1,11 +1,9 @@
 // This file is part of twist
 package main
 
-import "net"
-
 type execution struct {
 	manifest             *manifest
-	connection           net.Conn
+	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *ExecutionInfo
@@ -16,8 +14,8 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, conn net.Conn, pluginHandler *pluginHandler) *execution {
-	e := execution{manifest: manifest, specifications: specifications, connection: conn, pluginHandler: pluginHandler}
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler) *execution {
+	e := execution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 	return &e
 }
 
@@ -35,7 +33,7 @@ func (e *execution) endExecution() *ProtoExecutionResult {
 
 func (e *execution) executeHook(message *Message) *ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
-	executionResult := executeAndGetStatus(e.connection, message)
+	executionResult := executeAndGetStatus(e.runner.connection, message)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -53,7 +51,6 @@ func (e *execution) notifyExecutionResult() {
 func (e *execution) notifyExecutionStop() {
 	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
-
 	e.pluginHandler.notifyPlugins(message)
 	e.pluginHandler.gracefullyKillPlugins()
 }
@@ -62,7 +59,7 @@ func (e *execution) killProcess() error {
 	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
 
-	_, err := getResponse(e.connection, message)
+	_, err := getResponse(e.runner.connection, message)
 	return err
 }
 
@@ -75,7 +72,7 @@ type executionValidationErrors map[*specification][]*stepValidationError
 func (exe *execution) validate(conceptDictionary *conceptDictionary) executionValidationErrors {
 	validationStatus := make(executionValidationErrors)
 	for _, spec := range exe.specifications {
-		executor := &specExecutor{specification: spec, connection: exe.connection, conceptDictionary: conceptDictionary}
+		executor := &specExecutor{specification: spec, runner: exe.runner, conceptDictionary: conceptDictionary}
 		validationErrors := executor.validateSpecification()
 		if len(validationErrors) != 0 {
 			validationStatus[spec] = validationErrors
@@ -96,7 +93,7 @@ func (exe *execution) start() *suiteResult {
 		exe.suiteResult.setFailure()
 	}
 	for _, specificationToExecute := range exe.specifications {
-		executor := newSpecExecutor(specificationToExecute, exe.connection, exe.pluginHandler)
+		executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler)
 		protoSpecResult := executor.execute()
 		exe.suiteResult.addSpecResult(protoSpecResult)
 	}
@@ -107,11 +104,12 @@ func (exe *execution) start() *suiteResult {
 	}
 	exe.notifyExecutionResult()
 	exe.notifyExecutionStop()
+	exe.runner.kill()
 	return exe.suiteResult
 }
 
-func newSpecExecutor(specToExecute *specification, connection net.Conn, pluginHandler *pluginHandler) *specExecutor {
+func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, connection, pluginHandler)
+	specExecutor.initialize(specToExecute, runner, pluginHandler)
 	return specExecutor
 }

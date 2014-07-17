@@ -15,8 +15,8 @@ const (
 	API_STATIC_PORT        = 8889
 )
 
-func makeListOfAvailableSteps(runnerConn net.Conn) {
-	addStepValuesToAvailableSteps(getStepsFromRunner(runnerConn))
+func makeListOfAvailableSteps(runner *testRunner) {
+	addStepValuesToAvailableSteps(getStepsFromRunner(runner))
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	availableSpecs = parseSpecFiles(specFiles, dictionary)
@@ -77,36 +77,27 @@ func getAvailableStepNames() []string {
 	return stepNames
 }
 
-func getStepsFromRunner(runnerConnection net.Conn) []string {
+func getStepsFromRunner(runner *testRunner) []string {
 	steps := make([]string, 0)
-	if runnerConnection == nil {
-		var connErr error
-		runnerConnection, connErr = startRunnerAndMakeConnection(getProjectManifest())
+	if runner == nil {
+		runner, connErr := startRunnerAndMakeConnection(getProjectManifest())
 		if connErr == nil {
-			steps = append(steps, requestForSteps(runnerConnection)...)
-			killRunner(runnerConnection)
+			steps = append(steps, requestForSteps(runner)...)
+			runner.kill()
 		}
 	} else {
-		steps = append(steps, requestForSteps(runnerConnection)...)
+		steps = append(steps, requestForSteps(runner)...)
 	}
 	return steps
 }
 
-func requestForSteps(connection net.Conn) []string {
-	message, err := getResponse(connection, createGetStepNamesRequest())
+func requestForSteps(runner *testRunner) []string {
+	message, err := getResponse(runner.connection, createGetStepNamesRequest())
 	if err == nil {
 		allStepsResponse := message.GetStepNamesResponse()
 		return allStepsResponse.GetSteps()
 	}
 	return make([]string, 0)
-}
-
-func killRunner(connection net.Conn) error {
-	id := common.GetUniqueId()
-	message := &Message{MessageId: &id, MessageType: Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &KillProcessRequest{}}
-
-	return writeMessage(connection, message)
 }
 
 func createGetStepNamesRequest() *Message {

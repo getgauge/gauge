@@ -10,7 +10,6 @@ import (
 	"io"
 	"io/ioutil"
 	flag "mflag"
-	"net"
 	"os"
 	"path"
 	"path/filepath"
@@ -171,17 +170,17 @@ func executeSpecs() {
 		fmt.Printf("Failed to start gauge API. %s\n", err.Error())
 		os.Exit(1)
 	}
-	runnerConnection, runnerError := startRunnerAndMakeConnection(manifest)
+	runner, runnerError := startRunnerAndMakeConnection(manifest)
 	if runnerError != nil {
 		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
-	makeListOfAvailableSteps(runnerConnection)
+	makeListOfAvailableSteps(runner)
 
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
 	specsToExecute := convertMapToArray(allSpecs)
-	execution := newExecution(manifest, specsToExecute, runnerConnection, pluginHandler)
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
 	validationErrors := execution.validate(conceptsDictionary)
 	if len(validationErrors) > 0 {
 		fmt.Println("Validation failed. The following steps have errors")
@@ -390,7 +389,7 @@ func loadGaugeEnvironment() {
 
 }
 
-func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {
+func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -408,12 +407,13 @@ func startRunnerAndMakeConnection(manifest *manifest) (net.Conn, error) {
 		return nil, err
 	}
 
-	runnerConnection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
+	connection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
+	testRunner.connection = connection
 	if connectionError != nil {
 		testRunner.cmd.Process.Kill()
 		return nil, connectionError
 	}
-	return runnerConnection, nil
+	return testRunner, nil
 }
 
 func printExecutionStatus(suiteResult *suiteResult) int {
