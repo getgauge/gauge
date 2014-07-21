@@ -172,8 +172,9 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 	}
 
 	cmd := common.GetExecutableCommand(path.Join(pd.pluginPath, command))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	pluginConsoleWriter := &pluginConsoleWriter{pluginName: pd.Name}
+	cmd.Stdout = pluginConsoleWriter
+	cmd.Stderr = pluginConsoleWriter
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -223,7 +224,6 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	if _, err := startPlugin(pd, action, true); err != nil {
 		return err
 	}
-
 	manifest.Plugins = append(manifest.Plugins, pluginDetails{Id: pd.Id, Version: pd.Version})
 	return manifest.save()
 }

@@ -11,6 +11,31 @@ type consoleWriter struct {
 	isInsideStep       bool
 }
 
+type pluginConsoleWriter struct {
+	pluginName string
+}
+
+func (writer *pluginConsoleWriter) Write(b []byte) (int, error) {
+	message := string(b)
+	prefixedMessage := writer.addPrefixToEachLine(message)
+	gaugeConsoleWriter := getCurrentConsole()
+	_, err := gaugeConsoleWriter.Write([]byte(prefixedMessage))
+	return len(message), err
+}
+
+func (writer *pluginConsoleWriter) addPrefixToEachLine(text string) string {
+	lines := strings.Split(text, "\n")
+	prefixedLines := make([]string, 0)
+	for i, line := range lines {
+		if (i == len(lines)-1) && line == "" {
+			prefixedLines = append(prefixedLines, line)
+		} else {
+			prefixedLines = append(prefixedLines, fmt.Sprintf("[%s Plugin] : %s", writer.pluginName, line))
+		}
+	}
+	return strings.Join(prefixedLines, "\n")
+}
+
 func newConsoleWriter() *consoleWriter {
 	return &consoleWriter{linesAfterLastStep: 0, isInsideStep: false}
 }

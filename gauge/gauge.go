@@ -135,7 +135,7 @@ func addPluginToProject(pluginName string) {
 		}
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest()); err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
 		os.Exit(1)
 	} else {
 		fmt.Printf("Plugin %s was successfully added to the project\n", pluginName)

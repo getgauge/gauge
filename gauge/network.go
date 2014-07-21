@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
-	"log"
 	"net"
 	"os"
 	"strconv"
@@ -81,7 +80,7 @@ func (connectionHandler *gaugeConnectionHandler) handleConnectionMessages() {
 		if err != nil {
 			connectionHandler.conn.Close()
 			//TODO: Move to file
-			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
+			//			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
 			return
 		}
 
