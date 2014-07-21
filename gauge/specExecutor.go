@@ -2,7 +2,6 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	"net"
 )
 
 type specExecutor struct {
@@ -45,7 +44,7 @@ func (e *specExecutor) executeAfterSpecHook() *ProtoExecutionResult {
 
 func (e *specExecutor) executeHook(message *Message, execTimeTracker execTimeTracker) *ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner.connection, message)
+	executionResult := executeAndGetStatus(e.runner, message)
 	execTimeTracker.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -146,7 +145,7 @@ func (executor *specExecutor) validateConcept(concept *step) []*stepValidationEr
 func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
-	response, err := getResponse(executor.runner.connection, message)
+	response, err := getResponseForGaugeMessage(message, executor.runner.connectionHandler)
 	if err != nil {
 		return &stepValidationError{step: step, message: err.Error(), fileName: executor.specification.fileName}
 	}
@@ -376,7 +375,7 @@ func (executor *specExecutor) executeStep(protoStep *ProtoStep) bool {
 		printStatus(beforeHookStatus)
 	} else {
 		executeStepMessage := &Message{MessageType: Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
-		stepExecutionStatus := executeAndGetStatus(executor.runner.connection, executeStepMessage)
+		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			executor.currentExecutionInfo.setStepFailure()
 			printStatus(stepExecutionStatus)
@@ -412,14 +411,14 @@ func (executor *specExecutor) executeBeforeStepHook() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_StepExecutionStarting.Enum(),
 		StepExecutionStartingRequest: &StepExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	executor.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(executor.runner.connection, message)
+	return executeAndGetStatus(executor.runner, message)
 }
 
 func (executor *specExecutor) executeAfterStepHook() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_StepExecutionEnding.Enum(),
 		StepExecutionEndingRequest: &StepExecutionEndingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	executor.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(executor.runner.connection, message)
+	return executeAndGetStatus(executor.runner, message)
 }
 
 func (executor *specExecutor) createStepRequest(protoStep *ProtoStep) *ExecuteStepRequest {
@@ -432,8 +431,8 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
 }
 
-func executeAndGetStatus(connection net.Conn, message *Message) *ProtoExecutionResult {
-	response, err := getResponse(connection, message)
+func executeAndGetStatus(runner *testRunner, message *Message) *ProtoExecutionResult {
+	response, err := getResponseForGaugeMessage(message, runner.connectionHandler)
 	if err != nil {
 		return &ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
 	}

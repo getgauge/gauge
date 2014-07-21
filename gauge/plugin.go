@@ -1,12 +1,13 @@
 package main
 
 import (
+	"code.google.com/p/goprotobuf/proto"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
-	"net"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
@@ -20,6 +21,7 @@ const (
 	executionScope          = "execution"
 	pluginConnectionTimeout = time.Second * 10
 	setupScope              = "setup"
+	pluginConnectionPortEnv = "plugin_connection_port"
 )
 
 type pluginDescriptor struct {
@@ -41,42 +43,42 @@ type pluginHandler struct {
 }
 
 type plugin struct {
-	connection net.Conn
-	process    *os.Process
-	descriptor *pluginDescriptor
+	connectionHandler *gaugeConnectionHandler
+	pluginCmd         *exec.Cmd
+	descriptor        *pluginDescriptor
 }
 
 func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	readyToClose := make(chan bool)
-	go plugin.readTillClose(readyToClose)
-	fmt.Println(fmt.Sprintf("Waiting for plugin [%s] with pid [%d] to close connection [%s]", plugin.descriptor.Name, plugin.process.Pid, plugin.connection.RemoteAddr()))
-	select {
-	case <-readyToClose:
-		{
-			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] has closed the connection [%s]", plugin.descriptor.Name, plugin.process.Pid, plugin.connection.RemoteAddr()))
-			break
-		}
-	case <-time.After(pluginConnectionTimeout):
-		{
-			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not respond after %.2f seconds", plugin.descriptor.Name, plugin.process.Pid, pluginConnectionTimeout.Seconds()))
-			break
-		}
-	}
+	if plugin.isStillRunning() {
 
-	err := plugin.connection.Close()
-	if err != nil {
-		return err
+		exited := make(chan bool, 1)
+		go func() {
+			for {
+				if plugin.isStillRunning() {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					exited <- true
+					return
+				}
+			}
+		}()
+
+		select {
+		case done := <-exited:
+			if done {
+				fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid))
+			}
+		case <-time.After(pluginConnectionTimeout):
+			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, pluginConnectionTimeout.Seconds()))
+			return plugin.pluginCmd.Process.Kill()
+		}
 	}
-	fmt.Println(fmt.Sprintf("Killing plugin [%s] with pid [%d]", plugin.descriptor.Name, plugin.process.Pid))
-	err = plugin.process.Kill()
-	return err
+	return nil
 }
-func (plugin *plugin) readTillClose(readyToClose chan bool) {
-	data := make([]byte, 1024)
-	//sees if plugin has closed the connection
-	plugin.connection.Read(data)
-	readyToClose <- true
+
+func (plugin *plugin) isStillRunning() bool {
+	return plugin.pluginCmd.ProcessState == nil || !plugin.pluginCmd.ProcessState.Exited()
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
@@ -155,7 +157,7 @@ func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, e
 	return &pd, nil
 }
 
-func startPlugin(pd *pluginDescriptor, action string, wait bool) (*os.Process, error) {
+func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, error) {
 	command := ""
 	switch runtime.GOOS {
 	case "windows":
@@ -177,10 +179,14 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*os.Process, e
 	}
 
 	if wait {
-		return cmd.Process, cmd.Wait()
+		return cmd, cmd.Wait()
+	} else {
+		go func() {
+			cmd.Wait()
+		}()
 	}
 
-	return cmd.Process, nil
+	return cmd, nil
 }
 
 func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginArgs map[string]string) {
@@ -235,12 +241,6 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	warnings := make([]string, 0)
 	handler := &pluginHandler{}
 	envProperties := make(map[string]string)
-	pluginListener, err := newGaugeListener(0)
-	envProperties["plugin_connection_port"] = strconv.Itoa((pluginListener.tcpListener.Addr().(*net.TCPAddr).Port))
-	if err != nil {
-		warnings = append(warnings, err.Error())
-		return nil, warnings
-	}
 
 	for _, pluginDetails := range manifest.Plugins {
 		pd, err := getPluginDescriptor(pluginDetails.Id, pluginDetails.Version)
@@ -249,20 +249,25 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
+			gaugeConnectionHandler, err := newGaugeConnectionHandler(0, nil)
+			if err != nil {
+				warnings = append(warnings, err.Error())
+				continue
+			}
+			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())
 			setEnvForPlugin(executionScope, pd, manifest, envProperties)
 
-			pluginProcess, err := startPlugin(pd, executionScope, false)
+			pluginCmd, err := startPlugin(pd, executionScope, false)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := pluginListener.acceptConnection(pluginConnectionTimeout)
-			if err != nil {
+			if err := gaugeConnectionHandler.acceptConnection(pluginConnectionTimeout); err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
-				pluginProcess.Kill()
+				pluginCmd.Process.Kill()
 				continue
 			}
-			handler.addPlugin(pluginDetails.Id, &plugin{connection: pluginConnection, process: pluginProcess, descriptor: pd})
+			handler.addPlugin(pluginDetails.Id, &plugin{connectionHandler: gaugeConnectionHandler, pluginCmd: pluginCmd, descriptor: pd})
 		}
 
 	}
@@ -291,26 +296,20 @@ func (handler *pluginHandler) removePlugin(pluginId string) {
 
 func (handler *pluginHandler) notifyPlugins(message *Message) {
 	for id, plugin := range handler.pluginsMap {
-		err := handler.sendMessage(plugin.connection, message)
+		err := plugin.sendMessage(message)
 		if err != nil {
-			fmt.Printf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+			fmt.Printf("[Warinig] Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 			handler.killPlugin(id)
 		}
 	}
 }
 
-func (handler *pluginHandler) sendMessage(conn net.Conn, message *Message) error {
-	messageId := common.GetUniqueId()
-	message.MessageId = &messageId
-	return writeMessage(conn, message)
-}
-
 func (handler *pluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
 	fmt.Printf("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
-	err := plugin.process.Kill()
+	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		fmt.Printf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		fmt.Printf("[Error] Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginId)
 }
@@ -322,4 +321,18 @@ func (handler *pluginHandler) gracefullyKillPlugins() {
 		go plugin.kill(&wg)
 	}
 	wg.Wait()
+}
+
+func (plugin *plugin) sendMessage(message *Message) error {
+	messageId := common.GetUniqueId()
+	message.MessageId = &messageId
+	messageBytes, err := proto.Marshal(message)
+	if err != nil {
+		return err
+	}
+	err = plugin.connectionHandler.write(messageBytes)
+	if err != nil {
+		return errors.New(fmt.Sprintf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error()))
+	}
+	return nil
 }

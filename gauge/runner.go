@@ -11,9 +11,12 @@ import (
 	"time"
 )
 
+const runnerKillTimeOut = time.Second * 2
+
 type testRunner struct {
-	cmd        *exec.Cmd
-	connection net.Conn
+	cmd               *exec.Cmd
+	connection        net.Conn
+	connectionHandler *gaugeConnectionHandler
 }
 
 type runner struct {
@@ -92,7 +95,7 @@ func (testRunner *testRunner) kill() error {
 			if done {
 				return nil
 			}
-		case <-time.After(time.Second * 2):
+		case <-time.After(runnerKillTimeOut):
 			fmt.Printf("Killing runner with PID:%d forcefully ", testRunner.cmd.Process.Pid)
 			return testRunner.cmd.Process.Kill()
 		}
@@ -109,7 +112,7 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 	message := &Message{MessageId: &id, MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
 
-	writeMessage(testRunner.connection, message)
+	writeGaugeMessage(message, testRunner.connectionHandler)
 }
 
 // Looks for a runner configuration inside the runner directory

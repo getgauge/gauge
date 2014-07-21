@@ -13,6 +13,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -190,7 +191,7 @@ func executeSpecs() {
 				fmt.Printf("\x1b[31;1m  %s:%d: %s. %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText)
 			}
 		}
-		err := execution.killProcess()
+		err := execution.runner.kill()
 		if err != nil {
 			fmt.Printf("Failed to kill Runner. %s\n", err.Error())
 		}
@@ -394,11 +395,11 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	if err != nil {
 		port = 0
 	}
-	listener, listenerErr := newGaugeListener(port)
-	if listenerErr != nil {
-		return nil, listenerErr
+	gaugeConnectionHandler, connHandlerErr := newGaugeConnectionHandler(port, nil)
+	if connHandlerErr != nil {
+		return nil, connHandlerErr
 	}
-	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, listener.portNumber()); err != nil {
+	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
 	}
 
@@ -407,8 +408,8 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 
-	connection, connectionError := listener.acceptConnection(runnerConnectionTimeOut)
-	testRunner.connection = connection
+	connectionError := gaugeConnectionHandler.acceptConnection(runnerConnectionTimeOut)
+	testRunner.connectionHandler = gaugeConnectionHandler
 	if connectionError != nil {
 		testRunner.cmd.Process.Kill()
 		return nil, connectionError

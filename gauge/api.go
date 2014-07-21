@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"log"
-	"net"
+	"strconv"
 	"sync"
 )
 
@@ -92,7 +92,7 @@ func getStepsFromRunner(runner *testRunner) []string {
 }
 
 func requestForSteps(runner *testRunner) []string {
-	message, err := getResponse(runner.connection, createGetStepNamesRequest())
+	message, err := getResponseForGaugeMessage(createGetStepNamesRequest(), runner.connectionHandler)
 	if err == nil {
 		allStepsResponse := message.GetStepNamesResponse()
 		return allStepsResponse.GetSteps()
@@ -105,16 +105,16 @@ func createGetStepNamesRequest() *Message {
 }
 
 func startAPIService(port int) error {
-	gaugeListener, err := newGaugeListener(port)
+	gaugeConnectionHandler, err := newGaugeConnectionHandler(port, new(gaugeApiMessageHandler))
 	if err != nil {
 		return err
 	}
 	if port == 0 {
-		if err := common.SetEnvVariable(apiPortEnvVariableName, gaugeListener.portNumber()); err != nil {
+		if err := common.SetEnvVariable(apiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
 			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", apiPortEnvVariableName, err.Error()))
 		}
 	}
-	go gaugeListener.acceptConnections(&GaugeApiMessageHandler{})
+	go gaugeConnectionHandler.handleMultipleConnections()
 	return nil
 }
 
@@ -123,95 +123,95 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	startAPIService(port)
 }
 
-type GaugeApiMessageHandler struct{}
+type gaugeApiMessageHandler struct{}
 
-func (handler *GaugeApiMessageHandler) messageReceived(bytesRead []byte, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, connectionHandler *gaugeConnectionHandler) {
 	apiMessage := &APIMessage{}
+	var responseMessage *APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
 	if err != nil {
 		log.Printf("[Warning] Failed to read API proto message: %s\n", err.Error())
-		handler.sendErrorMessage(err, conn)
+		responseMessage = handler.getErrorMessage(err)
 	} else {
 		messageType := apiMessage.GetMessageType()
 		switch messageType {
 		case APIMessage_GetProjectRootRequest:
-			handler.respondToProjectRootRequest(apiMessage, conn)
+			responseMessage = handler.projectRootRequestResponse(apiMessage)
 			break
 		case APIMessage_GetAllStepsRequest:
-			handler.respondToGetAllStepsRequest(apiMessage, conn)
+			responseMessage = handler.getAllStepsRequestResponse(apiMessage)
 			break
 		case APIMessage_GetAllSpecsRequest:
-			handler.respondToGetAllSpecsRequest(apiMessage, conn)
+			responseMessage = handler.getAllSpecsRequestResponse(apiMessage)
 			break
 		case APIMessage_GetStepValueRequest:
-			handler.respondToGetStepValueRequest(apiMessage, conn)
+			responseMessage = handler.getStepValueRequestResponse(apiMessage)
 			break
 		}
 	}
+	handler.sendMessage(responseMessage, connectionHandler)
 }
 
-func (handler *GaugeApiMessageHandler) respondToProjectRootRequest(message *APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, connectionHandler *gaugeConnectionHandler) {
+	dataBytes, err := proto.Marshal(message)
+	if err != nil {
+		fmt.Printf("[Warning] Failed to respond to API request. Could not Marshal response %s\n", err.Error())
+	}
+	if err := connectionHandler.write(dataBytes); err != nil {
+		fmt.Printf("[Warning] Failed to respond to API request. Could not write response %s\n", err.Error())
+	}
+}
+
+func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *APIMessage) *APIMessage {
 	root, err := common.GetProjectRoot()
 	if err != nil {
 		fmt.Printf("[Warning] Failed to find project root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
 	projectRootResponse := &GetProjectRootResponse{ProjectRoot: proto.String(root)}
-	responseApiMessage := &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
-	handler.sendMessage(responseApiMessage, conn)
+	return &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
+
 }
 
-func (handler *GaugeApiMessageHandler) respondToGetAllStepsRequest(message *APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMessage) *APIMessage {
 	getAllStepsResponse := &GetAllStepsResponse{Steps: getAvailableStepNames()}
-	responseApiMessage := &APIMessage{MessageType: APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
-	handler.sendMessage(responseApiMessage, conn)
+	return &APIMessage{MessageType: APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
-func (handler *GaugeApiMessageHandler) respondToGetAllSpecsRequest(message *APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *APIMessage) *APIMessage {
 	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(availableSpecs)
-	responseApiMessage := &APIMessage{MessageType: APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
-	handler.sendMessage(responseApiMessage, conn)
+	return &APIMessage{MessageType: APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
 }
 
-func (handler *GaugeApiMessageHandler) respondToGetStepValueRequest(message *APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIMessage) *APIMessage {
 	stepText := message.GetStepValueRequest().GetStepText()
 	stepValue, params, err := extractStepValueAndParams(stepText)
 	if err != nil {
-		handler.sendErrorResponse(err, message, conn)
-		return
+		return handler.getErrorResponse(message, err)
 	}
 	stepValueResponse := &GetStepValueResponse{StepValue: proto.String(stepValue), Parameters: params}
-	responseApiMessage := &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
-	handler.sendMessage(responseApiMessage, conn)
+	return &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
+
 }
 
-func (handler *GaugeApiMessageHandler) sendErrorResponse(err error, message *APIMessage, conn net.Conn) {
-	handler.sendErrorResponseWithId(err, message.MessageId, conn)
-}
-
-func (handler *GaugeApiMessageHandler) sendErrorMessage(err error, conn net.Conn) {
-	id := common.GetUniqueId()
-	handler.sendErrorResponseWithId(err, &id, conn)
-}
-
-func (handler *GaugeApiMessageHandler) sendErrorResponseWithId(err error, id *int64, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) getErrorResponse(message *APIMessage, err error) *APIMessage {
 	errorResponse := &ErrorResponse{Error: proto.String(err.Error())}
-	responseApiMessage := &APIMessage{MessageType: APIMessage_ErrorResponse.Enum(), MessageId: id, Error: errorResponse}
-	handler.sendMessage(responseApiMessage, conn)
+	return &APIMessage{MessageType: APIMessage_ErrorResponse.Enum(), MessageId: message.MessageId, Error: errorResponse}
+
 }
 
-func (handler *GaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*specification) *GetAllSpecsResponse {
+func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *APIMessage {
+	id := common.GetUniqueId()
+	errorResponse := &ErrorResponse{Error: proto.String(err.Error())}
+	return &APIMessage{MessageType: APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
+}
+
+func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*specification) *GetAllSpecsResponse {
 	protoSpecs := make([]*ProtoSpec, 0)
 	for _, spec := range specs {
 		protoSpecs = append(protoSpecs, convertToProtoSpec(spec))
 	}
 	return &GetAllSpecsResponse{Specs: protoSpecs}
-}
-
-func (handler *GaugeApiMessageHandler) sendMessage(message *APIMessage, conn net.Conn) {
-	if err := writeMessage(conn, message); err != nil {
-		fmt.Printf("[Warning] Failed to respond to API request. %s\n", err.Error())
-	}
 }
 
 func extractStepValueAndParams(stepText string) (string, []string, error) {

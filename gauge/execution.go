@@ -33,7 +33,7 @@ func (e *execution) endExecution() *ProtoExecutionResult {
 
 func (e *execution) executeHook(message *Message) *ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner.connection, message)
+	executionResult := executeAndGetStatus(e.runner, message)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -53,14 +53,6 @@ func (e *execution) notifyExecutionStop() {
 		KillProcessRequest: &KillProcessRequest{}}
 	e.pluginHandler.notifyPlugins(message)
 	e.pluginHandler.gracefullyKillPlugins()
-}
-
-func (e *execution) killProcess() error {
-	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &KillProcessRequest{}}
-
-	_, err := getResponse(e.runner.connection, message)
-	return err
 }
 
 func (e *execution) killPlugins() {
