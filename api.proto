@@ -10,6 +10,13 @@ message GetProjectRootResponse {
     required string projectRoot = 1;
 }
 
+message GetInstallationRootRequest {
+}
+
+message GetInstallationRootResponse {
+    required string installationRoot = 1;
+}
+
 message GetAllStepsRequest {
 }
 
@@ -41,13 +48,15 @@ message APIMessage {
     enum APIMessageType {
         GetProjectRootRequest = 1;
         GetProjectRootResponse = 2;
-        GetAllStepsRequest = 3;
-        GetAllStepResponse = 4;
-        GetAllSpecsRequest = 5;
-        GetAllSpecsResponse = 6;
-        GetStepValueRequest = 7;
-        GetStepValueResponse = 8;
-        ErrorResponse = 9;
+        GetInstallationRootRequest = 3;
+        GetInstallationRootResponse = 4;
+        GetAllStepsRequest = 5;
+        GetAllStepResponse = 6;
+        GetAllSpecsRequest = 7;
+        GetAllSpecsResponse = 8;
+        GetStepValueRequest = 9;
+        GetStepValueResponse = 10;
+        ErrorResponse = 11;
     }
 
     required APIMessageType messageType = 1;
@@ -55,12 +64,14 @@ message APIMessage {
 
     optional GetProjectRootRequest projectRootRequest = 3;
     optional GetProjectRootResponse projectRootResponse = 4;
-    optional GetAllStepsRequest allStepsRequest = 5;
-    optional GetAllStepsResponse allStepsResponse = 6;
-    optional GetAllSpecsRequest allSpecsRequest = 7;
-    optional GetAllSpecsResponse allSpecsResponse = 8;
-    optional GetStepValueRequest stepValueRequest = 9;
-    optional GetStepValueResponse stepValueResponse = 10;
-    optional ErrorResponse error = 11;
+    optional GetInstallationRootRequest installationRootRequest = 5;
+    optional GetInstallationRootResponse installationRootResponse = 6;
+    optional GetAllStepsRequest allStepsRequest = 7;
+    optional GetAllStepsResponse allStepsResponse = 8;
+    optional GetAllSpecsRequest allSpecsRequest = 9;
+    optional GetAllSpecsResponse allSpecsResponse = 10;
+    optional GetStepValueRequest stepValueRequest = 11;
+    optional GetStepValueResponse stepValueResponse = 12;
+    optional ErrorResponse error = 13;
 
 }

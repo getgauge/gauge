@@ -138,6 +138,9 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 		case APIMessage_GetProjectRootRequest:
 			responseMessage = handler.projectRootRequestResponse(apiMessage)
 			break
+		case APIMessage_GetInstallationRootRequest:
+			responseMessage = handler.installationRootRequestResponse(apiMessage)
+			break
 		case APIMessage_GetAllStepsRequest:
 			responseMessage = handler.getAllStepsRequestResponse(apiMessage)
 			break
@@ -171,6 +174,16 @@ func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *APIMe
 	projectRootResponse := &GetProjectRootResponse{ProjectRoot: proto.String(root)}
 	return &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
 
+}
+
+func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *APIMessage) *APIMessage {
+	root, err := common.GetInstallationPrefix()
+	if err != nil {
+		fmt.Printf("[Warning] Failed to find installation root while responding to API request. %s\n", err.Error())
+		root = ""
+	}
+	installationRootResponse := &GetInstallationRootResponse{InstallationRoot: proto.String(root)}
+	return &APIMessage{MessageType: APIMessage_GetInstallationRootResponse.Enum(), MessageId: message.MessageId, InstallationRootResponse: installationRootResponse}
 }
 
 func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMessage) *APIMessage {
