@@ -191,6 +191,7 @@ func (m *GetAllSpecsResponse) GetSpecs() []*ProtoSpec {
 
 type GetStepValueRequest struct {
 	StepText         *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
+	HasInlineTable   *bool   `protobuf:"varint,2,opt,name=hasInlineTable" json:"hasInlineTable,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
@@ -205,10 +206,18 @@ func (m *GetStepValueRequest) GetStepText() string {
 	return ""
 }
 
+func (m *GetStepValueRequest) GetHasInlineTable() bool {
+	if m != nil && m.HasInlineTable != nil {
+		return *m.HasInlineTable
+	}
+	return false
+}
+
 type GetStepValueResponse struct {
-	StepValue        *string  `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
-	Parameters       []string `protobuf:"bytes,2,rep,name=parameters" json:"parameters,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	StepValue              *string  `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	ParameterizedStepValue *string  `protobuf:"bytes,2,req,name=parameterizedStepValue" json:"parameterizedStepValue,omitempty"`
+	Parameters             []string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty"`
+	XXX_unrecognized       []byte   `json:"-"`
 }
 
 func (m *GetStepValueResponse) Reset()         { *m = GetStepValueResponse{} }
@@ -218,6 +227,13 @@ func (*GetStepValueResponse) ProtoMessage()    {}
 func (m *GetStepValueResponse) GetStepValue() string {
 	if m != nil && m.StepValue != nil {
 		return *m.StepValue
+	}
+	return ""
+}
+
+func (m *GetStepValueResponse) GetParameterizedStepValue() string {
+	if m != nil && m.ParameterizedStepValue != nil {
+		return *m.ParameterizedStepValue
 	}
 	return ""
 }

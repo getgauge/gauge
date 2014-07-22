@@ -33,11 +33,13 @@ message GetAllSpecsResponse {
 
 message GetStepValueRequest {
     required string stepText = 1;
+    optional bool hasInlineTable = 2;
 }
 
 message GetStepValueResponse {
     required string stepValue = 1;
-    repeated string parameters = 2;
+    required string parameterizedStepValue = 2;
+    repeated string parameters = 3;
 }
 
 message ErrorResponse {

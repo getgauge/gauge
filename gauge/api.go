@@ -7,6 +7,7 @@ import (
 	"github.com/getgauge/common"
 	"log"
 	"strconv"
+	"strings"
 	"sync"
 )
 
@@ -14,6 +15,12 @@ const (
 	apiPortEnvVariableName = "GAUGE_API_PORT"
 	API_STATIC_PORT        = 8889
 )
+
+type stepValue struct {
+	args                   []string
+	stepValue              string
+	parameterizedStepValue string
+}
 
 func makeListOfAvailableSteps(runner *testRunner) {
 	addStepValuesToAvailableSteps(getStepsFromRunner(runner))
@@ -197,12 +204,15 @@ func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *APIMe
 }
 
 func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIMessage) *APIMessage {
-	stepText := message.GetStepValueRequest().GetStepText()
-	stepValue, params, err := extractStepValueAndParams(stepText)
+	request := message.GetStepValueRequest()
+	stepText := request.GetStepText()
+	hasInlineTable := request.GetHasInlineTable()
+	stepValue, err := extractStepValueAndParams(stepText, hasInlineTable)
+
 	if err != nil {
 		return handler.getErrorResponse(message, err)
 	}
-	stepValueResponse := &GetStepValueResponse{StepValue: proto.String(stepValue), Parameters: params}
+	stepValueResponse := &GetStepValueResponse{StepValue: proto.String(stepValue.stepValue), Parameters: stepValue.args, ParameterizedStepValue: proto.String(stepValue.parameterizedStepValue)}
 	return &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }
@@ -227,12 +237,26 @@ func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs
 	return &GetAllSpecsResponse{Specs: protoSpecs}
 }
 
-func extractStepValueAndParams(stepText string) (string, []string, error) {
+func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
 	stepValueWithPlaceHolders, args, err := processStepText(stepText)
 	if err != nil {
-		return "", nil, err
+		return nil, err
 	}
-	stepValue, _ := extractStepValueAndParameterTypes(stepValueWithPlaceHolders)
-	return stepValue, args, nil
 
+	extractedStepValue, _ := extractStepValueAndParameterTypes(stepValueWithPlaceHolders)
+	if hasInlineTable {
+		extractedStepValue += " " + PARAMETER_PLACEHOLDER
+		args = append(args, string(tableArg))
+	}
+	parameterizedStepValue := getParameterizeStepValue(extractedStepValue, args)
+
+	return &stepValue{args, extractedStepValue, parameterizedStepValue}, nil
+
+}
+
+func getParameterizeStepValue(stepValue string, params []string) string {
+	for _, param := range params {
+		stepValue = strings.Replace(stepValue, PARAMETER_PLACEHOLDER, "<"+param+">", 1)
+	}
+	return stepValue
 }
