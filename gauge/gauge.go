@@ -47,7 +47,7 @@ func main() {
 	flag.Parse()
 	if *daemonize {
 		runInBackground()
-	} else if *version {
+	} else if *gaugeVersion {
 		printVersion()
 	} else if *specFilesToFormat != "" {
 		formatSpecFiles(*specFilesToFormat)
@@ -64,7 +64,7 @@ func main() {
 
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var version = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
+var gaugeVersion = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a runner for the particular language if implementation is available. Eg: gauge --install java")
 var installVersion = flag.String([]string{"-version"}, "", "Versin of plugin or runner to install. This is used with --install")

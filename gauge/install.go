@@ -44,6 +44,18 @@ func installRunner(language, version string) {
 }
 
 func installRunnerWithDescription(installDescription *installDescription) {
+	if err := checkVersionCompatibilityWithGauge(installDescription); err != nil {
+		fmt.Printf("Incompatible runner version. $s \n", err)
+		return
+	}
+}
+
+func checkVersionCompatibilityWithGauge(installDescription *installDescription) error {
+	if installDescription.GaugeVersionSupport.Minimum == "" {
+		return errors.New(fmt.Sprintf("Supported Gauge Version numbers not found in %s install file. Cannot install runner", installDescription.Name))
+	}
+	parseVersion(installDescription.GaugeVersionSupport.Minimum)
+	return nil
 }
 
 func getInstallDescription(language, version string) (*installDescription, error) {
