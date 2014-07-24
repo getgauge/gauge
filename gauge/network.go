@@ -17,10 +17,6 @@ const (
 	runnerConnectionTimeOut = time.Second * 10
 )
 
-type MessageHandler interface {
-	messageReceived([]byte, net.Conn)
-}
-
 type messageHandler interface {
 	messageBytesReceived([]byte, *gaugeConnectionHandler)
 }

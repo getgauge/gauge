@@ -53,6 +53,8 @@ func main() {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
+	} else if *install != "" {
+		installRunner(*install, *installVersion)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else {
@@ -62,8 +64,10 @@ func main() {
 
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var version = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit")
+var version = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
+var install = flag.String([]string{"-install"}, "", "Downloads and installs a runner for the particular language if implementation is available. Eg: gauge --install java")
+var installVersion = flag.String([]string{"-version"}, "", "Versin of plugin or runner to install. This is used with --install")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
