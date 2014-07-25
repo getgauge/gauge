@@ -17,13 +17,10 @@ const (
 type installDescription struct {
 	Name                string
 	Version             string
-	GaugeVersionSupport struct {
-		Minimum string
-		Maximum string
-	}
-	Description  string
-	Install      platformSpecifics
-	DownloadUrls struct {
+	GaugeVersionSupport versionSupport
+	Description         string
+	Install             platformSpecifics
+	DownloadUrls        struct {
 		X86 platformSpecifics
 		X64 platformSpecifics
 	}
@@ -35,6 +32,11 @@ type platformSpecifics struct {
 	Darwin  string
 }
 
+type versionSupport struct {
+	Minimum string
+	Maximum string
+}
+
 func installRunner(language, version string) {
 	installDescription, err := getInstallDescription(language, version)
 	if err != nil {
@@ -44,18 +46,38 @@ func installRunner(language, version string) {
 }
 
 func installRunnerWithDescription(installDescription *installDescription) {
-	if err := checkVersionCompatibilityWithGauge(installDescription); err != nil {
-		fmt.Printf("Incompatible runner version. $s \n", err)
+	if err := checkVersionCompatibilityWithGauge(installDescription, currentGaugeVersion); err != nil {
+		fmt.Printf("Error installing runner %s. %s \n", installDescription.Name, err)
 		return
 	}
+	fmt.Printf("Succesfully installed language runner : %s %s \n", installDescription.Name, installDescription.Version)
 }
 
-func checkVersionCompatibilityWithGauge(installDescription *installDescription) error {
+func checkVersionCompatibilityWithGauge(installDescription *installDescription, gaugeVersion *version) error {
 	if installDescription.GaugeVersionSupport.Minimum == "" {
 		return errors.New(fmt.Sprintf("Supported Gauge Version numbers not found in %s install file. Cannot install runner", installDescription.Name))
 	}
-	parseVersion(installDescription.GaugeVersionSupport.Minimum)
-	return nil
+
+	minGaugeVersion, err := parseVersion(installDescription.GaugeVersionSupport.Minimum)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Invalid minimum gauge support version %s in install file for %s : %s. ", installDescription.GaugeVersionSupport.Minimum, installDescription.Name, err))
+	}
+	if installDescription.GaugeVersionSupport.Maximum != "" {
+		maxGaugeVersion, err := parseVersion(installDescription.GaugeVersionSupport.Maximum)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Invalid maximum gauge support version %s in install file for %s : %s. ", installDescription.GaugeVersionSupport.Maximum, installDescription.Name, err))
+		}
+		if gaugeVersion.isBetween(minGaugeVersion, maxGaugeVersion) {
+			return nil
+		} else {
+			return errors.New(fmt.Sprintf("Incompatible %s version %s. Gauge version %s is not supported for this runner.", installDescription.Name, installDescription.Version, gaugeVersion.String()))
+		}
+	}
+
+	if minGaugeVersion.isLesserThanEqualTo(gaugeVersion) {
+		return nil
+	}
+	return errors.New(fmt.Sprintf("Incompatible language %s version %s. Minimun supported gauge version %s is higher than current Gauge version %s", installDescription.Name, installDescription.Version, minGaugeVersion.String(), gaugeVersion.String()))
 }
 
 func getInstallDescription(language, version string) (*installDescription, error) {

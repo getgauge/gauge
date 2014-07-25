@@ -7,6 +7,15 @@ import (
 	"strings"
 )
 
+const (
+	MAJOR_VERSION = 0
+	MINOR_VERSION = 0
+	PATCH_VERSION = 1
+	DOT           = "."
+)
+
+var currentGaugeVersion = &version{0, 0, 0}
+
 type version struct {
 	major int
 	minor int
@@ -35,7 +44,7 @@ func parseVersion(versionText string) (*version, error) {
 }
 
 func (version *version) isBetween(lower *version, greater *version) bool {
-	return version.isGreaterThan(lower) && version.isLesserThan(greater)
+	return version.isGreaterThanEqualTo(lower) && version.isLesserThanEqualTo(greater)
 }
 
 func (version *version) isLesserThan(version1 *version) bool {
@@ -44,6 +53,18 @@ func (version *version) isLesserThan(version1 *version) bool {
 
 func (version *version) isGreaterThan(version1 *version) bool {
 	return compareVersions(version, version1, greaterThanFunc)
+}
+
+func (version *version) isLesserThanEqualTo(version1 *version) bool {
+	return version.isLesserThan(version1) || version.isEqualTo(version1)
+}
+
+func (version *version) isGreaterThanEqualTo(version1 *version) bool {
+	return version.isGreaterThan(version1) || version.isEqualTo(version1)
+}
+
+func (version *version) isEqualTo(version1 *version) bool {
+	return isEqual(version.major, version1.major) && isEqual(version.minor, version1.minor) && isEqual(version.patch, version1.patch)
 }
 
 func compareVersions(first *version, second *version, compareFunc func(int, int) bool) bool {
@@ -75,9 +96,6 @@ func isEqual(first, second int) bool {
 	return first == second
 }
 
-const (
-	MAJOR_VERSION = 0
-	MINOR_VERSION = 0
-	PATCH_VERSION = 1
-	DOT           = "."
-)
+func (version *version) String() string {
+	return fmt.Sprintf("%d.%d.%d", version.major, version.minor, version.patch)
+}

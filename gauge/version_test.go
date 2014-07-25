@@ -36,7 +36,7 @@ func (s *MySuite) TestParsingErrorForNonIntegerVersion(c *C) {
 	c.Assert(err.Error(), Equals, "Error parsing patch version number 8 to integer. strconv.ParseInt: parsing \"opl\": invalid syntax")
 }
 
-func (s *MySuite) TestVersionCompatibilityComparisonLesserThan(c *C) {
+func (s *MySuite) TestVersionComparisonGreaterLesser(c *C) {
 	higherVersion, _ := parseVersion("0.0.7")
 	lowerVersion, _ := parseVersion("0.0.3")
 	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
@@ -51,6 +51,47 @@ func (s *MySuite) TestVersionCompatibilityComparisonLesserThan(c *C) {
 	lowerVersion, _ = parseVersion("3.8.7")
 	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
 	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+
+	version1, _ := parseVersion("4.7.2")
+	version2, _ := parseVersion("4.7.2")
+	c.Assert(version1.isEqualTo(version2), Equals, true)
+}
+
+func (s *MySuite) TestVersionComparisonGreaterThanEqual(c *C) {
+	higherVersion, _ := parseVersion("0.0.7")
+	lowerVersion, _ := parseVersion("0.0.3")
+	c.Assert(higherVersion.isGreaterThanEqualTo(lowerVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("0.7.2")
+	lowerVersion, _ = parseVersion("0.5.7")
+	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("4.7.2")
+	lowerVersion, _ = parseVersion("3.8.7")
+	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
+	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+
+	version1, _ := parseVersion("6.7.2")
+	version2, _ := parseVersion("6.7.2")
+	c.Assert(version1.isGreaterThanEqualTo(version2), Equals, true)
+}
+
+func (s *MySuite) TestVersionComparisonLesserThanEqual(c *C) {
+	higherVersion, _ := parseVersion("0.0.7")
+	lowerVersion, _ := parseVersion("0.0.3")
+	c.Assert(lowerVersion.isLesserThanEqualTo(higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("0.7.2")
+	lowerVersion, _ = parseVersion("0.5.7")
+	c.Assert(lowerVersion.isLesserThanEqualTo(higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("5.8.2")
+	lowerVersion, _ = parseVersion("2.9.7")
+	c.Assert(lowerVersion.isLesserThanEqualTo(higherVersion), Equals, true)
+
+	version1, _ := parseVersion("6.7.2")
+	version2, _ := parseVersion("6.7.2")
+	c.Assert(version1.isLesserThanEqualTo(version2), Equals, true)
 }
 
 func (s *MySuite) TestVersionIsBetweenTwoVersions(c *C) {
@@ -67,5 +108,15 @@ func (s *MySuite) TestVersionIsBetweenTwoVersions(c *C) {
 	higherVersion, _ = parseVersion("4.7.2")
 	lowerVersion, _ = parseVersion("3.8.7")
 	middleVersion, _ = parseVersion("4.0.1")
+	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("4.7.2")
+	lowerVersion, _ = parseVersion("4.0.1")
+	middleVersion, _ = parseVersion("4.0.1")
+	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("0.0.2")
+	lowerVersion, _ = parseVersion("0.0.1")
+	middleVersion, _ = parseVersion("0.0.2")
 	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
 }
