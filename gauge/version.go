@@ -34,6 +34,47 @@ func parseVersion(versionText string) (*version, error) {
 	return &version{major, minor, patch}, nil
 }
 
+func (version *version) isBetween(lower *version, greater *version) bool {
+	return version.isGreaterThan(lower) && version.isLesserThan(greater)
+}
+
+func (version *version) isLesserThan(version1 *version) bool {
+	return compareVersions(version, version1, lesserThanFunc)
+}
+
+func (version *version) isGreaterThan(version1 *version) bool {
+	return compareVersions(version, version1, greaterThanFunc)
+}
+
+func compareVersions(first *version, second *version, compareFunc func(int, int) bool) bool {
+	if compareFunc(first.major, second.major) {
+		return true
+	} else if isEqual(first.major, second.major) {
+		if compareFunc(first.minor, second.minor) {
+			return true
+		} else if isEqual(first.minor, second.minor) {
+			if compareFunc(first.patch, second.patch) {
+				return true
+			} else {
+				return false
+			}
+		}
+	}
+	return false
+}
+
+func lesserThanFunc(first, second int) bool {
+	return first < second
+}
+
+func greaterThanFunc(first, second int) bool {
+	return first > second
+}
+
+func isEqual(first, second int) bool {
+	return first == second
+}
+
 const (
 	MAJOR_VERSION = 0
 	MINOR_VERSION = 0

@@ -35,3 +35,37 @@ func (s *MySuite) TestParsingErrorForNonIntegerVersion(c *C) {
 	c.Assert(err, NotNil)
 	c.Assert(err.Error(), Equals, "Error parsing patch version number 8 to integer. strconv.ParseInt: parsing \"opl\": invalid syntax")
 }
+
+func (s *MySuite) TestVersionCompatibilityComparisonLesserThan(c *C) {
+	higherVersion, _ := parseVersion("0.0.7")
+	lowerVersion, _ := parseVersion("0.0.3")
+	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
+	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("0.7.2")
+	lowerVersion, _ = parseVersion("0.5.7")
+	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
+	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("4.7.2")
+	lowerVersion, _ = parseVersion("3.8.7")
+	c.Assert(lowerVersion.isLesserThan(higherVersion), Equals, true)
+	c.Assert(higherVersion.isGreaterThan(lowerVersion), Equals, true)
+}
+
+func (s *MySuite) TestVersionIsBetweenTwoVersions(c *C) {
+	higherVersion, _ := parseVersion("0.0.9")
+	lowerVersion, _ := parseVersion("0.0.7")
+	middleVersion, _ := parseVersion("0.0.8")
+	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("0.7.2")
+	lowerVersion, _ = parseVersion("0.5.7")
+	middleVersion, _ = parseVersion("0.6.9")
+	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
+
+	higherVersion, _ = parseVersion("4.7.2")
+	lowerVersion, _ = parseVersion("3.8.7")
+	middleVersion, _ = parseVersion("4.0.1")
+	c.Assert(middleVersion.isBetween(lowerVersion, higherVersion), Equals, true)
+}
