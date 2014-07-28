@@ -54,7 +54,7 @@ func main() {
 	} else if *initialize != "" {
 		initializeProject(*initialize)
 	} else if *install != "" {
-		installRunner(*install, *installVersion)
+		installPlugin(*install, *installVersion)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else {
@@ -66,15 +66,15 @@ func main() {
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
 var gaugeVersion = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var install = flag.String([]string{"-install"}, "", "Downloads and installs a runner for the particular language if implementation is available. Eg: gauge --install java")
-var installVersion = flag.String([]string{"-version"}, "", "Versin of plugin or runner to install. This is used with --install")
+var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
+var installVersion = flag.String([]string{"-version"}, "", "Version of plugin to be installed install. This is used with --install")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 
 func printUsage() {
-	fmt.Printf("gauge - version %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
+	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
 	fmt.Println("Copyright 2014 Thoughtworks\n")
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
@@ -628,5 +628,5 @@ func convertMapToArray(allSpecs map[string]*specification) []*specification {
 }
 
 func printVersion() {
-	fmt.Printf("%d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION)
+	fmt.Printf("%s\n", currentGaugeVersion.String())
 }

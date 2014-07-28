@@ -5,25 +5,30 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
-	"io/ioutil"
-	"path"
+	"runtime"
+	"strings"
 )
 
 const (
-	gaugeRepositoryRunnersUrl = "http://raw.github.com/getgauge/gauge-repository/master/runners"
-	currentDir                = "current"
+	gaugeRepositoryUrl = "http://raw.github.com/getgauge/gauge-repository/master"
 )
 
 type installDescription struct {
-	Name                string
+	Name        string
+	Description string
+	Versions    []versionInstallDescription
+}
+
+type versionInstallDescription struct {
 	Version             string
 	GaugeVersionSupport versionSupport
-	Description         string
 	Install             platformSpecifics
-	DownloadUrls        struct {
-		X86 platformSpecifics
-		X64 platformSpecifics
-	}
+	DownloadUrls        downloadUrls
+}
+
+type downloadUrls struct {
+	X86 platformSpecifics
+	X64 platformSpecifics
 }
 
 type platformSpecifics struct {
@@ -37,84 +42,143 @@ type versionSupport struct {
 	Maximum string
 }
 
-func installRunner(language, version string) {
-	installDescription, err := getInstallDescription(language, version)
+func installPlugin(pluginName, version string) {
+	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
-		fmt.Printf("Error installing language %s %s : %s \n", language, version, err)
+		fmt.Printf("Error installing plugin %s %s : %s \n", pluginName, version, err)
 	}
-	installRunnerWithDescription(installDescription)
+	fmt.Println(installDescription)
+	installPluginWithDescription(installDescription, version)
 }
 
-func installRunnerWithDescription(installDescription *installDescription) {
-	if err := checkVersionCompatibilityWithGauge(installDescription, currentGaugeVersion); err != nil {
-		fmt.Printf("Error installing runner %s. %s \n", installDescription.Name, err)
-		return
-	}
-	fmt.Printf("Succesfully installed language runner : %s %s \n", installDescription.Name, installDescription.Version)
-}
-
-func checkVersionCompatibilityWithGauge(installDescription *installDescription, gaugeVersion *version) error {
-	if installDescription.GaugeVersionSupport.Minimum == "" {
-		return errors.New(fmt.Sprintf("Supported Gauge Version numbers not found in %s install file. Cannot install runner", installDescription.Name))
-	}
-
-	minGaugeVersion, err := parseVersion(installDescription.GaugeVersionSupport.Minimum)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Invalid minimum gauge support version %s in install file for %s : %s. ", installDescription.GaugeVersionSupport.Minimum, installDescription.Name, err))
-	}
-	if installDescription.GaugeVersionSupport.Maximum != "" {
-		maxGaugeVersion, err := parseVersion(installDescription.GaugeVersionSupport.Maximum)
+func installPluginWithDescription(installDescription *installDescription, version string) {
+	var versionInstallDescription *versionInstallDescription
+	var err error
+	if version != "" {
+		versionInstallDescription, err = installDescription.getVersion(version)
 		if err != nil {
-			return errors.New(fmt.Sprintf("Invalid maximum gauge support version %s in install file for %s : %s. ", installDescription.GaugeVersionSupport.Maximum, installDescription.Name, err))
+			fmt.Printf("Could not install plugin %s %s : %s", installDescription.Name, version, err)
 		}
-		if gaugeVersion.isBetween(minGaugeVersion, maxGaugeVersion) {
-			return nil
-		} else {
-			return errors.New(fmt.Sprintf("Incompatible %s version %s. Gauge version %s is not supported for this runner.", installDescription.Name, installDescription.Version, gaugeVersion.String()))
+		if compatibilityError := checkCompatiblity(currentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
+			fmt.Printf("Could not install plugin %s %s. Plugin Version %s is not supported for gauge %s : %s \n", installDescription.Name, versionInstallDescription.Version, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error())
+		}
+	} else {
+		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(currentGaugeVersion)
+		if (err != nil) {
+			fmt.Printf("Could not install plugin %s. : %s", installDescription.Name, err)
 		}
 	}
-
-	if minGaugeVersion.isLesserThanEqualTo(gaugeVersion) {
-		return nil
-	}
-	return errors.New(fmt.Sprintf("Incompatible language %s version %s. Minimun supported gauge version %s is higher than current Gauge version %s", installDescription.Name, installDescription.Version, minGaugeVersion.String(), gaugeVersion.String()))
+	installPluginVersion(versionInstallDescription)
 }
 
-func getInstallDescription(language, version string) (*installDescription, error) {
-	languageJson, err := getLanguageJsonFromGaugeRepository(language, version)
+func installPluginVersion(versionInstallDescription *versionInstallDescription) error {
+	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
+	if (err != nil) {
+		return errors.New(fmt.Sprintf("Failed to download plugin zip %s.", err))
+	}
+	unzipDir, err := common.UnzipArchive(pluginZip)
+	if (err != nil) {
+		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
+	}
+	return copyPluginFilesToGauge(unzipDir)
+}
+
+func copyPluginFilesToGauge(pluginDir string) error {
+	return nil
+}
+
+func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
+	var platformLinks *platformSpecifics
+	if strings.Contains(runtime.GOARCH, "64") {
+		platformLinks = &downloadUrls.X64
+	} else {
+		platformLinks = &downloadUrls.X86
+	}
+
+	var downloadLink string
+	switch runtime.GOOS {
+	case "windows":
+		downloadLink = platformLinks.Windows
+		break
+	case "darwin":
+		downloadLink = platformLinks.Darwin
+		break
+	default:
+		downloadLink = platformLinks.Linux
+		break
+	}
+
+	downloadedFile, err := common.DownloadToTempDir(downloadLink)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Failed to download File %s. %s", downloadLink, err.Error()))
+	}
+	return downloadedFile, err
+}
+
+func getInstallDescription(plugin string) (*installDescription, error) {
+	installJson, err := getPluginInstallJson(plugin)
 	if err != nil {
 		return nil, err
 	}
-	languageJsonContents, readErr := common.ReadFileContents(languageJson)
+	InstallJsonContents, readErr := common.ReadFileContents(installJson)
 	if readErr != nil {
 		return nil, readErr
 	}
 	installDescription := &installDescription{}
-	if err = json.Unmarshal([]byte(languageJsonContents), installDescription); err != nil {
+	if err = json.Unmarshal([]byte(InstallJsonContents), installDescription); err != nil {
 		return nil, err
 	}
 	return installDescription, nil
 }
 
-func getLanguageJsonFromGaugeRepository(language string, version string) (string, error) {
-	languageInstallJsonFile := language + "-install.json"
-	languageInstallJsonUrl := constructLanguageInstallJsonUrl(language, version)
+func getPluginInstallJson(plugin string) (string, error) {
+	versionInstallDescriptionJsonFile := plugin + "-install.json"
+	versionInstallDescriptionJsonUrl := constructPluginInstallJsonUrl(plugin)
 
-	tempDir, err := ioutil.TempDir("", fmt.Sprintf("%d", common.GetUniqueId()))
-	if err != nil {
-		return "", err
+	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
+	if downloadErr != nil {
+		return "", errors.New(fmt.Sprintf("Could not find %s file. Check install name and version. %s", versionInstallDescriptionJsonFile, downloadErr.Error()))
 	}
-	if err = common.Download(languageInstallJsonUrl, tempDir); err != nil {
-		return "", errors.New(fmt.Sprintf("Could not find %s file. Check install name and version. %s", languageInstallJsonFile, err.Error()))
-	}
-	return path.Join(tempDir, languageInstallJsonFile), nil
+	return downloadedFile, nil
 }
 
-func constructLanguageInstallJsonUrl(language string, version string) string {
-	languageInstallJsonFile := language + "-install.json"
-	if version != "" {
-		return fmt.Sprintf("%s/%s/%s/%s", gaugeRepositoryRunnersUrl, language, version, languageInstallJsonFile)
-	} else {
-		return fmt.Sprintf("%s/%s/%s/%s", gaugeRepositoryRunnersUrl, language, currentDir, languageInstallJsonFile)
+func constructPluginInstallJsonUrl(plugin string) string {
+	installJsonFile := plugin + "-install.json"
+	return fmt.Sprintf("%s/%s", gaugeRepositoryUrl, installJsonFile)
+}
+
+func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {
+	for _, versionInstallDescription := range installDesc.Versions {
+		if versionInstallDescription.Version == version {
+			return &versionInstallDescription, nil
+		}
 	}
+	return nil, errors.New("Could not find install description for Version "+version)
+}
+
+func (installDesc *installDescription) getLatestCompatibleVersionTo(version *version) (*versionInstallDescription, error) {
+	return nil, nil
+}
+
+func checkCompatiblity(version *version, versionSupport *versionSupport) error {
+	minSupportVersion, err := parseVersion(versionSupport.Minimum)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Invalid minimum support version %s. : %s. ", versionSupport.Minimum, err))
+	}
+	if versionSupport.Maximum != "" {
+		maxSupportVersion, err := parseVersion(versionSupport.Maximum)
+		if err != nil {
+			return errors.New(fmt.Sprintf("Invalid maximum support version %s. : %s. ", versionSupport.Maximum, err))
+		}
+		if version.isBetween(minSupportVersion, maxSupportVersion) {
+			return nil
+		} else {
+			return errors.New(fmt.Sprintf("Version %s is not between %s and %s", version, minSupportVersion, maxSupportVersion))
+		}
+	}
+
+	if minSupportVersion.isLesserThanEqualTo(version) {
+		return nil
+	}
+	return errors.New(fmt.Sprintf("Incompatible version. Minimun version %s is higher than current version %s", minSupportVersion, version))
 }

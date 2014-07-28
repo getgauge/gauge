@@ -1,60 +1,69 @@
 package main
 
-import . "launchpad.net/gocheck"
+import (
+	. "launchpad.net/gocheck"
+)
 
-func (s *MySuite) TestConstructRunnerJsonInstallUrl(c *C) {
-	constructedUrl := constructLanguageInstallJsonUrl("java", "")
-	c.Assert(constructedUrl, Equals, "http://raw.github.com/getgauge/gauge-repository/master/runners/java/current/java-install.json")
+func (s *MySuite) TestConstructPluginJsonInstallUrl(c *C) {
+	constructedUrl := constructPluginInstallJsonUrl("java")
+	c.Assert(constructedUrl, Equals, "http://raw.github.com/getgauge/gauge-repository/master/java-install.json")
 }
 
-func (s *MySuite) TestConstructRunnerJsonInstallUrlWithVersion(c *C) {
-	constructedUrl := constructLanguageInstallJsonUrl("java", "0.0.1")
-	c.Assert(constructedUrl, Equals, "http://raw.github.com/getgauge/gauge-repository/master/runners/java/0.0.1/java-install.json")
+func (s *MySuite) TestFindVersion(c *C) {
+	installDescription := createInstallDescriptionWithVersions("0.0.4", "0.6.7", "0.7.4", "3.6.5")
+	versionInstall, err := installDescription.getVersion("0.7.4")
+	c.Assert(err, Equals, nil)
+	c.Assert(versionInstall.Version, Equals, "0.7.4")
 }
 
-func (s *MySuite) TestVersionCompatibilitySuccess(c *C) {
-	installDescription := createInstallDescriptionWithMinimumMaximumSupportVersions("0.6.5", "1.8.5")
+func (s *MySuite) TestFindVersionFailing(c *C) {
+	installDescription := createInstallDescriptionWithVersions("0.0.4", "0.6.7", "0.7.4", "3.6.5")
+	_, err := installDescription.getVersion("0.9.4")
+	c.Assert(err, NotNil)
+}
+
+func (s *MySuite) TestCheckVersionCompatibilitySuccess(c *C) {
+	versionSupported := &versionSupport{"0.6.5", "1.8.5"}
 	gaugeVersion := &version{0, 6, 7}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), Equals, nil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("0.0.1", "0.0.1")
+	versionSupported = &versionSupport{"0.0.1", "0.0.1"}
 	gaugeVersion = &version{0, 0, 1}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), Equals, nil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("0.0.1")
+	versionSupported = &versionSupport{Minimum: "0.0.1"}
 	gaugeVersion = &version{1, 5, 2}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), Equals, nil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("0.5.1")
+	versionSupported = &versionSupport{Minimum: "0.5.1"}
 	gaugeVersion = &version{0, 5, 1}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), Equals, nil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
 
 }
 
-func (s *MySuite) TestVersionCompatibilityFailure(c *C) {
-	installDescription := createInstallDescriptionWithMinimumMaximumSupportVersions("0.6.5", "1.8.5")
+func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
+	versionsSupported := &versionSupport{"0.6.5", "1.8.5"}
 	gaugeVersion := &version{1, 9, 9}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), NotNil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("0.0.1", "0.0.1")
+	versionsSupported = &versionSupport{"0.0.1", "0.0.1"}
 	gaugeVersion = &version{0, 0, 2}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), NotNil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("1.3.1")
+	versionsSupported = &versionSupport{Minimum: "1.3.1"}
 	gaugeVersion = &version{1, 3, 0}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), NotNil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
 
-	installDescription = createInstallDescriptionWithMinimumMaximumSupportVersions("0.5.1")
+	versionsSupported = &versionSupport{Minimum: "0.5.1"}
 	gaugeVersion = &version{0, 0, 9}
-	c.Assert(checkVersionCompatibilityWithGauge(installDescription, gaugeVersion), NotNil)
+	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
 
 }
 
-func createInstallDescriptionWithMinimumMaximumSupportVersions(supportVersions ...string) *installDescription {
-	if len(supportVersions) == 2 {
-		return &installDescription{Name: "Test", Version: "1.2.3", GaugeVersionSupport: versionSupport{supportVersions[0], supportVersions[1]}}
-	} else if len(supportVersions) == 1 {
-		return &installDescription{Name: "Test", Version: "1.2.3", GaugeVersionSupport: versionSupport{Minimum: supportVersions[0]}}
+func createInstallDescriptionWithVersions(versionNumbers ...string) *installDescription {
+	versionInstallDescriptions := make([]versionInstallDescription, 0)
+	for _, version := range versionNumbers {
+		versionInstallDescriptions = append(versionInstallDescriptions, versionInstallDescription{Version: version})
 	}
-	return nil
+	return &installDescription{Name: "my-plugin", Versions: versionInstallDescriptions}
 }

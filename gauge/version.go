@@ -8,13 +8,10 @@ import (
 )
 
 const (
-	MAJOR_VERSION = 0
-	MINOR_VERSION = 0
-	PATCH_VERSION = 1
-	DOT           = "."
+	DOT = "."
 )
 
-var currentGaugeVersion = &version{0, 0, 0}
+var currentGaugeVersion = &version{0, 0, 1}
 
 type version struct {
 	major int
