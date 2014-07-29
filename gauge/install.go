@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"path"
 	"runtime"
 	"sort"
 	"strings"
@@ -46,11 +47,14 @@ type versionSupport struct {
 func installPlugin(pluginName, version string) {
 	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
-		fmt.Printf("Error finding plugin %s %s install description. : %s \n", pluginName, version, err)
+		fmt.Printf("[Error] Failed to find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err)
+		return
 	}
 	if err := installPluginWithDescription(installDescription, version); err != nil {
-		fmt.Printf("Error installing plugin %s %s : %s \n", pluginName, version, err)
+		fmt.Printf("[Error] Failed installing Plugin '%s' %s : %s \n", pluginName, version, err)
+		return
 	}
+	fmt.Printf("Successfully installed plugin: %s %s\n", pluginName, version)
 }
 
 func installPluginWithDescription(installDescription *installDescription, version string) error {
@@ -59,34 +63,44 @@ func installPluginWithDescription(installDescription *installDescription, versio
 	if version != "" {
 		versionInstallDescription, err = installDescription.getVersion(version)
 		if err != nil {
-			fmt.Printf("Could not install plugin %s %s : %s", installDescription.Name, version, err)
+			return err
 		}
 		if compatibilityError := checkCompatiblity(currentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
-			fmt.Printf("Could not install plugin %s %s. Plugin Version %s is not supported for gauge %s : %s \n", installDescription.Name, versionInstallDescription.Version, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error())
+			return errors.New(fmt.Sprintf("Plugin Version %s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
 		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(currentGaugeVersion)
 		if err != nil {
-			fmt.Printf("Could not install plugin %s. : %s", installDescription.Name, err)
+			return errors.New(fmt.Sprintf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err))
 		}
 	}
-	return installPluginVersion(versionInstallDescription)
+	return installPluginVersion(installDescription, versionInstallDescription)
 }
 
-func installPluginVersion(versionInstallDescription *versionInstallDescription) error {
+func installPluginVersion(installDesc *installDescription, versionInstallDescription *versionInstallDescription) error {
+	fmt.Printf("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
 	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to download plugin zip %s.", err))
+		return errors.New(fmt.Sprintf("Failed to download plugin zip: %s.", err))
 	}
 	pluginContents, err := common.UnzipArchive(pluginZip)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
-	return copyPluginFilesToGauge(pluginContents)
+	return copyPluginFilesToGauge(installDesc, versionInstallDescription, pluginContents)
 }
 
-func copyPluginFilesToGauge(pluginContents string) error {
-	return nil
+func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc *versionInstallDescription, pluginContents string) error {
+	pluginsDir, err := common.GetPluginsPath()
+	if err != nil {
+		return err
+	}
+	versionedPluginDir := path.Join(pluginsDir, installDesc.Name, versionInstallDesc.Version)
+	if common.DirExists(versionedPluginDir) {
+		return errors.New(fmt.Sprintf("Plugin %s %s already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir))
+	}
+	return common.MirrorDir(pluginContents, versionedPluginDir)
+
 }
 
 func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
@@ -112,7 +126,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Failed to download File %s. %s", downloadLink, err.Error()))
+		return "", errors.New(fmt.Sprintf("Failed to download File %s: %s", downloadLink, err.Error()))
 	}
 	return downloadedFile, err
 }
@@ -165,7 +179,7 @@ func (installDesc *installDescription) getLatestCompatibleVersionTo(version *ver
 			return &versionInstallDesc, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Could not find compatible version to %s \n", version))
+	return nil, errors.New(fmt.Sprintf("Compatible version to %s not found", version))
 
 }
 
@@ -193,7 +207,7 @@ func checkCompatiblity(version *version, versionSupport *versionSupport) error {
 	if minSupportVersion.isLesserThanEqualTo(version) {
 		return nil
 	}
-	return errors.New(fmt.Sprintf("Incompatible version. Minimun version %s is higher than current version %s", minSupportVersion, version))
+	return errors.New(fmt.Sprintf("Incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, version))
 }
 
 type ByDecreasingVersion []versionInstallDescription
