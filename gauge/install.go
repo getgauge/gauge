@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"runtime"
+	"sort"
 	"strings"
 )
 
@@ -45,13 +46,14 @@ type versionSupport struct {
 func installPlugin(pluginName, version string) {
 	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
+		fmt.Printf("Error finding plugin %s %s install description. : %s \n", pluginName, version, err)
+	}
+	if err := installPluginWithDescription(installDescription, version); err != nil {
 		fmt.Printf("Error installing plugin %s %s : %s \n", pluginName, version, err)
 	}
-	fmt.Println(installDescription)
-	installPluginWithDescription(installDescription, version)
 }
 
-func installPluginWithDescription(installDescription *installDescription, version string) {
+func installPluginWithDescription(installDescription *installDescription, version string) error {
 	var versionInstallDescription *versionInstallDescription
 	var err error
 	if version != "" {
@@ -64,26 +66,26 @@ func installPluginWithDescription(installDescription *installDescription, versio
 		}
 	} else {
 		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(currentGaugeVersion)
-		if (err != nil) {
+		if err != nil {
 			fmt.Printf("Could not install plugin %s. : %s", installDescription.Name, err)
 		}
 	}
-	installPluginVersion(versionInstallDescription)
+	return installPluginVersion(versionInstallDescription)
 }
 
 func installPluginVersion(versionInstallDescription *versionInstallDescription) error {
 	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
-	if (err != nil) {
+	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to download plugin zip %s.", err))
 	}
-	unzipDir, err := common.UnzipArchive(pluginZip)
-	if (err != nil) {
+	pluginContents, err := common.UnzipArchive(pluginZip)
+	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
-	return copyPluginFilesToGauge(unzipDir)
+	return copyPluginFilesToGauge(pluginContents)
 }
 
-func copyPluginFilesToGauge(pluginDir string) error {
+func copyPluginFilesToGauge(pluginContents string) error {
 	return nil
 }
 
@@ -153,11 +155,22 @@ func (installDesc *installDescription) getVersion(version string) (*versionInsta
 			return &versionInstallDescription, nil
 		}
 	}
-	return nil, errors.New("Could not find install description for Version "+version)
+	return nil, errors.New("Could not find install description for Version " + version)
 }
 
 func (installDesc *installDescription) getLatestCompatibleVersionTo(version *version) (*versionInstallDescription, error) {
-	return nil, nil
+	installDesc.sortVersionInstallDescriptions()
+	for _, versionInstallDesc := range installDesc.Versions {
+		if err := checkCompatiblity(version, &versionInstallDesc.GaugeVersionSupport); err == nil {
+			return &versionInstallDesc, nil
+		}
+	}
+	return nil, errors.New(fmt.Sprintf("Could not find compatible version to %s \n", version))
+
+}
+
+func (installDescription *installDescription) sortVersionInstallDescriptions() {
+	sort.Sort(ByDecreasingVersion(installDescription.Versions))
 }
 
 func checkCompatiblity(version *version, versionSupport *versionSupport) error {
@@ -181,4 +194,14 @@ func checkCompatiblity(version *version, versionSupport *versionSupport) error {
 		return nil
 	}
 	return errors.New(fmt.Sprintf("Incompatible version. Minimun version %s is higher than current version %s", minSupportVersion, version))
+}
+
+type ByDecreasingVersion []versionInstallDescription
+
+func (a ByDecreasingVersion) Len() int      { return len(a) }
+func (a ByDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByDecreasingVersion) Less(i, j int) bool {
+	version1, _ := parseVersion(a[i].Version)
+	version2, _ := parseVersion(a[j].Version)
+	return version1.isGreaterThan(version2)
 }

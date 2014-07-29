@@ -1,8 +1,6 @@
 package main
 
-import (
-	. "launchpad.net/gocheck"
-)
+import . "launchpad.net/gocheck"
 
 func (s *MySuite) TestConstructPluginJsonInstallUrl(c *C) {
 	constructedUrl := constructPluginInstallJsonUrl("java")
@@ -60,10 +58,49 @@ func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
 
 }
 
+func (s *MySuite) TestSortingVersionInstallDescriptionsInDecreasingVersionOrder(c *C) {
+	installDescription := createInstallDescriptionWithVersions("5.8.8", "1.7.8", "4.8.9", "0.7.6", "3.5.6")
+	installDescription.sortVersionInstallDescriptions()
+	c.Assert(installDescription.Versions[0].Version, Equals, "5.8.8")
+	c.Assert(installDescription.Versions[1].Version, Equals, "4.8.9")
+	c.Assert(installDescription.Versions[2].Version, Equals, "3.5.6")
+	c.Assert(installDescription.Versions[3].Version, Equals, "1.7.8")
+	c.Assert(installDescription.Versions[4].Version, Equals, "0.7.6")
+}
+
+func (s *MySuite) TestFindingLatestCompatibleVersionSuccess(c *C) {
+	installDescription := createInstallDescriptionWithVersions("5.8.8", "1.7.8", "4.8.9", "0.7.6")
+	addVersionSupportToInstallDescription(installDescription,
+		&versionSupport{"0.0.2", "0.8.7"},
+		&versionSupport{"1.2.4", "1.2.6"},
+		&versionSupport{"0.9.8", "1.2.1"},
+		&versionSupport{Minimum: "0.7.7"})
+	versionInstallDesc, err := installDescription.getLatestCompatibleVersionTo(&version{1, 0, 0})
+	c.Assert(err, Equals, nil)
+	c.Assert(versionInstallDesc.Version, Equals, "4.8.9")
+}
+
+func (s *MySuite) TestFindingLatestCompatibleVersionFailing(c *C) {
+	installDescription := createInstallDescriptionWithVersions("2.8.8", "0.7.8", "4.8.9", "1.7.6")
+	addVersionSupportToInstallDescription(installDescription,
+		&versionSupport{"0.0.2", "0.8.7"},
+		&versionSupport{"1.2.4", "1.2.6"},
+		&versionSupport{"0.9.8", "1.0.0"},
+		&versionSupport{Minimum: "1.7.7"})
+	_, err := installDescription.getLatestCompatibleVersionTo(&version{1, 1, 0})
+	c.Assert(err, NotNil)
+}
+
 func createInstallDescriptionWithVersions(versionNumbers ...string) *installDescription {
 	versionInstallDescriptions := make([]versionInstallDescription, 0)
 	for _, version := range versionNumbers {
 		versionInstallDescriptions = append(versionInstallDescriptions, versionInstallDescription{Version: version})
 	}
 	return &installDescription{Name: "my-plugin", Versions: versionInstallDescriptions}
+}
+
+func addVersionSupportToInstallDescription(installDescription *installDescription, versionSupportList ...*versionSupport) {
+	for i, _ := range installDescription.Versions {
+		installDescription.Versions[i].GaugeVersionSupport = *versionSupportList[i]
+	}
 }
