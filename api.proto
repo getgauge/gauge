@@ -21,7 +21,7 @@ message GetAllStepsRequest {
 }
 
 message GetAllStepsResponse {
-    repeated string steps = 1;
+    repeated ProtoStepValue allSteps = 1;
 }
 
 message GetAllSpecsRequest {
@@ -37,9 +37,7 @@ message GetStepValueRequest {
 }
 
 message GetStepValueResponse {
-    required string stepValue = 1;
-    required string parameterizedStepValue = 2;
-    repeated string parameters = 3;
+    required ProtoStepValue stepValue = 1;
 }
 
 message ErrorResponse {

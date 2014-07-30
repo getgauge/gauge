@@ -26,6 +26,7 @@ It has these top-level messages:
 	ProtoHookFailure
 	ProtoSuiteResult
 	ProtoSpecResult
+	ProtoStepValue
 */
 package main
 
@@ -828,6 +829,38 @@ func (m *ProtoSpecResult) GetExecutionTime() int64 {
 		return *m.ExecutionTime
 	}
 	return 0
+}
+
+type ProtoStepValue struct {
+	StepValue              *string  `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	ParameterizedStepValue *string  `protobuf:"bytes,2,req,name=parameterizedStepValue" json:"parameterizedStepValue,omitempty"`
+	Parameters             []string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty"`
+	XXX_unrecognized       []byte   `json:"-"`
+}
+
+func (m *ProtoStepValue) Reset()         { *m = ProtoStepValue{} }
+func (m *ProtoStepValue) String() string { return proto.CompactTextString(m) }
+func (*ProtoStepValue) ProtoMessage()    {}
+
+func (m *ProtoStepValue) GetStepValue() string {
+	if m != nil && m.StepValue != nil {
+		return *m.StepValue
+	}
+	return ""
+}
+
+func (m *ProtoStepValue) GetParameterizedStepValue() string {
+	if m != nil && m.ParameterizedStepValue != nil {
+		return *m.ParameterizedStepValue
+	}
+	return ""
+}
+
+func (m *ProtoStepValue) GetParameters() []string {
+	if m != nil {
+		return m.Parameters
+	}
+	return nil
 }
 
 func init() {

@@ -137,3 +137,9 @@ message ProtoSpecResult {
     repeated int32 failedDataTableRows = 5;
     optional int64 executionTime = 6;
 }
+
+message ProtoStepValue {
+    required string stepValue = 1;
+    required string parameterizedStepValue = 2;
+    repeated string parameters = 3;
+}

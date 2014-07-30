@@ -18,7 +18,7 @@ const (
 )
 
 type messageHandler interface {
-	messageBytesReceived([]byte, *gaugeConnectionHandler)
+	messageBytesReceived([]byte, net.Conn)
 }
 
 type dataHandlerFn func(*gaugeConnectionHandler, []byte)
@@ -26,7 +26,6 @@ type dataHandlerFn func(*gaugeConnectionHandler, []byte)
 type gaugeConnectionHandler struct {
 	tcpListener    *net.TCPListener
 	messageHandler messageHandler
-	conn           net.Conn
 }
 
 func newGaugeConnectionHandler(port int, messageHandler messageHandler) (*gaugeConnectionHandler, error) {
@@ -40,7 +39,7 @@ func newGaugeConnectionHandler(port int, messageHandler messageHandler) (*gaugeC
 	return &gaugeConnectionHandler{tcpListener: listener, messageHandler: messageHandler}, nil
 }
 
-func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTimeOut time.Duration) error {
+func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {
 	errChannel := make(chan error, 1)
 	connectionChannel := make(chan net.Conn, 1)
 
@@ -56,57 +55,67 @@ func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTime
 
 	select {
 	case err := <-errChannel:
-		return err
+		return nil, err
 	case conn := <-connectionChannel:
 		if connectionHandler.messageHandler != nil {
-			go connectionHandler.handleConnectionMessages()
+			go connectionHandler.handleConnectionMessages(conn)
 		}
-		connectionHandler.conn = conn
-		return nil
+		return conn, nil
 	case <-time.After(connectionTimeOut):
-		return errors.New(fmt.Sprintf("Timed out connecting to %v", connectionHandler.tcpListener.Addr()))
+		return nil, errors.New(fmt.Sprintf("Timed out connecting to %v", connectionHandler.tcpListener.Addr()))
 	}
 }
 
-func (connectionHandler *gaugeConnectionHandler) handleConnectionMessages() {
+func (connectionHandler *gaugeConnectionHandler) handleConnectionMessages(conn net.Conn) {
 	buffer := new(bytes.Buffer)
 	data := make([]byte, 8192)
 	for {
-		n, err := connectionHandler.conn.Read(data)
+		n, err := conn.Read(data)
 		if err != nil {
-			connectionHandler.conn.Close()
+			conn.Close()
 			//TODO: Move to file
 			//			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
 			return
 		}
 
 		buffer.Write(data[0:n])
+		connectionHandler.processMessage(buffer, conn)
+	}
+}
 
+func (connectionHandler *gaugeConnectionHandler) processMessage(buffer *bytes.Buffer, conn net.Conn) {
+	for {
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
+			messageBoundary := int(messageLength) + bytesRead
 			receivedBytes := buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)]
-			connectionHandler.messageHandler.messageBytesReceived(receivedBytes, connectionHandler)
-			buffer.Reset()
+			connectionHandler.messageHandler.messageBytesReceived(receivedBytes, conn)
+			buffer.Next(messageBoundary)
+			if buffer.Len() == 0 {
+				return
+			}
+		} else {
+			return
 		}
 	}
 }
 
-func (connectionHandler *gaugeConnectionHandler) writeDataAndGetResponse(messageBytes []byte) ([]byte, error) {
-	if err := connectionHandler.write(messageBytes); err != nil {
+func writeDataAndGetResponse(conn net.Conn, messageBytes []byte) ([]byte, error) {
+	if err := write(conn, messageBytes); err != nil {
 		return nil, err
 	}
 
-	return connectionHandler.readResponse()
+	return readResponse(conn)
 }
 
-func (connectionHandler *gaugeConnectionHandler) readResponse() ([]byte, error) {
+func readResponse(conn net.Conn) ([]byte, error) {
 	buffer := new(bytes.Buffer)
 	data := make([]byte, 8192)
 	for {
-		n, err := connectionHandler.conn.Read(data)
+		n, err := conn.Read(data)
 		if err != nil {
-			connectionHandler.conn.Close()
-			return nil, errors.New(fmt.Sprintf("Connection closed [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
+			conn.Close()
+			return nil, errors.New(fmt.Sprintf("Connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error()))
 		}
 
 		buffer.Write(data[0:n])
@@ -118,10 +127,10 @@ func (connectionHandler *gaugeConnectionHandler) readResponse() ([]byte, error) 
 	}
 }
 
-func (connectionHandler *gaugeConnectionHandler) write(messageBytes []byte) error {
+func write(conn net.Conn, messageBytes []byte) error {
 	messageLen := proto.EncodeVarint(uint64(len(messageBytes)))
 	data := append(messageLen, messageBytes...)
-	_, err := connectionHandler.conn.Write(data)
+	_, err := conn.Write(data)
 	return err
 }
 
@@ -141,7 +150,7 @@ func (connectionHandler *gaugeConnectionHandler) connectionPortNumber() int {
 	}
 }
 
-func writeGaugeMessage(message *Message, connectionHandler *gaugeConnectionHandler) error {
+func writeGaugeMessage(message *Message, conn net.Conn) error {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 
@@ -149,10 +158,10 @@ func writeGaugeMessage(message *Message, connectionHandler *gaugeConnectionHandl
 	if err != nil {
 		return err
 	}
-	return connectionHandler.write(data)
+	return write(conn, data)
 }
 
-func getResponseForGaugeMessage(message *Message, connectionHandler *gaugeConnectionHandler) (*Message, error) {
+func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, error) {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 
@@ -160,7 +169,7 @@ func getResponseForGaugeMessage(message *Message, connectionHandler *gaugeConnec
 	if err != nil {
 		return nil, err
 	}
-	responseBytes, err := connectionHandler.writeDataAndGetResponse(data)
+	responseBytes, err := writeDataAndGetResponse(conn, data)
 	if err != nil {
 		return nil, err
 	}

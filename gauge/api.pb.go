@@ -150,17 +150,17 @@ func (m *GetAllStepsRequest) String() string { return proto.CompactTextString(m)
 func (*GetAllStepsRequest) ProtoMessage()    {}
 
 type GetAllStepsResponse struct {
-	Steps            []string `protobuf:"bytes,1,rep,name=steps" json:"steps,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	AllSteps         []*ProtoStepValue `protobuf:"bytes,1,rep,name=allSteps" json:"allSteps,omitempty"`
+	XXX_unrecognized []byte            `json:"-"`
 }
 
 func (m *GetAllStepsResponse) Reset()         { *m = GetAllStepsResponse{} }
 func (m *GetAllStepsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetAllStepsResponse) ProtoMessage()    {}
 
-func (m *GetAllStepsResponse) GetSteps() []string {
+func (m *GetAllStepsResponse) GetAllSteps() []*ProtoStepValue {
 	if m != nil {
-		return m.Steps
+		return m.AllSteps
 	}
 	return nil
 }
@@ -214,33 +214,17 @@ func (m *GetStepValueRequest) GetHasInlineTable() bool {
 }
 
 type GetStepValueResponse struct {
-	StepValue              *string  `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
-	ParameterizedStepValue *string  `protobuf:"bytes,2,req,name=parameterizedStepValue" json:"parameterizedStepValue,omitempty"`
-	Parameters             []string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty"`
-	XXX_unrecognized       []byte   `json:"-"`
+	StepValue        *ProtoStepValue `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	XXX_unrecognized []byte          `json:"-"`
 }
 
 func (m *GetStepValueResponse) Reset()         { *m = GetStepValueResponse{} }
 func (m *GetStepValueResponse) String() string { return proto.CompactTextString(m) }
 func (*GetStepValueResponse) ProtoMessage()    {}
 
-func (m *GetStepValueResponse) GetStepValue() string {
-	if m != nil && m.StepValue != nil {
-		return *m.StepValue
-	}
-	return ""
-}
-
-func (m *GetStepValueResponse) GetParameterizedStepValue() string {
-	if m != nil && m.ParameterizedStepValue != nil {
-		return *m.ParameterizedStepValue
-	}
-	return ""
-}
-
-func (m *GetStepValueResponse) GetParameters() []string {
+func (m *GetStepValueResponse) GetStepValue() *ProtoStepValue {
 	if m != nil {
-		return m.Parameters
+		return m.StepValue
 	}
 	return nil
 }
