@@ -82,12 +82,12 @@ func (plugin *plugin) isStillRunning() bool {
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
-	pluginsPath, err := common.GetPluginsPath()
+	pluginsInstallDir, err := common.GetPluginsInstallDir()
 	if err != nil {
 		return false
 	}
 
-	thisPluginDir := path.Join(pluginsPath, pluginName)
+	thisPluginDir := path.Join(pluginsInstallDir, pluginName)
 	if !common.DirExists(thisPluginDir) {
 		return false
 	}
@@ -109,33 +109,11 @@ func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
 		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, pluginVersion))
 	}
 
-	pluginsPath, err := common.GetPluginsPath()
+	pluginsInstallDir, err := common.GetPluginInstallDir(pluginName, pluginVersion)
 	if err != nil {
 		return "", err
 	}
-
-	thisPluginDir := path.Join(pluginsPath, pluginName)
-	if pluginVersion != "" {
-		return path.Join(thisPluginDir, pluginVersion, common.PluginJsonFile), nil
-	} else {
-		pluginJson := ""
-		walkFn := func(path string, info os.FileInfo, err error) error {
-			if info.Name() == common.PluginJsonFile {
-				if pluginJson != "" {
-					return errors.New(fmt.Sprintf("Multiple versions of '%s' found. Specify the exact version to be used", pluginName))
-				}
-				pluginJson = path
-			}
-			return nil
-		}
-
-		err := filepath.Walk(thisPluginDir, walkFn)
-		if err != nil {
-			return "", err
-		}
-
-		return pluginJson, nil
-	}
+	return filepath.Join(pluginInstallDir, common.PluginJsonFile), nil
 }
 
 func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, error) {
@@ -197,9 +175,9 @@ func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pl
 	if err == nil {
 		os.Setenv("project_root", projRoot)
 	}
-	pluginPath, err := common.GetPluginsPath()
+	pluginsInstallDir, err := common.GetPluginsInstallDir()
 	if err == nil {
-		os.Setenv("plugin_root", path.Join(pluginPath, pd.Id, pd.Version))
+		os.Setenv("plugin_root", path.Join(pluginsInstallDir, pd.Id, pd.Version))
 	}
 	setEnvironmentProperties(pluginArgs)
 }

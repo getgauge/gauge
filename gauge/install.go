@@ -91,7 +91,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 }
 
 func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc *versionInstallDescription, pluginContents string) error {
-	pluginsDir, err := common.GetPluginsPath()
+	pluginsDir, err := common.GetPluginsInstallDir()
 	if err != nil {
 		return err
 	}

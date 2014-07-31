@@ -256,7 +256,6 @@ func createProjectTemplate(language string) error {
 	if !common.IsASupportedLanguage(language) {
 		return errors.New(fmt.Sprintf("%s is not a supported language", language))
 	}
-
 	// Create the project manifest
 	showMessage("create", common.ManifestFile)
 	if common.FileExists(common.ManifestFile) {
