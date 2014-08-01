@@ -24,6 +24,8 @@ const (
 const (
 	HTML_PLUGIN_ID     = "html-report"
 	GAUGE_RUBY_GEMFILE = "gauge-ruby-*.gem"
+	dotGauge           = ".gauge"
+	plugins            = "plugins"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, "bin")
@@ -36,24 +38,24 @@ var gaugePlugins = []string{HTML_PLUGIN_ID}
 func hashDir(dirPath string) string {
 	var b bytes.Buffer
 	filepath.Walk(dirPath, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() {
-			contents, err := ioutil.ReadFile(path)
-			if err != nil {
-				panic(err)
+			if !info.IsDir() {
+				contents, err := ioutil.ReadFile(path)
+				if err != nil {
+					panic(err)
+				}
+				h := sha1.New()
+				h.Write(contents)
+				b.WriteString(fmt.Sprintf("%x", h.Sum(nil)))
 			}
-			h := sha1.New()
-			h.Write(contents)
-			b.WriteString(fmt.Sprintf("%x", h.Sum(nil)))
-		}
-		return nil
-	})
+			return nil
+		})
 	h := sha1.New()
 	h.Write(b.Bytes())
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
 
 func isExecMode(mode os.FileMode) bool {
-	return (mode & 0111) != 0
+	return (mode&0111) != 0
 }
 
 func mirrorFile(src, dst string) error {
@@ -67,7 +69,7 @@ func mirrorFile(src, dst string) error {
 	dfi, err := os.Stat(dst)
 	if err == nil &&
 		isExecMode(sfi.Mode()) == isExecMode(dfi.Mode()) &&
-		(dfi.Mode()&os.ModeType == 0) &&
+			(dfi.Mode()&os.ModeType == 0) &&
 		dfi.Size() == sfi.Size() &&
 		dfi.ModTime().Unix() == sfi.ModTime().Unix() {
 		// Seems to not be modified.
@@ -109,18 +111,18 @@ func mirrorFile(src, dst string) error {
 func mirrorDir(src, dst string) error {
 	log.Printf("Copying '%s' -> '%s'\n", src, dst)
 	err := filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if fi.IsDir() {
-			return nil
-		}
-		suffix, err := filepath.Rel(src, path)
-		if err != nil {
-			return fmt.Errorf("Failed to find Rel(%q, %q): %v", src, path, err)
-		}
-		return mirrorFile(path, filepath.Join(dst, suffix))
-	})
+			if err != nil {
+				return err
+			}
+			if fi.IsDir() {
+				return nil
+			}
+			suffix, err := filepath.Rel(src, path)
+			if err != nil {
+				return fmt.Errorf("Failed to find Rel(%q, %q): %v", src, path, err)
+			}
+			return mirrorFile(path, filepath.Join(dst, suffix))
+		})
 	return err
 }
 
@@ -445,17 +447,17 @@ type targetOpts struct {
 
 var (
 	targets = map[string]*targetOpts{
-		"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
-		"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
-		"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
-		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
-	}
+	"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
+	"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
+	"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
+	"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
+}
 )
 
 var (
 	pluginInstallers = map[string]func(string) error{
-		HTML_PLUGIN_ID: installHtmlPlugin,
-	}
+	HTML_PLUGIN_ID: installHtmlPlugin,
+}
 )
 
 func installRunners(language, installPath string) {
@@ -543,13 +545,13 @@ func main() {
 			if pluginInstallPrefix == "" {
 				panic(fmt.Errorf("Failed to find AppData directory"))
 			}
-			pluginInstallPrefix = filepath.Join(pluginInstallPrefix, "gauge")
+			pluginInstallPrefix = filepath.Join(pluginInstallPrefix, "gauge", plugins)
 		} else {
 			userHome := getUserHome()
 			if userHome == "" {
 				panic(fmt.Errorf("Failed to find User Home directory"))
 			}
-			pluginInstallPrefix = filepath.Join(userHome, ".gauge")
+			pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
 		}
 
 		installGaugeFiles(*gaugeInstallPrefix)
