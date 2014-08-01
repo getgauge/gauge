@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"time"
 )
@@ -64,6 +65,7 @@ func executeInitHookForRunner(language string) error {
 	}
 
 	cmd := common.GetExecutableCommand(command)
+	cmd.Dir = filepath.Dir(languageJsonFilePath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
@@ -148,6 +150,7 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 	}
 
 	cmd := common.GetExecutableCommand(command)
+	cmd.Dir = filepath.Dir(languageJsonFilePath)
 	cmd.Stdout = getCurrentConsole()
 	cmd.Stderr = getCurrentConsole()
 	err = cmd.Start()

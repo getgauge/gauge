@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
-	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
@@ -109,7 +108,7 @@ func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
 		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, pluginVersion))
 	}
 
-	pluginsInstallDir, err := common.GetPluginInstallDir(pluginName, pluginVersion)
+	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, pluginVersion)
 	if err != nil {
 		return "", err
 	}
@@ -130,7 +129,7 @@ func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, e
 	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
 		return nil, errors.New(fmt.Sprintf("%s: %s", pluginJson, err.Error()))
 	}
-	pd.pluginPath = strings.Replace(pluginJson, filepath.Base(pluginJson), "", -1)
+	pd.pluginPath = filepath.Dir(pluginJson)
 
 	return &pd, nil
 }
@@ -150,6 +149,7 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 	}
 
 	cmd := common.GetExecutableCommand(path.Join(pd.pluginPath, command))
+	cmd.Dir = pd.pluginPath
 	pluginConsoleWriter := &pluginConsoleWriter{pluginName: pd.Name}
 	cmd.Stdout = pluginConsoleWriter
 	cmd.Stderr = pluginConsoleWriter
@@ -168,24 +168,25 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 	return cmd, nil
 }
 
-func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginArgs map[string]string) {
-	os.Setenv(fmt.Sprintf("%s_action", pd.Id), action)
-	os.Setenv("test_language", manifest.Language)
-	projRoot, err := common.GetProjectRoot()
-	if err == nil {
-		os.Setenv("project_root", projRoot)
+func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginEnvVars map[string]string) error {
+	pluginEnvVars[fmt.Sprintf("%s_action", pd.Id)] = action
+	pluginEnvVars["test_language"] = manifest.Language
+	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
+		return err
 	}
-	pluginsInstallDir, err := common.GetPluginsInstallDir()
-	if err == nil {
-		os.Setenv("plugin_root", path.Join(pluginsInstallDir, pd.Id, pd.Version))
+	if err := setCurrentProjectEnvVariable(); err != nil {
+		return err
 	}
-	setEnvironmentProperties(pluginArgs)
+	return nil
 }
 
-func setEnvironmentProperties(properties map[string]string) {
+func setEnvironmentProperties(properties map[string]string) error {
 	for k, v := range properties {
-		os.Setenv(k, v)
+		if err := common.SetEnvVariable(k, v); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest) error {
@@ -198,7 +199,9 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return errors.New("Plugin " + pd.Name + " is already added")
 	}
 	action := setupScope
-	setEnvForPlugin(action, pd, manifest, pluginArgs)
+	if err := setEnvForPlugin(action, pd, manifest, pluginArgs); err != nil {
+		return err
+	}
 	if _, err := startPlugin(pd, action, true); err != nil {
 		return err
 	}

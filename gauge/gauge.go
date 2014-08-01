@@ -84,11 +84,23 @@ func printUsage() {
 	os.Exit(2)
 }
 
+func setCurrentProjectEnvVariable() error {
+	projectRoot, err := common.GetProjectRoot()
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to find gauge project root: %s ", err.Error()))
+	}
+	err = common.SetEnvVariable(common.GaugeProjectRootEnv, projectRoot)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Error setting environment variable project_root : %s ", err.Error()))
+	}
+	return nil
+}
+
 func runInBackground() {
 	loadGaugeEnvironment()
 	port, err := getPortFromEnvironmentVariable(apiPortEnvVariableName)
 	if err != nil {
-		fmt.Printf("Failed to start API Service. %s", err.Error())
+		fmt.Printf("Failed to start API Service. %s \n", err.Error())
 		os.Exit(1)
 	}
 	var wg sync.WaitGroup
@@ -152,7 +164,6 @@ func executeSpecs() {
 	}
 
 	loadGaugeEnvironment()
-
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 
@@ -394,6 +405,10 @@ func loadGaugeEnvironment() {
 }
 
 func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
+	if err := setCurrentProjectEnvVariable(); err != nil {
+		return nil, err
+	}
+
 	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
