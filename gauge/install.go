@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"os"
 	"path"
 	"runtime"
 	"sort"
@@ -83,11 +84,44 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to download plugin zip: %s.", err))
 	}
-	pluginContents, err := common.UnzipArchive(pluginZip)
+	unzippedPluginDir, err := common.UnzipArchive(pluginZip)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
-	return copyPluginFilesToGauge(installDesc, versionInstallDescription, pluginContents)
+	if err := runInstallCommands(versionInstallDescription.Install, unzippedPluginDir); err != nil {
+		return errors.New(fmt.Sprintf("Failed to Run install command. %s.", err))
+	}
+	return copyPluginFilesToGauge(installDesc, versionInstallDescription, unzippedPluginDir)
+}
+
+func runInstallCommands(installCommands platformSpecifics, workingDir string) error {
+	command := ""
+	switch runtime.GOOS {
+	case "windows":
+		command = installCommands.Windows
+		break
+	case "darwin":
+		command = installCommands.Darwin
+		break
+	default:
+		command = installCommands.Linux
+		break
+	}
+
+	if command == "" {
+		return nil
+	}
+
+	cmd := common.GetExecutableCommand(command)
+	cmd.Dir = workingDir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	return cmd.Wait()
 }
 
 func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc *versionInstallDescription, pluginContents string) error {
