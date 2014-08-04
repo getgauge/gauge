@@ -35,6 +35,10 @@ type runner struct {
 }
 
 func executeInitHookForRunner(language string) error {
+	if err := setCurrentProjectEnvVariable(); err != nil {
+		return err
+	}
+
 	var r runner
 	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
 	if err != nil {
@@ -64,8 +68,10 @@ func executeInitHookForRunner(language string) error {
 		break
 	}
 
-	cmd := common.GetExecutableCommand(command)
-	cmd.Dir = filepath.Dir(languageJsonFilePath)
+	runnerDir := filepath.Dir(languageJsonFilePath)
+	commandWithAbsolutePath := filepath.Join(runnerDir, command)
+	cmd := common.GetExecutableCommand(commandWithAbsolutePath)
+	cmd.Dir = runnerDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Start()
@@ -148,9 +154,10 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		command = r.Run.Linux
 		break
 	}
-
-	cmd := common.GetExecutableCommand(command)
-	cmd.Dir = filepath.Dir(languageJsonFilePath)
+	runnerDir := filepath.Dir(languageJsonFilePath)
+	commandWithAbsolutePath := filepath.Join(runnerDir, command)
+	cmd := common.GetExecutableCommand(commandWithAbsolutePath)
+	cmd.Dir = runnerDir
 	cmd.Stdout = getCurrentConsole()
 	cmd.Stderr = getCurrentConsole()
 	err = cmd.Start()

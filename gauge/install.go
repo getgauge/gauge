@@ -157,7 +157,9 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 		downloadLink = platformLinks.Linux
 		break
 	}
-
+	if downloadLink == "" {
+		return "", errors.New("Plugin download URL not available for current platform.")
+	}
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Failed to download File %s: %s", downloadLink, err.Error()))
