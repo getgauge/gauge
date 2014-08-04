@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"net"
 	"os/exec"
 	"path"
 	"path/filepath"
@@ -42,9 +43,9 @@ type pluginHandler struct {
 }
 
 type plugin struct {
-	connectionHandler *gaugeConnectionHandler
-	pluginCmd         *exec.Cmd
-	descriptor        *pluginDescriptor
+	connection net.Conn
+	pluginCmd  *exec.Cmd
+	descriptor *pluginDescriptor
 }
 
 func (plugin *plugin) kill(wg *sync.WaitGroup) error {
@@ -243,12 +244,13 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
 				continue
 			}
-			if err := gaugeConnectionHandler.acceptConnection(pluginConnectionTimeout); err != nil {
+			pluginConnection, err := gaugeConnectionHandler.acceptConnection(pluginConnectionTimeout)
+			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
 				pluginCmd.Process.Kill()
 				continue
 			}
-			handler.addPlugin(pluginDetails.Id, &plugin{connectionHandler: gaugeConnectionHandler, pluginCmd: pluginCmd, descriptor: pd})
+			handler.addPlugin(pluginDetails.Id, &plugin{connection: pluginConnection, pluginCmd: pluginCmd, descriptor: pd})
 		}
 
 	}
@@ -311,7 +313,7 @@ func (plugin *plugin) sendMessage(message *Message) error {
 	if err != nil {
 		return err
 	}
-	err = plugin.connectionHandler.write(messageBytes)
+	err = write(plugin.connection, messageBytes)
 	if err != nil {
 		return errors.New(fmt.Sprintf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error()))
 	}

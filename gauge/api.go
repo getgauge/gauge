@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"log"
+	"net"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,8 +59,11 @@ func findAvailableStepsInSpecs(specs []*specification) {
 
 func addStepsToAvailableSteps(steps []*step) {
 	for _, step := range steps {
-		if _, ok := availableStepsMap[step.value]; !ok {
-			availableStepsMap[step.value] = true
+		stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
+		if err == nil {
+			if _, ok := availableStepsMap[stepValue.stepValue]; !ok {
+				availableStepsMap[stepValue.stepValue] = stepValue
+			}
 		}
 	}
 }
@@ -70,18 +74,21 @@ func addStepValuesToAvailableSteps(stepValues []string) {
 	}
 }
 
-func addToAvailableSteps(step string) {
-	if _, ok := availableStepsMap[step]; !ok {
-		availableStepsMap[step] = true
+func addToAvailableSteps(stepText string) {
+	stepValue, err := extractStepValueAndParams(stepText, false)
+	if err == nil {
+		if _, ok := availableStepsMap[stepValue.stepValue]; !ok {
+			availableStepsMap[stepValue.stepValue] = stepValue
+		}
 	}
 }
 
-func getAvailableStepNames() []string {
-	stepNames := make([]string, 0)
-	for stepName, _ := range availableStepsMap {
-		stepNames = append(stepNames, stepName)
+func getAvailableSteps() []*stepValue {
+	steps := make([]*stepValue, 0)
+	for _, stepValue := range availableStepsMap {
+		steps = append(steps, stepValue)
 	}
-	return stepNames
+	return steps
 }
 
 func getStepsFromRunner(runner *testRunner) []string {
@@ -99,7 +106,7 @@ func getStepsFromRunner(runner *testRunner) []string {
 }
 
 func requestForSteps(runner *testRunner) []string {
-	message, err := getResponseForGaugeMessage(createGetStepNamesRequest(), runner.connectionHandler)
+	message, err := getResponseForGaugeMessage(createGetStepNamesRequest(), runner.connection)
 	if err == nil {
 		allStepsResponse := message.GetStepNamesResponse()
 		return allStepsResponse.GetSteps()
@@ -132,7 +139,7 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 
 type gaugeApiMessageHandler struct{}
 
-func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, connectionHandler *gaugeConnectionHandler) {
+func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, conn net.Conn) {
 	apiMessage := &APIMessage{}
 	var responseMessage *APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
@@ -159,15 +166,15 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 			break
 		}
 	}
-	handler.sendMessage(responseMessage, connectionHandler)
+	handler.sendMessage(responseMessage, conn)
 }
 
-func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, connectionHandler *gaugeConnectionHandler) {
+func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, conn net.Conn) {
 	dataBytes, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Printf("[Warning] Failed to respond to API request. Could not Marshal response %s\n", err.Error())
 	}
-	if err := connectionHandler.write(dataBytes); err != nil {
+	if err := write(conn, dataBytes); err != nil {
 		fmt.Printf("[Warning] Failed to respond to API request. Could not write response %s\n", err.Error())
 	}
 }
@@ -194,7 +201,12 @@ func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *
 }
 
 func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMessage) *APIMessage {
-	getAllStepsResponse := &GetAllStepsResponse{Steps: getAvailableStepNames()}
+	stepValues := getAvailableSteps()
+	stepValueResponses := make([]*ProtoStepValue, 0)
+	for _, stepValue := range stepValues {
+		stepValueResponses = append(stepValueResponses, convertToProtoStepValue(stepValue))
+	}
+	getAllStepsResponse := &GetAllStepsResponse{AllSteps: stepValueResponses}
 	return &APIMessage{MessageType: APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
@@ -212,7 +224,7 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIM
 	if err != nil {
 		return handler.getErrorResponse(message, err)
 	}
-	stepValueResponse := &GetStepValueResponse{StepValue: proto.String(stepValue.stepValue), Parameters: stepValue.args, ParameterizedStepValue: proto.String(stepValue.parameterizedStepValue)}
+	stepValueResponse := &GetStepValueResponse{StepValue: convertToProtoStepValue(stepValue)}
 	return &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }

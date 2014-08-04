@@ -25,7 +25,7 @@ const (
 )
 
 var availableSpecs = make([]*specification, 0)
-var availableStepsMap = make(map[string]bool)
+var availableStepsMap = make(map[string]*stepValue)
 var acceptedExtensions = make(map[string]bool)
 
 func init() {
@@ -426,8 +426,8 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 
-	connectionError := gaugeConnectionHandler.acceptConnection(runnerConnectionTimeOut)
-	testRunner.connectionHandler = gaugeConnectionHandler
+	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(runnerConnectionTimeOut)
+	testRunner.connection = runnerConnection
 	if connectionError != nil {
 		testRunner.cmd.Process.Kill()
 		return nil, connectionError

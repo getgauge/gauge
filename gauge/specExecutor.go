@@ -145,7 +145,7 @@ func (executor *specExecutor) validateConcept(concept *step) []*stepValidationEr
 func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
-	response, err := getResponseForGaugeMessage(message, executor.runner.connectionHandler)
+	response, err := getResponseForGaugeMessage(message, executor.runner.connection)
 	if err != nil {
 		return &stepValidationError{step: step, message: err.Error(), fileName: executor.specification.fileName}
 	}
@@ -432,7 +432,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 }
 
 func executeAndGetStatus(runner *testRunner, message *Message) *ProtoExecutionResult {
-	response, err := getResponseForGaugeMessage(message, runner.connectionHandler)
+	response, err := getResponseForGaugeMessage(message, runner.connection)
 	if err != nil {
 		return &ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
 	}

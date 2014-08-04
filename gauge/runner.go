@@ -15,9 +15,8 @@ import (
 const runnerKillTimeOut = time.Second * 2
 
 type testRunner struct {
-	cmd               *exec.Cmd
-	connection        net.Conn
-	connectionHandler *gaugeConnectionHandler
+	cmd        *exec.Cmd
+	connection net.Conn
 }
 
 type runner struct {
@@ -69,8 +68,7 @@ func executeInitHookForRunner(language string) error {
 	}
 
 	runnerDir := filepath.Dir(languageJsonFilePath)
-	commandWithAbsolutePath := filepath.Join(runnerDir, command)
-	cmd := common.GetExecutableCommand(commandWithAbsolutePath)
+	cmd := common.GetExecutableCommand(filepath.Join(runnerDir, command))
 	cmd.Dir = runnerDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -120,7 +118,7 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 	message := &Message{MessageId: &id, MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
 
-	writeGaugeMessage(message, testRunner.connectionHandler)
+	writeGaugeMessage(message, testRunner.connection)
 }
 
 // Looks for a runner configuration inside the runner directory
@@ -155,8 +153,7 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		break
 	}
 	runnerDir := filepath.Dir(languageJsonFilePath)
-	commandWithAbsolutePath := filepath.Join(runnerDir, command)
-	cmd := common.GetExecutableCommand(commandWithAbsolutePath)
+	cmd := common.GetExecutableCommand(filepath.Join(runnerDir, command))
 	cmd.Dir = runnerDir
 	cmd.Stdout = getCurrentConsole()
 	cmd.Stderr = getCurrentConsole()

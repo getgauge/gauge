@@ -44,14 +44,15 @@ type argLookup struct {
 }
 
 type step struct {
-	lineNo       int
-	value        string
-	lineText     string
-	args         []*stepArg
-	isConcept    bool
-	lookup       argLookup
-	conceptSteps []*step
-	fragments    []*Fragment
+	lineNo         int
+	value          string
+	lineText       string
+	args           []*stepArg
+	isConcept      bool
+	lookup         argLookup
+	conceptSteps   []*step
+	fragments      []*Fragment
+	hasInlineTable bool
 }
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
@@ -536,6 +537,7 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 //todo validate headers for dynamic
 func addInlineTableHeader(step *step, token *token) {
 	step.value = fmt.Sprintf("%s %s", step.value, PARAMETER_PLACEHOLDER)
+	step.hasInlineTable = true
 	step.addInlineTableHeaders(token.args)
 }
 

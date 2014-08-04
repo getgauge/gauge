@@ -223,6 +223,7 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 	c.Assert(inlineTable, NotNil)
 
 	c.Assert(step.value, Equals, "Step with inline table {}")
+	c.Assert(step.hasInlineTable, Equals, true)
 	c.Assert(len(inlineTable.get("id")), Equals, 2)
 	c.Assert(len(inlineTable.get("name")), Equals, 2)
 	c.Assert(inlineTable.get("id")[0].value, Equals, "1")

@@ -189,6 +189,14 @@ func convertToProtoSpec(spec *specification) *ProtoSpec {
 	return protoSpec
 }
 
+func convertToProtoStepValue(stepValue *stepValue) *ProtoStepValue {
+	return &ProtoStepValue{
+		StepValue:              proto.String(stepValue.stepValue),
+		ParameterizedStepValue: proto.String(stepValue.parameterizedStepValue),
+		Parameters:             stepValue.args,
+	}
+}
+
 func newSpecResult(specification *specification) *specResult {
 	return &specResult{
 		protoSpec:           newProtoSpec(specification),
