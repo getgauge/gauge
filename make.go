@@ -306,9 +306,9 @@ func getHasHFile(dir string) string {
 func installGaugeFiles(installPath string) {
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(platformBinDir, "gauge.exe")] = bin
+		files[filepath.Join(getBinDir(), "gauge.exe")] = bin
 	} else {
-		files[filepath.Join(platformBinDir, "gauge")] = bin
+		files[filepath.Join(getBinDir(), "gauge")] = bin
 	}
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
@@ -318,9 +318,9 @@ func installGaugeFiles(installPath string) {
 func installGaugeJavaFiles(installPath string) {
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(platformBinDir, "gauge-java.exe")] = bin
+		files[filepath.Join(getBinDir(), "gauge-java.exe")] = bin
 	} else {
-		files[filepath.Join(platformBinDir, "gauge-java")] = bin
+		files[filepath.Join(getBinDir(), "gauge-java")] = bin
 	}
 
 	javaRunnerProperties, err := getPluginProperties(filepath.Join("gauge-java", "java.json"))
@@ -342,9 +342,9 @@ func installGaugeRubyFiles(installPath string) {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(platformBinDir, "gauge-ruby.exe")] = bin
+		files[filepath.Join(getBinDir(), "gauge-ruby.exe")] = bin
 	} else {
-		files[filepath.Join(platformBinDir, "gauge-ruby")] = bin
+		files[filepath.Join(getBinDir(), "gauge-ruby")] = bin
 	}
 
 	rubyRunnerProperties, err := getPluginProperties(filepath.Join("gauge-ruby", "ruby.json"))
@@ -365,6 +365,13 @@ func installGaugeRubyFiles(installPath string) {
 
 	installFiles(files, rubyRunnerRelativePath)
 	installGaugeRubyGem()
+}
+
+func getBinDir() string {
+	if *binDir == "" {
+		return platformBinDir
+	}
+	return path.Join(bin, *binDir)
 }
 
 func getGemFile(dir string) string {
@@ -448,7 +455,7 @@ func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) error {
 }
 
 func moveBinaryToDirectory(target, destDir string) error {
-	if (runtime.GOOS == "windows") {
+	if runtime.GOOS == "windows" {
 		target = target + ".exe"
 	}
 	srcFile := path.Join(bin, target)
@@ -492,7 +499,8 @@ var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where g
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
-var language = flag.String("language", "", "Specifies the language of runner to be executed")
+var language = flag.String("language", "", "Specifies the language of runner to be install")
+var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -557,9 +565,9 @@ func installHtmlPlugin(installPath string) error {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(platformBinDir, HTML_PLUGIN_ID+".exe")] = pluginRelativePath
+		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID+".exe")] = pluginRelativePath
 	} else {
-		files[filepath.Join(platformBinDir, HTML_PLUGIN_ID)] = pluginRelativePath
+		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID)] = pluginRelativePath
 	}
 	files[filepath.Join(pluginSrcBasePath, "plugin.json")] = pluginRelativePath
 	files[filepath.Join(pluginSrcBasePath, "report-template")] = filepath.Join(pluginRelativePath, "report-template")
