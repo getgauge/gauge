@@ -434,6 +434,7 @@ var test = flag.Bool("test", false, "Run the test cases")
 var coverage = flag.Bool("test-coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
+var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
 var language = flag.String("language", "", "Specifies the language of runner to be executed")
 
@@ -539,24 +540,25 @@ func main() {
 				*gaugeInstallPrefix = "/usr/local"
 			}
 		}
-		var pluginInstallPrefix string
-		if runtime.GOOS == "windows" {
-			pluginInstallPrefix = os.Getenv("APPDATA")
-			if pluginInstallPrefix == "" {
-				panic(fmt.Errorf("Failed to find AppData directory"))
+		if *pluginInstallPrefix == "" {
+			if runtime.GOOS == "windows" {
+				*pluginInstallPrefix = os.Getenv("APPDATA")
+				if *pluginInstallPrefix == "" {
+					panic(fmt.Errorf("Failed to find AppData directory"))
+				}
+				*pluginInstallPrefix = filepath.Join(*pluginInstallPrefix, "gauge", plugins)
+			} else {
+				userHome := getUserHome()
+				if userHome == "" {
+					panic(fmt.Errorf("Failed to find User Home directory"))
+				}
+				*pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
 			}
-			pluginInstallPrefix = filepath.Join(pluginInstallPrefix, "gauge", plugins)
-		} else {
-			userHome := getUserHome()
-			if userHome == "" {
-				panic(fmt.Errorf("Failed to find User Home directory"))
-			}
-			pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
 		}
 
 		installGaugeFiles(*gaugeInstallPrefix)
-		installPlugins(pluginInstallPrefix)
-		installRunners(*language, pluginInstallPrefix)
+		installPlugins(*pluginInstallPrefix)
+		installRunners(*language, *pluginInstallPrefix)
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {
