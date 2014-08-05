@@ -448,6 +448,9 @@ func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) error {
 }
 
 func moveBinaryToDirectory(target, destDir string) error {
+	if (runtime.GOOS == "windows") {
+		target = target + ".exe"
+	}
 	srcFile := path.Join(bin, target)
 	destFile := path.Join(destDir, target)
 	if err := os.MkdirAll(destDir, newDirPermissions); err != nil {
