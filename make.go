@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -26,11 +27,21 @@ const (
 	GAUGE_RUBY_GEMFILE = "gauge-ruby-*.gem"
 	dotGauge           = ".gauge"
 	plugins            = "plugins"
+	GOARCH             = "GOARCH"
+	GOOS               = "GOOS"
+	X86                = "386"
+	X86_64             = "amd64"
+	DARWIN             = "darwin"
+	LINUX              = "linux"
+	WINDOWS            = "windows"
+	bin                = "bin"
+	newDirPermissions  = 0755
 )
 
-var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, "bin")
+var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, bin)
 var BUILD_DIR_SRC = filepath.Join(BUILD_DIR, "src")
 var BUILD_DIR_PKG = filepath.Join(BUILD_DIR, "pkg")
+var platformBinDir = filepath.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 
 var gaugePackages = []string{"gauge", "gauge-java", "gauge-ruby"}
 var gaugePlugins = []string{HTML_PLUGIN_ID}
@@ -77,7 +88,7 @@ func mirrorFile(src, dst string) error {
 	}
 
 	dstDir := filepath.Dir(dst)
-	if err := os.MkdirAll(dstDir, 0755); err != nil {
+	if err := os.MkdirAll(dstDir, newDirPermissions); err != nil {
 		return err
 	}
 
@@ -127,17 +138,17 @@ func mirrorDir(src, dst string) error {
 }
 
 func createGoPathForBuild() {
-	err := os.MkdirAll(BUILD_DIR_SRC, 0755)
+	err := os.MkdirAll(BUILD_DIR_SRC, newDirPermissions)
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.MkdirAll(BUILD_DIR_BIN, 0755)
+	err = os.MkdirAll(BUILD_DIR_BIN, newDirPermissions)
 	if err != nil {
 		panic(err)
 	}
 
-	err = os.MkdirAll(BUILD_DIR_PKG, 0755)
+	err = os.MkdirAll(BUILD_DIR_PKG, newDirPermissions)
 	if err != nil {
 		panic(err)
 	}
@@ -229,21 +240,20 @@ func runTests(packageName string, coverage bool) {
 }
 
 func copyBinaries() {
-	err := os.MkdirAll("bin", 0755)
+	err := os.MkdirAll(bin, newDirPermissions)
 	if err != nil {
 		panic(err)
 	}
 
-	err = mirrorDir(BUILD_DIR_BIN, "bin")
+	err = mirrorDir(BUILD_DIR_BIN, bin)
 	if err != nil {
 		panic(err)
 	}
 
-	absBin, err := filepath.Abs("bin")
+	absBin, err := filepath.Abs(bin)
 	if err != nil {
 		panic(err)
 	}
-
 	log.Printf("Binaries are available at: %s\n", absBin)
 }
 
@@ -296,9 +306,9 @@ func getHasHFile(dir string) string {
 func installGaugeFiles(installPath string) {
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join("bin", "gauge.exe")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge.exe")] = bin
 	} else {
-		files[filepath.Join("bin", "gauge")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge")] = bin
 	}
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
@@ -308,9 +318,9 @@ func installGaugeFiles(installPath string) {
 func installGaugeJavaFiles(installPath string) {
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join("bin", "gauge-java.exe")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge-java.exe")] = bin
 	} else {
-		files[filepath.Join("bin", "gauge-java")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge-java")] = bin
 	}
 
 	javaRunnerProperties, err := getPluginProperties(filepath.Join("gauge-java", "java.json"))
@@ -332,9 +342,9 @@ func installGaugeRubyFiles(installPath string) {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join("bin", "gauge-ruby.exe")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge-ruby.exe")] = bin
 	} else {
-		files[filepath.Join("bin", "gauge-ruby")] = "bin"
+		files[filepath.Join(platformBinDir, "gauge-ruby")] = bin
 	}
 
 	rubyRunnerProperties, err := getPluginProperties(filepath.Join("gauge-ruby", "ruby.json"))
@@ -412,19 +422,61 @@ func installPlugins(installPath string) {
 
 // Executes the specified target
 // It also keeps a hash of all the contents in the target directory and avoid recompilation if contents are not changed
-func executeTarget(target string) {
+func executeTarget(target string, forAllPlatforms bool) {
+	if forAllPlatforms {
+		for _, platformEnv := range platformEnvs {
+			fmt.Printf("Executing target %s for platform envs:%s \n", target, platformEnv)
+			setEnv(platformEnv)
+			runTarget(target, false)
+		}
+	} else {
+		runTarget(target, true)
+	}
+}
+func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) error {
+	destDir := path.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
+	if compileTarget == "" {
+		for target, _ := range targets {
+			if err := moveBinaryToDirectory(path.Base(target), destDir); err != nil {
+				return err
+			}
+		}
+	} else {
+		return moveBinaryToDirectory(path.Base(compileTarget), destDir)
+	}
+	return nil
+}
+
+func moveBinaryToDirectory(target, destDir string) error {
+	srcFile := path.Join(bin, target)
+	destFile := path.Join(destDir, target)
+	if err := os.MkdirAll(destDir, newDirPermissions); err != nil {
+		return err
+	}
+	if err := mirrorFile(srcFile, destFile); err != nil {
+		return err
+	}
+	return os.Remove(srcFile)
+}
+
+func runTarget(target string, checkChanges bool) {
 	opts, ok := targets[target]
 	if !ok {
 		log.Fatalf("Unknown target: %s\n", target)
 	}
-
-	if opts.lookForChanges {
+	if checkChanges && opts.lookForChanges {
 		if hasChanges(hashDir(target), target) {
 			opts.targetFunc()
 			saveHash(hashDir(target), target)
 		}
 	} else {
 		opts.targetFunc()
+	}
+}
+
+func setEnv(envVariables map[string]string) {
+	for k, v := range envVariables {
+		os.Setenv(k, v)
 	}
 }
 
@@ -436,6 +488,7 @@ var install = flag.Bool("install", false, "Install to the specified prefix")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
+var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
 var language = flag.String("language", "", "Specifies the language of runner to be executed")
 
 type targetOpts struct {
@@ -452,6 +505,14 @@ var (
 		"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
 		"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
 		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
+	}
+	platformEnvs = []map[string]string{
+		map[string]string{GOARCH: X86, GOOS: DARWIN},
+		map[string]string{GOARCH: X86_64, GOOS: DARWIN},
+		map[string]string{GOARCH: X86, GOOS: LINUX},
+		map[string]string{GOARCH: X86_64, GOOS: LINUX},
+		map[string]string{GOARCH: X86, GOOS: WINDOWS},
+		map[string]string{GOARCH: X86_64, GOOS: WINDOWS},
 	}
 )
 
@@ -485,7 +546,7 @@ func installHtmlPlugin(installPath string) error {
 	}
 	pluginRelativePath := filepath.Join(pluginProperties["id"].(string), pluginProperties["version"].(string))
 	pluginInstallPath := filepath.Join(installPath, pluginRelativePath)
-	err = os.MkdirAll(pluginInstallPath, 0755)
+	err = os.MkdirAll(pluginInstallPath, newDirPermissions)
 	if err != nil {
 		fmt.Printf("Could not create %s: %s\n", pluginInstallPath, err)
 		return err
@@ -493,9 +554,9 @@ func installHtmlPlugin(installPath string) error {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join("bin", HTML_PLUGIN_ID+".exe")] = pluginRelativePath
+		files[filepath.Join(platformBinDir, HTML_PLUGIN_ID+".exe")] = pluginRelativePath
 	} else {
-		files[filepath.Join("bin", HTML_PLUGIN_ID)] = pluginRelativePath
+		files[filepath.Join(platformBinDir, HTML_PLUGIN_ID)] = pluginRelativePath
 	}
 	files[filepath.Join(pluginSrcBasePath, "plugin.json")] = pluginRelativePath
 	files[filepath.Join(pluginSrcBasePath, "report-template")] = filepath.Join(pluginRelativePath, "report-template")
@@ -562,12 +623,16 @@ func main() {
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {
-				executeTarget(target)
+				executeTarget(target, *allPlatforms)
 			}
 		} else {
-			executeTarget(*compileTarget)
+			executeTarget(*compileTarget, *allPlatforms)
 		}
 		copyBinaries()
+		if err := moveOSBinaryToCurrentOSArchDirectory(*compileTarget); err != nil {
+			panic(fmt.Sprintf("Failed to move current OS-ARCH binaries: %s", err))
+		}
+
 	}
 }
 
