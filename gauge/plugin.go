@@ -82,7 +82,7 @@ func (plugin *plugin) isStillRunning() bool {
 }
 
 func isPluginInstalled(pluginName, pluginVersion string) bool {
-	pluginsInstallDir, err := common.GetPluginsInstallDir()
+	pluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
 		return false
 	}

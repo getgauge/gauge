@@ -125,7 +125,7 @@ func runInstallCommands(installCommands platformSpecifics, workingDir string) er
 }
 
 func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc *versionInstallDescription, pluginContents string) error {
-	pluginsDir, err := common.GetPluginsInstallDir()
+	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
 		return err
 	}
