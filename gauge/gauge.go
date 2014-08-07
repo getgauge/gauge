@@ -24,8 +24,6 @@ const (
 	envDefaultDirName = "default"
 )
 
-var availableSpecs = make([]*specification, 0)
-var availableStepsMap = make(map[string]*stepValue)
 var acceptedExtensions = make(map[string]bool)
 
 func init() {
@@ -105,7 +103,6 @@ func runInBackground() {
 	}
 	var wg sync.WaitGroup
 	runAPIServiceIndefinitely(port, &wg)
-	makeListOfAvailableSteps(nil)
 	wg.Wait()
 }
 
@@ -180,7 +177,6 @@ func executeSpecs() {
 		}
 	}
 	manifest := getProjectManifest()
-
 	err := startAPIService(0)
 	if err != nil {
 		fmt.Printf("Failed to start gauge API. %s\n", err.Error())
@@ -191,7 +187,6 @@ func executeSpecs() {
 		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
-	makeListOfAvailableSteps(runner)
 
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)

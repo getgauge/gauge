@@ -23,88 +23,6 @@ type stepValue struct {
 	parameterizedStepValue string
 }
 
-func makeListOfAvailableSteps(runner *testRunner) {
-	addStepValuesToAvailableSteps(getStepsFromRunner(runner))
-	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
-	dictionary, _ := createConceptsDictionary(true)
-	availableSpecs = parseSpecFiles(specFiles, dictionary)
-	findAvailableStepsInSpecs(availableSpecs)
-}
-
-func parseSpecFiles(specFiles []string, dictionary *conceptDictionary) []*specification {
-	specs := make([]*specification, 0)
-	for _, file := range specFiles {
-		specContent, err := common.ReadFileContents(file)
-		if err != nil {
-			continue
-		}
-		parser := new(specParser)
-		specification, result := parser.parse(specContent, dictionary)
-
-		if result.ok {
-			specs = append(specs, specification)
-		}
-	}
-	return specs
-}
-
-func findAvailableStepsInSpecs(specs []*specification) {
-	for _, spec := range specs {
-		addStepsToAvailableSteps(spec.contexts)
-		for _, scenario := range spec.scenarios {
-			addStepsToAvailableSteps(scenario.steps)
-		}
-	}
-}
-
-func addStepsToAvailableSteps(steps []*step) {
-	for _, step := range steps {
-		stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
-		if err == nil {
-			if _, ok := availableStepsMap[stepValue.stepValue]; !ok {
-				availableStepsMap[stepValue.stepValue] = stepValue
-			}
-		}
-	}
-}
-
-func addStepValuesToAvailableSteps(stepValues []string) {
-	for _, step := range stepValues {
-		addToAvailableSteps(step)
-	}
-}
-
-func addToAvailableSteps(stepText string) {
-	stepValue, err := extractStepValueAndParams(stepText, false)
-	if err == nil {
-		if _, ok := availableStepsMap[stepValue.stepValue]; !ok {
-			availableStepsMap[stepValue.stepValue] = stepValue
-		}
-	}
-}
-
-func getAvailableSteps() []*stepValue {
-	steps := make([]*stepValue, 0)
-	for _, stepValue := range availableStepsMap {
-		steps = append(steps, stepValue)
-	}
-	return steps
-}
-
-func getStepsFromRunner(runner *testRunner) []string {
-	steps := make([]string, 0)
-	if runner == nil {
-		runner, connErr := startRunnerAndMakeConnection(getProjectManifest())
-		if connErr == nil {
-			steps = append(steps, requestForSteps(runner)...)
-			runner.kill()
-		}
-	} else {
-		steps = append(steps, requestForSteps(runner)...)
-	}
-	return steps
-}
-
 func requestForSteps(runner *testRunner) []string {
 	message, err := getResponseForGaugeMessage(createGetStepNamesRequest(), runner.connection)
 	if err == nil {
@@ -119,7 +37,9 @@ func createGetStepNamesRequest() *Message {
 }
 
 func startAPIService(port int) error {
-	gaugeConnectionHandler, err := newGaugeConnectionHandler(port, new(gaugeApiMessageHandler))
+	specInfoGatherer := new(specInfoGatherer)
+	apiHandler := &gaugeApiMessageHandler{specInfoGatherer}
+	gaugeConnectionHandler, err := newGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
 		return err
 	}
@@ -137,7 +57,9 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	startAPIService(port)
 }
 
-type gaugeApiMessageHandler struct{}
+type gaugeApiMessageHandler struct {
+	specInfoGatherer *specInfoGatherer
+}
 
 func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, conn net.Conn) {
 	apiMessage := &APIMessage{}
@@ -201,7 +123,7 @@ func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *
 }
 
 func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMessage) *APIMessage {
-	stepValues := getAvailableSteps()
+	stepValues := handler.specInfoGatherer.getAvailableSteps()
 	stepValueResponses := make([]*ProtoStepValue, 0)
 	for _, stepValue := range stepValues {
 		stepValueResponses = append(stepValueResponses, convertToProtoStepValue(stepValue))
@@ -211,7 +133,7 @@ func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMe
 }
 
 func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *APIMessage) *APIMessage {
-	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(availableSpecs)
+	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.availableSpecs)
 	return &APIMessage{MessageType: APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
 }
 
