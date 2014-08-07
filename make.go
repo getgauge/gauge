@@ -501,6 +501,7 @@ var compileTarget = flag.String("target", "", "Specifies the target to be execut
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
 var language = flag.String("language", "", "Specifies the language of runner to be install")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
+var gaugeOnly = flag.Bool("gauge-only", false, "Installs only gauge and default plugins. Skips langauge installation")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -630,7 +631,10 @@ func main() {
 
 		installGaugeFiles(*gaugeInstallPrefix)
 		installPlugins(*pluginInstallPrefix)
-		installRunners(*language, *pluginInstallPrefix)
+		if !*gaugeOnly {
+			installRunners(*language, *pluginInstallPrefix)
+		}
+
 	} else {
 		if *compileTarget == "" {
 			for target, _ := range targets {
