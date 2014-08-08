@@ -499,7 +499,7 @@ var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where g
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
-var language = flag.String("language", "", "Specifies the language of runner to be install")
+var language = flag.String("language", "", "Specifies the language of runner to be installed. Plugins or gauge will not be installed")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var gaugeOnly = flag.Bool("gauge-only", false, "Installs only gauge and default plugins. Skips langauge installation")
 
@@ -629,10 +629,15 @@ func main() {
 			}
 		}
 
-		installGaugeFiles(*gaugeInstallPrefix)
-		installPlugins(*pluginInstallPrefix)
-		if !*gaugeOnly {
+		if *language != "" {
+			// only install that runner
 			installRunners(*language, *pluginInstallPrefix)
+		} else {
+			installGaugeFiles(*gaugeInstallPrefix)
+			installPlugins(*pluginInstallPrefix)
+			if !*gaugeOnly {
+				installRunners(*language, *pluginInstallPrefix)
+			}
 		}
 
 	} else {
