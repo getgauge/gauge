@@ -40,6 +40,14 @@ message GetStepValueResponse {
     required ProtoStepValue stepValue = 1;
 }
 
+message GetLanguagePluginLibPathRequest {
+    required string language = 1;
+}
+
+message GetLanguagePluginLibPathResponse {
+    required string path = 1;
+}
+
 message ErrorResponse {
     required string error = 1;
 }
@@ -56,7 +64,9 @@ message APIMessage {
         GetAllSpecsResponse = 8;
         GetStepValueRequest = 9;
         GetStepValueResponse = 10;
-        ErrorResponse = 11;
+        GetLanguagePluginLibPathRequest = 11;
+        GetLanguagePluginLibPathResponse = 12;
+        ErrorResponse = 13;
     }
 
     required APIMessageType messageType = 1;
@@ -72,6 +82,8 @@ message APIMessage {
     optional GetAllSpecsResponse allSpecsResponse = 10;
     optional GetStepValueRequest stepValueRequest = 11;
     optional GetStepValueResponse stepValueResponse = 12;
-    optional ErrorResponse error = 13;
+    optional GetLanguagePluginLibPathRequest libPathRequest = 13;
+    optional GetLanguagePluginLibPathResponse libPathResponse = 14;
+    optional ErrorResponse error = 15;
 
 }

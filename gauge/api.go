@@ -7,6 +7,7 @@ import (
 	"github.com/getgauge/common"
 	"log"
 	"net"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
@@ -86,6 +87,9 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 		case APIMessage_GetStepValueRequest:
 			responseMessage = handler.getStepValueRequestResponse(apiMessage)
 			break
+		case APIMessage_GetLanguagePluginLibPathRequest:
+			responseMessage = handler.getLanguagePluginLibPath(apiMessage)
+			break
 		}
 	}
 	handler.sendMessage(responseMessage, conn)
@@ -149,6 +153,23 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIM
 	stepValueResponse := &GetStepValueResponse{StepValue: convertToProtoStepValue(stepValue)}
 	return &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
+}
+
+func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *APIMessage) *APIMessage {
+	libPathRequest := message.GetLibPathRequest()
+	language := libPathRequest.GetLanguage()
+	languageInstallDir, err := common.GetPluginInstallDir(language, "")
+	if err != nil {
+		return handler.getErrorMessage(err)
+	}
+	runnerInfo, err := getRunnerInfo(language)
+	if err != nil {
+		return handler.getErrorMessage(err)
+	}
+	relativeLibPath := runnerInfo.Lib
+	libPath := path.Join(languageInstallDir, relativeLibPath)
+	response := &GetLanguagePluginLibPathResponse{Path: proto.String(libPath)}
+	return &APIMessage{MessageType: APIMessage_GetLanguagePluginLibPathResponse.Enum(), MessageId: message.MessageId, LibPathResponse: response}
 }
 
 func (handler *gaugeApiMessageHandler) getErrorResponse(message *APIMessage, err error) *APIMessage {

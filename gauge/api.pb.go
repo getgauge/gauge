@@ -19,6 +19,8 @@ It has these top-level messages:
 	GetAllSpecsResponse
 	GetStepValueRequest
 	GetStepValueResponse
+	GetLanguagePluginLibPathRequest
+	GetLanguagePluginLibPathResponse
 	ErrorResponse
 	APIMessage
 */
@@ -36,17 +38,19 @@ var _ = math.Inf
 type APIMessage_APIMessageType int32
 
 const (
-	APIMessage_GetProjectRootRequest       APIMessage_APIMessageType = 1
-	APIMessage_GetProjectRootResponse      APIMessage_APIMessageType = 2
-	APIMessage_GetInstallationRootRequest  APIMessage_APIMessageType = 3
-	APIMessage_GetInstallationRootResponse APIMessage_APIMessageType = 4
-	APIMessage_GetAllStepsRequest          APIMessage_APIMessageType = 5
-	APIMessage_GetAllStepResponse          APIMessage_APIMessageType = 6
-	APIMessage_GetAllSpecsRequest          APIMessage_APIMessageType = 7
-	APIMessage_GetAllSpecsResponse         APIMessage_APIMessageType = 8
-	APIMessage_GetStepValueRequest         APIMessage_APIMessageType = 9
-	APIMessage_GetStepValueResponse        APIMessage_APIMessageType = 10
-	APIMessage_ErrorResponse               APIMessage_APIMessageType = 11
+	APIMessage_GetProjectRootRequest            APIMessage_APIMessageType = 1
+	APIMessage_GetProjectRootResponse           APIMessage_APIMessageType = 2
+	APIMessage_GetInstallationRootRequest       APIMessage_APIMessageType = 3
+	APIMessage_GetInstallationRootResponse      APIMessage_APIMessageType = 4
+	APIMessage_GetAllStepsRequest               APIMessage_APIMessageType = 5
+	APIMessage_GetAllStepResponse               APIMessage_APIMessageType = 6
+	APIMessage_GetAllSpecsRequest               APIMessage_APIMessageType = 7
+	APIMessage_GetAllSpecsResponse              APIMessage_APIMessageType = 8
+	APIMessage_GetStepValueRequest              APIMessage_APIMessageType = 9
+	APIMessage_GetStepValueResponse             APIMessage_APIMessageType = 10
+	APIMessage_GetLanguagePluginLibPathRequest  APIMessage_APIMessageType = 11
+	APIMessage_GetLanguagePluginLibPathResponse APIMessage_APIMessageType = 12
+	APIMessage_ErrorResponse                    APIMessage_APIMessageType = 13
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -60,20 +64,24 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	8:  "GetAllSpecsResponse",
 	9:  "GetStepValueRequest",
 	10: "GetStepValueResponse",
-	11: "ErrorResponse",
+	11: "GetLanguagePluginLibPathRequest",
+	12: "GetLanguagePluginLibPathResponse",
+	13: "ErrorResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
-	"GetProjectRootRequest":       1,
-	"GetProjectRootResponse":      2,
-	"GetInstallationRootRequest":  3,
-	"GetInstallationRootResponse": 4,
-	"GetAllStepsRequest":          5,
-	"GetAllStepResponse":          6,
-	"GetAllSpecsRequest":          7,
-	"GetAllSpecsResponse":         8,
-	"GetStepValueRequest":         9,
-	"GetStepValueResponse":        10,
-	"ErrorResponse":               11,
+	"GetProjectRootRequest":            1,
+	"GetProjectRootResponse":           2,
+	"GetInstallationRootRequest":       3,
+	"GetInstallationRootResponse":      4,
+	"GetAllStepsRequest":               5,
+	"GetAllStepResponse":               6,
+	"GetAllSpecsRequest":               7,
+	"GetAllSpecsResponse":              8,
+	"GetStepValueRequest":              9,
+	"GetStepValueResponse":             10,
+	"GetLanguagePluginLibPathRequest":  11,
+	"GetLanguagePluginLibPathResponse": 12,
+	"ErrorResponse":                    13,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -229,6 +237,38 @@ func (m *GetStepValueResponse) GetStepValue() *ProtoStepValue {
 	return nil
 }
 
+type GetLanguagePluginLibPathRequest struct {
+	Language         *string `protobuf:"bytes,1,req,name=language" json:"language,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *GetLanguagePluginLibPathRequest) Reset()         { *m = GetLanguagePluginLibPathRequest{} }
+func (m *GetLanguagePluginLibPathRequest) String() string { return proto.CompactTextString(m) }
+func (*GetLanguagePluginLibPathRequest) ProtoMessage()    {}
+
+func (m *GetLanguagePluginLibPathRequest) GetLanguage() string {
+	if m != nil && m.Language != nil {
+		return *m.Language
+	}
+	return ""
+}
+
+type GetLanguagePluginLibPathResponse struct {
+	Path             *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *GetLanguagePluginLibPathResponse) Reset()         { *m = GetLanguagePluginLibPathResponse{} }
+func (m *GetLanguagePluginLibPathResponse) String() string { return proto.CompactTextString(m) }
+func (*GetLanguagePluginLibPathResponse) ProtoMessage()    {}
+
+func (m *GetLanguagePluginLibPathResponse) GetPath() string {
+	if m != nil && m.Path != nil {
+		return *m.Path
+	}
+	return ""
+}
+
 type ErrorResponse struct {
 	Error            *string `protobuf:"bytes,1,req,name=error" json:"error,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -246,20 +286,22 @@ func (m *ErrorResponse) GetError() string {
 }
 
 type APIMessage struct {
-	MessageType              *APIMessage_APIMessageType   `protobuf:"varint,1,req,name=messageType,enum=main.APIMessage_APIMessageType" json:"messageType,omitempty"`
-	MessageId                *int64                       `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
-	ProjectRootRequest       *GetProjectRootRequest       `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
-	ProjectRootResponse      *GetProjectRootResponse      `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
-	InstallationRootRequest  *GetInstallationRootRequest  `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
-	InstallationRootResponse *GetInstallationRootResponse `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
-	AllStepsRequest          *GetAllStepsRequest          `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
-	AllStepsResponse         *GetAllStepsResponse         `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
-	AllSpecsRequest          *GetAllSpecsRequest          `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
-	AllSpecsResponse         *GetAllSpecsResponse         `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
-	StepValueRequest         *GetStepValueRequest         `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
-	StepValueResponse        *GetStepValueResponse        `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
-	Error                    *ErrorResponse               `protobuf:"bytes,13,opt,name=error" json:"error,omitempty"`
-	XXX_unrecognized         []byte                       `json:"-"`
+	MessageType              *APIMessage_APIMessageType        `protobuf:"varint,1,req,name=messageType,enum=main.APIMessage_APIMessageType" json:"messageType,omitempty"`
+	MessageId                *int64                            `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
+	ProjectRootRequest       *GetProjectRootRequest            `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
+	ProjectRootResponse      *GetProjectRootResponse           `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
+	InstallationRootRequest  *GetInstallationRootRequest       `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
+	InstallationRootResponse *GetInstallationRootResponse      `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
+	AllStepsRequest          *GetAllStepsRequest               `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
+	AllStepsResponse         *GetAllStepsResponse              `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
+	AllSpecsRequest          *GetAllSpecsRequest               `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
+	AllSpecsResponse         *GetAllSpecsResponse              `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
+	StepValueRequest         *GetStepValueRequest              `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
+	StepValueResponse        *GetStepValueResponse             `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
+	LibPathRequest           *GetLanguagePluginLibPathRequest  `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
+	LibPathResponse          *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
+	Error                    *ErrorResponse                    `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
+	XXX_unrecognized         []byte                            `json:"-"`
 }
 
 func (m *APIMessage) Reset()         { *m = APIMessage{} }
@@ -346,6 +388,20 @@ func (m *APIMessage) GetStepValueRequest() *GetStepValueRequest {
 func (m *APIMessage) GetStepValueResponse() *GetStepValueResponse {
 	if m != nil {
 		return m.StepValueResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetLibPathRequest() *GetLanguagePluginLibPathRequest {
+	if m != nil {
+		return m.LibPathRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetLibPathResponse() *GetLanguagePluginLibPathResponse {
+	if m != nil {
+		return m.LibPathResponse
 	}
 	return nil
 }

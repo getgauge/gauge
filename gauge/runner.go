@@ -31,42 +31,31 @@ type runner struct {
 		Linux   string
 		Darwin  string
 	}
+	Lib string
 }
 
 func executeInitHookForRunner(language string) error {
 	if err := setCurrentProjectEnvVariable(); err != nil {
 		return err
 	}
-
-	var r runner
-	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
+	runnerInfo, err := getRunnerInfo(language)
 	if err != nil {
 		return err
 	}
-
-	contents, err := common.ReadFileContents(languageJsonFilePath)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal([]byte(contents), &r)
-	if err != nil {
-		return err
-	}
-
 	command := ""
 	switch runtime.GOOS {
 	case "windows":
-		command = r.Init.Windows
+		command = runnerInfo.Init.Windows
 		break
 	case "darwin":
-		command = r.Init.Darwin
+		command = runnerInfo.Init.Darwin
 		break
 	default:
-		command = r.Init.Linux
+		command = runnerInfo.Init.Linux
 		break
 	}
 
+	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
 	runnerDir := filepath.Dir(languageJsonFilePath)
 	cmd := common.GetExecutableCommand(filepath.Join(runnerDir, command))
 	cmd.Dir = runnerDir
@@ -78,6 +67,25 @@ func executeInitHookForRunner(language string) error {
 	}
 
 	return cmd.Wait()
+}
+
+func getRunnerInfo(language string) (*runner, error) {
+	runnerInfo := new(runner)
+	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
+	if err != nil {
+		return nil, err
+	}
+
+	contents, err := common.ReadFileContents(languageJsonFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(contents), &runnerInfo)
+	if err != nil {
+		return nil, err
+	}
+	return runnerInfo, nil
 }
 
 func (testRunner *testRunner) kill() error {
