@@ -116,6 +116,7 @@ func runInstallCommands(installCommands platformSpecifics, workingDir string) er
 		return nil
 	}
 
+	fmt.Printf("Running plugin install command => %s", command)
 	cmd := common.GetExecutableCommand(command)
 	cmd.Dir = workingDir
 	cmd.Stdout = os.Stdout
