@@ -79,6 +79,10 @@ func installPluginWithDescription(installDescription *installDescription, versio
 }
 
 func installPluginVersion(installDesc *installDescription, versionInstallDescription *versionInstallDescription) error {
+	if common.IsPluginInstalled(installDesc.Name, versionInstallDescription.Version) {
+		return errors.New(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
+	}
+
 	fmt.Printf("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
 	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
 	if err != nil {
