@@ -2,6 +2,7 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
+	"fmt"
 )
 
 type specExecutor struct {
@@ -31,6 +32,13 @@ func (e *stepValidationError) Error() string {
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *ProtoExecutionResult {
+	initSpecDataStoreMessage := &Message{MessageType: Message_SpecDataStoreInit.Enum(),
+		SpecDataStoreInitRequest: &SpecDataStoreInitRequest{}}
+	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
+	if initResult.GetFailed() {
+		fmt.Println("[Warning] Spec data store didn't get initialized")
+	}
+
 	message := &Message{MessageType: Message_SpecExecutionStarting.Enum(),
 		SpecExecutionStartingRequest: &SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	return e.executeHook(message, e.specResult)
@@ -163,6 +171,13 @@ func (executor *specExecutor) validateStep(step *step) *stepValidationError {
 }
 
 func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *scenarioResult) *ProtoExecutionResult {
+	initScenarioDataStoreMessage := &Message{MessageType: Message_ScenarioDataStoreInit.Enum(),
+		ScenarioDataStoreInitRequest: &ScenarioDataStoreInitRequest{}}
+	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
+	if initResult.GetFailed() {
+		fmt.Println("[Warning] Scenario data store didn't get initialized")
+	}
+
 	message := &Message{MessageType: Message_ScenarioExecutionStarting.Enum(),
 		ScenarioExecutionStartingRequest: &ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	return executor.executeHook(message, scenarioResult)

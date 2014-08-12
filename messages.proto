@@ -95,6 +95,18 @@ message StepNamesResponse {
     repeated string steps = 1;
 }
 
+message ScenarioDataStoreInitRequest {
+
+}
+
+message SpecDataStoreInitRequest {
+
+}
+
+message SuiteDataStoreInitRequest {
+
+}
+
 // This is the message which gets transferred all the time 
 // with proper message type set
 message Message {
@@ -115,6 +127,9 @@ message Message {
         StepNamesResponse = 13;
         KillProcessRequest = 14;
         SuiteExecutionResult = 15;
+        ScenarioDataStoreInit = 16;
+        SpecDataStoreInit = 17;
+        SuiteDataStoreInit = 18;
 	}
 
   	required MessageType messageType = 1;
@@ -140,5 +155,8 @@ message Message {
     optional StepNamesResponse stepNamesResponse = 16;
   	optional SuiteExecutionResult suiteExecutionResult = 17;
   	optional KillProcessRequest killProcessRequest = 18;
+    optional ScenarioDataStoreInitRequest scenarioDataStoreInitRequest = 19;
+    optional SpecDataStoreInitRequest specDataStoreInitRequest = 20;
+    optional SuiteDataStoreInitRequest suiteDataStoreInitRequest = 21;
 }
 

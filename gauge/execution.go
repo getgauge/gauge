@@ -1,6 +1,8 @@
 // This file is part of twist
 package main
 
+import "fmt"
+
 type execution struct {
 	manifest             *manifest
 	runner               *testRunner
@@ -20,6 +22,12 @@ func newExecution(manifest *manifest, specifications []*specification, runner *t
 }
 
 func (e *execution) startExecution() *ProtoExecutionResult {
+	initSuiteDataStoreMessage := &Message{MessageType: Message_SuiteDataStoreInit.Enum(),
+		SuiteDataStoreInitRequest: &SuiteDataStoreInitRequest{}}
+	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
+	if initResult.GetFailed() {
+		fmt.Println("[Warning] Suite data store didn't get initialized")
+	}
 	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &ExecutionStartingRequest{}}
 	return e.executeHook(message)
