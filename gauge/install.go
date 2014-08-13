@@ -92,6 +92,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
+	fmt.Printf("Plugin unzipped to => %s\n", unzippedPluginDir)
 	if err := runInstallCommands(versionInstallDescription.Install, unzippedPluginDir); err != nil {
 		return errors.New(fmt.Sprintf("Failed to Run install command. %s.", err))
 	}
@@ -116,8 +117,8 @@ func runInstallCommands(installCommands platformSpecifics, workingDir string) er
 		return nil
 	}
 
-	fmt.Printf("Running plugin install command => %s", command)
-	cmd := common.GetExecutableCommand(command)
+	fmt.Printf("Running plugin install command => %s\n", command)
+	cmd := common.GetExecutableCommand(path.Join(workingDir, command))
 	cmd.Dir = workingDir
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
