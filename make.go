@@ -440,18 +440,15 @@ func executeTarget(target string, forAllPlatforms bool) {
 		runTarget(target, true)
 	}
 }
-func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) error {
+func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) {
 	destDir := path.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 	if compileTarget == "" {
 		for target, _ := range targets {
-			if err := moveBinaryToDirectory(path.Base(target), destDir); err != nil {
-				return err
-			}
+			moveBinaryToDirectory(path.Base(target), destDir)
 		}
 	} else {
-		return moveBinaryToDirectory(path.Base(compileTarget), destDir)
+		moveBinaryToDirectory(path.Base(compileTarget), destDir)
 	}
-	return nil
 }
 
 func moveBinaryToDirectory(target, destDir string) error {
@@ -649,9 +646,7 @@ func main() {
 			executeTarget(*compileTarget, *allPlatforms)
 		}
 		copyBinaries()
-		if err := moveOSBinaryToCurrentOSArchDirectory(*compileTarget); err != nil {
-			panic(fmt.Sprintf("Failed to move current OS-ARCH binaries: %s", err))
-		}
+		moveOSBinaryToCurrentOSArchDirectory(*compileTarget)
 
 	}
 }
