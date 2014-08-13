@@ -12,10 +12,6 @@ import (
 	"strings"
 )
 
-const (
-	gaugeRepositoryUrl = "http://raw.github.com/getgauge/gauge-repository/master"
-)
-
 type installDescription struct {
 	Name        string
 	Description string
@@ -191,8 +187,10 @@ func getInstallDescription(plugin string) (*installDescription, error) {
 
 func getPluginInstallJson(plugin string) (string, error) {
 	versionInstallDescriptionJsonFile := plugin + "-install.json"
-	versionInstallDescriptionJsonUrl := constructPluginInstallJsonUrl(plugin)
-
+	versionInstallDescriptionJsonUrl, err := constructPluginInstallJsonUrl(plugin)
+	if err != nil {
+		return "", errors.New(fmt.Sprintf("Could not construct plugin install json file URL. %s", err))
+	}
 	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
 	if downloadErr != nil {
 		return "", errors.New(fmt.Sprintf("Could not find %s file. Check install name and version. %s", versionInstallDescriptionJsonFile, downloadErr.Error()))
@@ -200,9 +198,21 @@ func getPluginInstallJson(plugin string) (string, error) {
 	return downloadedFile, nil
 }
 
-func constructPluginInstallJsonUrl(plugin string) string {
+func constructPluginInstallJsonUrl(plugin string) (string, error) {
 	installJsonFile := plugin + "-install.json"
-	return fmt.Sprintf("%s/%s", gaugeRepositoryUrl, installJsonFile)
+	repoUrl, err := getGaugeRepositoryUrl()
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%s/%s", repoUrl, installJsonFile), nil
+}
+
+func getGaugeRepositoryUrl() (string, error) {
+	config, err := common.GetGaugeConfiguration()
+	if err != nil {
+		return "", err
+	}
+	return config[common.GaugeRepositoryUrl], nil
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {

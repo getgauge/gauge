@@ -312,6 +312,7 @@ func installGaugeFiles(installPath string) {
 	}
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
+	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", "gauge")
 	installFiles(files, installPath)
 }
 
