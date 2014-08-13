@@ -2,11 +2,6 @@ package main
 
 import . "launchpad.net/gocheck"
 
-func (s *MySuite) TestConstructPluginJsonInstallUrl(c *C) {
-	constructedUrl := constructPluginInstallJsonUrl("java")
-	c.Assert(constructedUrl, Equals, "http://raw.github.com/getgauge/gauge-repository/master/java-install.json")
-}
-
 func (s *MySuite) TestFindVersion(c *C) {
 	installDescription := createInstallDescriptionWithVersions("0.0.4", "0.6.7", "0.7.4", "3.6.5")
 	versionInstall, err := installDescription.getVersion("0.7.4")
