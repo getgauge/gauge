@@ -36,6 +36,7 @@ const (
 	WINDOWS            = "windows"
 	bin                = "bin"
 	newDirPermissions  = 0755
+	CGO_ENABLED        = "CGO_ENABLED"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, bin)
@@ -517,12 +518,12 @@ var (
 		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
 	}
 	platformEnvs = []map[string]string{
-		map[string]string{GOARCH: X86, GOOS: DARWIN},
-		map[string]string{GOARCH: X86_64, GOOS: DARWIN},
-		map[string]string{GOARCH: X86, GOOS: LINUX},
-		map[string]string{GOARCH: X86_64, GOOS: LINUX},
-		map[string]string{GOARCH: X86, GOOS: WINDOWS},
-		map[string]string{GOARCH: X86_64, GOOS: WINDOWS},
+		map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: WINDOWS, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: WINDOWS, CGO_ENABLED: "0"},
 	}
 )
 
