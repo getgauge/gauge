@@ -1,5 +1,5 @@
-Welcome to Gauge
-================
+Specification Heading
+=====================
 
 This is an executable specification file. This file follows markdown syntax. Every heading in this file denotes a scenario. Every bulleted point denotes a step.
 
@@ -9,24 +9,25 @@ To execute this specification, use
 
 * A context step which gets executed before every scenario
 
-Say hello to Gauge
-------------------
+First scenario
+--------------
 
 tags: hello world, first test
 
 * Say "hello" to "gauge"
 
 
-Getting started with Gauge
----------------------------
+Second scenario for the specification
+-------------------------------------
 
 This is the second scenario in this specification
 
 * Say "hello again" to "gauge"
 * Step that takes a table
-    |product|description                 |
-    |-------|----------------------------|
-    |Gocd   |Continous delivery platform |
-    |Twist  |BDD style automation testing|
-    |Gauge  |Next generation of Twist    |
+    |Product|       Description           |
+    |-------|-----------------------------|
+    |Gauge  |BDD style testing with ease  |
+    |Mingle |Agile project management     |
+    |Snap   |Hosted continuous integration|
+    |Gocd   |Continuous delivery platform |
 
