@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 const (
@@ -424,7 +425,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(runnerConnectionTimeOut)
 	testRunner.connection = runnerConnection
 	if connectionError != nil {
-		testRunner.cmd.Process.Kill()
+		testRunner.cmd.Process.Signal(syscall.SIGTERM)
 		return nil, connectionError
 	}
 	return testRunner, nil

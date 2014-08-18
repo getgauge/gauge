@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	runnerConnectionPort    = ":8888"
-	runnerConnectionTimeOut = time.Second * 10
+	runnerConnectionTimeOut = time.Second * 30
 )
 
 type messageHandler interface {
