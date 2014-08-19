@@ -39,8 +39,8 @@ func newGaugeConnectionHandler(port int, messageHandler messageHandler) (*gaugeC
 }
 
 func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {
-	errChannel := make(chan error, 1)
-	connectionChannel := make(chan net.Conn, 1)
+	errChannel := make(chan error)
+	connectionChannel := make(chan net.Conn)
 
 	go func() {
 		connection, err := connectionHandler.tcpListener.Accept()
@@ -62,6 +62,31 @@ func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTime
 		return conn, nil
 	case <-time.After(connectionTimeOut):
 		return nil, errors.New(fmt.Sprintf("Timed out connecting to %v", connectionHandler.tcpListener.Addr()))
+	}
+}
+
+func (connectionHandler *gaugeConnectionHandler) acceptConnectionWithoutTimeout() (net.Conn, error) {
+	errChannel := make(chan error)
+	connectionChannel := make(chan net.Conn)
+
+	go func() {
+		connection, err := connectionHandler.tcpListener.Accept()
+		if err != nil {
+			errChannel <- err
+		}
+		if connection != nil {
+			connectionChannel <- connection
+		}
+	}()
+
+	select {
+	case err := <-errChannel:
+		return nil, err
+	case conn := <-connectionChannel:
+		if connectionHandler.messageHandler != nil {
+			go connectionHandler.handleConnectionMessages(conn)
+		}
+		return conn, nil
 	}
 }
 
@@ -136,7 +161,7 @@ func write(conn net.Conn, messageBytes []byte) error {
 //accepts multiple connections and Handler responds to incoming messages
 func (connectionHandler *gaugeConnectionHandler) handleMultipleConnections() {
 	for {
-		connectionHandler.acceptConnection(30 * time.Second)
+		connectionHandler.acceptConnectionWithoutTimeout()
 	}
 
 }
