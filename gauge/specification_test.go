@@ -633,12 +633,13 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(firstConcept.conceptSteps[1].args[0].argType, Equals, static)
 
 	c.Assert(len(firstConcept.lookup.paramValue), Equals, 2)
-	c.Assert(firstConcept.lookup.paramValue[0].name, Equals, "user-id")
-	c.Assert(firstConcept.lookup.paramValue[0].stepArg.value, Equals, "id")
-	c.Assert(firstConcept.lookup.paramValue[0].stepArg.argType, Equals, dynamic)
-	c.Assert(firstConcept.lookup.paramValue[1].name, Equals, "user-description")
-	c.Assert(firstConcept.lookup.paramValue[1].stepArg.value, Equals, "description")
-	c.Assert(firstConcept.lookup.paramValue[1].stepArg.argType, Equals, dynamic)
+	arg1 := firstConcept.lookup.getArg("user-id")
+	c.Assert(arg1.value, Equals, "id")
+	c.Assert(arg1.argType, Equals, dynamic)
+
+	arg2 := firstConcept.lookup.getArg("user-description")
+	c.Assert(arg2.value, Equals, "description")
+	c.Assert(arg2.argType, Equals, dynamic)
 
 	secondConcept := spec.scenarios[0].steps[1]
 	c.Assert(secondConcept.isConcept, Equals, true)
