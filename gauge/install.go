@@ -44,7 +44,7 @@ type versionSupport struct {
 func installPlugin(pluginName, version string) error {
 	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err))
+		return errors.New(fmt.Sprintf("Could not find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err))
 	}
 	if err := installPluginWithDescription(installDescription, version); err != nil {
 		return err
@@ -81,7 +81,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	fmt.Printf("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
 	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to download plugin zip: %s.", err))
+		return errors.New(fmt.Sprintf("Could not download plugin zip: %s.", err))
 	}
 	unzippedPluginDir, err := common.UnzipArchive(pluginZip)
 	if err != nil {
@@ -163,7 +163,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	}
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Failed to download File %s: %s", downloadLink, err.Error()))
+		return "", errors.New(fmt.Sprintf("COuld not download File %s: %s", downloadLink, err.Error()))
 	}
 	return downloadedFile, err
 }
