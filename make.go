@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha1"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -317,7 +318,7 @@ func installGaugeFiles(installPath string) {
 	installFiles(files, installPath)
 }
 
-func installGaugeJavaFiles(installPath string) {
+func installGaugeJavaFiles(installPath string) error {
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
 		files[filepath.Join(getBinDir(), "gauge-java.exe")] = bin
@@ -327,7 +328,7 @@ func installGaugeJavaFiles(installPath string) {
 
 	javaRunnerProperties, err := getPluginProperties(filepath.Join("gauge-java", "java.json"))
 	if err != nil {
-		fmt.Printf("Failed to get java runner properties. %s", err)
+		return errors.New(fmt.Sprintf("Failed to get java runner properties. %s", err))
 	}
 	javaRunnerRelativePath := filepath.Join(installPath, "java", javaRunnerProperties["version"].(string))
 
@@ -337,9 +338,10 @@ func installGaugeJavaFiles(installPath string) {
 	files[filepath.Join("gauge-java", "libs")] = filepath.Join("libs")
 	files[filepath.Join("gauge-java", "build", "jar")] = filepath.Join("libs")
 	installFiles(files, javaRunnerRelativePath)
+	return nil
 }
 
-func installGaugeRubyFiles(installPath string) {
+func installGaugeRubyFiles(installPath string) error {
 	runProcess("gem", "gauge-ruby", "build", "gauge-ruby.gemspec")
 
 	files := make(map[string]string)
@@ -350,8 +352,9 @@ func installGaugeRubyFiles(installPath string) {
 	}
 
 	rubyRunnerProperties, err := getPluginProperties(filepath.Join("gauge-ruby", "ruby.json"))
+
 	if err != nil {
-		fmt.Printf("Failed to get ruby runner properties. %s", err)
+		return errors.New(fmt.Sprintf("Failed to get ruby runner properties. %s", err))
 	}
 	rubyRunnerRelativePath := filepath.Join(installPath, "ruby", rubyRunnerProperties["version"].(string))
 
@@ -360,13 +363,13 @@ func installGaugeRubyFiles(installPath string) {
 	files[filepath.Join("gauge-ruby", "skel", "ruby.properties")] = filepath.Join("skel", "env")
 	gemFile := getGemFile("gauge-ruby")
 	if gemFile == "" {
-		fmt.Println("Could not find .gem file")
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("Could not find .gem file"))
 	}
-	files[filepath.Join("gauge-ruby", gemFile)] = ""
 
+	files[filepath.Join("gauge-ruby", gemFile)] = ""
 	installFiles(files, rubyRunnerRelativePath)
 	installGaugeRubyGem()
+	return nil
 }
 
 func getBinDir() string {
@@ -418,14 +421,21 @@ func gemHomeFromRvm() string {
 }
 
 func installPlugins(installPath string) {
-	for pluginName, pluginInstaller := range pluginInstallers {
-		fmt.Printf("Installing plugin %s\n", pluginName)
-		err := pluginInstaller(installPath)
-		if err != nil {
-			fmt.Printf("Could not install plugin %s : %s\n", pluginName, err)
-		} else {
-			fmt.Printf("Successfully installed plugin %s\n", pluginName)
-		}
+	for pluginName, _ := range pluginInstallers {
+		installPlugin(pluginName, installPath)
+	}
+}
+
+func installPlugin(pluginId, installPath string) {
+	fmt.Printf("Installing plugin %s\n", pluginId)
+	if _, ok := pluginInstallers[pluginId]; !ok {
+		panic(fmt.Sprintf("Invalid plugin name => %s", pluginId))
+	}
+	err := pluginInstallers[pluginId](installPath)
+	if err != nil {
+		fmt.Printf("Could not install plugin %s : %s\n", pluginId, err)
+	} else {
+		fmt.Printf("Successfully installed plugin %s\n", pluginId)
 	}
 }
 
@@ -494,11 +504,11 @@ type compileFunc func()
 var test = flag.Bool("test", false, "Run the test cases")
 var coverage = flag.Bool("test-coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
+var plugin = flag.String("plugin", "", "Specify the name of the plugin to be installed. Can be a languge plugin too.")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
 var compileTarget = flag.String("target", "", "Specifies the target to be executed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
-var language = flag.String("language", "", "Specifies the language of runner to be installed. Plugins or gauge will not be installed")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var gaugeOnly = flag.Bool("gauge-only", false, "Installs only gauge and default plugins. Skips langauge installation")
 
@@ -530,23 +540,10 @@ var (
 var (
 	pluginInstallers = map[string]func(string) error{
 		HTML_PLUGIN_ID: installHtmlPlugin,
+		"java":         installGaugeJavaFiles,
+		"ruby":         installGaugeRubyFiles,
 	}
 )
-
-func installRunners(language, installPath string) {
-	runnerInstallers := map[string]func(string){
-		"java": installGaugeJavaFiles,
-		"ruby": installGaugeRubyFiles,
-	}
-
-	if installer, found := runnerInstallers[language]; found {
-		installer(installPath)
-	} else {
-		for _, installer := range runnerInstallers {
-			installer(installPath)
-		}
-	}
-}
 
 func installHtmlPlugin(installPath string) error {
 	pluginSrcBasePath := filepath.Join("plugins", HTML_PLUGIN_ID)
@@ -628,14 +625,13 @@ func main() {
 			}
 		}
 
-		if *language != "" {
-			// only install that runner
-			installRunners(*language, *pluginInstallPrefix)
+		if *plugin != "" {
+			// only a single plugin
+			installPlugin(*plugin, *pluginInstallPrefix)
 		} else {
 			installGaugeFiles(*gaugeInstallPrefix)
-			installPlugins(*pluginInstallPrefix)
 			if !*gaugeOnly {
-				installRunners(*language, *pluginInstallPrefix)
+				installPlugins(*pluginInstallPrefix)
 			}
 		}
 
