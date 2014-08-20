@@ -266,8 +266,8 @@ func showMessage(action, filename string) {
 
 func createProjectTemplate(language string) error {
 	if !common.IsASupportedLanguage(language) {
-		fmt.Printf("%s is not installed \n", language)
-		fmt.Printf("Installing plugin => %s \n", language)
+		fmt.Printf("%s plugin is not installed \n", language)
+		fmt.Printf("Installing plugin => %s ... \n\n", language)
 
 		if err := installPlugin(language, ""); err != nil {
 			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, err))
