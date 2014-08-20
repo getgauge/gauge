@@ -104,20 +104,20 @@ func isPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 }
 
-func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
-	if !isPluginInstalled(pluginName, pluginVersion) {
-		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, pluginVersion))
+func getPluginJsonPath(pluginName, version string) (string, error) {
+	if !isPluginInstalled(pluginName, version) {
+		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName))
 	}
 
-	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, pluginVersion)
+	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(pluginInstallDir, common.PluginJsonFile), nil
 }
 
-func getPluginDescriptor(pluginName, pluginVersion string) (*pluginDescriptor, error) {
-	pluginJson, err := getPluginJsonPath(pluginName, pluginVersion)
+func getPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, error) {
+	pluginJson, err := getPluginJsonPath(pluginId, pluginVersion)
 	if err != nil {
 		return nil, err
 	}
@@ -206,13 +206,13 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	if _, err := startPlugin(pd, action, true); err != nil {
 		return err
 	}
-	manifest.Plugins = append(manifest.Plugins, pluginDetails{Id: pd.Id, Version: pd.Version})
+	manifest.Plugins = append(manifest.Plugins, pd.Id)
 	return manifest.save()
 }
 
 func isPluginAdded(manifest *manifest, descriptor *pluginDescriptor) bool {
-	for _, pluginDetails := range manifest.Plugins {
-		if pluginDetails.Id == descriptor.Id && pluginDetails.Version == descriptor.Version {
+	for _, pluginId := range manifest.Plugins {
+		if pluginId == descriptor.Id {
 			return true
 		}
 	}
@@ -224,10 +224,10 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	handler := &pluginHandler{}
 	envProperties := make(map[string]string)
 
-	for _, pluginDetails := range manifest.Plugins {
-		pd, err := getPluginDescriptor(pluginDetails.Id, pluginDetails.Version)
+	for _, pluginId := range manifest.Plugins {
+		pd, err := getPluginDescriptor(pluginId, "")
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to get plugin.json. %s", pluginDetails.Id, pluginDetails.Version, err.Error()))
+			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s", pluginId, err.Error()))
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
@@ -241,16 +241,16 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 
 			pluginCmd, err := startPlugin(pd, executionScope, false)
 			if err != nil {
-				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pluginDetails.Version, err.Error()))
+				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
 			pluginConnection, err := gaugeConnectionHandler.acceptConnection(pluginConnectionTimeout)
 			if err != nil {
-				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pluginDetails.Version, err.Error()))
+				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
 				pluginCmd.Process.Kill()
 				continue
 			}
-			handler.addPlugin(pluginDetails.Id, &plugin{connection: pluginConnection, pluginCmd: pluginCmd, descriptor: pd})
+			handler.addPlugin(pluginId, &plugin{connection: pluginConnection, pluginCmd: pluginCmd, descriptor: pd})
 		}
 
 	}

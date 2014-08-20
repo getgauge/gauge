@@ -26,20 +26,16 @@ const (
 )
 
 var acceptedExtensions = make(map[string]bool)
+var defaultPlugins = []string{"html-report"}
 
 func init() {
 	acceptedExtensions[".spec"] = true
 	acceptedExtensions[".md"] = true
 }
 
-type pluginDetails struct {
-	Id      string
-	Version string
-}
-
 type manifest struct {
 	Language string
-	Plugins  []pluginDetails
+	Plugins  []string
 }
 
 func main() {
@@ -284,7 +280,7 @@ func createProjectTemplate(language string) error {
 	if common.FileExists(common.ManifestFile) {
 		showMessage("skip", common.ManifestFile)
 	}
-	manifest := &manifest{Language: language}
+	manifest := &manifest{Language: language, Plugins: defaultPlugins}
 	if err := manifest.save(); err != nil {
 		return err
 	}
