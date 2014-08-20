@@ -41,17 +41,16 @@ type versionSupport struct {
 	Maximum string
 }
 
-func installPlugin(pluginName, version string) {
+func installPlugin(pluginName, version string) error {
 	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
-		fmt.Printf("[Error] Failed to find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err)
-		return
+		return errors.New(fmt.Sprintf("Failed to find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err))
 	}
 	if err := installPluginWithDescription(installDescription, version); err != nil {
-		fmt.Printf("[Error] Failed installing Plugin '%s' %s : %s \n", pluginName, version, err)
-		return
+		return err
 	}
-	fmt.Printf("Successfully installed plugin: %s %s\n", pluginName, version)
+
+	return nil
 }
 
 func installPluginWithDescription(installDescription *installDescription, version string) error {

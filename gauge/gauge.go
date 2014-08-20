@@ -53,7 +53,8 @@ func main() {
 	} else if *initialize != "" {
 		initializeProject(*initialize)
 	} else if *install != "" {
-		installPlugin(*install, *installVersion)
+		downloadAndInstallPlugin(*install, *installVersion)
+
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else {
@@ -81,6 +82,14 @@ func printUsage() {
 	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
 	os.Exit(2)
+}
+
+func downloadAndInstallPlugin(plugin, version string) {
+	if err := installPlugin(plugin, version); err != nil {
+		fmt.Printf("[Error] Failed to install plugin %s : %s\n", plugin, err)
+	} else {
+		fmt.Printf("Successfully installed plugin => %s %s", plugin, version)
+	}
 }
 
 func setCurrentProjectEnvVariable() error {
@@ -129,7 +138,7 @@ func formatSpecFiles(filesToFormat string) {
 func initializeProject(language string) {
 	err := createProjectTemplate(language)
 	if err != nil {
-		fmt.Printf("Failed to initialize. %s\n", err.Error())
+		fmt.Printf("[Error] Failed to initialize. %s\n", err.Error())
 		os.Exit(1)
 	}
 	fmt.Println("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
@@ -261,8 +270,15 @@ func showMessage(action, filename string) {
 
 func createProjectTemplate(language string) error {
 	if !common.IsASupportedLanguage(language) {
-		return errors.New(fmt.Sprintf("%s is not a supported language", language))
+		fmt.Printf("%s is not installed \n", language)
+		fmt.Printf("Installing plugin => %s \n", language)
+
+		if err := installPlugin(language, ""); err != nil {
+			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, err))
+		}
+
 	}
+
 	// Create the project manifest
 	showMessage("create", common.ManifestFile)
 	if common.FileExists(common.ManifestFile) {
