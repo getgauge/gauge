@@ -2,21 +2,44 @@ package main
 
 import (
 	"github.com/getgauge/common"
+	"sync"
+	"time"
 )
+
+const refreshInterval = time.Duration(2) * time.Second
 
 type specInfoGatherer struct {
 	availableSpecs    []*specification
 	availableStepsMap map[string]*stepValue
+	stepsFromRunner   []string
+	mutex             sync.Mutex
 }
 
 func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) {
 	specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
-	stepsFromRunner := specInfoGatherer.getStepsFromRunner(runner)
-	specInfoGatherer.addStepValuesToAvailableSteps(stepsFromRunner)
+	specInfoGatherer.stepsFromRunner = specInfoGatherer.getStepsFromRunner(runner)
+	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
+	specInfoGatherer.addStepsToAvailableSteps(specInfoGatherer.getStepsFromSpecs())
+	go specInfoGatherer.refreshSteps(refreshInterval)
+}
+
+func (specInfoGatherer *specInfoGatherer) getStepsFromSpecs() []*step {
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
-	specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs)
+	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs)
+}
+
+func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
+	for {
+		time.Sleep(seconds)
+		specInfoGatherer.mutex.Lock()
+		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
+		specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
+		value := specInfoGatherer.getStepsFromSpecs()
+		specInfoGatherer.addStepsToAvailableSteps(value)
+		specInfoGatherer.mutex.Unlock()
+	}
 }
 
 func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) []string {
@@ -50,13 +73,15 @@ func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dic
 	return specs
 }
 
-func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) {
+func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) []*step {
+	allSteps := make([]*step, 0)
 	for _, spec := range specs {
-		specInfoGatherer.addStepsToAvailableSteps(spec.contexts)
+		allSteps = append(allSteps, spec.contexts...)
 		for _, scenario := range spec.scenarios {
-			specInfoGatherer.addStepsToAvailableSteps(scenario.steps)
+			allSteps = append(allSteps, scenario.steps...)
 		}
 	}
+	return allSteps
 }
 
 func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(steps []*step) {
@@ -89,9 +114,11 @@ func (specInfoGatherer *specInfoGatherer) getAvailableSteps() []*stepValue {
 	if specInfoGatherer.availableStepsMap == nil {
 		specInfoGatherer.makeListOfAvailableSteps(nil)
 	}
+	specInfoGatherer.mutex.Lock()
 	steps := make([]*stepValue, 0)
 	for _, stepValue := range specInfoGatherer.availableStepsMap {
 		steps = append(steps, stepValue)
 	}
+	specInfoGatherer.mutex.Unlock()
 	return steps
 }

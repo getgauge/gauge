@@ -50,6 +50,7 @@ func startAPIService(port int) error {
 		}
 	}
 	go gaugeConnectionHandler.handleMultipleConnections()
+	specInfoGatherer.makeListOfAvailableSteps(nil)
 	return nil
 }
 
