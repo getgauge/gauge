@@ -60,11 +60,11 @@ func main() {
 
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var gaugeVersion = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
+var gaugeVersion = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit. Eg: gauge -version")
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
-var installVersion = flag.String([]string{"-version"}, "", "Version of plugin to be installed install. This is used with --install")
+var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
