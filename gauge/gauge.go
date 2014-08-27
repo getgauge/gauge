@@ -61,6 +61,7 @@ func main() {
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
 var gaugeVersion = flag.Bool([]string{"v", "version"}, false, "Print the current version and exit. Eg: gauge -version")
+var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
 var installVersion = flag.String([]string{"-version"}, "", "Version of plugin to be installed install. This is used with --install")
@@ -204,7 +205,7 @@ func executeSpecs() {
 		for _, stepValidationErrors := range validationErrors {
 			for _, stepValidationError := range stepValidationErrors {
 				s := stepValidationError.step
-				fmt.Printf("\x1b[31;1m  %s:%d: %s. %s\n\x1b[0m", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText)
+				getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText))
 			}
 		}
 		err := execution.runner.kill()
@@ -473,21 +474,23 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 
 func printHookError(hook *ProtoHookFailure) {
 	if hook != nil {
-		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hook.GetErrorMessage())
-		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", hook.GetStackTrace())
+		console := getCurrentConsole()
+		console.writeError(hook.GetErrorMessage())
+		console.writeError(hook.GetStackTrace())
 	}
 }
 
 func printError(execResult *ProtoExecutionResult) {
 	if execResult.GetFailed() {
-		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execResult.GetErrorMessage())
-		fmt.Printf("\x1b[31;1m%s\n\x1b[0m", execResult.GetStackTrace())
+		console := getCurrentConsole()
+		console.writeError(execResult.GetErrorMessage() + "\n")
+		console.writeError(execResult.GetStackTrace() + "\n")
 	}
 }
 
 func printSpecFailure(specResult *specResult) {
 	if specResult.isFailed {
-		fmt.Printf("\x1b[31;1m%s : %s \n\x1b[0m", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading())
+		getCurrentConsole().writeError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
@@ -510,7 +513,7 @@ func printTableDrivenScenarioFailure(tableDrivenScenario *ProtoTableDrivenScenar
 
 func printScenarioFailure(scenario *ProtoScenario) {
 	if scenario.GetFailed() {
-		fmt.Printf("\x1b[31;1m%s:\n\x1b[0m", scenario.GetScenarioHeading())
+		getCurrentConsole().writeError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
@@ -528,7 +531,7 @@ func printScenarioFailure(scenario *ProtoScenario) {
 func printStepFailure(step *ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
-		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", step.GetActualText())
+		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", step.GetActualText()))
 		printHookError(stepExecResult.GetPreHookFailure())
 		printError(stepExecResult.ExecutionResult)
 		printHookError(stepExecResult.GetPostHookFailure())
@@ -538,7 +541,7 @@ func printStepFailure(step *ProtoStep) {
 func printConceptFailure(concept *ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
-		fmt.Printf("\x1b[31;1m\t %s\n\x1b[0m", concept.ConceptStep.GetActualText())
+		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
 		printError(conceptExecResult.ExecutionResult)
 	}
 }

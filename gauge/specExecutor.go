@@ -74,7 +74,10 @@ func (specExecutor *specExecutor) execute() *specResult {
 		addPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		specExecutor.currentExecutionInfo.setSpecFailure()
 	} else {
-		getCurrentConsole().writeSteps(specExecutor.specification.contexts)
+		console := getCurrentConsole()
+		for _, step := range specExecutor.specification.contexts {
+			console.writeStep(step)
+		}
 		dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
@@ -377,7 +380,7 @@ func (executor *specExecutor) executeStep(protoStep *ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
 	stepWithResolvedArgs := createStepFromStepRequest(stepRequest)
 	console := getCurrentConsole()
-	console.writeStep(stepWithResolvedArgs)
+	console.writeStepStarting(stepWithResolvedArgs)
 
 	protoStepExecResult := &ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
