@@ -15,17 +15,21 @@ List of submodules used
 
 Building
 ------------
-* make
+
+````
+go run make.go
+````
 
 This will generate gauge in the root directory
 
 Installing
 ------------
+
 ````
-make install
+go run make.go --install
 ````
 
-This installs gauge into __/usr/local__ by default. 
+This installs gauge into __/usr/local__ by default.
 To install into a custom location use a prefix for installation
 
 ````
@@ -34,11 +38,13 @@ prefix=CUSTOM_PATH make install
 
 Initializing a project
 ---------------------
-In an empty directory initialize based on required language. Currently supported langauges are: Java, Ruby
+In an empty directory initialize a gauge project based on required language. Currently supported languages are: Java, Ruby
 
 ````
 gauge --init java
-  or 
+````
+For a gauge ruby project
+````
 gauge --init ruby
 ````
 
@@ -46,9 +52,13 @@ Executing Specifications
 ---------------------
 Inside the project directory
 
+To execute all specifications:
 ````
 gauge specs/
-  or
+````
+
+To execute a single specification
+````
 gauge specs/hello_world.spec
 ````
 
