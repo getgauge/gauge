@@ -33,7 +33,7 @@ This installs gauge into __/usr/local__ by default.
 To install into a custom location use a prefix for installation
 
 ````
-prefix=CUSTOM_PATH make install
+go run make.go --install --prefix CUSTOM_PATH
 ````
 
 Initializing a project
