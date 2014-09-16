@@ -1,3 +1,0 @@
-* Add search path, env variables to runner.json files
-* Finalize manifest.json structure
-* Error handling
