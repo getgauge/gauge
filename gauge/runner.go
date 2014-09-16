@@ -22,14 +22,14 @@ type testRunner struct {
 type runner struct {
 	Name string
 	Run  struct {
-		Windows string
-		Linux   string
-		Darwin  string
+		Windows []string
+		Linux   []string
+		Darwin  []string
 	}
 	Init struct {
-		Windows string
-		Linux   string
-		Darwin  string
+		Windows []string
+		Linux   []string
+		Darwin  []string
 	}
 	Lib string
 }
@@ -42,7 +42,7 @@ func executeInitHookForRunner(language string) error {
 	if err != nil {
 		return err
 	}
-	command := ""
+	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
 		command = runnerInfo.Init.Windows
@@ -57,11 +57,8 @@ func executeInitHookForRunner(language string) error {
 
 	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
 	runnerDir := filepath.Dir(languageJsonFilePath)
-	cmd := common.GetExecutableCommand(filepath.Join(runnerDir, command))
-	cmd.Dir = runnerDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err = cmd.Start()
+	cmd, err := common.ExecuteCommand(command, runnerDir, os.Stdout, os.Stderr)
+
 	if err != nil {
 		return err
 	}
@@ -148,7 +145,7 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 
-	command := ""
+	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
 		command = r.Run.Windows
@@ -161,15 +158,13 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		break
 	}
 	runnerDir := filepath.Dir(languageJsonFilePath)
-	cmd := common.GetExecutableCommand(filepath.Join(runnerDir, command))
-	cmd.Dir = runnerDir
-	cmd.Stdout = getCurrentConsole()
-	cmd.Stderr = getCurrentConsole()
-	err = cmd.Start()
+
+	currentConsole := getCurrentConsole()
+	cmd, err := common.ExecuteCommand(command, runnerDir, currentConsole, currentConsole)
+
 	if err != nil {
 		return nil, err
 	}
-
 	// Wait for the process to exit so we will get a detailed error message
 	go func() {
 		err := cmd.Wait()

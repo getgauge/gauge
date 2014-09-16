@@ -21,16 +21,22 @@ type installDescription struct {
 type versionInstallDescription struct {
 	Version             string
 	GaugeVersionSupport versionSupport
-	Install             platformSpecifics
+	Install             platformSpecificCommand
 	DownloadUrls        downloadUrls
 }
 
 type downloadUrls struct {
-	X86 platformSpecifics
-	X64 platformSpecifics
+	X86 platformSpecificUrl
+	X64 platformSpecificUrl
 }
 
-type platformSpecifics struct {
+type platformSpecificCommand struct {
+	Windows []string
+	Linux   []string
+	Darwin  []string
+}
+
+type platformSpecificUrl struct {
 	Windows string
 	Linux   string
 	Darwin  string
@@ -94,8 +100,8 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	return copyPluginFilesToGauge(installDesc, versionInstallDescription, unzippedPluginDir)
 }
 
-func runInstallCommands(installCommands platformSpecifics, workingDir string) error {
-	command := ""
+func runInstallCommands(installCommands platformSpecificCommand, workingDir string) error {
+	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
 		command = installCommands.Windows
@@ -108,16 +114,13 @@ func runInstallCommands(installCommands platformSpecifics, workingDir string) er
 		break
 	}
 
-	if command == "" {
+	if len(command) == 0 {
 		return nil
 	}
 
 	fmt.Printf("Running plugin install command => %s\n", command)
-	cmd := common.GetExecutableCommand(path.Join(workingDir, command))
-	cmd.Dir = workingDir
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	err := cmd.Start()
+	cmd, err := common.ExecuteCommand(command, workingDir, os.Stdout, os.Stderr)
+
 	if err != nil {
 		return err
 	}
@@ -139,7 +142,7 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 }
 
 func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
-	var platformLinks *platformSpecifics
+	var platformLinks *platformSpecificUrl
 	if strings.Contains(runtime.GOARCH, "64") {
 		platformLinks = &downloadUrls.X64
 	} else {

@@ -30,9 +30,9 @@ type pluginDescriptor struct {
 	Name        string
 	Description string
 	Command     struct {
-		Windows string
-		Linux   string
-		Darwin  string
+		Windows []string
+		Linux   []string
+		Darwin  []string
 	}
 	Scope      []string
 	pluginPath string
@@ -136,7 +136,7 @@ func getPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, err
 }
 
 func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, error) {
-	command := ""
+	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
 		command = pd.Command.Windows
@@ -149,12 +149,10 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 		break
 	}
 
-	cmd := common.GetExecutableCommand(path.Join(pd.pluginPath, command))
-	cmd.Dir = pd.pluginPath
 	pluginConsoleWriter := &pluginConsoleWriter{pluginName: pd.Name}
-	cmd.Stdout = pluginConsoleWriter
-	cmd.Stderr = pluginConsoleWriter
-	if err := cmd.Start(); err != nil {
+	cmd, err := common.ExecuteCommand(command, pd.pluginPath, pluginConsoleWriter, pluginConsoleWriter)
+
+	if err != nil {
 		return nil, err
 	}
 

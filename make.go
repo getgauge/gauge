@@ -38,6 +38,8 @@ const (
 	bin                = "bin"
 	newDirPermissions  = 0755
 	CGO_ENABLED        = "CGO_ENABLED"
+	pluginJsonFile     = "plugin.json"
+	reportTemplate     = "report-template"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, bin)
@@ -549,7 +551,7 @@ var (
 func installHtmlPlugin(installPath string) error {
 	pluginSrcBasePath := filepath.Join("plugins", HTML_PLUGIN_ID)
 
-	pluginProperties, err := getPluginProperties(filepath.Join(pluginSrcBasePath, "plugin.json"))
+	pluginProperties, err := getPluginProperties(filepath.Join(pluginSrcBasePath, pluginJsonFile))
 	if err != nil {
 		return err
 	}
@@ -563,12 +565,12 @@ func installHtmlPlugin(installPath string) error {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID+".exe")] = pluginRelativePath
+		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID+".exe")] = filepath.Join(pluginRelativePath, bin)
 	} else {
-		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID)] = pluginRelativePath
+		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID)] = filepath.Join(pluginRelativePath, bin)
 	}
-	files[filepath.Join(pluginSrcBasePath, "plugin.json")] = pluginRelativePath
-	files[filepath.Join(pluginSrcBasePath, "report-template")] = filepath.Join(pluginRelativePath, "report-template")
+	files[filepath.Join(pluginSrcBasePath, pluginJsonFile)] = pluginRelativePath
+	files[filepath.Join(pluginSrcBasePath, reportTemplate)] = filepath.Join(pluginRelativePath, reportTemplate)
 	installFiles(files, installPath)
 	return nil
 }
