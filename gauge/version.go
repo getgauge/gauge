@@ -11,7 +11,7 @@ const (
 	DOT = "."
 )
 
-var currentGaugeVersion = &version{0, 0, 3}
+var currentGaugeVersion = &version{0, 0, 2}
 
 type version struct {
 	major int
