@@ -55,6 +55,7 @@
     <Compile Include="Spec.cs" />
     <Compile Include="Step.cs" />
     <Compile Include="StepImpl.cs" />
+    <Compile Include="Table.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="deps\protobuf\Google.ProtocolBuffers.dll" />
