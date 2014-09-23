@@ -54,7 +54,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spec.cs" />
     <Compile Include="Step.cs" />
-    <Compile Include="StepImpl.cs" />
     <Compile Include="Table.cs" />
   </ItemGroup>
   <ItemGroup>

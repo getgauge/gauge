@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace gauge_csharp_lib
 {
     [AttributeUsage(AttributeTargets.Method)]
-    public class Step : System.Attribute
+    public class Step : Attribute
     {
-        public readonly string stepText ;
+        private readonly string[] _stepText ;
 
         public Step(string stepText)
         {
-            this.stepText = stepText;
+            _stepText = new[] {stepText};
         }
 
-        public string Name
+        public Step(params string[] stepText)
+        {
+            _stepText = stepText;
+        }
+
+        public IEnumerable<string> Names
         {
             get
             {
-                return stepText;
+                return _stepText;
             }
         }
     }

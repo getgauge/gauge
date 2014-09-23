@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Google.ProtocolBuffers;
@@ -9,7 +11,6 @@ namespace gauge_csharp_lib
 {
     public class GaugeConnection
     {
-        private readonly int _port;
         private readonly TcpClient _tcpCilent;
 
         public GaugeConnection(int port)
@@ -24,81 +25,64 @@ namespace gauge_csharp_lib
                 throw new Exception("Could not connect", e);
             }
             _tcpCilent = tcpClient;
-            _port = port;
         }
 
-        public int Port
+        private static APIMessage ReadMessage(NetworkStream networkStream)
         {
-            get { return _port; }
+            var responseBytes = ReadBytes(networkStream);
+            return APIMessage.ParseFrom(responseBytes.ToArray());
         }
 
-        public IList<ProtoStepValue> fetchAllSteps()
+        private static void WriteApiMessage(IMessageLite apiRequest, Stream networkStream)
         {
-            GetAllStepsRequest getAllStepsRequest = GetAllStepsRequest.CreateBuilder().Build();
-            APIMessage fetchStepsApiRequest =
-                APIMessage.CreateBuilder()
-                    .SetAllStepsRequest(getAllStepsRequest)
-                    .SetMessageId(1)
-                    .SetMessageType(APIMessage.Types.APIMessageType.GetAllStepsRequest)
-                    .Build();
-            NetworkStream networkStream = _tcpCilent.GetStream();
-
-            APIMessage apiMessage = WriteAndReadApiMessage(fetchStepsApiRequest, networkStream);
-            return apiMessage.AllStepsResponse.AllStepsList;
-        }
-
-
-        private static APIMessage readMessage(NetworkStream networkStream)
-        {
-            byte[] responseBytes = readBytes(networkStream);
-            APIMessage apiMessage = APIMessage.ParseFrom(responseBytes);
-            return apiMessage;
-        }
-
-        private static void writeAPIMessage(APIMessage apiRequest, NetworkStream networkStream)
-        {
-            byte[] bytes = apiRequest.ToByteArray();
-            CodedOutputStream cos = CodedOutputStream.CreateInstance(networkStream);
+            var bytes = apiRequest.ToByteArray();
+            var cos = CodedOutputStream.CreateInstance(networkStream);
             cos.WriteRawVarint64((ulong) bytes.Length);
             cos.Flush();
             networkStream.Write(bytes, 0, bytes.Length);
             networkStream.Flush();
         }
 
-        private static byte[] readBytes(NetworkStream networkStream)
+        private static IEnumerable<byte> ReadBytes(Stream networkStream)
         {
-            CodedInputStream codedInputStream = CodedInputStream.CreateInstance(networkStream);
-            ulong messageLength = codedInputStream.ReadRawVarint64();
-            var bytes = new List<byte>();
+            var codedInputStream = CodedInputStream.CreateInstance(networkStream);
+            var messageLength = codedInputStream.ReadRawVarint64();
             for (ulong i = 0; i < messageLength; i++)
             {
-                bytes.Add(codedInputStream.ReadRawByte());
+                yield return codedInputStream.ReadRawByte();
             }
-            return bytes.ToArray();
         }
 
-        public string getStepValue(string stepText, bool hasInlineTable)
+        public IEnumerable<string> GetStepValue(IEnumerable<string> stepTexts, bool hasInlineTable)
         {
-            GetStepValueRequest stepValueRequest =
-                GetStepValueRequest.CreateBuilder().SetStepText(stepText).SetHasInlineTable(hasInlineTable).Build();
-            APIMessage stepValueRequestMessage =
-                APIMessage.CreateBuilder()
-                    .SetMessageId(2)
+            foreach (var stepText in stepTexts)
+            {
+                var stepValueRequest = GetStepValueRequest.CreateBuilder()
+                    .SetStepText(stepText)
+                    .SetHasInlineTable(hasInlineTable)
+                    .Build();
+                var stepValueRequestMessage = APIMessage.CreateBuilder()
+                    .SetMessageId(GenerateMessageId())
                     .SetMessageType(APIMessage.Types.APIMessageType.GetStepValueRequest)
                     .SetStepValueRequest(stepValueRequest)
                     .Build();
-            NetworkStream networkStream = _tcpCilent.GetStream();
-            APIMessage apiMessage = WriteAndReadApiMessage(stepValueRequestMessage, networkStream);
-            return apiMessage.StepValueResponse.StepValue.StepValue;
+                var networkStream = _tcpCilent.GetStream();
+                var apiMessage = WriteAndReadApiMessage(stepValueRequestMessage, networkStream);
+                yield return apiMessage.StepValueResponse.StepValue.StepValue;
+            }
+        }
+
+        private long GenerateMessageId()
+        {
+            return DateTime.Now.Ticks/TimeSpan.TicksPerMillisecond;
         }
 
         private APIMessage WriteAndReadApiMessage(APIMessage stepValueRequestMessage, NetworkStream networkStream)
         {
             lock (_tcpCilent)
             {
-                writeAPIMessage(stepValueRequestMessage, networkStream);
-                APIMessage apiMessage = readMessage(networkStream);
-                return apiMessage;
+                WriteApiMessage(stepValueRequestMessage, networkStream);
+                return ReadMessage(networkStream);
             }
         }
     }
