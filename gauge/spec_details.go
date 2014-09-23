@@ -12,18 +12,21 @@ type specInfoGatherer struct {
 	availableSpecs    []*specification
 	availableStepsMap map[string]*stepValue
 	stepsFromRunner   []string
+	specStepMapCache  map[string][]*step
 	mutex             sync.Mutex
 }
 
 func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) {
-	specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
+	specInfoGatherer.availableStepsMap = make(map[string]*stepValue)
+	specInfoGatherer.specStepMapCache = make(map[string][]*step)
 	specInfoGatherer.stepsFromRunner = specInfoGatherer.getStepsFromRunner(runner)
 	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
-	specInfoGatherer.addStepsToAvailableSteps(specInfoGatherer.getStepsFromSpecs())
+	newSpecStepMap := specInfoGatherer.getStepsFromSpecs()
+	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
 	go specInfoGatherer.refreshSteps(refreshInterval)
 }
 
-func (specInfoGatherer *specInfoGatherer) getStepsFromSpecs() []*step {
+func (specInfoGatherer *specInfoGatherer) getStepsFromSpecs() map[string][]*step {
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
@@ -36,8 +39,8 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 		specInfoGatherer.mutex.Lock()
 		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
 		specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
-		value := specInfoGatherer.getStepsFromSpecs()
-		specInfoGatherer.addStepsToAvailableSteps(value)
+		newSpecStepMap := specInfoGatherer.getStepsFromSpecs()
+		specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
 		specInfoGatherer.mutex.Unlock()
 	}
 }
@@ -73,25 +76,38 @@ func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dic
 	return specs
 }
 
-func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) []*step {
-	allSteps := make([]*step, 0)
+func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) map[string][]*step {
+	specStepsMap := make(map[string][]*step)
 	for _, spec := range specs {
-		allSteps = append(allSteps, spec.contexts...)
+		stepsInSpec := make([]*step, 0)
+		stepsInSpec = append(stepsInSpec, spec.contexts...)
 		for _, scenario := range spec.scenarios {
-			allSteps = append(allSteps, scenario.steps...)
+			stepsInSpec = append(stepsInSpec, scenario.steps...)
 		}
+		specStepsMap[spec.fileName] = stepsInSpec
 	}
-	return allSteps
+	return specStepsMap
 }
 
-func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(steps []*step) {
-	for _, step := range steps {
-		stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
-		if err == nil {
-			if _, ok := specInfoGatherer.availableStepsMap[stepValue.stepValue]; !ok {
-				specInfoGatherer.availableStepsMap[stepValue.stepValue] = stepValue
+func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsMap map[string][]*step) {
+	specInfoGatherer.updateCache(newSpecStepsMap)
+	for _, steps := range specInfoGatherer.specStepMapCache {
+		for _, step := range steps {
+			stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
+			if err == nil {
+				if _, ok := specInfoGatherer.availableStepsMap[stepValue.stepValue]; !ok {
+					specInfoGatherer.availableStepsMap[stepValue.stepValue] = stepValue
+				}
 			}
 		}
+	}
+
+}
+
+func (specInfoGatherer *specInfoGatherer) updateCache(newSpecStepsMap map[string][]*step) {
+	for fileName, specsteps := range newSpecStepsMap {
+		specInfoGatherer.specStepMapCache[fileName] = specsteps
+
 	}
 }
 
