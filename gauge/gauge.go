@@ -631,7 +631,9 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[str
 
 func findSpecsFilesIn(dirRoot string) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
-	return common.FindFilesInDir(absRoot, isValidSpecExtension)
+	specFiles := common.FindFilesInDir(absRoot, isValidSpecExtension)
+	sort.Strings(specFiles)
+	return specFiles
 }
 
 func isValidSpecExtension(path string) bool {
