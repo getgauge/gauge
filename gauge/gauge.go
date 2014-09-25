@@ -12,6 +12,7 @@ import (
 	flag "mflag"
 	"os"
 	"path"
+	"sort"
 	"path/filepath"
 	"strconv"
 	"strings"
