@@ -91,11 +91,12 @@ func (exe *execution) start() *suiteResult {
 	if beforeSuiteHookExecResult.GetFailed() {
 		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
 		exe.suiteResult.setFailure()
-	}
-	for _, specificationToExecute := range exe.specifications {
-		executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler)
-		protoSpecResult := executor.execute()
-		exe.suiteResult.addSpecResult(protoSpecResult)
+	} else {
+		for _, specificationToExecute := range exe.specifications {
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler)
+			protoSpecResult := executor.execute()
+			exe.suiteResult.addSpecResult(protoSpecResult)
+		}
 	}
 	afterSuiteHookExecResult := exe.endExecution()
 	if afterSuiteHookExecResult.GetFailed() {
