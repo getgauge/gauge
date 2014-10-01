@@ -19,27 +19,28 @@ import (
 )
 
 const (
-	DEPS_DIR  = "deps"
-	BUILD_DIR = "tmp"
+	DEPS_DIR    = "deps"
+	BUILD_DIR   = "tmp"
+	CGO_ENABLED = "CGO_ENABLED"
 )
 
 const (
-	HTML_PLUGIN_ID     = "html-report"
-	GAUGE_RUBY_GEMFILE = "gauge-ruby-*.gem"
-	dotGauge           = ".gauge"
-	plugins            = "plugins"
-	GOARCH             = "GOARCH"
-	GOOS               = "GOOS"
-	X86                = "386"
-	X86_64             = "amd64"
-	DARWIN             = "darwin"
-	LINUX              = "linux"
-	WINDOWS            = "windows"
-	bin                = "bin"
-	newDirPermissions  = 0755
-	CGO_ENABLED        = "CGO_ENABLED"
-	pluginJsonFile     = "plugin.json"
-	reportTemplate     = "report-template"
+	htmlPluginId      = "html-report"
+	gaugeRubyGemfile  = "gauge-ruby-*.gem"
+	dotGauge          = ".gauge"
+	plugins           = "plugins"
+	GOARCH            = "GOARCH"
+	GOOS              = "GOOS"
+	X86               = "386"
+	X86_64            = "amd64"
+	DARWIN            = "darwin"
+	LINUX             = "linux"
+	WINDOWS           = "windows"
+	bin               = "bin"
+	newDirPermissions = 0755
+	pluginJsonFile    = "plugin.json"
+	reportTemplate    = "report-template"
+	gauge             = "gauge"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, bin)
@@ -47,8 +48,8 @@ var BUILD_DIR_SRC = filepath.Join(BUILD_DIR, "src")
 var BUILD_DIR_PKG = filepath.Join(BUILD_DIR, "pkg")
 var platformBinDir = filepath.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 
-var gaugePackages = []string{"gauge", "gauge-java", "gauge-ruby"}
-var gaugePlugins = []string{HTML_PLUGIN_ID}
+var gaugePackages = []string{gauge, "gauge-java", "gauge-ruby"}
+var gaugePlugins = []string{htmlPluginId}
 
 func hashDir(dirPath string) string {
 	var b bytes.Buffer
@@ -70,7 +71,7 @@ func hashDir(dirPath string) string {
 }
 
 func isExecMode(mode os.FileMode) bool {
-	return (mode&0111) != 0
+	return (mode & 0111) != 0
 }
 
 func mirrorFile(src, dst string) error {
@@ -84,7 +85,7 @@ func mirrorFile(src, dst string) error {
 	dfi, err := os.Stat(dst)
 	if err == nil &&
 		isExecMode(sfi.Mode()) == isExecMode(dfi.Mode()) &&
-			(dfi.Mode()&os.ModeType == 0) &&
+		(dfi.Mode()&os.ModeType == 0) &&
 		dfi.Size() == sfi.Size() &&
 		dfi.ModTime().Unix() == sfi.ModTime().Unix() {
 		// Seems to not be modified.
@@ -165,21 +166,16 @@ func copyDepsToGoPath() {
 	}
 }
 
+//Copy gauge packages that are available.
 func copyGaugePackagesToGoPath() {
 	for _, p := range gaugePackages {
-		err := mirrorDir(p, filepath.Join(BUILD_DIR_SRC, p))
-		if err != nil {
-			panic(err)
-		}
+		mirrorDir(p, filepath.Join(BUILD_DIR_SRC, p))
 	}
 }
 
 func copyGaugePluginsToGoPath() {
 	for _, pluginName := range gaugePlugins {
-		err := mirrorDir(filepath.Join("plugins", pluginName), filepath.Join(BUILD_DIR_SRC, pluginName))
-		if err != nil {
-			panic(err)
-		}
+		mirrorDir(filepath.Join("plugins", pluginName), filepath.Join(BUILD_DIR_SRC, pluginName))
 	}
 }
 
@@ -219,11 +215,11 @@ func compileGoPackage(packageName string) {
 }
 
 func compileGauge() {
-	compileGoPackage("gauge")
+	compileGoPackage(gauge)
 }
 
 func compileHtmlPlugin() {
-	compileGoPackage(HTML_PLUGIN_ID)
+	compileGoPackage(htmlPluginId)
 }
 
 func compileGaugeJava() {
@@ -237,7 +233,7 @@ func compileGaugeRuby() {
 
 func runTests(packageName string, coverage bool) {
 	setGoPath()
-	runProcess("go", BUILD_DIR, "test","-covermode=count", "-coverprofile=count.out","-v", packageName)
+	runProcess("go", BUILD_DIR, "test", "-covermode=count", "-coverprofile=count.out", packageName)
 	if coverage {
 		runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
 	}
@@ -312,11 +308,11 @@ func installGaugeFiles(installPath string) {
 	if runtime.GOOS == "windows" {
 		files[filepath.Join(getBinDir(), "gauge.exe")] = bin
 	} else {
-		files[filepath.Join(getBinDir(), "gauge")] = bin
+		files[filepath.Join(getBinDir(), gauge)] = bin
 	}
-	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", "gauge", "skel")
-	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", "gauge", "skel", "env")
-	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", "gauge")
+	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", gauge, "skel")
+	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", gauge, "skel", "env")
+	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", gauge)
 	installFiles(files, installPath)
 }
 
@@ -399,9 +395,9 @@ func getGemFile(dir string) string {
 func installGaugeRubyGem() {
 	gemHome := getGemHome()
 	if gemHome == "" {
-		runProcess("gem", "gauge-ruby", "install", "--user-install", GAUGE_RUBY_GEMFILE)
+		runProcess("gem", "gauge-ruby", "install", "--user-install", gaugeRubyGemfile)
 	} else {
-		runProcess("gem", "gauge-ruby", "install", GAUGE_RUBY_GEMFILE, "--install-dir", gemHome)
+		runProcess("gem", "gauge-ruby", "install", gaugeRubyGemfile, "--install-dir", gemHome)
 	}
 }
 
@@ -443,7 +439,7 @@ func installPlugin(pluginId, installPath string) {
 
 // Executes the specified target
 // It also keeps a hash of all the contents in the target directory and avoid recompilation if contents are not changed
-func executeTarget(target string, forAllPlatforms bool) {
+func executeTarget(target *targetOpts, forAllPlatforms bool) {
 	if forAllPlatforms {
 		for _, platformEnv := range platformEnvs {
 			fmt.Printf("Executing target %s for platform envs:%s \n", target, platformEnv)
@@ -454,20 +450,20 @@ func executeTarget(target string, forAllPlatforms bool) {
 		runTarget(target, true)
 	}
 }
-func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) {
+func moveOSBinaryToCurrentOSArchDirectory(targetName string) {
 	destDir := path.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
-	if compileTarget == "" {
-		for target, _ := range targets {
+	if targetName == "" {
+		for _, target := range getAllTargetNames() {
 			moveBinaryToDirectory(path.Base(target), destDir)
 		}
 	} else {
-		moveBinaryToDirectory(path.Base(compileTarget), destDir)
+		moveBinaryToDirectory(path.Base(targetName), destDir)
 	}
 }
 
 func moveBinaryToDirectory(target, destDir string) error {
 	if runtime.GOOS == "windows" {
-		target = target+".exe"
+		target = target + ".exe"
 	}
 	srcFile := path.Join(bin, target)
 	destFile := path.Join(destDir, target)
@@ -480,18 +476,14 @@ func moveBinaryToDirectory(target, destDir string) error {
 	return os.Remove(srcFile)
 }
 
-func runTarget(target string, checkChanges bool) {
-	opts, ok := targets[target]
-	if !ok {
-		log.Fatalf("Unknown target: %s\n", target)
-	}
-	if checkChanges && opts.lookForChanges {
-		if hasChanges(hashDir(target), target) {
-			opts.targetFunc()
-			saveHash(hashDir(target), target)
+func runTarget(targetOpts *targetOpts, checkChanges bool) {
+	if checkChanges && targetOpts.lookForChanges {
+		if hasChanges(hashDir(targetOpts.dir), targetOpts.name) {
+			targetOpts.targetFunc()
+			saveHash(hashDir(targetOpts.dir), targetOpts.name)
 		}
 	} else {
-		opts.targetFunc()
+		targetOpts.targetFunc()
 	}
 }
 
@@ -509,47 +501,53 @@ var install = flag.Bool("install", false, "Install to the specified prefix")
 var plugin = flag.String("plugin", "", "Specify the name of the plugin to be installed. Can be a languge plugin too.")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
-var compileTarget = flag.String("target", "", "Specifies the target to be executed")
-var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linus, darwin both x86 and x86_64")
+var compileTarget = flag.String("target", "", "Specifies the target to be compiled or installed. Can be gauge, default plugin or language plugin")
+var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
-var gaugeOnly = flag.Bool("gauge", false, "Installs only gauge and default plugins. Skips langauge installation")
-var pluginsOnly = flag.Bool("plugins", false, "Installs only Plugins including all language runners")
+var gaugeOnly = flag.Bool(gauge, false, "Compiles or Installs only gauge. Skips language installation")
+var allPlugins = flag.Bool("plugins", false, "Compiles or installs only Plugins including all language runners")
+var defaultPlugins = flag.Bool("default-plugins", false, "Compiles or installs only default Plugins. This does not include languages")
 
 type targetOpts struct {
 	lookForChanges bool
 	targetFunc     compileFunc
+	name           string
+	dir            string
 }
 
 // Defines all the compile targets
 // Each target name is the directory name
 
 var (
-	targets      = map[string]*targetOpts{
-	"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
-	"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
-	"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
-	"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
-}
+	gaugeCompileTarget    = &targetOpts{lookForChanges: true, targetFunc: compileGauge, name: gauge, dir: gauge}
+	languagePluginTargets = map[string]*targetOpts{
+		"gauge-java": &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava, name: "gauge-java", dir: "gauge-java"},
+		"gauge-ruby": &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby, name: "gauge-ruby", dir: "gauge-ruby"},
+	}
+	defaultPluginTargets = map[string]*targetOpts{
+		"html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin, name: htmlPluginId, dir: "plugins/html-report"},
+	}
+
 	platformEnvs = []map[string]string{
-	map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
-	map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
-	map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
-	map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
-	map[string]string{GOARCH: X86, GOOS: WINDOWS, CGO_ENABLED: "0"},
-	map[string]string{GOARCH: X86_64, GOOS: WINDOWS, CGO_ENABLED: "0"},
-}
+		map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: WINDOWS, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: WINDOWS, CGO_ENABLED: "0"},
+	}
 )
 
 var (
 	pluginInstallers = map[string]func(string) error{
-	HTML_PLUGIN_ID: installHtmlPlugin,
-	"java":         installGaugeJavaFiles,
-	"ruby":         installGaugeRubyFiles,
-}
+		htmlPluginId: installHtmlPlugin,
+		"java":       installGaugeJavaFiles,
+		"ruby":       installGaugeRubyFiles,
+	}
 )
 
 func installHtmlPlugin(installPath string) error {
-	pluginSrcBasePath := filepath.Join("plugins", HTML_PLUGIN_ID)
+	pluginSrcBasePath := filepath.Join("plugins", htmlPluginId)
 
 	pluginProperties, err := getPluginProperties(filepath.Join(pluginSrcBasePath, pluginJsonFile))
 	if err != nil {
@@ -565,9 +563,9 @@ func installHtmlPlugin(installPath string) error {
 
 	files := make(map[string]string)
 	if runtime.GOOS == "windows" {
-		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID+".exe")] = filepath.Join(pluginRelativePath, bin)
+		files[filepath.Join(getBinDir(), htmlPluginId+".exe")] = filepath.Join(pluginRelativePath, bin)
 	} else {
-		files[filepath.Join(getBinDir(), HTML_PLUGIN_ID)] = filepath.Join(pluginRelativePath, bin)
+		files[filepath.Join(getBinDir(), htmlPluginId)] = filepath.Join(pluginRelativePath, bin)
 	}
 	files[filepath.Join(pluginSrcBasePath, pluginJsonFile)] = pluginRelativePath
 	files[filepath.Join(pluginSrcBasePath, reportTemplate)] = filepath.Join(pluginRelativePath, reportTemplate)
@@ -591,66 +589,127 @@ func getPluginProperties(jsonPropertiesFile string) (map[string]interface{}, err
 
 func main() {
 	flag.Parse()
+
 	createGoPathForBuild()
 	copyDepsToGoPath()
 	copyGaugePackagesToGoPath()
 	copyGaugePluginsToGoPath()
 
 	if *test {
-		runTests("gauge", false)
+		runTests(gauge, false)
 	} else if *coverage {
-		runTests("gauge", true)
+		runTests(gauge, true)
 	} else if *install {
-		if *gaugeInstallPrefix == "" {
-			if runtime.GOOS == "windows" {
-				*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
-				if *gaugeInstallPrefix == "" {
-					panic(fmt.Errorf("Failed to find programfiles"))
-				}
-				*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, "gauge")
-			} else {
-				*gaugeInstallPrefix = "/usr/local"
-			}
-		}
-		if *pluginInstallPrefix == "" {
-			if runtime.GOOS == "windows" {
-				*pluginInstallPrefix = os.Getenv("APPDATA")
-				if *pluginInstallPrefix == "" {
-					panic(fmt.Errorf("Failed to find AppData directory"))
-				}
-				*pluginInstallPrefix = filepath.Join(*pluginInstallPrefix, "gauge", plugins)
-			} else {
-				userHome := getUserHome()
-				if userHome == "" {
-					panic(fmt.Errorf("Failed to find User Home directory"))
-				}
-				*pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
-			}
-		}
-
-		if *plugin != "" {
-			installPlugin(*plugin, *pluginInstallPrefix)
-		} else if *pluginsOnly {
-			installPlugins(*pluginInstallPrefix)
-		} else if *gaugeOnly {
-			installGaugeFiles(*gaugeInstallPrefix)
-		} else {
-			installGaugeFiles(*gaugeInstallPrefix)
-			installPlugins(*pluginInstallPrefix)
-		}
-
+		installGaugeComponents()
 	} else {
-		if *compileTarget == "" {
-			for target, _ := range targets {
-				executeTarget(target, *allPlatforms)
-			}
-		} else {
-			executeTarget(*compileTarget, *allPlatforms)
-		}
-		copyBinaries()
-		moveOSBinaryToCurrentOSArchDirectory(*compileTarget)
-
+		compileGaugeComponents()
 	}
+}
+
+func installGaugeComponents() {
+	if *gaugeInstallPrefix == "" {
+		if runtime.GOOS == "windows" {
+			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
+			if *gaugeInstallPrefix == "" {
+				panic(fmt.Errorf("Failed to find programfiles"))
+			}
+			*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, gauge)
+		} else {
+			*gaugeInstallPrefix = "/usr/local"
+		}
+	}
+	if *pluginInstallPrefix == "" {
+		if runtime.GOOS == "windows" {
+			*pluginInstallPrefix = os.Getenv("APPDATA")
+			if *pluginInstallPrefix == "" {
+				panic(fmt.Errorf("Failed to find AppData directory"))
+			}
+			*pluginInstallPrefix = filepath.Join(*pluginInstallPrefix, gauge, plugins)
+		} else {
+			userHome := getUserHome()
+			if userHome == "" {
+				panic(fmt.Errorf("Failed to find User Home directory"))
+			}
+			*pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
+		}
+	}
+
+	if *plugin != "" {
+		installPlugin(*plugin, *pluginInstallPrefix)
+	} else if *allPlugins {
+		installPlugins(*pluginInstallPrefix)
+	} else if *gaugeOnly {
+		installGaugeFiles(*gaugeInstallPrefix)
+	} else {
+		installGaugeFiles(*gaugeInstallPrefix)
+		installPlugins(*pluginInstallPrefix)
+	}
+
+}
+
+func compileGaugeComponents() {
+	if *gaugeOnly {
+		executeTarget(gaugeCompileTarget, *allPlatforms)
+	} else if *allPlugins {
+		compilePlugins()
+	} else if *defaultPlugins {
+		compileDefaultPlugins()
+	} else if *compileTarget == "" {
+		compileAllTargets()
+	} else {
+		executeTarget(getTargetOpts(*compileTarget), *allPlatforms)
+	}
+	copyBinaries()
+	moveOSBinaryToCurrentOSArchDirectory(*compileTarget)
+}
+
+func compileAllTargets() {
+	executeTarget(gaugeCompileTarget, *allPlatforms)
+	for _, targetOpt := range languagePluginTargets {
+		executeTarget(targetOpt, *allPlatforms)
+	}
+	for _, targetOpt := range defaultPluginTargets {
+		executeTarget(targetOpt, *allPlatforms)
+	}
+}
+
+func getTargetOpts(target string) *targetOpts {
+	if target == gauge {
+		return gaugeCompileTarget
+	}
+	if opt, ok := languagePluginTargets[target]; ok {
+		return opt
+	}
+	if opt, ok := defaultPluginTargets[target]; ok {
+		return opt
+	}
+	panic(fmt.Sprintf("Invalid target specified: %s", target))
+
+}
+
+func compilePlugins() {
+	for _, targetOpt := range languagePluginTargets {
+		executeTarget(targetOpt, *allPlatforms)
+	}
+	compileDefaultPlugins()
+}
+
+func compileDefaultPlugins() {
+	for _, targetOpt := range defaultPluginTargets {
+		executeTarget(targetOpt, *allPlatforms)
+	}
+}
+
+func getAllTargetNames() []string {
+	targetNames := make([]string, 0)
+	targetNames = append(targetNames, gaugeCompileTarget.name)
+	for _, targetOpt := range defaultPluginTargets {
+		targetNames = append(targetNames, targetOpt.name)
+	}
+	for _, targetOpt := range languagePluginTargets {
+		targetNames = append(targetNames, targetOpt.name)
+	}
+	return targetNames
 }
 
 func getUserHome() string {
