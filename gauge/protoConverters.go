@@ -23,6 +23,14 @@ func convertToProtoStepItem(step *step) *ProtoItem {
 	return &ProtoItem{ItemType: ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
 }
 
+func convertToProtoStepItems(steps []*step) []*ProtoItem {
+	protoItems := make([]*ProtoItem, 0)
+	for _, step := range steps {
+		protoItems = append(protoItems, convertToProtoStepItem(step))
+	}
+	return protoItems
+}
+
 func convertToProtoScenarioItem(scenario *scenario) *ProtoItem {
 	scenarioItems := make([]*ProtoItem, 0)
 	for _, item := range scenario.items {
@@ -33,7 +41,7 @@ func convertToProtoScenarioItem(scenario *scenario) *ProtoItem {
 }
 
 func convertToProtoConcept(concept *step) *ProtoItem {
-	protoConcept := &ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoSteps(concept.conceptSteps)}
+	protoConcept := &ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.conceptSteps)}
 	protoConceptItem := &ProtoItem{ItemType: ProtoItem_Concept.Enum(), Concept: protoConcept}
 	return protoConceptItem
 }

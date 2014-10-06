@@ -143,14 +143,7 @@ func (executor *specExecutor) validateSteps(steps []*step) []*stepValidationErro
 }
 
 func (executor *specExecutor) validateConcept(concept *step) []*stepValidationError {
-	validationErrors := make([]*stepValidationError, 0)
-	for _, conceptStep := range concept.conceptSteps {
-		if err := executor.validateStep(conceptStep); err != nil {
-			err.fileName = executor.conceptDictionary.search(concept.value).fileName
-			validationErrors = append(validationErrors, err)
-		}
-	}
-	return validationErrors
+	return executor.validateSteps(concept.conceptSteps)
 }
 
 func (executor *specExecutor) validateStep(step *step) *stepValidationError {
@@ -307,8 +300,12 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *a
 	updateProtoStepParameters(protoConceptItem.Concept.ConceptStep, conceptStepParameters)
 
 	for stepIndex, step := range concept.conceptSteps {
-		stepParameters := paramResolver.getResolvedParams(step.args, conceptLookup, executor.dataTableLookup())
-		updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex], stepParameters)
+		if step.isConcept {
+			//			executor.resolveToProtoConceptItem(step)
+		} else {
+			stepParameters := paramResolver.getResolvedParams(step.args, conceptLookup, executor.dataTableLookup())
+			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
+		}
 	}
 	return protoConceptItem
 }
@@ -348,22 +345,26 @@ func (executor *specExecutor) executeSteps(protoSteps []*ProtoStep) bool {
 }
 
 func (executor *specExecutor) executeConcept(protoConcept *ProtoConcept) bool {
-	executor.executeSteps(protoConcept.Steps)
-	executor.setExecutionResultForConcept(protoConcept)
+	for _, step := range protoConcept.Steps {
+		executor.executeItem(step)
+		executor.setExecutionResultForConcept(protoConcept)
+	}
 	return protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
 }
 
 func (executor *specExecutor) setExecutionResultForConcept(protoConcept *ProtoConcept) {
 	var conceptExecutionTime int64
 	for _, step := range protoConcept.GetSteps() {
-		stepExecResult := step.GetStepExecutionResult().GetExecutionResult()
-		conceptExecutionTime += stepExecResult.GetExecutionTime()
-		if stepExecResult.GetFailed() {
-			conceptExecutionResult := &ProtoStepExecutionResult{ExecutionResult: stepExecResult}
-			conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
-			protoConcept.ConceptExecutionResult = conceptExecutionResult
-			protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-			return
+		if step.GetItemType() == ProtoItem_Step {
+			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
+			conceptExecutionTime += stepExecResult.GetExecutionTime()
+			if stepExecResult.GetFailed() {
+				conceptExecutionResult := &ProtoStepExecutionResult{ExecutionResult: stepExecResult}
+				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
+				protoConcept.ConceptExecutionResult = conceptExecutionResult
+				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
+				return
+			}
 		}
 	}
 	protoConcept.ConceptExecutionResult = &ProtoStepExecutionResult{ExecutionResult: &ProtoExecutionResult{Failed: proto.Bool(false), ExecutionTime: proto.Int64(conceptExecutionTime)}}

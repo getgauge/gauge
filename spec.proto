@@ -53,7 +53,7 @@ message ProtoStep {
 
 message ProtoConcept {
     required ProtoStep conceptStep = 1;
-    repeated ProtoStep steps = 2;
+    repeated ProtoItem steps = 2;
     optional ProtoStepExecutionResult conceptExecutionResult = 3;
 }
 

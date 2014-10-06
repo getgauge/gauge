@@ -29,6 +29,27 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	c.Assert(err.message, Equals, "Duplicate concept definition found")
 }
 
+func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
+	dictionary := new(conceptDictionary)
+	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
+	normalStep2 := &step{value: "normal step 2", lineText: "normal step 2"}
+	nestedConceptStep := &step{value: "nested concept", lineText: "nested concept"}
+	nestedConcept := &step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*step{normalStep2}}
+
+	topLevelConcept := &step{value: "top level concept", isConcept: true, conceptSteps: []*step{nestedConceptStep, normalStep1}}
+
+	dictionary.add([]*step{nestedConcept}, "file1.cpt")
+	dictionary.add([]*step{topLevelConcept}, "file2.cpt")
+
+	concept := dictionary.search("top level concept")
+	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 2)
+	actualnestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualnestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+}
+
 func (s *MySuite) TestConceptDictionarySearch(c *C) {
 	dictionary := new(conceptDictionary)
 	step1 := &step{value: "test step 1"}

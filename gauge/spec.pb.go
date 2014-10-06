@@ -31,12 +31,10 @@ It has these top-level messages:
 package main
 
 import proto "code.google.com/p/goprotobuf/proto"
-import json "encoding/json"
 import math "math"
 
-// Reference proto, json, and math imports to suppress error if they are not otherwise used.
+// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = &json.SyntaxError{}
 var _ = math.Inf
 
 type ProtoItem_ItemType int32
@@ -417,7 +415,7 @@ func (m *ProtoStep) GetStepExecutionResult() *ProtoStepExecutionResult {
 
 type ProtoConcept struct {
 	ConceptStep            *ProtoStep                `protobuf:"bytes,1,req,name=conceptStep" json:"conceptStep,omitempty"`
-	Steps                  []*ProtoStep              `protobuf:"bytes,2,rep,name=steps" json:"steps,omitempty"`
+	Steps                  []*ProtoItem              `protobuf:"bytes,2,rep,name=steps" json:"steps,omitempty"`
 	ConceptExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,3,opt,name=conceptExecutionResult" json:"conceptExecutionResult,omitempty"`
 	XXX_unrecognized       []byte                    `json:"-"`
 }
@@ -433,7 +431,7 @@ func (m *ProtoConcept) GetConceptStep() *ProtoStep {
 	return nil
 }
 
-func (m *ProtoConcept) GetSteps() []*ProtoStep {
+func (m *ProtoConcept) GetSteps() []*ProtoItem {
 	if m != nil {
 		return m.Steps
 	}

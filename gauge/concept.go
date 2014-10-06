@@ -14,6 +14,7 @@ type conceptParser struct {
 	currentConcept *step
 }
 
+//concept file can have multiple concept headings
 func (parser *conceptParser) parse(text string) ([]*step, *parseError) {
 	defer parser.resetState()
 
@@ -145,11 +146,12 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 	if conceptDictionary.conceptsMap == nil {
 		conceptDictionary.conceptsMap = make(map[string]*concept)
 	}
-	for _, step := range concepts {
-		if _, exists := conceptDictionary.conceptsMap[step.value]; exists {
-			return &parseError{message: "Duplicate concept definition found", lineNo: step.lineNo, lineText: step.lineText}
+	for _, conceptStep := range concepts {
+		if _, exists := conceptDictionary.conceptsMap[conceptStep.value]; exists {
+			return &parseError{message: "Duplicate concept definition found", lineNo: conceptStep.lineNo, lineText: conceptStep.lineText}
 		}
-		conceptDictionary.conceptsMap[step.value] = &concept{step, conceptFile}
+		conceptDictionary.replaceNestedConceptSteps(conceptStep)
+		conceptDictionary.conceptsMap[conceptStep.value] = &concept{conceptStep, conceptFile}
 	}
 	return nil
 }
@@ -159,4 +161,12 @@ func (conceptDictionary *conceptDictionary) search(stepValue string) *concept {
 		return concept
 	}
 	return nil
+}
+
+func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptStep *step) {
+	for i, stepInsideConcept := range conceptStep.conceptSteps {
+		if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
+			conceptStep.conceptSteps[i] = nestedConcept.conceptStep
+		}
+	}
 }

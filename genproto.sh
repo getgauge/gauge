@@ -1,4 +1,7 @@
 #!/bin/sh
+
+#Using protoc version 2.5.0
+
 PATH=$PATH:$GOPATH/bin protoc --go_out=gauge spec.proto
 PATH=$PATH:$GOPATH/bin protoc --go_out=gauge messages.proto
 sed  -i.backup '/import main1 "spec.pb"/d' gauge/messages.pb.go && sed  -i.backup 's/main1.//g' gauge/messages.pb.go && rm gauge/messages.pb.go.backup
