@@ -50,6 +50,78 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 }
 
+func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
+	dictionary := new(conceptDictionary)
+	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
+	normalStep2 := &step{value: "normal step 2", lineText: "normal step 2"}
+
+	nestedConceptStep := &step{value: "nested concept", lineText: "nested concept"}
+
+	topLevelConcept := &step{value: "top level concept", isConcept: true, conceptSteps: []*step{nestedConceptStep, normalStep1}}
+	anotherTopLevelConcept := &step{value: "top level concept 2", isConcept: true, conceptSteps: []*step{nestedConceptStep}}
+	nestedConcept := &step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*step{normalStep2}}
+
+	dictionary.add([]*step{topLevelConcept}, "file1.cpt")
+	dictionary.add([]*step{anotherTopLevelConcept}, "file1.cpt")
+	dictionary.add([]*step{nestedConcept}, "file2.cpt")
+
+	concept := dictionary.search("top level concept")
+	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 2)
+	actualnestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualnestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+
+	toplevelConcept2 := dictionary.search("top level concept 2")
+	c.Assert(len(toplevelConcept2.conceptStep.conceptSteps), Equals, 1)
+	actualnestedConcept = toplevelConcept2.conceptStep.conceptSteps[0]
+	c.Assert(actualnestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+}
+
+func (s *MySuite) TestMultiLevelConcept(c *C) {
+	dictionary := new(conceptDictionary)
+	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
+	normalStep2 := &step{value: "normal step 2", lineText: "normal step 2"}
+	normalStep3 := &step{value: "normal step 3", lineText: "normal step 3"}
+	nestedConceptStep := &step{value: "nested concept", lineText: "nested concept"}
+
+	topLevelConcept := &step{value: "top level concept", isConcept: true, conceptSteps: []*step{nestedConceptStep, normalStep1}}
+	anotherNestedConcept := &step{value: "another nested concept", isConcept: true, conceptSteps: []*step{normalStep3}}
+	nestedConcept := &step{value: "nested concept", isConcept: true, conceptSteps: []*step{anotherNestedConcept, normalStep2}}
+
+	dictionary.add([]*step{topLevelConcept}, "file1.cpt")
+	dictionary.add([]*step{anotherNestedConcept}, "file1.cpt")
+	dictionary.add([]*step{nestedConcept}, "file1.cpt")
+
+	actualTopLevelConcept := dictionary.search("top level concept")
+	c.Assert(len(actualTopLevelConcept.conceptStep.conceptSteps), Equals, 2)
+	actualNestedConcept := actualTopLevelConcept.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 2)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, anotherNestedConcept.value)
+	c.Assert(actualNestedConcept.conceptSteps[1].value, Equals, normalStep2.value)
+	c.Assert(actualTopLevelConcept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+
+	actualAnotherNestedConcept := dictionary.search("another nested concept")
+	c.Assert(len(actualAnotherNestedConcept.conceptStep.conceptSteps), Equals, 1)
+	step := actualAnotherNestedConcept.conceptStep.conceptSteps[0]
+	c.Assert(step.isConcept, Equals, false)
+	c.Assert(step.value, Equals, normalStep3.value)
+
+
+	nestedConcept2 := dictionary.search("nested concept")
+	c.Assert(len(nestedConcept2.conceptStep.conceptSteps), Equals, 2)
+	actualAnotherNestedConcept2 := nestedConcept2.conceptStep.conceptSteps[0]
+	c.Assert(actualAnotherNestedConcept2.isConcept, Equals, true)
+	c.Assert(len(actualAnotherNestedConcept2.conceptSteps), Equals, 1)
+	c.Assert(actualAnotherNestedConcept2.conceptSteps[0].value, Equals, normalStep3.value)
+	c.Assert(nestedConcept2.conceptStep.conceptSteps[1].value, Equals, normalStep2.value)
+
+}
+
 func (s *MySuite) TestConceptDictionarySearch(c *C) {
 	dictionary := new(conceptDictionary)
 	step1 := &step{value: "test step 1"}

@@ -2,6 +2,7 @@ package main
 
 type conceptDictionary struct {
 	conceptsMap map[string]*concept
+	constructionMap map[string]*step
 }
 
 type concept struct {
@@ -146,6 +147,9 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 	if conceptDictionary.conceptsMap == nil {
 		conceptDictionary.conceptsMap = make(map[string]*concept)
 	}
+	if conceptDictionary.constructionMap == nil {
+		conceptDictionary.constructionMap = make(map[string]*step)
+	}
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.conceptsMap[conceptStep.value]; exists {
 			return &parseError{message: "Duplicate concept definition found", lineNo: conceptStep.lineNo, lineText: conceptStep.lineText}
@@ -164,9 +168,21 @@ func (conceptDictionary *conceptDictionary) search(stepValue string) *concept {
 }
 
 func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptStep *step) {
+	conceptDictionary.updateStep(conceptStep)
 	for i, stepInsideConcept := range conceptStep.conceptSteps {
 		if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 			conceptStep.conceptSteps[i] = nestedConcept.conceptStep
+		} else {
+			conceptDictionary.updateStep(stepInsideConcept)
 		}
+	}
+}
+//mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
+func (conceptDictionary * conceptDictionary) updateStep(step *step) {
+	if (conceptDictionary.constructionMap[step.value] == nil) {
+		conceptDictionary.constructionMap[step.value] = step
+	} else {
+		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
+		conceptDictionary.constructionMap[step.value].conceptSteps = step.conceptSteps
 	}
 }
