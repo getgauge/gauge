@@ -655,12 +655,12 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(secondConcept.conceptSteps[1].args[0].argType, Equals, static)
 
 	c.Assert(len(secondConcept.lookup.paramValue), Equals, 2)
-	c.Assert(secondConcept.lookup.paramValue[0].name, Equals, "user-id")
-	c.Assert(secondConcept.lookup.paramValue[0].stepArg.value, Equals, "456")
-	c.Assert(secondConcept.lookup.paramValue[0].stepArg.argType, Equals, static)
-	c.Assert(secondConcept.lookup.paramValue[1].name, Equals, "user-description")
-	c.Assert(secondConcept.lookup.paramValue[1].stepArg.value, Equals, "Regular fellow")
-	c.Assert(secondConcept.lookup.paramValue[1].stepArg.argType, Equals, static)
+	arg1 = secondConcept.lookup.getArg("user-id")
+	arg2 = secondConcept.lookup.getArg("user-description")
+	c.Assert(arg1.value, Equals, "456")
+	c.Assert(arg1.argType, Equals, static)
+	c.Assert(arg2.value, Equals, "Regular fellow")
+	c.Assert(arg2.argType, Equals, static)
 
 }
 
