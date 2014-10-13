@@ -70,7 +70,7 @@ func hashDir(dirPath string) string {
 }
 
 func isExecMode(mode os.FileMode) bool {
-	return (mode & 0111) != 0
+	return (mode&0111) != 0
 }
 
 func mirrorFile(src, dst string) error {
@@ -84,7 +84,7 @@ func mirrorFile(src, dst string) error {
 	dfi, err := os.Stat(dst)
 	if err == nil &&
 		isExecMode(sfi.Mode()) == isExecMode(dfi.Mode()) &&
-		(dfi.Mode()&os.ModeType == 0) &&
+			(dfi.Mode()&os.ModeType == 0) &&
 		dfi.Size() == sfi.Size() &&
 		dfi.ModTime().Unix() == sfi.ModTime().Unix() {
 		// Seems to not be modified.
@@ -237,7 +237,7 @@ func compileGaugeRuby() {
 
 func runTests(packageName string, coverage bool) {
 	setGoPath()
-	runProcess("go", BUILD_DIR, "test", "-covermode=count", "-coverprofile=count.out", packageName)
+	runProcess("go", BUILD_DIR, "test","-covermode=count", "-coverprofile=count.out","-v", packageName)
 	if coverage {
 		runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
 	}
@@ -467,7 +467,7 @@ func moveOSBinaryToCurrentOSArchDirectory(compileTarget string) {
 
 func moveBinaryToDirectory(target, destDir string) error {
 	if runtime.GOOS == "windows" {
-		target = target + ".exe"
+		target = target+".exe"
 	}
 	srcFile := path.Join(bin, target)
 	destFile := path.Join(destDir, target)
@@ -524,28 +524,28 @@ type targetOpts struct {
 // Each target name is the directory name
 
 var (
-	targets = map[string]*targetOpts{
-		"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
-		"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
-		"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
-		"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
-	}
+	targets      = map[string]*targetOpts{
+	"gauge":               &targetOpts{lookForChanges: true, targetFunc: compileGauge},
+	"gauge-java":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeJava},
+	"gauge-ruby":          &targetOpts{lookForChanges: true, targetFunc: compileGaugeRuby},
+	"plugins/html-report": &targetOpts{lookForChanges: true, targetFunc: compileHtmlPlugin},
+}
 	platformEnvs = []map[string]string{
-		map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86, GOOS: WINDOWS, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: WINDOWS, CGO_ENABLED: "0"},
-	}
+	map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
+	map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
+	map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
+	map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
+	map[string]string{GOARCH: X86, GOOS: WINDOWS, CGO_ENABLED: "0"},
+	map[string]string{GOARCH: X86_64, GOOS: WINDOWS, CGO_ENABLED: "0"},
+}
 )
 
 var (
 	pluginInstallers = map[string]func(string) error{
-		HTML_PLUGIN_ID: installHtmlPlugin,
-		"java":         installGaugeJavaFiles,
-		"ruby":         installGaugeRubyFiles,
-	}
+	HTML_PLUGIN_ID: installHtmlPlugin,
+	"java":         installGaugeJavaFiles,
+	"ruby":         installGaugeRubyFiles,
+}
 )
 
 func installHtmlPlugin(installPath string) error {

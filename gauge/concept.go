@@ -3,6 +3,7 @@ package main
 type conceptDictionary struct {
 	conceptsMap map[string]*concept
 	constructionMap map[string]*step
+	referenceMap map[*step][]*step
 }
 
 type concept struct {
@@ -117,13 +118,13 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 
 func (parser *conceptParser) processTableHeader(token *token) {
 	steps := parser.currentConcept.conceptSteps
-	currentStep := steps[len(steps)-1]
+	currentStep := steps[len(steps) - 1]
 	addInlineTableHeader(currentStep, token)
 }
 
 func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLookup) {
 	steps := parser.currentConcept.conceptSteps
-	currentStep := steps[len(steps)-1]
+	currentStep := steps[len(steps) - 1]
 	addInlineTableRow(currentStep, token, argLookup)
 }
 
@@ -143,6 +144,25 @@ func (parser *conceptParser) createConceptLookup(concept *step) {
 	}
 }
 
+//
+//func (conceptDictionary *conceptDictionary) resolveNestedConcepts() *parseResult {
+//	for _, concept := range conceptDictionary.conceptsMap {
+//		for _, stepInConcept := range concept.conceptStep.conceptSteps {
+//			if conceptDictionary.isConcept(stepInConcept) {
+//
+//
+//			}
+//
+//		}
+//
+//	}
+//}
+
+func (conceptDictionary *conceptDictionary) isConcept(step *step) bool {
+	_, ok := conceptDictionary.conceptsMap[step.value]
+	return ok
+
+}
 func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile string) *parseError {
 	if conceptDictionary.conceptsMap == nil {
 		conceptDictionary.conceptsMap = make(map[string]*concept)
@@ -157,6 +177,7 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 		conceptDictionary.replaceNestedConceptSteps(conceptStep)
 		conceptDictionary.conceptsMap[conceptStep.value] = &concept{conceptStep, conceptFile}
 	}
+
 	return nil
 }
 
@@ -171,12 +192,14 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 	conceptDictionary.updateStep(conceptStep)
 	for i, stepInsideConcept := range conceptStep.conceptSteps {
 		if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
+			//replace step with actual concept
 			conceptStep.conceptSteps[i] = nestedConcept.conceptStep
 		} else {
 			conceptDictionary.updateStep(stepInsideConcept)
 		}
 	}
 }
+
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
 func (conceptDictionary * conceptDictionary) updateStep(step *step) {
 	if (conceptDictionary.constructionMap[step.value] == nil) {
@@ -184,5 +207,6 @@ func (conceptDictionary * conceptDictionary) updateStep(step *step) {
 	} else {
 		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
 		conceptDictionary.constructionMap[step.value].conceptSteps = step.conceptSteps
+		conceptDictionary.constructionMap[step.value].lookup = step.lookup
 	}
 }

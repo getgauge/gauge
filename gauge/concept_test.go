@@ -2,6 +2,8 @@ package main
 
 import (
 	. "launchpad.net/gocheck"
+	"strings"
+	"fmt"
 )
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
@@ -50,6 +52,17 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 }
 
+/*
+#top level concept
+* nested concept
+* normal step 1
+
+#top level concept 2
+* nested concept
+
+# nested concept
+* normal step 2
+ */
 func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 	dictionary := new(conceptDictionary)
 	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
@@ -67,18 +80,18 @@ func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 
 	concept := dictionary.search("top level concept")
 	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 2)
-	actualnestedConcept := concept.conceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	actualNestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 
-	toplevelConcept2 := dictionary.search("top level concept 2")
-	c.Assert(len(toplevelConcept2.conceptStep.conceptSteps), Equals, 1)
-	actualnestedConcept = toplevelConcept2.conceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	topLevelConcept2 := dictionary.search("top level concept 2")
+	c.Assert(len(topLevelConcept2.conceptStep.conceptSteps), Equals, 1)
+	actualNestedConcept = topLevelConcept2.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
 }
 
 func (s *MySuite) TestMultiLevelConcept(c *C) {
@@ -122,6 +135,26 @@ func (s *MySuite) TestMultiLevelConcept(c *C) {
 
 }
 
+func (s *MySuite) TestParamScopeInMultilevelConcept(c *C) {
+	dictionary := new(conceptDictionary)
+	firstConcept, _ := createConcept("# my concept with <param0> and <param1>", "* First step with <param0>", "* nested concept with <param1>")
+	nestedConcept, _ := createConcept("# nested concept with <nested_param>", "* nested concept step with \"foo\" and <nested_param>")
+
+	dictionary.add([]*step{firstConcept, nestedConcept}, "file.cpt")
+	concept := dictionary.search("my concept with {} and {}")
+
+	actualNestedConcept := concept.conceptStep.conceptSteps[1]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	nestedConceptLookup := actualNestedConcept.lookup
+	c.Assert(nestedConceptLookup.containsArg("nested_param"), Equals, true)
+	stepArg := nestedConceptLookup.getArg("nested_param")
+	conceptOriginalArg := concept.conceptStep.lookup.getArg("param1")
+	fmt.Println(concept.conceptStep.lookup)
+	fmt.Println(conceptOriginalArg)
+	c.Assert(stepArg, Equals, conceptOriginalArg)
+
+}
+
 func (s *MySuite) TestConceptDictionarySearch(c *C) {
 	dictionary := new(conceptDictionary)
 	step1 := &step{value: "test step 1"}
@@ -147,6 +180,7 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	c.Assert(concept.isConcept, Equals, true)
 	c.Assert(len(concept.conceptSteps), Equals, 2)
 	c.Assert(concept.conceptSteps[0].value, Equals, "first step")
+	c.Assert(concept.conceptSteps[0],)
 	c.Assert(concept.conceptSteps[1].value, Equals, "second step")
 
 }
@@ -287,4 +321,13 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 
 	c.Assert(err, NotNil)
 	c.Assert(err.message, Equals, "Table doesn't belong to any step")
+}
+
+func createConcept(lines ...string) (*step, *parseError) {
+	parser := &conceptParser{}
+	concepts, parseError := parser.parse(strings.Join(lines, "\n"))
+	if len(concepts) > 0 {
+		return concepts[0], parseError
+	}
+	return nil, parseError
 }
