@@ -498,10 +498,9 @@ type compileFunc func()
 var test = flag.Bool("test", false, "Run the test cases")
 var coverage = flag.Bool("test-coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
-var plugin = flag.String("plugin", "", "Specify the name of the plugin to be installed. Can be a languge plugin too.")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var pluginInstallPrefix = flag.String("plugin-prefix", "", "Specifies the prefix where gauge plugins will be installed")
-var compileTarget = flag.String("target", "", "Specifies the target to be compiled or installed. Can be gauge, default plugin or language plugin")
+var target = flag.String("target", "", "Specifies the target to be compiled or installed. Can be gauge, default plugin or language plugin")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var gaugeOnly = flag.Bool(gauge, false, "Compiles or Installs only gauge. Skips language installation")
@@ -606,7 +605,41 @@ func main() {
 	}
 }
 
+func compileGaugeComponents() {
+	if *gaugeOnly {
+		executeTarget(gaugeCompileTarget, *allPlatforms)
+	} else if *allPlugins {
+		compilePlugins()
+	} else if *defaultPlugins {
+		compileDefaultPlugins()
+	} else if *target == "" {
+		compileAllTargets()
+	} else {
+		executeTarget(getTargetOpts(*target), *allPlatforms)
+	}
+	copyBinaries()
+	moveOSBinaryToCurrentOSArchDirectory(*target)
+}
+
 func installGaugeComponents() {
+	updateGaugeInstallPrefix()
+	updatePluginInstallPrefix()
+
+	if *gaugeOnly {
+		installGaugeFiles(*gaugeInstallPrefix)
+	} else if *allPlugins {
+		installPlugins(*pluginInstallPrefix)
+	} else if *defaultPlugins {
+		installDefaultPlugins(*pluginInstallPrefix)
+	} else if *target != "" {
+		installPlugin(*target, *pluginInstallPrefix)
+	} else {
+		installGaugeFiles(*gaugeInstallPrefix)
+		installPlugins(*pluginInstallPrefix)
+	}
+}
+
+func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {
 		if runtime.GOOS == "windows" {
 			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
@@ -618,6 +651,15 @@ func installGaugeComponents() {
 			*gaugeInstallPrefix = "/usr/local"
 		}
 	}
+}
+
+func installDefaultPlugins(pluginInstallPrefix string) {
+	for defaultPluginTarget, _ := range defaultPluginTargets {
+		installPlugin(defaultPluginTarget, pluginInstallPrefix)
+	}
+}
+
+func updatePluginInstallPrefix() {
 	if *pluginInstallPrefix == "" {
 		if runtime.GOOS == "windows" {
 			*pluginInstallPrefix = os.Getenv("APPDATA")
@@ -633,34 +675,6 @@ func installGaugeComponents() {
 			*pluginInstallPrefix = filepath.Join(userHome, dotGauge, plugins)
 		}
 	}
-
-	if *plugin != "" {
-		installPlugin(*plugin, *pluginInstallPrefix)
-	} else if *allPlugins {
-		installPlugins(*pluginInstallPrefix)
-	} else if *gaugeOnly {
-		installGaugeFiles(*gaugeInstallPrefix)
-	} else {
-		installGaugeFiles(*gaugeInstallPrefix)
-		installPlugins(*pluginInstallPrefix)
-	}
-
-}
-
-func compileGaugeComponents() {
-	if *gaugeOnly {
-		executeTarget(gaugeCompileTarget, *allPlatforms)
-	} else if *allPlugins {
-		compilePlugins()
-	} else if *defaultPlugins {
-		compileDefaultPlugins()
-	} else if *compileTarget == "" {
-		compileAllTargets()
-	} else {
-		executeTarget(getTargetOpts(*compileTarget), *allPlatforms)
-	}
-	copyBinaries()
-	moveOSBinaryToCurrentOSArchDirectory(*compileTarget)
 }
 
 func compileAllTargets() {
