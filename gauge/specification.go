@@ -65,7 +65,18 @@ type step struct {
 	lookup         argLookup
 	conceptSteps   []*step
 	fragments      []*Fragment
+	parent           *step
 	hasInlineTable bool
+}
+
+func (step *step) deepCopyStepArgs() ([]*stepArg) {
+	copiedStepArgs := make([]*stepArg, 0)
+	for _, conceptStepArg := range step.args {
+		temp := new(stepArg)
+		*temp = *conceptStepArg
+		copiedStepArgs = append(copiedStepArgs, temp)
+	}
+	return copiedStepArgs
 }
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
@@ -369,28 +380,26 @@ func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLo
 }
 
 func (specification *specification) processConceptStepsFrom(conceptDictionary *conceptDictionary) {
-	for _, step := range specification.contexts {
-		specification.processConceptStep(step, conceptDictionary)
+	for i, _ := range specification.contexts {
+		specification.processConceptStep(&specification.contexts[i], conceptDictionary)
 	}
-	for _, scenario := range specification.scenarios {
-		for _, step := range scenario.steps {
-			specification.processConceptStep(step, conceptDictionary)
+	//using indices since for range creates a new object, but we want to modify the actual object
+	for i, _ := range specification.scenarios {
+		for j, _ := range specification.scenarios[i].steps {
+			specification.processConceptStep(&specification.scenarios[i].steps[j], conceptDictionary)
 		}
 	}
 }
 
-func (specification *specification) processConceptStep(step *step, conceptDictionary *conceptDictionary) {
-	if conceptFromDictionary := conceptDictionary.search(step.value); conceptFromDictionary != nil {
+func (specification *specification) processConceptStep(step **step, conceptDictionary *conceptDictionary) {
+	if conceptFromDictionary := conceptDictionary.search((*step).value); conceptFromDictionary != nil {
 		specification.createConceptStep(conceptFromDictionary.conceptStep, step)
 	}
 }
 
-func (specification *specification) createConceptStep(conceptFromDictionary *step, originalStep *step) {
-	lookup := conceptFromDictionary.lookup.getCopy()
-	originalStep.isConcept = true
-	originalStep.conceptSteps = conceptFromDictionary.conceptSteps
-	specification.populateConceptLookup(lookup, conceptFromDictionary.args, originalStep.args)
-	originalStep.lookup = *lookup
+func (specification *specification) createConceptStep(concept *step, originalStep **step) {
+	*originalStep = concept.getCopy()
+	specification.populateConceptLookup(&((*originalStep).lookup), concept.args, (*originalStep).args)
 }
 
 func (specification *specification) addItem(itemToAdd item) {
@@ -706,4 +715,20 @@ func (specification *specification) getSpecItems() []item {
 		}
 	}
 	return specItems
+}
+
+func (self *step) getCopy() *step {
+	if !self.isConcept {
+		return self
+	}
+	nestedStepsCopy := make([] *step, 0)
+	for _, nestedStep := range self.conceptSteps {
+		nestedStepsCopy = append(nestedStepsCopy, nestedStep.getCopy())
+	}
+
+	copiedConceptStep := new(step)
+	*copiedConceptStep = *self
+	copiedConceptStep.conceptSteps = nestedStepsCopy
+	copiedConceptStep.lookup = *self.lookup.getCopy()
+	return copiedConceptStep
 }

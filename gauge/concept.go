@@ -210,3 +210,7 @@ func (conceptDictionary * conceptDictionary) updateStep(step *step) {
 		conceptDictionary.constructionMap[step.value].lookup = step.lookup
 	}
 }
+
+func (self *concept) deepCopy() (*concept) {
+	return &concept{fileName:self.fileName, conceptStep:self.conceptStep.getCopy()}
+}

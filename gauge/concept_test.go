@@ -2,8 +2,6 @@ package main
 
 import (
 	. "launchpad.net/gocheck"
-	"strings"
-	"fmt"
 )
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
@@ -135,26 +133,6 @@ func (s *MySuite) TestMultiLevelConcept(c *C) {
 
 }
 
-func (s *MySuite) TestParamScopeInMultilevelConcept(c *C) {
-	dictionary := new(conceptDictionary)
-	firstConcept, _ := createConcept("# my concept with <param0> and <param1>", "* First step with <param0>", "* nested concept with <param1>")
-	nestedConcept, _ := createConcept("# nested concept with <nested_param>", "* nested concept step with \"foo\" and <nested_param>")
-
-	dictionary.add([]*step{firstConcept, nestedConcept}, "file.cpt")
-	concept := dictionary.search("my concept with {} and {}")
-
-	actualNestedConcept := concept.conceptStep.conceptSteps[1]
-	c.Assert(actualNestedConcept.isConcept, Equals, true)
-	nestedConceptLookup := actualNestedConcept.lookup
-	c.Assert(nestedConceptLookup.containsArg("nested_param"), Equals, true)
-	stepArg := nestedConceptLookup.getArg("nested_param")
-	conceptOriginalArg := concept.conceptStep.lookup.getArg("param1")
-	fmt.Println(concept.conceptStep.lookup)
-	fmt.Println(conceptOriginalArg)
-	c.Assert(stepArg, Equals, conceptOriginalArg)
-
-}
-
 func (s *MySuite) TestConceptDictionarySearch(c *C) {
 	dictionary := new(conceptDictionary)
 	step1 := &step{value: "test step 1"}
@@ -180,7 +158,6 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	c.Assert(concept.isConcept, Equals, true)
 	c.Assert(len(concept.conceptSteps), Equals, 2)
 	c.Assert(concept.conceptSteps[0].value, Equals, "first step")
-	c.Assert(concept.conceptSteps[0],)
 	c.Assert(concept.conceptSteps[1].value, Equals, "second step")
 
 }
@@ -323,11 +300,27 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	c.Assert(err.message, Equals, "Table doesn't belong to any step")
 }
 
-func createConcept(lines ...string) (*step, *parseError) {
-	parser := &conceptParser{}
-	concepts, parseError := parser.parse(strings.Join(lines, "\n"))
-	if len(concepts) > 0 {
-		return concepts[0], parseError
-	}
-	return nil, parseError
+func (s *MySuite) TestDeepCopyOfConcept(c *C) {
+	dictionary := new(conceptDictionary)
+	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
+	normalStep2 := &step{value: "normal step 2", lineText: "normal step 2"}
+
+	nestedConceptStep := &step{value: "nested concept", lineText: "nested concept"}
+
+	topLevelConcept := &step{value: "top level concept", isConcept: true, conceptSteps: []*step{nestedConceptStep, normalStep1}}
+	nestedConcept := &step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*step{normalStep2}}
+
+	dictionary.add([]*step{topLevelConcept}, "file1.cpt")
+	dictionary.add([]*step{nestedConcept}, "file2.cpt")
+
+	actualConcept := dictionary.search("top level concept")
+
+	copiedTopLevelConcept := actualConcept.deepCopy()
+
+	verifyCopiedConcept(copiedTopLevelConcept, actualConcept, c)
+}
+
+func verifyCopiedConcept(copiedConcept *concept, actualConcept *concept, c *C) {
+	c.Assert(&copiedConcept, Not(Equals), &actualConcept)
+	c.Assert(copiedConcept, DeepEquals, actualConcept)
 }
