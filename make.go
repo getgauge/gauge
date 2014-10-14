@@ -179,13 +179,18 @@ func copyGaugePluginsToGoPath() {
 	}
 }
 
-func setGoPath() {
+func setGoEnv() {
 	absBuildDir, err := filepath.Abs(BUILD_DIR)
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("GOPATH = %s\n", absBuildDir)
-	err = os.Setenv("GOPATH", absBuildDir)
+	set("GOPATH", absBuildDir)
+	set("GOBIN", filepath.Join(absBuildDir, bin))
+}
+
+func set(envName, envValue string) {
+	log.Printf("%s = %s\n", envName, envValue)
+	err := os.Setenv(envName, envValue)
 	if err != nil {
 		panic(err)
 	}
@@ -210,7 +215,7 @@ func runCommand(command string, arg ...string) (string, error) {
 }
 
 func compileGoPackage(packageName string) {
-	setGoPath()
+	setGoEnv()
 	runProcess("go", BUILD_DIR, "install", "-v", packageName)
 }
 
@@ -232,7 +237,7 @@ func compileGaugeRuby() {
 }
 
 func runTests(packageName string, coverage bool) {
-	setGoPath()
+	setGoEnv()
 	runProcess("go", BUILD_DIR, "test", "-covermode=count", "-coverprofile=count.out", packageName)
 	if coverage {
 		runProcess("go", BUILD_DIR, "tool", "cover", "-html=count.out")
