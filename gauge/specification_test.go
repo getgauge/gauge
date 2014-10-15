@@ -1,6 +1,9 @@
 package main
 
-import . "launchpad.net/gocheck"
+import (
+	. "launchpad.net/gocheck"
+	"code.google.com/p/goprotobuf/proto"
+)
 
 func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 	tokens := []*token{
@@ -789,4 +792,45 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	c.Assert(protoTable.GetHeaders().GetCells(), DeepEquals, headers)
 	c.Assert(len(protoTable.GetRows()), Equals, 1)
 	c.Assert(protoTable.GetRows()[0].GetCells(), DeepEquals, row1)
+}
+
+func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
+	argsInStep := []*stepArg{&stepArg{name:"arg1", value:"arg value", argType:dynamic}}
+	fragments := []*Fragment{&Fragment{Text:proto.String("foo")}}
+	originalStep := &step {    lineNo: 12,
+		value: "foo {}",
+		lineText: "foo <bar>",
+		args: argsInStep,
+		isConcept:false,
+		fragments:fragments,
+		hasInlineTable: false}
+
+	destinationStep := new(step)
+	destinationStep.copyFrom(originalStep)
+
+	c.Assert(destinationStep, DeepEquals, originalStep)
+}
+
+func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
+	argsInStep := []*stepArg{&stepArg{name:"arg1", value:"arg value", argType:dynamic}}
+	argLookup := new(argLookup)
+	argLookup.addArgName("name")
+	argLookup.addArgName("id")
+	fragments := []*Fragment{&Fragment{Text:proto.String("foo")}}
+	conceptSteps := [] *step { &step{value: "step 1"}}
+	originalConcept := &step {
+		lineNo: 12,
+		value: "foo {}",
+		lineText: "foo <bar>",
+		args: argsInStep,
+		isConcept:true,
+		lookup: *argLookup,
+		fragments: fragments,
+		conceptSteps: conceptSteps,
+		hasInlineTable: false}
+
+	destinationConcept := new(step)
+	destinationConcept.copyFrom(originalConcept)
+
+	c.Assert(destinationConcept, DeepEquals, originalConcept)
 }

@@ -380,26 +380,26 @@ func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLo
 }
 
 func (specification *specification) processConceptStepsFrom(conceptDictionary *conceptDictionary) {
-	for i, _ := range specification.contexts {
-		specification.processConceptStep(&specification.contexts[i], conceptDictionary)
+	for _, step := range specification.contexts {
+		specification.processConceptStep(step, conceptDictionary)
 	}
-	//using indices since for range creates a new object, but we want to modify the actual object
-	for i, _ := range specification.scenarios {
-		for j, _ := range specification.scenarios[i].steps {
-			specification.processConceptStep(&specification.scenarios[i].steps[j], conceptDictionary)
+	for _, scenario := range specification.scenarios {
+		for _, step := range scenario.steps {
+			specification.processConceptStep(step, conceptDictionary)
 		}
 	}
 }
 
-func (specification *specification) processConceptStep(step **step, conceptDictionary *conceptDictionary) {
-	if conceptFromDictionary := conceptDictionary.search((*step).value); conceptFromDictionary != nil {
+func (specification *specification) processConceptStep(step *step, conceptDictionary *conceptDictionary) {
+	if conceptFromDictionary := conceptDictionary.search(step.value); conceptFromDictionary != nil {
 		specification.createConceptStep(conceptFromDictionary.conceptStep, step)
 	}
 }
 
-func (specification *specification) createConceptStep(concept *step, originalStep **step) {
-	*originalStep = concept.getCopy()
-	specification.populateConceptLookup(&((*originalStep).lookup), concept.args, (*originalStep).args)
+func (specification *specification) createConceptStep(concept *step, originalStep *step) {
+	stepCopy := concept.getCopy()
+	originalStep.copyFrom(stepCopy)
+	specification.populateConceptLookup(&originalStep.lookup, concept.args, originalStep.args)
 }
 
 func (specification *specification) addItem(itemToAdd item) {
@@ -731,4 +731,36 @@ func (self *step) getCopy() *step {
 	copiedConceptStep.conceptSteps = nestedStepsCopy
 	copiedConceptStep.lookup = *self.lookup.getCopy()
 	return copiedConceptStep
+}
+
+func (self *step) copyFrom(another *step) {
+	self.isConcept = another.isConcept
+
+	if another.args == nil {
+		self.args = nil
+	} else {
+		self.args =  make([] *stepArg, len(another.args))
+		copy(self.args, another.args)
+	}
+
+	if another.conceptSteps == nil {
+		self.conceptSteps = nil
+	} else {
+		self.conceptSteps = make([] *step, len(another.conceptSteps))
+		copy(self.conceptSteps, another.conceptSteps)
+	}
+
+	if another.fragments == nil {
+		self.fragments = nil
+	} else {
+		self.fragments = make([] *Fragment, len(another.fragments))
+		copy(self.fragments, another.fragments)
+	}
+
+	self.lineNo = another.lineNo
+	self.lineText = another.lineText
+	self.hasInlineTable = another.hasInlineTable
+	self.value = another.value
+	self.lookup = another.lookup
+	self.parent = another.parent
 }
