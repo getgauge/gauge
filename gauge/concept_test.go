@@ -60,7 +60,7 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 
 # nested concept
 * normal step 2
- */
+*/
 func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 	dictionary := new(conceptDictionary)
 	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
@@ -121,7 +121,6 @@ func (s *MySuite) TestMultiLevelConcept(c *C) {
 	step := actualAnotherNestedConcept.conceptStep.conceptSteps[0]
 	c.Assert(step.isConcept, Equals, false)
 	c.Assert(step.value, Equals, normalStep3.value)
-
 
 	nestedConcept2 := dictionary.search("nested concept")
 	c.Assert(len(nestedConcept2.conceptStep.conceptSteps), Equals, 2)
@@ -323,4 +322,33 @@ func (s *MySuite) TestDeepCopyOfConcept(c *C) {
 func verifyCopiedConcept(copiedConcept *concept, actualConcept *concept, c *C) {
 	c.Assert(&copiedConcept, Not(Equals), &actualConcept)
 	c.Assert(copiedConcept, DeepEquals, actualConcept)
+}
+
+func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First flow").
+		step("concept step \"foo\"").
+		step("another step").String()
+
+	conceptText := SpecBuilder().
+		specHeading("concept step <bar>").
+		step("nested concept <bar>").
+		step("step 2").
+		specHeading("nested concept <bar>").
+		step("nested step 1 <bar>").
+		step("nested step 2").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	err := conceptDictionary.add(concepts, "file.cpt")
+	tokens, err := parser.generateTokens(specText)
+	c.Assert(err, IsNil)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+	firstStepInSpec := spec.scenarios[0].steps[0]
+	nestedConcept := firstStepInSpec.conceptSteps[0]
+	nestedConceptArg := nestedConcept.getArg("bar")
+	c.Assert(nestedConceptArg.value, Equals, "foo")
 }

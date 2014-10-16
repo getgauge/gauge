@@ -504,5 +504,4 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	c.Assert(firstStepInSpec.conceptSteps[1].parent, Equals, firstStepInSpec)
 	c.Assert(firstStepInSpec.parent, IsNil)
 	c.Assert(secondStepInSpec.parent, IsNil)
-
 }

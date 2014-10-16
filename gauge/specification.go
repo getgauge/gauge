@@ -69,6 +69,13 @@ type step struct {
 	hasInlineTable bool
 }
 
+func (step *step) getArg(name string) *stepArg {
+	if step.parent == nil {
+		return step.lookup.getArg(name)
+	}
+	return step.parent.getArg(name)
+}
+
 func (step *step) deepCopyStepArgs() ([]*stepArg) {
 	copiedStepArgs := make([]*stepArg, 0)
 	for _, conceptStepArg := range step.args {

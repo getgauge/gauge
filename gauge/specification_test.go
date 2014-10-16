@@ -1,8 +1,8 @@
 package main
 
 import (
-	. "launchpad.net/gocheck"
 	"code.google.com/p/goprotobuf/proto"
+	. "launchpad.net/gocheck"
 )
 
 func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
@@ -739,6 +739,25 @@ func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
 	fragment := step.fragments[0]
 	c.Assert(fragment.GetText(), Equals, "This is a simple step")
 	c.Assert(fragment.GetFragmentType(), Equals, Fragment_Text)
+}
+
+func (s *MySuite) TestGetArgForStep(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
+	step := &step{lookup: *lookup}
+
+	c.Assert(step.getArg("param1").value, Equals, "value1")
+}
+
+func (s *MySuite) TestGetArgForConceptStep(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
+	concept := &step{lookup: *lookup, isConcept: true}
+	step := &step{parent: concept}
+
+	c.Assert(step.getArg("param1").value, Equals, "value1")
 }
 
 func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
