@@ -398,7 +398,16 @@ func (specification *specification) processConceptStep(step *step, conceptDictio
 
 func (specification *specification) createConceptStep(concept *step, originalStep *step) {
 	stepCopy := concept.getCopy()
+	originalArgs := originalStep.args
 	originalStep.copyFrom(stepCopy)
+	originalStep.args = originalArgs
+
+	// set parent of all concept steps to be the current concept (referred as originalStep here)
+	// this is used to fetch from parent's lookup when nested
+	for _, conceptStep := range originalStep.conceptSteps {
+		conceptStep.parent = originalStep
+	}
+
 	specification.populateConceptLookup(&originalStep.lookup, concept.args, originalStep.args)
 }
 

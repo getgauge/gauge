@@ -435,20 +435,20 @@ func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
 func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 	parser := new(specParser)
 	specText := SpecBuilder().specHeading("A spec heading").
-	text("Hello, i am a comment").
-	text(" ").
-	step("Context step with \"param\" and <file:foo>").
-	text("|a|b|c|").
-	text("|--||").
-	text("|a1|a2|a3|").
-	tags("one", "two").
-	scenarioHeading("First flow").
-	tags("tag1", "tag2").
-	step("first with \"fpp\" and <bar>").
-	text("Comment in scenario").
-	step("<table:file.csv> and <another> with \"foo\"").
-	scenarioHeading("First flow").
-	step("another").String()
+		text("Hello, i am a comment").
+		text(" ").
+		step("Context step with \"param\" and <file:foo>").
+		text("|a|b|c|").
+		text("|--||").
+		text("|a1|a2|a3|").
+		tags("one", "two").
+		scenarioHeading("First flow").
+		tags("tag1", "tag2").
+		step("first with \"fpp\" and <bar>").
+		text("Comment in scenario").
+		step("<table:file.csv> and <another> with \"foo\"").
+		scenarioHeading("First flow").
+		step("another").String()
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
@@ -486,12 +486,12 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	parser := new(specParser)
 	conceptDictionary := new(conceptDictionary)
 	specText := SpecBuilder().specHeading("A spec heading").
-	scenarioHeading("First flow").
-	step("concept step").
-	step("another step").String()
-	step1 := &step{value:"step 1"}
-	step2 := &step{value:"step 2"}
-	concept1 := &step{value: "concept step", conceptSteps:[]*step{step1, step2}, isConcept:true}
+		scenarioHeading("First flow").
+		step("concept step").
+		step("another step").String()
+	step1 := &step{value: "step 1"}
+	step2 := &step{value: "step 2"}
+	concept1 := &step{value: "concept step", conceptSteps: []*step{step1, step2}, isConcept: true}
 	err := conceptDictionary.add([]*step{concept1}, "file.cpt")
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
@@ -502,6 +502,7 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	secondStepInSpec := spec.scenarios[0].steps[1]
 	c.Assert(firstStepInSpec.conceptSteps[0].parent, Equals, firstStepInSpec)
 	c.Assert(firstStepInSpec.conceptSteps[1].parent, Equals, firstStepInSpec)
-	c.Assert(secondStepInSpec.parent, Equals, nil)
+	c.Assert(firstStepInSpec.parent, IsNil)
+	c.Assert(secondStepInSpec.parent, IsNil)
 
 }

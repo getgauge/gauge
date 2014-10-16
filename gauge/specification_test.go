@@ -795,14 +795,14 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 }
 
 func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
-	argsInStep := []*stepArg{&stepArg{name:"arg1", value:"arg value", argType:dynamic}}
-	fragments := []*Fragment{&Fragment{Text:proto.String("foo")}}
-	originalStep := &step {    lineNo: 12,
-		value: "foo {}",
-		lineText: "foo <bar>",
-		args: argsInStep,
-		isConcept:false,
-		fragments:fragments,
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "arg value", argType: dynamic}}
+	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	originalStep := &step{lineNo: 12,
+		value:          "foo {}",
+		lineText:       "foo <bar>",
+		args:           argsInStep,
+		isConcept:      false,
+		fragments:      fragments,
 		hasInlineTable: false}
 
 	destinationStep := new(step)
@@ -812,21 +812,21 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
 }
 
 func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
-	argsInStep := []*stepArg{&stepArg{name:"arg1", value:"arg value", argType:dynamic}}
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "arg value", argType: dynamic}}
 	argLookup := new(argLookup)
 	argLookup.addArgName("name")
 	argLookup.addArgName("id")
-	fragments := []*Fragment{&Fragment{Text:proto.String("foo")}}
-	conceptSteps := [] *step { &step{value: "step 1"}}
-	originalConcept := &step {
-		lineNo: 12,
-		value: "foo {}",
-		lineText: "foo <bar>",
-		args: argsInStep,
-		isConcept:true,
-		lookup: *argLookup,
-		fragments: fragments,
-		conceptSteps: conceptSteps,
+	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	conceptSteps := []*step{&step{value: "step 1"}}
+	originalConcept := &step{
+		lineNo:         12,
+		value:          "foo {}",
+		lineText:       "foo <bar>",
+		args:           argsInStep,
+		isConcept:      true,
+		lookup:         *argLookup,
+		fragments:      fragments,
+		conceptSteps:   conceptSteps,
 		hasInlineTable: false}
 
 	destinationConcept := new(step)
