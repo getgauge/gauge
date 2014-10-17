@@ -60,6 +60,7 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", comment))
 	return specBuilder
 }
+
 func (s *MySuite) TestIsInState(c *C) {
 	c.Assert(isInState(1, 1), Equals, true)
 	c.Assert(isInState(1, 3, 2), Equals, true)

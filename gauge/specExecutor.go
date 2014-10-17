@@ -269,6 +269,8 @@ func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *
 	switch item.kind() {
 	case stepKind:
 		if (item.(*step)).isConcept {
+			fmt.Println("resolving concept item")
+			fmt.Println(item.(*step).lookup)
 			protoItem = executor.resolveToProtoConceptItem(item.(*step), lookup)
 		} else {
 			protoItem = executor.resolveToProtoStepItem(item.(*step), lookup)
@@ -290,9 +292,11 @@ func (executor *specExecutor) resolveToProtoStepItem(step *step, lookup *argLook
 }
 
 func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *argLookup) *ProtoItem {
+	fmt.Println("Resolving concept", concept.value)
 	protoConceptItem := convertToProtoItem(concept)
 
 	conceptLookup := concept.lookup.getCopy()
+	fmt.Println("concept lookup =>", conceptLookup)
 	executor.populateConceptDynamicParams(conceptLookup, lookup)
 
 	paramResolver := new(paramResolver)
@@ -301,7 +305,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *a
 
 	for stepIndex, step := range concept.conceptSteps {
 		if step.isConcept {
-			//			executor.resolveToProtoConceptItem(step)
+			executor.resolveToProtoConceptItem(step, conceptLookup)
 		} else {
 			stepParameters := paramResolver.getResolvedParams(step.args, conceptLookup, executor.dataTableLookup())
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
@@ -421,7 +425,7 @@ func addExecutionTimes(stepExecResult *ProtoStepExecutionResult, execResults ...
 		if currentScenarioExecTime == nil {
 			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
 		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
+			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime+execResult.GetExecutionTime())
 		}
 	}
 }

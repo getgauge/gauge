@@ -1,6 +1,9 @@
 package main
 
-import . "launchpad.net/gocheck"
+import (
+	"code.google.com/p/goprotobuf/proto"
+	. "launchpad.net/gocheck"
+)
 
 func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 	tokens := []*token{
@@ -655,12 +658,12 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(secondConcept.conceptSteps[1].args[0].argType, Equals, static)
 
 	c.Assert(len(secondConcept.lookup.paramValue), Equals, 2)
-	c.Assert(secondConcept.lookup.paramValue[0].name, Equals, "user-id")
-	c.Assert(secondConcept.lookup.paramValue[0].stepArg.value, Equals, "456")
-	c.Assert(secondConcept.lookup.paramValue[0].stepArg.argType, Equals, static)
-	c.Assert(secondConcept.lookup.paramValue[1].name, Equals, "user-description")
-	c.Assert(secondConcept.lookup.paramValue[1].stepArg.value, Equals, "Regular fellow")
-	c.Assert(secondConcept.lookup.paramValue[1].stepArg.argType, Equals, static)
+	arg1 = secondConcept.lookup.getArg("user-id")
+	arg2 = secondConcept.lookup.getArg("user-description")
+	c.Assert(arg1.value, Equals, "456")
+	c.Assert(arg1.argType, Equals, static)
+	c.Assert(arg2.value, Equals, "Regular fellow")
+	c.Assert(arg2.argType, Equals, static)
 
 }
 
@@ -738,6 +741,25 @@ func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
 	c.Assert(fragment.GetFragmentType(), Equals, Fragment_Text)
 }
 
+func (s *MySuite) TestGetArgForStep(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
+	step := &step{lookup: *lookup}
+
+	c.Assert(step.getArg("param1").value, Equals, "value1")
+}
+
+func (s *MySuite) TestGetArgForConceptStep(c *C) {
+	lookup := new(argLookup)
+	lookup.addArgName("param1")
+	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
+	concept := &step{lookup: *lookup, isConcept: true}
+	step := &step{parent: concept}
+
+	c.Assert(step.getArg("param1").value, Equals, "value1")
+}
+
 func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	arg1 := &stepArg{value: "first", argType: static}
 	arg2 := &stepArg{value: "second", argType: dynamic, name: "second"}
@@ -789,4 +811,45 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	c.Assert(protoTable.GetHeaders().GetCells(), DeepEquals, headers)
 	c.Assert(len(protoTable.GetRows()), Equals, 1)
 	c.Assert(protoTable.GetRows()[0].GetCells(), DeepEquals, row1)
+}
+
+func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "arg value", argType: dynamic}}
+	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	originalStep := &step{lineNo: 12,
+		value:          "foo {}",
+		lineText:       "foo <bar>",
+		args:           argsInStep,
+		isConcept:      false,
+		fragments:      fragments,
+		hasInlineTable: false}
+
+	destinationStep := new(step)
+	destinationStep.copyFrom(originalStep)
+
+	c.Assert(destinationStep, DeepEquals, originalStep)
+}
+
+func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "arg value", argType: dynamic}}
+	argLookup := new(argLookup)
+	argLookup.addArgName("name")
+	argLookup.addArgName("id")
+	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	conceptSteps := []*step{&step{value: "step 1"}}
+	originalConcept := &step{
+		lineNo:         12,
+		value:          "foo {}",
+		lineText:       "foo <bar>",
+		args:           argsInStep,
+		isConcept:      true,
+		lookup:         *argLookup,
+		fragments:      fragments,
+		conceptSteps:   conceptSteps,
+		hasInlineTable: false}
+
+	destinationConcept := new(step)
+	destinationConcept.copyFrom(originalConcept)
+
+	c.Assert(destinationConcept, DeepEquals, originalConcept)
 }

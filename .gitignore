@@ -27,3 +27,4 @@ tags
 tmp
 bin/
 gauge-ruby/*.gem
+gauge/.idea

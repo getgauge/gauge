@@ -33,14 +33,27 @@ type stepArg struct {
 	table   table
 }
 
+func (stepArg *stepArg) String() string {
+	return fmt.Sprintf("{Name: %s,value %s,argType %s,table %v}", stepArg.name, stepArg.value, string(stepArg.argType), stepArg.table)
+}
+
 type paramNameValue struct {
 	name    string
 	stepArg *stepArg
 }
 
+func (paramNameValue paramNameValue) String() string {
+	return fmt.Sprintf("ParamName: %s, stepArg: %s", paramNameValue.name, paramNameValue.stepArg)
+}
+
 type argLookup struct {
+	//helps to access the index of an arg at O(1)
 	paramIndexMap map[string]int
 	paramValue    []paramNameValue
+}
+
+func (argLookup argLookup) String() string {
+	return fmt.Sprintln(argLookup.paramValue)
 }
 
 type step struct {
@@ -52,7 +65,25 @@ type step struct {
 	lookup         argLookup
 	conceptSteps   []*step
 	fragments      []*Fragment
+	parent           *step
 	hasInlineTable bool
+}
+
+func (step *step) getArg(name string) *stepArg {
+	if step.parent == nil {
+		return step.lookup.getArg(name)
+	}
+	return step.parent.getArg(name)
+}
+
+func (step *step) deepCopyStepArgs() ([]*stepArg) {
+	copiedStepArgs := make([]*stepArg, 0)
+	for _, conceptStepArg := range step.args {
+		temp := new(stepArg)
+		*temp = *conceptStepArg
+		copiedStepArgs = append(copiedStepArgs, temp)
+	}
+	return copiedStepArgs
 }
 
 func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
@@ -372,12 +403,19 @@ func (specification *specification) processConceptStep(step *step, conceptDictio
 	}
 }
 
-func (specification *specification) createConceptStep(conceptFromDictionary *step, originalStep *step) {
-	lookup := conceptFromDictionary.lookup.getCopy()
-	originalStep.isConcept = true
-	originalStep.conceptSteps = conceptFromDictionary.conceptSteps
-	specification.populateConceptLookup(lookup, conceptFromDictionary.args, originalStep.args)
-	originalStep.lookup = *lookup
+func (specification *specification) createConceptStep(concept *step, originalStep *step) {
+	stepCopy := concept.getCopy()
+	originalArgs := originalStep.args
+	originalStep.copyFrom(stepCopy)
+	originalStep.args = originalArgs
+
+	// set parent of all concept steps to be the current concept (referred as originalStep here)
+	// this is used to fetch from parent's lookup when nested
+	for _, conceptStep := range originalStep.conceptSteps {
+		conceptStep.parent = originalStep
+	}
+
+	specification.populateConceptLookup(&originalStep.lookup, concept.args, originalStep.args)
 }
 
 func (specification *specification) addItem(itemToAdd item) {
@@ -418,11 +456,11 @@ func (specification *specification) addTags(tags *tags) {
 }
 
 func (specification *specification) latestScenario() *scenario {
-	return specification.scenarios[len(specification.scenarios)-1]
+	return specification.scenarios[len(specification.scenarios) - 1]
 }
 
 func (specification *specification) latestContext() *step {
-	return specification.contexts[len(specification.contexts)-1]
+	return specification.contexts[len(specification.contexts) - 1]
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {
@@ -474,7 +512,7 @@ func (step *step) addInlineTableHeaders(headers []string) {
 }
 
 func (step *step) addInlineTableRow(row []tableCell) {
-	lastArg := step.args[len(step.args)-1]
+	lastArg := step.args[len(step.args) - 1]
 	lastArg.table.addRows(row)
 	step.populateFragments()
 }
@@ -666,7 +704,7 @@ func (scenario *scenario) addItem(itemToAdd item) {
 }
 
 func (scenario *scenario) latestStep() *step {
-	return scenario.steps[len(scenario.steps)-1]
+	return scenario.steps[len(scenario.steps) - 1]
 }
 
 func (heading *heading) kind() tokenKind {
@@ -693,4 +731,52 @@ func (specification *specification) getSpecItems() []item {
 		}
 	}
 	return specItems
+}
+
+func (self *step) getCopy() *step {
+	if !self.isConcept {
+		return self
+	}
+	nestedStepsCopy := make([] *step, 0)
+	for _, nestedStep := range self.conceptSteps {
+		nestedStepsCopy = append(nestedStepsCopy, nestedStep.getCopy())
+	}
+
+	copiedConceptStep := new(step)
+	*copiedConceptStep = *self
+	copiedConceptStep.conceptSteps = nestedStepsCopy
+	copiedConceptStep.lookup = *self.lookup.getCopy()
+	return copiedConceptStep
+}
+
+func (self *step) copyFrom(another *step) {
+	self.isConcept = another.isConcept
+
+	if another.args == nil {
+		self.args = nil
+	} else {
+		self.args =  make([] *stepArg, len(another.args))
+		copy(self.args, another.args)
+	}
+
+	if another.conceptSteps == nil {
+		self.conceptSteps = nil
+	} else {
+		self.conceptSteps = make([] *step, len(another.conceptSteps))
+		copy(self.conceptSteps, another.conceptSteps)
+	}
+
+	if another.fragments == nil {
+		self.fragments = nil
+	} else {
+		self.fragments = make([] *Fragment, len(another.fragments))
+		copy(self.fragments, another.fragments)
+	}
+
+	self.lineNo = another.lineNo
+	self.lineText = another.lineText
+	self.hasInlineTable = another.hasInlineTable
+	self.value = another.value
+	self.lookup = another.lookup
+	self.parent = another.parent
 }

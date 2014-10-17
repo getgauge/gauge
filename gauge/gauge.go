@@ -1,4 +1,3 @@
-// This file is part of twist
 package main
 
 import (
@@ -570,6 +569,8 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}
+	//	result := conceptsDictionary.resolveNestedConcepts()
+	//	return conceptsDictionary, result
 	return conceptsDictionary, &parseResult{ok: true}
 }
 
@@ -583,6 +584,11 @@ func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *pars
 		return err
 	}
 	err = conceptDictionary.add(concepts, conceptFile)
+	fmt.Println("After adding")
+	for name, concept := range conceptDictionary.conceptsMap {
+		fmt.Printf("name %s, concept lookup %v\n", name, concept.conceptStep.lookup)
+	}
+	fmt.Println("")
 	return err
 }
 

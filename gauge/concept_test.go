@@ -50,6 +50,17 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 }
 
+/*
+#top level concept
+* nested concept
+* normal step 1
+
+#top level concept 2
+* nested concept
+
+# nested concept
+* normal step 2
+*/
 func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 	dictionary := new(conceptDictionary)
 	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
@@ -67,18 +78,18 @@ func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 
 	concept := dictionary.search("top level concept")
 	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 2)
-	actualnestedConcept := concept.conceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	actualNestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 
-	toplevelConcept2 := dictionary.search("top level concept 2")
-	c.Assert(len(toplevelConcept2.conceptStep.conceptSteps), Equals, 1)
-	actualnestedConcept = toplevelConcept2.conceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	topLevelConcept2 := dictionary.search("top level concept 2")
+	c.Assert(len(topLevelConcept2.conceptStep.conceptSteps), Equals, 1)
+	actualNestedConcept = topLevelConcept2.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
 }
 
 func (s *MySuite) TestMultiLevelConcept(c *C) {
@@ -110,7 +121,6 @@ func (s *MySuite) TestMultiLevelConcept(c *C) {
 	step := actualAnotherNestedConcept.conceptStep.conceptSteps[0]
 	c.Assert(step.isConcept, Equals, false)
 	c.Assert(step.value, Equals, normalStep3.value)
-
 
 	nestedConcept2 := dictionary.search("nested concept")
 	c.Assert(len(nestedConcept2.conceptStep.conceptSteps), Equals, 2)
@@ -287,4 +297,58 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 
 	c.Assert(err, NotNil)
 	c.Assert(err.message, Equals, "Table doesn't belong to any step")
+}
+
+func (s *MySuite) TestDeepCopyOfConcept(c *C) {
+	dictionary := new(conceptDictionary)
+	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
+	normalStep2 := &step{value: "normal step 2", lineText: "normal step 2"}
+
+	nestedConceptStep := &step{value: "nested concept", lineText: "nested concept"}
+
+	topLevelConcept := &step{value: "top level concept", isConcept: true, conceptSteps: []*step{nestedConceptStep, normalStep1}}
+	nestedConcept := &step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*step{normalStep2}}
+
+	dictionary.add([]*step{topLevelConcept}, "file1.cpt")
+	dictionary.add([]*step{nestedConcept}, "file2.cpt")
+
+	actualConcept := dictionary.search("top level concept")
+
+	copiedTopLevelConcept := actualConcept.deepCopy()
+
+	verifyCopiedConcept(copiedTopLevelConcept, actualConcept, c)
+}
+
+func verifyCopiedConcept(copiedConcept *concept, actualConcept *concept, c *C) {
+	c.Assert(&copiedConcept, Not(Equals), &actualConcept)
+	c.Assert(copiedConcept, DeepEquals, actualConcept)
+}
+
+func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First flow").
+		step("concept step \"foo\"").
+		step("another step").String()
+
+	conceptText := SpecBuilder().
+		specHeading("concept step <bar>").
+		step("nested concept <bar>").
+		step("step 2").
+		specHeading("nested concept <bar>").
+		step("nested step 1 <bar>").
+		step("nested step 2").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	err := conceptDictionary.add(concepts, "file.cpt")
+	tokens, err := parser.generateTokens(specText)
+	c.Assert(err, IsNil)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+	firstStepInSpec := spec.scenarios[0].steps[0]
+	nestedConcept := firstStepInSpec.conceptSteps[0]
+	nestedConceptArg := nestedConcept.getArg("bar")
+	c.Assert(nestedConceptArg.value, Equals, "foo")
 }
