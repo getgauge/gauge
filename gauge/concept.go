@@ -177,7 +177,7 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 		conceptDictionary.replaceNestedConceptSteps(conceptStep)
 		conceptDictionary.conceptsMap[conceptStep.value] = &concept{conceptStep, conceptFile}
 	}
-
+	conceptDictionary.updateLookupForNestedConcepts()
 	return nil
 }
 
@@ -208,6 +208,18 @@ func (conceptDictionary * conceptDictionary) updateStep(step *step) {
 		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
 		conceptDictionary.constructionMap[step.value].conceptSteps = step.conceptSteps
 		conceptDictionary.constructionMap[step.value].lookup = step.lookup
+	}
+}
+
+func(conceptDictionary *conceptDictionary) updateLookupForNestedConcepts(){
+	for _, concept := range conceptDictionary.conceptsMap {
+		for _, stepInsideConcept := range concept.conceptStep.conceptSteps{
+			if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
+				for i, arg := range nestedConcept.conceptStep.args {
+					nestedConcept.conceptStep.lookup.addArgValue(arg.name, &stepArg{argType: dynamic, value: stepInsideConcept.args[i].name})
+				}
+			}
+		}
 	}
 }
 

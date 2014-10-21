@@ -1,8 +1,6 @@
 package main
 
-import (
-	. "launchpad.net/gocheck"
-)
+import . "launchpad.net/gocheck"
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	dictionary := new(conceptDictionary)
@@ -329,26 +327,26 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	conceptDictionary := new(conceptDictionary)
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First flow").
-		step("concept step \"foo\"").
+		step("create user \"foo\" \"boo\"").
 		step("another step").String()
 
 	conceptText := SpecBuilder().
-		specHeading("concept step <bar>").
-		step("nested concept <bar>").
+		specHeading("create user <bar> <far>").
+		step("assign role <bar> <far>").
 		step("step 2").
-		specHeading("nested concept <bar>").
-		step("nested step 1 <bar>").
-		step("nested step 2").String()
+		specHeading("assign role <baz> <boo>").
+		step("add admin rights <baz>").
+		step("give root access").String()
+
 	concepts, _ := new(conceptParser).parse(conceptText)
 
-	err := conceptDictionary.add(concepts, "file.cpt")
-	tokens, err := parser.generateTokens(specText)
-	c.Assert(err, IsNil)
+	conceptDictionary.add(concepts, "file.cpt")
+	tokens, _ := parser.generateTokens(specText)
 	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.ok, Equals, true)
 	firstStepInSpec := spec.scenarios[0].steps[0]
 	nestedConcept := firstStepInSpec.conceptSteps[0]
-	nestedConceptArg := nestedConcept.getArg("bar")
+	nestedConceptArg := nestedConcept.getArg("baz")
 	c.Assert(nestedConceptArg.value, Equals, "foo")
 }

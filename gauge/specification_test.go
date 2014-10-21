@@ -581,8 +581,7 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(firstConceptStep.conceptSteps[1].value, Equals, "select {}")
 	c.Assert(firstConceptStep.conceptSteps[1].args[0].value, Equals, "finish")
 	c.Assert(len(firstConceptStep.lookup.paramValue), Equals, 1)
-	c.Assert(firstConceptStep.lookup.paramValue[0].name, Equals, "username")
-	c.Assert(firstConceptStep.lookup.paramValue[0].stepArg.value, Equals, "foo")
+	c.Assert(firstConceptStep.getArg("username").value, Equals, "foo")
 
 	secondConceptStep := spec.scenarios[0].steps[1]
 	c.Assert(secondConceptStep.isConcept, Equals, true)
@@ -591,8 +590,7 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(secondConceptStep.conceptSteps[1].value, Equals, "select {}")
 	c.Assert(secondConceptStep.conceptSteps[1].args[0].value, Equals, "finish")
 	c.Assert(len(secondConceptStep.lookup.paramValue), Equals, 1)
-	c.Assert(secondConceptStep.lookup.paramValue[0].name, Equals, "username")
-	c.Assert(secondConceptStep.lookup.paramValue[0].stepArg.value, Equals, "bar")
+	c.Assert(secondConceptStep.getArg("username").value, Equals, "bar")
 
 }
 
@@ -755,7 +753,10 @@ func (s *MySuite) TestGetArgForConceptStep(c *C) {
 	lookup.addArgName("param1")
 	lookup.addArgValue("param1", &stepArg{value: "value1", argType: static})
 	concept := &step{lookup: *lookup, isConcept: true}
-	step := &step{parent: concept}
+	stepLookup := new(argLookup)
+	stepLookup.addArgName("param1")
+	stepLookup.addArgValue("param1", &stepArg{value: "param1", argType: dynamic})
+	step := &step{parent: concept, lookup: *stepLookup}
 
 	c.Assert(step.getArg("param1").value, Equals, "value1")
 }

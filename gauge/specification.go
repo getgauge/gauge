@@ -65,7 +65,7 @@ type step struct {
 	lookup         argLookup
 	conceptSteps   []*step
 	fragments      []*Fragment
-	parent           *step
+	parent         *step
 	hasInlineTable bool
 }
 
@@ -73,10 +73,10 @@ func (step *step) getArg(name string) *stepArg {
 	if step.parent == nil {
 		return step.lookup.getArg(name)
 	}
-	return step.parent.getArg(name)
+	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
-func (step *step) deepCopyStepArgs() ([]*stepArg) {
+func (step *step) deepCopyStepArgs() []*stepArg {
 	copiedStepArgs := make([]*stepArg, 0)
 	for _, conceptStepArg := range step.args {
 		temp := new(stepArg)
@@ -456,11 +456,11 @@ func (specification *specification) addTags(tags *tags) {
 }
 
 func (specification *specification) latestScenario() *scenario {
-	return specification.scenarios[len(specification.scenarios) - 1]
+	return specification.scenarios[len(specification.scenarios)-1]
 }
 
 func (specification *specification) latestContext() *step {
-	return specification.contexts[len(specification.contexts) - 1]
+	return specification.contexts[len(specification.contexts)-1]
 }
 
 func (specParser *specParser) validateSpec(specification *specification) *parseError {
@@ -512,7 +512,7 @@ func (step *step) addInlineTableHeaders(headers []string) {
 }
 
 func (step *step) addInlineTableRow(row []tableCell) {
-	lastArg := step.args[len(step.args) - 1]
+	lastArg := step.args[len(step.args)-1]
 	lastArg.table.addRows(row)
 	step.populateFragments()
 }
@@ -704,7 +704,7 @@ func (scenario *scenario) addItem(itemToAdd item) {
 }
 
 func (scenario *scenario) latestStep() *step {
-	return scenario.steps[len(scenario.steps) - 1]
+	return scenario.steps[len(scenario.steps)-1]
 }
 
 func (heading *heading) kind() tokenKind {
@@ -737,7 +737,7 @@ func (self *step) getCopy() *step {
 	if !self.isConcept {
 		return self
 	}
-	nestedStepsCopy := make([] *step, 0)
+	nestedStepsCopy := make([]*step, 0)
 	for _, nestedStep := range self.conceptSteps {
 		nestedStepsCopy = append(nestedStepsCopy, nestedStep.getCopy())
 	}
@@ -755,21 +755,21 @@ func (self *step) copyFrom(another *step) {
 	if another.args == nil {
 		self.args = nil
 	} else {
-		self.args =  make([] *stepArg, len(another.args))
+		self.args = make([]*stepArg, len(another.args))
 		copy(self.args, another.args)
 	}
 
 	if another.conceptSteps == nil {
 		self.conceptSteps = nil
 	} else {
-		self.conceptSteps = make([] *step, len(another.conceptSteps))
+		self.conceptSteps = make([]*step, len(another.conceptSteps))
 		copy(self.conceptSteps, another.conceptSteps)
 	}
 
 	if another.fragments == nil {
 		self.fragments = nil
 	} else {
-		self.fragments = make([] *Fragment, len(another.fragments))
+		self.fragments = make([]*Fragment, len(another.fragments))
 		copy(self.fragments, another.fragments)
 	}
 
