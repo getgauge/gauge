@@ -1,3 +1,6 @@
 [submodule "deps/github.com/getgauge/common"]
 	path = deps/github.com/getgauge/common
 	url = git@github.com:getgauge/common.git
+[submodule "gauge-proto"]
+	path = gauge-proto
+	url = http://github.com/getgauge/gauge-proto
