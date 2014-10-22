@@ -8,7 +8,7 @@ import (
 	"github.com/getgauge/common"
 	"io"
 	"io/ioutil"
-	flag "mflag"
+	flag "github.com/getgauge/mflag"
 	"os"
 	"path"
 	"path/filepath"
