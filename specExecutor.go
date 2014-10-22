@@ -425,7 +425,7 @@ func addExecutionTimes(stepExecResult *ProtoStepExecutionResult, execResults ...
 		if currentScenarioExecTime == nil {
 			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
 		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime+execResult.GetExecutionTime())
+			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
 		}
 	}
 }

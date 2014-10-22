@@ -168,7 +168,7 @@ func convertToProtoSuiteResult(suiteResult *suiteResult) *ProtoSuiteResult {
 }
 
 func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
-	if (totalSpecs == 0) {
+	if totalSpecs == 0 {
 		return 0
 	}
 	return (float32)(100.0 * (totalSpecs - failedSpecs) / totalSpecs)

@@ -1,9 +1,9 @@
 package main
 
 type conceptDictionary struct {
-	conceptsMap map[string]*concept
+	conceptsMap     map[string]*concept
 	constructionMap map[string]*step
-	referenceMap map[*step][]*step
+	referenceMap    map[*step][]*step
 }
 
 type concept struct {
@@ -118,13 +118,13 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 
 func (parser *conceptParser) processTableHeader(token *token) {
 	steps := parser.currentConcept.conceptSteps
-	currentStep := steps[len(steps) - 1]
+	currentStep := steps[len(steps)-1]
 	addInlineTableHeader(currentStep, token)
 }
 
 func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLookup) {
 	steps := parser.currentConcept.conceptSteps
-	currentStep := steps[len(steps) - 1]
+	currentStep := steps[len(steps)-1]
 	addInlineTableRow(currentStep, token, argLookup)
 }
 
@@ -201,8 +201,8 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 }
 
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
-func (conceptDictionary * conceptDictionary) updateStep(step *step) {
-	if (conceptDictionary.constructionMap[step.value] == nil) {
+func (conceptDictionary *conceptDictionary) updateStep(step *step) {
+	if conceptDictionary.constructionMap[step.value] == nil {
 		conceptDictionary.constructionMap[step.value] = step
 	} else {
 		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
@@ -211,9 +211,9 @@ func (conceptDictionary * conceptDictionary) updateStep(step *step) {
 	}
 }
 
-func(conceptDictionary *conceptDictionary) updateLookupForNestedConcepts(){
+func (conceptDictionary *conceptDictionary) updateLookupForNestedConcepts() {
 	for _, concept := range conceptDictionary.conceptsMap {
-		for _, stepInsideConcept := range concept.conceptStep.conceptSteps{
+		for _, stepInsideConcept := range concept.conceptStep.conceptSteps {
 			if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 				for i, arg := range nestedConcept.conceptStep.args {
 					nestedConcept.conceptStep.lookup.addArgValue(arg.name, &stepArg{argType: dynamic, value: stepInsideConcept.args[i].name})
@@ -223,6 +223,6 @@ func(conceptDictionary *conceptDictionary) updateLookupForNestedConcepts(){
 	}
 }
 
-func (self *concept) deepCopy() (*concept) {
-	return &concept{fileName:self.fileName, conceptStep:self.conceptStep.getCopy()}
+func (self *concept) deepCopy() *concept {
+	return &concept{fileName: self.fileName, conceptStep: self.conceptStep.getCopy()}
 }
