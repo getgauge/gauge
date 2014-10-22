@@ -41,13 +41,14 @@ const (
 	pluginJsonFile    = "plugin.json"
 	reportTemplate    = "report-template"
 	gauge             = "gauge"
+	deploy            = "deploy"
 )
 
 var BUILD_DIR_BIN = filepath.Join(BUILD_DIR, bin)
 var BUILD_DIR_SRC = filepath.Join(BUILD_DIR, "src")
 var BUILD_DIR_PKG = filepath.Join(BUILD_DIR, "pkg")
 var platformBinDir = filepath.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
-
+var deployDir = filepath.Join(deploy, gauge)
 var gaugePackages = []string{gauge, "gauge-java", "gauge-ruby"}
 var gaugePlugins = []string{htmlPluginId}
 
@@ -323,9 +324,9 @@ func getHasHFile(dir string) string {
 	}
 }
 
-func installGaugeFiles(installPath string) {
+func copyGaugeFiles(installPath string) {
 	files := make(map[string]string)
-	if runtime.GOOS == "windows" {
+	if getOS() == "windows" {
 		files[filepath.Join(getBinDir(), "gauge.exe")] = bin
 	} else {
 		files[filepath.Join(getBinDir(), gauge)] = bin
@@ -476,7 +477,7 @@ func moveOSBinaryToCurrentOSArchDirectory() {
 }
 
 func moveBinaryToDirectory(target, destDir string) error {
-	if getOS() == "windows" {
+	if runtime.GOOS == "windows" {
 		target = target + ".exe"
 	}
 	srcFile := path.Join(bin, target)
@@ -520,6 +521,7 @@ var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries
 var gaugeOnly = flag.Bool(gauge, false, "Compiles or Installs only gauge. Skips language installation")
 var allPlugins = flag.Bool("plugins", false, "Compiles or installs only Plugins including all language runners")
 var defaultPlugins = flag.Bool("default-plugins", false, "Compiles or installs only default Plugins. This does not include languages")
+var distroVersion = flag.String("distro", "", "Create gauge distributable for specified version")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -609,7 +611,9 @@ func main() {
 	} else if *coverage {
 		runTests(gauge, true)
 	} else if *install {
-		installGaugeComponents()
+		installGauge()
+	} else if *distroVersion != "" {
+		createGaugeDistributables(*allPlatforms)
 	} else {
 		if *allPlatforms {
 			crossCompileGauge()
@@ -629,22 +633,29 @@ func crossCompileGauge() {
 	}
 }
 
-func installGaugeComponents() {
+func installGauge() {
 	updateGaugeInstallPrefix()
-	updatePluginInstallPrefix()
+	copyGaugeFiles(deployDir)
+	mirrorDir(deployDir, *gaugeInstallPrefix)
+}
 
-	if *gaugeOnly {
-		installGaugeFiles(*gaugeInstallPrefix)
-	} else if *allPlugins {
-		installPlugins(*pluginInstallPrefix)
-	} else if *defaultPlugins {
-		installDefaultPlugins(*pluginInstallPrefix)
-	} else if *target != "" {
-		installPlugin(*target, *pluginInstallPrefix)
+func createGaugeDistributables(forAllPlatforms bool) {
+	if forAllPlatforms {
+		for _, platformEnv := range platformEnvs {
+			setEnv(platformEnv)
+			fmt.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+			*binDir = fmt.Sprintf("%s_%s", platformEnv[GOOS], platformEnv[GOARCH])
+			createDistro()
+		}
 	} else {
-		installGaugeFiles(*gaugeInstallPrefix)
-		installPlugins(*pluginInstallPrefix)
+		createDistro()
 	}
+
+}
+
+func createDistro() {
+	distroDir := filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch()))
+	copyGaugeFiles(distroDir)
 }
 
 func updateGaugeInstallPrefix() {

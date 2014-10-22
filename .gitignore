@@ -20,11 +20,10 @@ _cgo_export.*
 _testmain.go
 
 *.exe
-twist2
 !src/github.com/twist2
 tags
 .bundle
 tmp
 bin/
-gauge-ruby/*.gem
-gauge/.idea
+deploy
+.idea
