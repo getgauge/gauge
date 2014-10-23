@@ -27,3 +27,4 @@ tmp
 bin/
 deploy
 .idea
+_workspace/

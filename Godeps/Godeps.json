@@ -1,0 +1,32 @@
+{
+	"ImportPath": "github.com/getgauge/gauge",
+	"GoVersion": "go1.3.1",
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/goprotobuf/proto",
+			"Comment": "go.r60-157",
+			"Rev": "725eb0907b649c438e0e8f1601648597141fb66c"
+		},
+		{
+			"ImportPath": "github.com/dmotylev/goproperties",
+			"Rev": "7cbffbaada472bc302cbaca51c1d5ed2682eb509"
+		},
+		{
+			"ImportPath": "github.com/getgauge/common",
+			"Rev": "61552f94363ee9bc4a5b1bd2913103509ba99bca"
+		},
+		{
+			"ImportPath": "github.com/getgauge/mflag",
+			"Rev": "d64a28a7abc05602c9e6d9c5a1488ee69f9fcb83"
+		},
+		{
+			"ImportPath": "github.com/wsxiaoys/terminal",
+			"Rev": "9dcaf1d63119a8ac00eef82270eaef08b6aa2328"
+		},
+		{
+			"ImportPath": "launchpad.net/gocheck",
+			"Comment": "87",
+			"Rev": "gustavo@niemeyer.net-20140225173054-xu9zlkf9kxhvow02"
+		}
+	]
+}
