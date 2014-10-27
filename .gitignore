@@ -23,8 +23,8 @@ _testmain.go
 !src/github.com/twist2
 tags
 .bundle
-tmp
 bin/
 deploy
 .idea
 _workspace/
+count.out
