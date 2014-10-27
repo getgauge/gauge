@@ -8,37 +8,57 @@ Gauge uses submodules. So issue the following commands before you attempt to mak
   git submodule update
 ```
 
-List of submodules used
-
-
-* [common](https://github.com/getgauge/common) - https://github.com/getgauge/common.git
-
 Building
-------------
+-----------
 
 ````
-go run make.go
+go run build/make.go
 ````
 
 This will generate gauge in the root directory
 
+Running Tests
+-------------
+
+````
+go test
+````
+or 
+````
+go run build/make.go --test
+````
+With Test coverage
+````
+go run build/make.go --test --coverage
+````
+
 Installing
 ------------
 
+###MacOS and Linux
+
 ````
-go run make.go --install
+go run build/make.go --install
 ````
 
 This installs gauge into __/usr/local__ by default.
 To install into a custom location use a prefix for installation
 
 ````
-go run make.go --install --prefix CUSTOM_PATH
+go run build/make.go --install --prefix CUSTOM_PATH
 ````
+
+###Windows
+
+````
+go run build\make.go --install --prefix CUSTOM_PATH
+````
+
+Set environment variable GAUGE_ROOT to the CUSTOM_PATH
 
 Initializing a project
 ---------------------
-In an empty directory initialize a gauge project based on required language. Currently supported languages are: Java, Ruby
+In an empty directory initialize a gauge project based on required language.
 
 ````
 gauge --init java
@@ -61,4 +81,5 @@ To execute a single specification
 ````
 gauge specs/hello_world.spec
 ````
+
 
