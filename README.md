@@ -1,21 +1,28 @@
 Gauge
 ======
 
-Gauge uses submodules. So issue the following commands before you attempt to make
+Gauge uses submodules. So issue the following commands before you attempt to build
 
 ```
   git submodule init
   git submodule update
 ```
 
+Gauge uses [godep](https://github.com/tools/godep) to manage Go dependencies. To fetch all dependencies run
+
+````
+go get github.com/tools/godep
+godep restore
+````
+
 Building
------------
+----------
 
 ````
 go run build/make.go
 ````
 
-This will generate gauge in the root directory
+This will generate gauge in the bin directory
 
 Running Tests
 -------------
@@ -81,5 +88,3 @@ To execute a single specification
 ````
 gauge specs/hello_world.spec
 ````
-
-
