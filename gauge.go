@@ -584,9 +584,6 @@ func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *pars
 		return err
 	}
 	err = conceptDictionary.add(concepts, conceptFile)
-	for name, concept := range conceptDictionary.conceptsMap {
-		fmt.Printf("name %s, concept lookup %v\n", name, concept.conceptStep.lookup)
-	}
 	return err
 }
 

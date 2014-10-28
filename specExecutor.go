@@ -269,8 +269,6 @@ func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *
 	switch item.kind() {
 	case stepKind:
 		if (item.(*step)).isConcept {
-			fmt.Println("resolving concept item")
-			fmt.Println(item.(*step).lookup)
 			protoItem = executor.resolveToProtoConceptItem(item.(*step), lookup)
 		} else {
 			protoItem = executor.resolveToProtoStepItem(item.(*step), lookup)
@@ -292,11 +290,9 @@ func (executor *specExecutor) resolveToProtoStepItem(step *step, lookup *argLook
 }
 
 func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *argLookup) *ProtoItem {
-	fmt.Println("Resolving concept", concept.value)
 	protoConceptItem := convertToProtoItem(concept)
 
 	conceptLookup := concept.lookup.getCopy()
-	fmt.Println("concept lookup =>", conceptLookup)
 	executor.populateConceptDynamicParams(conceptLookup, lookup)
 
 	paramResolver := new(paramResolver)
