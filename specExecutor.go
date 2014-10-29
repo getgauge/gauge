@@ -293,7 +293,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *a
 	protoConceptItem := convertToProtoItem(concept)
 
 	conceptLookup := concept.lookup.getCopy()
-	executor.populateConceptDynamicParams(conceptLookup, lookup)
+	populateConceptDynamicParams(conceptLookup, lookup)
 
 	paramResolver := new(paramResolver)
 	conceptStepParameters := paramResolver.getResolvedParams(concept.args, lookup, executor.dataTableLookup())
@@ -467,7 +467,7 @@ func executeAndGetStatus(runner *testRunner, message *Message) *ProtoExecutionRe
 	}
 }
 
-func (executor *specExecutor) populateConceptDynamicParams(conceptLookup *argLookup, dataTableLookup *argLookup) {
+func populateConceptDynamicParams(conceptLookup *argLookup, dataTableLookup *argLookup) {
 	for key, _ := range conceptLookup.paramIndexMap {
 		conceptLookupArg := conceptLookup.getArg(key)
 		if conceptLookupArg.argType == dynamic {
