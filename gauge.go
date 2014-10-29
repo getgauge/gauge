@@ -197,7 +197,7 @@ func executeSpecs() {
 
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
-	specsToExecute := convertMapToArray(allSpecs)
+	specsToExecute := getSortedSpecsList(allSpecs)
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
 	validationErrors := execution.validate(conceptsDictionary)
 	if len(validationErrors) > 0 {
@@ -634,7 +634,6 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[str
 func findSpecsFilesIn(dirRoot string) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
 	specFiles := common.FindFilesInDir(absRoot, isValidSpecExtension)
-	sort.Strings(specFiles)
 	return specFiles
 }
 
@@ -648,10 +647,16 @@ func handleWarningMessages(warnings []string) {
 	}
 }
 
-func convertMapToArray(allSpecs map[string]*specification) []*specification {
+func getSortedSpecsList(allSpecs map[string]*specification) []*specification {
 	var specs []*specification
-	for _, value := range allSpecs {
-		specs = append(specs, value)
+	fileNames := make([]string, 0)
+
+	for fileName, _ := range allSpecs {
+		fileNames = append(fileNames, fileName)
+	}
+	sort.Strings(fileNames)
+	for _, fileName := range fileNames {
+		specs = append(specs, allSpecs[fileName])
 	}
 	return specs
 }
