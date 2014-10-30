@@ -144,20 +144,6 @@ func (parser *conceptParser) createConceptLookup(concept *step) {
 	}
 }
 
-//
-//func (conceptDictionary *conceptDictionary) resolveNestedConcepts() *parseResult {
-//	for _, concept := range conceptDictionary.conceptsMap {
-//		for _, stepInConcept := range concept.conceptStep.conceptSteps {
-//			if conceptDictionary.isConcept(stepInConcept) {
-//
-//
-//			}
-//
-//		}
-//
-//	}
-//}
-
 func (conceptDictionary *conceptDictionary) isConcept(step *step) bool {
 	_, ok := conceptDictionary.conceptsMap[step.value]
 	return ok
