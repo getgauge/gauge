@@ -135,6 +135,10 @@ type item interface {
 	kind() tokenKind
 }
 
+type specFilter interface {
+	filter(item) bool
+}
+
 type headingType int
 
 const (
@@ -544,6 +548,26 @@ func (step *step) populateFragments() {
 		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:len(step.value)])})
 	}
 
+}
+
+func (spec *specification) filter(filter specFilter) {
+	for i,item := range spec.items {
+		if filter.filter(item) {
+			spec.removeItem(item, i)
+		}
+	}
+}
+
+func (spec *specification) removeItem(item item, index int) {
+	spec.items = append(spec.items[:index], spec.items[index+1:]...)
+	if(item.kind()== scenarioKind){
+		spec.removeScenario(item.(*scenario))
+	}
+}
+
+func (spec *specification) removeScenario(scenario *scenario){
+	index := getIndexFor(scenario, spec.scenarios)
+	spec.scenarios = append(spec.scenarios[:index], spec.scenarios[index+1:]...)
 }
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {

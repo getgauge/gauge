@@ -1,5 +1,7 @@
 package main
 
+import "reflect"
+
 func isInState(currentState int, statesToCheck ...int) bool {
 	var mask int
 	for _, value := range statesToCheck {
@@ -67,4 +69,13 @@ func arrayContains(array []string, toFind string) bool {
 		}
 	}
 	return false
+}
+
+func getIndexFor(scenario *scenario, scenarios []*scenario) int {
+	for index, anItem := range scenarios {
+		if (reflect.DeepEqual(scenario, anItem)) {
+			return index
+		}
+	}
+	return -1
 }
