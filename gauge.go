@@ -174,7 +174,11 @@ func executeSpecs() {
 	allSpecs := make(map[string]*specification)
 	for _, arg := range flag.Args() {
 		specSource := arg
-		parsedSpecs, specParseResults := findSpecs(specSource, conceptsDictionary)
+			if(isIndexedSpec(specSource)){
+				indexedSpec := true
+				specSource, _ = GetIndexedSpecName(specSource)
+			}
+			parsedSpecs, specParseResults := findSpecs(specSource, conceptsDictionary)
 		handleParseResult(specParseResults...)
 		for fileName, parsedSpec := range parsedSpecs {
 			_, exists := allSpecs[fileName]
