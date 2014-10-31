@@ -854,3 +854,43 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 
 	c.Assert(destinationConcept, DeepEquals, originalConcept)
 }
+
+func (s *MySuite) TestCreateConceptStep(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("concept with <foo>").
+		step("nested concept with <foo>").
+		specHeading("nested concept with <baz>").
+		step("nested concept step wiht <baz>").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	dictionary := new(conceptDictionary)
+	dictionary.add(concepts, "file.cpt")
+
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "value", argType: static}}
+	originalStep := &step{
+		lineNo:         12,
+		value:          "concept with {}",
+		lineText:       "concept with \"value\"",
+		args:           argsInStep,
+		isConcept:      true,
+		hasInlineTable: false}
+	new(specification).createConceptStep(dictionary.search("concept with {}").conceptStep, originalStep)
+	c.Assert(originalStep.isConcept, Equals, true)
+	c.Assert(len(originalStep.conceptSteps), Equals, 1)
+	c.Assert(originalStep.args[0].value, Equals, "value")
+
+	c.Assert(originalStep.lookup.getArg("foo").value, Equals, "value")
+
+	nestedConcept := originalStep.conceptSteps[0]
+	c.Assert(nestedConcept.isConcept, Equals, true)
+	c.Assert(len(nestedConcept.conceptSteps), Equals, 1)
+
+	c.Assert(nestedConcept.args[0].argType, Equals, dynamic)
+	c.Assert(nestedConcept.args[0].value, Equals, "foo")
+
+	c.Assert(nestedConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
+	c.Assert(nestedConcept.conceptSteps[0].args[0].value, Equals, "baz")
+
+	c.Assert(nestedConcept.lookup.getArg("baz").argType, Equals, dynamic)
+	c.Assert(nestedConcept.lookup.getArg("baz").value, Equals, "foo")
+}
