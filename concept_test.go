@@ -327,7 +327,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	conceptDictionary := new(conceptDictionary)
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First flow").
-		step("create user \"foo\" \"boo\"").
+		step("create user \"foo\" \"doo\"").
 		step("another step").String()
 
 	conceptText := SpecBuilder().
@@ -347,6 +347,98 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	c.Assert(parseResult.ok, Equals, true)
 	firstStepInSpec := spec.scenarios[0].steps[0]
 	nestedConcept := firstStepInSpec.conceptSteps[0]
-	nestedConceptArg := nestedConcept.getArg("baz")
-	c.Assert(nestedConceptArg.value, Equals, "foo")
+	nestedConceptArg1 := nestedConcept.getArg("baz")
+	c.Assert(nestedConceptArg1.value, Equals, "foo")
+	nestedConceptArg2 := nestedConcept.getArg("boo")
+	c.Assert(nestedConceptArg2.value, Equals, "doo")
+}
+
+func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableHeader("123", "prateek", "8800").
+		tableHeader("456", "apoorva", "9800").
+		tableHeader("789", "srikanth", "7900").
+		scenarioHeading("First scenario").
+		step("create user <id> <name> and <phone>").
+		step("another step").String()
+
+	conceptText := SpecBuilder().
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name <user-name>").
+		step("assign number <user-phone>").
+		specHeading("assign id <userid> and name <username>").
+		step("add id <userid>").
+		step("add name <username>").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	conceptDictionary.add(concepts, "file.cpt")
+	tokens, _ := parser.generateTokens(specText)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+
+	firstStepInSpec := spec.scenarios[0].steps[0]
+	c.Assert(firstStepInSpec.isConcept, Equals, true)
+	c.Assert(firstStepInSpec.getArg("user-id").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-name").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-phone").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-id").value, Equals, "id")
+	c.Assert(firstStepInSpec.getArg("user-name").value, Equals, "name")
+	c.Assert(firstStepInSpec.getArg("user-phone").value, Equals, "phone")
+
+	nestedConcept := firstStepInSpec.conceptSteps[0]
+	c.Assert(nestedConcept.getArg("userid").argType, Equals, dynamic)
+	c.Assert(nestedConcept.getArg("username").argType, Equals, dynamic)
+	c.Assert(nestedConcept.getArg("userid").value, Equals, "id")
+	c.Assert(nestedConcept.getArg("username").value, Equals, "name")
+
+}
+
+func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableHeader("123", "prateek", "8800").
+		tableHeader("456", "apoorva", "9800").
+		tableHeader("789", "srikanth", "7900").
+		scenarioHeading("First scenario").
+		step("create user <id> <name> and <phone>").
+		step("another step").String()
+
+	conceptText := SpecBuilder().
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name <user-name>").
+		step("assign number <user-phone>").
+		specHeading("assign id <user-id> and name <user-name>").
+		step("add id <user-id>").
+		step("add name <user-name>").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	conceptDictionary.add(concepts, "file.cpt")
+	tokens, _ := parser.generateTokens(specText)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+
+	firstStepInSpec := spec.scenarios[0].steps[0]
+	c.Assert(firstStepInSpec.isConcept, Equals, true)
+	c.Assert(firstStepInSpec.getArg("user-id").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-name").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-phone").argType, Equals, dynamic)
+	c.Assert(firstStepInSpec.getArg("user-id").value, Equals, "id")
+	c.Assert(firstStepInSpec.getArg("user-name").value, Equals, "name")
+	c.Assert(firstStepInSpec.getArg("user-phone").value, Equals, "phone")
+
+	nestedConcept := firstStepInSpec.conceptSteps[0]
+	c.Assert(nestedConcept.getArg("user-id").argType, Equals, dynamic)
+	c.Assert(nestedConcept.getArg("user-name").argType, Equals, dynamic)
+	c.Assert(nestedConcept.getArg("user-id").value, Equals, "id")
+	c.Assert(nestedConcept.getArg("user-name").value, Equals, "name")
+
 }
