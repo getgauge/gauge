@@ -176,11 +176,11 @@ func executeSpecs() {
 		specSource := arg
 		var parsedSpecs map[string]*specification
 		var specParseResults []*parseResult
-			if(isIndexedSpec(specSource)){
-				parsedSpecs, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
-			} else {
-				parsedSpecs, specParseResults = findSpecs(specSource, conceptsDictionary)
-			}
+		if isIndexedSpec(specSource) {
+			parsedSpecs, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
+		} else {
+			parsedSpecs, specParseResults = findSpecs(specSource, conceptsDictionary)
+		}
 		handleParseResult(specParseResults...)
 		for fileName, parsedSpec := range parsedSpecs {
 			_, exists := allSpecs[fileName]
@@ -606,11 +606,11 @@ func getSpecFiles(specSource string) []string {
 	return nil
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary ) (map[string]*specification, []*parseResult) {
+func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) (map[string]*specification, []*parseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
-	for _,spec := range parsedSpecs {
-		spec.filter(newScenarioIndexFilter(indexToFilter))
+	for _, spec := range parsedSpecs {
+		spec.filter(newScenarioIndexFilterToRetain(indexToFilter))
 	}
 	return parsedSpecs, parseResult
 }

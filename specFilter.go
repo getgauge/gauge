@@ -1,20 +1,23 @@
 package main
 
-type scenarioIndexFilter struct {
-	indexToFilter    int
+type scenarioIndexFilterToRetain struct {
+	indexToFilter        int
 	currentScenarioIndex int
 }
 
-func newScenarioIndexFilter(index int) *scenarioIndexFilter {
-	return &scenarioIndexFilter{index, 0}
+func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
+	return &scenarioIndexFilterToRetain{index, 0}
 }
 
-func (filter *scenarioIndexFilter) filter(item item) bool {
+func (filter *scenarioIndexFilterToRetain) filter(item item) bool {
 	if item.kind() == scenarioKind {
-		if filter.currentScenarioIndex == filter.indexToFilter {
+		if filter.currentScenarioIndex != filter.indexToFilter {
+			filter.currentScenarioIndex++
 			return true
+		} else {
+			filter.currentScenarioIndex++
+			return false
 		}
-		filter.currentScenarioIndex ++
 	}
 	return false
 }

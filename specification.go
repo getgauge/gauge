@@ -551,23 +551,37 @@ func (step *step) populateFragments() {
 }
 
 func (spec *specification) filter(filter specFilter) {
-	for i,item := range spec.items {
-		if filter.filter(item) {
-			spec.removeItem(item, i)
+	for i := 0; i < len(spec.items); i++ {
+		if filter.filter(spec.items[i]) {
+			spec.removeItem(i)
+			i--
 		}
 	}
 }
 
-func (spec *specification) removeItem(item item, index int) {
-	spec.items = append(spec.items[:index], spec.items[index+1:]...)
-	if(item.kind()== scenarioKind){
+func (spec *specification) removeItem(itemIndex int) {
+	item := spec.items[itemIndex]
+	if len(spec.items)-1 == itemIndex {
+		spec.items = spec.items[:itemIndex]
+	} else if 0 == itemIndex {
+		spec.items = spec.items[itemIndex+1:]
+	} else {
+		spec.items = append(spec.items[:itemIndex], spec.items[itemIndex+1:]...)
+	}
+	if item.kind() == scenarioKind {
 		spec.removeScenario(item.(*scenario))
 	}
 }
 
-func (spec *specification) removeScenario(scenario *scenario){
+func (spec *specification) removeScenario(scenario *scenario) {
 	index := getIndexFor(scenario, spec.scenarios)
-	spec.scenarios = append(spec.scenarios[:index], spec.scenarios[index+1:]...)
+	if len(spec.scenarios)-1 == index {
+		spec.scenarios = spec.scenarios[:index]
+	} else if index == 0 {
+		spec.scenarios = spec.scenarios[index+1:]
+	} else {
+		spec.scenarios = append(spec.scenarios[:index], spec.scenarios[index+1:]...)
+	}
 }
 
 func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs []*stepArg, stepArgs []*stepArg) {

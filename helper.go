@@ -73,7 +73,7 @@ func arrayContains(array []string, toFind string) bool {
 
 func getIndexFor(scenario *scenario, scenarios []*scenario) int {
 	for index, anItem := range scenarios {
-		if (reflect.DeepEqual(scenario, anItem)) {
+		if reflect.DeepEqual(scenario, anItem) {
 			return index
 		}
 	}
