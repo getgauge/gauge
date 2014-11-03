@@ -88,3 +88,8 @@ To execute a single specification
 ````
 gauge specs/hello_world.spec
 ````
+To execute a single scenario of a specification
+````
+gauge specs/hello_world.spec:2
+````
+where 2 is index of scenario to be executed
