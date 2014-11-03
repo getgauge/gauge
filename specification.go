@@ -771,6 +771,8 @@ func (specification *specification) getSpecItems() []item {
 	return specItems
 }
 
+// Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
+// are copied and their parent copying again comes back to copy the same concept.
 func (self *step) getCopy() *step {
 	if !self.isConcept {
 		return self
