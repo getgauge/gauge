@@ -84,11 +84,11 @@ To execute all specifications:
 gauge specs/
 ````
 
-To execute a single specification
+To execute a single specification:
 ````
 gauge specs/hello_world.spec
 ````
-To execute a single scenario of a specification
+To execute a single scenario of a specification:
 ````
 gauge specs/hello_world.spec:2
 ````
