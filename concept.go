@@ -200,9 +200,10 @@ func (conceptDictionary *conceptDictionary) updateStep(step *step) {
 func (conceptDictionary *conceptDictionary) updateLookupForNestedConcepts() {
 	for _, concept := range conceptDictionary.conceptsMap {
 		for _, stepInsideConcept := range concept.conceptStep.conceptSteps {
+			stepInsideConcept.parent = concept.conceptStep
 			if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 				for i, arg := range nestedConcept.conceptStep.args {
-					nestedConcept.conceptStep.lookup.addArgValue(arg.name, &stepArg{argType: dynamic, value: stepInsideConcept.args[i].name})
+					nestedConcept.conceptStep.lookup.addArgValue(arg.value, &stepArg{argType: dynamic, value: stepInsideConcept.args[i].value})
 				}
 			}
 		}

@@ -247,9 +247,8 @@ func (executor *specExecutor) executeScenarioItems(scenarioResult *scenarioResul
 
 func (executor *specExecutor) resolveItems(items []item) []*ProtoItem {
 	protoItems := make([]*ProtoItem, 0)
-	argLookup := new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 	for _, item := range items {
-		protoItems = append(protoItems, executor.resolveToProtoItem(item, argLookup))
+		protoItems = append(protoItems, executor.resolveToProtoItem(item))
 	}
 	return protoItems
 }
@@ -264,14 +263,15 @@ func (executor *specExecutor) executeItems(executingItems []*ProtoItem) bool {
 	return false
 }
 
-func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *ProtoItem {
+func (executor *specExecutor) resolveToProtoItem(item item) *ProtoItem {
 	var protoItem *ProtoItem
 	switch item.kind() {
 	case stepKind:
 		if (item.(*step)).isConcept {
-			protoItem = executor.resolveToProtoConceptItem(item.(*step), lookup)
+			concept := item.(*step)
+			protoItem = executor.resolveToProtoConceptItem(*concept)
 		} else {
-			protoItem = executor.resolveToProtoStepItem(item.(*step), lookup)
+			protoItem = executor.resolveToProtoStepItem(item.(*step))
 		}
 		break
 
@@ -281,29 +281,30 @@ func (executor *specExecutor) resolveToProtoItem(item item, lookup *argLookup) *
 	return protoItem
 }
 
-func (executor *specExecutor) resolveToProtoStepItem(step *step, lookup *argLookup) *ProtoItem {
+func (executor *specExecutor) resolveToProtoStepItem(step *step) *ProtoItem {
 	protoStepItem := convertToProtoItem(step)
 	paramResolver := new(paramResolver)
-	parameters := paramResolver.getResolvedParams(step.args, lookup, executor.dataTableLookup())
+	parameters := paramResolver.getResolvedParams(step, nil, executor.dataTableLookup())
 	updateProtoStepParameters(protoStepItem.Step, parameters)
 	return protoStepItem
 }
 
-func (executor *specExecutor) resolveToProtoConceptItem(concept *step, lookup *argLookup) *ProtoItem {
-	protoConceptItem := convertToProtoItem(concept)
-
-	conceptLookup := concept.lookup.getCopy()
-	populateConceptDynamicParams(conceptLookup, lookup)
-
+// Not passing poiter as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
+func (executor *specExecutor) resolveToProtoConceptItem(concept step) *ProtoItem {
 	paramResolver := new(paramResolver)
-	conceptStepParameters := paramResolver.getResolvedParams(concept.args, lookup, executor.dataTableLookup())
-	updateProtoStepParameters(protoConceptItem.Concept.ConceptStep, conceptStepParameters)
+	protoConceptItem := convertToProtoItem(&concept)
+
+	if concept.parent == nil {
+		populateConceptDynamicParams(&concept, executor.dataTableLookup())
+	}
 
 	for stepIndex, step := range concept.conceptSteps {
+		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.isConcept {
-			executor.resolveToProtoConceptItem(step, conceptLookup)
+			step.parent = &concept
+			protoConceptItem.GetConcept().GetSteps()[stepIndex] = executor.resolveToProtoConceptItem(*step)
 		} else {
-			stepParameters := paramResolver.getResolvedParams(step.args, conceptLookup, executor.dataTableLookup())
+			stepParameters := paramResolver.getResolvedParams(step, &concept, executor.dataTableLookup())
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
 		}
 	}
@@ -467,14 +468,17 @@ func executeAndGetStatus(runner *testRunner, message *Message) *ProtoExecutionRe
 	}
 }
 
-func populateConceptDynamicParams(conceptLookup *argLookup, dataTableLookup *argLookup) {
-	for key, _ := range conceptLookup.paramIndexMap {
-		conceptLookupArg := conceptLookup.getArg(key)
+// Creating a copy of the lookup and populating table values
+func populateConceptDynamicParams(concept *step, dataTableLookup *argLookup) {
+	lookup := concept.lookup.getCopy()
+	for key, _ := range lookup.paramIndexMap {
+		conceptLookupArg := lookup.getArg(key)
 		if conceptLookupArg.argType == dynamic {
 			resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
-			conceptLookup.addArgValue(key, resolvedArg)
+			lookup.addArgValue(key, resolvedArg)
 		}
 	}
+	concept.lookup = *lookup
 }
 
 func (executionInfo *ExecutionInfo) setSpecFailure() {

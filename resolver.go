@@ -18,21 +18,26 @@ type specialTypeResolver struct {
 type paramResolver struct {
 }
 
-func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, lookup *argLookup, dataTableLookup *argLookup) []*Parameter {
+func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, dataTableLookup *argLookup) []*Parameter {
 	parameters := make([]*Parameter, 0)
-	for _, arg := range stepArgs {
+	for _, arg := range step.args {
 		parameter := new(Parameter)
 		parameter.Name = proto.String(arg.name)
 		if arg.argType == static {
 			parameter.ParameterType = Parameter_Static.Enum()
 			parameter.Value = proto.String(arg.value)
 		} else if arg.argType == dynamic {
-			resolvedArg := lookup.getArg(arg.value)
+			var resolvedArg *stepArg
+			if parent != nil {
+				resolvedArg = parent.getArg(arg.value)
+			} else {
+				resolvedArg = dataTableLookup.getArg(arg.value)
+			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = proto.String(resolvedArg.name)
 			if resolvedArg.table.isInitialized() {
 				parameter.ParameterType = Parameter_Special_Table.Enum()
-				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.table, lookup, dataTableLookup)
+				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.table, dataTableLookup)
 			} else {
 				parameter.ParameterType = Parameter_Dynamic.Enum()
 				parameter.Value = proto.String(resolvedArg.value)
@@ -42,10 +47,10 @@ func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, looku
 			parameter.Value = proto.String(arg.value)
 		} else if arg.argType == specialTable {
 			parameter.ParameterType = Parameter_Special_Table.Enum()
-			parameter.Table = paramResolver.createProtoStepTable(&arg.table, lookup, dataTableLookup)
+			parameter.Table = paramResolver.createProtoStepTable(&arg.table, dataTableLookup)
 		} else {
 			parameter.ParameterType = Parameter_Table.Enum()
-			parameter.Table = paramResolver.createProtoStepTable(&arg.table, lookup, dataTableLookup)
+			parameter.Table = paramResolver.createProtoStepTable(&arg.table, dataTableLookup)
 
 		}
 		parameters = append(parameters, parameter)
@@ -55,7 +60,7 @@ func (paramResolver *paramResolver) getResolvedParams(stepArgs []*stepArg, looku
 
 }
 
-func (resolver *paramResolver) createProtoStepTable(table *table, lookup *argLookup, dataTableLookup *argLookup) *ProtoTable {
+func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLookup *argLookup) *ProtoTable {
 	protoTable := new(ProtoTable)
 	protoTable.Headers = &ProtoTableRow{Cells: table.headers}
 	tableRows := make([]*ProtoTableRow, 0)
@@ -65,12 +70,8 @@ func (resolver *paramResolver) createProtoStepTable(table *table, lookup *argLoo
 			tableCell := table.get(header)[i]
 			value := tableCell.value
 			if tableCell.cellType == dynamic {
-				if lookup.containsArg(tableCell.value) {
-					value = lookup.getArg(tableCell.value).value
-				} else {
-					//if concept has a table with dynamic cell, arglookup won't have the table value, so fetch from datatable itself
-					value = dataTableLookup.getArg(tableCell.value).value
-				}
+				//if concept has a table with dynamic cell, fetch from datatable
+				value = dataTableLookup.getArg(tableCell.value).value
 			}
 			row = append(row, value)
 		}

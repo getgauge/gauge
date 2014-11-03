@@ -56,7 +56,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	concept := spec.scenarios[0].steps[0]
 
 	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable, 0)
-	populateConceptDynamicParams(&concept.lookup, dataTableLookup)
+	populateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").value, Equals, "123")
 	c.Assert(concept.getArg("user-name").value, Equals, "foo")
@@ -90,7 +90,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	concept1 := spec.scenarios[0].steps[0]
 
 	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable, 0)
-	populateConceptDynamicParams(&concept1.lookup, dataTableLookup)
+	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").value, Equals, "123")
 	c.Assert(concept1.getArg("user-name").value, Equals, "prateek")
