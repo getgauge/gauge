@@ -292,11 +292,9 @@ func (executor *specExecutor) resolveToProtoStepItem(step *step) *ProtoItem {
 // Not passing poiter as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
 func (executor *specExecutor) resolveToProtoConceptItem(concept step) *ProtoItem {
 	paramResolver := new(paramResolver)
-	protoConceptItem := convertToProtoItem(&concept)
 
-	if concept.parent == nil {
-		populateConceptDynamicParams(&concept, executor.dataTableLookup())
-	}
+	populateConceptDynamicParams(&concept, executor.dataTableLookup())
+	protoConceptItem := convertToProtoItem(&concept)
 
 	for stepIndex, step := range concept.conceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
@@ -470,15 +468,34 @@ func executeAndGetStatus(runner *testRunner, message *Message) *ProtoExecutionRe
 
 // Creating a copy of the lookup and populating table values
 func populateConceptDynamicParams(concept *step, dataTableLookup *argLookup) {
-	lookup := concept.lookup.getCopy()
-	for key, _ := range lookup.paramIndexMap {
-		conceptLookupArg := lookup.getArg(key)
-		if conceptLookupArg.argType == dynamic {
-			resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
-			lookup.addArgValue(key, resolvedArg)
+	//If it is a top level concept
+	if concept.parent == nil {
+		lookup := concept.lookup.getCopy()
+		for key, _ := range lookup.paramIndexMap {
+			conceptLookupArg := lookup.getArg(key)
+			if conceptLookupArg.argType == dynamic {
+				resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
+				lookup.addArgValue(key, resolvedArg)
+			}
+		}
+		concept.lookup = *lookup
+	}
+
+	//Updating values inside the concept step as well
+	newArgs := make([]*stepArg, 0)
+	for _, arg := range concept.args {
+		if arg.argType == dynamic {
+			if concept.parent != nil {
+				newArgs = append(newArgs, concept.parent.getArg(arg.value))
+			} else {
+				newArgs = append(newArgs, dataTableLookup.getArg(arg.value))
+			}
+		} else {
+			newArgs = append(newArgs, arg)
 		}
 	}
-	concept.lookup = *lookup
+	concept.args = newArgs
+	concept.populateFragments()
 }
 
 func (executionInfo *ExecutionInfo) setSpecFailure() {

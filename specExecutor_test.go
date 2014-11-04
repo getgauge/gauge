@@ -2,7 +2,44 @@ package main
 
 import . "launchpad.net/gocheck"
 
-func (s *MySuite) TestResolveToProtoConceptItem(c *C) {
+func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"456\" \"foo\" and \"9900\"").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name <user-name>").
+		step("assign phone <user-phone>").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+	conceptDictionary.add(concepts, "file.cpt")
+	spec, _ := parser.parse(specText, conceptDictionary)
+
+	specExecutor := newSpecExecutor(spec, nil, nil)
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+
+	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
+
+	firstStep := protoConcept.GetSteps()[0].GetStep()
+	params := getParameters(firstStep.GetFragments())
+	c.Assert(2, Equals, len(params))
+	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetValue(), Equals, "456")
+
+	secondStep := protoConcept.GetSteps()[1].GetStep()
+	params = getParameters(secondStep.GetFragments())
+	c.Assert(1, Equals, len(params))
+	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetValue(), Equals, "9900")
+
+}
+
+func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	parser := new(specParser)
 	conceptDictionary := new(conceptDictionary)
 
@@ -25,9 +62,13 @@ func (s *MySuite) TestResolveToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil)
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
+
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
 
 	nestedConcept := protoConcept.GetSteps()[0].GetConcept()
+	checkConceptParameterValuesInOrder(c, nestedConcept, "456", "foo")
+
 	firstNestedStep := nestedConcept.GetSteps()[0].GetStep()
 	params := getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
@@ -56,7 +97,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "foo", "8800").
-		tableHeader("456", "bar", "9800").
+		tableHeader("666", "bar", "9900").
 		scenarioHeading("First scenario").
 		step("create user <id> <name> and <phone>").
 		String()
@@ -78,9 +119,11 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	// For first row
 	specExecutor.dataTableIndex = 0
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
-	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
+	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
+	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
 	nestedConcept := protoConcept.GetSteps()[0].GetConcept()
+	checkConceptParameterValuesInOrder(c, nestedConcept, "123", "foo")
 	firstNestedStep := nestedConcept.GetSteps()[0].GetStep()
 	params := getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
@@ -104,13 +147,15 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specExecutor.dataTableIndex = 1
 	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
+	checkConceptParameterValuesInOrder(c, protoConcept, "666", "bar", "9900")
 
 	nestedConcept = protoConcept.GetSteps()[0].GetConcept()
+	checkConceptParameterValuesInOrder(c, nestedConcept, "666", "bar")
 	firstNestedStep = nestedConcept.GetSteps()[0].GetStep()
 	params = getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
 	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
-	c.Assert(params[0].GetValue(), Equals, "456")
+	c.Assert(params[0].GetValue(), Equals, "666")
 
 	secondNestedStep = nestedConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondNestedStep.GetFragments())
@@ -123,5 +168,14 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	params = getParameters(secondStepInConcept.GetFragments())
 	c.Assert(1, Equals, len(params))
 	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
-	c.Assert(params[0].GetValue(), Equals, "9800")
+	c.Assert(params[0].GetValue(), Equals, "9900")
+}
+
+func checkConceptParameterValuesInOrder(c *C, concept *ProtoConcept, paramValues ...string) {
+	params := getParameters(concept.GetConceptStep().Fragments)
+	c.Assert(len(params), Equals, len(paramValues))
+	for i, param := range params {
+		c.Assert(param.GetValue(), Equals, paramValues[i])
+	}
+
 }
