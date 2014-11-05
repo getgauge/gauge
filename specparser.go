@@ -218,14 +218,22 @@ func processComment(parser *specParser, token *token) (*parseError, bool) {
 
 func processTag(parser *specParser, token *token) (*parseError, bool) {
 	parser.clearState()
+	tokens := splitAndTrimTags(token.value)
 
-	for _, tagValue := range strings.Split(token.value, ",") {
-		trimmedTag := strings.TrimSpace(tagValue)
-		if len(trimmedTag) > 0 {
-			token.args = append(token.args, trimmedTag)
+	for _, tagValue := range tokens {
+		if len(tagValue) > 0 {
+			token.args = append(token.args, tagValue)
 		}
 	}
 	return nil, false
+}
+
+func splitAndTrimTags(tag string) []string {
+	listOfTags := strings.Split(tag, ",")
+	for i, aTag := range listOfTags {
+		listOfTags[i] = strings.TrimSpace(aTag)
+	}
+	return listOfTags
 }
 
 func processTable(parser *specParser, token *token) (*parseError, bool) {

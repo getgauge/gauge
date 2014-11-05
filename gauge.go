@@ -50,7 +50,8 @@ func main() {
 		initializeProject(*initialize)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
-
+	} else if *executeTags != "" {
+		executeSpecs()
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else {
@@ -69,6 +70,7 @@ var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environ
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
+var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
@@ -189,6 +191,10 @@ func executeSpecs() {
 			}
 		}
 	}
+	specsToExecute := getSortedSpecsList(allSpecs)
+	if *executeTags != "" {
+		filterSpecsByTags(specsToExecute, splitAndTrimTags(*executeTags))
+	}
 	manifest := getProjectManifest()
 	err := startAPIService(0)
 	if err != nil {
@@ -203,7 +209,6 @@ func executeSpecs() {
 
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
-	specsToExecute := getSortedSpecsList(allSpecs)
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
 	validationErrors := execution.validate(conceptsDictionary)
 	if len(validationErrors) > 0 {
@@ -223,6 +228,12 @@ func executeSpecs() {
 		status := execution.start()
 		exitCode := printExecutionStatus(status)
 		os.Exit(exitCode)
+	}
+}
+
+func filterSpecsByTags(specs []*specification, tags []string) {
+	for _, spec := range specs {
+		spec.filter(newScenarioFilterBasedOnTags(tags))
 	}
 }
 
