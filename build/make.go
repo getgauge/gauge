@@ -1,6 +1,7 @@
 package main
 
 import (
+	"archive/zip"
 	"flag"
 	"fmt"
 	"io"
@@ -14,24 +15,21 @@ import (
 )
 
 const (
-	CGO_ENABLED = "CGO_ENABLED"
+	CGO_ENABLED        = "CGO_ENABLED"
+	GOARCH             = "GOARCH"
+	GOOS               = "GOOS"
+	X86                = "386"
+	X86_64             = "amd64"
+	darwin             = "darwin"
+	linux              = "linux"
+	windows            = "windows"
+	bin                = "bin"
+	newDirPermissions  = 0755
+	gauge              = "gauge"
+	deploy             = "deploy"
+	installShellScript = "install.sh"
 )
 
-const (
-	GOARCH            = "GOARCH"
-	GOOS              = "GOOS"
-	X86               = "386"
-	X86_64            = "amd64"
-	DARWIN            = "darwin"
-	LINUX             = "linux"
-	windows           = "windows"
-	bin               = "bin"
-	newDirPermissions = 0755
-	gauge             = "gauge"
-	deploy            = "deploy"
-)
-
-var platformBinDir = filepath.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
 var deployDir = filepath.Join(deploy, gauge)
 
 func isExecMode(mode os.FileMode) bool {
@@ -174,7 +172,15 @@ func copyGaugeFiles(installPath string) {
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", gauge, "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", gauge, "skel", "env")
 	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", gauge)
+	files = addInstallScripts(files)
 	installFiles(files, installPath)
+}
+
+func addInstallScripts(files map[string]string) map[string]string {
+	if (getOS() == darwin || getOS() == darwin) && (*distroVersion != "") {
+		files[filepath.Join("build", "install", installShellScript)] = ""
+	}
+	return files
 }
 
 func moveOSBinaryToCurrentOSArchDirectory() {
@@ -225,10 +231,10 @@ type targetOpts struct {
 
 var (
 	platformEnvs = []map[string]string{
-		map[string]string{GOARCH: X86, GOOS: DARWIN, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: DARWIN, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86, GOOS: LINUX, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: LINUX, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: darwin, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: darwin, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: linux, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: linux, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: windows, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86_64, GOOS: windows, CGO_ENABLED: "0"},
 	}
@@ -279,8 +285,80 @@ func createGaugeDistributables(forAllPlatforms bool) {
 }
 
 func createDistro() {
-	distroDir := filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch()))
+	if getOS() == windows {
+		createWindowsInstaller()
+	} else {
+		createZipPackage()
+	}
+}
+
+func createWindowsInstaller() {
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch())
+	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
+	if err != nil {
+		panic(err)
+
+	}
 	copyGaugeFiles(distroDir)
+	runProcess("makensis.exe",
+		fmt.Sprintf("/DPRODUCT_VERSION=%s", *distroVersion),
+		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
+		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", packageName),
+		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
+
+}
+
+func createZipPackage() {
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch())
+	distroDir := filepath.Join(deploy, packageName)
+	copyGaugeFiles(distroDir)
+	createZip(deploy, packageName)
+	os.RemoveAll(distroDir)
+}
+
+func createZip(dir, packageName string) {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	os.Chdir(dir)
+
+	zipFileName := packageName + ".zip"
+	newfile, err := os.Create(zipFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer newfile.Close()
+
+	zipWriter := zip.NewWriter(newfile)
+	defer zipWriter.Close()
+
+	filepath.Walk(packageName, func(path string, info os.FileInfo, err error) error {
+		infoHeader, err := zip.FileInfoHeader(info)
+		if err != nil {
+			panic(err)
+		}
+		infoHeader.Name = strings.Replace(path, fmt.Sprintf("%s%c", packageName, filepath.Separator), "", 1)
+		if info.IsDir() {
+			return nil
+		}
+		writer, err := zipWriter.CreateHeader(infoHeader)
+		if err != nil {
+			panic(err)
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+		_, err = io.Copy(writer, file)
+		if err != nil {
+			panic(err)
+		}
+		return nil
+	})
+	fmt.Println("Created zip: ", zipFileName)
+	os.Chdir(wd)
 }
 
 func updateGaugeInstallPrefix() {
