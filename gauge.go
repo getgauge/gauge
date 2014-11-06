@@ -233,7 +233,11 @@ func executeSpecs() {
 
 func filterSpecsByTags(specs []*specification, tags []string) {
 	for _, spec := range specs {
-		spec.filter(newScenarioFilterBasedOnTags(tags))
+		if spec.tags == nil {
+			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
+		} else {
+			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
+		}
 	}
 }
 

@@ -81,7 +81,9 @@ func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 	c.Assert(len(spec.scenarios), Equals, 3)
 	c.Assert(len(spec.scenarios[1].tags.values), Equals, 2)
 
-	spec.filter(newScenarioFilterBasedOnTags(myTags))
+	var specs []*specification
+	specs = append(specs, spec)
+	filterSpecsByTags(specs, myTags)
 	c.Assert(len(spec.scenarios), Equals, 1)
 	c.Assert(spec.scenarios[0].heading.value, Equals, "Scenario Heading 2")
 }
@@ -101,7 +103,9 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 	c.Assert(len(spec.scenarios), Equals, 3)
 	c.Assert(len(spec.scenarios[1].tags.values), Equals, 2)
 
-	spec.filter(newScenarioFilterBasedOnTags([]string{"tag3"}))
+	var specs []*specification
+	specs = append(specs, spec)
+	filterSpecsByTags(specs, []string{"tag3"})
 	c.Assert(len(spec.scenarios), Equals, 0)
 }
 
@@ -123,7 +127,9 @@ func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
 	c.Assert(len(spec.scenarios[0].tags.values), Equals, 1)
 	c.Assert(len(spec.scenarios[1].tags.values), Equals, 2)
 
-	spec.filter(newScenarioFilterBasedOnTags(myTags))
+	var specs []*specification
+	specs = append(specs, spec)
+	filterSpecsByTags(specs, myTags)
 	c.Assert(len(spec.scenarios), Equals, 2)
 	c.Assert(spec.scenarios[0].heading.value, Equals, "Scenario Heading 2")
 	c.Assert(spec.scenarios[1].heading.value, Equals, "Scenario Heading 3")
@@ -151,9 +157,35 @@ func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
 	c.Assert(len(spec.scenarios[2].tags.values), Equals, 2)
 	c.Assert(len(spec.scenarios[3].tags.values), Equals, 4)
 
-	spec.filter(newScenarioFilterBasedOnTags(myTags))
+	var specs []*specification
+	specs = append(specs, spec)
+	filterSpecsByTags(specs, myTags)
 	c.Assert(len(spec.scenarios), Equals, 3)
 	c.Assert(spec.scenarios[0].heading.value, Equals, "Scenario Heading 2")
 	c.Assert(spec.scenarios[1].heading.value, Equals, "Scenario Heading 3")
 	c.Assert(spec.scenarios[2].heading.value, Equals, "Scenario Heading 4")
+}
+
+func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tagKind, args: myTags, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+		&token{kind: scenarioKind, value: "Scenario Heading 3", lineNo: 5},
+	}
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	c.Assert(len(spec.scenarios), Equals, 3)
+	c.Assert(len(spec.tags.values), Equals, 2)
+
+	var specs []*specification
+	specs = append(specs, spec)
+	filterSpecsByTags(specs, myTags)
+	c.Assert(len(spec.scenarios), Equals, 3)
+	c.Assert(spec.scenarios[0].heading.value, Equals, "Scenario Heading 1")
+	c.Assert(spec.scenarios[1].heading.value, Equals, "Scenario Heading 2")
+	c.Assert(spec.scenarios[2].heading.value, Equals, "Scenario Heading 3")
 }
