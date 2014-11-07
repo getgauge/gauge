@@ -12,7 +12,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -50,8 +49,6 @@ func main() {
 		initializeProject(*initialize)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
-	} else if *executeTags != "" {
-		executeSpecs()
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else {
@@ -168,12 +165,11 @@ func executeSpecs() {
 	if len(flag.Args()) == 0 {
 		printUsage()
 	}
-
 	loadGaugeEnvironment()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 
-	allSpecs := make(map[string]*specification)
+	specsToExecute := make([]*specification, 0)
 	for _, arg := range flag.Args() {
 		specSource := arg
 		var parsedSpecs map[string]*specification
@@ -184,14 +180,10 @@ func executeSpecs() {
 			parsedSpecs, specParseResults = findSpecs(specSource, conceptsDictionary)
 		}
 		handleParseResult(specParseResults...)
-		for fileName, parsedSpec := range parsedSpecs {
-			_, exists := allSpecs[fileName]
-			if !exists {
-				allSpecs[fileName] = parsedSpec
-			}
+		for _, parsedSpec := range parsedSpecs {
+			specsToExecute = append(specsToExecute, parsedSpec)
 		}
 	}
-	specsToExecute := getSortedSpecsList(allSpecs)
 	if *executeTags != "" {
 		filterSpecsByTags(specsToExecute, splitAndTrimTags(*executeTags))
 	}
@@ -675,20 +667,6 @@ func handleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
 		fmt.Println(fmt.Sprintf("[Warning] %s", warning))
 	}
-}
-
-func getSortedSpecsList(allSpecs map[string]*specification) []*specification {
-	var specs []*specification
-	fileNames := make([]string, 0)
-
-	for fileName, _ := range allSpecs {
-		fileNames = append(fileNames, fileName)
-	}
-	sort.Strings(fileNames)
-	for _, fileName := range fileNames {
-		specs = append(specs, allSpecs[fileName])
-	}
-	return specs
 }
 
 func printVersion() {
