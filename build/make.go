@@ -218,6 +218,7 @@ var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where g
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distroVersion = flag.String("distro", "", "Create gauge distributable for specified version")
+var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -286,7 +287,9 @@ func createGaugeDistributables(forAllPlatforms bool) {
 
 func createDistro() {
 	if getOS() == windows {
-		createWindowsInstaller()
+		if !*skipWindowsDistro {
+			createWindowsInstaller()
+		}
 	} else {
 		createZipPackage()
 	}
@@ -297,15 +300,14 @@ func createWindowsInstaller() {
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
 	if err != nil {
 		panic(err)
-
 	}
 	copyGaugeFiles(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", *distroVersion),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
-		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", packageName),
+		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
-
+	os.RemoveAll(distroDir)
 }
 
 func createZipPackage() {
