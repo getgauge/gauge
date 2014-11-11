@@ -68,6 +68,7 @@ var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plu
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
+var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
@@ -101,11 +102,21 @@ func setCurrentProjectEnvVariable() error {
 }
 
 func runInBackground() {
-	loadGaugeEnvironment()
-	port, err := getPortFromEnvironmentVariable(apiPortEnvVariableName)
-	if err != nil {
-		fmt.Printf("Failed to start API Service. %s \n", err.Error())
-		os.Exit(1)
+	var port int
+	var err error
+	if *apiPort != "" {
+		port, err = strconv.Atoi(*apiPort)
+		if err != nil {
+			fmt.Println("Failed to parse the port number :", *apiPort, "\n", err.Error())
+			os.Exit(1)
+		}
+	} else {
+		loadGaugeEnvironment()
+		port, err = getPortFromEnvironmentVariable(apiPortEnvVariableName)
+		if err != nil {
+			fmt.Printf("Failed to start API Service. %s \n", err.Error())
+			os.Exit(1)
+		}
 	}
 	var wg sync.WaitGroup
 	runAPIServiceIndefinitely(port, &wg)
@@ -224,19 +235,19 @@ func executeSpecs() {
 }
 
 func filterSpecsByTags(specs *[]*specification, tags []string) {
-	for i,spec := range *specs {
+	for i, spec := range *specs {
 		if spec.tags == nil {
 			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
 		} else {
 			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
 		}
-		if(len(spec.scenarios)==0) {
+		if len(spec.scenarios) == 0 {
 			if len(*specs)-1 == i {
 				*specs = (*specs)[:i]
 			} else if 0 == i {
 				*specs = (*specs)[i+1:]
 			} else {
-				*specs =  append((*specs)[:i], (*specs)[i+1:]...)
+				*specs = append((*specs)[:i], (*specs)[i+1:]...)
 			}
 		}
 	}

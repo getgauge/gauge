@@ -123,7 +123,6 @@ func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	c.Assert(result.ok, Equals, true)
 
-
 	var specs []*specification
 	specs = append(specs, spec)
 	c.Assert(len(specs[0].scenarios), Equals, 3)
@@ -150,7 +149,6 @@ func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
 	}
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	c.Assert(result.ok, Equals, true)
-
 
 	var specs []*specification
 	specs = append(specs, spec)
@@ -179,7 +177,6 @@ func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
 	}
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	c.Assert(result.ok, Equals, true)
-
 
 	var specs []*specification
 	specs = append(specs, spec)
