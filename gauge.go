@@ -106,6 +106,7 @@ func runInBackground() {
 	var err error
 	if *apiPort != "" {
 		port, err = strconv.Atoi(*apiPort)
+		os.Setenv("GAUGE_API_PORT", *apiPort)
 		if err != nil {
 			fmt.Println("Failed to parse the port number :", *apiPort, "\n", err.Error())
 			os.Exit(1)
