@@ -148,6 +148,9 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 		command = pd.Command.Linux
 		break
 	}
+	if len(command) == 0 {
+		return nil, errors.New(fmt.Sprintf("Platform specific command not specified: %s.", runtime.GOOS))
+	}
 
 	pluginConsoleWriter := &pluginConsoleWriter{pluginName: pd.Name}
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, pluginConsoleWriter, pluginConsoleWriter)
