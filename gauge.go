@@ -185,7 +185,7 @@ func executeSpecs() {
 		}
 	}
 	if *executeTags != "" {
-		filterSpecsByTags(specsToExecute, splitAndTrimTags(*executeTags))
+		filterSpecsByTags(&specsToExecute, splitAndTrimTags(*executeTags))
 	}
 	manifest := getProjectManifest()
 	err := startAPIService(0)
@@ -223,12 +223,21 @@ func executeSpecs() {
 	}
 }
 
-func filterSpecsByTags(specs []*specification, tags []string) {
-	for _, spec := range specs {
+func filterSpecsByTags(specs *[]*specification, tags []string) {
+	for i,spec := range *specs {
 		if spec.tags == nil {
 			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
 		} else {
 			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
+		}
+		if(len(spec.scenarios)==0) {
+			if len(*specs)-1 == i {
+				*specs = (*specs)[:i]
+			} else if 0 == i {
+				*specs = (*specs)[i+1:]
+			} else {
+				*specs =  append((*specs)[:i], (*specs)[i+1:]...)
+			}
 		}
 	}
 }
