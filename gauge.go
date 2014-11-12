@@ -90,7 +90,11 @@ func downloadAndInstallPlugin(plugin, version string) {
 }
 
 func setCurrentProjectEnvVariable() error {
-	projectRoot, err := common.GetProjectRoot()
+	value := ""
+	if len(flag.Args()) != 0 {
+		value = flag.Args()[0]
+	}
+	projectRoot, err := common.GetProjectRoot(value)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to find gauge project root: %s ", err.Error()))
 	}
@@ -269,7 +273,11 @@ type environmentVariables struct {
 }
 
 func getProjectManifest() *manifest {
-	projectRoot, err := common.GetProjectRoot()
+	value := ""
+	if len(flag.Args()) != 0 {
+		value = flag.Args()[0]
+	}
+	projectRoot, err := common.GetProjectRoot(value)
 	if err != nil {
 		fmt.Printf("Failed to read manifest: %s \n", err.Error())
 		os.Exit(1)
@@ -379,7 +387,13 @@ func createProjectTemplate(language string) error {
 
 // Loads all the properties files available in the specified env directory
 func loadEnvironment(env string) error {
-	envDir, err := common.GetDirInProject(common.EnvDirectoryName)
+	var err error
+	var envDir string
+	if len(flag.Args()) == 0 {
+		envDir, err = common.GetDirInProject(common.EnvDirectoryName, "")
+	} else {
+		envDir, err = common.GetDirInProject(common.EnvDirectoryName, flag.Args()[0])
+	}
 	if err != nil {
 		fmt.Printf("Failed to Load environment: %s\n", err.Error())
 		os.Exit(1)
@@ -581,7 +595,11 @@ func printConceptFailure(concept *ProtoConcept) {
 }
 
 func findConceptFiles() []string {
-	conceptsDir, err := common.GetDirInProject(common.SpecsDirectoryName)
+	value := ""
+	if len(flag.Args()) != 0 {
+		value = flag.Args()[0]
+	}
+	conceptsDir, err := common.GetDirInProject(common.SpecsDirectoryName, value)
 	if err != nil {
 		return []string{}
 	}
