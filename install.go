@@ -115,7 +115,7 @@ func runInstallCommands(installCommands platformSpecificCommand, workingDir stri
 	}
 
 	if len(command) == 0 {
-		return errors.New(fmt.Sprintf("Platform specific command not specified: %s.", runtime.GOOS))
+		return errors.New(fmt.Sprintf("Platform not supported: %s.", runtime.GOOS))
 	}
 
 	fmt.Printf("Running plugin install command => %s\n", command)
