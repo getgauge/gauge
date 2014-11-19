@@ -58,7 +58,7 @@ func formatConcept(protoConcept *ProtoConcept) string {
 		if fragment.GetFragmentType() == Fragment_Text {
 			conceptText = conceptText + fragment.GetText()
 		} else if fragment.GetFragmentType() == Fragment_Parameter {
-			if fragment.GetParameter().GetParameterType() == Parameter_Table {
+			if fragment.GetParameter().GetParameterType() == (Parameter_Table | Parameter_Special_Table) {
 				conceptText += "\n" + formatTable(tableFrom(fragment.GetParameter().GetTable()))
 			} else {
 				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""
