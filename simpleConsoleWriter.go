@@ -85,3 +85,11 @@ func (writer *simpleConsoleWriter) writeStepFinished(step *step, failed bool) {
 func (writer *simpleConsoleWriter) writeTable(table *table) {
 	writer.writeString(formatTable(table))
 }
+
+func (writer *simpleConsoleWriter) writeConceptStarting(protoConcept *ProtoConcept) {
+	writer.writeString(formatConcept(protoConcept))
+}
+
+func (writer *simpleConsoleWriter) writeConceptFinished(protoConcept *ProtoConcept) {
+	writer.writeString(formatConcept(protoConcept))
+}

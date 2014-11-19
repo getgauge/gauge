@@ -52,6 +52,22 @@ func formatStep(step *step) string {
 	return stepText
 }
 
+func formatConcept(protoConcept *ProtoConcept) string {
+	conceptText := "# "
+	for _, fragment := range protoConcept.ConceptStep.GetFragments() {
+		if fragment.GetFragmentType() == Fragment_Text {
+			conceptText = conceptText + fragment.GetText()
+		} else if fragment.GetFragmentType() == Fragment_Parameter {
+			if fragment.GetParameter().GetParameterType() == Parameter_Table {
+				conceptText += "\n" + formatTable(tableFrom(fragment.GetParameter().GetTable()))
+			} else {
+				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""
+			}
+		}
+	}
+	return conceptText
+}
+
 func formatHeading(heading, headingChar string) string {
 	length := len(heading)
 	if length > HEADING_UNDERLINE_LENGTH {

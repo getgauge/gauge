@@ -344,10 +344,13 @@ func (executor *specExecutor) executeSteps(protoSteps []*ProtoStep) bool {
 }
 
 func (executor *specExecutor) executeConcept(protoConcept *ProtoConcept) bool {
+	console := getCurrentConsole()
+	console.writeConceptStarting(protoConcept)
 	for _, step := range protoConcept.Steps {
 		executor.executeItem(step)
 		executor.setExecutionResultForConcept(protoConcept)
 	}
+	console.writeConceptFinished(protoConcept)
 	return protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
 }
 

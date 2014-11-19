@@ -17,6 +17,8 @@ type consoleWriter interface {
 	writeStepStarting(*step)
 	writeStepFinished(*step, bool)
 	writeTable(*table)
+	writeConceptStarting(*ProtoConcept)
+	writeConceptFinished(*ProtoConcept)
 }
 
 var currentConsoleWriter consoleWriter
@@ -109,6 +111,16 @@ func (writer *coloredConsoleWriter) writeStep(step *step) {
 	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
+}
+
+func (writer *coloredConsoleWriter) writeConceptStarting(protoConcept *ProtoConcept) {
+	conceptText := formatConcept(protoConcept)
+	terminal.Stdout.Colorf("@b%s", conceptText)
+}
+
+func (writer *coloredConsoleWriter) writeConceptFinished(protoConcept *ProtoConcept) {
+	conceptText := formatConcept(protoConcept)
+	terminal.Stdout.Colorf("@g%s", conceptText)
 }
 
 func (writer *coloredConsoleWriter) writeStepStarting(step *step) {
