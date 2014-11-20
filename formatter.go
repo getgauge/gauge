@@ -33,7 +33,7 @@ func formatStep(step *step) string {
 	for i := 0; i < paramCount; i++ {
 		argument := step.args[i]
 		formattedArg := ""
-		if argument.argType == tableArg {
+		if argument.argType == tableArg || argument.argType == specialTable {
 			formattedTable := formatTable(&argument.table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
 		} else if argument.argType == dynamic {
