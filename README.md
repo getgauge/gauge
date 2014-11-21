@@ -48,14 +48,6 @@ Check out the **[Talk to us] [talk-to-us]** page on our wiki.
 
 [techdocs]:http://getgauge.io/documentation/getting_started/creating_a_gauge_project.html
 [setup]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
-[roadmap]:http://getgauge.io
+[roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
 [contributing]:http://github.com/getgauge/gauge/wiki/Contributing
-
-
-## Learn more about using gauge
-* [Specifications](specifications/README.md)
-* [Steps](specifications/steps.md)
-* [Environments](managing_environments/README.md)
-* [Plugins](plugins/README.md)
-* [IDE Support](ide_support/README.md)
 
