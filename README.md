@@ -39,7 +39,7 @@ Certain features of Gauge makes it stand unique amongst others.
 
 ## Questions or need help?
 
-Check out the **[Talk to us] [talk-to-us]** page on our wiki.
+Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)** page on our wiki.
 
 [techdocs-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
 [setup-image]: https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
