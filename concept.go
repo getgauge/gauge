@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 type conceptDictionary struct {
 	conceptsMap     map[string]*concept
 	constructionMap map[string]*step
@@ -112,6 +114,10 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 	if err != nil {
 		return err
 	}
+	if conceptStep.value == parser.currentConcept.value {
+		return &parseError{lineNo: conceptStep.lineNo, message: "Cyclic dependancy found. Step is calling concept again.", lineText: conceptStep.lineText}
+
+	}
 	parser.currentConcept.conceptSteps = append(parser.currentConcept.conceptSteps, conceptStep)
 	return nil
 }
@@ -164,13 +170,47 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 		conceptDictionary.conceptsMap[conceptStep.value] = &concept{conceptStep, conceptFile}
 	}
 	conceptDictionary.updateLookupForNestedConcepts()
-	return nil
+	return conceptDictionary.validateConcepts()
 }
 
 func (conceptDictionary *conceptDictionary) search(stepValue string) *concept {
 	if concept, ok := conceptDictionary.conceptsMap[stepValue]; ok {
 		return concept
 	}
+	return nil
+}
+
+func (conceptDictionary *conceptDictionary) validateConcepts() *parseError {
+	for _, concept := range conceptDictionary.conceptsMap {
+		err := conceptDictionary.checkCircularReferencing(concept.conceptStep, nil)
+		if err != nil {
+			err.message = fmt.Sprintf("Circular reference found in concept: \"%s\"\n%s", concept.conceptStep.lineText, err.message)
+			return err
+		}
+	}
+	return nil
+}
+
+func (conceptDictionary *conceptDictionary) checkCircularReferencing(concept *step, traversedSteps map[string]string) *parseError {
+	if traversedSteps == nil {
+		traversedSteps = make(map[string]string, 0)
+	}
+	currentConceptFileName := conceptDictionary.search(concept.value).fileName
+	traversedSteps[concept.value] = currentConceptFileName
+	for _, step := range concept.conceptSteps {
+		if fileName, exists := traversedSteps[step.value]; exists {
+			return &parseError{lineNo: step.lineNo,
+				message: fmt.Sprintf("%s: The concept \"%s\" references a higher concept -> %s: \"%s\"", currentConceptFileName, concept.lineText, fileName, step.lineText),
+			}
+
+		}
+		if step.isConcept {
+			if err := conceptDictionary.checkCircularReferencing(step, traversedSteps); err != nil {
+				return err
+			}
+		}
+	}
+	delete(traversedSteps, concept.value)
 	return nil
 }
 
@@ -190,7 +230,7 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 func (conceptDictionary *conceptDictionary) updateStep(step *step) {
 	if conceptDictionary.constructionMap[step.value] == nil {
 		conceptDictionary.constructionMap[step.value] = step
-	} else {
+	} else if !conceptDictionary.constructionMap[step.value].isConcept {
 		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
 		conceptDictionary.constructionMap[step.value].conceptSteps = step.conceptSteps
 		conceptDictionary.constructionMap[step.value].lookup = step.lookup

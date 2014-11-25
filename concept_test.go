@@ -1,6 +1,9 @@
 package main
 
-import . "launchpad.net/gocheck"
+import (
+	. "launchpad.net/gocheck"
+	"strings"
+)
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	dictionary := new(conceptDictionary)
@@ -245,6 +248,14 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 
 }
 
+func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
+	parser := new(conceptParser)
+	_, err := parser.parse("# my concept \n * first step using \n * my concept ")
+
+	c.Assert(err, NotNil)
+	c.Assert(err.message, Equals, "Cyclic dependancy found. Step is calling concept again.")
+}
+
 func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	parser := new(conceptParser)
 	_, err := parser.parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
@@ -467,4 +478,48 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 	c.Assert(nestedConcept.getArg("user-id").value, Equals, "id")
 	c.Assert(nestedConcept.getArg("user-name").value, Equals, "name")
 
+}
+
+func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
+	conceptDictionary := new(conceptDictionary)
+
+	conceptText := SpecBuilder().
+		specHeading("another concept").
+		step("second step").
+		step("my concept").
+		specHeading("my concept").
+		step("first step").
+		step("another concept").String()
+
+	concepts, err := new(conceptParser).parse(conceptText)
+	c.Assert(err, IsNil)
+	err = conceptDictionary.add(concepts, "file.cpt")
+	c.Assert(err, NotNil)
+	c.Assert(true, Equals, strings.Contains(err.message, "Circular reference found in concept"))
+}
+
+func (s *MySuite) TestErrorOnCircularReferenceInDeepNestedConceptConcept(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	conceptText := SpecBuilder().
+		specHeading("first concept <a> and <b>").
+		step("a step step").
+		step("a nested concept <a>").
+		specHeading("a nested concept <b>").
+		step("second nested <b>").
+		step("another step").String()
+
+	secondConceptText := SpecBuilder().
+		specHeading("second nested <c>").
+		step("a nested concept <c>").String()
+
+	concepts1, err := new(conceptParser).parse(conceptText)
+	c.Assert(err, IsNil)
+	concepts2, err := new(conceptParser).parse(secondConceptText)
+
+	err = conceptDictionary.add(concepts1, "file.cpt")
+	c.Assert(err, IsNil)
+
+	err = conceptDictionary.add(concepts2, "file2.cpt")
+	c.Assert(err, NotNil)
+	c.Assert(true, Equals, strings.Contains(err.message, "Circular reference found in concept"))
 }
