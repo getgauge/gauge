@@ -328,9 +328,8 @@ func (executor *specExecutor) executeItem(protoItem *ProtoItem) bool {
 		return executor.executeConcept(protoItem.GetConcept())
 	} else if protoItem.GetItemType() == ProtoItem_Step {
 		return executor.executeStep(protoItem.GetStep())
-	} else {
-		return false
 	}
+	return false
 }
 
 func (executor *specExecutor) executeSteps(protoSteps []*ProtoStep) bool {
@@ -347,7 +346,10 @@ func (executor *specExecutor) executeConcept(protoConcept *ProtoConcept) bool {
 	console := getCurrentConsole()
 	console.writeConceptStarting(protoConcept)
 	for _, step := range protoConcept.Steps {
-		executor.executeItem(step)
+		failure := executor.executeItem(step)
+		if failure {
+			return true
+		}
 		executor.setExecutionResultForConcept(protoConcept)
 	}
 	console.writeConceptFinished(protoConcept)
@@ -357,7 +359,17 @@ func (executor *specExecutor) executeConcept(protoConcept *ProtoConcept) bool {
 func (executor *specExecutor) setExecutionResultForConcept(protoConcept *ProtoConcept) {
 	var conceptExecutionTime int64
 	for _, step := range protoConcept.GetSteps() {
-		if step.GetItemType() == ProtoItem_Step {
+		if step.GetItemType() == ProtoItem_Concept {
+			stepExecResult := step.GetConcept().GetConceptExecutionResult().GetExecutionResult()
+			conceptExecutionTime += stepExecResult.GetExecutionTime()
+			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
+				conceptExecutionResult := &ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult()}
+				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
+				protoConcept.ConceptExecutionResult = conceptExecutionResult
+				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
+				return
+			}
+		} else if step.GetItemType() == ProtoItem_Step {
 			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if stepExecResult.GetFailed() {
