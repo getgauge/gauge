@@ -115,7 +115,7 @@ func runInstallCommands(installCommands platformSpecificCommand, workingDir stri
 	}
 
 	if len(command) == 0 {
-		return errors.New(fmt.Sprintf("Platform not supported: %s.", runtime.GOOS))
+		return nil
 	}
 
 	fmt.Printf("Running plugin install command => %s\n", command)
@@ -162,7 +162,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 		break
 	}
 	if downloadLink == "" {
-		return "", errors.New("Plugin download URL not available for current platform.")
+		return "", errors.New("Platform not supported for %s. Download URL not specified.")
 	}
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
