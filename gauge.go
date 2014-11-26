@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -188,17 +189,13 @@ func executeSpecs() {
 	specsToExecute := make([]*specification, 0)
 	for _, arg := range flag.Args() {
 		specSource := arg
-		var parsedSpecs map[string]*specification
 		var specParseResults []*parseResult
 		if isIndexedSpec(specSource) {
-			parsedSpecs, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
+			specsToExecute, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
 		} else {
-			parsedSpecs, specParseResults = findSpecs(specSource, conceptsDictionary)
+			specsToExecute, specParseResults = findSpecs(specSource, conceptsDictionary)
 		}
 		handleParseResult(specParseResults...)
-		for _, parsedSpec := range parsedSpecs {
-			specsToExecute = append(specsToExecute, parsedSpec)
-		}
 	}
 	if *executeTags != "" {
 		filterSpecsByTags(&specsToExecute, splitAndTrimTags(*executeTags))
@@ -214,7 +211,7 @@ func executeSpecs() {
 		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
-
+	getSortedSpecsList(specsToExecute)
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
@@ -652,7 +649,7 @@ func getSpecFiles(specSource string) []string {
 	return nil
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) (map[string]*specification, []*parseResult) {
+func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
 	for _, spec := range parsedSpecs {
@@ -661,7 +658,7 @@ func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDicti
 	return parsedSpecs, parseResult
 }
 
-func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[string]*specification, []*parseResult) {
+func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specFiles := getSpecFiles(specSource)
 	if specFiles == nil {
 		fmt.Printf("Spec file or directory does not exist: %s\n", specSource)
@@ -671,7 +668,7 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[str
 		os.Exit(1)
 	}
 	parseResults := make([]*parseResult, 0)
-	specs := make(map[string]*specification)
+	specs := make([]*specification, 0)
 	for _, specFile := range specFiles {
 		specFileContent, err := common.ReadFileContents(specFile)
 		if err != nil {
@@ -685,9 +682,7 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) (map[str
 		} else {
 			parseResults = append(parseResults, parseResult)
 		}
-		spec.fileName = specFile
-		specs[spec.fileName] = spec
-
+		specs = append(specs, spec)
 	}
 	return specs, parseResults
 }
@@ -710,4 +705,22 @@ func handleWarningMessages(warnings []string) {
 
 func printVersion() {
 	fmt.Printf("%s\n", currentGaugeVersion.String())
+}
+
+type ByFileName []*specification
+
+func (s ByFileName) Len() int {
+	return len(s)
+}
+
+func (s ByFileName) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s ByFileName) Less(i, j int) bool {
+	return s[i].fileName < s[j].fileName
+}
+
+func getSortedSpecsList(allSpecs []*specification) {
+	sort.Sort(ByFileName(allSpecs))
 }

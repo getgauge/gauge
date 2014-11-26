@@ -233,3 +233,19 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 	c.Assert(specs[0].heading.value, Equals, "Spec Heading1")
 	c.Assert(specs[1].heading.value, Equals, "Spec Heading3")
 }
+
+func (s *MySuite) TestToSortSpecs(c *C) {
+	spec1 := &specification{fileName: "ab"}
+	spec2 := &specification{fileName: "b"}
+	spec3 := &specification{fileName: "c"}
+	var specs []*specification
+	specs = append(specs, spec3)
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	getSortedSpecsList(specs)
+
+	c.Assert(specs[0].fileName, Equals, spec1.fileName)
+	c.Assert(specs[1].fileName, Equals, spec2.fileName)
+	c.Assert(specs[2].fileName, Equals, spec3.fileName)
+}
