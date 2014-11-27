@@ -107,7 +107,7 @@ func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, conn net
 }
 
 func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *APIMessage) *APIMessage {
-	root, err := common.GetProjectRootFromWD()
+	root, err := common.GetProjectRoot()
 	if err != nil {
 		fmt.Printf("[Warning] Failed to find project root while responding to API request. %s\n", err.Error())
 		root = ""

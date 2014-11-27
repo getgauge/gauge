@@ -95,7 +95,7 @@ func setCurrentProjectEnvVariable() error {
 	if len(flag.Args()) != 0 {
 		value = flag.Args()[0]
 	}
-	projectRoot, err := common.GetProjectRoot(value)
+	projectRoot, err := common.GetProjectRootFromSpecPath(value)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to find gauge project root: %s ", err.Error()))
 	}
@@ -236,6 +236,13 @@ func executeSpecs() {
 	}
 }
 
+func getSpecName(specSource string) string {
+	if isIndexedSpec(specSource) {
+		specSource, _ = GetIndexedSpecName(specSource)
+	}
+	return specSource
+}
+
 func filterSpecsByTags(specs *[]*specification, tags []string) {
 	for i, spec := range *specs {
 		if spec.tags == nil {
@@ -274,7 +281,7 @@ func getProjectManifest() *manifest {
 	if len(flag.Args()) != 0 {
 		value = flag.Args()[0]
 	}
-	projectRoot, err := common.GetProjectRoot(value)
+	projectRoot, err := common.GetProjectRootFromSpecPath(value)
 	if err != nil {
 		fmt.Printf("Failed to read manifest: %s \n", err.Error())
 		os.Exit(1)
@@ -389,7 +396,7 @@ func loadEnvironment(env string) error {
 	if len(flag.Args()) == 0 {
 		envDir, err = common.GetDirInProject(common.EnvDirectoryName, "")
 	} else {
-		envDir, err = common.GetDirInProject(common.EnvDirectoryName, flag.Args()[0])
+		envDir, err = common.GetDirInProject(common.EnvDirectoryName, getSpecName(flag.Args()[0]))
 	}
 	if err != nil {
 		fmt.Printf("Failed to Load environment: %s\n", err.Error())
