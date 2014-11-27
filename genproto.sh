@@ -3,11 +3,11 @@
 #Using protoc version 2.5.0
 
 cd gauge-proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=../gauge spec.proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=../gauge messages.proto
-PATH=$PATH:$GOPATH/bin protoc --go_out=../gauge api.proto
+PATH=$PATH:$GOPATH/bin protoc --go_out=../ spec.proto
+PATH=$PATH:$GOPATH/bin protoc --go_out=../ messages.proto
+PATH=$PATH:$GOPATH/bin protoc --go_out=../ api.proto
 cd ..
-sed  -i.backup '/import main1 "spec.pb"/d' gauge/messages.pb.go && sed  -i.backup 's/main1.//g' gauge/messages.pb.go && rm gauge/messages.pb.go.backup
-sed  -i.backup '/import main1 "spec.pb"/d' gauge/api.pb.go && sed  -i.backup 's/main1.//g' gauge/api.pb.go && rm gauge/api.pb.go.backup
-cd gauge && go fmt && cd ..
+sed  -i.backup '/import main1 "spec.pb"/d' messages.pb.go && sed  -i.backup 's/main1.//g' messages.pb.go && rm messages.pb.go.backup
+sed  -i.backup '/import main1 "spec.pb"/d' api.pb.go && sed  -i.backup 's/main1.//g' api.pb.go && rm api.pb.go.backup
+go fmt
 
