@@ -49,11 +49,11 @@ const (
 	APIMessage_GetAllSpecsResponse              APIMessage_APIMessageType = 8
 	APIMessage_GetStepValueRequest              APIMessage_APIMessageType = 9
 	APIMessage_GetStepValueResponse             APIMessage_APIMessageType = 10
-	APIMessage_GetAllConceptsRequest            APIMessage_APIMessageType = 11
-	APIMessage_GetAllConceptsResponse           APIMessage_APIMessageType = 12
-	APIMessage_GetLanguagePluginLibPathRequest  APIMessage_APIMessageType = 13
-	APIMessage_GetLanguagePluginLibPathResponse APIMessage_APIMessageType = 14
-	APIMessage_ErrorResponse                    APIMessage_APIMessageType = 15
+	APIMessage_GetLanguagePluginLibPathRequest  APIMessage_APIMessageType = 11
+	APIMessage_GetLanguagePluginLibPathResponse APIMessage_APIMessageType = 12
+	APIMessage_ErrorResponse                    APIMessage_APIMessageType = 13
+	APIMessage_GetAllConceptsRequest            APIMessage_APIMessageType = 14
+	APIMessage_GetAllConceptsResponse           APIMessage_APIMessageType = 15
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -67,11 +67,11 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	8:  "GetAllSpecsResponse",
 	9:  "GetStepValueRequest",
 	10: "GetStepValueResponse",
-	11: "GetAllConceptsRequest",
-	12: "GetAllConceptsResponse",
-	13: "GetLanguagePluginLibPathRequest",
-	14: "GetLanguagePluginLibPathResponse",
-	15: "ErrorResponse",
+	11: "GetLanguagePluginLibPathRequest",
+	12: "GetLanguagePluginLibPathResponse",
+	13: "ErrorResponse",
+	14: "GetAllConceptsRequest",
+	15: "GetAllConceptsResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":            1,
@@ -84,11 +84,11 @@ var APIMessage_APIMessageType_value = map[string]int32{
 	"GetAllSpecsResponse":              8,
 	"GetStepValueRequest":              9,
 	"GetStepValueResponse":             10,
-	"GetAllConceptsRequest":            11,
-	"GetAllConceptsResponse":           12,
-	"GetLanguagePluginLibPathRequest":  13,
-	"GetLanguagePluginLibPathResponse": 14,
-	"ErrorResponse":                    15,
+	"GetLanguagePluginLibPathRequest":  11,
+	"GetLanguagePluginLibPathResponse": 12,
+	"ErrorResponse":                    13,
+	"GetAllConceptsRequest":            14,
+	"GetAllConceptsResponse":           15,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -359,13 +359,13 @@ type APIMessage struct {
 	AllStepsResponse         *GetAllStepsResponse              `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
 	AllSpecsRequest          *GetAllSpecsRequest               `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
 	AllSpecsResponse         *GetAllSpecsResponse              `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
-	AllConceptsRequest       *GetAllConceptsRequest            `protobuf:"bytes,11,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
-	AllConceptsResponse      *GetAllConceptsResponse           `protobuf:"bytes,12,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
-	StepValueRequest         *GetStepValueRequest              `protobuf:"bytes,13,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
-	StepValueResponse        *GetStepValueResponse             `protobuf:"bytes,14,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
-	LibPathRequest           *GetLanguagePluginLibPathRequest  `protobuf:"bytes,15,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
-	LibPathResponse          *GetLanguagePluginLibPathResponse `protobuf:"bytes,16,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
-	Error                    *ErrorResponse                    `protobuf:"bytes,17,opt,name=error" json:"error,omitempty"`
+	StepValueRequest         *GetStepValueRequest              `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
+	StepValueResponse        *GetStepValueResponse             `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
+	LibPathRequest           *GetLanguagePluginLibPathRequest  `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
+	LibPathResponse          *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
+	Error                    *ErrorResponse                    `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
+	AllConceptsRequest       *GetAllConceptsRequest            `protobuf:"bytes,16,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
+	AllConceptsResponse      *GetAllConceptsResponse           `protobuf:"bytes,17,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
 	XXX_unrecognized         []byte                            `json:"-"`
 }
 
@@ -443,20 +443,6 @@ func (m *APIMessage) GetAllSpecsResponse() *GetAllSpecsResponse {
 	return nil
 }
 
-func (m *APIMessage) GetAllConceptsRequest() *GetAllConceptsRequest {
-	if m != nil {
-		return m.AllConceptsRequest
-	}
-	return nil
-}
-
-func (m *APIMessage) GetAllConceptsResponse() *GetAllConceptsResponse {
-	if m != nil {
-		return m.AllConceptsResponse
-	}
-	return nil
-}
-
 func (m *APIMessage) GetStepValueRequest() *GetStepValueRequest {
 	if m != nil {
 		return m.StepValueRequest
@@ -488,6 +474,20 @@ func (m *APIMessage) GetLibPathResponse() *GetLanguagePluginLibPathResponse {
 func (m *APIMessage) GetError() *ErrorResponse {
 	if m != nil {
 		return m.Error
+	}
+	return nil
+}
+
+func (m *APIMessage) GetAllConceptsRequest() *GetAllConceptsRequest {
+	if m != nil {
+		return m.AllConceptsRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetAllConceptsResponse() *GetAllConceptsResponse {
+	if m != nil {
+		return m.AllConceptsResponse
 	}
 	return nil
 }
