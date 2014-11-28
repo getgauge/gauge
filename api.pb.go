@@ -229,21 +229,21 @@ func (m *GetAllConceptsResponse) GetConcepts() []*ConceptInfo {
 }
 
 type ConceptInfo struct {
-	Name             *string `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
-	Filepath         *string `protobuf:"bytes,2,req,name=filepath" json:"filepath,omitempty"`
-	LineNumber       *int32  `protobuf:"varint,3,req,name=lineNumber" json:"lineNumber,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	StepValue        *ProtoStepValue `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	Filepath         *string         `protobuf:"bytes,2,req,name=filepath" json:"filepath,omitempty"`
+	LineNumber       *int32          `protobuf:"varint,3,req,name=lineNumber" json:"lineNumber,omitempty"`
+	XXX_unrecognized []byte          `json:"-"`
 }
 
 func (m *ConceptInfo) Reset()         { *m = ConceptInfo{} }
 func (m *ConceptInfo) String() string { return proto.CompactTextString(m) }
 func (*ConceptInfo) ProtoMessage()    {}
 
-func (m *ConceptInfo) GetName() string {
-	if m != nil && m.Name != nil {
-		return *m.Name
+func (m *ConceptInfo) GetStepValue() *ProtoStepValue {
+	if m != nil {
+		return m.StepValue
 	}
-	return ""
+	return nil
 }
 
 func (m *ConceptInfo) GetFilepath() string {

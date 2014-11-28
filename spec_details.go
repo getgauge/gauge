@@ -40,7 +40,11 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*
 func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*ConceptInfo {
 	conceptInfos := make([]*ConceptInfo, 0)
 	for _, concept := range dictionary.conceptsMap {
-		conceptInfos = append(conceptInfos, &ConceptInfo{Name: proto.String(concept.conceptStep.value), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
+		stepValue, err := extractStepValueAndParams(concept.conceptStep.lineText, concept.conceptStep.hasInlineTable)
+		if err != nil {
+			continue
+		}
+		conceptInfos = append(conceptInfos, &ConceptInfo{StepValue: convertToProtoStepValue(stepValue), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
 	}
 	return conceptInfos
 }
