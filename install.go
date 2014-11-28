@@ -162,7 +162,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 		break
 	}
 	if downloadLink == "" {
-		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified."))
+		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified.", runtime.GOOS))
 	}
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {

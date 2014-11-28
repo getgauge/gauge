@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/getgauge/common"
 	"code.google.com/p/goprotobuf/proto"
+	"github.com/getgauge/common"
 	"sync"
 	"time"
 )
