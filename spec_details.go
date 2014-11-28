@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/getgauge/common"
+	"code.google.com/p/goprotobuf/proto"
 	"sync"
 	"time"
 )
@@ -13,6 +14,7 @@ type specInfoGatherer struct {
 	availableStepsMap map[string]*stepValue
 	stepsFromRunner   []string
 	specStepMapCache  map[string][]*step
+	conceptInfos      []*ConceptInfo
 	mutex             sync.Mutex
 }
 
@@ -21,16 +23,26 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.specStepMapCache = make(map[string][]*step)
 	specInfoGatherer.stepsFromRunner = specInfoGatherer.getStepsFromRunner(runner)
 	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
-	newSpecStepMap := specInfoGatherer.getStepsFromSpecs()
+	newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
+	specInfoGatherer.conceptInfos = conceptInfos
+
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
 	go specInfoGatherer.refreshSteps(refreshInterval)
 }
 
-func (specInfoGatherer *specInfoGatherer) getStepsFromSpecs() map[string][]*step {
+func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*ConceptInfo) {
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
-	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs)
+	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
+}
+
+func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*ConceptInfo {
+	conceptInfos := make([]*ConceptInfo, 0)
+	for _, concept := range dictionary.conceptsMap {
+		conceptInfos = append(conceptInfos, &ConceptInfo{Name: proto.String(concept.conceptStep.value), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
+	}
+	return conceptInfos
 }
 
 func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
@@ -39,7 +51,8 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 		specInfoGatherer.mutex.Lock()
 		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
 		specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
-		newSpecStepMap := specInfoGatherer.getStepsFromSpecs()
+		newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
+		specInfoGatherer.conceptInfos = conceptInfos
 		specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
 		specInfoGatherer.mutex.Unlock()
 	}

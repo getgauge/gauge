@@ -91,6 +91,9 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 		case APIMessage_GetLanguagePluginLibPathRequest:
 			responseMessage = handler.getLanguagePluginLibPath(apiMessage)
 			break
+		case APIMessage_GetAllConceptsRequest:
+			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
+			break
 		}
 	}
 	handler.sendMessage(responseMessage, conn)
@@ -156,6 +159,12 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIM
 
 }
 
+func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *APIMessage) *APIMessage {
+	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.conceptInfos)
+	return &APIMessage{MessageType: APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
+
+}
+
 func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *APIMessage) *APIMessage {
 	libPathRequest := message.GetLibPathRequest()
 	language := libPathRequest.GetLanguage()
@@ -191,6 +200,10 @@ func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs
 		protoSpecs = append(protoSpecs, convertToProtoSpec(spec))
 	}
 	return &GetAllSpecsResponse{Specs: protoSpecs}
+}
+
+func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*ConceptInfo) *GetAllConceptsResponse {
+	return &GetAllConceptsResponse{Concepts: conceptInfos}
 }
 
 func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
