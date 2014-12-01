@@ -104,9 +104,15 @@ func (exe *execution) start() *suiteResult {
 		exe.suiteResult.setFailure()
 	}
 	exe.notifyExecutionResult()
-	exe.notifyExecutionStop()
-	exe.runner.kill()
+	exe.stopAllPlugins()
 	return exe.suiteResult
+}
+
+func (e *execution) stopAllPlugins() {
+	e.notifyExecutionStop()
+	if err := e.runner.kill(); err != nil {
+		fmt.Printf("[Error] Failed to kill Runner. %s\n", err.Error())
+	}
 }
 
 func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler) *specExecutor {

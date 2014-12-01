@@ -214,25 +214,27 @@ func executeSpecs() {
 	getSortedSpecsList(specsToExecute)
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
+
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
 	validationErrors := execution.validate(conceptsDictionary)
 	if len(validationErrors) > 0 {
-		fmt.Println("Validation failed. The following steps have errors")
-		for _, stepValidationErrors := range validationErrors {
-			for _, stepValidationError := range stepValidationErrors {
-				s := stepValidationError.step
-				getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText))
-			}
-		}
-		err := execution.runner.kill()
-		if err != nil {
-			fmt.Printf("Failed to kill Runner. %s\n", err.Error())
-		}
+		printValidationFailures(validationErrors)
+		execution.stopAllPlugins()
 		os.Exit(1)
 	} else {
 		status := execution.start()
 		exitCode := printExecutionStatus(status)
 		os.Exit(exitCode)
+	}
+}
+
+func printValidationFailures(validationErrors executionValidationErrors) {
+	fmt.Println("Validation failed. The following steps have errors")
+	for _, stepValidationErrors := range validationErrors {
+		for _, stepValidationError := range stepValidationErrors {
+			s := stepValidationError.step
+			getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText))
+		}
 	}
 }
 
