@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type conceptDictionary struct {
 	conceptsMap     map[string]*concept
@@ -98,6 +101,7 @@ func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseE
 	if !parser.hasOnlyDynamicParams(token) {
 		return nil, &parseError{lineNo: token.lineNo, message: "Concept heading can have only Dynamic Parameters"}
 	}
+	token.lineText = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(token.lineText), "#"))
 	concept, err := new(specification).createStepUsingLookup(token, nil)
 	if err != nil {
 		return nil, err
