@@ -69,12 +69,13 @@ func formatConcept(protoConcept *ProtoConcept) string {
 }
 
 func formatHeading(heading, headingChar string) string {
-	length := len(heading)
+	trimmedHeading := strings.TrimSpace(heading)
+	length := len(trimmedHeading)
 	if length > HEADING_UNDERLINE_LENGTH {
 		length = HEADING_UNDERLINE_LENGTH
 	}
 
-	return fmt.Sprintf("%s\n%s\n", heading, getRepeatedChars(headingChar, length))
+	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 
 func formatTable(table *table) string {

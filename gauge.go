@@ -138,7 +138,7 @@ func formatSpecFiles(filesToFormat string) {
 		err := common.SaveFile(spec.fileName, formatted, true)
 		if err != nil {
 			failed = true
-			fmt.Printf("Failed to format '%s': %s\n", spec.fileName)
+			fmt.Printf("Failed to format '%s': %s\n", spec.fileName, err)
 		}
 	}
 	if failed {
@@ -691,6 +691,7 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 		} else {
 			parseResults = append(parseResults, parseResult)
 		}
+		spec.fileName = specFile
 		specs = append(specs, spec)
 	}
 	return specs, parseResults
