@@ -2,7 +2,7 @@ package main
 
 import (
 	"code.google.com/p/goprotobuf/proto"
-	. "launchpad.net/gocheck"
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestCopyingFragments(c *C) {
