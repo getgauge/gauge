@@ -1,6 +1,6 @@
 package main
 
-import . "launchpad.net/gocheck"
+import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestFindVersion(c *C) {
 	installDescription := createInstallDescriptionWithVersions("0.0.4", "0.6.7", "0.7.4", "3.6.5")

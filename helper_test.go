@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	. "launchpad.net/gocheck"
+	. "gopkg.in/check.v1"
 )
 
 type specBuilder struct {
