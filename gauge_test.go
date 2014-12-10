@@ -249,3 +249,32 @@ func (s *MySuite) TestToSortSpecs(c *C) {
 	c.Assert(specs[1].fileName, Equals, spec2.fileName)
 	c.Assert(specs[2].fileName, Equals, spec3.fileName)
 }
+
+func (s *MySuite) TestToFilterSpecsByInvalidTag(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
+		&token{kind: tagKind, args: myTags, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+	}
+	spec1, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens1 := []*token{
+		&token{kind: specKind, value: "Spec Heading2", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 3},
+	}
+	spec2, result := new(specParser).createSpecification(tokens1, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	c.Assert(specs[0].tags.values[0], Equals, myTags[0])
+	c.Assert(specs[0].tags.values[1], Equals, myTags[1])
+	filterSpecsByTags(&specs, []string{"tag1 && tag2"})
+	c.Assert(len(specs), Equals, 0)
+}
