@@ -138,7 +138,7 @@ func formatSpecFiles(filesToFormat string) {
 		err := common.SaveFile(spec.fileName, formatted, true)
 		if err != nil {
 			failed = true
-			fmt.Printf("Failed to format '%s': %s\n", spec.fileName)
+			fmt.Printf("Failed to format '%s': %s\n", spec.fileName, err)
 		}
 	}
 	if failed {
@@ -246,22 +246,18 @@ func getSpecName(specSource string) string {
 }
 
 func filterSpecsByTags(specs *[]*specification, tags []string) {
-	for i, spec := range *specs {
+	filteredSpecs := make([]*specification, 0)
+	for _, spec := range *specs {
 		if spec.tags == nil {
 			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
 		} else {
 			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
 		}
-		if len(spec.scenarios) == 0 {
-			if len(*specs)-1 == i {
-				*specs = (*specs)[:i]
-			} else if 0 == i {
-				*specs = (*specs)[i+1:]
-			} else {
-				*specs = append((*specs)[:i], (*specs)[i+1:]...)
-			}
+		if len(spec.scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, spec)
 		}
 	}
+	*specs = filteredSpecs
 }
 
 func (m *manifest) save() error {
@@ -691,6 +687,7 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 		} else {
 			parseResults = append(parseResults, parseResult)
 		}
+		spec.fileName = specFile
 		specs = append(specs, spec)
 	}
 	return specs, parseResults
