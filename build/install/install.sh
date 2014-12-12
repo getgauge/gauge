@@ -9,5 +9,5 @@ echo "creating $prefix if it doesn't exist"
 echo "Copying files to $prefix"
 cp -rf bin share $prefix
 echo "Done installing Gauge to $prefix"
-echo "Installing plugin - htm-report"
+echo "Installing plugin - html-report"
 gauge --install html-report
