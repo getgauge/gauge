@@ -177,7 +177,7 @@ func copyGaugeFiles(installPath string) {
 }
 
 func addInstallScripts(files map[string]string) map[string]string {
-	if (getOS() == darwin || getOS() == darwin) && (*distroVersion != "") {
+	if (getOS() == darwin || getOS() == linux) && (*distroVersion != "") {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	}
 	return files
