@@ -76,6 +76,12 @@ func (step *step) getArg(name string) *stepArg {
 	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
+func (step *step) renameIfRequired(oldStep step, newStep step) {
+	if strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
+		step.value = newStep.value
+	}
+}
+
 func (step *step) deepCopyStepArgs() []*stepArg {
 	copiedStepArgs := make([]*stepArg, 0)
 	for _, conceptStepArg := range step.args {
@@ -590,6 +596,12 @@ func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs 
 	}
 }
 
+func (spec *specification) renameSteps(oldStep step, newStep step) {
+	for _, scenario := range spec.scenarios {
+		scenario.renameSteps(oldStep, newStep)
+	}
+}
+
 func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseError) {
 	var stepArgument *stepArg
 	if typeOfArg == "special" {
@@ -732,6 +744,12 @@ func (scenario *scenario) addTags(tags *tags) {
 func (scenario *scenario) addComment(comment *comment) {
 	scenario.comments = append(scenario.comments, comment)
 	scenario.addItem(comment)
+}
+
+func (scenario *scenario) renameSteps(oldStep step, newStep step) {
+	for _, step := range scenario.steps {
+		step.renameIfRequired(oldStep, newStep)
+	}
 }
 
 func (scenario *scenario) addItem(itemToAdd item) {
