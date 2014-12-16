@@ -14,5 +14,5 @@ else
 fi
 
 echo "Done installing Gauge to $prefix"
-echo "Installing plugin - html-report"
-gauge --install html-report
+echo "Installing plugin - html-report. This may take a few minutes"
+$prefix/bin/gauge --install html-report
