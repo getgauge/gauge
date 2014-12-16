@@ -52,8 +52,31 @@ func main() {
 		downloadAndInstallPlugin(*install, *installVersion)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
+	} else if *refactor != "" {
+		refactorSteps(*refactor)
 	} else {
 		executeSpecs()
+	}
+}
+
+func refactorSteps(oldStep string) {
+	if len(flag.Args()) != 1 {
+		printUsage()
+	}
+	projectRoot,_ := common.GetProjectRoot()
+	specs, _ := findSpecs(projectRoot, &conceptDictionary{})
+	agent,err := getRefactorAgent(oldStep,flag.Args()[0])
+	if err != nil{
+		fmt.Printf(err.Error())
+		return;
+	}
+	agent.refactor(&specs)
+	for _, spec := range specs {
+		formatted := formatSpecification(spec)
+		err := common.SaveFile(spec.fileName, formatted, true)
+		if err != nil {
+			fmt.Printf("Failed to format '%s': %s\n", spec.fileName, err)
+		}
 	}
 }
 
@@ -70,6 +93,7 @@ var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
+var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
