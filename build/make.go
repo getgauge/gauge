@@ -179,6 +179,8 @@ func copyGaugeFiles(installPath string) {
 func addInstallScripts(files map[string]string) map[string]string {
 	if (getOS() == darwin || getOS() == linux) && (*distroVersion != "") {
 		files[filepath.Join("build", "install", installShellScript)] = ""
+	} else if getOS() == windows {
+		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
 	}
 	return files
 }
@@ -307,7 +309,7 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
-	os.RemoveAll(distroDir)
+	    os.RemoveAll(distroDir)
 }
 
 func createZipPackage() {

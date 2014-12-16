@@ -1,0 +1,1 @@
+gauge --install html-report
