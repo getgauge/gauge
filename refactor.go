@@ -34,13 +34,13 @@ func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
 		return nil, err
 	}
 	spec := &specification{}
-	steps := make([]*step,0)
+	steps := make([]*step, 0)
 	for _, stepToken := range stepTokens {
 		step, err := spec.createStepUsingLookup(stepToken, nil)
 		if err != nil {
 			return nil, err
 		}
-		steps = append(steps,step)
+		steps = append(steps, step)
 	}
 	if len(stepTokens[0].args) == 0 && len(stepTokens[1].args) == 0 {
 		return &renameRefactorer{oldStep: steps[0], newStep: steps[1]}, nil

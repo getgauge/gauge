@@ -63,12 +63,12 @@ func refactorSteps(oldStep string) {
 	if len(flag.Args()) != 1 {
 		printUsage()
 	}
-	projectRoot,_ := common.GetProjectRoot()
+	projectRoot, _ := common.GetProjectRoot()
 	specs, _ := findSpecs(projectRoot, &conceptDictionary{})
-	agent,err := getRefactorAgent(oldStep,flag.Args()[0])
-	if err != nil{
+	agent, err := getRefactorAgent(oldStep, flag.Args()[0])
+	if err != nil {
 		fmt.Printf(err.Error())
-		return;
+		return
 	}
 	agent.refactor(&specs)
 	for _, spec := range specs {

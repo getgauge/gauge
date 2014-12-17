@@ -67,6 +67,7 @@ type step struct {
 	fragments      []*Fragment
 	parent         *step
 	hasInlineTable bool
+	items          []item
 }
 
 func (step *step) getArg(name string) *stepArg {
@@ -627,6 +628,7 @@ func addInlineTableHeader(step *step, token *token) {
 	step.value = fmt.Sprintf("%s %s", step.value, PARAMETER_PLACEHOLDER)
 	step.hasInlineTable = true
 	step.addInlineTableHeaders(token.args)
+
 }
 
 func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResult {

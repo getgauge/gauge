@@ -71,10 +71,50 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
 	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, "add id {}")
 	c.Assert(actualnestedConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
 	c.Assert(actualnestedConcept.conceptSteps[0].args[0].value, Equals, "userid")
+	c.Assert(len(concepts[0].items), Equals, 2)
 
 	c.Assert(actualnestedConcept.conceptSteps[1].value, Equals, "add name {}")
 	c.Assert(actualnestedConcept.conceptSteps[1].args[0].argType, Equals, dynamic)
 	c.Assert(actualnestedConcept.conceptSteps[1].args[0].value, Equals, "username")
+	c.Assert(len(concepts[1].items), Equals, 3)
+}
+
+func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	conceptText := SpecBuilder().
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name <user-name>").
+		text("Comments").
+		specHeading("assign id <userid> and name <username>").
+		step("add id <userid>").
+		step("add name <username>").
+		text("Comment1").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+	conceptDictionary.add(concepts, "file.cpt")
+
+	concept := conceptDictionary.search("create user {} {} and {}")
+	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 1)
+	actualnestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualnestedConcept.isConcept, Equals, true)
+
+	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 2)
+	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, "add id {}")
+	c.Assert(actualnestedConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
+	c.Assert(actualnestedConcept.conceptSteps[0].args[0].value, Equals, "userid")
+	c.Assert(len(concepts[0].items), Equals, 3)
+
+	c.Assert(actualnestedConcept.conceptSteps[1].value, Equals, "add name {}")
+	c.Assert(actualnestedConcept.conceptSteps[1].args[0].argType, Equals, dynamic)
+	c.Assert(actualnestedConcept.conceptSteps[1].args[0].value, Equals, "username")
+	c.Assert(len(concepts[1].items), Equals, 4)
+}
+
+func (s *MySuite) TestConceptHavingItemsWithTables(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	concepts, _ := new(conceptParser).parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
+	conceptDictionary.add(concepts, "concept.cpt")
+
+	c.Assert(len(concepts[0].items), Equals, 3)
 }
 
 /*

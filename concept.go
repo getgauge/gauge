@@ -68,6 +68,9 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			addStates(&parser.currentState, tableScope)
 		} else if parser.isTableDataRow(token) {
 			parser.processTableDataRow(token, &parser.currentConcept.lookup)
+		} else {
+			comment := &comment{value: token.value, lineNo: token.lineNo}
+			parser.currentConcept.items = append(parser.currentConcept.items, comment)
 		}
 	}
 	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
@@ -108,6 +111,7 @@ func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseE
 	}
 	concept.isConcept = true
 	parser.createConceptLookup(concept)
+	concept.items = append(concept.items, concept)
 	return concept, nil
 
 }
@@ -123,6 +127,7 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 
 	}
 	parser.currentConcept.conceptSteps = append(parser.currentConcept.conceptSteps, conceptStep)
+	parser.currentConcept.items = append(parser.currentConcept.items, conceptStep)
 	return nil
 }
 
@@ -130,12 +135,16 @@ func (parser *conceptParser) processTableHeader(token *token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	addInlineTableHeader(currentStep, token)
+	items := parser.currentConcept.items
+	items[len(items)-1] = currentStep
 }
 
 func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLookup) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	addInlineTableRow(currentStep, token, argLookup)
+	items := parser.currentConcept.items
+	items[len(items)-1] = currentStep
 }
 
 func (parser *conceptParser) hasOnlyDynamicParams(token *token) bool {
