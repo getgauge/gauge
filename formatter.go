@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -179,4 +180,35 @@ func formatSpecification(specification *specification) string {
 	formattedText.WriteString(formatSpecHeading(specification.heading.value))
 	formattedText.WriteString(formatItems(specification.items))
 	return string(formattedText.Bytes())
+}
+
+type ByLineNo []*concept
+
+func (s ByLineNo) Len() int {
+	return len(s)
+}
+
+func (s ByLineNo) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s ByLineNo) Less(i, j int) bool {
+	return s[i].conceptStep.lineNo < s[j].conceptStep.lineNo
+}
+
+func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
+	conceptMap := make(map[string]string)
+	concepts := make([]*concept, 0)
+	for _, concept := range conceptDictionary.conceptsMap {
+		conceptMap[concept.fileName] = ""
+		concepts = append(concepts, concept)
+	}
+	sort.Sort(ByLineNo(concepts))
+	for _, concept := range concepts {
+		conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatItem(concept.conceptStep), "*", "#", 1)) + "\n"
+		for i := 1; i < len(concept.conceptStep.items); i++ {
+			conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
+		}
+	}
+	return conceptMap
 }

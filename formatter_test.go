@@ -32,3 +32,16 @@ Scenario Heading
      |2 |bar |
 `)
 }
+
+func (s *MySuite) TestFormatConcepts(c *C) {
+	dictionary := new(conceptDictionary)
+	step1 := &step{value: "sdsf", isConcept: true, lineNo: 1}
+	step2 := &step{value: "dsfdsfdsf", isConcept: true, lineNo: 2, items: []item{&step{value: "sfd", isConcept: false}, &step{value: "sdfsdf" + "T", isConcept: false}}}
+	dictionary.add([]*step{step1, step2}, "file.cpt")
+
+	formatted := formatConcepts(dictionary)
+	c.Assert(formatted["file.cpt"], Equals, `# sdsf
+# dsfdsfdsf
+* sdfsdfT
+`)
+}

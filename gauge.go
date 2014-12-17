@@ -70,13 +70,22 @@ func refactorSteps(oldStep string) {
 		fmt.Printf(err.Error())
 		return
 	}
-	agent.refactor(&specs)
+	conceptDictionary, _ := createConceptsDictionary(false)
+	agent.refactor(&specs, conceptDictionary)
 	for _, spec := range specs {
 		formatted := formatSpecification(spec)
-		err := common.SaveFile(spec.fileName, formatted, true)
-		if err != nil {
-			fmt.Printf("Failed to format '%s': %s\n", spec.fileName, err)
-		}
+		saveFile(spec.fileName, formatted, true)
+	}
+	conceptMap := formatConcepts(conceptDictionary)
+	for fileName, concept := range conceptMap {
+		saveFile(fileName, concept, true)
+	}
+}
+
+func saveFile(fileName string, content string, backup bool) {
+	err := common.SaveFile(fileName, content, backup)
+	if err != nil {
+		fmt.Printf("Failed to refactor '%s': %s\n", fileName, err)
 	}
 }
 
@@ -648,6 +657,7 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 			if shouldIgnoreErrors {
 				continue
 			}
+			fmt.Println(err)
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}

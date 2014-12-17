@@ -77,8 +77,8 @@ func (step *step) getArg(name string) *stepArg {
 	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
-func (step *step) renameIfRequired(oldStep step, newStep step) {
-	if strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
+func (step *step) rename(oldStep step, newStep step) {
+	if !step.isConcept && strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
 		step.value = newStep.value
 	}
 }
@@ -750,7 +750,7 @@ func (scenario *scenario) addComment(comment *comment) {
 
 func (scenario *scenario) renameSteps(oldStep step, newStep step) {
 	for _, step := range scenario.steps {
-		step.renameIfRequired(oldStep, newStep)
+		step.rename(oldStep, newStep)
 	}
 }
 

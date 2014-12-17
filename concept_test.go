@@ -102,6 +102,7 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 	c.Assert(actualnestedConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
 	c.Assert(actualnestedConcept.conceptSteps[0].args[0].value, Equals, "userid")
 	c.Assert(len(concepts[0].items), Equals, 3)
+	c.Assert(concepts[0].items[2].(*comment).value, Equals, "Comments")
 
 	c.Assert(actualnestedConcept.conceptSteps[1].value, Equals, "add name {}")
 	c.Assert(actualnestedConcept.conceptSteps[1].args[0].argType, Equals, dynamic)

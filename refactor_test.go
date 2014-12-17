@@ -34,7 +34,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgs(c *C) {
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	agent, err := getRefactorAgent(oldStep, newStep)
 	specs := append(make([]*specification, 0), spec)
-	agent.refactor(&specs)
+	agent.refactor(&specs, new(conceptDictionary))
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios[0].steps), Equals, 1)
@@ -57,7 +57,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneScenario(c *
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	agent, err := getRefactorAgent(oldStep, newStep)
 	specs := append(make([]*specification, 0), spec)
-	agent.refactor(&specs)
+	agent.refactor(&specs, new(conceptDictionary))
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios), Equals, 2)
@@ -88,7 +88,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	specs := append(make([]*specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, err := getRefactorAgent(oldStep, newStep)
-	agent.refactor(&specs)
+	agent.refactor(&specs, new(conceptDictionary))
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios[0].steps), Equals, 1)
@@ -96,5 +96,26 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 
 	c.Assert(len(specs[1].scenarios[0].steps), Equals, 1)
 	c.Assert(specs[1].scenarios[0].steps[0].value, Equals, newStep)
+}
 
+func (s *MySuite) TestRefactoringOfStepsWithNoArgsInConceptFiles(c *C) {
+	oldStep := "first step"
+	newStep := "second step"
+	unchanged := "unchanged"
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 20},
+	}
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	agent, _ := getRefactorAgent(oldStep, newStep)
+	specs := append(make([]*specification, 0), spec)
+	dictionary := new(conceptDictionary)
+	step1 := &step{value: oldStep + "sdsf", isConcept: true}
+	step2 := &step{value: unchanged, isConcept: true, items: []item{&step{value: oldStep, isConcept: false}, &step{value: oldStep + "T", isConcept: false}}}
+	dictionary.add([]*step{step1, step2}, "file.cpt")
+
+	agent.refactor(&specs, dictionary)
+
+	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[0].(*step).value, Equals, newStep)
+	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[1].(*step).value, Equals, oldStep+"T")
 }
