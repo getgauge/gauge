@@ -146,3 +146,28 @@ func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 	c.Assert(true, Equals, specRefactored[specs[0]])
 	c.Assert(false, Equals, specRefactored[specs[1]])
 }
+
+func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c *C) {
+	oldStep := "first step"
+	newStep := "second step"
+	unchanged := "unchanged"
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 20},
+	}
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	agent, _ := getRefactorAgent(oldStep, newStep)
+	specs := append(make([]*specification, 0), spec)
+	dictionary := new(conceptDictionary)
+	step1 := &step{value: oldStep + "sdsf", isConcept: true}
+	step2 := &step{value: unchanged, isConcept: true, items: []item{&step{value: newStep, isConcept: false}, &step{value: oldStep + "T", isConcept: false}}}
+	step3 := &step{value: "Concept value", isConcept: true, items: []item{&step{value: oldStep, isConcept: false}, &step{value: oldStep + "T", isConcept: false}}}
+	fileName := "file.cpt"
+	dictionary.add([]*step{step1, step2}, fileName)
+	dictionary.add([]*step{step3}, "e"+fileName)
+
+	_, filesRefactored := agent.refactor(&specs, dictionary)
+
+	c.Assert(filesRefactored[fileName], Equals, false)
+	c.Assert(filesRefactored["e"+fileName], Equals, true)
+}

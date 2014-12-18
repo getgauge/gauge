@@ -5,7 +5,7 @@ import ()
 const ERROR_MESSAGE = "No Refactoring Agent Present"
 
 type refactorAgent interface {
-	refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[*concept]bool)
+	refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool)
 }
 
 type renameRefactorer struct {
@@ -21,19 +21,23 @@ func (error *RefactoringError) Error() string {
 	return error.errorMessage
 }
 
-func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[*concept]bool) {
+func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
 	specsRefactored := make(map[*specification]bool, 0)
+	conceptFilesRefactored := make(map[string]bool, 0)
 	for _, spec := range *specs {
 		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep)
 	}
 	for _, concept := range conceptDictionary.conceptsMap {
+		conceptFilesRefactored[concept.fileName] = false
+	}
+	for _, concept := range conceptDictionary.conceptsMap {
 		for _, item := range concept.conceptStep.items {
 			if item.kind() == stepKind {
-				item.(*step).rename(*agent.oldStep, *agent.newStep, false)
+				conceptFilesRefactored[concept.fileName] = item.(*step).rename(*agent.oldStep, *agent.newStep, conceptFilesRefactored[concept.fileName])
 			}
 		}
 	}
-	return specsRefactored, make(map[*concept]bool, 0)
+	return specsRefactored, conceptFilesRefactored
 }
 
 func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {

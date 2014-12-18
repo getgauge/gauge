@@ -71,7 +71,7 @@ func refactorSteps(oldStep string) {
 		return
 	}
 	conceptDictionary, _ := createConceptsDictionary(false)
-	specsRefactored, _ := agent.refactor(&specs, conceptDictionary)
+	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
 	for _, spec := range specs {
 		if specsRefactored[spec] {
 			formatted := formatSpecification(spec)
@@ -80,7 +80,9 @@ func refactorSteps(oldStep string) {
 	}
 	conceptMap := formatConcepts(conceptDictionary)
 	for fileName, concept := range conceptMap {
-		saveFile(fileName, concept, true)
+		if conceptFilesRefactored[fileName] {
+			saveFile(fileName, concept, true)
+		}
 	}
 }
 
