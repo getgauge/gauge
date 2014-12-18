@@ -14,6 +14,15 @@ func (s *MySuite) TestGetRefactoringAgentGivesRenameRefactorerWhenThereIsNoParam
 	c.Assert(reflect.TypeOf(agent).Elem().Name(), Equals, "renameRefactorer")
 }
 
+func (s *MySuite) TestGetRefactoringAgentGivesRenameRefactorerWhenEqualNoOfParametersAreThere(c *C) {
+	oldStep := "first step \"s\""
+	newStep := "second step \"a\""
+	agent, err := getRefactorAgent(oldStep, newStep)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(reflect.TypeOf(agent).Elem().Name(), Equals, "renameRefactorer")
+}
+
 func (s *MySuite) TestGetRefactoringAgentGivesNilWhenThereIsNoRefactorerPresentToHandleAParticularRefactoring(c *C) {
 	oldStep := "first step \" a \" "
 	newStep := "second step"
@@ -170,4 +179,23 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 
 	c.Assert(filesRefactored[fileName], Equals, false)
 	c.Assert(filesRefactored["e"+fileName], Equals, true)
+}
+
+func (s *MySuite) TestRenamingWhenNumberOfArgumentsAreSame(c *C) {
+	oldStep := "first step {static} and {static}"
+	oldStep1 := "first step <a> and <b>"
+	newStep := "second step <a> and <b>"
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: stepKind, value: oldStep, lineNo: 3, args: []string{"name", "address"}},
+	}
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	agent, _ := getRefactorAgent(oldStep1, newStep)
+	specs := append(make([]*specification, 0), spec)
+	dictionary := new(conceptDictionary)
+	agent.refactor(&specs, dictionary)
+	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {}")
+	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
+	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
 }

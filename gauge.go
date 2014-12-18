@@ -63,6 +63,9 @@ func refactorSteps(oldStep string) {
 	if len(flag.Args()) != 1 {
 		printUsage()
 	}
+	if oldStep == flag.Args()[0] {
+		return
+	}
 	projectRoot, _ := common.GetProjectRoot()
 	specs, _ := findSpecs(projectRoot, &conceptDictionary{})
 	agent, err := getRefactorAgent(oldStep, flag.Args()[0])

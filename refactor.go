@@ -56,7 +56,7 @@ func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
 		}
 		steps = append(steps, step)
 	}
-	if len(stepTokens[0].args) == 0 && len(stepTokens[1].args) == 0 {
+	if len(stepTokens[0].args) == len(stepTokens[1].args) {
 		return &renameRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 	}
 	return nil, &RefactoringError{errorMessage: ERROR_MESSAGE}
