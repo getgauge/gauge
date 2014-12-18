@@ -283,22 +283,18 @@ func getSpecName(specSource string) string {
 }
 
 func filterSpecsByTags(specs *[]*specification, tags []string) {
-	for i, spec := range *specs {
+	filteredSpecs := make([]*specification, 0)
+	for _, spec := range *specs {
 		if spec.tags == nil {
 			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
 		} else {
 			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
 		}
-		if len(spec.scenarios) == 0 {
-			if len(*specs)-1 == i {
-				*specs = (*specs)[:i]
-			} else if 0 == i {
-				*specs = (*specs)[i+1:]
-			} else {
-				*specs = append((*specs)[:i], (*specs)[i+1:]...)
-			}
+		if len(spec.scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, spec)
 		}
 	}
+	*specs = filteredSpecs
 }
 
 func (m *manifest) save() error {

@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	HEADING_UNDERLINE_LENGTH = 20
-	TABLE_LEFT_SPACING       = 5
+	TABLE_LEFT_SPACING = 5
 )
 
 func getRepeatedChars(character string, repeatCount int) string {
@@ -72,10 +71,6 @@ func formatConcept(protoConcept *ProtoConcept) string {
 func formatHeading(heading, headingChar string) string {
 	trimmedHeading := strings.TrimSpace(heading)
 	length := len(trimmedHeading)
-	if length > HEADING_UNDERLINE_LENGTH {
-		length = HEADING_UNDERLINE_LENGTH
-	}
-
 	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 

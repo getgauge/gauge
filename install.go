@@ -68,7 +68,7 @@ func installPluginWithDescription(installDescription *installDescription, versio
 			return err
 		}
 		if compatibilityError := checkCompatiblity(currentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
-			return errors.New(fmt.Sprintf("Plugin Version %s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error()))
+			return errors.New(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
 		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(currentGaugeVersion)
@@ -164,6 +164,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	if downloadLink == "" {
 		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified.", runtime.GOOS))
 	}
+	fmt.Println("Downloading Plugin... => ", downloadLink)
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Could not download File %s: %s", downloadLink, err.Error()))

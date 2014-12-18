@@ -1,6 +1,6 @@
 package main
 
-import . "launchpad.net/gocheck"
+import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	parser := new(specParser)

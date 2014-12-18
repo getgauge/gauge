@@ -80,8 +80,8 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
   ExecShell "open" "http://getgauge.io/documentation"
+  Exec '"$INSTDIR\plugin-install.bat"'
 SectionEnd
-
 
 Function un.onUninstSuccess
   HideWindow
@@ -95,6 +95,7 @@ FunctionEnd
 
 Section Uninstall
   Delete "$INSTDIR\uninst.exe"
+  Delete "$INSTDIR\plugin-install.bat"
   RMDir /r "$INSTDIR\bin"
   RMDir /r "$INSTDIR\share"
   Delete "$SMPROGRAMS\Gauge\Uninstall.lnk"
