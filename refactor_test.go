@@ -88,8 +88,11 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	specs := append(make([]*specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, err := getRefactorAgent(oldStep, newStep)
-	agent.refactor(&specs, new(conceptDictionary))
+	specRefactored, _ := agent.refactor(&specs, new(conceptDictionary))
 
+	for _, isRefactored := range specRefactored {
+		c.Assert(true, Equals, isRefactored)
+	}
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios[0].steps), Equals, 1)
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, newStep)
@@ -118,4 +121,28 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsInConceptFiles(c *C) {
 
 	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[0].(*step).value, Equals, newStep)
 	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[1].(*step).value, Equals, oldStep+"T")
+}
+
+func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
+	oldStep := " first step"
+	newStep := "second step"
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: oldStep, lineNo: 3},
+	}
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	tokens = []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 10},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 20},
+		&token{kind: stepKind, value: newStep, lineNo: 30},
+	}
+	spec1, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	specs := append(make([]*specification, 0), spec)
+	specs = append(specs, spec1)
+	agent, _ := getRefactorAgent(oldStep, newStep)
+	specRefactored, _ := agent.refactor(&specs, new(conceptDictionary))
+
+	c.Assert(true, Equals, specRefactored[specs[0]])
+	c.Assert(false, Equals, specRefactored[specs[1]])
 }

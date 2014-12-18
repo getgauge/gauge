@@ -78,10 +78,12 @@ func (step *step) getArg(name string) *stepArg {
 	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
-func (step *step) rename(oldStep step, newStep step) {
+func (step *step) rename(oldStep step, newStep step, isRefactored bool) bool {
 	if !step.isConcept && strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
 		step.value = newStep.value
+		isRefactored = true
 	}
+	return isRefactored
 }
 
 func (step *step) deepCopyStepArgs() []*stepArg {
@@ -598,10 +600,18 @@ func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs 
 	}
 }
 
-func (spec *specification) renameSteps(oldStep step, newStep step) {
-	for _, scenario := range spec.scenarios {
-		scenario.renameSteps(oldStep, newStep)
+func (spec *specification) renameSteps(oldStep step, newStep step) bool {
+	isRefactored := false
+	for _, step := range spec.contexts {
+		isRefactored = step.rename(oldStep, newStep, isRefactored)
 	}
+	for _, scenario := range spec.scenarios {
+		refactor := scenario.renameSteps(oldStep, newStep)
+		if refactor {
+			isRefactored = refactor
+		}
+	}
+	return isRefactored
 }
 
 func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseError) {
@@ -749,10 +759,12 @@ func (scenario *scenario) addComment(comment *comment) {
 	scenario.addItem(comment)
 }
 
-func (scenario *scenario) renameSteps(oldStep step, newStep step) {
+func (scenario *scenario) renameSteps(oldStep step, newStep step) bool {
+	isRefactored := false
 	for _, step := range scenario.steps {
-		step.rename(oldStep, newStep)
+		isRefactored = step.rename(oldStep, newStep, isRefactored)
 	}
+	return isRefactored
 }
 
 func (scenario *scenario) addItem(itemToAdd item) {

@@ -5,7 +5,7 @@ import ()
 const ERROR_MESSAGE = "No Refactoring Agent Present"
 
 type refactorAgent interface {
-	refactor(specs *[]*specification, conceptDictionary *conceptDictionary)
+	refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[*concept]bool)
 }
 
 type renameRefactorer struct {
@@ -21,17 +21,19 @@ func (error *RefactoringError) Error() string {
 	return error.errorMessage
 }
 
-func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) {
+func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[*concept]bool) {
+	specsRefactored := make(map[*specification]bool, 0)
 	for _, spec := range *specs {
-		spec.renameSteps(*agent.oldStep, *agent.newStep)
+		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep)
 	}
 	for _, concept := range conceptDictionary.conceptsMap {
 		for _, item := range concept.conceptStep.items {
 			if item.kind() == stepKind {
-				item.(*step).rename(*agent.oldStep, *agent.newStep)
+				item.(*step).rename(*agent.oldStep, *agent.newStep, false)
 			}
 		}
 	}
+	return specsRefactored, make(map[*concept]bool, 0)
 }
 
 func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
