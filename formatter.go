@@ -210,8 +210,7 @@ func formatConceptSteps(conceptDictionary *conceptDictionary, conceptMap map[str
 
 func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
-	concepts := sortConcepts(conceptDictionary, conceptMap)
-	for _, concept := range concepts {
+	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.conceptStep.preComments {
 			conceptMap[concept.fileName] += formatItem(comment)
 		}

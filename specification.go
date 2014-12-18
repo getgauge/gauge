@@ -79,7 +79,7 @@ func (step *step) getArg(name string) *stepArg {
 }
 
 func (step *step) rename(oldStep step, newStep step, isRefactored bool) bool {
-	if !step.isConcept && strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
+	if strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
 		step.value = newStep.value
 		isRefactored = true
 	}

@@ -28,9 +28,10 @@ func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictiona
 		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep)
 	}
 	for _, concept := range conceptDictionary.conceptsMap {
-		conceptFilesRefactored[concept.fileName] = false
-	}
-	for _, concept := range conceptDictionary.conceptsMap {
+		_, ok := conceptFilesRefactored[concept.fileName]
+		if !ok {
+			conceptFilesRefactored[concept.fileName] = false
+		}
 		for _, item := range concept.conceptStep.items {
 			if item.kind() == stepKind {
 				conceptFilesRefactored[concept.fileName] = item.(*step).rename(*agent.oldStep, *agent.newStep, conceptFilesRefactored[concept.fileName])
