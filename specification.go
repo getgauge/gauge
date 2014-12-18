@@ -68,6 +68,7 @@ type step struct {
 	parent         *step
 	hasInlineTable bool
 	items          []item
+	preComments    []*comment
 }
 
 func (step *step) getArg(name string) *stepArg {

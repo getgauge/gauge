@@ -196,19 +196,31 @@ func (s ByLineNo) Less(i, j int) bool {
 	return s[i].conceptStep.lineNo < s[j].conceptStep.lineNo
 }
 
-func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
-	conceptMap := make(map[string]string)
+func sortConcepts(conceptDictionary *conceptDictionary, conceptMap map[string]string) []*concept {
 	concepts := make([]*concept, 0)
 	for _, concept := range conceptDictionary.conceptsMap {
 		conceptMap[concept.fileName] = ""
 		concepts = append(concepts, concept)
 	}
 	sort.Sort(ByLineNo(concepts))
+	return concepts
+}
+
+func formatConceptSteps(conceptDictionary *conceptDictionary, conceptMap map[string]string, concept *concept) {
+	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatItem(concept.conceptStep), "*", "#", 1)) + "\n"
+	for i := 1; i < len(concept.conceptStep.items); i++ {
+		conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
+	}
+}
+
+func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
+	conceptMap := make(map[string]string)
+	concepts := sortConcepts(conceptDictionary, conceptMap)
 	for _, concept := range concepts {
-		conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatItem(concept.conceptStep), "*", "#", 1)) + "\n"
-		for i := 1; i < len(concept.conceptStep.items); i++ {
-			conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
+		for _, comment := range concept.conceptStep.preComments {
+			conceptMap[concept.fileName] += formatItem(comment)
 		}
+		formatConceptSteps(conceptDictionary, conceptMap, concept)
 	}
 	return conceptMap
 }

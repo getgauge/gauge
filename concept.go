@@ -42,12 +42,18 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 	parser.currentState = initial
 	concepts := make([]*step, 0)
 	var error *parseError
+	preComments := make([]*comment, 0)
+	addPreComments := false
 	for _, token := range tokens {
 		if parser.isConceptHeading(token) {
 			if isInState(parser.currentState, conceptScope, stepScope) {
 				concepts = append(concepts, parser.currentConcept)
 			}
 			parser.currentConcept, error = parser.processConceptHeading(token)
+			if addPreComments {
+				parser.currentConcept.preComments = preComments
+				addPreComments = false
+			}
 			if error != nil {
 				return nil, error
 			}
@@ -70,6 +76,11 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			parser.processTableDataRow(token, &parser.currentConcept.lookup)
 		} else {
 			comment := &comment{value: token.value, lineNo: token.lineNo}
+			if parser.currentConcept == nil {
+				preComments = append(preComments, comment)
+				addPreComments = true
+				continue
+			}
 			parser.currentConcept.items = append(parser.currentConcept.items, comment)
 		}
 	}

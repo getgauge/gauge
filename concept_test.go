@@ -110,12 +110,14 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 	c.Assert(len(concepts[1].items), Equals, 4)
 }
 
-func (s *MySuite) TestConceptHavingItemsWithTables(c *C) {
+func (s *MySuite) TestConceptHavingItemsWithTablesAndPreComments(c *C) {
 	conceptDictionary := new(conceptDictionary)
-	concepts, _ := new(conceptParser).parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
+	concepts, _ := new(conceptParser).parse("COMMENT\n# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
 	conceptDictionary.add(concepts, "concept.cpt")
 
 	c.Assert(len(concepts[0].items), Equals, 3)
+	c.Assert(len(concepts[0].preComments), Equals, 1)
+	c.Assert(concepts[0].preComments[0].value, Equals, "COMMENT")
 }
 
 /*
