@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-const refreshInterval = time.Duration(2) * time.Second
-
 type specInfoGatherer struct {
 	availableSpecs    []*specification
 	availableStepsMap map[string]*stepValue
@@ -27,7 +25,7 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.conceptInfos = conceptInfos
 
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
-	go specInfoGatherer.refreshSteps(refreshInterval)
+	go specInfoGatherer.refreshSteps(getApiRefreshInterval())
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*ConceptInfo) {
