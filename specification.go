@@ -78,9 +78,14 @@ func (step *step) getArg(name string) *stepArg {
 	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
-func (step *step) rename(oldStep step, newStep step, isRefactored bool) bool {
+func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap map[int]int) bool {
 	if strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
 		step.value = newStep.value
+		args := make([]*stepArg, len(step.args))
+		for i, arg := range step.args {
+			args[orderMap[i]] = arg
+		}
+		step.args = args
 		isRefactored = true
 	}
 	return isRefactored
@@ -600,13 +605,13 @@ func (spec *specification) populateConceptLookup(lookup *argLookup, conceptArgs 
 	}
 }
 
-func (spec *specification) renameSteps(oldStep step, newStep step) bool {
+func (spec *specification) renameSteps(oldStep step, newStep step, orderMap map[int]int) bool {
 	isRefactored := false
 	for _, step := range spec.contexts {
-		isRefactored = step.rename(oldStep, newStep, isRefactored)
+		isRefactored = step.rename(oldStep, newStep, isRefactored, orderMap)
 	}
 	for _, scenario := range spec.scenarios {
-		refactor := scenario.renameSteps(oldStep, newStep)
+		refactor := scenario.renameSteps(oldStep, newStep, orderMap)
 		if refactor {
 			isRefactored = refactor
 		}
@@ -759,10 +764,10 @@ func (scenario *scenario) addComment(comment *comment) {
 	scenario.addItem(comment)
 }
 
-func (scenario *scenario) renameSteps(oldStep step, newStep step) bool {
+func (scenario *scenario) renameSteps(oldStep step, newStep step, orderMap map[int]int) bool {
 	isRefactored := false
 	for _, step := range scenario.steps {
-		isRefactored = step.rename(oldStep, newStep, isRefactored)
+		isRefactored = step.rename(oldStep, newStep, isRefactored, orderMap)
 	}
 	return isRefactored
 }

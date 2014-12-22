@@ -16,7 +16,7 @@ func (s *MySuite) TestGetRefactoringAgentGivesRenameRefactorerWhenThereIsNoParam
 
 func (s *MySuite) TestGetRefactoringAgentGivesRenameRefactorerWhenEqualNoOfParametersAreThere(c *C) {
 	oldStep := "first step \"s\""
-	newStep := "second step \"a\""
+	newStep := "second step \"s\""
 	agent, err := getRefactorAgent(oldStep, newStep)
 
 	c.Assert(err, Equals, nil)
@@ -198,4 +198,37 @@ func (s *MySuite) TestRenamingWhenNumberOfArgumentsAreSame(c *C) {
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
+}
+
+func (s *MySuite) TestRenamingWhenArgumentsOrderIsChanged(c *C) {
+	oldStep := "first step {static} and {static} and {static} and {static}"
+	oldStep1 := "first step <a> and <b> and <c> and <d>"
+	newStep := "second step <d> and <b> and <c> and <a>"
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: stepKind, value: oldStep, lineNo: 3, args: []string{"name", "address", "number", "id"}},
+	}
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	agent, _ := getRefactorAgent(oldStep1, newStep)
+	specs := append(make([]*specification, 0), spec)
+	dictionary := new(conceptDictionary)
+	agent.refactor(&specs, dictionary)
+	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
+	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "id")
+	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
+	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "number")
+	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "name")
+}
+
+func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
+	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
+	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "a"}}}
+
+	orderMap := createOrderOfArgs(*step1, *step2)
+
+	c.Assert(orderMap[0], Equals, 3)
+	c.Assert(orderMap[1], Equals, 1)
+	c.Assert(orderMap[2], Equals, 2)
+	c.Assert(orderMap[3], Equals, 0)
 }
