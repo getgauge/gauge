@@ -79,28 +79,25 @@ func (step *step) getArg(name string) *stepArg {
 }
 
 func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap map[int]ArgPosition) bool {
-	if strings.TrimSpace(step.value) == strings.TrimSpace(oldStep.value) {
-		step.value = newStep.value
-		length := len(step.args)
-		if len(step.args) < len(orderMap) {
-			length = len(orderMap)
-		}
-		args := make([]*stepArg, length)
-		count := 0
-		for i := 0; i < length; i++ {
-			if orderMap[i].isRemoved == true {
-				continue
-			} else if orderMap[i].isRemoved == false && orderMap[i].index == -1 {
-				args[orderMap[i].previousArgIndex+1] = &stepArg{value: "<PARAM>"}
-				count++
-				continue
-			}
+	if strings.TrimSpace(step.value) != strings.TrimSpace(oldStep.value) {
+		return isRefactored
+	}
+	step.value = newStep.value
+	length := len(step.args)
+	if length < len(orderMap) {
+		length = len(orderMap)
+	}
+	args := make([]*stepArg, length)
+	for i,count := 0,0; i < length; i++ {
+		if !orderMap[i].isRemoved && orderMap[i].index == -1 {
+			args[orderMap[i].previousArgIndex+1] = &stepArg{value: "<PARAM>",argType:static}
+			count++
+		} else if !orderMap[i].isRemoved {
 			args[orderMap[i].index+count] = step.args[i-count]
 		}
-		step.args = args
-		isRefactored = true
 	}
-	return isRefactored
+	step.args = args
+	return true
 }
 
 func (step *step) deepCopyStepArgs() []*stepArg {
