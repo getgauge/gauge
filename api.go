@@ -11,13 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
-)
-
-const (
-	apiPortEnvVariableName    = "GAUGE_API_PORT"
-	API_STATIC_PORT           = 8889
-	defaultApiRefreshInterval = time.Duration(2) * time.Second
 )
 
 type stepValue struct {
@@ -230,18 +223,4 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 		stepValue = strings.Replace(stepValue, PARAMETER_PLACEHOLDER, "<"+param+">", 1)
 	}
 	return stepValue
-}
-
-func getApiRefreshInterval() time.Duration {
-	config, err := common.GetGaugeConfiguration()
-	if err != nil {
-		return defaultApiRefreshInterval
-	}
-	intervalString := config[common.ApiRefreshInterval]
-	interval, err := strconv.Atoi(intervalString)
-	if err != nil {
-		return defaultApiRefreshInterval
-	}
-	return time.Millisecond * time.Duration(interval)
-
 }

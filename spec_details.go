@@ -3,6 +3,7 @@ package main
 import (
 	"code.google.com/p/goprotobuf/proto"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"sync"
 	"time"
 )
@@ -25,7 +26,7 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.conceptInfos = conceptInfos
 
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
-	go specInfoGatherer.refreshSteps(getApiRefreshInterval())
+	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*ConceptInfo) {

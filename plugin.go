@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"net"
 	"os/exec"
 	"path"
@@ -19,7 +20,6 @@ import (
 
 const (
 	executionScope          = "execution"
-	pluginConnectionTimeout = time.Second * 10
 	setupScope              = "setup"
 	pluginConnectionPortEnv = "plugin_connection_port"
 )
@@ -69,8 +69,8 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 			if done {
 				fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid))
 			}
-		case <-time.After(pluginConnectionTimeout):
-			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, pluginConnectionTimeout.Seconds()))
+		case <-time.After(config.PluginConnectionTimeout()):
+			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds()))
 			return plugin.pluginCmd.Process.Kill()
 		}
 	}
@@ -245,7 +245,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := gaugeConnectionHandler.acceptConnection(pluginConnectionTimeout)
+			pluginConnection, err := gaugeConnectionHandler.acceptConnection(config.PluginConnectionTimeout())
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
 				pluginCmd.Process.Kill()

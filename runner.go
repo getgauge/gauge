@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"net"
 	"os"
 	"os/exec"
@@ -11,8 +12,6 @@ import (
 	"runtime"
 	"time"
 )
-
-const runnerKillTimeOut = time.Second * 2
 
 type testRunner struct {
 	cmd        *exec.Cmd
@@ -106,7 +105,7 @@ func (testRunner *testRunner) kill() error {
 			if done {
 				return nil
 			}
-		case <-time.After(runnerKillTimeOut):
+		case <-time.After(config.RunnerKillTimeout()):
 			fmt.Printf("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
 			return testRunner.cmd.Process.Kill()
 		}
