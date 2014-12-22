@@ -118,7 +118,7 @@ func runInBackground() {
 		}
 	} else {
 		loadGaugeEnvironment()
-		port, err = getPortFromEnvironmentVariable(apiPortEnvVariableName)
+		port, err = getPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
 			fmt.Printf("Failed to start API Service. %s \n", err.Error())
 			os.Exit(1)
