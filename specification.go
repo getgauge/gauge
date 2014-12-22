@@ -90,8 +90,7 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 		for i := 0; i < length; i++ {
 			if orderMap[i].isRemoved == true {
 				continue
-			}
-			if orderMap[i].isRemoved == false && orderMap[i].index == -1 {
+			} else if orderMap[i].isRemoved == false && orderMap[i].index == -1 {
 				args[orderMap[i].previousArgIndex+1] = &stepArg{value: "<PARAM>"}
 				count++
 				continue

@@ -894,3 +894,31 @@ func (s *MySuite) TestCreateConceptStep(c *C) {
 	c.Assert(nestedConcept.lookup.getArg("baz").argType, Equals, dynamic)
 	c.Assert(nestedConcept.lookup.getArg("baz").value, Equals, "foo")
 }
+
+func (s *MySuite) TestRenameStep(c *C) {
+	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "value", argType: static}, &stepArg{name: "arg2", value: "value1", argType: static}}
+	originalStep := &step{
+		lineNo:         12,
+		value:          "step with {}",
+		args:           argsInStep,
+		isConcept:      false,
+		hasInlineTable: false}
+
+	argsInStep = []*stepArg{&stepArg{name: "arg2", value: "value1", argType: static}, &stepArg{name: "arg1", value: "value", argType: static}}
+	newStep := &step{
+		lineNo:         12,
+		value:          "step from {} {}",
+		args:           argsInStep,
+		isConcept:      false,
+		hasInlineTable: false}
+	orderMap := make(map[int]ArgPosition)
+	orderMap[0] = ArgPosition{index: 1}
+	orderMap[1] = ArgPosition{index: 0}
+
+	isRefactored := originalStep.rename(*originalStep, *newStep, false, orderMap)
+
+	c.Assert(isRefactored, Equals, true)
+	c.Assert(originalStep.value, Equals, "step from {} {}")
+	c.Assert(originalStep.args[0].name, Equals, "arg2")
+	c.Assert(originalStep.args[1].name, Equals, "arg1")
+}

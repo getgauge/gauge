@@ -60,12 +60,12 @@ func createOrderOfArgs(oldStep step, newStep step) map[int]ArgPosition {
 	for i, arg := range args {
 		index := SliceIndex(len(args), func(i int) bool { return len(otherArgs) > i && otherArgs[i].String() == arg.String() })
 		if index > -1 {
-			orderMap[i] = *&ArgPosition{index: index}
+			orderMap[i] = ArgPosition{index: index}
 		} else {
 			if isOldStepArgs {
-				orderMap[i] = *&ArgPosition{index: index, isRemoved: true}
+				orderMap[i] = ArgPosition{index: index, isRemoved: true}
 			} else {
-				orderMap[i] = *&ArgPosition{index: index, isRemoved: false, previousArgIndex: i - 1}
+				orderMap[i] = ArgPosition{index: index, isRemoved: false, previousArgIndex: i - 1}
 			}
 		}
 	}
