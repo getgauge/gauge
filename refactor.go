@@ -41,12 +41,32 @@ func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictiona
 	return specsRefactored, conceptFilesRefactored
 }
 
-func createOrderOfArgs(oldStep step, newStep step) map[int]int {
-	orderMap := make(map[int]int)
-	for i, arg := range oldStep.args {
-		index := SliceIndex(len(oldStep.args), func(i int) bool { return newStep.args[i].String() == arg.String() })
+type ArgPosition struct {
+	index            int
+	isRemoved        bool
+	previousArgIndex int
+}
+
+func createOrderOfArgs(oldStep step, newStep step) map[int]ArgPosition {
+	orderMap := make(map[int]ArgPosition)
+	isOldStepArgs := true
+	otherArgs := newStep.args
+	args := oldStep.args
+	if len(oldStep.args) < len(newStep.args) {
+		args = newStep.args
+		otherArgs = oldStep.args
+		isOldStepArgs = false
+	}
+	for i, arg := range args {
+		index := SliceIndex(len(args), func(i int) bool { return len(otherArgs) > i && otherArgs[i].String() == arg.String() })
 		if index > -1 {
-			orderMap[i] = index
+			orderMap[i] = *&ArgPosition{index: index}
+		} else {
+			if isOldStepArgs {
+				orderMap[i] = *&ArgPosition{index: index, isRemoved: true}
+			} else {
+				orderMap[i] = *&ArgPosition{index: index, isRemoved: false, previousArgIndex: i - 1}
+			}
 		}
 	}
 	return orderMap
@@ -76,8 +96,5 @@ func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
 		}
 		steps = append(steps, step)
 	}
-	if len(stepTokens[0].args) == len(stepTokens[1].args) {
-		return &renameRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
-	}
-	return nil, &RefactoringError{errorMessage: ERROR_MESSAGE}
+	return &renameRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 }
