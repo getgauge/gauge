@@ -110,6 +110,9 @@ func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 	specInfoGatherer.updateCache(newSpecStepsMap)
 	for _, steps := range specInfoGatherer.specStepMapCache {
 		for _, step := range steps {
+			if step.isConcept {
+				continue
+			}
 			stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
 			if err == nil {
 				if _, ok := specInfoGatherer.availableStepsMap[stepValue.stepValue]; !ok {
