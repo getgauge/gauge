@@ -42,28 +42,18 @@ func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictiona
 }
 
 type ArgPosition struct {
-	index            int
-	isRemoved        bool
-	previousArgIndex int
+	index int
 }
 
 func createOrderOfArgs(oldStep step, newStep step) map[int]ArgPosition {
-	orderMap := make(map[int]ArgPosition)
-	isOldStepArgs := true
-	otherArgs := newStep.args
-	args := oldStep.args
-	if len(oldStep.args) < len(newStep.args) {
-		args = newStep.args
-		otherArgs = oldStep.args
-		isOldStepArgs = false
-	}
-	for i, arg := range args {
-		index := SliceIndex(len(args), func(i int) bool { return len(otherArgs) > i && otherArgs[i].String() == arg.String() })
-		isRemoved := isOldStepArgs
+	orderMap := make(map[int]ArgPosition, len(newStep.args))
+	for i, arg := range newStep.args {
+		index := SliceIndex(len(oldStep.args), func(i int) bool { return oldStep.args[i].String() == arg.String() })
 		if index > -1 {
-			isRemoved = false
+			orderMap[i] = ArgPosition{index: index}
+			continue
 		}
-		orderMap[i] = ArgPosition{index: index, isRemoved: isRemoved, previousArgIndex: i-1}
+		orderMap[i] = ArgPosition{index: index}
 	}
 	return orderMap
 }

@@ -83,17 +83,12 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 		return isRefactored
 	}
 	step.value = newStep.value
-	length := len(step.args)
-	if length < len(orderMap) {
-		length = len(orderMap)
-	}
-	args := make([]*stepArg, length)
-	for i,count := 0,0; i < length; i++ {
-		if !orderMap[i].isRemoved && orderMap[i].index == -1 {
-			args[orderMap[i].previousArgIndex+1] = &stepArg{value: "<PARAM>",argType:static}
-			count++
-		} else if !orderMap[i].isRemoved {
-			args[orderMap[i].index+count] = step.args[i-count]
+	args := make([]*stepArg, len(newStep.args))
+	for key, value := range orderMap {
+		if value.index == -1 {
+			args[key] = &stepArg{value: "", argType: static}
+		} else {
+			args[key] = step.args[value.index]
 		}
 	}
 	step.args = args

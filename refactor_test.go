@@ -202,7 +202,6 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
 	c.Assert(orderMap[0].index, Equals, 3)
 	c.Assert(orderMap[1].index, Equals, 1)
 	c.Assert(orderMap[2].index, Equals, 2)
-	c.Assert(orderMap[3].index, Equals, 0)
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
@@ -224,11 +223,9 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreremoved(c *C)
 
 	orderMap := createOrderOfArgs(*step1, *step2)
 
-	c.Assert(orderMap[0].index, Equals, -1)
-	c.Assert(orderMap[0].isRemoved, Equals, true)
+	c.Assert(orderMap[0].index, Equals, 3)
 	c.Assert(orderMap[1].index, Equals, 1)
 	c.Assert(orderMap[2].index, Equals, 2)
-	c.Assert(orderMap[3].index, Equals, 0)
 }
 
 func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
@@ -250,7 +247,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "number")
-	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "<PARAM>")
+	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "")
 }
 
 func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
@@ -269,7 +266,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
 	agent.refactor(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
-	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "<PARAM>")
+	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "number")
@@ -292,7 +289,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedInMiddle(c *C) {
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
-	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "<PARAM>")
+	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "number")
 }
