@@ -309,7 +309,7 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
-	    os.RemoveAll(distroDir)
+	os.RemoveAll(distroDir)
 }
 
 func createZipPackage() {

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"os"
 	"path"
 	"runtime"
@@ -203,19 +204,11 @@ func getPluginInstallJson(plugin string) (string, error) {
 
 func constructPluginInstallJsonUrl(plugin string) (string, error) {
 	installJsonFile := plugin + "-install.json"
-	repoUrl, err := getGaugeRepositoryUrl()
-	if err != nil {
-		return "", err
+	repoUrl := config.GaugeRepositoryUrl()
+	if repoUrl == "" {
+		return "", errors.New("Could not find gauge repository url from configuration.")
 	}
 	return fmt.Sprintf("%s/%s", repoUrl, installJsonFile), nil
-}
-
-func getGaugeRepositoryUrl() (string, error) {
-	config, err := common.GetGaugeConfiguration()
-	if err != nil {
-		return "", err
-	}
-	return config[common.GaugeRepositoryUrl], nil
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	flag "github.com/getgauge/mflag"
 	"io"
 	"io/ioutil"
@@ -153,14 +154,14 @@ func runInBackground() {
 	var err error
 	if *apiPort != "" {
 		port, err = strconv.Atoi(*apiPort)
-		os.Setenv("GAUGE_API_PORT", *apiPort)
+		os.Setenv(common.ApiPortEnvVariableName, *apiPort)
 		if err != nil {
 			fmt.Println("Failed to parse the port number :", *apiPort, "\n", err.Error())
 			os.Exit(1)
 		}
 	} else {
 		loadGaugeEnvironment()
-		port, err = getPortFromEnvironmentVariable(apiPortEnvVariableName)
+		port, err = getPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
 			fmt.Printf("Failed to start API Service. %s \n", err.Error())
 			os.Exit(1)
@@ -527,7 +528,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 
-	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(runnerConnectionTimeOut)
+	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(config.RunnerConnectionTimeout())
 	testRunner.connection = runnerConnection
 	if connectionError != nil {
 		testRunner.cmd.Process.Signal(syscall.SIGTERM)

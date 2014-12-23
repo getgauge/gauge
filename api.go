@@ -13,11 +13,6 @@ import (
 	"sync"
 )
 
-const (
-	apiPortEnvVariableName = "GAUGE_API_PORT"
-	API_STATIC_PORT        = 8889
-)
-
 type stepValue struct {
 	args                   []string
 	stepValue              string
@@ -45,8 +40,8 @@ func startAPIService(port int) error {
 		return err
 	}
 	if port == 0 {
-		if err := common.SetEnvVariable(apiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
-			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", apiPortEnvVariableName, err.Error()))
+		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
+			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error()))
 		}
 	}
 	go gaugeConnectionHandler.handleMultipleConnections()

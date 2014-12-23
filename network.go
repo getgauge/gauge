@@ -12,10 +12,6 @@ import (
 	"time"
 )
 
-const (
-	runnerConnectionTimeOut = time.Second * 30
-)
-
 type messageHandler interface {
 	messageBytesReceived([]byte, net.Conn)
 }
