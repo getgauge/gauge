@@ -41,19 +41,10 @@ func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictiona
 	return specsRefactored, conceptFilesRefactored
 }
 
-type ArgPosition struct {
-	index int
-}
-
-func createOrderOfArgs(oldStep step, newStep step) map[int]ArgPosition {
-	orderMap := make(map[int]ArgPosition, len(newStep.args))
+func createOrderOfArgs(oldStep step, newStep step) map[int]int {
+	orderMap := make(map[int]int, len(newStep.args))
 	for i, arg := range newStep.args {
-		index := SliceIndex(len(oldStep.args), func(i int) bool { return oldStep.args[i].String() == arg.String() })
-		if index > -1 {
-			orderMap[i] = ArgPosition{index: index}
-			continue
-		}
-		orderMap[i] = ArgPosition{index: index}
+		orderMap[i] = SliceIndex(len(oldStep.args), func(i int) bool { return oldStep.args[i].String() == arg.String() })
 	}
 	return orderMap
 }

@@ -911,9 +911,9 @@ func (s *MySuite) TestRenameStep(c *C) {
 		args:           argsInStep,
 		isConcept:      false,
 		hasInlineTable: false}
-	orderMap := make(map[int]ArgPosition)
-	orderMap[0] = ArgPosition{index: 1}
-	orderMap[1] = ArgPosition{index: 0}
+	orderMap := make(map[int]int)
+	orderMap[0] = 1
+	orderMap[1] = 0
 
 	isRefactored := originalStep.rename(*originalStep, *newStep, false, orderMap)
 

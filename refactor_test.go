@@ -199,9 +199,9 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
 
 	orderMap := createOrderOfArgs(*step1, *step2)
 
-	c.Assert(orderMap[0].index, Equals, 3)
-	c.Assert(orderMap[1].index, Equals, 1)
-	c.Assert(orderMap[2].index, Equals, 2)
+	c.Assert(orderMap[0], Equals, 3)
+	c.Assert(orderMap[1], Equals, 1)
+	c.Assert(orderMap[2], Equals, 2)
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
@@ -210,11 +210,11 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
 
 	orderMap := createOrderOfArgs(*step1, *step2)
 
-	c.Assert(orderMap[0].index, Equals, 3)
-	c.Assert(orderMap[1].index, Equals, -1)
-	c.Assert(orderMap[2].index, Equals, 1)
-	c.Assert(orderMap[3].index, Equals, 2)
-	c.Assert(orderMap[4].index, Equals, 0)
+	c.Assert(orderMap[0], Equals, 3)
+	c.Assert(orderMap[1], Equals, -1)
+	c.Assert(orderMap[2], Equals, 1)
+	c.Assert(orderMap[3], Equals, 2)
+	c.Assert(orderMap[4], Equals, 0)
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreremoved(c *C) {
@@ -223,9 +223,9 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreremoved(c *C)
 
 	orderMap := createOrderOfArgs(*step1, *step2)
 
-	c.Assert(orderMap[0].index, Equals, 3)
-	c.Assert(orderMap[1].index, Equals, 1)
-	c.Assert(orderMap[2].index, Equals, 2)
+	c.Assert(orderMap[0], Equals, 3)
+	c.Assert(orderMap[1], Equals, 1)
+	c.Assert(orderMap[2], Equals, 2)
 }
 
 func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
