@@ -96,6 +96,7 @@ func refactorSteps(oldStep string) {
 			saveFile(fileName, concept, true)
 		}
 	}
+	agent.requestRunnerForRefactoring()
 }
 
 func saveFile(fileName string, content string, backup bool) {

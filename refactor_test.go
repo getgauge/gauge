@@ -197,7 +197,8 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "a"}}}
 
-	orderMap := createOrderOfArgs(*step1, *step2)
+	agent := &rephraseRefactorer{step1, step2}
+	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)
 	c.Assert(orderMap[1], Equals, 1)
@@ -208,7 +209,8 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "e"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "a"}}}
 
-	orderMap := createOrderOfArgs(*step1, *step2)
+	agent := &rephraseRefactorer{step1, step2}
+	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)
 	c.Assert(orderMap[1], Equals, -1)
@@ -217,11 +219,12 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
 	c.Assert(orderMap[4], Equals, 0)
 }
 
-func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreremoved(c *C) {
+func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreRemoved(c *C) {
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "b"}, &stepArg{name: "c"}}}
 
-	orderMap := createOrderOfArgs(*step1, *step2)
+	agent := &rephraseRefactorer{step1, step2}
+	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)
 	c.Assert(orderMap[1], Equals, 1)
@@ -355,4 +358,43 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromMiddle(c *C) {
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "id")
+}
+
+func (s *MySuite) TestGenerateNewStepNameGivesLineTextWithActualParamNames(c *C) {
+	args := []string{"name", "address", "id"}
+	newStep := "second step <a> and <b> and <d>"
+	orderMap := make(map[int]int)
+	orderMap[0] = 1
+	orderMap[1] = 2
+	orderMap[2] = 0
+	agent, _ := getRefactorAgent(newStep, newStep)
+	linetext := agent.generateNewStepName(args, orderMap)
+
+	c.Assert(linetext, Equals, "second step <address> and <id> and <name>")
+}
+
+func (s *MySuite) TestGenerateNewStepNameWhenParametersAreAdded(c *C) {
+	args := []string{"name", "address"}
+	newStep := "changed step <a> and <b> and \"id\""
+	orderMap := make(map[int]int)
+	orderMap[0] = 1
+	orderMap[1] = 0
+	orderMap[2] = -1
+	agent, _ := getRefactorAgent(newStep, newStep)
+	linetext := agent.generateNewStepName(args, orderMap)
+
+	c.Assert(linetext, Equals, "changed step <address> and <name> and \"id\"")
+}
+
+func (s *MySuite) TestGenerateNewStepNameWhenParametersAreRemoved(c *C) {
+	args := []string{"name", "address", "desc"}
+	newStep := "changed step <b> and \"id\""
+	orderMap := make(map[int]int)
+	orderMap[0] = 1
+	orderMap[1] = -1
+	orderMap[2] = -1
+	agent, _ := getRefactorAgent(newStep, newStep)
+	linetext := agent.generateNewStepName(args, orderMap)
+
+	c.Assert(linetext, Equals, "changed step <address> and \"id\"")
 }

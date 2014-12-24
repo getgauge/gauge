@@ -862,3 +862,24 @@ func (self *step) copyFrom(another *step) {
 	self.lookup = another.lookup
 	self.parent = another.parent
 }
+
+func convertToStepText(fragments []*Fragment) string {
+	stepText := ""
+	for _, fragment := range fragments {
+		value := ""
+		if fragment.GetFragmentType() == Fragment_Text {
+			value = fragment.GetText()
+		} else {
+			switch fragment.GetParameter().GetParameterType() {
+			case Parameter_Static:
+				value = fmt.Sprintf("\"%s\"", fragment.GetParameter().GetValue())
+				break
+			case Parameter_Dynamic:
+				value = fmt.Sprintf("<%s>", fragment.GetParameter().GetValue())
+				break
+			}
+		}
+		stepText += value
+	}
+	return stepText
+}
