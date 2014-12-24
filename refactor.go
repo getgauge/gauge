@@ -1,27 +1,11 @@
 package main
 
-import ()
-
-const ERROR_MESSAGE = "No Refactoring Agent Present"
-
-type refactorAgent interface {
-	refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool)
-}
-
-type renameRefactorer struct {
+type rephraseRefactorer struct {
 	oldStep *step
 	newStep *step
 }
 
-type RefactoringError struct {
-	errorMessage string
-}
-
-func (error *RefactoringError) Error() string {
-	return error.errorMessage
-}
-
-func (agent *renameRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
+func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
 	specsRefactored := make(map[*specification]bool, 0)
 	conceptFilesRefactored := make(map[string]bool, 0)
 	orderMap := createOrderOfArgs(*agent.oldStep, *agent.newStep)
@@ -58,7 +42,7 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
+func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, error) {
 	parser := new(specParser)
 	stepTokens, err := parser.generateTokens("* " + oldStepText + "\n" + "*" + newStepText)
 	if err != nil {
@@ -73,5 +57,5 @@ func getRefactorAgent(oldStepText, newStepText string) (refactorAgent, error) {
 		}
 		steps = append(steps, step)
 	}
-	return &renameRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 }

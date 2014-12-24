@@ -67,17 +67,23 @@ func refactorSteps(oldStep string) {
 	if oldStep == flag.Args()[0] {
 		return
 	}
-	projectRoot, _ := common.GetProjectRoot()
+	projectRoot, err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Printf("Failed to find project root: %s", err)
+		os.Exit(1)
+	}
 	specs, specParseResult := findSpecs(projectRoot, &conceptDictionary{})
 	handleParseResult(specParseResult...)
+
 	agent, err := getRefactorAgent(oldStep, flag.Args()[0])
 	if err != nil {
-		fmt.Printf(err.Error())
-		return
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 	conceptDictionary, parseResult := createConceptsDictionary(false)
 	handleParseResult(parseResult)
 	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
+
 	for _, spec := range specs {
 		if specsRefactored[spec] {
 			formatted := formatSpecification(spec)
