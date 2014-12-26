@@ -1,10 +1,10 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/golang/protobuf/proto"
 	"log"
 	"net"
 	"path"

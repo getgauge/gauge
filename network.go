@@ -2,10 +2,10 @@ package main
 
 import (
 	"bytes"
-	"code.google.com/p/goprotobuf/proto"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/golang/protobuf/proto"
 	"net"
 	"os"
 	"strconv"

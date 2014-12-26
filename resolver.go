@@ -1,11 +1,11 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
 	"encoding/csv"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/golang/protobuf/proto"
 	"regexp"
 	"strings"
 )
