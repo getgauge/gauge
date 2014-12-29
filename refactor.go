@@ -68,6 +68,8 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
+	loadGaugeEnvironment()
+	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
 	if err != nil {
 		fmt.Printf("Failed to connect to test runner: %s", err)
@@ -94,11 +96,11 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 
 //Todo: Check for inline tables
 func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner) (*Message, error) {
-	stepNames := agent.getStepNameFromRunner(runner)
-	if len(stepNames) == 0 {
+	isStepPresent,stepName := agent.getStepNameFromRunner(runner)
+	if !isStepPresent {
 		return nil, errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
 	}
-	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepNames)
+	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
 	}
@@ -127,13 +129,13 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) []string {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (bool,string) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForGaugeMessage(stepNameMessage, runner.connection)
 	if err != nil || responseMessage.GetMessageType() != Message_StepNameResponse {
-		return make([]string, 0)
+		return false,""
 	}
-	return responseMessage.GetStepNameResponse().GetStepName()
+	return responseMessage.GetStepNameResponse().GetIsStepPresent(),responseMessage.GetStepNameResponse().GetStepName()
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
@@ -144,7 +146,6 @@ func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) 
 	return paramPositions
 }
 
-func (agent *rephraseRefactorer) getStepValueFor(step *step, stepNames []string) (*stepValue, error) {
-	index := SliceIndex(len(stepNames), func(i int) bool { return step.value == stepNames[i] })
-	return extractStepValueAndParams(stepNames[index], false)
+func (agent *rephraseRefactorer) getStepValueFor(step *step, stepName string) (*stepValue, error) {
+	return extractStepValueAndParams(stepName, false)
 }
