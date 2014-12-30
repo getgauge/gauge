@@ -1,9 +1,9 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
 	"errors"
 	"fmt"
+	"github.com/golang/protobuf/proto"
 	"os"
 )
 
@@ -96,7 +96,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 
 //Todo: Check for inline tables
 func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner) (*Message, error) {
-	isStepPresent,stepName := agent.getStepNameFromRunner(runner)
+	isStepPresent, stepName := agent.getStepNameFromRunner(runner)
 	if !isStepPresent {
 		return nil, errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
 	}
@@ -129,13 +129,13 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (bool,string) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (bool, string) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForGaugeMessage(stepNameMessage, runner.connection)
 	if err != nil || responseMessage.GetMessageType() != Message_StepNameResponse {
-		return false,""
+		return false, ""
 	}
-	return responseMessage.GetStepNameResponse().GetIsStepPresent(),responseMessage.GetStepNameResponse().GetStepName()
+	return responseMessage.GetStepNameResponse().GetIsStepPresent(), responseMessage.GetStepNameResponse().GetStepName()
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
