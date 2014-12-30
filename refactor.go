@@ -86,10 +86,10 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
 	response, err := getResponseForGaugeMessage(refactorRequest, testRunner.connection)
 	if err != nil {
-		fmt.Sprintf("Failed to perform refactoring in code: %s", err)
+		fmt.Printf("Failed to perform refactoring in code: %s", err)
 		os.Exit(1)
 	} else if !response.GetRefactorResponse().GetSuccess() {
-		fmt.Sprintf("Failed to perform refactoring in code: %s", response.GetRefactorResponse().GetError())
+		fmt.Printf("Failed to perform refactoring in code: %s", response.GetRefactorResponse().GetError())
 		os.Exit(1)
 	}
 }
