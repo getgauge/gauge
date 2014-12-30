@@ -1,12 +1,12 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/golang/protobuf/proto"
 	"net"
 	"os/exec"
 	"path"

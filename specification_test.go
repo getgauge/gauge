@@ -1,7 +1,7 @@
 package main
 
 import (
-	"code.google.com/p/goprotobuf/proto"
+	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 

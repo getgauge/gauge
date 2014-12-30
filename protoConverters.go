@@ -1,6 +1,6 @@
 package main
 
-import "code.google.com/p/goprotobuf/proto"
+import "github.com/golang/protobuf/proto"
 
 func convertToProtoItem(item item) *ProtoItem {
 	switch item.kind() {
