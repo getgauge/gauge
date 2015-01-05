@@ -46,24 +46,35 @@ func (table *table) addHeaders(columnNames []string) {
 }
 
 func (table *table) addRowValues(rowValues []string) {
-	for i, value := range rowValues {
-		table.columns[i] = append(table.columns[i], getTableCell(strings.TrimSpace(value)))
+	tableCells := table.createTableCells(rowValues)
+	table.addRows(tableCells)
+}
+
+func (table *table) createTableCells(rowValues []string) []tableCell {
+	tableCells := make([]tableCell, 0)
+	for _, value := range rowValues {
+		tableCells = append(tableCells, getTableCell(strings.TrimSpace(value)))
 	}
-	if len(table.headers) > len(rowValues) {
-		for i := len(rowValues); i < len(table.headers); i++ {
-			table.columns[i] = append(table.columns[i], getDefaultTableCell())
+	return tableCells
+}
+
+func (table *table) toHeaderSizeRow(rows []tableCell) []tableCell {
+	finalCells := make([]tableCell, 0)
+	for i, _ := range table.headers {
+		var cell tableCell
+		if len(rows)-1 >= i {
+			cell = rows[i]
+		} else {
+			cell = getDefaultTableCell()
 		}
+		finalCells = append(finalCells, cell)
 	}
+	return finalCells
 }
 
 func (table *table) addRows(rows []tableCell) {
-	for i, value := range rows {
+	for i, value := range table.toHeaderSizeRow(rows) {
 		table.columns[i] = append(table.columns[i], value)
-	}
-	if len(table.headers) > len(rows) {
-		for i := len(rows); i < len(table.headers); i++ {
-			table.columns[i] = append(table.columns[i], getDefaultTableCell())
-		}
 	}
 }
 

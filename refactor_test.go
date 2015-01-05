@@ -197,7 +197,7 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "a"}}}
 
-	agent := &rephraseRefactorer{step1, step2}
+	agent := &rephraseRefactorer{step1, step2, false}
 	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)
@@ -209,7 +209,7 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "e"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "a"}}}
 
-	agent := &rephraseRefactorer{step1, step2}
+	agent := &rephraseRefactorer{step1, step2, false}
 	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)
@@ -223,7 +223,7 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreRemoved(c *C)
 	step1 := &step{args: []*stepArg{&stepArg{name: "a"}, &stepArg{name: "b"}, &stepArg{name: "c"}, &stepArg{name: "d"}}}
 	step2 := &step{args: []*stepArg{&stepArg{name: "d"}, &stepArg{name: "b"}, &stepArg{name: "c"}}}
 
-	agent := &rephraseRefactorer{step1, step2}
+	agent := &rephraseRefactorer{step1, step2, false}
 	orderMap := agent.createOrderOfArgs()
 
 	c.Assert(orderMap[0], Equals, 3)

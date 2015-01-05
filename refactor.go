@@ -8,8 +8,9 @@ import (
 )
 
 type rephraseRefactorer struct {
-	oldStep *step
-	newStep *step
+	oldStep   *step
+	newStep   *step
+	isConcept bool
 }
 
 func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
@@ -19,16 +20,18 @@ func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictio
 	for _, spec := range *specs {
 		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep, orderMap)
 	}
+	isConcept := false
 	for _, concept := range conceptDictionary.conceptsMap {
 		_, ok := conceptFilesRefactored[concept.fileName]
 		conceptFilesRefactored[concept.fileName] = !ok && false || conceptFilesRefactored[concept.fileName]
 		for _, item := range concept.conceptStep.items {
 			isRefactored := conceptFilesRefactored[concept.fileName]
 			conceptFilesRefactored[concept.fileName] = item.kind() == stepKind &&
-				item.(*step).rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap) ||
+				item.(*step).rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
 				isRefactored
 		}
 	}
+	agent.isConcept = isConcept
 	return specsRefactored, conceptFilesRefactored
 }
 
@@ -68,6 +71,9 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
+	if agent.isConcept {
+		return
+	}
 	loadGaugeEnvironment()
 	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
@@ -78,18 +84,22 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 	refactorRequest, err := agent.createRefactorRequest(testRunner)
 	if err != nil {
 		fmt.Printf("Failed to create refactoring request: %s", err)
+		testRunner.kill()
 		os.Exit(1)
 	}
 	agent.sendRefactorRequest(testRunner, refactorRequest)
+	testRunner.kill()
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
 	response, err := getResponseForGaugeMessage(refactorRequest, testRunner.connection)
 	if err != nil {
+		testRunner.kill()
 		fmt.Printf("Failed to perform refactoring in code: %s", err)
 		os.Exit(1)
 	} else if !response.GetRefactorResponse().GetSuccess() {
 		fmt.Printf("Failed to perform refactoring in code: %s", response.GetRefactorResponse().GetError())
+		testRunner.kill()
 		os.Exit(1)
 	}
 }

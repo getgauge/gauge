@@ -28,12 +28,43 @@ func (s *MySuite) TestShouldAddHeaders(c *C) {
 	c.Assert(table.headers[2], Equals, "three")
 }
 
-func (s *MySuite) TestShouldAddRows(c *C) {
+func (s *MySuite) TestShouldAddRowValues(c *C) {
 	var table table
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
 	table.addRowValues([]string{"john", "jim"})
+
+	c.Assert(table.getRowCount(), Equals, 2)
+	column1 := table.get("one")
+	c.Assert(len(column1), Equals, 2)
+	c.Assert(column1[0].value, Equals, "foo")
+	c.Assert(column1[0].cellType, Equals, static)
+	c.Assert(column1[1].value, Equals, "john")
+	c.Assert(column1[1].cellType, Equals, static)
+
+	column2 := table.get("two")
+	c.Assert(len(column2), Equals, 2)
+	c.Assert(column2[0].value, Equals, "bar")
+	c.Assert(column2[0].cellType, Equals, static)
+	c.Assert(column2[1].value, Equals, "jim")
+	c.Assert(column2[1].cellType, Equals, static)
+
+	column3 := table.get("three")
+	c.Assert(len(column3), Equals, 2)
+	c.Assert(column3[0].value, Equals, "baz")
+	c.Assert(column3[0].cellType, Equals, static)
+	c.Assert(column3[1].value, Equals, "")
+	c.Assert(column3[1].cellType, Equals, static)
+
+}
+
+func (s *MySuite) TestShouldAddRows(c *C) {
+	var table table
+
+	table.addHeaders([]string{"one", "two", "three"})
+	table.addRows([]tableCell{tableCell{"foo", static}, tableCell{"bar", static}, tableCell{"baz", static}})
+	table.addRows([]tableCell{tableCell{"john", static}, tableCell{"jim", static}})
 
 	c.Assert(table.getRowCount(), Equals, 2)
 	column1 := table.get("one")
@@ -100,4 +131,25 @@ func (s *MySuite) TestGetRows(c *C) {
 	c.Assert(secondRow[0], Equals, "john")
 	c.Assert(secondRow[1], Equals, "jim")
 	c.Assert(secondRow[2], Equals, "jack")
+}
+
+func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
+	var table table
+	table.addHeaders([]string{"id", "name"})
+
+	firstRow := table.toHeaderSizeRow([]tableCell{tableCell{"123", static}, tableCell{"foo", static}})
+	secondRow := table.toHeaderSizeRow([]tableCell{tableCell{"jim", static}, tableCell{"jack", static}})
+	thirdRow := table.toHeaderSizeRow([]tableCell{tableCell{"789", static}})
+
+	c.Assert(len(firstRow), Equals, 2)
+	c.Assert(firstRow[0].value, Equals, "123")
+	c.Assert(firstRow[1].value, Equals, "foo")
+
+	c.Assert(len(secondRow), Equals, 2)
+	c.Assert(secondRow[0].value, Equals, "jim")
+	c.Assert(secondRow[1].value, Equals, "jack")
+
+	c.Assert(len(thirdRow), Equals, 2)
+	c.Assert(thirdRow[0].value, Equals, "789")
+	c.Assert(thirdRow[1].value, Equals, "")
 }
