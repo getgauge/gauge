@@ -78,18 +78,22 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 	refactorRequest, err := agent.createRefactorRequest(testRunner)
 	if err != nil {
 		fmt.Printf("Failed to create refactoring request: %s", err)
+		testRunner.kill()
 		os.Exit(1)
 	}
 	agent.sendRefactorRequest(testRunner, refactorRequest)
+	testRunner.kill()
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
 	response, err := getResponseForGaugeMessage(refactorRequest, testRunner.connection)
 	if err != nil {
+		testRunner.kill()
 		fmt.Printf("Failed to perform refactoring in code: %s", err)
 		os.Exit(1)
 	} else if !response.GetRefactorResponse().GetSuccess() {
 		fmt.Printf("Failed to perform refactoring in code: %s", response.GetRefactorResponse().GetError())
+		testRunner.kill()
 		os.Exit(1)
 	}
 }
