@@ -8,8 +8,9 @@ import (
 )
 
 type rephraseRefactorer struct {
-	oldStep *step
-	newStep *step
+	oldStep   *step
+	newStep   *step
+	isConcept bool
 }
 
 func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
@@ -19,16 +20,18 @@ func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictio
 	for _, spec := range *specs {
 		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep, orderMap)
 	}
+	isConcept := false
 	for _, concept := range conceptDictionary.conceptsMap {
 		_, ok := conceptFilesRefactored[concept.fileName]
 		conceptFilesRefactored[concept.fileName] = !ok && false || conceptFilesRefactored[concept.fileName]
 		for _, item := range concept.conceptStep.items {
 			isRefactored := conceptFilesRefactored[concept.fileName]
 			conceptFilesRefactored[concept.fileName] = item.kind() == stepKind &&
-				item.(*step).rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap) ||
+				item.(*step).rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
 				isRefactored
 		}
 	}
+	agent.isConcept = isConcept
 	return specsRefactored, conceptFilesRefactored
 }
 
@@ -68,6 +71,9 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
+	if agent.isConcept {
+		return
+	}
 	loadGaugeEnvironment()
 	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
