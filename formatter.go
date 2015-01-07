@@ -28,9 +28,20 @@ func formatScenarioHeading(scenarioHeading string) string {
 }
 
 func formatStep(step *step) string {
-	text := step.lineText
-	if step.hasInlineTable {
-		text += "\n" + formatTable(&step.args[len(step.args)-1].table)
+	text := step.value
+	paramCount := strings.Count(text, PARAMETER_PLACEHOLDER)
+	for i := 0; i < paramCount; i++ {
+		argument := step.args[i]
+		formattedArg := ""
+		if argument.argType == tableArg || argument.argType == specialTable {
+			formattedTable := formatTable(&argument.table)
+			formattedArg = fmt.Sprintf("\n%s", formattedTable)
+		} else if argument.argType == dynamic {
+			formattedArg = fmt.Sprintf("<%s>", argument.value)
+		} else {
+			formattedArg = fmt.Sprintf("\"%s\"", argument.value)
+		}
+		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
