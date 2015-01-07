@@ -1,6 +1,9 @@
 package main
 
-import "reflect"
+import (
+	"reflect"
+	"strconv"
+)
 
 func isInState(currentState int, statesToCheck ...int) bool {
 	var mask int
@@ -78,4 +81,9 @@ func getIndexFor(scenario *scenario, scenarios []*scenario) int {
 		}
 	}
 	return -1
+}
+
+func getUnescapedString(string1 string) string {
+	unescaped := strconv.Quote(string1)
+	return unescaped[1 : len(unescaped)-1]
 }

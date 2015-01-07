@@ -149,3 +149,18 @@ func (s *MySuite) TestSpecBuilderWithSampleSpec(c *C) {
 	spec := SpecBuilder().specHeading("spec heading").tags("tag1", "tag2").step("context here").scenarioHeading("scenario heading").text("comment").step("sample step").scenarioHeading("scenario 2").step("step 2")
 	c.Assert(spec.String(), Equals, "#spec heading\ntags: tag1,tag2\n* context here\n##scenario heading\ncomment\n* sample step\n##scenario 2\n* step 2\n")
 }
+
+func (s *MySuite) TestUnescapedString(c *C) {
+	unEscapedString := getUnescapedString("hello \n \"world")
+	c.Assert(unEscapedString, Equals, "hello \\n \\\"world")
+
+	unEscapedString = getUnescapedString("\"hello \n \"world\"\"")
+	c.Assert(unEscapedString, Equals, "\\\"hello \\n \\\"world\\\"\\\"")
+
+	unEscapedString = getUnescapedString("\"\"")
+	c.Assert(unEscapedString, Equals, "\\\"\\\"")
+
+	unEscapedString = getUnescapedString("")
+	c.Assert(unEscapedString, Equals, "")
+
+}

@@ -73,3 +73,13 @@ tags: tag3, tag4
 `)
 
 }
+
+func (s *MySuite) TestFormatStep(c *C) {
+	step := &step{value: "my step with {}, {}, {} and {}", args: []*stepArg{&stepArg{value: "static \"foo\"", argType: static},
+		&stepArg{value: "dynamic \"foo\"", argType: dynamic},
+		&stepArg{name: "file:user\".txt", argType: specialString},
+		&stepArg{name: "table :hell\".csv", argType: specialTable}}}
+	formatted := formatStep(step)
+	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic \"foo\">, <file:user\".txt> and <table :hell\".csv>
+`)
+}

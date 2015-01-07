@@ -33,13 +33,15 @@ func formatStep(step *step) string {
 	for i := 0; i < paramCount; i++ {
 		argument := step.args[i]
 		formattedArg := ""
-		if argument.argType == tableArg || argument.argType == specialTable {
+		if argument.argType == tableArg {
 			formattedTable := formatTable(&argument.table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
 		} else if argument.argType == dynamic {
-			formattedArg = fmt.Sprintf("<%s>", argument.value)
+			formattedArg = fmt.Sprintf("<%s>", getUnescapedString(argument.value))
+		} else if argument.argType == specialString || argument.argType == specialTable {
+			formattedArg = fmt.Sprintf("<%s>", getUnescapedString(argument.name))
 		} else {
-			formattedArg = fmt.Sprintf("\"%s\"", argument.value)
+			formattedArg = fmt.Sprintf("\"%s\"", getUnescapedString(argument.value))
 		}
 		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
 	}
