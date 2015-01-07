@@ -25,7 +25,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 Scenario Heading
 ----------------
 * Example step
-* Step with inline table
+* Step with inline table 
      |id|name|
      |--|----|
      |1 |foo |
@@ -49,16 +49,27 @@ func (s *MySuite) TestFormatConcepts(c *C) {
 
 func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	tokens := []*token{
-		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: specKind, value: "My Spec Heading", lineNo: 1},
 		&token{kind: tagKind, args: []string{"tag1", "tag2"}, lineNo: 2},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
-		&token{kind: tagKind, args: []string{"tag1", "tag2"}, lineNo: 4},
+		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 4},
 		&token{kind: stepKind, value: "Example step", lineNo: 5, lineText: "Example step"},
 	}
 
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
-	formatSpecification(spec)
-	c.Assert(len(spec.tags.values), Equals, 2)
-	c.Assert(spec.tags.values[0], Equals, "tag1")
-	c.Assert(spec.tags.values[1], Equals, "tag2")
+	formatted := formatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+
+tags: tag1, tag2
+
+Scenario Heading
+----------------
+
+tags: tag3, tag4
+
+* Example step
+`)
+
 }
