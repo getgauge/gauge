@@ -201,6 +201,28 @@ func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, erro
 	return responseMessage, err
 }
 
+func getResponseForMessageWithTimeout(message *Message, conn net.Conn, seconds int) (*Message, error) {
+	timeout := make(chan bool, 1)
+	received := make(chan bool, 1)
+	go func() {
+		time.Sleep((time.Duration(seconds) * time.Second))
+		timeout <- true
+	}()
+	var response *Message
+	var error error
+	go func() {
+		response, error = getResponseForGaugeMessage(message, conn)
+		received <- true
+		close(received)
+	}()
+	select {
+	case <-received:
+		return response, error
+	case <-timeout:
+		return nil, errors.New("Request Timeout")
+	}
+}
+
 func getPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 	if port := os.Getenv(portEnvVariable); port != "" {
 		gport, err := strconv.Atoi(port)

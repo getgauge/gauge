@@ -92,7 +92,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
-	response, err := getResponseForGaugeMessage(refactorRequest, testRunner.connection)
+	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, 60)
 	if err != nil {
 		testRunner.kill()
 		fmt.Printf("Failed to perform refactoring in code: %s", err)
@@ -141,7 +141,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (bool, string) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
-	responseMessage, err := getResponseForGaugeMessage(stepNameMessage, runner.connection)
+	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, 60)
 	if err != nil || responseMessage.GetMessageType() != Message_StepNameResponse {
 		return false, ""
 	}
