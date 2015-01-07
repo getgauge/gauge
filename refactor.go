@@ -83,7 +83,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 	}
 	refactorRequest, err := agent.createRefactorRequest(testRunner)
 	if err != nil {
-		fmt.Printf("Failed to create refactoring request: %s", err)
+		fmt.Printf("%s", err)
 		testRunner.kill()
 		os.Exit(1)
 	}
@@ -108,7 +108,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner) (*Message, error) {
 	isStepPresent, stepName := agent.getStepNameFromRunner(runner)
 	if !isStepPresent {
-		return nil, errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
+		return nil, errors.New(fmt.Sprintf("Changes only in spec and concept files.Step implementation not found: %s", agent.oldStep.lineText))
 	}
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
