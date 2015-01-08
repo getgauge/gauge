@@ -34,8 +34,7 @@ func newGaugeConnectionHandler(port int, messageHandler messageHandler) (*gaugeC
 	return &gaugeConnectionHandler{tcpListener: listener, messageHandler: messageHandler}, nil
 }
 
-func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTimeOut time.Duration) (net.Conn, error) {
-	errChannel := make(chan error)
+func (connectionHandler *gaugeConnectionHandler) acceptConnection(connectionTimeOut time.Duration, errChannel chan error) (net.Conn, error) {
 	connectionChannel := make(chan net.Conn)
 
 	go func() {

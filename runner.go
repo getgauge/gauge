@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -14,8 +15,9 @@ import (
 )
 
 type testRunner struct {
-	cmd        *exec.Cmd
-	connection net.Conn
+	cmd          *exec.Cmd
+	connection   net.Conn
+	errorChannel chan error
 }
 
 type runner struct {
@@ -165,12 +167,14 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		return nil, err
 	}
 	// Wait for the process to exit so we will get a detailed error message
+
+	errChannel := make(chan error)
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			fmt.Printf("Runner exited with error: %s\n", err.Error())
+			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
 		}
 	}()
 
-	return &testRunner{cmd: cmd}, nil
+	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
 }

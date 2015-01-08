@@ -245,7 +245,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := gaugeConnectionHandler.acceptConnection(config.PluginConnectionTimeout())
+			pluginConnection, err := gaugeConnectionHandler.acceptConnection(config.PluginConnectionTimeout(), make(chan error))
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
 				pluginCmd.Process.Kill()
