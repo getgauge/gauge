@@ -95,10 +95,10 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, 60)
 	if err != nil {
 		testRunner.kill()
-		fmt.Printf("Failed to perform refactoring in code: %s", err)
+		fmt.Printf("Effects only in spec and concept files: %s", err)
 		os.Exit(1)
 	} else if !response.GetRefactorResponse().GetSuccess() {
-		fmt.Printf("Failed to perform refactoring in code: %s", response.GetRefactorResponse().GetError())
+		fmt.Printf("Effects only in spec and concept files: %s", response.GetRefactorResponse().GetError())
 		testRunner.kill()
 		os.Exit(1)
 	}
@@ -106,9 +106,9 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 
 //Todo: Check for inline tables
 func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner) (*Message, error) {
-	isStepPresent, stepName := agent.getStepNameFromRunner(runner)
-	if !isStepPresent {
-		return nil, errors.New(fmt.Sprintf("Changes only in spec and concept files.Step implementation not found: %s", agent.oldStep.lineText))
+	err, stepName := agent.getStepNameFromRunner(runner)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Changes only in spec and concept files.%s", err))
 	}
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
@@ -139,13 +139,16 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (bool, string) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, 60)
-	if err != nil || responseMessage.GetMessageType() != Message_StepNameResponse {
-		return false, ""
+	if err != nil {
+		return err, ""
 	}
-	return responseMessage.GetStepNameResponse().GetIsStepPresent(), responseMessage.GetStepNameResponse().GetStepName()
+	if !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
+		return errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText)), ""
+	}
+	return nil, responseMessage.GetStepNameResponse().GetStepName()
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
