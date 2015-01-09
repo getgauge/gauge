@@ -247,7 +247,7 @@ func executeSpecs() {
 		handleParseResult(specParseResults...)
 	}
 	if *executeTags != "" {
-		filterSpecsByTags(&specsToExecute, splitAndTrimTags(*executeTags))
+		filterSpecsByTags(&specsToExecute, *executeTags)
 	}
 	manifest := getProjectManifest()
 	err := startAPIService(0)
@@ -277,6 +277,7 @@ func executeSpecs() {
 	}
 }
 
+
 func printValidationFailures(validationErrors executionValidationErrors) {
 	fmt.Println("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
@@ -294,13 +295,13 @@ func getSpecName(specSource string) string {
 	return specSource
 }
 
-func filterSpecsByTags(specs *[]*specification, tags []string) {
+func filterSpecsByTags(specs *[]*specification, tagExpression string) {
 	filteredSpecs := make([]*specification, 0)
 	for _, spec := range *specs {
 		if spec.tags == nil {
-			spec.filter(newScenarioFilterBasedOnTags(tags, nil))
+			spec.filter(newScenarioFilterBasedOnTags(nil, tagExpression ))
 		} else {
-			spec.filter(newScenarioFilterBasedOnTags(tags, spec.tags.values))
+			spec.filter(newScenarioFilterBasedOnTags(spec.tags.values, tagExpression))
 		}
 		if len(spec.scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
