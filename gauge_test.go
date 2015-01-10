@@ -250,7 +250,7 @@ func (s *MySuite) TestToSortSpecs(c *C) {
 	c.Assert(specs[2].fileName, Equals, spec3.fileName)
 }
 
-func (s *MySuite) TestToFilterSpecsByInvalidTag(c *C) {
+func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
 	myTags := []string{"tag1", "tag2"}
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
@@ -276,5 +276,63 @@ func (s *MySuite) TestToFilterSpecsByInvalidTag(c *C) {
 	c.Assert(specs[0].tags.values[0], Equals, myTags[0])
 	c.Assert(specs[0].tags.values[1], Equals, myTags[1])
 	filterSpecsByTags(&specs, "tag1 & tag2")
+	c.Assert(len(specs), Equals, 1)
+}
+
+func (s *MySuite) TestToEvaluateTagExpression(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: tagKind, args: []string{"tag1"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+		&token{kind: tagKind, args: []string{"tag3"}, lineNo: 5},
+	}
+	spec1, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens1 := []*token{
+		&token{kind: specKind, value: "Spec Heading2", lineNo: 1},
+		&token{kind: tagKind, args: myTags, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+	}
+	spec2, result := new(specParser).createSpecification(tokens1, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	filterSpecsByTags(&specs, "tag1 & tag1 & (tag2 | tag3)")
+	c.Assert(len(specs), Equals, 1)
+}
+
+func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
+		&token{kind: tagKind, args: myTags, lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+	}
+	spec1, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens1 := []*token{
+		&token{kind: specKind, value: "Spec Heading2", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 3},
+	}
+	spec2, result := new(specParser).createSpecification(tokens1, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	c.Assert(specs[0].tags.values[0], Equals, myTags[0])
+	c.Assert(specs[0].tags.values[1], Equals, myTags[1])
+	filterSpecsByTags(&specs, "(tag1 & tag2")
 	c.Assert(len(specs), Equals, 0)
 }

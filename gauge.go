@@ -247,6 +247,11 @@ func executeSpecs() {
 		handleParseResult(specParseResults...)
 	}
 	if *executeTags != "" {
+		_, err := formatAndEvaluateExpression(strings.Replace(*executeTags, " ", "", -1), make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
+		if err != nil {
+			fmt.Printf(err.Error())
+			os.Exit(1)
+		}
 		filterSpecsByTags(&specsToExecute, *executeTags)
 	}
 	manifest := getProjectManifest()
@@ -277,7 +282,6 @@ func executeSpecs() {
 	}
 }
 
-
 func printValidationFailures(validationErrors executionValidationErrors) {
 	fmt.Println("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
@@ -299,7 +303,7 @@ func filterSpecsByTags(specs *[]*specification, tagExpression string) {
 	filteredSpecs := make([]*specification, 0)
 	for _, spec := range *specs {
 		if spec.tags == nil {
-			spec.filter(newScenarioFilterBasedOnTags(nil, tagExpression ))
+			spec.filter(newScenarioFilterBasedOnTags(nil, tagExpression))
 		} else {
 			spec.filter(newScenarioFilterBasedOnTags(spec.tags.values, tagExpression))
 		}

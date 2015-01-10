@@ -1,12 +1,12 @@
 package main
 
 import (
-	"strings"
-	"strconv"
-	"golang.org/x/tools/go/types"
+	"errors"
 	"golang.org/x/tools/go/exact"
-	"log"
+	"golang.org/x/tools/go/types"
 	"regexp"
+	"strconv"
+	"strings"
 )
 
 type scenarioIndexFilterToRetain struct {
@@ -14,8 +14,8 @@ type scenarioIndexFilterToRetain struct {
 	currentScenarioIndex int
 }
 type ScenarioFilterBasedOnTags struct {
-	specTags        []string
-	tagExpression    string
+	specTags      []string
+	tagExpression string
 }
 
 func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
@@ -41,28 +41,37 @@ func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFil
 
 func (filter *ScenarioFilterBasedOnTags) filter(item item) bool {
 	if item.kind() == scenarioKind {
-		if filter.filter(filter.specTags) {
+		if filter.filterTags(filter.specTags) {
+			return false
+		}
+		tags := item.(*scenario).tags
+		if tags == nil {
 			return true
 		}
-		return filter.filterTags(item)
+		return !filter.filterTags(tags.values)
 	}
-	return false
+	return true
 }
 
-func (filter *ScenarioFilterBasedOnTags) filterTags(item item) bool{
-	tagsMap := make(map[string]bool,0)
-	for _,tag := range item.(*scenario).tags.values{
-		tagsMap[tag] = true
+func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
+	tagsMap := make(map[string]bool, 0)
+	for _, tag := range stags {
+		tagsMap[strings.Replace(tag, " ", "", -1)] = true
 	}
-	_, tags := getOperatorsAndOperands(filter.tagExpression)
-	for _,tag := range tags{
-		strings.Replace(filter.tagExpression,tag,strconv.FormatBool(isTagPresent(tagsMap,tag)),-1)
-	}
-	return evaluateExp(filter.tagExpression)
-	
+	value, _ := formatAndEvaluateExpression(strings.Replace(filter.tagExpression, " ", "", -1), tagsMap, isTagPresent)
+	return value
 }
 
-func evaluateExp(tagExpression string) bool {
+func formatAndEvaluateExpression(tagExpression string, tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
+	_, tags := getOperatorsAndOperands(tagExpression)
+	expToBeEvaluated := tagExpression
+	for _, tag := range tags {
+		expToBeEvaluated = strings.Replace(expToBeEvaluated, strings.TrimSpace(tag), strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag))), -1)
+	}
+	return evaluateExp(expToBeEvaluated)
+}
+
+func evaluateExp(tagExpression string) (bool, error) {
 	tre := regexp.MustCompile("true")
 	fre := regexp.MustCompile("false")
 
@@ -70,7 +79,7 @@ func evaluateExp(tagExpression string) bool {
 
 	_, val, err := types.Eval(s, nil, nil)
 	if err != nil {
-		log.Fatal(err)
+		return false, errors.New("Invalid Expression.\n" + err.Error())
 	}
 	res, _ := exact.Uint64Val(val)
 
@@ -81,24 +90,24 @@ func evaluateExp(tagExpression string) bool {
 		final = false
 	}
 
-	return final
+	return final, nil
 }
 
 func isTagPresent(tagsMap map[string]bool, tagName string) bool {
-	_,ok := tagsMap[tagName]
+	_, ok := tagsMap[tagName]
 	return ok
 }
 
-func getOperatorsAndOperands(tagExpression string) ([]string, []string){
-	listOfOperators := make([]string,0)
+func getOperatorsAndOperands(tagExpression string) ([]string, []string) {
+	listOfOperators := make([]string, 0)
 	listOfTags := strings.FieldsFunc(tagExpression, func(r rune) bool {
-			isValidOperator := r == '&' || r == '|'
-			if isValidOperator {
-				operator, _ := strconv.Unquote(strconv.QuoteRuneToASCII(r))
-				listOfOperators = append(listOfOperators, operator)
-				return isValidOperator
-			}
-			return false
-		})
+		isValidOperator := r == '&' || r == '|' || r == '(' || r == ')'
+		if isValidOperator {
+			operator, _ := strconv.Unquote(strconv.QuoteRuneToASCII(r))
+			listOfOperators = append(listOfOperators, operator)
+			return isValidOperator
+		}
+		return false
+	})
 	return listOfOperators, listOfTags
 }
