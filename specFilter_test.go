@@ -113,3 +113,18 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingOfSpaces(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 & tag3"}
 	c.Assert(filter.filterTags([]string{"tag 1", "tag3"}), Equals, true)
 }
+
+func (s *MySuite) TestToEvaluateTagExpressionConsistingLogicalNotOperator(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "!tag 1 & tag3"}
+	c.Assert(filter.filterTags([]string{"tag2", "tag3"}), Equals, true)
+}
+
+func (s *MySuite) TestToEvaluateTagExpressionConsistingComma(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 , tag3"}
+	c.Assert(filter.filterTags([]string{"tag2", "tag3"}), Equals, false)
+}
+
+func (s *MySuite) TestToEvaluateTagExpressionConsistingCommaGivesTrue(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 , tag3"}
+	c.Assert(filter.filterTags([]string{"tag1", "tag3"}), Equals, true)
+}

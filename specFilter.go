@@ -58,20 +58,24 @@ func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 	for _, tag := range stags {
 		tagsMap[strings.Replace(tag, " ", "", -1)] = true
 	}
-	value, _ := formatAndEvaluateExpression(strings.Replace(filter.tagExpression, " ", "", -1), tagsMap, isTagPresent)
+	filter.replaceSpecialChar()
+	value, _ := filter.formatAndEvaluateExpression(tagsMap, filter.isTagPresent)
 	return value
 }
+func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
+	filter.tagExpression = strings.Replace(strings.Replace(filter.tagExpression, " ", "", -1), ",", "&", -1)
+}
 
-func formatAndEvaluateExpression(tagExpression string, tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
-	_, tags := getOperatorsAndOperands(tagExpression)
-	expToBeEvaluated := tagExpression
+func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
+	_, tags := filter.getOperatorsAndOperands()
+	expToBeEvaluated := filter.tagExpression
 	for _, tag := range tags {
 		expToBeEvaluated = strings.Replace(expToBeEvaluated, strings.TrimSpace(tag), strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag))), -1)
 	}
-	return evaluateExp(expToBeEvaluated)
+	return filter.evaluateExp(expToBeEvaluated)
 }
 
-func evaluateExp(tagExpression string) (bool, error) {
+func (filter *ScenarioFilterBasedOnTags) evaluateExp(tagExpression string) (bool, error) {
 	tre := regexp.MustCompile("true")
 	fre := regexp.MustCompile("false")
 
@@ -93,14 +97,18 @@ func evaluateExp(tagExpression string) (bool, error) {
 	return final, nil
 }
 
-func isTagPresent(tagsMap map[string]bool, tagName string) bool {
+func (filter *ScenarioFilterBasedOnTags) isTagPresent(tagsMap map[string]bool, tagName string) bool {
+	if strings.Contains(tagName, "!") {
+		_, ok := tagsMap[strings.Replace(tagName, "!", "", -1)]
+		return !ok
+	}
 	_, ok := tagsMap[tagName]
 	return ok
 }
 
-func getOperatorsAndOperands(tagExpression string) ([]string, []string) {
+func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []string) {
 	listOfOperators := make([]string, 0)
-	listOfTags := strings.FieldsFunc(tagExpression, func(r rune) bool {
+	listOfTags := strings.FieldsFunc(filter.tagExpression, func(r rune) bool {
 		isValidOperator := r == '&' || r == '|' || r == '(' || r == ')'
 		if isValidOperator {
 			operator, _ := strconv.Unquote(strconv.QuoteRuneToASCII(r))

@@ -247,7 +247,9 @@ func executeSpecs() {
 		handleParseResult(specParseResults...)
 	}
 	if *executeTags != "" {
-		_, err := formatAndEvaluateExpression(strings.Replace(*executeTags, " ", "", -1), make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
+		filter := &ScenarioFilterBasedOnTags{tagExpression: *executeTags}
+		filter.replaceSpecialChar()
+		_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
 		if err != nil {
 			fmt.Printf(err.Error())
 			os.Exit(1)
