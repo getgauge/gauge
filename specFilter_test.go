@@ -142,3 +142,11 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagNames(c 
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "true , false"}
 	c.Assert(filter.filterTags([]string{"true", "false"}), Equals, true)
 }
+func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagSDFNames(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "!true"}
+	c.Assert(filter.filterTags(nil), Equals, true)
+}
+func (s *MySuite) TestToEvaluateTagExpressionConsistingSpecialCharacters(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "a && b || c | b & b"}
+	c.Assert(filter.filterTags([]string{"a", "b"}), Equals, true)
+}

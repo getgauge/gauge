@@ -14,8 +14,9 @@ type scenarioIndexFilterToRetain struct {
 	currentScenarioIndex int
 }
 type ScenarioFilterBasedOnTags struct {
-	specTags      []string
-	tagExpression string
+	specTags       []string
+	tagExpression  string
+	isSpecSelected bool
 }
 
 func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
@@ -36,17 +37,21 @@ func (filter *scenarioIndexFilterToRetain) filter(item item) bool {
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
-	return &ScenarioFilterBasedOnTags{specTags, tagExp}
+	return &ScenarioFilterBasedOnTags{specTags, tagExp, false}
 }
 
 func (filter *ScenarioFilterBasedOnTags) filter(item item) bool {
 	if item.kind() == scenarioKind {
+		if filter.isSpecSelected {
+			return false
+		}
 		if filter.filterTags(filter.specTags) {
+			filter.isSpecSelected = true
 			return false
 		}
 		tags := item.(*scenario).tags
 		if tags == nil {
-			return true
+			return !filter.filterTags(make([]string, 0))
 		}
 		return !filter.filterTags(tags.values)
 	}
@@ -63,7 +68,7 @@ func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 	return value
 }
 func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
-	filter.tagExpression = strings.Replace(strings.Replace(filter.tagExpression, " ", "", -1), ",", "&", -1)
+	filter.tagExpression = strings.Replace(strings.Replace(strings.Replace(strings.Replace(filter.tagExpression, " ", "", -1), ",", "&", -1), "&&", "&", -1), "||", "|", -1)
 }
 
 func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
