@@ -271,7 +271,9 @@ func crossCompileGauge() {
 func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeFiles(deployDir)
-	mirrorDir(deployDir, *gaugeInstallPrefix)
+	if err := mirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
+		panic(fmt.Sprintf("[Error] Could not install gauge : %s", err))
+	}
 }
 
 func createGaugeDistributables(forAllPlatforms bool) {
