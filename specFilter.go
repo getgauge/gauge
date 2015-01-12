@@ -81,11 +81,11 @@ func (filter *ScenarioFilterBasedOnTags) evaluateExp(tagExpression string) (bool
 
 	s := fre.ReplaceAllString(tre.ReplaceAllString(tagExpression, "1"), "0")
 
-	_, val, err := types.Eval(s, nil, nil)
+	val, err := types.Eval(s, nil, nil)
 	if err != nil {
 		return false, errors.New("Invalid Expression.\n" + err.Error())
 	}
-	res, _ := exact.Uint64Val(val)
+	res, _ := exact.Uint64Val(val.Value)
 
 	var final bool
 	if res == 1 {
