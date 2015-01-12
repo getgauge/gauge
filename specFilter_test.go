@@ -1,8 +1,6 @@
 package main
 
-import (
-	. "gopkg.in/check.v1"
-)
+import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestScenarioIndexFilter(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
@@ -119,6 +117,18 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingLogicalNotOperator(c *C) 
 	c.Assert(filter.filterTags([]string{"tag2", "tag3"}), Equals, true)
 }
 
+func (s *MySuite) TestToEvaluateTagExpressionConsistingManyLogicalNotOperator(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "!(!(tag 1 | !(tag6 | !(tag5))) & tag2)"}
+	value := filter.filterTags([]string{"tag2", "tag4"})
+	c.Assert(value, Equals, true)
+}
+
+func (s *MySuite) TestToEvaluateTagExpressionConsistingParallelLogicalNotOperator(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "!(tag1) & ! (tag3 & ! (tag3))"}
+	value := filter.filterTags([]string{"tag2", "tag4"})
+	c.Assert(value, Equals, true)
+}
+
 func (s *MySuite) TestToEvaluateTagExpressionConsistingComma(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 , tag3"}
 	c.Assert(filter.filterTags([]string{"tag2", "tag3"}), Equals, false)
@@ -127,4 +137,8 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingComma(c *C) {
 func (s *MySuite) TestToEvaluateTagExpressionConsistingCommaGivesTrue(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 , tag3"}
 	c.Assert(filter.filterTags([]string{"tag1", "tag3"}), Equals, true)
+}
+func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagNames(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "true , false"}
+	c.Assert(filter.filterTags([]string{"true", "false"}), Equals, true)
 }

@@ -72,7 +72,41 @@ func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map
 	for _, tag := range tags {
 		expToBeEvaluated = strings.Replace(expToBeEvaluated, strings.TrimSpace(tag), strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag))), -1)
 	}
-	return filter.evaluateExp(expToBeEvaluated)
+	return filter.evaluateExp(filter.handleNegation(expToBeEvaluated))
+}
+
+func (filter *ScenarioFilterBasedOnTags) handleNegation(tagExpression string) string {
+	tagExpression = strings.Replace(strings.Replace(tagExpression, "!true", "false", -1), "!false", "true", -1)
+	for strings.Contains(tagExpression, "!(") {
+		tagExpression = filter.evaluateBrackets(tagExpression)
+	}
+	return tagExpression
+}
+
+func (filter *ScenarioFilterBasedOnTags) evaluateBrackets(tagExpression string) string {
+	if strings.Contains(tagExpression, "!(") {
+		innerText := filter.resolveBracketExpression(tagExpression)
+		return strings.Replace(tagExpression, "!("+innerText+")", filter.evaluateBrackets(innerText), -1)
+	}
+	value, _ := filter.evaluateExp(tagExpression)
+	return strconv.FormatBool(!value)
+}
+
+func (filter *ScenarioFilterBasedOnTags) resolveBracketExpression(tagExpression string) string {
+	indexOfOpenBracket := strings.Index(tagExpression, "!(") + 1
+	bracketStack := make([]string, 0)
+	i := indexOfOpenBracket
+	for ; i < len(tagExpression); i++ {
+		if tagExpression[i] == '(' {
+			bracketStack = append(bracketStack, "(")
+		} else if tagExpression[i] == ')' {
+			bracketStack = append(bracketStack[:len(bracketStack)-1])
+		}
+		if len(bracketStack) == 0 {
+			break
+		}
+	}
+	return tagExpression[indexOfOpenBracket+1 : i]
 }
 
 func (filter *ScenarioFilterBasedOnTags) evaluateExp(tagExpression string) (bool, error) {
@@ -98,10 +132,6 @@ func (filter *ScenarioFilterBasedOnTags) evaluateExp(tagExpression string) (bool
 }
 
 func (filter *ScenarioFilterBasedOnTags) isTagPresent(tagsMap map[string]bool, tagName string) bool {
-	if strings.Contains(tagName, "!") {
-		_, ok := tagsMap[strings.Replace(tagName, "!", "", -1)]
-		return !ok
-	}
 	_, ok := tagsMap[tagName]
 	return ok
 }
@@ -109,7 +139,7 @@ func (filter *ScenarioFilterBasedOnTags) isTagPresent(tagsMap map[string]bool, t
 func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []string) {
 	listOfOperators := make([]string, 0)
 	listOfTags := strings.FieldsFunc(filter.tagExpression, func(r rune) bool {
-		isValidOperator := r == '&' || r == '|' || r == '(' || r == ')'
+		isValidOperator := r == '&' || r == '|' || r == '(' || r == ')' || r == '!'
 		if isValidOperator {
 			operator, _ := strconv.Unquote(strconv.QuoteRuneToASCII(r))
 			listOfOperators = append(listOfOperators, operator)

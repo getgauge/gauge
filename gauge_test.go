@@ -283,9 +283,9 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 	myTags := []string{"tag1", "tag2"}
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
-		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+		&token{kind: scenarioKind, value: "Scenario Heading 01", lineNo: 2},
 		&token{kind: tagKind, args: []string{"tag1"}, lineNo: 3},
-		&token{kind: scenarioKind, value: "Scenario Heading 2", lineNo: 4},
+		&token{kind: scenarioKind, value: "Scenario Heading 02", lineNo: 4},
 		&token{kind: tagKind, args: []string{"tag3"}, lineNo: 5},
 	}
 	spec1, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
@@ -304,8 +304,11 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 
-	filterSpecsByTags(&specs, "tag1 & tag1 & (tag2 | tag3)")
+	filterSpecsByTags(&specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
 	c.Assert(len(specs), Equals, 1)
+	c.Assert(len(specs[0].scenarios), Equals, 2)
+	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 1")
+	c.Assert(specs[0].scenarios[1].heading.value, Equals, "Scenario Heading 2")
 }
 
 func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
