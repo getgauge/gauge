@@ -238,13 +238,17 @@ func executeSpecs() {
 	specsToExecute := make([]*specification, 0)
 	for _, arg := range flag.Args() {
 		specSource := arg
+		currentSpecsToExecute := make([]*specification,0)
 		var specParseResults []*parseResult
 		if isIndexedSpec(specSource) {
-			specsToExecute, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
+			currentSpecsToExecute, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
 		} else {
-			specsToExecute, specParseResults = findSpecs(specSource, conceptsDictionary)
+			currentSpecsToExecute, specParseResults = findSpecs(specSource, conceptsDictionary)
 		}
 		handleParseResult(specParseResults...)
+		for _,spec := range currentSpecsToExecute {
+			specsToExecute = append(specsToExecute, spec)
+		}
 	}
 	if *executeTags != "" {
 		filter := &ScenarioFilterBasedOnTags{tagExpression: *executeTags}
