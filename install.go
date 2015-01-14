@@ -197,7 +197,7 @@ func getPluginInstallJson(plugin string) (string, error) {
 	}
 	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
 	if downloadErr != nil {
-		return "", errors.New(fmt.Sprintf("Could not find %s file. Check install name and version. %s", versionInstallDescriptionJsonFile, downloadErr.Error()))
+		return "", errors.New(fmt.Sprintf("Could not download %s file. Invalid plugin name", versionInstallDescriptionJsonFile, downloadErr.Error()))
 	}
 	return downloadedFile, nil
 }

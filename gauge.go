@@ -55,6 +55,9 @@ func main() {
 	} else if *refactor != "" {
 		refactorSteps(*refactor)
 	} else {
+		if len(flag.Args()) == 0 {
+			printUsage()
+		}
 		executeSpecs()
 	}
 }
@@ -228,52 +231,24 @@ func addPluginToProject(pluginName string) {
 }
 
 func executeSpecs() {
-	if len(flag.Args()) == 0 {
-		printUsage()
-	}
 	loadGaugeEnvironment()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 
-	specsToExecute := make([]*specification, 0)
-	for _, arg := range flag.Args() {
-		specSource := arg
-		currentSpecsToExecute := make([]*specification,0)
-		var specParseResults []*parseResult
-		if isIndexedSpec(specSource) {
-			currentSpecsToExecute, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
-		} else {
-			currentSpecsToExecute, specParseResults = findSpecs(specSource, conceptsDictionary)
-		}
-		handleParseResult(specParseResults...)
-		for _,spec := range currentSpecsToExecute {
-			specsToExecute = append(specsToExecute, spec)
-		}
-	}
-	if *executeTags != "" {
-		filter := &ScenarioFilterBasedOnTags{tagExpression: *executeTags}
-		filter.replaceSpecialChar()
-		_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
-		if err != nil {
-			fmt.Printf(err.Error())
-			os.Exit(1)
-		}
-		filterSpecsByTags(&specsToExecute, *executeTags)
-	}
+	specsToExecute := getSpecsToExecute(conceptsDictionary)
 	manifest := getProjectManifest()
 	err := startAPIService(0)
 	if err != nil {
 		fmt.Printf("Failed to start gauge API. %s\n", err.Error())
 		os.Exit(1)
 	}
+
 	runner, runnerError := startRunnerAndMakeConnection(manifest)
 	if runnerError != nil {
 		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
-	getSortedSpecsList(specsToExecute)
-	pluginHandler, warnings := startPluginsForExecution(manifest)
-	handleWarningMessages(warnings)
+	pluginHandler := startPlugins(manifest)
 
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
 	validationErrors := execution.validate(conceptsDictionary)
@@ -286,6 +261,22 @@ func executeSpecs() {
 		exitCode := printExecutionStatus(status)
 		os.Exit(exitCode)
 	}
+}
+
+func startPlugins(manifest *manifest) *pluginHandler {
+	pluginHandler, warnings := startPluginsForExecution(manifest)
+	handleWarningMessages(warnings)
+	return pluginHandler
+}
+
+func getSpecsToExecute(conceptsDictionary *conceptDictionary) []*specification {
+	specsToExecute := specsFromArgs(conceptsDictionary)
+
+	if *executeTags != "" {
+		validateTagExpression(*executeTags)
+		specsToExecute = filterSpecsByTags(specsToExecute, *executeTags)
+	}
+	return sortSpecsList(specsToExecute)
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {
@@ -303,21 +294,6 @@ func getSpecName(specSource string) string {
 		specSource, _ = GetIndexedSpecName(specSource)
 	}
 	return specSource
-}
-
-func filterSpecsByTags(specs *[]*specification, tagExpression string) {
-	filteredSpecs := make([]*specification, 0)
-	for _, spec := range *specs {
-		if spec.tags == nil {
-			spec.filter(newScenarioFilterBasedOnTags(nil, tagExpression))
-		} else {
-			spec.filter(newScenarioFilterBasedOnTags(spec.tags.values, tagExpression))
-		}
-		if len(spec.scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
-		}
-	}
-	*specs = filteredSpecs
 }
 
 func (m *manifest) save() error {
@@ -715,13 +691,23 @@ func getSpecFiles(specSource string) []string {
 	return nil
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
-	specName, indexToFilter := GetIndexedSpecName(specSource)
-	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
-	for _, spec := range parsedSpecs {
-		spec.filter(newScenarioIndexFilterToRetain(indexToFilter))
+func filterSpecsByScenarioIndex(specs []*specification, specSource string) []*specification {
+	_, indexToFilter := GetIndexedSpecName(specSource)
+	return filterSpecsItems(specs, newScenarioIndexFilterToRetain(indexToFilter))
+}
+
+func specsFromArgs(conceptDictionary *conceptDictionary) []*specification {
+	allSpecs := make([]*specification, 0)
+	for _, arg := range flag.Args() {
+		specSource := arg
+		specs, specParseResults := findSpecs(specSource, conceptDictionary)
+		if isIndexedSpec(specSource) {
+			specs = filterSpecsByScenarioIndex(specs, specSource)
+		}
+		handleParseResult(specParseResults...)
+		allSpecs = append(allSpecs, specs...)
 	}
-	return parsedSpecs, parseResult
+	return allSpecs
 }
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
@@ -788,6 +774,7 @@ func (s ByFileName) Less(i, j int) bool {
 	return s[i].fileName < s[j].fileName
 }
 
-func getSortedSpecsList(allSpecs []*specification) {
+func sortSpecsList(allSpecs []*specification) []*specification {
 	sort.Sort(ByFileName(allSpecs))
+	return allSpecs
 }

@@ -83,7 +83,7 @@ func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 
 	var specs []*specification
 	specs = append(specs, spec)
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].scenarios), Equals, 1)
 	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 2")
 }
@@ -105,7 +105,7 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 
 	var specs []*specification
 	specs = append(specs, spec)
-	filterSpecsByTags(&specs, "tag3")
+	specs = filterSpecsByTags(specs, "tag3")
 	c.Assert(len(specs), Equals, 0)
 }
 
@@ -128,7 +128,7 @@ func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
 	c.Assert(len(specs[0].scenarios), Equals, 3)
 	c.Assert(len(specs[0].scenarios[0].tags.values), Equals, 1)
 	c.Assert(len(specs[0].scenarios[1].tags.values), Equals, 2)
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].scenarios), Equals, 2)
 	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 2")
 	c.Assert(specs[0].scenarios[1].heading.value, Equals, "Scenario Heading 3")
@@ -159,7 +159,7 @@ func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
 	c.Assert(len(specs[0].scenarios[2].tags.values), Equals, 2)
 	c.Assert(len(specs[0].scenarios[3].tags.values), Equals, 4)
 
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].scenarios), Equals, 3)
 	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 2")
 	c.Assert(specs[0].scenarios[1].heading.value, Equals, "Scenario Heading 3")
@@ -183,7 +183,7 @@ func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
 
 	c.Assert(len(specs[0].scenarios), Equals, 3)
 	c.Assert(len(specs[0].tags.values), Equals, 2)
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].scenarios), Equals, 3)
 	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 1")
 	c.Assert(specs[0].scenarios[1].heading.value, Equals, "Scenario Heading 2")
@@ -226,7 +226,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 	specs = append(specs, spec3)
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs), Equals, 2)
 	c.Assert(len(specs[0].scenarios), Equals, 1)
 	c.Assert(len(specs[1].scenarios), Equals, 1)
@@ -243,7 +243,7 @@ func (s *MySuite) TestToSortSpecs(c *C) {
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 
-	getSortedSpecsList(specs)
+	specs = sortSpecsList(specs)
 
 	c.Assert(specs[0].fileName, Equals, spec1.fileName)
 	c.Assert(specs[1].fileName, Equals, spec2.fileName)
@@ -275,7 +275,7 @@ func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
 
 	c.Assert(specs[0].tags.values[0], Equals, myTags[0])
 	c.Assert(specs[0].tags.values[1], Equals, myTags[1])
-	filterSpecsByTags(&specs, "tag1 & tag2")
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs), Equals, 1)
 }
 
@@ -304,7 +304,7 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 
-	filterSpecsByTags(&specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
+	specs = filterSpecsByTags(specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
 	c.Assert(len(specs), Equals, 1)
 	c.Assert(len(specs[0].scenarios), Equals, 2)
 	c.Assert(specs[0].scenarios[0].heading.value, Equals, "Scenario Heading 1")
@@ -336,6 +336,6 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 
 	c.Assert(specs[0].tags.values[0], Equals, myTags[0])
 	c.Assert(specs[0].tags.values[1], Equals, myTags[1])
-	filterSpecsByTags(&specs, "(tag1 & tag2")
+	specs = filterSpecsByTags(specs, "(tag1 & tag2")
 	c.Assert(len(specs), Equals, 0)
 }

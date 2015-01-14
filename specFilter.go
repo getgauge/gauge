@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"golang.org/x/tools/go/exact"
 	"golang.org/x/tools/go/types"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -153,4 +155,40 @@ func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []
 		return false
 	})
 	return listOfOperators, listOfTags
+}
+
+func filterSpecsItems(specs []*specification, filter specFilter) []*specification {
+	filteredSpecs := make([]*specification, 0)
+	for _, spec := range specs {
+		spec.filter(filter)
+		if len(spec.scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, spec)
+		}
+	}
+	return filteredSpecs
+}
+
+func filterSpecsByTags(specs []*specification, tagExpression string) []*specification {
+	filteredSpecs := make([]*specification, 0)
+	for _, spec := range specs {
+		tagValues := make([]string, 0)
+		if spec.tags != nil {
+			tagValues = spec.tags.values
+		}
+		spec.filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
+		if len(spec.scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, spec)
+		}
+	}
+	return filteredSpecs
+}
+
+func validateTagExpression(tagExpression string) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: tagExpression}
+	filter.replaceSpecialChar()
+	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
+	}
 }
