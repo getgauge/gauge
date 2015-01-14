@@ -85,6 +85,7 @@ func refactorSteps(oldStep string) {
 	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
 	if err != nil {
 		fmt.Printf(err.Error())
+		runner.kill()
 		os.Exit(1)
 	}
 	conceptDictionary, parseResult := createConceptsDictionary(false)
@@ -95,7 +96,9 @@ func refactorSteps(oldStep string) {
 	printSummary(specCount, conceptCount)
 	if isStepPresent {
 		agent.requestRunnerForRefactoring(runner, stepName)
+		return
 	}
+	runner.kill()
 }
 
 func printSummary(specFilesCount int, conceptFilesCount int) {
