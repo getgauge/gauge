@@ -73,16 +73,25 @@ func refactorSteps(oldStep string) {
 	}
 	specs, specParseResult := findSpecs(projectRoot, &conceptDictionary{})
 	handleParseResult(specParseResult...)
-
 	agent, err := getRefactorAgent(oldStep, flag.Args()[0])
 	if err != nil {
 		fmt.Println(err.Error())
 		os.Exit(1)
 	}
+	runner := agent.startRunner()
+	err, stepName := agent.getStepNameFromRunner(runner)
+	if err != nil {
+		fmt.Printf(err.Error())
+		os.Exit(1)
+	}
 	conceptDictionary, parseResult := createConceptsDictionary(false)
 	handleParseResult(parseResult)
 	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
+	writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+	agent.requestRunnerForRefactoring(runner, stepName)
+}
 
+func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) {
 	for _, spec := range specs {
 		if specsRefactored[spec] {
 			formatted := formatSpecification(spec)
@@ -95,7 +104,6 @@ func refactorSteps(oldStep string) {
 			saveFile(fileName, concept, true)
 		}
 	}
-	agent.requestRunnerForRefactoring()
 }
 
 func saveFile(fileName string, content string, backup bool) {
@@ -238,7 +246,7 @@ func executeSpecs() {
 	specsToExecute := make([]*specification, 0)
 	for _, arg := range flag.Args() {
 		specSource := arg
-		currentSpecsToExecute := make([]*specification,0)
+		currentSpecsToExecute := make([]*specification, 0)
 		var specParseResults []*parseResult
 		if isIndexedSpec(specSource) {
 			currentSpecsToExecute, specParseResults = getSpecWithScenarioIndex(specSource, conceptsDictionary)
@@ -246,7 +254,7 @@ func executeSpecs() {
 			currentSpecsToExecute, specParseResults = findSpecs(specSource, conceptsDictionary)
 		}
 		handleParseResult(specParseResults...)
-		for _,spec := range currentSpecsToExecute {
+		for _, spec := range currentSpecsToExecute {
 			specsToExecute = append(specsToExecute, spec)
 		}
 	}
