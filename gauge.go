@@ -79,7 +79,7 @@ func refactorSteps(oldStep string) {
 		os.Exit(1)
 	}
 	runner := agent.startRunner()
-	err, stepName := agent.getStepNameFromRunner(runner)
+	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
 	if err != nil {
 		fmt.Printf(err.Error())
 		os.Exit(1)
@@ -88,7 +88,9 @@ func refactorSteps(oldStep string) {
 	handleParseResult(parseResult)
 	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
 	writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	agent.requestRunnerForRefactoring(runner, stepName)
+	if isStepPresent {
+		agent.requestRunnerForRefactoring(runner, stepName)
+	}
 }
 
 func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) {

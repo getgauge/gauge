@@ -140,20 +140,21 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, 60)
 	if err != nil {
-		return err, ""
+		return err, "", false
 	}
 	if !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		return errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText)), ""
+		fmt.Println("Step implementation not found: " + agent.oldStep.lineText)
+		return nil, "", false
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
-		return errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.",strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), ""
+		return errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), "", false
 	}
 
-	return nil, responseMessage.GetStepNameResponse().GetStepName()[0]
+	return nil, responseMessage.GetStepNameResponse().GetStepName()[0], true
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
