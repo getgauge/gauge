@@ -715,23 +715,27 @@ func getSpecFiles(specSource string) []string {
 	return nil
 }
 
-func filterSpecsByScenarioIndex(specs []*specification, specSource string) []*specification {
-	_, indexToFilter := GetIndexedSpecName(specSource)
-	return filterSpecsItems(specs, newScenarioIndexFilterToRetain(indexToFilter))
-}
-
 func specsFromArgs(conceptDictionary *conceptDictionary) []*specification {
 	allSpecs := make([]*specification, 0)
+	specs := make([]*specification, 0)
+	var specParseResults []*parseResult
 	for _, arg := range flag.Args() {
 		specSource := arg
-		specs, specParseResults := findSpecs(specSource, conceptDictionary)
 		if isIndexedSpec(specSource) {
-			specs = filterSpecsByScenarioIndex(specs, specSource)
+			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)
+		} else {
+			specs, specParseResults = findSpecs(specSource, conceptDictionary)
 		}
 		handleParseResult(specParseResults...)
 		allSpecs = append(allSpecs, specs...)
 	}
 	return allSpecs
+}
+
+func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
+	specName, indexToFilter := GetIndexedSpecName(specSource)
+	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
+	return  filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
 }
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
