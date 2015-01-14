@@ -683,9 +683,10 @@ func (m *GetStepNameRequest) GetStepValue() string {
 }
 
 type GetStepNameResponse struct {
-	IsStepPresent    *bool   `protobuf:"varint,1,req,name=isStepPresent" json:"isStepPresent,omitempty"`
-	StepName         *string `protobuf:"bytes,2,opt,name=stepName" json:"stepName,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	IsStepPresent    *bool    `protobuf:"varint,1,req,name=isStepPresent" json:"isStepPresent,omitempty"`
+	StepName         []string `protobuf:"bytes,2,rep,name=stepName" json:"stepName,omitempty"`
+	HasAlias         *bool    `protobuf:"varint,3,req,name=hasAlias" json:"hasAlias,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *GetStepNameResponse) Reset()         { *m = GetStepNameResponse{} }
@@ -699,11 +700,18 @@ func (m *GetStepNameResponse) GetIsStepPresent() bool {
 	return false
 }
 
-func (m *GetStepNameResponse) GetStepName() string {
-	if m != nil && m.StepName != nil {
-		return *m.StepName
+func (m *GetStepNameResponse) GetStepName() []string {
+	if m != nil {
+		return m.StepName
 	}
-	return ""
+	return nil
+}
+
+func (m *GetStepNameResponse) GetHasAlias() bool {
+	if m != nil && m.HasAlias != nil {
+		return *m.HasAlias
+	}
+	return false
 }
 
 // This is the message which gets transferred all the time

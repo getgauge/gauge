@@ -76,18 +76,39 @@ func refactorSteps(oldStep string) {
 	}
 	specs, specParseResult := findSpecs(projectRoot, &conceptDictionary{})
 	handleParseResult(specParseResult...)
-
 	agent, err := getRefactorAgent(oldStep, flag.Args()[0])
 	if err != nil {
 		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+	runner := agent.startRunner()
+	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
+	if err != nil {
+		fmt.Printf(err.Error())
 		os.Exit(1)
 	}
 	conceptDictionary, parseResult := createConceptsDictionary(false)
 	handleParseResult(parseResult)
 	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
 
+	specCount, conceptCount := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+	printSummary(specCount, conceptCount)
+	if isStepPresent {
+		agent.requestRunnerForRefactoring(runner, stepName)
+	}
+}
+
+func printSummary(specFilesCount int, conceptFilesCount int) {
+	fmt.Println(strconv.Itoa(specFilesCount) + " specifications changed.")
+	fmt.Println(strconv.Itoa(conceptFilesCount) + " concept files changed.")
+}
+
+func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) (int, int) {
+	specFilesCount := 0
+	conceptFilesCount := 0
 	for _, spec := range specs {
 		if specsRefactored[spec] {
+			specFilesCount++
 			formatted := formatSpecification(spec)
 			saveFile(spec.fileName, formatted, true)
 		}
@@ -95,10 +116,11 @@ func refactorSteps(oldStep string) {
 	conceptMap := formatConcepts(conceptDictionary)
 	for fileName, concept := range conceptMap {
 		if conceptFilesRefactored[fileName] {
+			conceptFilesCount++
 			saveFile(fileName, concept, true)
 		}
 	}
-	agent.requestRunnerForRefactoring()
+	return specFilesCount, conceptFilesCount
 }
 
 func saveFile(fileName string, content string, backup bool) {
@@ -234,7 +256,6 @@ func executeSpecs() {
 	loadGaugeEnvironment()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
-
 	specsToExecute := getSpecsToExecute(conceptsDictionary)
 	manifest := getProjectManifest()
 	err := startAPIService(0)

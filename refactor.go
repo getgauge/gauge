@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"os"
+	"strings"
 )
 
 type rephraseRefactorer struct {
@@ -70,18 +71,11 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 }
 
-func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
+func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRunner, stepName string) {
 	if agent.isConcept {
 		return
 	}
-	loadGaugeEnvironment()
-	startAPIService(0)
-	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
-	if err != nil {
-		fmt.Printf("Failed to connect to test runner: %s", err)
-		os.Exit(1)
-	}
-	refactorRequest, err := agent.createRefactorRequest(testRunner)
+	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName)
 	if err != nil {
 		fmt.Printf("%s", err)
 		testRunner.kill()
@@ -89,6 +83,17 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring() {
 	}
 	agent.sendRefactorRequest(testRunner, refactorRequest)
 	testRunner.kill()
+}
+
+func (agent *rephraseRefactorer) startRunner() *testRunner {
+	loadGaugeEnvironment()
+	startAPIService(0)
+	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
+	if err != nil {
+		fmt.Printf("Failed to connect to test runner: %s", err)
+		os.Exit(1)
+	}
+	return testRunner
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
@@ -105,11 +110,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 }
 
 //Todo: Check for inline tables
-func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner) (*Message, error) {
-	err, stepName := agent.getStepNameFromRunner(runner)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Changes only in spec and concept files.%s", err))
-	}
+func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner, stepName string) (*Message, error) {
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
@@ -139,16 +140,21 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, 60)
 	if err != nil {
-		return err, ""
+		return err, "", false
 	}
 	if !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		return errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText)), ""
+		fmt.Println("Step implementation not found: " + agent.oldStep.lineText)
+		return nil, "", false
 	}
-	return nil, responseMessage.GetStepNameResponse().GetStepName()
+	if responseMessage.GetStepNameResponse().GetHasAlias() {
+		return errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), "", false
+	}
+
+	return nil, responseMessage.GetStepNameResponse().GetStepName()[0], true
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
