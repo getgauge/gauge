@@ -87,15 +87,25 @@ func refactorSteps(oldStep string) {
 	conceptDictionary, parseResult := createConceptsDictionary(false)
 	handleParseResult(parseResult)
 	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
-	writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+
+	specCount, conceptCount := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+	printSummary(specCount, conceptCount)
 	if isStepPresent {
 		agent.requestRunnerForRefactoring(runner, stepName)
 	}
 }
 
-func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) {
+func printSummary(specFilesCount int, conceptFilesCount int) {
+	fmt.Println(strconv.Itoa(specFilesCount) + " specifications changed.")
+	fmt.Println(strconv.Itoa(conceptFilesCount) + " concept files changed.")
+}
+
+func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) (int, int) {
+	specFilesCount := 0
+	conceptFilesCount := 0
 	for _, spec := range specs {
 		if specsRefactored[spec] {
+			specFilesCount++
 			formatted := formatSpecification(spec)
 			saveFile(spec.fileName, formatted, true)
 		}
@@ -103,9 +113,11 @@ func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conce
 	conceptMap := formatConcepts(conceptDictionary)
 	for fileName, concept := range conceptMap {
 		if conceptFilesRefactored[fileName] {
+			conceptFilesCount++
 			saveFile(fileName, concept, true)
 		}
 	}
+	return specFilesCount, conceptFilesCount
 }
 
 func saveFile(fileName string, content string, backup bool) {
