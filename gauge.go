@@ -58,7 +58,7 @@ func main() {
 		if len(flag.Args()) == 0 {
 			printUsage()
 		}
-		executeSpecs()
+		executeSpecs(*parallel)
 	}
 }
 
@@ -147,6 +147,7 @@ var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specif
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
+var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
@@ -255,7 +256,7 @@ func addPluginToProject(pluginName string) {
 	}
 }
 
-func executeSpecs() {
+func executeSpecs(inParallel bool) {
 	loadGaugeEnvironment()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
@@ -272,25 +273,29 @@ func executeSpecs() {
 		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
-	pluginHandler := startPlugins(manifest)
+	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 
+	pluginHandler := startPlugins(manifest)
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
-	validationErrors := execution.validate(conceptsDictionary)
-	if len(validationErrors) > 0 {
-		printValidationFailures(validationErrors)
-		execution.stopAllPlugins()
-		os.Exit(1)
-	} else {
-		status := execution.start()
-		exitCode := printExecutionStatus(status)
-		os.Exit(exitCode)
-	}
+	status := execution.start()
+	exitCode := printExecutionStatus(status)
+	pluginHandler.gracefullyKillPlugins()
+	os.Exit(exitCode)
 }
 
 func startPlugins(manifest *manifest) *pluginHandler {
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	handleWarningMessages(warnings)
 	return pluginHandler
+}
+
+func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *testRunner, conceptDictionary *conceptDictionary) {
+	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
+	validationErrors := validator.validate()
+	if len(validationErrors) > 0 {
+		printValidationFailures(validationErrors)
+		os.Exit(1)
+	}
 }
 
 func getSpecsToExecute(conceptsDictionary *conceptDictionary) []*specification {
@@ -735,7 +740,7 @@ func specsFromArgs(conceptDictionary *conceptDictionary) []*specification {
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
-	return  filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
+	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
 }
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {

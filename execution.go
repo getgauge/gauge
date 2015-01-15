@@ -67,24 +67,6 @@ func (e *execution) killPlugins() {
 	e.pluginHandler.gracefullyKillPlugins()
 }
 
-type executionValidationErrors map[*specification][]*stepValidationError
-
-func (exe *execution) validate(conceptDictionary *conceptDictionary) executionValidationErrors {
-	validationStatus := make(executionValidationErrors)
-	for _, spec := range exe.specifications {
-		executor := &specExecutor{specification: spec, runner: exe.runner, conceptDictionary: conceptDictionary}
-		validationErrors := executor.validateSpecification()
-		if len(validationErrors) != 0 {
-			validationStatus[spec] = validationErrors
-		}
-	}
-	if len(validationStatus) > 0 {
-		return validationStatus
-	} else {
-		return nil
-	}
-}
-
 func (exe *execution) start() *suiteResult {
 	exe.suiteResult = newSuiteResult()
 	beforeSuiteHookExecResult := exe.startExecution()
