@@ -276,10 +276,10 @@ func executeSpecs(inParallel bool) {
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler)
+	execution := newExecution(specsToExecute, runner, pluginHandler, inParallel)
+
 	status := execution.start()
 	exitCode := printExecutionStatus(status)
-	pluginHandler.gracefullyKillPlugins()
 	os.Exit(exitCode)
 }
 

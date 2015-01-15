@@ -3,8 +3,7 @@ package main
 
 import "fmt"
 
-type execution struct {
-	manifest             *manifest
+type simpleExecution struct {
 	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
@@ -12,16 +11,22 @@ type execution struct {
 	suiteResult          *suiteResult
 }
 
+type execution interface {
+	start() *suiteResult
+}
+
 type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler) *execution {
-	e := execution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
-	return &e
+func newExecution(specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, inParallel bool) execution {
+	if inParallel {
+		return &parallelSpecExecution{specifications: specifications, runner: runner, pluginHandler: pluginHandler}
+	}
+	return &simpleExecution{specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 }
 
-func (e *execution) startExecution() *ProtoExecutionResult {
+func (e *simpleExecution) startExecution() *ProtoExecutionResult {
 	initSuiteDataStoreMessage := &Message{MessageType: Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &SuiteDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
@@ -33,41 +38,41 @@ func (e *execution) startExecution() *ProtoExecutionResult {
 	return e.executeHook(message)
 }
 
-func (e *execution) endExecution() *ProtoExecutionResult {
+func (e *simpleExecution) endExecution() *ProtoExecutionResult {
 	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	return e.executeHook(message)
 }
 
-func (e *execution) executeHook(message *Message) *ProtoExecutionResult {
+func (e *simpleExecution) executeHook(message *Message) *ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
 	executionResult := executeAndGetStatus(e.runner, message)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
 
-func (e *execution) addExecTime(execTime int64) {
+func (e *simpleExecution) addExecTime(execTime int64) {
 	e.suiteResult.executionTime += execTime
 }
 
-func (e *execution) notifyExecutionResult() {
+func (e *simpleExecution) notifyExecutionResult() {
 	message := &Message{MessageType: Message_SuiteExecutionResult.Enum(),
 		SuiteExecutionResult: &SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.notifyPlugins(message)
 }
 
-func (e *execution) notifyExecutionStop() {
+func (e *simpleExecution) notifyExecutionStop() {
 	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &KillProcessRequest{}}
 	e.pluginHandler.notifyPlugins(message)
 	e.pluginHandler.gracefullyKillPlugins()
 }
 
-func (e *execution) killPlugins() {
+func (e *simpleExecution) killPlugins() {
 	e.pluginHandler.gracefullyKillPlugins()
 }
 
-func (exe *execution) start() *suiteResult {
+func (exe *simpleExecution) start() *suiteResult {
 	exe.suiteResult = newSuiteResult()
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
@@ -90,7 +95,7 @@ func (exe *execution) start() *suiteResult {
 	return exe.suiteResult
 }
 
-func (e *execution) stopAllPlugins() {
+func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.kill(); err != nil {
 		fmt.Printf("[Error] Failed to kill Runner. %s\n", err.Error())
