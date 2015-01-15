@@ -14,6 +14,7 @@ type specValidator struct {
 	runner               *testRunner
 	conceptsDictionary   *conceptDictionary
 	stepValidationErrors []*stepValidationError
+	stepValidationCache  map[string]bool
 }
 
 type stepValidationError struct {
@@ -34,8 +35,9 @@ func newValidator(manifest *manifest, specsToExecute []*specification, runner *t
 
 func (self *validator) validate() executionValidationErrors {
 	validationStatus := make(executionValidationErrors)
+	specValidator := &specValidator{runner: self.runner, conceptsDictionary: self.conceptsDictionary, stepValidationCache: make(map[string]bool)}
 	for _, spec := range self.specsToExecute {
-		specValidator := &specValidator{specification: spec, runner: self.runner, conceptsDictionary: self.conceptsDictionary}
+		specValidator.specification = spec
 		validationErrors := specValidator.validate()
 		if len(validationErrors) != 0 {
 			validationStatus[spec] = validationErrors
@@ -56,9 +58,13 @@ func (self *specValidator) validate() []*stepValidationError {
 func (self *specValidator) step(step *step) {
 	if step.isConcept {
 		for _, conceptStep := range step.conceptSteps {
-			self.step(conceptStep)
+			if _, ok := self.stepValidationCache[conceptStep.value]; !ok {
+				self.stepValidationCache[conceptStep.value] = true
+				self.step(conceptStep)
+			}
 		}
-	} else {
+	} else if _, ok := self.stepValidationCache[step.value]; !ok {
+		self.stepValidationCache[step.value] = true
 		self.validateStep(step)
 	}
 }
