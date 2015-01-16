@@ -13,10 +13,12 @@ const (
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	runnerKillTimeOut       = "runner_kill_timeout"
 
-	defaultApiRefreshInterval      = time.Duration(2) * time.Second
+	defaultApiRefreshInterval      = time.Second * 2
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
 	defaultRunnerKillTimeOut       = time.Second * 2
+	defaultRefactorTimeout         = time.Second * 10
+	defaultRunnerAPIRequestTimeout = time.Second * 2
 )
 
 func ApiRefreshInterval() time.Duration {
@@ -39,9 +41,18 @@ func RunnerKillTimeout() time.Duration {
 	return convertToTime(intervalString, defaultRunnerKillTimeOut)
 }
 
-func GaugeRepositoryUrl() string {
-	return getFromConfig(gaugeRepositoryUrl)
+func RefactorTimeout() time.Duration {
+	return defaultRefactorTimeout
+	
 }
+
+func RunnerAPIRequestTimeout() time.Duration {
+	return defaultRunnerAPIRequestTimeout
+}
+
+func GaugeRepositoryUrl() string {
+		return getFromConfig(gaugeRepositoryUrl)
+		}
 
 func convertToTime(value string, defaultValue time.Duration) time.Duration {
 	intValue, err := strconv.Atoi(value)

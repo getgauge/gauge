@@ -200,11 +200,11 @@ func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, erro
 	return responseMessage, err
 }
 
-func getResponseForMessageWithTimeout(message *Message, conn net.Conn, seconds int) (*Message, error) {
+func getResponseForMessageWithTimeout(message *Message, conn net.Conn, t time.Duration) (*Message, error) {
 	timeout := make(chan bool, 1)
 	received := make(chan bool, 1)
 	go func() {
-		time.Sleep((time.Duration(seconds) * time.Second))
+		time.Sleep(t)
 		timeout <- true
 	}()
 	var response *Message

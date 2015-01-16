@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/getgauge/gauge/config"
 	"github.com/golang/protobuf/proto"
 	"os"
 	"strings"
@@ -97,7 +98,7 @@ func (agent *rephraseRefactorer) startRunner() *testRunner {
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
-	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, 60)
+	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
 	if err != nil {
 		testRunner.kill()
 		fmt.Printf("Effects only in spec and concept files: %s", err)
@@ -142,7 +143,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
 	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
-	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, 60)
+	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerAPIRequestTimeout())
 	if err != nil {
 		return err, "", false
 	}
