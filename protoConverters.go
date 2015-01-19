@@ -12,6 +12,8 @@ func convertToProtoItem(item item) *ProtoItem {
 		return convertToProtoCommentItem(item.(*comment))
 	case tableKind:
 		return convertToProtoTableItem(item.(*table))
+	case tagKind:
+		return convertToProtoTagItem(item.(*tags))
 	}
 	return nil
 }
@@ -21,6 +23,10 @@ func convertToProtoStepItem(step *step) *ProtoItem {
 		return convertToProtoConcept(step)
 	}
 	return &ProtoItem{ItemType: ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
+}
+
+func convertToProtoTagItem(tags *tags) *ProtoTags {
+	return &ProtoItem{}
 }
 
 func convertToProtoStepItems(steps []*step) []*ProtoItem {

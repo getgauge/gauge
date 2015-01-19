@@ -128,30 +128,6 @@ func findLongestCellWidth(columnCells []tableCell, minValue int) int {
 	return longestLength
 }
 
-func formatItem(item item) string {
-	switch item.kind() {
-	case commentKind:
-		comment := item.(*comment)
-		return formatComment(comment)
-	case stepKind:
-		step := item.(*step)
-		return formatStep(step)
-	case tableKind:
-		table := item.(*table)
-		return formatTable(table)
-	case scenarioKind:
-		scenario := item.(*scenario)
-		var b bytes.Buffer
-		b.WriteString(formatScenarioHeading(scenario.heading.value))
-		b.WriteString(formatItems(scenario.items))
-		return string(b.Bytes())
-	case tagKind:
-		tags := item.(*tags)
-		return formatTags(tags)
-	}
-	return ""
-}
-
 func formatComment(comment *comment) string {
 	if comment.value == "\n" {
 		return comment.value
@@ -173,14 +149,6 @@ func formatTags(tags *tags) string {
 	}
 	b.WriteString("\n\n")
 	return string(b.Bytes())
-}
-
-func formatItems(items []item) string {
-	var result bytes.Buffer
-	for _, item := range items {
-		result.WriteString(formatItem(item))
-	}
-	return string(result.Bytes())
 }
 
 func formatSpecification(specification *specification) string {
