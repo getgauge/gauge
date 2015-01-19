@@ -276,7 +276,8 @@ func executeSpecs(inParallel bool) {
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(specsToExecute, runner, pluginHandler, inParallel)
+	// change false to parallel flag for parallel execution
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, false)
 
 	status := execution.start()
 	exitCode := printExecutionStatus(status)

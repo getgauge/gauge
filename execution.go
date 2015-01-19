@@ -4,6 +4,7 @@ package main
 import "fmt"
 
 type simpleExecution struct {
+	manifest             *manifest
 	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
@@ -19,11 +20,11 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, inParallel bool) execution {
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, inParallel bool) execution {
 	if inParallel {
-		return &parallelSpecExecution{specifications: specifications, runner: runner, pluginHandler: pluginHandler}
+		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 	}
-	return &simpleExecution{specifications: specifications, runner: runner, pluginHandler: pluginHandler}
+	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 }
 
 func (e *simpleExecution) startExecution() *ProtoExecutionResult {

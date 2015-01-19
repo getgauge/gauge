@@ -1,8 +1,12 @@
 package main
 
-import "runtime"
+import (
+	"runtime"
+	"sync"
+)
 
 type parallelSpecExecution struct {
+	manifest             *manifest
 	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
@@ -15,8 +19,38 @@ type specCollection struct {
 }
 
 func (e *parallelSpecExecution) start() *suiteResult {
-	e.distributeSpecs(numberOfCores())
-	return nil
+	specCollections := e.distributeSpecs(numberOfCores())
+	suiteResultChannel := make(chan *suiteResult)
+	errChannel := make(chan error)
+	errors := make([]error, 0)
+	suiteResults := make([]*suiteResult, 0)
+	var wg sync.WaitGroup
+	for _, specCollection := range specCollections {
+		wg.Add(1)
+		go e.startSpecsExecution(specCollection, suiteResultChannel, errChannel, &wg)
+	}
+	wg.Wait()
+
+	for err := range errChannel {
+		errors = append(errors, err)
+	}
+	for result := range suiteResultChannel {
+		suiteResults = append(suiteResults, result)
+	}
+	close(errChannel)
+	close(suiteResultChannel)
+	return suiteResults[0]
+}
+
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, errChannel chan error, wg *sync.WaitGroup) {
+	defer wg.Done()
+	runner, err := startRunnerAndMakeConnection(e.manifest)
+	if err != nil {
+		errChannel <- err
+		return
+	}
+	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false)
+	suiteResults <- execution.start()
 }
 
 func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollection {
