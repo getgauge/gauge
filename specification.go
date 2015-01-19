@@ -79,6 +79,13 @@ func (step *step) getArg(name string) *stepArg {
 	return step.parent.getArg(step.lookup.getArg(name).value)
 }
 
+func (step *step) getLineText() string {
+	if step.hasInlineTable {
+		return fmt.Sprintf("%s <%s>", step.lineText, tableArg)
+	}
+	return step.lineText
+}
+
 func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
 	if strings.TrimSpace(step.value) != strings.TrimSpace(oldStep.value) {
 		return isRefactored
