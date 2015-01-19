@@ -132,10 +132,7 @@ func formatItem(item item) string {
 	switch item.kind() {
 	case commentKind:
 		comment := item.(*comment)
-		if comment.value == "\n" {
-			return comment.value
-		}
-		return fmt.Sprintf("%s\n", comment.value)
+		return formatComment(comment)
 	case stepKind:
 		step := item.(*step)
 		return formatStep(step)
@@ -155,19 +152,26 @@ func formatItem(item item) string {
 	return ""
 }
 
+func formatComment(comment *comment) string {
+	if comment.value == "\n" {
+		return comment.value
+	}
+	return fmt.Sprintf("%s\n", comment.value)
+}
+
 func formatTags(tags *tags) string {
 	if tags == nil || len(tags.values) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
-	b.WriteString("tags: ")
+	b.WriteString("\ntags: ")
 	for i, tag := range tags.values {
 		b.WriteString(tag)
 		if (i + 1) != len(tags.values) {
 			b.WriteString(", ")
 		}
 	}
-	b.WriteString("\n")
+	b.WriteString("\n\n")
 	return string(b.Bytes())
 }
 
@@ -180,10 +184,10 @@ func formatItems(items []item) string {
 }
 
 func formatSpecification(specification *specification) string {
-	var formattedText bytes.Buffer
-	formattedText.WriteString(formatSpecHeading(specification.heading.value))
-	formattedText.WriteString(formatItems(specification.items))
-	return string(formattedText.Bytes())
+	var formattedSpec bytes.Buffer
+	formatter := &formatter{buffer: formattedSpec}
+	specification.traverse(formatter)
+	return string(formatter.buffer.Bytes())
 }
 
 type ByLineNo []*concept
@@ -210,10 +214,10 @@ func sortConcepts(conceptDictionary *conceptDictionary, conceptMap map[string]st
 	return concepts
 }
 
-func formatConceptSteps(conceptDictionary *conceptDictionary, conceptMap map[string]string, concept *concept) {
-	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatItem(concept.conceptStep), "*", "#", 1)) + "\n"
+func formatConceptSteps(conceptMap map[string]string, concept *concept) {
+	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatStep(concept.conceptStep), "*", "#", 1)) + "\n"
 	for i := 1; i < len(concept.conceptStep.items); i++ {
-		conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
+		conceptMap[concept.fileName] += formatStep(concept.conceptStep.items[i].(*step))
 	}
 }
 
@@ -221,9 +225,9 @@ func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.conceptStep.preComments {
-			conceptMap[concept.fileName] += formatItem(comment)
+			conceptMap[concept.fileName] += formatComment(comment)
 		}
-		formatConceptSteps(conceptDictionary, conceptMap, concept)
+		formatConceptSteps(conceptMap, concept)
 	}
 	return conceptMap
 }

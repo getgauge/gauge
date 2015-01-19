@@ -94,7 +94,7 @@ func (writer *coloredConsoleWriter) writeSpecHeading(heading string) {
 }
 
 func (writer *coloredConsoleWriter) writeComment(comment *comment) {
-	terminal.Stdout.Colorf("%s", formatItem(comment))
+	terminal.Stdout.Colorf("%s", formatComment(comment))
 }
 
 func (writer *coloredConsoleWriter) writeScenarioHeading(scenarioHeading string) {
