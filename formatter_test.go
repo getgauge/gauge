@@ -61,14 +61,10 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
-
 tags: tag1, tag2
-
 Scenario Heading
 ----------------
-
 tags: tag3, tag4
-
 * Example step
 `)
 

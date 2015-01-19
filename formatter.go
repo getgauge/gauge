@@ -146,9 +146,11 @@ func formatItem(item item) string {
 		scenario := item.(*scenario)
 		var b bytes.Buffer
 		b.WriteString(formatScenarioHeading(scenario.heading.value))
-		b.WriteString(formatTags(scenario.tags))
 		b.WriteString(formatItems(scenario.items))
 		return string(b.Bytes())
+	case tagKind:
+		tags := item.(*tags)
+		return formatTags(tags)
 	}
 	return ""
 }
@@ -158,14 +160,14 @@ func formatTags(tags *tags) string {
 		return ""
 	}
 	var b bytes.Buffer
-	b.WriteString("\ntags: ")
+	b.WriteString("tags: ")
 	for i, tag := range tags.values {
 		b.WriteString(tag)
 		if (i + 1) != len(tags.values) {
 			b.WriteString(", ")
 		}
 	}
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 	return string(b.Bytes())
 }
 
@@ -180,7 +182,6 @@ func formatItems(items []item) string {
 func formatSpecification(specification *specification) string {
 	var formattedText bytes.Buffer
 	formattedText.WriteString(formatSpecHeading(specification.heading.value))
-	formattedText.WriteString(formatTags(specification.tags))
 	formattedText.WriteString(formatItems(specification.items))
 	return string(formattedText.Bytes())
 }
