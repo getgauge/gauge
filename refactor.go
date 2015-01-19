@@ -143,7 +143,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 }
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
-	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
+	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerAPIRequestTimeout())
 	if err != nil {
 		return err, "", false
