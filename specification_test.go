@@ -922,3 +922,17 @@ func (s *MySuite) TestRenameStep(c *C) {
 	c.Assert(originalStep.args[0].name, Equals, "arg2")
 	c.Assert(originalStep.args[1].name, Equals, "arg1")
 }
+
+func (s *MySuite) TestGetLineTextForStep(c *C) {
+	step := &step{lineText: "foo"}
+
+	c.Assert(step.getLineText(), Equals, "foo")
+}
+
+func (s *MySuite) TestGetLineTextForStepWithTable(c *C) {
+	step := &step{
+		lineText:       "foo",
+		hasInlineTable: true}
+
+	c.Assert(step.getLineText(), Equals, "foo <table>")
+}
