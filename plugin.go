@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"os/exec"
@@ -278,7 +279,7 @@ func (handler *pluginHandler) removePlugin(pluginId string) {
 	delete(handler.pluginsMap, pluginId)
 }
 
-func (handler *pluginHandler) notifyPlugins(message *Message) {
+func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
@@ -307,7 +308,7 @@ func (handler *pluginHandler) gracefullyKillPlugins() {
 	wg.Wait()
 }
 
-func (plugin *plugin) sendMessage(message *Message) error {
+func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 	messageBytes, err := proto.Marshal(message)

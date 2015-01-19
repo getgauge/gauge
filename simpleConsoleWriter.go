@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
 )
 
 type simpleConsoleWriter struct{}
@@ -86,10 +87,10 @@ func (writer *simpleConsoleWriter) writeTable(table *table) {
 	writer.writeString(formatTable(table))
 }
 
-func (writer *simpleConsoleWriter) writeConceptStarting(protoConcept *ProtoConcept) {
+func (writer *simpleConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
 	writer.writeString(formatConcept(protoConcept))
 }
 
-func (writer *simpleConsoleWriter) writeConceptFinished(protoConcept *ProtoConcept) {
+func (writer *simpleConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
 	writer.writeString(formatConcept(protoConcept))
 }

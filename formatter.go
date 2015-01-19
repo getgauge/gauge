@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
 	"sort"
 	"strings"
 )
@@ -54,13 +55,13 @@ func formatStep(step *step) string {
 	return stepText
 }
 
-func formatConcept(protoConcept *ProtoConcept) string {
+func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 	conceptText := "# "
 	for _, fragment := range protoConcept.ConceptStep.GetFragments() {
-		if fragment.GetFragmentType() == Fragment_Text {
+		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
 			conceptText = conceptText + fragment.GetText()
-		} else if fragment.GetFragmentType() == Fragment_Parameter {
-			if fragment.GetParameter().GetParameterType() == (Parameter_Table | Parameter_Special_Table) {
+		} else if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
+			if fragment.GetParameter().GetParameterType() == (gauge_messages.Parameter_Table | gauge_messages.Parameter_Special_Table) {
 				conceptText += "\n" + formatTable(tableFrom(fragment.GetParameter().GetTable()))
 			} else {
 				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""

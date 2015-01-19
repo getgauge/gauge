@@ -1,16 +1,17 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestCopyingFragments(c *C) {
-	text1 := &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String("step with")}
-	staticParam := &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String("param0")}}
-	text2 := &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String("and")}
-	dynamicParam := &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String("param1")}}
-	fragments := []*Fragment{text1, staticParam, text2, dynamicParam}
+	text1 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String("step with")}
+	staticParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String("param0")}}
+	text2 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String("and")}
+	dynamicParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String("param1")}}
+	fragments := []*gauge_messages.Fragment{text1, staticParam, text2, dynamicParam}
 
 	copiedFragments := makeFragmentsCopy(fragments)
 
@@ -24,11 +25,11 @@ func (s *MySuite) TestCopyingFragments(c *C) {
 }
 
 func (s *MySuite) TestCopyingProtoTable(c *C) {
-	headers := &ProtoTableRow{Cells: []string{"id", "name", "description"}}
-	row1 := &ProtoTableRow{Cells: []string{"123", "abc", "first description"}}
-	row2 := &ProtoTableRow{Cells: []string{"456", "def", "second description"}}
+	headers := &gauge_messages.ProtoTableRow{Cells: []string{"id", "name", "description"}}
+	row1 := &gauge_messages.ProtoTableRow{Cells: []string{"123", "abc", "first description"}}
+	row2 := &gauge_messages.ProtoTableRow{Cells: []string{"456", "def", "second description"}}
 
-	table := &ProtoTable{Headers: headers, Rows: []*ProtoTableRow{row1, row2}}
+	table := &gauge_messages.ProtoTable{Headers: headers, Rows: []*gauge_messages.ProtoTableRow{row1, row2}}
 	copiedTable := makeTableCopy(table)
 
 	compareTable(table, copiedTable, c)
@@ -51,14 +52,14 @@ func (s *MySuite) TestCopyingStepValue(c *C) {
 	c.Assert(protoStepValue.GetParameters(), DeepEquals, stepValue.args)
 }
 
-func compareFragments(fragmentList1 []*Fragment, fragmentList2 []*Fragment, c *C) {
+func compareFragments(fragmentList1 []*gauge_messages.Fragment, fragmentList2 []*gauge_messages.Fragment, c *C) {
 	c.Assert(len(fragmentList1), Equals, len(fragmentList2))
 	for i, _ := range fragmentList1 {
 		compareFragment(fragmentList1[i], fragmentList2[i], c)
 	}
 }
 
-func compareFragment(fragment1 *Fragment, fragment2 *Fragment, c *C) {
+func compareFragment(fragment1 *gauge_messages.Fragment, fragment2 *gauge_messages.Fragment, c *C) {
 	c.Assert(fragment1.GetFragmentType(), Equals, fragment2.GetFragmentType())
 	c.Assert(fragment1.GetText(), Equals, fragment2.GetText())
 	parameter1 := fragment1.GetParameter()
@@ -66,7 +67,7 @@ func compareFragment(fragment1 *Fragment, fragment2 *Fragment, c *C) {
 	compareParameter(parameter1, parameter2, c)
 }
 
-func compareParameter(parameter1 *Parameter, parameter2 *Parameter, c *C) {
+func compareParameter(parameter1 *gauge_messages.Parameter, parameter2 *gauge_messages.Parameter, c *C) {
 	if parameter1 != nil && parameter2 != nil {
 		c.Assert(parameter1.GetParameterType(), Equals, parameter2.GetParameterType())
 		c.Assert(parameter1.GetName(), Equals, parameter2.GetName())
@@ -79,7 +80,7 @@ func compareParameter(parameter1 *Parameter, parameter2 *Parameter, c *C) {
 	}
 }
 
-func compareTable(table1 *ProtoTable, table2 *ProtoTable, c *C) {
+func compareTable(table1 *gauge_messages.ProtoTable, table2 *gauge_messages.ProtoTable, c *C) {
 	compareTableRow(table1.GetHeaders(), table2.GetHeaders(), c)
 	c.Assert(len(table1.GetRows()), Equals, len(table2.GetRows()))
 	for i, row := range table1.GetRows() {
@@ -87,6 +88,6 @@ func compareTable(table1 *ProtoTable, table2 *ProtoTable, c *C) {
 	}
 }
 
-func compareTableRow(row1 *ProtoTableRow, row2 *ProtoTableRow, c *C) {
+func compareTableRow(row1 *gauge_messages.ProtoTableRow, row2 *gauge_messages.ProtoTableRow, c *C) {
 	c.Assert(row1.GetCells(), DeepEquals, row2.GetCells())
 }

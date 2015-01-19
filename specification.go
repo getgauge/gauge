@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"regexp"
 	"strings"
@@ -64,7 +65,7 @@ type step struct {
 	isConcept      bool
 	lookup         argLookup
 	conceptSteps   []*step
-	fragments      []*Fragment
+	fragments      []*gauge_messages.Fragment
 	parent         *step
 	hasInlineTable bool
 	items          []item
@@ -109,7 +110,7 @@ func (step *step) deepCopyStepArgs() []*stepArg {
 	return copiedStepArgs
 }
 
-func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
+func createStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *step {
 	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
 	step := &step{value: stepReq.GetParsedStepText(),
 		lineText: stepReq.GetActualStepText()}
@@ -117,24 +118,24 @@ func createStepFromStepRequest(stepReq *ExecuteStepRequest) *step {
 	return step
 }
 
-func createStepArgsFromProtoArguments(parameters []*Parameter) []*stepArg {
+func createStepArgsFromProtoArguments(parameters []*gauge_messages.Parameter) []*stepArg {
 	stepArgs := make([]*stepArg, 0)
 	for _, parameter := range parameters {
 		var arg *stepArg
 		switch parameter.GetParameterType() {
-		case Parameter_Static:
+		case gauge_messages.Parameter_Static:
 			arg = &stepArg{argType: static, value: parameter.GetValue(), name: parameter.GetName()}
 			break
-		case Parameter_Dynamic:
+		case gauge_messages.Parameter_Dynamic:
 			arg = &stepArg{argType: dynamic, value: parameter.GetValue(), name: parameter.GetName()}
 			break
-		case Parameter_Special_String:
+		case gauge_messages.Parameter_Special_String:
 			arg = &stepArg{argType: specialString, value: parameter.GetValue(), name: parameter.GetName()}
 			break
-		case Parameter_Table:
+		case gauge_messages.Parameter_Table:
 			arg = &stepArg{argType: tableArg, table: *(tableFrom(parameter.GetTable())), name: parameter.GetName()}
 			break
-		case Parameter_Special_Table:
+		case gauge_messages.Parameter_Special_Table:
 			arg = &stepArg{argType: specialTable, table: *(tableFrom(parameter.GetTable())), name: parameter.GetName()}
 			break
 		}
@@ -552,23 +553,23 @@ func (step *step) populateFragments() {
 		[[6 8] [13 15]]
 	*/
 	argSplitIndices := r.FindAllStringSubmatchIndex(step.value, -1)
-	step.fragments = make([]*Fragment, 0)
+	step.fragments = make([]*gauge_messages.Fragment, 0)
 	if len(step.args) == 0 {
-		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value)})
+		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value)})
 		return
 	}
 
 	textStartIndex := 0
 	for argIndex, argIndices := range argSplitIndices {
 		if textStartIndex < argIndices[0] {
-			step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:argIndices[0]])})
+			step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:argIndices[0]])})
 		}
 		parameter := convertToProtoParameter(step.args[argIndex])
-		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: parameter})
+		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: parameter})
 		textStartIndex = argIndices[1]
 	}
 	if textStartIndex < len(step.value) {
-		step.fragments = append(step.fragments, &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:len(step.value)])})
+		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:len(step.value)])})
 	}
 
 }
@@ -857,7 +858,7 @@ func (self *step) copyFrom(another *step) {
 	if another.fragments == nil {
 		self.fragments = nil
 	} else {
-		self.fragments = make([]*Fragment, len(another.fragments))
+		self.fragments = make([]*gauge_messages.Fragment, len(another.fragments))
 		copy(self.fragments, another.fragments)
 	}
 
@@ -869,18 +870,18 @@ func (self *step) copyFrom(another *step) {
 	self.parent = another.parent
 }
 
-func convertToStepText(fragments []*Fragment) string {
+func convertToStepText(fragments []*gauge_messages.Fragment) string {
 	stepText := ""
 	for _, fragment := range fragments {
 		value := ""
-		if fragment.GetFragmentType() == Fragment_Text {
+		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
 			value = fragment.GetText()
 		} else {
 			switch fragment.GetParameter().GetParameterType() {
-			case Parameter_Static:
+			case gauge_messages.Parameter_Static:
 				value = fmt.Sprintf("\"%s\"", fragment.GetParameter().GetValue())
 				break
-			case Parameter_Dynamic:
+			case gauge_messages.Parameter_Dynamic:
 				value = fmt.Sprintf("<%s>", fragment.GetParameter().GetValue())
 				break
 			}

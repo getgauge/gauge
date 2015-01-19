@@ -7,6 +7,7 @@ import (
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
 	"io"
 	"io/ioutil"
@@ -588,7 +589,7 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	return exitCode
 }
 
-func printHookError(hook *ProtoHookFailure) {
+func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 	if hook != nil {
 		console := getCurrentConsole()
 		console.writeError(hook.GetErrorMessage())
@@ -596,7 +597,7 @@ func printHookError(hook *ProtoHookFailure) {
 	}
 }
 
-func printError(execResult *ProtoExecutionResult) {
+func printError(execResult *gauge_messages.ProtoExecutionResult) {
 	if execResult.GetFailed() {
 		console := getCurrentConsole()
 		console.writeError(execResult.GetErrorMessage() + "\n")
@@ -610,9 +611,9 @@ func printSpecFailure(specResult *specResult) {
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
-			if specItem.GetItemType() == ProtoItem_Scenario {
+			if specItem.GetItemType() == gauge_messages.ProtoItem_Scenario {
 				printScenarioFailure(specItem.GetScenario())
-			} else if specItem.GetItemType() == ProtoItem_TableDrivenScenario {
+			} else if specItem.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
 				printTableDrivenScenarioFailure(specItem.GetTableDrivenScenario())
 			}
 		}
@@ -621,21 +622,21 @@ func printSpecFailure(specResult *specResult) {
 	}
 }
 
-func printTableDrivenScenarioFailure(tableDrivenScenario *ProtoTableDrivenScenario) {
+func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTableDrivenScenario) {
 	for _, scenario := range tableDrivenScenario.GetScenarios() {
 		printScenarioFailure(scenario)
 	}
 }
 
-func printScenarioFailure(scenario *ProtoScenario) {
+func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 	if scenario.GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
-			if scenarioItem.GetItemType() == ProtoItem_Step {
+			if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Step {
 				printStepFailure(scenarioItem.GetStep())
-			} else if scenarioItem.GetItemType() == ProtoItem_Concept {
+			} else if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Concept {
 				printConceptFailure(scenarioItem.GetConcept())
 			}
 		}
@@ -644,7 +645,7 @@ func printScenarioFailure(scenario *ProtoScenario) {
 
 }
 
-func printStepFailure(step *ProtoStep) {
+func printStepFailure(step *gauge_messages.ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", step.GetActualText()))
@@ -654,7 +655,7 @@ func printStepFailure(step *ProtoStep) {
 	}
 }
 
-func printConceptFailure(concept *ProtoConcept) {
+func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))

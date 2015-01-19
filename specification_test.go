@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
@@ -736,7 +737,7 @@ func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
 	c.Assert(len(step.fragments), Equals, 1)
 	fragment := step.fragments[0]
 	c.Assert(fragment.GetText(), Equals, "This is a simple step")
-	c.Assert(fragment.GetFragmentType(), Equals, Fragment_Text)
+	c.Assert(fragment.GetFragmentType(), Equals, gauge_messages.Fragment_Text)
 }
 
 func (s *MySuite) TestGetArgForStep(c *C) {
@@ -778,36 +779,36 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 
 	c.Assert(len(step.fragments), Equals, 7)
 	fragment1 := step.fragments[0]
-	c.Assert(fragment1.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment1.GetFragmentType(), Equals, gauge_messages.Fragment_Parameter)
 	c.Assert(fragment1.GetParameter().GetValue(), Equals, "first")
-	c.Assert(fragment1.GetParameter().GetParameterType(), Equals, Parameter_Static)
+	c.Assert(fragment1.GetParameter().GetParameterType(), Equals, gauge_messages.Parameter_Static)
 
 	fragment2 := step.fragments[1]
 	c.Assert(fragment2.GetText(), Equals, " step with ")
-	c.Assert(fragment2.GetFragmentType(), Equals, Fragment_Text)
+	c.Assert(fragment2.GetFragmentType(), Equals, gauge_messages.Fragment_Text)
 
 	fragment3 := step.fragments[2]
-	c.Assert(fragment3.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment3.GetFragmentType(), Equals, gauge_messages.Fragment_Parameter)
 	c.Assert(fragment3.GetParameter().GetValue(), Equals, "second")
-	c.Assert(fragment3.GetParameter().GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(fragment3.GetParameter().GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 
 	fragment4 := step.fragments[3]
 	c.Assert(fragment4.GetText(), Equals, " and ")
-	c.Assert(fragment4.GetFragmentType(), Equals, Fragment_Text)
+	c.Assert(fragment4.GetFragmentType(), Equals, gauge_messages.Fragment_Text)
 
 	fragment5 := step.fragments[4]
-	c.Assert(fragment5.GetFragmentType(), Equals, Fragment_Parameter)
+	c.Assert(fragment5.GetFragmentType(), Equals, gauge_messages.Fragment_Parameter)
 	c.Assert(fragment5.GetParameter().GetValue(), Equals, "text from file")
-	c.Assert(fragment5.GetParameter().GetParameterType(), Equals, Parameter_Special_String)
+	c.Assert(fragment5.GetParameter().GetParameterType(), Equals, gauge_messages.Parameter_Special_String)
 	c.Assert(fragment5.GetParameter().GetName(), Equals, "file:foo.txt")
 
 	fragment6 := step.fragments[5]
 	c.Assert(fragment6.GetText(), Equals, ", ")
-	c.Assert(fragment6.GetFragmentType(), Equals, Fragment_Text)
+	c.Assert(fragment6.GetFragmentType(), Equals, gauge_messages.Fragment_Text)
 
 	fragment7 := step.fragments[6]
-	c.Assert(fragment7.GetFragmentType(), Equals, Fragment_Parameter)
-	c.Assert(fragment7.GetParameter().GetParameterType(), Equals, Parameter_Table)
+	c.Assert(fragment7.GetFragmentType(), Equals, gauge_messages.Fragment_Parameter)
+	c.Assert(fragment7.GetParameter().GetParameterType(), Equals, gauge_messages.Parameter_Table)
 	protoTable := fragment7.GetParameter().GetTable()
 	c.Assert(protoTable.GetHeaders().GetCells(), DeepEquals, headers)
 	c.Assert(len(protoTable.GetRows()), Equals, 1)
@@ -816,7 +817,7 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 
 func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
 	argsInStep := []*stepArg{&stepArg{name: "arg1", value: "arg value", argType: dynamic}}
-	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: proto.String("foo")}}
 	originalStep := &step{lineNo: 12,
 		value:          "foo {}",
 		lineText:       "foo <bar>",
@@ -836,7 +837,7 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 	argLookup := new(argLookup)
 	argLookup.addArgName("name")
 	argLookup.addArgName("id")
-	fragments := []*Fragment{&Fragment{Text: proto.String("foo")}}
+	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: proto.String("foo")}}
 	conceptSteps := []*step{&step{value: "step 1"}}
 	originalConcept := &step{
 		lineNo:         12,

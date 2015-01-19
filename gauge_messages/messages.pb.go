@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package main is a generated protocol buffer package.
+Package gauge_messages is a generated protocol buffer package.
 
 It is generated from these files:
 	messages.proto
@@ -39,7 +39,7 @@ It has these top-level messages:
 	GetStepNameResponse
 	Message
 */
-package main
+package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
 import math "math"
@@ -643,9 +643,10 @@ func (m *RefactorRequest) GetParamPositions() []*ParameterPosition {
 }
 
 type RefactorResponse struct {
-	Success          *bool   `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
-	Error            *string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Success          *bool    `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
+	Error            *string  `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	FilesChanged     []string `protobuf:"bytes,3,rep,name=filesChanged" json:"filesChanged,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *RefactorResponse) Reset()         { *m = RefactorResponse{} }
@@ -664,6 +665,13 @@ func (m *RefactorResponse) GetError() string {
 		return *m.Error
 	}
 	return ""
+}
+
+func (m *RefactorResponse) GetFilesChanged() []string {
+	if m != nil {
+		return m.FilesChanged
+	}
+	return nil
 }
 
 type GetStepNameRequest struct {
@@ -717,7 +725,7 @@ func (m *GetStepNameResponse) GetHasAlias() bool {
 // This is the message which gets transferred all the time
 // with proper message type set
 type Message struct {
-	MessageType *Message_MessageType `protobuf:"varint,1,req,name=messageType,enum=main.Message_MessageType" json:"messageType,omitempty"`
+	MessageType *Message_MessageType `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.Message_MessageType" json:"messageType,omitempty"`
 	// A unique id to represent this message. A response to the message should copy over this value
 	// this is used to synchronize messages & responses
 	MessageId *int64 `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
@@ -928,5 +936,5 @@ func (m *Message) GetRefactorResponse() *RefactorResponse {
 }
 
 func init() {
-	proto.RegisterEnum("main.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
+	proto.RegisterEnum("gauge.messages.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
 }

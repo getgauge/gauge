@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/gauge_messages"
 	"runtime"
 	"sync"
 )
@@ -10,7 +11,7 @@ type parallelSpecExecution struct {
 	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
-	currentExecutionInfo *ExecutionInfo
+	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *suiteResult
 }
 

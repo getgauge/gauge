@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package main is a generated protocol buffer package.
+Package gauge_messages is a generated protocol buffer package.
 
 It is generated from these files:
 	spec.proto
@@ -28,7 +28,7 @@ It has these top-level messages:
 	ProtoSpecResult
 	ProtoStepValue
 */
-package main
+package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
 import math "math"
@@ -222,7 +222,7 @@ func (m *ProtoSpec) GetTags() []string {
 }
 
 type ProtoItem struct {
-	ItemType            *ProtoItem_ItemType       `protobuf:"varint,1,req,name=itemType,enum=main.ProtoItem_ItemType" json:"itemType,omitempty"`
+	ItemType            *ProtoItem_ItemType       `protobuf:"varint,1,req,name=itemType,enum=gauge.messages.ProtoItem_ItemType" json:"itemType,omitempty"`
 	Step                *ProtoStep                `protobuf:"bytes,2,opt,name=step" json:"step,omitempty"`
 	Concept             *ProtoConcept             `protobuf:"bytes,3,opt,name=concept" json:"concept,omitempty"`
 	Scenario            *ProtoScenario            `protobuf:"bytes,4,opt,name=scenario" json:"scenario,omitempty"`
@@ -462,7 +462,7 @@ func (m *ProtoTags) GetTags() []string {
 }
 
 type Fragment struct {
-	FragmentType     *Fragment_FragmentType `protobuf:"varint,1,req,name=fragmentType,enum=main.Fragment_FragmentType" json:"fragmentType,omitempty"`
+	FragmentType     *Fragment_FragmentType `protobuf:"varint,1,req,name=fragmentType,enum=gauge.messages.Fragment_FragmentType" json:"fragmentType,omitempty"`
 	Text             *string                `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
 	Parameter        *Parameter             `protobuf:"bytes,3,opt,name=parameter" json:"parameter,omitempty"`
 	XXX_unrecognized []byte                 `json:"-"`
@@ -494,7 +494,7 @@ func (m *Fragment) GetParameter() *Parameter {
 }
 
 type Parameter struct {
-	ParameterType    *Parameter_ParameterType `protobuf:"varint,1,req,name=parameterType,enum=main.Parameter_ParameterType" json:"parameterType,omitempty"`
+	ParameterType    *Parameter_ParameterType `protobuf:"varint,1,req,name=parameterType,enum=gauge.messages.Parameter_ParameterType" json:"parameterType,omitempty"`
 	Value            *string                  `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
 	Name             *string                  `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
 	Table            *ProtoTable              `protobuf:"bytes,4,opt,name=table" json:"table,omitempty"`
@@ -862,7 +862,7 @@ func (m *ProtoStepValue) GetParameters() []string {
 }
 
 func init() {
-	proto.RegisterEnum("main.ProtoItem_ItemType", ProtoItem_ItemType_name, ProtoItem_ItemType_value)
-	proto.RegisterEnum("main.Fragment_FragmentType", Fragment_FragmentType_name, Fragment_FragmentType_value)
-	proto.RegisterEnum("main.Parameter_ParameterType", Parameter_ParameterType_name, Parameter_ParameterType_value)
+	proto.RegisterEnum("gauge.messages.ProtoItem_ItemType", ProtoItem_ItemType_name, ProtoItem_ItemType_value)
+	proto.RegisterEnum("gauge.messages.Fragment_FragmentType", Fragment_FragmentType_name, Fragment_FragmentType_value)
+	proto.RegisterEnum("gauge.messages.Parameter_ParameterType", Parameter_ParameterType_name, Parameter_ParameterType_value)
 }
