@@ -41,6 +41,7 @@ type manifest struct {
 
 func main() {
 	flag.Parse()
+	setWorkingDir(*workingDir)
 	if *daemonize {
 		runInBackground()
 	} else if *gaugeVersion {
@@ -149,6 +150,7 @@ var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and sce
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
+var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
@@ -812,4 +814,28 @@ func (s ByFileName) Less(i, j int) bool {
 func sortSpecsList(allSpecs []*specification) []*specification {
 	sort.Sort(ByFileName(allSpecs))
 	return allSpecs
+}
+
+func setWorkingDir(workingDir string) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Unable to read current directory : %s\n", err)
+		os.Exit(1)
+	}
+	targetDir := path.Join(pwd, workingDir)
+	fmt.Printf("Set working directory: %s\n", targetDir)
+	if !common.DirExists(targetDir) {
+		err = os.Mkdir(targetDir, 0777)
+		if err != nil {
+			fmt.Printf("Unable to set working directory : %s\n", err)
+			os.Exit(1)
+		}
+	}
+	err = os.Chdir(targetDir)
+	pwd, err = os.Getwd()
+	fmt.Println(pwd)
+	if err != nil {
+		fmt.Printf("Unable to set working directory : %s\n", err)
+		os.Exit(1)
+	}
 }
