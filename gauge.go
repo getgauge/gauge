@@ -42,11 +42,17 @@ type manifest struct {
 func main() {
 	flag.Parse()
 	setWorkingDir(*workingDir)
+	validGaugeProject := true
+	_, err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Println("Not a valid Gauge Project Directory.")
+		validGaugeProject = false
+	}
 	if *daemonize {
 		runInBackground()
 	} else if *gaugeVersion {
 		printVersion()
-	} else if *specFilesToFormat != "" {
+	} else if *specFilesToFormat != "" && validGaugeProject {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
@@ -54,13 +60,14 @@ func main() {
 		downloadAndInstallPlugin(*install, *installVersion)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
-	} else if *refactor != "" {
+	} else if *refactor != "" && validGaugeProject {
 		refactorSteps(*refactor)
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
+		} else if validGaugeProject {
+			executeSpecs(*parallel)
 		}
-		executeSpecs(*parallel)
 	}
 }
 
@@ -823,7 +830,6 @@ func setWorkingDir(workingDir string) {
 		os.Exit(1)
 	}
 	targetDir := path.Join(pwd, workingDir)
-	fmt.Printf("Set working directory: %s\n", targetDir)
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
@@ -833,7 +839,6 @@ func setWorkingDir(workingDir string) {
 	}
 	err = os.Chdir(targetDir)
 	pwd, err = os.Getwd()
-	fmt.Println(pwd)
 	if err != nil {
 		fmt.Printf("Unable to set working directory : %s\n", err)
 		os.Exit(1)
