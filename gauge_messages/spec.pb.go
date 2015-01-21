@@ -30,7 +30,7 @@ It has these top-level messages:
 */
 package gauge_messages
 
-import proto "github.com/golang/protobuf/proto"
+import proto "code.google.com/p/goprotobuf/proto"
 import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -46,6 +46,7 @@ const (
 	ProtoItem_Scenario            ProtoItem_ItemType = 4
 	ProtoItem_TableDrivenScenario ProtoItem_ItemType = 5
 	ProtoItem_Table               ProtoItem_ItemType = 6
+	ProtoItem_Tags                ProtoItem_ItemType = 7
 )
 
 var ProtoItem_ItemType_name = map[int32]string{
@@ -55,6 +56,7 @@ var ProtoItem_ItemType_name = map[int32]string{
 	4: "Scenario",
 	5: "TableDrivenScenario",
 	6: "Table",
+	7: "Tags",
 }
 var ProtoItem_ItemType_value = map[string]int32{
 	"Step":                1,
@@ -63,6 +65,7 @@ var ProtoItem_ItemType_value = map[string]int32{
 	"Scenario":            4,
 	"TableDrivenScenario": 5,
 	"Table":               6,
+	"Tags":                7,
 }
 
 func (x ProtoItem_ItemType) Enum() *ProtoItem_ItemType {
@@ -229,6 +232,7 @@ type ProtoItem struct {
 	TableDrivenScenario *ProtoTableDrivenScenario `protobuf:"bytes,5,opt,name=tableDrivenScenario" json:"tableDrivenScenario,omitempty"`
 	Comment             *ProtoComment             `protobuf:"bytes,6,opt,name=comment" json:"comment,omitempty"`
 	Table               *ProtoTable               `protobuf:"bytes,7,opt,name=table" json:"table,omitempty"`
+	Tags                *ProtoTags                `protobuf:"bytes,8,opt,name=tags" json:"tags,omitempty"`
 	XXX_unrecognized    []byte                    `json:"-"`
 }
 
@@ -281,6 +285,13 @@ func (m *ProtoItem) GetComment() *ProtoComment {
 func (m *ProtoItem) GetTable() *ProtoTable {
 	if m != nil {
 		return m.Table
+	}
+	return nil
+}
+
+func (m *ProtoItem) GetTags() *ProtoTags {
+	if m != nil {
+		return m.Tags
 	}
 	return nil
 }

@@ -54,6 +54,9 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
 		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 4},
 		&token{kind: stepKind, value: "Example step", lineNo: 5, lineText: "Example step"},
+		&token{kind: scenarioKind, value: "Scenario Heading1", lineNo: 6},
+		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 7},
+		&token{kind: stepKind, value: "Example step", lineNo: 8, lineText: "Example step"},
 	}
 
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
@@ -61,14 +64,14 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
-
 tags: tag1, tag2
-
 Scenario Heading
 ----------------
-
 tags: tag3, tag4
-
+* Example step
+Scenario Heading1
+-----------------
+tags: tag3, tag4
 * Example step
 `)
 

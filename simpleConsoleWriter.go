@@ -56,7 +56,7 @@ func (writer *simpleConsoleWriter) writeItem(item item) {
 }
 
 func (writer *simpleConsoleWriter) writeComment(comment *comment) {
-	writer.writeString(formatItem(comment))
+	writer.writeString(formatComment(comment))
 }
 
 func (writer *simpleConsoleWriter) writeScenarioHeading(scenarioHeading string) {
@@ -65,20 +65,20 @@ func (writer *simpleConsoleWriter) writeScenarioHeading(scenarioHeading string) 
 }
 
 func (writer *simpleConsoleWriter) writeStep(step *step) {
-	writer.writeString(formatItem(step))
+	writer.writeString(formatStep(step))
 }
 
 func (writer *simpleConsoleWriter) writeStepStarting(step *step) {
-	writer.writeString(fmt.Sprintf("Executing.. => %s", formatItem(step)))
+	writer.writeString(fmt.Sprintf("Executing.. => %s", formatStep(step)))
 }
 
 //todo: pass protostep instead
 func (writer *simpleConsoleWriter) writeStepFinished(step *step, failed bool) {
 	var message string
 	if failed {
-		message = fmt.Sprintf("Step Failed => %s\n", formatItem(step))
+		message = fmt.Sprintf("Step Failed => %s\n", formatStep(step))
 	} else {
-		message = fmt.Sprintf("Step Passed => %s\n", formatItem(step))
+		message = fmt.Sprintf("Step Passed => %s\n", formatStep(step))
 	}
 	writer.writeString(message)
 }

@@ -488,6 +488,7 @@ func (specification *specification) addDataTable(table *table) {
 
 func (specification *specification) addTags(tags *tags) {
 	specification.tags = tags
+	specification.addItem(tags)
 }
 
 func (specification *specification) latestScenario() *scenario {
@@ -774,6 +775,7 @@ func (scenario *scenario) addStep(step *step) {
 
 func (scenario *scenario) addTags(tags *tags) {
 	scenario.tags = tags
+	scenario.addItem(tags)
 }
 
 func (scenario *scenario) addComment(comment *comment) {
