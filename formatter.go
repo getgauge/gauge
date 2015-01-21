@@ -141,14 +141,14 @@ func formatTags(tags *tags) string {
 		return ""
 	}
 	var b bytes.Buffer
-	b.WriteString("\ntags: ")
+	b.WriteString("tags: ")
 	for i, tag := range tags.values {
 		b.WriteString(tag)
 		if (i + 1) != len(tags.values) {
 			b.WriteString(", ")
 		}
 	}
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 	return string(b.Bytes())
 }
 

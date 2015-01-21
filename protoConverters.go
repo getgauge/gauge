@@ -15,8 +15,14 @@ func convertToProtoItem(item item) *gauge_messages.ProtoItem {
 		return convertToProtoCommentItem(item.(*comment))
 	case tableKind:
 		return convertToProtoTableItem(item.(*table))
+	case tagKind:
+		return convertToProtoTagItem(item.(*tags))
 	}
 	return nil
+}
+
+func convertToProtoTagItem(tags *tags) *gauge_messages.ProtoItem {
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Tags.Enum(), Tags: convertToProtoTags(tags)}
 }
 
 func convertToProtoStepItem(step *step) *gauge_messages.ProtoItem {
@@ -51,6 +57,19 @@ func convertToProtoConcept(concept *step) *gauge_messages.ProtoItem {
 
 func convertToProtoStep(step *step) *gauge_messages.ProtoStep {
 	return &gauge_messages.ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: makeFragmentsCopy(step.fragments)}
+}
+
+func convertToProtoTags(tags *tags) *gauge_messages.ProtoTags {
+	return &gauge_messages.ProtoTags{Tags: getAllTags(tags)}
+	
+}
+
+func getAllTags(tags *tags) []string {
+	allTags := make([]string,0)
+	for _, tag := range tags.values{
+		allTags = append(allTags, *proto.String(tag))
+	}
+	return allTags
 }
 
 func makeFragmentsCopy(fragments []*gauge_messages.Fragment) []*gauge_messages.Fragment {
