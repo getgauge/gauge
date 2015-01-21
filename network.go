@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"os"
@@ -169,7 +170,7 @@ func (connectionHandler *gaugeConnectionHandler) connectionPortNumber() int {
 	}
 }
 
-func writeGaugeMessage(message *Message, conn net.Conn) error {
+func writeGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 
@@ -180,7 +181,7 @@ func writeGaugeMessage(message *Message, conn net.Conn) error {
 	return write(conn, data)
 }
 
-func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, error) {
+func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) (*gauge_messages.Message, error) {
 	messageId := common.GetUniqueId()
 	message.MessageId = &messageId
 
@@ -192,7 +193,7 @@ func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, erro
 	if err != nil {
 		return nil, err
 	}
-	responseMessage := &Message{}
+	responseMessage := &gauge_messages.Message{}
 	err = proto.Unmarshal(responseBytes, responseMessage)
 	if err != nil {
 		return nil, err
@@ -200,14 +201,14 @@ func getResponseForGaugeMessage(message *Message, conn net.Conn) (*Message, erro
 	return responseMessage, err
 }
 
-func getResponseForMessageWithTimeout(message *Message, conn net.Conn, t time.Duration) (*Message, error) {
+func getResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
 	timeout := make(chan bool, 1)
 	received := make(chan bool, 1)
 	go func() {
 		time.Sleep(t)
 		timeout <- true
 	}()
-	var response *Message
+	var response *gauge_messages.Message
 	var error error
 	go func() {
 		response, error = getResponseForGaugeMessage(message, conn)

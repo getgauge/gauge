@@ -43,7 +43,7 @@ func RunnerKillTimeout() time.Duration {
 
 func RefactorTimeout() time.Duration {
 	return defaultRefactorTimeout
-	
+
 }
 
 func RunnerAPIRequestTimeout() time.Duration {
@@ -51,8 +51,8 @@ func RunnerAPIRequestTimeout() time.Duration {
 }
 
 func GaugeRepositoryUrl() string {
-		return getFromConfig(gaugeRepositoryUrl)
-		}
+	return getFromConfig(gaugeRepositoryUrl)
+}
 
 func convertToTime(value string, defaultValue time.Duration) time.Duration {
 	intValue, err := strconv.Atoi(value)

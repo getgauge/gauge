@@ -1,6 +1,9 @@
 package main
 
-import "github.com/golang/protobuf/proto"
+import (
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/golang/protobuf/proto"
+)
 
 type validator struct {
 	manifest           *manifest
@@ -70,13 +73,13 @@ func (self *specValidator) step(step *step) {
 }
 
 func (self *specValidator) validateStep(step *step) {
-	message := &Message{MessageType: Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
 	response, err := getResponseForGaugeMessage(message, self.runner.connection)
 	if err != nil {
 		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.fileName})
 	}
-	if response.GetMessageType() == Message_StepValidateResponse {
+	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
 			self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: validateResponse.GetErrorMessage(), fileName: self.specification.fileName})

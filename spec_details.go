@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"sync"
 	"time"
@@ -13,7 +14,7 @@ type specInfoGatherer struct {
 	availableStepsMap map[string]*stepValue
 	stepsFromRunner   []string
 	specStepMapCache  map[string][]*step
-	conceptInfos      []*ConceptInfo
+	conceptInfos      []*gauge_messages.ConceptInfo
 	mutex             sync.Mutex
 }
 
@@ -29,21 +30,21 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
 
-func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*ConceptInfo) {
+func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
 	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
 	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
 }
 
-func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*ConceptInfo {
-	conceptInfos := make([]*ConceptInfo, 0)
+func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*gauge_messages.ConceptInfo {
+	conceptInfos := make([]*gauge_messages.ConceptInfo, 0)
 	for _, concept := range dictionary.conceptsMap {
 		stepValue, err := extractStepValueAndParams(concept.conceptStep.lineText, concept.conceptStep.hasInlineTable)
 		if err != nil {
 			continue
 		}
-		conceptInfos = append(conceptInfos, &ConceptInfo{StepValue: convertToProtoStepValue(stepValue), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
+		conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: convertToProtoStepValue(stepValue), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
 	}
 	return conceptInfos
 }

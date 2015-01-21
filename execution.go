@@ -1,14 +1,17 @@
 // This file is part of twist
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
+)
 
 type simpleExecution struct {
 	manifest             *manifest
 	runner               *testRunner
 	specifications       []*specification
 	pluginHandler        *pluginHandler
-	currentExecutionInfo *ExecutionInfo
+	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *suiteResult
 }
 
@@ -27,25 +30,25 @@ func newExecution(manifest *manifest, specifications []*specification, runner *t
 	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 }
 
-func (e *simpleExecution) startExecution() *ProtoExecutionResult {
-	initSuiteDataStoreMessage := &Message{MessageType: Message_SuiteDataStoreInit.Enum(),
-		SuiteDataStoreInitRequest: &SuiteDataStoreInitRequest{}}
+func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
+	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
+		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
 	if initResult.GetFailed() {
 		fmt.Println("[Warning] Suite data store didn't get initialized")
 	}
-	message := &Message{MessageType: Message_ExecutionStarting.Enum(),
-		ExecutionStartingRequest: &ExecutionStartingRequest{}}
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
+		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	return e.executeHook(message)
 }
 
-func (e *simpleExecution) endExecution() *ProtoExecutionResult {
-	message := &Message{MessageType: Message_ExecutionEnding.Enum(),
-		ExecutionEndingRequest: &ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
+		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	return e.executeHook(message)
 }
 
-func (e *simpleExecution) executeHook(message *Message) *ProtoExecutionResult {
+func (e *simpleExecution) executeHook(message *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
 	e.pluginHandler.notifyPlugins(message)
 	executionResult := executeAndGetStatus(e.runner, message)
 	e.addExecTime(executionResult.GetExecutionTime())
@@ -57,14 +60,14 @@ func (e *simpleExecution) addExecTime(execTime int64) {
 }
 
 func (e *simpleExecution) notifyExecutionResult() {
-	message := &Message{MessageType: Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.suiteResult)}}
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.notifyPlugins(message)
 }
 
 func (e *simpleExecution) notifyExecutionStop() {
-	message := &Message{MessageType: Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &KillProcessRequest{}}
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 	e.pluginHandler.notifyPlugins(message)
 	e.pluginHandler.gracefullyKillPlugins()
 }

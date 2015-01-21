@@ -3,7 +3,7 @@
 // DO NOT EDIT!
 
 /*
-Package main is a generated protocol buffer package.
+Package gauge_messages is a generated protocol buffer package.
 
 It is generated from these files:
 	messages.proto
@@ -35,11 +35,11 @@ It has these top-level messages:
 	ParameterPosition
 	RefactorRequest
 	RefactorResponse
-	GetStepNameRequest
-	GetStepNameResponse
+	StepNameRequest
+	StepNameResponse
 	Message
 */
-package main
+package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
 import math "math"
@@ -643,9 +643,10 @@ func (m *RefactorRequest) GetParamPositions() []*ParameterPosition {
 }
 
 type RefactorResponse struct {
-	Success          *bool   `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
-	Error            *string `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Success          *bool    `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
+	Error            *string  `protobuf:"bytes,2,opt,name=error" json:"error,omitempty"`
+	FilesChanged     []string `protobuf:"bytes,3,rep,name=filesChanged" json:"filesChanged,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *RefactorResponse) Reset()         { *m = RefactorResponse{} }
@@ -666,48 +667,55 @@ func (m *RefactorResponse) GetError() string {
 	return ""
 }
 
-type GetStepNameRequest struct {
+func (m *RefactorResponse) GetFilesChanged() []string {
+	if m != nil {
+		return m.FilesChanged
+	}
+	return nil
+}
+
+type StepNameRequest struct {
 	StepValue        *string `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *GetStepNameRequest) Reset()         { *m = GetStepNameRequest{} }
-func (m *GetStepNameRequest) String() string { return proto.CompactTextString(m) }
-func (*GetStepNameRequest) ProtoMessage()    {}
+func (m *StepNameRequest) Reset()         { *m = StepNameRequest{} }
+func (m *StepNameRequest) String() string { return proto.CompactTextString(m) }
+func (*StepNameRequest) ProtoMessage()    {}
 
-func (m *GetStepNameRequest) GetStepValue() string {
+func (m *StepNameRequest) GetStepValue() string {
 	if m != nil && m.StepValue != nil {
 		return *m.StepValue
 	}
 	return ""
 }
 
-type GetStepNameResponse struct {
+type StepNameResponse struct {
 	IsStepPresent    *bool    `protobuf:"varint,1,req,name=isStepPresent" json:"isStepPresent,omitempty"`
 	StepName         []string `protobuf:"bytes,2,rep,name=stepName" json:"stepName,omitempty"`
 	HasAlias         *bool    `protobuf:"varint,3,req,name=hasAlias" json:"hasAlias,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
 
-func (m *GetStepNameResponse) Reset()         { *m = GetStepNameResponse{} }
-func (m *GetStepNameResponse) String() string { return proto.CompactTextString(m) }
-func (*GetStepNameResponse) ProtoMessage()    {}
+func (m *StepNameResponse) Reset()         { *m = StepNameResponse{} }
+func (m *StepNameResponse) String() string { return proto.CompactTextString(m) }
+func (*StepNameResponse) ProtoMessage()    {}
 
-func (m *GetStepNameResponse) GetIsStepPresent() bool {
+func (m *StepNameResponse) GetIsStepPresent() bool {
 	if m != nil && m.IsStepPresent != nil {
 		return *m.IsStepPresent
 	}
 	return false
 }
 
-func (m *GetStepNameResponse) GetStepName() []string {
+func (m *StepNameResponse) GetStepName() []string {
 	if m != nil {
 		return m.StepName
 	}
 	return nil
 }
 
-func (m *GetStepNameResponse) GetHasAlias() bool {
+func (m *StepNameResponse) GetHasAlias() bool {
 	if m != nil && m.HasAlias != nil {
 		return *m.HasAlias
 	}
@@ -717,7 +725,7 @@ func (m *GetStepNameResponse) GetHasAlias() bool {
 // This is the message which gets transferred all the time
 // with proper message type set
 type Message struct {
-	MessageType *Message_MessageType `protobuf:"varint,1,req,name=messageType,enum=main.Message_MessageType" json:"messageType,omitempty"`
+	MessageType *Message_MessageType `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.Message_MessageType" json:"messageType,omitempty"`
 	// A unique id to represent this message. A response to the message should copy over this value
 	// this is used to synchronize messages & responses
 	MessageId *int64 `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
@@ -741,8 +749,8 @@ type Message struct {
 	ScenarioDataStoreInitRequest     *ScenarioDataStoreInitRequest     `protobuf:"bytes,19,opt,name=scenarioDataStoreInitRequest" json:"scenarioDataStoreInitRequest,omitempty"`
 	SpecDataStoreInitRequest         *SpecDataStoreInitRequest         `protobuf:"bytes,20,opt,name=specDataStoreInitRequest" json:"specDataStoreInitRequest,omitempty"`
 	SuiteDataStoreInitRequest        *SuiteDataStoreInitRequest        `protobuf:"bytes,21,opt,name=suiteDataStoreInitRequest" json:"suiteDataStoreInitRequest,omitempty"`
-	StepNameRequest                  *GetStepNameRequest               `protobuf:"bytes,22,opt,name=stepNameRequest" json:"stepNameRequest,omitempty"`
-	StepNameResponse                 *GetStepNameResponse              `protobuf:"bytes,23,opt,name=stepNameResponse" json:"stepNameResponse,omitempty"`
+	StepNameRequest                  *StepNameRequest                  `protobuf:"bytes,22,opt,name=stepNameRequest" json:"stepNameRequest,omitempty"`
+	StepNameResponse                 *StepNameResponse                 `protobuf:"bytes,23,opt,name=stepNameResponse" json:"stepNameResponse,omitempty"`
 	RefactorRequest                  *RefactorRequest                  `protobuf:"bytes,24,opt,name=refactorRequest" json:"refactorRequest,omitempty"`
 	RefactorResponse                 *RefactorResponse                 `protobuf:"bytes,25,opt,name=refactorResponse" json:"refactorResponse,omitempty"`
 	XXX_unrecognized                 []byte                            `json:"-"`
@@ -899,14 +907,14 @@ func (m *Message) GetSuiteDataStoreInitRequest() *SuiteDataStoreInitRequest {
 	return nil
 }
 
-func (m *Message) GetStepNameRequest() *GetStepNameRequest {
+func (m *Message) GetStepNameRequest() *StepNameRequest {
 	if m != nil {
 		return m.StepNameRequest
 	}
 	return nil
 }
 
-func (m *Message) GetStepNameResponse() *GetStepNameResponse {
+func (m *Message) GetStepNameResponse() *StepNameResponse {
 	if m != nil {
 		return m.StepNameResponse
 	}
@@ -928,5 +936,5 @@ func (m *Message) GetRefactorResponse() *RefactorResponse {
 }
 
 func init() {
-	proto.RegisterEnum("main.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
+	proto.RegisterEnum("gauge.messages.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
 }

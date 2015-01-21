@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/wsxiaoys/terminal"
 	"strings"
 )
@@ -17,8 +18,8 @@ type consoleWriter interface {
 	writeStepStarting(*step)
 	writeStepFinished(*step, bool)
 	writeTable(*table)
-	writeConceptStarting(*ProtoConcept)
-	writeConceptFinished(*ProtoConcept)
+	writeConceptStarting(*gauge_messages.ProtoConcept)
+	writeConceptFinished(*gauge_messages.ProtoConcept)
 }
 
 var currentConsoleWriter consoleWriter
@@ -113,12 +114,12 @@ func (writer *coloredConsoleWriter) writeStep(step *step) {
 	writer.linesAfterLastStep = 0
 }
 
-func (writer *coloredConsoleWriter) writeConceptStarting(protoConcept *ProtoConcept) {
+func (writer *coloredConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
 	conceptText := formatConcept(protoConcept)
 	terminal.Stdout.Colorf("@b%s", conceptText)
 }
 
-func (writer *coloredConsoleWriter) writeConceptFinished(protoConcept *ProtoConcept) {
+func (writer *coloredConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
 	conceptText := formatConcept(protoConcept)
 	terminal.Stdout.Colorf("@g%s", conceptText)
 }

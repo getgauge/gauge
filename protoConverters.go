@@ -1,8 +1,11 @@
 package main
 
-import "github.com/golang/protobuf/proto"
+import (
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/golang/protobuf/proto"
+)
 
-func convertToProtoItem(item item) *ProtoItem {
+func convertToProtoItem(item item) *gauge_messages.ProtoItem {
 	switch item.kind() {
 	case scenarioKind:
 		return convertToProtoScenarioItem(item.(*scenario))
@@ -12,87 +15,81 @@ func convertToProtoItem(item item) *ProtoItem {
 		return convertToProtoCommentItem(item.(*comment))
 	case tableKind:
 		return convertToProtoTableItem(item.(*table))
-	case tagKind:
-		return convertToProtoTagItem(item.(*tags))
 	}
 	return nil
 }
 
-func convertToProtoStepItem(step *step) *ProtoItem {
+func convertToProtoStepItem(step *step) *gauge_messages.ProtoItem {
 	if step.isConcept {
 		return convertToProtoConcept(step)
 	}
-	return &ProtoItem{ItemType: ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
 }
 
-func convertToProtoTagItem(tags *tags) *ProtoTags {
-	return &ProtoItem{}
-}
-
-func convertToProtoStepItems(steps []*step) []*ProtoItem {
-	protoItems := make([]*ProtoItem, 0)
+func convertToProtoStepItems(steps []*step) []*gauge_messages.ProtoItem {
+	protoItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, step := range steps {
 		protoItems = append(protoItems, convertToProtoStepItem(step))
 	}
 	return protoItems
 }
 
-func convertToProtoScenarioItem(scenario *scenario) *ProtoItem {
-	scenarioItems := make([]*ProtoItem, 0)
+func convertToProtoScenarioItem(scenario *scenario) *gauge_messages.ProtoItem {
+	scenarioItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range scenario.items {
 		scenarioItems = append(scenarioItems, convertToProtoItem(item))
 	}
 	protoScenario := newProtoScenario(scenario)
-	return &ProtoItem{ItemType: ProtoItem_Scenario.Enum(), Scenario: protoScenario}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: protoScenario}
 }
 
-func convertToProtoConcept(concept *step) *ProtoItem {
-	protoConcept := &ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.conceptSteps)}
-	protoConceptItem := &ProtoItem{ItemType: ProtoItem_Concept.Enum(), Concept: protoConcept}
+func convertToProtoConcept(concept *step) *gauge_messages.ProtoItem {
+	protoConcept := &gauge_messages.ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.conceptSteps)}
+	protoConceptItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Concept.Enum(), Concept: protoConcept}
 	return protoConceptItem
 }
 
-func convertToProtoStep(step *step) *ProtoStep {
-	return &ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: makeFragmentsCopy(step.fragments)}
+func convertToProtoStep(step *step) *gauge_messages.ProtoStep {
+	return &gauge_messages.ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: makeFragmentsCopy(step.fragments)}
 }
 
-func makeFragmentsCopy(fragments []*Fragment) []*Fragment {
-	copiedFragments := make([]*Fragment, 0)
+func makeFragmentsCopy(fragments []*gauge_messages.Fragment) []*gauge_messages.Fragment {
+	copiedFragments := make([]*gauge_messages.Fragment, 0)
 	for _, fragment := range fragments {
 		copiedFragments = append(copiedFragments, makeFragmentCopy(fragment))
 	}
 	return copiedFragments
 }
 
-func makeFragmentCopy(fragment *Fragment) *Fragment {
-	if fragment.GetFragmentType() == Fragment_Text {
-		return &Fragment{FragmentType: Fragment_Text.Enum(), Text: proto.String(fragment.GetText())}
+func makeFragmentCopy(fragment *gauge_messages.Fragment) *gauge_messages.Fragment {
+	if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
+		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(fragment.GetText())}
 	} else {
-		return &Fragment{FragmentType: Fragment_Parameter.Enum(), Parameter: makeParameterCopy(fragment.Parameter)}
+		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: makeParameterCopy(fragment.Parameter)}
 	}
 }
 
-func makeParameterCopy(parameter *Parameter) *Parameter {
+func makeParameterCopy(parameter *gauge_messages.Parameter) *gauge_messages.Parameter {
 	switch parameter.GetParameterType() {
-	case Parameter_Static:
-		return &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
-	case Parameter_Dynamic:
-		return &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
-	case Parameter_Table:
-		return &Parameter{ParameterType: Parameter_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
-	case Parameter_Special_String:
-		return &Parameter{ParameterType: Parameter_Special_String.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
-	case Parameter_Special_Table:
-		return &Parameter{ParameterType: Parameter_Special_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
+	case gauge_messages.Parameter_Static:
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+	case gauge_messages.Parameter_Dynamic:
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+	case gauge_messages.Parameter_Table:
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
+	case gauge_messages.Parameter_Special_String:
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+	case gauge_messages.Parameter_Special_Table:
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
 	}
 	return parameter
 }
 
-func makeTableCopy(table *ProtoTable) *ProtoTable {
-	copiedTable := &ProtoTable{}
+func makeTableCopy(table *gauge_messages.ProtoTable) *gauge_messages.ProtoTable {
+	copiedTable := &gauge_messages.ProtoTable{}
 	copiedTable.Headers = makeProtoTableRowCopy(table.GetHeaders())
 
-	copiedRows := make([]*ProtoTableRow, 0)
+	copiedRows := make([]*gauge_messages.ProtoTableRow, 0)
 	for _, tableRow := range table.GetRows() {
 		copiedRows = append(copiedRows, makeProtoTableRowCopy(tableRow))
 	}
@@ -100,68 +97,68 @@ func makeTableCopy(table *ProtoTable) *ProtoTable {
 	return copiedTable
 }
 
-func makeProtoTableRowCopy(tableRow *ProtoTableRow) *ProtoTableRow {
+func makeProtoTableRowCopy(tableRow *gauge_messages.ProtoTableRow) *gauge_messages.ProtoTableRow {
 	copiedCells := make([]string, 0)
-	return &ProtoTableRow{Cells: append(copiedCells, tableRow.GetCells()...)}
+	return &gauge_messages.ProtoTableRow{Cells: append(copiedCells, tableRow.GetCells()...)}
 }
 
-func convertToProtoSteps(steps []*step) []*ProtoStep {
-	protoSteps := make([]*ProtoStep, 0)
+func convertToProtoSteps(steps []*step) []*gauge_messages.ProtoStep {
+	protoSteps := make([]*gauge_messages.ProtoStep, 0)
 	for _, step := range steps {
 		protoSteps = append(protoSteps, convertToProtoStep(step))
 	}
 	return protoSteps
 }
 
-func convertToProtoCommentItem(comment *comment) *ProtoItem {
-	return &ProtoItem{ItemType: ProtoItem_Comment.Enum(), Comment: &ProtoComment{Text: proto.String(comment.value)}}
+func convertToProtoCommentItem(comment *comment) *gauge_messages.ProtoItem {
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.value)}}
 }
 
-func convertToProtoTableItem(table *table) *ProtoItem {
-	return &ProtoItem{ItemType: ProtoItem_Table.Enum(), Table: convertToProtoTableParam(table)}
+func convertToProtoTableItem(table *table) *gauge_messages.ProtoItem {
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table.Enum(), Table: convertToProtoTableParam(table)}
 }
 
-func convertToProtoParameters(args []*stepArg) []*Parameter {
-	params := make([]*Parameter, 0)
+func convertToProtoParameters(args []*stepArg) []*gauge_messages.Parameter {
+	params := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range args {
 		params = append(params, convertToProtoParameter(arg))
 	}
 	return params
 }
 
-func convertToProtoParameter(arg *stepArg) *Parameter {
+func convertToProtoParameter(arg *stepArg) *gauge_messages.Parameter {
 	switch arg.argType {
 	case static:
-		return &Parameter{ParameterType: Parameter_Static.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
 	case dynamic:
-		return &Parameter{ParameterType: Parameter_Dynamic.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
 	case tableArg:
-		return &Parameter{ParameterType: Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
 	case specialString:
-		return &Parameter{ParameterType: Parameter_Special_String.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
 	case specialTable:
-		return &Parameter{ParameterType: Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
 	}
 	return nil
 }
 
-func convertToProtoTableParam(table *table) *ProtoTable {
-	protoTableParam := &ProtoTable{Rows: make([]*ProtoTableRow, 0)}
-	protoTableParam.Headers = &ProtoTableRow{Cells: table.headers}
+func convertToProtoTableParam(table *table) *gauge_messages.ProtoTable {
+	protoTableParam := &gauge_messages.ProtoTable{Rows: make([]*gauge_messages.ProtoTableRow, 0)}
+	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.headers}
 	for _, row := range table.getRows() {
-		protoTableParam.Rows = append(protoTableParam.Rows, &ProtoTableRow{Cells: row})
+		protoTableParam.Rows = append(protoTableParam.Rows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	return protoTableParam
 }
 
-func addExecutionResult(protoItem *ProtoItem, protoStepExecutionResult *ProtoStepExecutionResult) {
+func addExecutionResult(protoItem *gauge_messages.ProtoItem, protoStepExecutionResult *gauge_messages.ProtoStepExecutionResult) {
 	if protoStepExecutionResult != nil {
 		protoItem.Step.StepExecutionResult = protoStepExecutionResult
 	}
 }
 
-func convertToProtoSuiteResult(suiteResult *suiteResult) *ProtoSuiteResult {
-	protoSuiteResult := &ProtoSuiteResult{
+func convertToProtoSuiteResult(suiteResult *suiteResult) *gauge_messages.ProtoSuiteResult {
+	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
 		PreHookFailure:   suiteResult.preSuite,
 		PostHookFailure:  suiteResult.postSuite,
 		Failed:           proto.Bool(suiteResult.isFailed),
@@ -180,10 +177,10 @@ func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
 	return (float32)(100.0 * (totalSpecs - failedSpecs) / totalSpecs)
 }
 
-func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
-	protoSpecResults := make([]*ProtoSpecResult, 0)
+func convertToProtoSpecResult(specResults []*specResult) []*gauge_messages.ProtoSpecResult {
+	protoSpecResults := make([]*gauge_messages.ProtoSpecResult, 0)
 	for _, specResult := range specResults {
-		protoSpecResult := &ProtoSpecResult{
+		protoSpecResult := &gauge_messages.ProtoSpecResult{
 			ProtoSpec:           specResult.protoSpec,
 			ScenarioCount:       proto.Int32(int32(specResult.scenarioCount)),
 			ScenarioFailedCount: proto.Int32(int32(specResult.scenarioFailedCount)),
@@ -196,9 +193,9 @@ func convertToProtoSpecResult(specResults []*specResult) []*ProtoSpecResult {
 	return protoSpecResults
 }
 
-func convertToProtoSpec(spec *specification) *ProtoSpec {
+func convertToProtoSpec(spec *specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
-	protoItems := make([]*ProtoItem, 0)
+	protoItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range spec.items {
 		protoItems = append(protoItems, convertToProtoItem(item))
 	}
@@ -206,8 +203,8 @@ func convertToProtoSpec(spec *specification) *ProtoSpec {
 	return protoSpec
 }
 
-func convertToProtoStepValue(stepValue *stepValue) *ProtoStepValue {
-	return &ProtoStepValue{
+func convertToProtoStepValue(stepValue *stepValue) *gauge_messages.ProtoStepValue {
+	return &gauge_messages.ProtoStepValue{
 		StepValue:              proto.String(stepValue.stepValue),
 		ParameterizedStepValue: proto.String(stepValue.parameterizedStepValue),
 		Parameters:             stepValue.args,
@@ -221,10 +218,10 @@ func newSpecResult(specification *specification) *specResult {
 	}
 }
 
-func newProtoSpec(specification *specification) *ProtoSpec {
+func newProtoSpec(specification *specification) *gauge_messages.ProtoSpec {
 
-	return &ProtoSpec{
-		Items:         make([]*ProtoItem, 0),
+	return &gauge_messages.ProtoSpec{
+		Items:         make([]*gauge_messages.ProtoItem, 0),
 		SpecHeading:   proto.String(specification.heading.value),
 		IsTableDriven: proto.Bool(false),
 		FileName:      proto.String(specification.fileName),
@@ -233,12 +230,12 @@ func newProtoSpec(specification *specification) *ProtoSpec {
 
 }
 
-func newProtoScenario(scenario *scenario) *ProtoScenario {
-	return &ProtoScenario{
+func newProtoScenario(scenario *scenario) *gauge_messages.ProtoScenario {
+	return &gauge_messages.ProtoScenario{
 		ScenarioHeading: proto.String(scenario.heading.value),
 		Failed:          proto.Bool(false),
 		Tags:            getTags(scenario.tags),
-		Contexts:        make([]*ProtoItem, 0),
+		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
 	}
 }

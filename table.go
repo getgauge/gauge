@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/gauge_messages"
 	"strings"
 )
 
@@ -116,7 +117,7 @@ func getDefaultTableCell() tableCell {
 	return tableCell{value: "", cellType: static}
 }
 
-func tableFrom(protoTable *ProtoTable) *table {
+func tableFrom(protoTable *gauge_messages.ProtoTable) *table {
 	table := &table{}
 	table.addHeaders(protoTable.GetHeaders().GetCells())
 	for _, row := range protoTable.GetRows() {

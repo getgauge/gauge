@@ -7,6 +7,7 @@ import (
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
 	"io"
 	"io/ioutil"
@@ -40,11 +41,18 @@ type manifest struct {
 
 func main() {
 	flag.Parse()
+	setWorkingDir(*workingDir)
+	validGaugeProject := true
+	_, err := common.GetProjectRoot()
+	if err != nil {
+		fmt.Println("Not a valid Gauge Project Directory.")
+		validGaugeProject = false
+	}
 	if *daemonize {
 		runInBackground()
 	} else if *gaugeVersion {
 		printVersion()
-	} else if *specFilesToFormat != "" {
+	} else if *specFilesToFormat != "" && validGaugeProject {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
@@ -52,13 +60,14 @@ func main() {
 		downloadAndInstallPlugin(*install, *installVersion)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
-	} else if *refactor != "" {
+	} else if *refactor != "" && validGaugeProject {
 		refactorSteps(*refactor)
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
+		} else if validGaugeProject {
+			executeSpecs(*parallel)
 		}
-		executeSpecs(*parallel)
 	}
 }
 
@@ -148,6 +157,7 @@ var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and sce
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
+var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
@@ -314,7 +324,7 @@ func printValidationFailures(validationErrors executionValidationErrors) {
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.lineText))
+			getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
 		}
 	}
 }
@@ -588,7 +598,7 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	return exitCode
 }
 
-func printHookError(hook *ProtoHookFailure) {
+func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 	if hook != nil {
 		console := getCurrentConsole()
 		console.writeError(hook.GetErrorMessage())
@@ -596,7 +606,7 @@ func printHookError(hook *ProtoHookFailure) {
 	}
 }
 
-func printError(execResult *ProtoExecutionResult) {
+func printError(execResult *gauge_messages.ProtoExecutionResult) {
 	if execResult.GetFailed() {
 		console := getCurrentConsole()
 		console.writeError(execResult.GetErrorMessage() + "\n")
@@ -610,9 +620,9 @@ func printSpecFailure(specResult *specResult) {
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
-			if specItem.GetItemType() == ProtoItem_Scenario {
+			if specItem.GetItemType() == gauge_messages.ProtoItem_Scenario {
 				printScenarioFailure(specItem.GetScenario())
-			} else if specItem.GetItemType() == ProtoItem_TableDrivenScenario {
+			} else if specItem.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
 				printTableDrivenScenarioFailure(specItem.GetTableDrivenScenario())
 			}
 		}
@@ -621,21 +631,21 @@ func printSpecFailure(specResult *specResult) {
 	}
 }
 
-func printTableDrivenScenarioFailure(tableDrivenScenario *ProtoTableDrivenScenario) {
+func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTableDrivenScenario) {
 	for _, scenario := range tableDrivenScenario.GetScenarios() {
 		printScenarioFailure(scenario)
 	}
 }
 
-func printScenarioFailure(scenario *ProtoScenario) {
+func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 	if scenario.GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
-			if scenarioItem.GetItemType() == ProtoItem_Step {
+			if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Step {
 				printStepFailure(scenarioItem.GetStep())
-			} else if scenarioItem.GetItemType() == ProtoItem_Concept {
+			} else if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Concept {
 				printConceptFailure(scenarioItem.GetConcept())
 			}
 		}
@@ -644,7 +654,7 @@ func printScenarioFailure(scenario *ProtoScenario) {
 
 }
 
-func printStepFailure(step *ProtoStep) {
+func printStepFailure(step *gauge_messages.ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", step.GetActualText()))
@@ -654,7 +664,7 @@ func printStepFailure(step *ProtoStep) {
 	}
 }
 
-func printConceptFailure(concept *ProtoConcept) {
+func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
 		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
@@ -811,4 +821,26 @@ func (s ByFileName) Less(i, j int) bool {
 func sortSpecsList(allSpecs []*specification) []*specification {
 	sort.Sort(ByFileName(allSpecs))
 	return allSpecs
+}
+
+func setWorkingDir(workingDir string) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Printf("Unable to read current directory : %s\n", err)
+		os.Exit(1)
+	}
+	targetDir := path.Join(pwd, workingDir)
+	if !common.DirExists(targetDir) {
+		err = os.Mkdir(targetDir, 0777)
+		if err != nil {
+			fmt.Printf("Unable to set working directory : %s\n", err)
+			os.Exit(1)
+		}
+	}
+	err = os.Chdir(targetDir)
+	pwd, err = os.Getwd()
+	if err != nil {
+		fmt.Printf("Unable to set working directory : %s\n", err)
+		os.Exit(1)
+	}
 }

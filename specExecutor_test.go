@@ -1,6 +1,9 @@
 package main
 
-import . "gopkg.in/check.v1"
+import (
+	"github.com/getgauge/gauge/gauge_messages"
+	. "gopkg.in/check.v1"
+)
 
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	parser := new(specParser)
@@ -28,13 +31,13 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	firstStep := protoConcept.GetSteps()[0].GetStep()
 	params := getParameters(firstStep.GetFragments())
 	c.Assert(2, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "456")
 
 	secondStep := protoConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "9900")
 
 }
@@ -64,7 +67,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
-	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
+	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
 
 	nestedConcept := protoConcept.GetSteps()[0].GetConcept()
 	checkConceptParameterValuesInOrder(c, nestedConcept, "456", "foo")
@@ -72,20 +75,20 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	firstNestedStep := nestedConcept.GetSteps()[0].GetStep()
 	params := getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "456")
 
 	secondNestedStep := nestedConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "foo")
 
-	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, ProtoItem_Step)
+	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, gauge_messages.ProtoItem_Step)
 	secondStepInConcept := protoConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondStepInConcept.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "9900")
 
 }
@@ -121,32 +124,32 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
-	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
+	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
 	nestedConcept := protoConcept.GetSteps()[0].GetConcept()
 	checkConceptParameterValuesInOrder(c, nestedConcept, "123", "foo")
 	firstNestedStep := nestedConcept.GetSteps()[0].GetStep()
 	params := getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "123")
 
 	secondNestedStep := nestedConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "foo")
 
-	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, ProtoItem_Step)
+	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, gauge_messages.ProtoItem_Step)
 	secondStepInConcept := protoConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondStepInConcept.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "8800")
 
 	// For second row
 	specExecutor.dataTableIndex = 1
 	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
-	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, ProtoItem_Concept)
+	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
 	checkConceptParameterValuesInOrder(c, protoConcept, "666", "bar", "9900")
 
 	nestedConcept = protoConcept.GetSteps()[0].GetConcept()
@@ -154,24 +157,24 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	firstNestedStep = nestedConcept.GetSteps()[0].GetStep()
 	params = getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "666")
 
 	secondNestedStep = nestedConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "bar")
 
-	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, ProtoItem_Step)
+	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, gauge_messages.ProtoItem_Step)
 	secondStepInConcept = protoConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondStepInConcept.GetFragments())
 	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, Parameter_Dynamic)
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "9900")
 }
 
-func checkConceptParameterValuesInOrder(c *C, concept *ProtoConcept, paramValues ...string) {
+func checkConceptParameterValuesInOrder(c *C, concept *gauge_messages.ProtoConcept, paramValues ...string) {
 	params := getParameters(concept.GetConceptStep().Fragments)
 	c.Assert(len(params), Equals, len(paramValues))
 	for i, param := range params {

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"os"
 	"strings"
@@ -97,7 +98,7 @@ func (agent *rephraseRefactorer) startRunner() *testRunner {
 	return testRunner
 }
 
-func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *Message) {
+func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) {
 	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
 	if err != nil {
 		testRunner.kill()
@@ -111,7 +112,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 }
 
 //Todo: Check for inline tables
-func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner, stepName string) (*Message, error) {
+func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner, stepName string) (*gauge_messages.Message, error) {
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
@@ -124,14 +125,14 @@ func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner, stepN
 	}
 	oldProtoStepValue := convertToProtoStepValue(oldStepValue)
 	newProtoStepValue := convertToProtoStepValue(newStepValue)
-	return &Message{MessageType: Message_RefactorRequest.Enum(), RefactorRequest: &RefactorRequest{OldStepValue: oldProtoStepValue, NewStepValue: newProtoStepValue, ParamPositions: agent.createParameterPositions(orderMap)}}, nil
+	return &gauge_messages.Message{MessageType: gauge_messages.Message_RefactorRequest.Enum(), RefactorRequest: &gauge_messages.RefactorRequest{OldStepValue: oldProtoStepValue, NewStepValue: newProtoStepValue, ParamPositions: agent.createParameterPositions(orderMap)}}, nil
 }
 
 func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map[int]int) string {
 	agent.newStep.populateFragments()
 	paramIndex := 0
 	for _, fragment := range agent.newStep.fragments {
-		if fragment.GetFragmentType() == Fragment_Parameter {
+		if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
 			if orderMap[paramIndex] != -1 {
 				fragment.GetParameter().Value = proto.String(args[orderMap[paramIndex]])
 			}
@@ -142,7 +143,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 }
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
-	stepNameMessage := &Message{MessageType: Message_StepNameRequest.Enum(), StepNameRequest: &GetStepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
+	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerAPIRequestTimeout())
 	if err != nil {
 		return err, "", false
@@ -158,10 +159,10 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (erro
 	return nil, responseMessage.GetStepNameResponse().GetStepName()[0], true
 }
 
-func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*ParameterPosition {
-	paramPositions := make([]*ParameterPosition, 0)
+func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*gauge_messages.ParameterPosition {
+	paramPositions := make([]*gauge_messages.ParameterPosition, 0)
 	for k, v := range orderMap {
-		paramPositions = append(paramPositions, &ParameterPosition{NewPosition: proto.Int(k), OldPosition: proto.Int(v)})
+		paramPositions = append(paramPositions, &gauge_messages.ParameterPosition{NewPosition: proto.Int(k), OldPosition: proto.Int(v)})
 	}
 	return paramPositions
 }

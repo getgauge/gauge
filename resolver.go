@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"regexp"
 	"strings"
@@ -18,13 +19,13 @@ type specialTypeResolver struct {
 type paramResolver struct {
 }
 
-func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, dataTableLookup *argLookup) []*Parameter {
-	parameters := make([]*Parameter, 0)
+func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, dataTableLookup *argLookup) []*gauge_messages.Parameter {
+	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.args {
-		parameter := new(Parameter)
+		parameter := new(gauge_messages.Parameter)
 		parameter.Name = proto.String(arg.name)
 		if arg.argType == static {
-			parameter.ParameterType = Parameter_Static.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Static.Enum()
 			parameter.Value = proto.String(arg.value)
 		} else if arg.argType == dynamic {
 			var resolvedArg *stepArg
@@ -36,20 +37,20 @@ func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, 
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = proto.String(resolvedArg.name)
 			if resolvedArg.table.isInitialized() {
-				parameter.ParameterType = Parameter_Special_Table.Enum()
+				parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
 				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.table, dataTableLookup)
 			} else {
-				parameter.ParameterType = Parameter_Dynamic.Enum()
+				parameter.ParameterType = gauge_messages.Parameter_Dynamic.Enum()
 				parameter.Value = proto.String(resolvedArg.value)
 			}
 		} else if arg.argType == specialString {
-			parameter.ParameterType = Parameter_Special_String.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Special_String.Enum()
 			parameter.Value = proto.String(arg.value)
 		} else if arg.argType == specialTable {
-			parameter.ParameterType = Parameter_Special_Table.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
 			parameter.Table = paramResolver.createProtoStepTable(&arg.table, dataTableLookup)
 		} else {
-			parameter.ParameterType = Parameter_Table.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Table.Enum()
 			parameter.Table = paramResolver.createProtoStepTable(&arg.table, dataTableLookup)
 
 		}
@@ -60,10 +61,10 @@ func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, 
 
 }
 
-func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLookup *argLookup) *ProtoTable {
-	protoTable := new(ProtoTable)
-	protoTable.Headers = &ProtoTableRow{Cells: table.headers}
-	tableRows := make([]*ProtoTableRow, 0)
+func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLookup *argLookup) *gauge_messages.ProtoTable {
+	protoTable := new(gauge_messages.ProtoTable)
+	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.headers}
+	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
 	for i := 0; i < len(table.columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.headers {
@@ -75,7 +76,7 @@ func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLooku
 			}
 			row = append(row, value)
 		}
-		tableRows = append(tableRows, &ProtoTableRow{Cells: row})
+		tableRows = append(tableRows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	protoTable.Rows = tableRows
 	return protoTable

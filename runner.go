@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge_messages"
 	"net"
 	"os"
 	"os/exec"
@@ -121,8 +122,8 @@ func (testRunner *testRunner) isStillRunning() bool {
 
 func (testRunner *testRunner) sendProcessKillMessage() {
 	id := common.GetUniqueId()
-	message := &Message{MessageId: &id, MessageType: Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &KillProcessRequest{}}
+	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
 	writeGaugeMessage(message, testRunner.connection)
 }

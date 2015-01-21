@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"log"
 	"net"
@@ -28,8 +29,8 @@ func requestForSteps(runner *testRunner) []string {
 	return make([]string, 0)
 }
 
-func createGetStepNamesRequest() *Message {
-	return &Message{MessageType: Message_StepNamesRequest.Enum(), StepNamesRequest: &StepNamesRequest{}}
+func createGetStepNamesRequest() *gauge_messages.Message {
+	return &gauge_messages.Message{MessageType: gauge_messages.Message_StepNamesRequest.Enum(), StepNamesRequest: &gauge_messages.StepNamesRequest{}}
 }
 
 func startAPIService(port int) error {
@@ -59,8 +60,8 @@ type gaugeApiMessageHandler struct {
 }
 
 func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, conn net.Conn) {
-	apiMessage := &APIMessage{}
-	var responseMessage *APIMessage
+	apiMessage := &gauge_messages.APIMessage{}
+	var responseMessage *gauge_messages.APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
 	if err != nil {
 		log.Printf("[Warning] Failed to read API proto message: %s\n", err.Error())
@@ -68,25 +69,25 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 	} else {
 		messageType := apiMessage.GetMessageType()
 		switch messageType {
-		case APIMessage_GetProjectRootRequest:
+		case gauge_messages.APIMessage_GetProjectRootRequest:
 			responseMessage = handler.projectRootRequestResponse(apiMessage)
 			break
-		case APIMessage_GetInstallationRootRequest:
+		case gauge_messages.APIMessage_GetInstallationRootRequest:
 			responseMessage = handler.installationRootRequestResponse(apiMessage)
 			break
-		case APIMessage_GetAllStepsRequest:
+		case gauge_messages.APIMessage_GetAllStepsRequest:
 			responseMessage = handler.getAllStepsRequestResponse(apiMessage)
 			break
-		case APIMessage_GetAllSpecsRequest:
+		case gauge_messages.APIMessage_GetAllSpecsRequest:
 			responseMessage = handler.getAllSpecsRequestResponse(apiMessage)
 			break
-		case APIMessage_GetStepValueRequest:
+		case gauge_messages.APIMessage_GetStepValueRequest:
 			responseMessage = handler.getStepValueRequestResponse(apiMessage)
 			break
-		case APIMessage_GetLanguagePluginLibPathRequest:
+		case gauge_messages.APIMessage_GetLanguagePluginLibPathRequest:
 			responseMessage = handler.getLanguagePluginLibPath(apiMessage)
 			break
-		case APIMessage_GetAllConceptsRequest:
+		case gauge_messages.APIMessage_GetAllConceptsRequest:
 			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
 			break
 		}
@@ -94,7 +95,7 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 	handler.sendMessage(responseMessage, conn)
 }
 
-func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMessage, conn net.Conn) {
 	dataBytes, err := proto.Marshal(message)
 	if err != nil {
 		fmt.Printf("[Warning] Failed to respond to API request. Could not Marshal response %s\n", err.Error())
@@ -104,43 +105,43 @@ func (handler *gaugeApiMessageHandler) sendMessage(message *APIMessage, conn net
 	}
 }
 
-func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	root, err := common.GetProjectRoot()
 	if err != nil {
 		fmt.Printf("[Warning] Failed to find project root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
-	projectRootResponse := &GetProjectRootResponse{ProjectRoot: proto.String(root)}
-	return &APIMessage{MessageType: APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
+	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(root)}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
 
 }
 
-func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	root, err := common.GetInstallationPrefix()
 	if err != nil {
 		fmt.Printf("[Warning] Failed to find installation root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
-	installationRootResponse := &GetInstallationRootResponse{InstallationRoot: proto.String(root)}
-	return &APIMessage{MessageType: APIMessage_GetInstallationRootResponse.Enum(), MessageId: message.MessageId, InstallationRootResponse: installationRootResponse}
+	installationRootResponse := &gauge_messages.GetInstallationRootResponse{InstallationRoot: proto.String(root)}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetInstallationRootResponse.Enum(), MessageId: message.MessageId, InstallationRootResponse: installationRootResponse}
 }
 
-func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	stepValues := handler.specInfoGatherer.getAvailableSteps()
-	stepValueResponses := make([]*ProtoStepValue, 0)
+	stepValueResponses := make([]*gauge_messages.ProtoStepValue, 0)
 	for _, stepValue := range stepValues {
 		stepValueResponses = append(stepValueResponses, convertToProtoStepValue(stepValue))
 	}
-	getAllStepsResponse := &GetAllStepsResponse{AllSteps: stepValueResponses}
-	return &APIMessage{MessageType: APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
+	getAllStepsResponse := &gauge_messages.GetAllStepsResponse{AllSteps: stepValueResponses}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
-func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.availableSpecs)
-	return &APIMessage{MessageType: APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
 }
 
-func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetStepValueRequest()
 	stepText := request.GetStepText()
 	hasInlineTable := request.GetHasInlineTable()
@@ -149,18 +150,18 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *APIM
 	if err != nil {
 		return handler.getErrorResponse(message, err)
 	}
-	stepValueResponse := &GetStepValueResponse{StepValue: convertToProtoStepValue(stepValue)}
-	return &APIMessage{MessageType: APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
+	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: convertToProtoStepValue(stepValue)}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }
 
-func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.conceptInfos)
-	return &APIMessage{MessageType: APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
 
 }
 
-func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *APIMessage) *APIMessage {
+func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	libPathRequest := message.GetLibPathRequest()
 	language := libPathRequest.GetLanguage()
 	languageInstallDir, err := common.GetPluginInstallDir(language, "")
@@ -173,32 +174,32 @@ func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *APIMess
 	}
 	relativeLibPath := runnerInfo.Lib
 	libPath := path.Join(languageInstallDir, relativeLibPath)
-	response := &GetLanguagePluginLibPathResponse{Path: proto.String(libPath)}
-	return &APIMessage{MessageType: APIMessage_GetLanguagePluginLibPathResponse.Enum(), MessageId: message.MessageId, LibPathResponse: response}
+	response := &gauge_messages.GetLanguagePluginLibPathResponse{Path: proto.String(libPath)}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetLanguagePluginLibPathResponse.Enum(), MessageId: message.MessageId, LibPathResponse: response}
 }
 
-func (handler *gaugeApiMessageHandler) getErrorResponse(message *APIMessage, err error) *APIMessage {
-	errorResponse := &ErrorResponse{Error: proto.String(err.Error())}
-	return &APIMessage{MessageType: APIMessage_ErrorResponse.Enum(), MessageId: message.MessageId, Error: errorResponse}
+func (handler *gaugeApiMessageHandler) getErrorResponse(message *gauge_messages.APIMessage, err error) *gauge_messages.APIMessage {
+	errorResponse := &gauge_messages.ErrorResponse{Error: proto.String(err.Error())}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: message.MessageId, Error: errorResponse}
 
 }
 
-func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *APIMessage {
+func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *gauge_messages.APIMessage {
 	id := common.GetUniqueId()
-	errorResponse := &ErrorResponse{Error: proto.String(err.Error())}
-	return &APIMessage{MessageType: APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
+	errorResponse := &gauge_messages.ErrorResponse{Error: proto.String(err.Error())}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
 }
 
-func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*specification) *GetAllSpecsResponse {
-	protoSpecs := make([]*ProtoSpec, 0)
+func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*specification) *gauge_messages.GetAllSpecsResponse {
+	protoSpecs := make([]*gauge_messages.ProtoSpec, 0)
 	for _, spec := range specs {
 		protoSpecs = append(protoSpecs, convertToProtoSpec(spec))
 	}
-	return &GetAllSpecsResponse{Specs: protoSpecs}
+	return &gauge_messages.GetAllSpecsResponse{Specs: protoSpecs}
 }
 
-func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*ConceptInfo) *GetAllConceptsResponse {
-	return &GetAllConceptsResponse{Concepts: conceptInfos}
+func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*gauge_messages.ConceptInfo) *gauge_messages.GetAllConceptsResponse {
+	return &gauge_messages.GetAllConceptsResponse{Concepts: conceptInfos}
 }
 
 func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
