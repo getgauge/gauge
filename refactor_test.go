@@ -15,7 +15,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgs(c *C) {
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	agent, err := getRefactorAgent(oldStep, newStep)
 	specs := append(make([]*specification, 0), spec)
-	agent.refactor(&specs, new(conceptDictionary))
+	agent.rephraseInSpecsAndConcepts(&specs, new(conceptDictionary))
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios[0].steps), Equals, 1)
@@ -38,7 +38,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneScenario(c *
 	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	agent, err := getRefactorAgent(oldStep, newStep)
 	specs := append(make([]*specification, 0), spec)
-	agent.refactor(&specs, new(conceptDictionary))
+	agent.rephraseInSpecsAndConcepts(&specs, new(conceptDictionary))
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].scenarios), Equals, 2)
@@ -69,7 +69,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	specs := append(make([]*specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, err := getRefactorAgent(oldStep, newStep)
-	specRefactored, _ := agent.refactor(&specs, new(conceptDictionary))
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, new(conceptDictionary))
 
 	for _, isRefactored := range specRefactored {
 		c.Assert(true, Equals, isRefactored)
@@ -98,7 +98,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsInConceptFiles(c *C) {
 	step2 := &step{value: unchanged, isConcept: true, items: []item{&step{value: oldStep, isConcept: false}, &step{value: oldStep + "T", isConcept: false}}}
 	dictionary.add([]*step{step1, step2}, "file.cpt")
 
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[0].(*step).value, Equals, newStep)
 	c.Assert(dictionary.conceptsMap[unchanged].conceptStep.items[1].(*step).value, Equals, oldStep+"T")
@@ -122,7 +122,7 @@ func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 	specs := append(make([]*specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, _ := getRefactorAgent(oldStep, newStep)
-	specRefactored, _ := agent.refactor(&specs, new(conceptDictionary))
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, new(conceptDictionary))
 
 	c.Assert(true, Equals, specRefactored[specs[0]])
 	c.Assert(false, Equals, specRefactored[specs[1]])
@@ -147,7 +147,7 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 	dictionary.add([]*step{step1, step2}, fileName)
 	dictionary.add([]*step{step3}, "e"+fileName)
 
-	_, filesRefactored := agent.refactor(&specs, dictionary)
+	_, filesRefactored := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(filesRefactored[fileName], Equals, false)
 	c.Assert(filesRefactored["e"+fileName], Equals, true)
@@ -166,7 +166,7 @@ func (s *MySuite) TestRenamingWhenNumberOfArgumentsAreSame(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
@@ -185,7 +185,7 @@ func (s *MySuite) TestRenamingWhenArgumentsOrderIsChanged(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "id")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
@@ -244,7 +244,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
@@ -266,7 +266,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "")
@@ -288,7 +288,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedInMiddle(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
@@ -310,7 +310,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromLast(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
@@ -331,7 +331,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromBegining(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "address")
@@ -352,7 +352,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromMiddle(c *C) {
 	agent, _ := getRefactorAgent(oldStep1, newStep)
 	specs := append(make([]*specification, 0), spec)
 	dictionary := new(conceptDictionary)
-	agent.refactor(&specs, dictionary)
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")

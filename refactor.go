@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
@@ -16,7 +17,83 @@ type rephraseRefactorer struct {
 	isConcept bool
 }
 
-func (agent *rephraseRefactorer) refactor(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
+type refactoringResult struct {
+	success            bool
+	specsChanged       []string
+	conceptsChanged    []string
+	runnerFilesChanged []string
+	errors             []string
+	warnings           []string
+}
+
+func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
+	if newStep == oldStep {
+		return rephraseFailure("Same old step name and new step name.")
+	}
+	agent, err := getRefactorAgent(oldStep, newStep)
+
+	if err != nil {
+		return rephraseFailure(err.Error())
+	}
+
+	projectRoot, err := common.GetProjectRoot()
+	if err != nil {
+		return rephraseFailure(err.Error())
+	}
+
+	result := &refactoringResult{success: true, errors: make([]string, 0), warnings: make([]string, 0)}
+	specs, specParseResults := findSpecs(projectRoot, &conceptDictionary{})
+	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
+	if !result.success {
+		return result
+	}
+	conceptDictionary, parseResult := createConceptsDictionary(false)
+
+	addErrorsAndWarningsToRefactoringResult(result, parseResult)
+	if !result.success {
+		return result
+	}
+
+	refactorResult := agent.performRefactoringOn(specs, conceptDictionary)
+	refactorResult.warnings = append(refactorResult.warnings, result.warnings...)
+	return refactorResult
+}
+
+func rephraseFailure(errors ...string) *refactoringResult {
+	return &refactoringResult{success: false, errors: errors}
+}
+
+func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, parseResults ...*parseResult) {
+	for _, parseResult := range parseResults {
+		if !parseResult.ok {
+			refactorResult.success = false
+			refactorResult.errors = append(refactorResult.errors, parseResult.error.Error())
+		}
+		refactorResult.appendWarnings(parseResult.warnings)
+	}
+}
+
+func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary) *refactoringResult {
+	runner := agent.startRunner()
+	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
+	if err != nil {
+		return rephraseFailure(fmt.Sprintf("Failed to perform refactoring: %s", err))
+	}
+	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
+	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+	refactoringResult := &refactoringResult{specsChanged: specFiles, conceptsChanged: conceptFiles, errors: make([]string, 0)}
+	if isStepPresent {
+		filesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
+		refactoringResult.runnerFilesChanged = filesChanged
+		if err != nil {
+			refactoringResult.errors = append(refactoringResult.errors, fmt.Sprintf("Only spec files and concepts refactored: %s", err))
+			refactoringResult.success = false
+		}
+	}
+	return refactoringResult
+}
+
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
 	specsRefactored := make(map[*specification]bool, 0)
 	conceptFilesRefactored := make(map[string]bool, 0)
 	orderMap := agent.createOrderOfArgs()
@@ -73,18 +150,19 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 }
 
-func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRunner, stepName string) {
-	if agent.isConcept {
-		return
-	}
+func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRunner, stepName string) ([]string, error) {
+	defer testRunner.kill()
+
 	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName)
 	if err != nil {
-		fmt.Printf("%s", err)
-		testRunner.kill()
-		os.Exit(1)
+		return nil, err
 	}
-	agent.sendRefactorRequest(testRunner, refactorRequest)
-	testRunner.kill()
+	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
+	var runnerError error
+	if !refactorResponse.GetSuccess() {
+		runnerError = errors.New(refactorResponse.GetError())
+	}
+	return refactorResponse.GetFilesChanged(), runnerError
 }
 
 func (agent *rephraseRefactorer) startRunner() *testRunner {
@@ -98,17 +176,12 @@ func (agent *rephraseRefactorer) startRunner() *testRunner {
 	return testRunner
 }
 
-func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) {
+func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
 	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
 	if err != nil {
-		testRunner.kill()
-		fmt.Printf("Effects only in spec and concept files: %s", err)
-		os.Exit(1)
-	} else if !response.GetRefactorResponse().GetSuccess() {
-		fmt.Printf("Effects only in spec and concept files: %s", response.GetRefactorResponse().GetError())
-		testRunner.kill()
-		os.Exit(1)
+		return &gauge_messages.RefactorResponse{Success: proto.Bool(false), Error: proto.String(err.Error())}
 	}
+	return response.GetRefactorResponse()
 }
 
 //Todo: Check for inline tables
@@ -169,4 +242,33 @@ func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) 
 
 func (agent *rephraseRefactorer) getStepValueFor(step *step, stepName string) (*stepValue, error) {
 	return extractStepValueAndParams(stepName, false)
+}
+
+func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) ([]string, []string) {
+	specFiles := make([]string, 0)
+	conceptFiles := make([]string, 0)
+	for _, spec := range specs {
+		if specsRefactored[spec] {
+			specFiles = append(specFiles, spec.fileName)
+			formatted := formatSpecification(spec)
+			saveFile(spec.fileName, formatted, true)
+		}
+	}
+	conceptMap := formatConcepts(conceptDictionary)
+	for fileName, concept := range conceptMap {
+		if conceptFilesRefactored[fileName] {
+			conceptFiles = append(conceptFiles, fileName)
+			saveFile(fileName, concept, true)
+		}
+	}
+	return specFiles, conceptFiles
+}
+
+func (refactoringResult *refactoringResult) appendWarnings(warnings []*warning) {
+	if refactoringResult.warnings == nil {
+		refactoringResult.warnings = make([]string, 0)
+	}
+	for _, warning := range warnings {
+		refactoringResult.warnings = append(refactoringResult.warnings, warning.message)
+	}
 }

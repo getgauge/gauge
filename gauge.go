@@ -54,7 +54,7 @@ func main() {
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else if *refactor != "" {
-		refactorSteps(*refactor)
+		refactorSteps(*refactor, newStepName())
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
@@ -63,68 +63,30 @@ func main() {
 	}
 }
 
-func refactorSteps(oldStep string) {
+func newStepName() string {
 	if len(flag.Args()) != 1 {
 		printUsage()
 	}
-	if oldStep == flag.Args()[0] {
-		return
-	}
-	projectRoot, err := common.GetProjectRoot()
-	if err != nil {
-		fmt.Printf("Failed to find project root: %s", err)
-		os.Exit(1)
-	}
-	specs, specParseResult := findSpecs(projectRoot, &conceptDictionary{})
-	handleParseResult(specParseResult...)
-	agent, err := getRefactorAgent(oldStep, flag.Args()[0])
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-	runner := agent.startRunner()
-	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
-	if err != nil {
-		fmt.Printf(err.Error())
-		runner.kill()
-		os.Exit(1)
-	}
-	conceptDictionary, parseResult := createConceptsDictionary(false)
-	handleParseResult(parseResult)
-	specsRefactored, conceptFilesRefactored := agent.refactor(&specs, conceptDictionary)
-
-	specCount, conceptCount := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	printSummary(specCount, conceptCount)
-	if isStepPresent {
-		agent.requestRunnerForRefactoring(runner, stepName)
-		return
-	}
-	runner.kill()
+	return flag.Args()[0]
 }
 
-func printSummary(specFilesCount int, conceptFilesCount int) {
-	fmt.Println(strconv.Itoa(specFilesCount) + " specifications changed.")
-	fmt.Println(strconv.Itoa(conceptFilesCount) + " concept files changed.")
+func refactorSteps(oldStep, newStep string) {
+	refactoringResult := performRephraseRefactoring(oldStep, newStep)
+	printRefactoringSummary(refactoringResult)
 }
 
-func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) (int, int) {
-	specFilesCount := 0
-	conceptFilesCount := 0
-	for _, spec := range specs {
-		if specsRefactored[spec] {
-			specFilesCount++
-			formatted := formatSpecification(spec)
-			saveFile(spec.fileName, formatted, true)
+func printRefactoringSummary(refactoringResult *refactoringResult) {
+	exitCode := 0
+	if !refactoringResult.success {
+		exitCode = 1
+		for _, err := range refactoringResult.errors {
+			fmt.Printf("[error] : %s \n", err)
 		}
 	}
-	conceptMap := formatConcepts(conceptDictionary)
-	for fileName, concept := range conceptMap {
-		if conceptFilesRefactored[fileName] {
-			conceptFilesCount++
-			saveFile(fileName, concept, true)
-		}
-	}
-	return specFilesCount, conceptFilesCount
+	fmt.Printf("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	fmt.Printf("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	fmt.Printf("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	os.Exit(exitCode)
 }
 
 func saveFile(fileName string, content string, backup bool) {
@@ -713,13 +675,11 @@ func getSpecFiles(specSource string) []string {
 	specFiles := make([]string, 0)
 	if common.DirExists(specSource) {
 		specFiles = append(specFiles, findSpecsFilesIn(specSource)...)
-		return specFiles
 	} else if common.FileExists(specSource) && isValidSpecExtension(specSource) {
 		specFile, _ := filepath.Abs(specSource)
 		specFiles = append(specFiles, specFile)
-		return specFiles
 	}
-	return nil
+	return specFiles
 }
 
 func specsFromArgs(conceptDictionary *conceptDictionary) []*specification {
@@ -747,19 +707,11 @@ func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDicti
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specFiles := getSpecFiles(specSource)
-	if specFiles == nil {
-		fmt.Printf("Spec file or directory does not exist: %s\n", specSource)
-		os.Exit(1)
-	} else if len(specFiles) == 0 {
-		fmt.Printf("No spec files were found in %s\n", specSource)
-		os.Exit(1)
-	}
 	parseResults := make([]*parseResult, 0)
 	specs := make([]*specification, 0)
 	for _, specFile := range specFiles {
 		specFileContent, err := common.ReadFileContents(specFile)
 		if err != nil {
-			fmt.Println(err)
 			parseResults = append(parseResults, &parseResult{error: &parseError{message: err.Error()}, ok: false, fileName: specFile})
 		}
 		spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
