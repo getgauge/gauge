@@ -75,6 +75,7 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary) *refactoringResult {
 	runner := agent.startRunner()
+	defer runner.kill()
 	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
 	if err != nil {
 		return rephraseFailure(fmt.Sprintf("Failed to perform refactoring: %s", err))
@@ -151,8 +152,6 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRunner, stepName string) ([]string, error) {
-	defer testRunner.kill()
-
 	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName)
 	if err != nil {
 		return nil, err
