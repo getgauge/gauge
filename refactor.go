@@ -272,3 +272,12 @@ func (refactoringResult *refactoringResult) appendWarnings(warnings []*warning) 
 		refactoringResult.warnings = append(refactoringResult.warnings, warning.message)
 	}
 }
+
+func (refactoringResult *refactoringResult) allFilesChanges() []string {
+	filesChanged := make([]string, 0)
+	filesChanged = append(filesChanged, refactoringResult.specsChanged...)
+	filesChanged = append(filesChanged, refactoringResult.conceptsChanged...)
+	filesChanged = append(filesChanged, refactoringResult.runnerFilesChanged...)
+	return filesChanged
+
+}

@@ -90,6 +90,9 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_GetAllConceptsRequest:
 			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
 			break
+		case gauge_messages.APIMessage_PerformRefactoringRequest:
+			responseMessage = handler.performRefactoring(apiMessage)
+			break
 		}
 	}
 	handler.sendMessage(responseMessage, conn)
@@ -200,6 +203,13 @@ func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs
 
 func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*gauge_messages.ConceptInfo) *gauge_messages.GetAllConceptsResponse {
 	return &gauge_messages.GetAllConceptsResponse{Concepts: conceptInfos}
+}
+
+func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	refactoringRequest := message.PerformRefactoringRequest
+	refactoringResult := performRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
+	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.success), Errors: refactoringResult.errors, FilesChanged: refactoringResult.allFilesChanges()}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
 }
 
 func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
