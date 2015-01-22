@@ -186,7 +186,7 @@ func sortConcepts(conceptDictionary *conceptDictionary, conceptMap map[string]st
 func formatConceptSteps(conceptMap map[string]string, concept *concept) {
 	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatStep(concept.conceptStep), "*", "#", 1)) + "\n"
 	for i := 1; i < len(concept.conceptStep.items); i++ {
-		conceptMap[concept.fileName] += formatStep(concept.conceptStep.items[i].(*step))
+		conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
 	}
 }
 
@@ -199,4 +199,25 @@ func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
 		formatConceptSteps(conceptMap, concept)
 	}
 	return conceptMap
+}
+
+func formatItem(item item) string {
+	switch item.kind() {
+	case commentKind:
+		comment := item.(*comment)
+		if comment.value == "\n" {
+			return comment.value
+		}
+		return fmt.Sprintf("%s\n", comment.value)
+	case stepKind:
+		step := item.(*step)
+		return formatStep(step)
+	case tableKind:
+		table := item.(*table)
+		return formatTable(table)
+	case tagKind:
+		tags := item.(*tags)
+		return formatTags(tags)
+	}
+	return ""
 }
