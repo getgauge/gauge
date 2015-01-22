@@ -74,23 +74,24 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 }
 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary) *refactoringResult {
-	runner := agent.startRunner()
-	defer runner.kill()
-	err, stepName, isStepPresent := agent.getStepNameFromRunner(runner)
-	if err != nil {
-		return rephraseFailure(fmt.Sprintf("Failed to perform refactoring: %s", err))
-	}
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	refactoringResult := &refactoringResult{specsChanged: specFiles, success:true, conceptsChanged: conceptFiles, errors: make([]string, 0)}
-	if isStepPresent {
-		filesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
-		refactoringResult.runnerFilesChanged = filesChanged
-		if err != nil {
-			refactoringResult.errors = append(refactoringResult.errors, fmt.Sprintf("Only spec files and concepts refactored: %s", err))
-			refactoringResult.success = false
-		}
+	refactoringResult := &refactoringResult{specsChanged: specFiles, success: false, conceptsChanged: conceptFiles, errors: make([]string, 0)}
+
+	runner := agent.startRunner()
+	defer runner.kill()
+	stepName, err := agent.getStepNameFromRunner(runner)
+	if err != nil {
+		refactoringResult.errors = append(refactoringResult.errors, err.Error())
+		return refactoringResult
 	}
+	runnerFilesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
+	if err != nil {
+		refactoringResult.errors = append(refactoringResult.errors, fmt.Sprintf("Only spec files and concepts refactored: %s", err))
+		return refactoringResult
+	}
+	refactoringResult.success = true
+	refactoringResult.runnerFilesChanged = runnerFilesChanged
 	return refactoringResult
 }
 
@@ -214,21 +215,19 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (error, string, bool) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (string, error) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerAPIRequestTimeout())
 	if err != nil {
-		return err, "", false
+		return "", err
 	}
 	if !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		fmt.Println("Step implementation not found: " + agent.oldStep.lineText)
-		return nil, "", false
+		return "", errors.New(fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
-		return errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), "", false
+		return "", errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")))
 	}
-
-	return nil, responseMessage.GetStepNameResponse().GetStepName()[0], true
+	return responseMessage.GetStepNameResponse().GetStepName()[0], nil
 }
 
 func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) []*gauge_messages.ParameterPosition {
