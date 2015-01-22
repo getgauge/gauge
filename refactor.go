@@ -82,7 +82,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 	}
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	refactoringResult := &refactoringResult{specsChanged: specFiles, conceptsChanged: conceptFiles, errors: make([]string, 0)}
+	refactoringResult := &refactoringResult{specsChanged: specFiles, success:true, conceptsChanged: conceptFiles, errors: make([]string, 0)}
 	if isStepPresent {
 		filesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
 		refactoringResult.runnerFilesChanged = filesChanged
