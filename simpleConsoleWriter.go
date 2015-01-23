@@ -69,7 +69,6 @@ func (writer *simpleConsoleWriter) writeStep(step *step) {
 }
 
 func (writer *simpleConsoleWriter) writeStepStarting(step *step) {
-	writer.writeString(fmt.Sprintf("Executing.. => %s", formatStep(step)))
 }
 
 //todo: pass protostep instead
