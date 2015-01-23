@@ -2,7 +2,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
@@ -35,7 +34,7 @@ func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
 	if initResult.GetFailed() {
-		fmt.Println("[Warning] Suite data store didn't get initialized")
+		log.Warning("Suite data store didn't get initialized")
 	}
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
@@ -102,7 +101,7 @@ func (exe *simpleExecution) start() *suiteResult {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.kill(); err != nil {
-		fmt.Printf("[Error] Failed to kill Runner. %s\n", err.Error())
+		log.Error("Failed to kill Runner. %s\n", err.Error())
 	}
 }
 

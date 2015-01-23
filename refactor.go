@@ -170,7 +170,7 @@ func (agent *rephraseRefactorer) startRunner() *testRunner {
 	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
 	if err != nil {
-		fmt.Printf("Failed to connect to test runner: %s", err)
+		log.Critical("Failed to connect to test runner: %s", err)
 		os.Exit(1)
 	}
 	return testRunner

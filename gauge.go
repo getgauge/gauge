@@ -9,6 +9,8 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
+	"github.com/op/go-logging"
+	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,9 +31,33 @@ const (
 var acceptedExtensions = make(map[string]bool)
 var defaultPlugins = []string{"html-report"}
 
+var log = logging.MustGetLogger("gauge")
+
+var format = logging.MustStringFormatter(
+	"%{time:15:04:05.000} [%{level:.4s}] %{message}",
+)
+
 func init() {
 	acceptedExtensions[".spec"] = true
 	acceptedExtensions[".md"] = true
+}
+
+func initLoggers() {
+	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+	fileLogger := logging.NewLogBackend(&lumberjack.Logger{
+		Filename:   "logs/foo.log",
+		MaxSize:    500, // megabytes
+		MaxBackups: 3,
+		MaxAge:     28, //days
+	}, "", 0)
+
+	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, format)
+	fileFormatter := logging.NewBackendFormatter(fileLogger, format)
+
+	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
+	stdOutLoggerLeveled.SetLevel(logging.INFO, "")
+
+	logging.SetBackend(fileFormatter, stdOutLoggerLeveled)
 }
 
 type manifest struct {
@@ -40,12 +66,13 @@ type manifest struct {
 }
 
 func main() {
+	initLoggers()
 	flag.Parse()
 	setWorkingDir(*workingDir)
 	validGaugeProject := true
 	_, err := common.GetProjectRoot()
 	if err != nil {
-		fmt.Println("Not a valid Gauge Project Directory.")
+		log.Info("Not a valid Gauge Project Directory.")
 		validGaugeProject = false
 	}
 	if *daemonize {
@@ -88,19 +115,19 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	if !refactoringResult.success {
 		exitCode = 1
 		for _, err := range refactoringResult.errors {
-			fmt.Printf("[error] : %s \n", err)
+			log.Error("%s \n", err)
 		}
 	}
-	fmt.Printf("%d specifications changed.\n", len(refactoringResult.specsChanged))
-	fmt.Printf("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
-	fmt.Printf("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
 	os.Exit(exitCode)
 }
 
 func saveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		fmt.Printf("Failed to refactor '%s': %s\n", fileName, err)
+		log.Error("Failed to refactor '%s': %s\n", fileName, err)
 	}
 }
 
@@ -134,9 +161,9 @@ func printUsage() {
 
 func downloadAndInstallPlugin(plugin, version string) {
 	if err := installPlugin(plugin, version); err != nil {
-		fmt.Printf("[Error] Failed to install plugin %s : %s\n", plugin, err)
+		log.Critical("Failed to install plugin %s : %s\n", plugin, err)
 	} else {
-		fmt.Printf("Successfully installed plugin => %s %s", plugin, version)
+		log.Info("Successfully installed plugin => %s %s", plugin, version)
 	}
 }
 
@@ -163,14 +190,14 @@ func runInBackground() {
 		port, err = strconv.Atoi(*apiPort)
 		os.Setenv(common.ApiPortEnvVariableName, *apiPort)
 		if err != nil {
-			fmt.Println("Failed to parse the port number :", *apiPort, "\n", err.Error())
+			log.Critical("Failed to parse the port number :", *apiPort, "\n", err.Error())
 			os.Exit(1)
 		}
 	} else {
 		loadGaugeEnvironment()
 		port, err = getPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
-			fmt.Printf("Failed to start API Service. %s \n", err.Error())
+			log.Critical("Failed to start API Service. %s \n", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -188,7 +215,7 @@ func formatSpecFiles(filesToFormat string) {
 		err := common.SaveFile(spec.fileName, formatted, true)
 		if err != nil {
 			failed = true
-			fmt.Printf("Failed to format '%s': %s\n", spec.fileName, err)
+			log.Error("Failed to format '%s': %s\n", spec.fileName, err)
 		}
 	}
 	if failed {
@@ -201,10 +228,10 @@ func formatSpecFiles(filesToFormat string) {
 func initializeProject(language string) {
 	err := createProjectTemplate(language)
 	if err != nil {
-		fmt.Printf("[Error] Failed to initialize. %s\n", err.Error())
+		log.Critical("Failed to initialize. %s\n", err.Error())
 		os.Exit(1)
 	}
-	fmt.Println("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
+	log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
 
 func addPluginToProject(pluginName string) {
@@ -221,10 +248,10 @@ func addPluginToProject(pluginName string) {
 		}
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest()); err != nil {
-		fmt.Printf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
+		log.Critical("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
 		os.Exit(1)
 	} else {
-		fmt.Printf("Plugin %s was successfully added to the project\n", pluginName)
+		log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}
 }
 
@@ -236,13 +263,13 @@ func executeSpecs(inParallel bool) {
 	manifest := getProjectManifest()
 	err := startAPIService(0)
 	if err != nil {
-		fmt.Printf("Failed to start gauge API. %s\n", err.Error())
+		log.Critical("Failed to start gauge API. %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	runner, runnerError := startRunnerAndMakeConnection(manifest)
 	if runnerError != nil {
-		fmt.Printf("Failed to start a runner. %s\n", runnerError.Error())
+		log.Critical("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -282,7 +309,7 @@ func getSpecsToExecute(conceptsDictionary *conceptDictionary) []*specification {
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {
-	fmt.Println("Validation failed. The following steps have errors")
+	log.Warning("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
@@ -319,12 +346,12 @@ func getProjectManifest() *manifest {
 	}
 	projectRoot, err := common.GetProjectRootFromSpecPath(value)
 	if err != nil {
-		fmt.Printf("Failed to read manifest: %s \n", err.Error())
+		log.Critical("Failed to read manifest: %s \n", err.Error())
 		os.Exit(1)
 	}
 	contents, err := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
 	if err != nil {
-		fmt.Println(err)
+		log.Critical(err.Error())
 		os.Exit(1)
 	}
 	dec := json.NewDecoder(strings.NewReader(contents))
@@ -334,8 +361,7 @@ func getProjectManifest() *manifest {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			fmt.Printf("Failed to read manifest. %s\n", err.Error())
-			// common.PrintError(fmt.Sprintf("Failed to read: %s. %s\n", manifestFile, err.Error()))
+			log.Critical("Failed to read manifest. %s\n", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -344,13 +370,13 @@ func getProjectManifest() *manifest {
 }
 
 func showMessage(action, filename string) {
-	fmt.Printf(" %s  %s\n", action, filename)
+	log.Info(" %s  %s\n", action, filename)
 }
 
 func createProjectTemplate(language string) error {
 	if !common.IsASupportedLanguage(language) {
-		fmt.Printf("%s plugin is not installed \n", language)
-		fmt.Printf("Installing plugin => %s ... \n\n", language)
+		log.Info("%s plugin is not installed \n", language)
+		log.Info("Installing plugin => %s ... \n\n", language)
 
 		if err := installPlugin(language, ""); err != nil {
 			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, err))
@@ -435,7 +461,7 @@ func loadEnvironment(env string) error {
 		envDir, err = common.GetDirInProject(common.EnvDirectoryName, getSpecName(flag.Args()[0]))
 	}
 	if err != nil {
-		fmt.Printf("Failed to Load environment: %s\n", err.Error())
+		log.Critical("Failed to Load environment: %s\n", err.Error())
 		os.Exit(1)
 	}
 
@@ -471,12 +497,12 @@ func loadEnvironment(env string) error {
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
 		if !result.ok {
-			fmt.Println(fmt.Sprintf("[ParseError] %s : %s", result.fileName, result.error.Error()))
+			log.Critical(fmt.Sprintf("[ParseError] %s : %s", result.fileName, result.error.Error()))
 			os.Exit(1)
 		}
 		if result.warnings != nil {
 			for _, warning := range result.warnings {
-				fmt.Println(fmt.Sprintf("[Warning] %s : %v", result.fileName, warning))
+				log.Warning("%s : %v", result.fileName, warning)
 			}
 		}
 	}
@@ -487,14 +513,14 @@ func loadGaugeEnvironment() {
 	// this way user specified env variable can override default if required
 	err := loadEnvironment(envDefaultDirName)
 	if err != nil {
-		fmt.Printf("Failed to load the default environment. %s\n", err.Error())
+		log.Critical("Failed to load the default environment. %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	if *currentEnv != envDefaultDirName {
 		err := loadEnvironment(*currentEnv)
 		if err != nil {
-			fmt.Printf("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
+			log.Critical("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
 			os.Exit(1)
 		}
 	}
@@ -542,7 +568,7 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	noOfScenariosFailed := 0
 	exitCode := 0
 	if suiteResult.isFailed {
-		fmt.Println("\nThe following failures occured:\n")
+		log.Info("\nThe following failures occured:\n")
 		exitCode = 1
 	}
 
@@ -555,8 +581,8 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	}
 
 	printHookError(suiteResult.postSuite)
-	fmt.Printf("\n\n%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
-	fmt.Printf("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
+	log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
+	log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
 	return exitCode
 }
 
@@ -658,7 +684,7 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 			if shouldIgnoreErrors {
 				continue
 			}
-			fmt.Println(err)
+			log.Error(err.Error())
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}
@@ -748,7 +774,7 @@ func isValidSpecExtension(path string) bool {
 
 func handleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
-		fmt.Println(fmt.Sprintf("[Warning] %s", warning))
+		log.Warning(warning)
 	}
 }
 
@@ -778,21 +804,21 @@ func sortSpecsList(allSpecs []*specification) []*specification {
 func setWorkingDir(workingDir string) {
 	pwd, err := os.Getwd()
 	if err != nil {
-		fmt.Printf("Unable to read current directory : %s\n", err)
+		log.Critical("Unable to read current directory : %s\n", err)
 		os.Exit(1)
 	}
 	targetDir := path.Join(pwd, workingDir)
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			fmt.Printf("Unable to set working directory : %s\n", err)
+			log.Critical("Unable to set working directory : %s\n", err)
 			os.Exit(1)
 		}
 	}
 	err = os.Chdir(targetDir)
 	pwd, err = os.Getwd()
 	if err != nil {
-		fmt.Printf("Unable to set working directory : %s\n", err)
+		log.Critical("Unable to set working directory : %s\n", err)
 		os.Exit(1)
 	}
 }

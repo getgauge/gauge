@@ -85,7 +85,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		return errors.New(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
-	fmt.Printf("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
+	log.Info("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
 	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Could not download plugin zip: %s.", err))
@@ -94,7 +94,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
-	fmt.Printf("Plugin unzipped to => %s\n", unzippedPluginDir)
+	log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 	if err := runInstallCommands(versionInstallDescription.Install, unzippedPluginDir); err != nil {
 		return errors.New(fmt.Sprintf("Failed to Run install command. %s.", err))
 	}
@@ -119,7 +119,7 @@ func runInstallCommands(installCommands platformSpecificCommand, workingDir stri
 		return nil
 	}
 
-	fmt.Printf("Running plugin install command => %s\n", command)
+	log.Info("Running plugin install command => %s\n", command)
 	cmd, err := common.ExecuteCommand(command, workingDir, os.Stdout, os.Stderr)
 
 	if err != nil {
@@ -165,7 +165,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	if downloadLink == "" {
 		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified.", runtime.GOOS))
 	}
-	fmt.Println("Downloading Plugin... => ", downloadLink)
+	log.Info("Downloading Plugin... => ", downloadLink)
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Could not download File %s: %s", downloadLink, err.Error()))

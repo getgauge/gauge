@@ -109,7 +109,7 @@ func (testRunner *testRunner) kill() error {
 				return nil
 			}
 		case <-time.After(config.RunnerKillTimeout()):
-			fmt.Printf("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
+			log.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
 			return testRunner.cmd.Process.Kill()
 		}
 	}

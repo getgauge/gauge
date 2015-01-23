@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"golang.org/x/tools/go/exact"
 	"golang.org/x/tools/go/types"
 	"os"
@@ -188,7 +187,7 @@ func validateTagExpression(tagExpression string) {
 	filter.replaceSpecialChar()
 	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
 	if err != nil {
-		fmt.Printf(err.Error())
+		log.Critical(err.Error())
 		os.Exit(1)
 	}
 }

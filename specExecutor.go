@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
@@ -27,7 +26,7 @@ func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionRes
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		fmt.Println("[Warning] Spec data store didn't get initialized")
+		log.Warning("Spec data store didn't get initialized")
 	}
 
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
@@ -108,7 +107,7 @@ func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *scenario
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		fmt.Println("[Warning] Scenario data store didn't get initialized")
+		log.Warning("Scenario data store didn't get initialized")
 	}
 
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
