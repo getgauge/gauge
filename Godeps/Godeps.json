@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/getgauge/gauge",
-	"GoVersion": "go1.3.1",
+	"GoVersion": "go1.4",
 	"Deps": [
 		{
 			"ImportPath": "github.com/dmotylev/goproperties",
@@ -8,7 +8,7 @@
 		},
 		{
 			"ImportPath": "github.com/getgauge/common",
-			"Rev": "3ab4ddc162ed64e4c5256b91a190d39124ed2f48"
+			"Rev": "48c43156ac69e7f58cf69127d8d347bd23da1d64"
 		},
 		{
 			"ImportPath": "github.com/getgauge/mflag",
@@ -16,19 +16,23 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "3ea3e05dbfae8d2dd0cc219b5f0f0ba4606d15eb"
+			"Rev": "7f07925444bb51fa4cf9dfe6f7661876f8852275"
 		},
 		{
 			"ImportPath": "github.com/wsxiaoys/terminal",
 			"Rev": "9dcaf1d63119a8ac00eef82270eaef08b6aa2328"
 		},
 		{
+			"ImportPath": "golang.org/x/tools/go/ast/astutil",
+			"Rev": "2ef5a0d23bc4e07573bb094b97e96c9cd9844fca"
+		},
+		{
 			"ImportPath": "golang.org/x/tools/go/exact",
-			"Rev": "4ed956ea274edb00cc6cc2b20755cdee3ed29385"
+			"Rev": "2ef5a0d23bc4e07573bb094b97e96c9cd9844fca"
 		},
 		{
 			"ImportPath": "golang.org/x/tools/go/types",
-			"Rev": "4ed956ea274edb00cc6cc2b20755cdee3ed29385"
+			"Rev": "2ef5a0d23bc4e07573bb094b97e96c9cd9844fca"
 		},
 		{
 			"ImportPath": "gopkg.in/check.v1",
