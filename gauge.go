@@ -45,7 +45,7 @@ func init() {
 func initLoggers() {
 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
 	fileLogger := logging.NewLogBackend(&lumberjack.Logger{
-		Filename:   "logs/foo.log",
+		Filename:   "logs/gauge.log",
 		MaxSize:    500, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, //days
