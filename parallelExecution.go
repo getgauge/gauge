@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"runtime"
-	"sync"
 )
 
 type parallelSpecExecution struct {
@@ -12,7 +12,7 @@ type parallelSpecExecution struct {
 	specifications       []*specification
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	suiteResult          *suiteResult
+	aggregateResult      *suiteResult
 }
 
 type specCollection struct {
@@ -21,37 +21,32 @@ type specCollection struct {
 
 func (e *parallelSpecExecution) start() *suiteResult {
 	specCollections := e.distributeSpecs(numberOfCores())
-	suiteResultChannel := make(chan *suiteResult)
-	errChannel := make(chan error)
-	errors := make([]error, 0)
-	suiteResults := make([]*suiteResult, 0)
-	var wg sync.WaitGroup
-	for _, specCollection := range specCollections {
-		wg.Add(1)
-		go e.startSpecsExecution(specCollection, suiteResultChannel, errChannel, &wg)
-	}
-	wg.Wait()
+	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 
-	for err := range errChannel {
-		errors = append(errors, err)
+	for _, specCollection := range specCollections {
+		go e.startSpecsExecution(specCollection, suiteResultChannel)
 	}
-	for result := range suiteResultChannel {
-		suiteResults = append(suiteResults, result)
+
+	suiteResults := make([]*suiteResult, 0)
+	for _, _ = range specCollections {
+		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
-	close(errChannel)
-	close(suiteResultChannel)
-	return suiteResults[0]
+
+	e.aggregateResult = e.aggregateResults(suiteResults)
+	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, errChannel chan error, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult) {
 	runner, err := startRunnerAndMakeConnection(e.manifest)
 	if err != nil {
-		errChannel <- err
+		fmt.Println("Failed: " + err.Error())
+		suiteResults <- &suiteResult{}
 		return
 	}
 	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false)
-	suiteResults <- execution.start()
+	result := execution.start()
+	runner.kill()
+	suiteResults <- result
 }
 
 func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollection {
@@ -67,6 +62,32 @@ func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollec
 		specCollections[mod].specs = append(specCollections[mod].specs, e.specifications[i])
 	}
 	return specCollections
+}
+
+func (e *parallelSpecExecution) finish() {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.aggregateResult)}}
+	e.pluginHandler.notifyPlugins(message)
+	e.pluginHandler.gracefullyKillPlugins()
+}
+
+func (e *parallelSpecExecution) aggregateResults(suiteResults []*suiteResult) *suiteResult {
+	aggregateResult := &suiteResult{isFailed: false, specResults: make([]*specResult, 0)}
+	for _, result := range suiteResults {
+		aggregateResult.executionTime += result.executionTime
+		aggregateResult.specsFailedCount += result.specsFailedCount
+		aggregateResult.specResults = append(aggregateResult.specResults, result.specResults...)
+		if result.isFailed {
+			aggregateResult.isFailed = true
+		}
+		if result.preSuite != nil {
+			aggregateResult.preSuite = result.preSuite
+		}
+		if result.postSuite != nil {
+			aggregateResult.postSuite = result.postSuite
+		}
+	}
+	return aggregateResult
 }
 
 func numberOfCores() int {
