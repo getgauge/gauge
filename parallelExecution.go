@@ -23,8 +23,12 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	specCollections := e.distributeSpecs(numberOfCores())
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 
-	for _, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel)
+	for i, specCollection := range specCollections {
+		if i == 0 {
+			go e.startSpecsExecution(specCollection, suiteResultChannel, e.runner)
+		} else {
+			go e.startSpecsExecution(specCollection, suiteResultChannel, nil)
+		}
 	}
 
 	suiteResults := make([]*suiteResult, 0)
@@ -36,17 +40,25 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult) {
-	runner, err := startRunnerAndMakeConnection(e.manifest)
-	if err != nil {
-		fmt.Println("Failed: " + err.Error())
-		suiteResults <- &suiteResult{}
-		return
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
+	if runner == nil {
+		var err error
+		runner, err = startRunnerAndMakeConnection(e.manifest)
+		if err != nil {
+			fmt.Println("Failed: " + err.Error())
+			suiteResults <- &suiteResult{}
+			return
+		}
 	}
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner)
+}
+
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
 	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false)
 	result := execution.start()
 	runner.kill()
 	suiteResults <- result
+
 }
 
 func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollection {
