@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
@@ -409,12 +410,20 @@ func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message) *g
 	if response.GetMessageType() == gauge_messages.Message_ExecutionStatusResponse {
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
-			panic("ProtoExecutionResult should not be nil")
+			errMsg := "ProtoExecutionResult obtained is nil"
+			log.Critical(errMsg)
+			return errorResult(errMsg)
 		}
 		return executionResult
 	} else {
-		panic("Expected ExecutionStatusResponse")
+		errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
+		log.Critical(errMsg)
+		return errorResult(errMsg)
 	}
+}
+
+func errorResult(message string) *gauge_messages.ProtoExecutionResult {
+	return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(message), RecoverableError: proto.Bool(false)}
 }
 
 // Creating a copy of the lookup and populating table values
