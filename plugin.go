@@ -177,9 +177,6 @@ func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pl
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
 		return err
 	}
-	if err := setCurrentProjectEnvVariable(); err != nil {
-		return err
-	}
 	return nil
 }
 

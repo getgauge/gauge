@@ -37,9 +37,6 @@ type runner struct {
 }
 
 func executeInitHookForRunner(language string) error {
-	if err := setCurrentProjectEnvVariable(); err != nil {
-		return err
-	}
 	runnerInfo, err := getRunnerInfo(language)
 	if err != nil {
 		return err

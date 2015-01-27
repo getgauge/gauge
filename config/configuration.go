@@ -21,6 +21,8 @@ const (
 	defaultRunnerAPIRequestTimeout = time.Second * 2
 )
 
+var ProjectRoot string
+
 func ApiRefreshInterval() time.Duration {
 	intervalString := getFromConfig(apiRefreshInterval)
 	return convertToTime(intervalString, defaultApiRefreshInterval)
@@ -53,6 +55,24 @@ func RunnerAPIRequestTimeout() time.Duration {
 func GaugeRepositoryUrl() string {
 	return getFromConfig(gaugeRepositoryUrl)
 }
+
+func SetProjectRoot(args []string) error {
+	value := ""
+	if len(args) != 0 {
+		value = args[0]
+	}
+	root, err := common.GetProjectRootFromSpecPath(value)
+	if (err != nil) {
+		return err
+	}
+	ProjectRoot = root
+	return setCurrentProjectEnvVariable()
+}
+
+func setCurrentProjectEnvVariable() error {
+	return common.SetEnvVariable(common.GaugeProjectRootEnv, ProjectRoot)
+}
+
 
 func convertToTime(value string, defaultValue time.Duration) time.Duration {
 	intValue, err := strconv.Atoi(value)

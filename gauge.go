@@ -70,9 +70,9 @@ func main() {
 	flag.Parse()
 	setWorkingDir(*workingDir)
 	validGaugeProject := true
-	_, err := common.GetProjectRoot()
+	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
-		log.Info("Not a valid Gauge Project Directory.")
+		log.Info("Could set project root: %s", err.Error())
 		validGaugeProject = false
 	}
 	if *daemonize {
@@ -167,22 +167,6 @@ func downloadAndInstallPlugin(plugin, version string) {
 	}
 }
 
-func setCurrentProjectEnvVariable() error {
-	value := ""
-	if len(flag.Args()) != 0 {
-		value = flag.Args()[0]
-	}
-	projectRoot, err := common.GetProjectRootFromSpecPath(value)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to find gauge project root: %s ", err.Error()))
-	}
-	err = common.SetEnvVariable(common.GaugeProjectRootEnv, projectRoot)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Error setting environment variable project_root : %s ", err.Error()))
-	}
-	return nil
-}
-
 func runInBackground() {
 	var port int
 	var err error
@@ -275,11 +259,11 @@ func executeSpecs(inParallel bool) {
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 
 	pluginHandler := startPlugins(manifest)
-	// change false to parallel flag for parallel execution
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, false)
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, *parallel)
 
-	status := execution.start()
-	exitCode := printExecutionStatus(status)
+	result := execution.start()
+	execution.finish()
+	exitCode := printExecutionStatus(result)
 	os.Exit(exitCode)
 }
 
@@ -528,10 +512,6 @@ func loadGaugeEnvironment() {
 }
 
 func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
-	if err := setCurrentProjectEnvVariable(); err != nil {
-		return nil, err
-	}
-
 	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
