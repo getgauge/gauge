@@ -7,7 +7,6 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
-	"os"
 	"strings"
 )
 
@@ -78,7 +77,11 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
 	refactoringResult := &refactoringResult{specsChanged: specFiles, success: false, conceptsChanged: conceptFiles, errors: make([]string, 0)}
 
-	runner := agent.startRunner()
+	runner, connErr := agent.startRunner()
+	if connErr != nil {
+		refactoringResult.errors = append(refactoringResult.errors, connErr.Error())
+		return refactoringResult
+	}
 	defer runner.kill()
 	stepName, err := agent.getStepNameFromRunner(runner)
 	if err != nil {
@@ -165,15 +168,14 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 	return refactorResponse.GetFilesChanged(), runnerError
 }
 
-func (agent *rephraseRefactorer) startRunner() *testRunner {
+func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
 	loadGaugeEnvironment()
 	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
 	if err != nil {
-		fmt.Printf("Failed to connect to test runner: %s", err)
-		os.Exit(1)
+		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}
-	return testRunner
+	return testRunner, nil
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
