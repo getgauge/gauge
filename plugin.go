@@ -68,10 +68,10 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 		select {
 		case done := <-exited:
 			if done {
-				fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid))
+				log.Info("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginConnectionTimeout()):
-			fmt.Println(fmt.Sprintf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds()))
+			log.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
 			return plugin.pluginCmd.Process.Kill()
 		}
 	}
@@ -283,7 +283,7 @@ func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
-			fmt.Printf("[Warinig] Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+			log.Error("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 			handler.killPlugin(id)
 		}
 	}
@@ -291,10 +291,10 @@ func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
 
 func (handler *pluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
-	fmt.Printf("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	log.Info("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		fmt.Printf("[Error] Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		log.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginId)
 }

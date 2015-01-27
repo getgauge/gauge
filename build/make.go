@@ -263,7 +263,7 @@ func main() {
 func crossCompileGauge() {
 	for _, platformEnv := range platformEnvs {
 		setEnv(platformEnv)
-		fmt.Printf("Compiling for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+		log.Printf("Compiling for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
 		compileGauge()
 	}
 }
@@ -272,7 +272,7 @@ func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeFiles(deployDir)
 	if err := mirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
-		panic(fmt.Sprintf("[Error] Could not install gauge : %s", err))
+		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
 }
 
@@ -280,7 +280,7 @@ func createGaugeDistributables(forAllPlatforms bool) {
 	if forAllPlatforms {
 		for _, platformEnv := range platformEnvs {
 			setEnv(platformEnv)
-			fmt.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+			log.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
 			createDistro()
 		}
 	} else {
@@ -363,7 +363,7 @@ func createZip(dir, packageName string) {
 		}
 		return nil
 	})
-	fmt.Println("Created zip: ", zipFileName)
+	log.Printf("Created zip: ", zipFileName)
 	os.Chdir(wd)
 }
 

@@ -6,7 +6,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
-	"log"
 	"net"
 	"path"
 	"strconv"
@@ -64,7 +63,7 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 	var responseMessage *gauge_messages.APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
 	if err != nil {
-		log.Printf("[Warning] Failed to read API proto message: %s\n", err.Error())
+		log.Error("Failed to read API proto message: %s\n", err.Error())
 		responseMessage = handler.getErrorMessage(err)
 	} else {
 		messageType := apiMessage.GetMessageType()
@@ -101,17 +100,17 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMessage, conn net.Conn) {
 	dataBytes, err := proto.Marshal(message)
 	if err != nil {
-		fmt.Printf("[Warning] Failed to respond to API request. Could not Marshal response %s\n", err.Error())
+		log.Error("Failed to respond to API request. Could not Marshal response %s\n", err.Error())
 	}
 	if err := write(conn, dataBytes); err != nil {
-		fmt.Printf("[Warning] Failed to respond to API request. Could not write response %s\n", err.Error())
+		log.Error("Failed to respond to API request. Could not write response %s\n", err.Error())
 	}
 }
 
 func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	root, err := common.GetProjectRoot()
 	if err != nil {
-		fmt.Printf("[Warning] Failed to find project root while responding to API request. %s\n", err.Error())
+		log.Error("Failed to find project root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
 	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(root)}
@@ -122,7 +121,7 @@ func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *gauge
 func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	root, err := common.GetInstallationPrefix()
 	if err != nil {
-		fmt.Printf("[Warning] Failed to find installation root while responding to API request. %s\n", err.Error())
+		log.Error("Failed to find installation root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
 	installationRootResponse := &gauge_messages.GetInstallationRootResponse{InstallationRoot: proto.String(root)}
