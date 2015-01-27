@@ -1,9 +1,7 @@
 // This file is part of twist
 package main
 
-import (
-	"github.com/getgauge/gauge/gauge_messages"
-)
+import "github.com/getgauge/gauge/gauge_messages"
 
 type simpleExecution struct {
 	manifest             *manifest
@@ -16,6 +14,7 @@ type simpleExecution struct {
 
 type execution interface {
 	start() *suiteResult
+	finish()
 }
 
 type executionInfo struct {
@@ -93,9 +92,12 @@ func (exe *simpleExecution) start() *suiteResult {
 		addPostHook(exe.suiteResult, afterSuiteHookExecResult)
 		exe.suiteResult.setFailure()
 	}
+	return exe.suiteResult
+}
+
+func (exe *simpleExecution) finish() {
 	exe.notifyExecutionResult()
 	exe.stopAllPlugins()
-	return exe.suiteResult
 }
 
 func (e *simpleExecution) stopAllPlugins() {
