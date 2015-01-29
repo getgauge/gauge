@@ -57,6 +57,9 @@ func GaugeRepositoryUrl() string {
 }
 
 func SetProjectRoot(args []string) error {
+	if ProjectRoot != "" {
+		return setCurrentProjectEnvVariable()
+	}
 	value := ""
 	if len(args) != 0 {
 		value = args[0]
