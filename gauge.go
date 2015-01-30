@@ -72,7 +72,7 @@ func main() {
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
-		log.Info("Could set project root: %s", err.Error())
+		log.Info("Could not set project root: %s", err.Error())
 		validGaugeProject = false
 	}
 	if *daemonize {
@@ -161,7 +161,7 @@ func printUsage() {
 
 func downloadAndInstallPlugin(plugin, version string) {
 	if err := installPlugin(plugin, version); err != nil {
-		log.Critical("Failed to install plugin %s : %s\n", plugin, err)
+		log.Warning("Failed to install plugin %s : %s\n", plugin, err)
 	} else {
 		log.Info("Successfully installed plugin => %s %s", plugin, version)
 	}

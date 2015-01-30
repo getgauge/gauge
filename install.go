@@ -51,7 +51,7 @@ type versionSupport struct {
 func installPlugin(pluginName, version string) error {
 	installDescription, err := getInstallDescription(pluginName)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Could not find install description for Plugin: '%s' %s. : %s \n", pluginName, version, err))
+		return err
 	}
 	if err := installPluginWithDescription(installDescription, version); err != nil {
 		return err
@@ -197,7 +197,7 @@ func getPluginInstallJson(plugin string) (string, error) {
 	}
 	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
 	if downloadErr != nil {
-		return "", errors.New(fmt.Sprintf("Could not download %s file. Invalid plugin name", versionInstallDescriptionJsonFile, downloadErr.Error()))
+		return "", errors.New(fmt.Sprintf("Could not download %s file. Invalid plugin name", versionInstallDescriptionJsonFile))
 	}
 	return downloadedFile, nil
 }
