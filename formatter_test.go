@@ -86,3 +86,27 @@ func (s *MySuite) TestFormatStep(c *C) {
 	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic \"foo\">, <file:user\".txt> and <table :hell\".csv>
 `)
 }
+
+func (s *MySuite) TestFormattingWithTableAsAComment(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "My Spec Heading", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
+		&token{kind: tableHeader, args: []string{"id", "name"}, lineText: " |id|name|"},
+		&token{kind: tableRow, args: []string{"1", "foo"}, lineText: " |1|foo|"},
+		&token{kind: tableRow, args: []string{"2", "bar"}, lineText: "|2|bar|"},
+		&token{kind: stepKind, value: "Example step", lineNo: 5, lineText: "Example step"},
+	}
+
+	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	formatted := formatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+Scenario Heading
+----------------
+ |id|name|
+ |1|foo|
+|2|bar|
+* Example step
+`)
+}

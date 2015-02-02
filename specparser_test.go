@@ -296,7 +296,7 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 4)
+	c.Assert(len(tokens), Equals, 5)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
 	c.Assert(len(tokens[1].args), Equals, 2)
@@ -305,19 +305,24 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 
 	c.Assert(tokens[2].kind, Equals, tableRow)
 	c.Assert(len(tokens[2].args), Equals, 2)
-	c.Assert(tokens[2].args[0], Equals, "john")
-	c.Assert(tokens[2].args[1], Equals, "123")
+	c.Assert(tokens[2].args[0], Equals, "---")
+	c.Assert(tokens[2].args[1], Equals, "---")
 
 	c.Assert(tokens[3].kind, Equals, tableRow)
 	c.Assert(len(tokens[3].args), Equals, 2)
-	c.Assert(tokens[3].args[0], Equals, "james")
-	c.Assert(tokens[3].args[1], Equals, "007")
+	c.Assert(tokens[3].args[0], Equals, "john")
+	c.Assert(tokens[3].args[1], Equals, "123")
+
+	c.Assert(tokens[4].kind, Equals, tableRow)
+	c.Assert(len(tokens[4].args), Equals, 2)
+	c.Assert(tokens[4].args[0], Equals, "james")
+	c.Assert(tokens[4].args[1], Equals, "007")
 
 }
 
 func (s *MySuite) TestParsingMultipleDataTable(c *C) {
 	parser := new(specParser)
-	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|007|").step("Example step").text("|user|role|").text("|root | admin|").String()
+	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|john|123|").text("|james|007|").step("Example step").text("|user|role|").text("|root | admin|").String()
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
@@ -355,7 +360,7 @@ func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 3)
+	c.Assert(len(tokens), Equals, 4)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
 	c.Assert(len(tokens[1].args), Equals, 2)
@@ -364,8 +369,13 @@ func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 
 	c.Assert(tokens[2].kind, Equals, tableRow)
 	c.Assert(len(tokens[2].args), Equals, 2)
-	c.Assert(tokens[2].args[0], Equals, "john")
-	c.Assert(tokens[2].args[1], Equals, "123")
+	c.Assert(tokens[2].args[0], Equals, "")
+	c.Assert(tokens[2].args[1], Equals, "")
+
+	c.Assert(tokens[3].kind, Equals, tableRow)
+	c.Assert(len(tokens[3].args), Equals, 2)
+	c.Assert(tokens[3].args[0], Equals, "john")
+	c.Assert(tokens[3].args[1], Equals, "123")
 
 }
 
@@ -416,7 +426,7 @@ func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 4)
+	c.Assert(len(tokens), Equals, 5)
 
 	c.Assert(tokens[1].kind, Equals, tableHeader)
 	c.Assert(len(tokens[1].args), Equals, 3)
@@ -452,7 +462,7 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 14)
+	c.Assert(len(tokens), Equals, 15)
 
 	c.Assert(tokens[0].kind, Equals, specKind)
 	c.Assert(tokens[1].kind, Equals, commentKind)
@@ -463,22 +473,23 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 	c.Assert(tokens[4].kind, Equals, tableHeader)
 	c.Assert(tokens[5].kind, Equals, tableRow)
-	c.Assert(tokens[6].kind, Equals, tagKind)
-	c.Assert(tokens[7].kind, Equals, scenarioKind)
-	c.Assert(tokens[8].kind, Equals, tagKind)
+	c.Assert(tokens[6].kind, Equals, tableRow)
+	c.Assert(tokens[7].kind, Equals, tagKind)
+	c.Assert(tokens[8].kind, Equals, scenarioKind)
+	c.Assert(tokens[9].kind, Equals, tagKind)
 
-	c.Assert(tokens[9].kind, Equals, stepKind)
-	c.Assert(tokens[9].value, Equals, "first with {static} and {dynamic}")
+	c.Assert(tokens[10].kind, Equals, stepKind)
+	c.Assert(tokens[10].value, Equals, "first with {static} and {dynamic}")
 
-	c.Assert(tokens[10].kind, Equals, commentKind)
+	c.Assert(tokens[11].kind, Equals, commentKind)
 
-	c.Assert(tokens[11].kind, Equals, stepKind)
-	c.Assert(tokens[11].value, Equals, "{special} and {dynamic} with {static}")
+	c.Assert(tokens[12].kind, Equals, stepKind)
+	c.Assert(tokens[12].value, Equals, "{special} and {dynamic} with {static}")
 
-	c.Assert(tokens[12].kind, Equals, scenarioKind)
+	c.Assert(tokens[13].kind, Equals, scenarioKind)
 
-	c.Assert(tokens[13].kind, Equals, stepKind)
-	c.Assert(tokens[13].value, Equals, "another")
+	c.Assert(tokens[14].kind, Equals, stepKind)
+	c.Assert(tokens[14].value, Equals, "another")
 
 }
 

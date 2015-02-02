@@ -344,10 +344,12 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 				spec.addDataTable(dataTable)
 			} else {
 				value := "Multiple data table present, ignoring table"
+				spec.addComment(&comment{token.lineText, token.lineNo})
 				return parseResult{ok: false, warnings: []*warning{&warning{value, token.lineNo}}}
 			}
 		} else {
 			value := "Table not associated with a step, ignoring table"
+			spec.latestScenario().addComment(&comment{token.lineText, token.lineNo})
 			return parseResult{ok: false, warnings: []*warning{&warning{value, token.lineNo}}}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope)
@@ -356,10 +358,20 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 	})
 
 	tableRowConverter := converterFn(func(token *token, state *int) bool {
-		return token.kind == tableRow && isInState(*state, tableScope)
+		return token.kind == tableRow
 	}, func(token *token, spec *specification, state *int) parseResult {
 		var result parseResult
-		if isInState(*state, stepScope) {
+		//When table is to be treated as a comment
+		if !isInState(*state, tableScope) {
+			if isInState(*state, scenarioScope) {
+				spec.latestScenario().addComment(&comment{token.lineText, token.lineNo})
+			} else {
+				spec.addComment(&comment{token.lineText, token.lineNo})
+			}
+		} else if areUnderlined(token.args) {
+			// skip table separator
+			result = parseResult{ok: true}
+		} else if isInState(*state, stepScope) {
 			latestScenario := spec.latestScenario()
 			latestStep := latestScenario.latestStep()
 			result = addInlineTableRow(latestStep, token, new(argLookup).fromDataTable(&spec.dataTable))

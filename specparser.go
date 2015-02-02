@@ -272,20 +272,13 @@ func processTable(parser *specParser, token *token) (*parseError, bool) {
 
 	}
 
-	shouldSkipToken := false
-
-	// Should skip a table header separator row after the Table header eg: |table|hello|
-	if isInState(parser.currentState, tableScope) && !isInState(parser.currentState, tableDataScope) && areUnderlined(token.args) {
-		shouldSkipToken = true
-	}
-
 	if !isInState(parser.currentState, tableScope) {
 		addStates(&parser.currentState, tableScope)
 	} else {
 		addStates(&parser.currentState, tableDataScope)
 	}
 
-	return nil, shouldSkipToken
+	return nil, false
 }
 
 func (parser *specParser) nextLine() (string, bool) {
