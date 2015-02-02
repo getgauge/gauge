@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"runtime"
+	"time"
 )
 
 type parallelSpecExecution struct {
@@ -20,6 +21,7 @@ type specCollection struct {
 }
 
 func (e *parallelSpecExecution) start() *suiteResult {
+	startTime := time.Now()
 	specCollections := e.distributeSpecs(numberOfCores())
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 
@@ -37,6 +39,7 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
+	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }
 

@@ -11,7 +11,7 @@ type suiteResult struct {
 	postSuite        *(gauge_messages.ProtoHookFailure)
 	isFailed         bool
 	specsFailedCount int
-	executionTime    int64
+	executionTime    int64 //in milliseconds
 }
 
 type specResult struct {

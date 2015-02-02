@@ -1,7 +1,10 @@
 // This file is part of twist
 package main
 
-import "github.com/getgauge/gauge/gauge_messages"
+import (
+	"github.com/getgauge/gauge/gauge_messages"
+	"time"
+)
 
 type simpleExecution struct {
 	manifest             *manifest
@@ -75,6 +78,7 @@ func (e *simpleExecution) killPlugins() {
 }
 
 func (exe *simpleExecution) start() *suiteResult {
+	startTime := time.Now()
 	exe.suiteResult = newSuiteResult()
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
@@ -92,6 +96,7 @@ func (exe *simpleExecution) start() *suiteResult {
 		addPostHook(exe.suiteResult, afterSuiteHookExecResult)
 		exe.suiteResult.setFailure()
 	}
+	exe.suiteResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return exe.suiteResult
 }
 

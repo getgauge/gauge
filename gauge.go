@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -563,6 +564,7 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	printHookError(suiteResult.postSuite)
 	log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
 	log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
+	log.Info("time: %s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
 	return exitCode
 }
 
