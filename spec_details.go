@@ -68,10 +68,16 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 		runner, connErr := startRunnerAndMakeConnection(getProjectManifest())
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
+			apiLog.Debug("Steps got from runner: %v", steps)
 			runner.kill()
 		}
+		if connErr != nil {
+			apiLog.Error("Runner connection failed: %s", connErr)
+		}
+
 	} else {
 		steps = append(steps, requestForSteps(runner)...)
+		apiLog.Debug("Steps got from runner: %v", steps)
 	}
 	return steps
 }
@@ -81,14 +87,17 @@ func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dic
 	for _, file := range specFiles {
 		specContent, err := common.ReadFileContents(file)
 		if err != nil {
+			apiLog.Error("Failed to read file content: %s %s", file, err)
 			continue
 		}
 		parser := new(specParser)
 		specification, result := parser.parse(specContent, dictionary)
 
-		if result.ok {
-			specs = append(specs, specification)
+		if !result.ok {
+			apiLog.Error("Spec Parse failure: %s %s", result.fileName, result.error)
+			continue
 		}
+		specs = append(specs, specification)
 	}
 	return specs
 }
@@ -127,7 +136,6 @@ func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 func (specInfoGatherer *specInfoGatherer) updateCache(newSpecStepsMap map[string][]*step) {
 	for fileName, specsteps := range newSpecStepsMap {
 		specInfoGatherer.specStepMapCache[fileName] = specsteps
-
 	}
 }
 

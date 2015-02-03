@@ -9,8 +9,6 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
-	"github.com/op/go-logging"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"io/ioutil"
 	"os"
@@ -29,37 +27,13 @@ const (
 	envDefaultDirName = "default"
 )
 
-var acceptedExtensions = make(map[string]bool)
-var defaultPlugins = []string{"html-report"}
-
-var log = logging.MustGetLogger("gauge")
-
-var format = logging.MustStringFormatter(
-	"%{time:15:04:05.000} [%{level:.4s}] %{message}",
-)
-
 func init() {
 	acceptedExtensions[".spec"] = true
 	acceptedExtensions[".md"] = true
 }
 
-func initLoggers() {
-	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	fileLogger := logging.NewLogBackend(&lumberjack.Logger{
-		Filename:   "logs/gauge.log",
-		MaxSize:    500, // megabytes
-		MaxBackups: 3,
-		MaxAge:     28, //days
-	}, "", 0)
-
-	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, format)
-	fileFormatter := logging.NewBackendFormatter(fileLogger, format)
-
-	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	stdOutLoggerLeveled.SetLevel(logging.INFO, "")
-
-	logging.SetBackend(fileFormatter, stdOutLoggerLeveled)
-}
+var acceptedExtensions = make(map[string]bool)
+var defaultPlugins = []string{"html-report"}
 
 type manifest struct {
 	Language string
@@ -67,7 +41,6 @@ type manifest struct {
 }
 
 func main() {
-	initLoggers()
 	flag.Parse()
 	setWorkingDir(*workingDir)
 	validGaugeProject := true
@@ -76,6 +49,8 @@ func main() {
 		log.Info("Could not set project root: %s", err.Error())
 		validGaugeProject = false
 	}
+	initLoggers()
+
 	if *daemonize {
 		runInBackground()
 	} else if *gaugeVersion {
@@ -533,6 +508,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
 	testRunner.connection = runnerConnection
 	if connectionError != nil {
+		log.Debug("Runner connection error: %s", connectionError)
 		testRunner.kill()
 		return nil, connectionError
 	}
@@ -664,14 +640,13 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 	for _, conceptFile := range conceptFiles {
 		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {
+				apiLog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
 			log.Error(err.Error())
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}
-	//	result := conceptsDictionary.resolveNestedConcepts()
-	//	return conceptsDictionary, result
 	return conceptsDictionary, &parseResult{ok: true}
 }
 

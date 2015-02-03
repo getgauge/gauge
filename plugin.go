@@ -68,7 +68,7 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 		select {
 		case done := <-exited:
 			if done {
-				log.Info("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
+				log.Debug("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginConnectionTimeout()):
 			log.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
@@ -288,7 +288,7 @@ func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
 
 func (handler *pluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
-	log.Info("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	log.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
 		log.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())

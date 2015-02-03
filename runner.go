@@ -173,6 +173,7 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
+			log.Debug("Runner exited with error: %s", err)
 			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
 		}
 	}()
