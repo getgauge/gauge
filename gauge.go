@@ -111,6 +111,8 @@ func saveFile(fileName string, content string, backup bool) {
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
 var gaugeVersion = flag.Bool([]string{"v", "-version"}, false, "Print the current version and exit. Eg: gauge -version")
+var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging for debugging")
+var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")

@@ -7,6 +7,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var log = logging.MustGetLogger("gauge")
@@ -32,7 +33,7 @@ func initGaugeLogger() {
 	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, format)
 
 	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	stdOutLoggerLeveled.SetLevel(logging.INFO, "")
+	stdOutLoggerLeveled.SetLevel(loggingLevel(), "")
 
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
@@ -44,7 +45,7 @@ func initApiLogger() {
 	apiFileLogger := createFileLogger(apiLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(apiFileLogger, format)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
-	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
+	fileLoggerLeveled.SetLevel(loggingLevel(), "")
 	apiLog.SetBackend(fileLoggerLeveled)
 }
 
@@ -67,4 +68,28 @@ func getLogFile(fileName string) string {
 		}
 		return filepath.Join(gaugeHome, fileName)
 	}
+}
+
+func loggingLevel() logging.Level {
+	if *verbosity {
+		return logging.DEBUG
+	}
+	if *logLevel != "" {
+		switch strings.ToLower(*logLevel) {
+		case "debug":
+			return logging.DEBUG
+		case "info":
+			return logging.INFO
+		case "warning":
+			return logging.WARNING
+		case "error":
+			return logging.ERROR
+		case "critical":
+			return logging.CRITICAL
+		case "notice":
+			return logging.NOTICE
+		}
+	}
+	return logging.INFO
+
 }
