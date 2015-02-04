@@ -937,3 +937,17 @@ func (s *MySuite) TestGetLineTextForStepWithTable(c *C) {
 
 	c.Assert(step.getLineText(), Equals, "foo <table>")
 }
+
+func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
+	tokens := []*token{
+		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
+		&token{kind: tableHeader, args: []string{"unknown:foo", "description"}, lineNo: 2},
+		&token{kind: tableRow, args: []string{"123", "Admin"}, lineNo: 3},
+		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
+		&token{kind: stepKind, value: "Example {special} step", lineNo: 3, args: []string{"unknown:foo"}},
+	}
+	spec, parseResults := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	c.Assert(spec.scenarios[0].steps[0].args[0].argType, Equals, dynamic)
+	c.Assert(len(parseResults.warnings), Equals, 1)
+	c.Assert(parseResults.warnings[0].message, Equals, "Could not resolve special param type <unknown:foo>. Treating it as dynamic param.")
+}

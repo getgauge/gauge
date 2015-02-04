@@ -289,27 +289,33 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 		return token.kind == stepKind && isInState(*state, scenarioScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
 		latestScenario := spec.latestScenario()
-		stepToAdd, err := spec.createStep(token)
-		if err != nil {
-			return parseResult{error: err, ok: false}
+		stepToAdd, parseDetails := spec.createStep(token)
+		if parseDetails != nil && parseDetails.error != nil {
+			return parseResult{error: parseDetails.error, ok: false, warnings: parseDetails.warnings}
 		}
 		latestScenario.addStep(stepToAdd)
 		retainStates(state, specScope, scenarioScope)
 		addStates(state, stepScope)
-		return parseResult{ok: true}
+		if parseDetails.warnings != nil {
+			return parseResult{ok: false, warnings: parseDetails.warnings}
+		}
+		return parseResult{ok: true, warnings: parseDetails.warnings}
 	})
 
 	contextConverter := converterFn(func(token *token, state *int) bool {
 		return token.kind == stepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
-		stepToAdd, err := spec.createStep(token)
-		if err != nil {
-			return parseResult{error: err, ok: false}
+		stepToAdd, parseDetails := spec.createStep(token)
+		if parseDetails != nil && parseDetails.error != nil {
+			return parseResult{error: parseDetails.error, ok: false, warnings: parseDetails.warnings}
 		}
 		spec.addContext(stepToAdd)
 		retainStates(state, specScope)
 		addStates(state, contextScope)
-		return parseResult{ok: true}
+		if parseDetails.warnings != nil {
+			return parseResult{ok: false, warnings: parseDetails.warnings}
+		}
+		return parseResult{ok: true, warnings: parseDetails.warnings}
 	})
 
 	commentConverter := converterFn(func(token *token, state *int) bool {
@@ -406,31 +412,38 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 	return converter
 }
 
-func (spec *specification) createStep(stepToken *token) (*step, *parseError) {
+func (spec *specification) createStep(stepToken *token) (*step, *parseDetailResult) {
 	dataTableLookup := new(argLookup).fromDataTable(&spec.dataTable)
-	stepToAdd, err := spec.createStepUsingLookup(stepToken, dataTableLookup)
-	if err != nil {
-		return nil, err
+	stepToAdd, parseDetails := spec.createStepUsingLookup(stepToken, dataTableLookup)
+
+	if parseDetails != nil && parseDetails.error != nil {
+		return nil, parseDetails
 	}
-	return stepToAdd, nil
+	return stepToAdd, parseDetails
 }
 
-func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLookup) (*step, *parseError) {
+func (spec *specification) createStepUsingLookup(stepToken *token, lookup *argLookup) (*step, *parseDetailResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.value)
 	if argsType != nil && len(argsType) != len(stepToken.args) {
-		return nil, &parseError{stepToken.lineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.lineText}
+		return nil, &parseDetailResult{error: &parseError{stepToken.lineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.lineText}, warnings: nil}
 	}
 	step := &step{lineNo: stepToken.lineNo, value: stepValue, lineText: strings.TrimSpace(stepToken.lineText)}
 	arguments := make([]*stepArg, 0)
+	var warnings []*warning
 	for i, argType := range argsType {
-		argument, err := spec.createStepArg(stepToken.args[i], argType, stepToken, lookup)
-		if err != nil {
-			return nil, err
+		argument, parseDetails := spec.createStepArg(stepToken.args[i], argType, stepToken, lookup)
+		if parseDetails != nil && parseDetails.error != nil {
+			return nil, parseDetails
 		}
 		arguments = append(arguments, argument)
+		if parseDetails != nil && parseDetails.warnings != nil {
+			for _, warn := range parseDetails.warnings {
+				warnings = append(warnings, warn)
+			}
+		}
 	}
 	step.addArgs(arguments...)
-	return step, nil
+	return step, &parseDetailResult{warnings: warnings}
 }
 
 func (specification *specification) processConceptStepsFrom(conceptDictionary *conceptDictionary) {
@@ -649,23 +662,39 @@ func (spec *specification) renameSteps(oldStep step, newStep step, orderMap map[
 	return isRefactored
 }
 
-func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseError) {
-	var stepArgument *stepArg
+func (spec *specification) createStepArg(argValue string, typeOfArg string, token *token, lookup *argLookup) (*stepArg, *parseDetailResult) {
 	if typeOfArg == "special" {
 		resolvedArgValue, err := newSpecialTypeResolver().resolve(argValue)
 		if err != nil {
-			return nil, &parseError{lineNo: token.lineNo, message: err.Error(), lineText: token.lineText}
+			parseDetailRes := &parseDetailResult{warnings: []*warning{&warning{lineNo: token.lineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
+			stepArg, result := validateDynamicArg(argValue, token, lookup)
+			if result != nil {
+				if result.error != nil {
+					parseDetailRes.error = result.error
+				}
+				if result.warnings != nil {
+					for _, warn := range result.warnings {
+						parseDetailRes.warnings = append(parseDetailRes.warnings, warn)
+					}
+				}
+			}
+			return stepArg, parseDetailRes
 		}
 		return resolvedArgValue, nil
 	} else if typeOfArg == "static" {
 		return &stepArg{argType: static, value: argValue}, nil
 	} else {
-		if !isConceptHeader(lookup) && !lookup.containsArg(argValue) {
-			return nil, &parseError{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), lineText: token.lineText}
-		}
-		stepArgument = &stepArg{argType: dynamic, value: argValue, name: argValue}
-		return stepArgument, nil
+		return validateDynamicArg(argValue, token, lookup)
 	}
+}
+
+func validateDynamicArg(argValue string, token *token, lookup *argLookup) (*stepArg, *parseDetailResult) {
+	if !isConceptHeader(lookup) && !lookup.containsArg(argValue) {
+		return nil, &parseDetailResult{error: &parseError{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), lineText: token.lineText}}
+	}
+	stepArgument := &stepArg{argType: dynamic, value: argValue, name: argValue}
+	return stepArgument, nil
+
 }
 
 //Step value is modified when inline table is found to account for the new parameter by appending {}

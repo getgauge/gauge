@@ -33,6 +33,11 @@ type parseError struct {
 	lineText string
 }
 
+type parseDetailResult struct {
+	error    *parseError
+	warnings []*warning
+}
+
 func (se *parseError) Error() string {
 	return fmt.Sprintf("line no: %d, %s", se.lineNo, se.message)
 }

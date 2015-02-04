@@ -146,9 +146,9 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 	spec := &specification{}
 	steps := make([]*step, 0)
 	for _, stepToken := range stepTokens {
-		step, err := spec.createStepUsingLookup(stepToken, nil)
-		if err != nil {
-			return nil, err
+		step, parseDetails := spec.createStepUsingLookup(stepToken, nil)
+		if parseDetails != nil && parseDetails.error != nil {
+			return nil, parseDetails.error
 		}
 		steps = append(steps, step)
 	}

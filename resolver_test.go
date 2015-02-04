@@ -14,6 +14,13 @@ func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	c.Assert(stepArg.name, Equals, "file:foo")
 }
 
+func (s *MySuite) TestParsingInvalidSpecialType(c *C) {
+	resolver := newSpecialTypeResolver()
+
+	_, err := resolver.resolve("unknown:foo")
+	c.Assert(err.Error(), Equals, "Resolver not found for special param <unknown:foo>")
+}
+
 func (s *MySuite) TestConvertCsvToTable(c *C) {
 	table, _ := convertCsvToTable("id,name \n1,foo\n2,bar")
 
@@ -29,7 +36,7 @@ func (s *MySuite) TestConvertCsvToTable(c *C) {
 func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
 
-	_, err := resolver.resolve("unknown:foo")
+	_, err := resolver.getStepArg("unknown", "foo", "unknown:foo")
 	c.Assert(err.Error(), Equals, "Resolver not found for special param <unknown:foo>")
 }
 

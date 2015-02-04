@@ -116,9 +116,9 @@ func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseE
 		return nil, &parseError{lineNo: token.lineNo, message: "Concept heading can have only Dynamic Parameters"}
 	}
 	token.lineText = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(token.lineText), "#"))
-	concept, err := new(specification).createStepUsingLookup(token, nil)
-	if err != nil {
-		return nil, err
+	concept, parseDetails := new(specification).createStepUsingLookup(token, nil)
+	if parseDetails != nil && parseDetails.error != nil {
+		return nil, parseDetails.error
 	}
 	concept.isConcept = true
 	parser.createConceptLookup(concept)
@@ -129,9 +129,9 @@ func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseE
 
 func (parser *conceptParser) processConceptStep(token *token) *parseError {
 	processStep(new(specParser), token)
-	conceptStep, err := new(specification).createStepUsingLookup(token, &parser.currentConcept.lookup)
-	if err != nil {
-		return err
+	conceptStep, parseDetails := new(specification).createStepUsingLookup(token, &parser.currentConcept.lookup)
+	if parseDetails != nil && parseDetails.error != nil {
+		return parseDetails.error
 	}
 	if conceptStep.value == parser.currentConcept.value {
 		return &parseError{lineNo: conceptStep.lineNo, message: "Cyclic dependancy found. Step is calling concept again.", lineText: conceptStep.lineText}
