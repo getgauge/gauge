@@ -46,12 +46,10 @@ func main() {
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
-		log.Info("Could not set project root: %s", err.Error())
 		validGaugeProject = false
 	}
 	initLoggers()
-
-	if *daemonize {
+	if *daemonize && validGaugeProject {
 		runInBackground()
 	} else if *gaugeVersion {
 		printVersion()
@@ -70,6 +68,9 @@ func main() {
 			printUsage()
 		} else if validGaugeProject {
 			executeSpecs(*parallel)
+		} else {
+			log.Error("Could not set project root: %s", err.Error())
+
 		}
 	}
 }
