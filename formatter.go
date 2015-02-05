@@ -56,7 +56,7 @@ func formatStep(step *step) string {
 }
 
 func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
-	conceptText := "# "
+	conceptText := "* "
 	for _, fragment := range protoConcept.ConceptStep.GetFragments() {
 		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
 			conceptText = conceptText + fragment.GetText()
@@ -68,7 +68,7 @@ func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 			}
 		}
 	}
-	return conceptText
+	return conceptText + "\n"
 }
 
 func formatHeading(heading, headingChar string) string {
