@@ -108,7 +108,7 @@ func (testRunner *testRunner) kill() error {
 			if done {
 				return nil
 			}
-		case <-time.After(config.RunnerKillTimeout()):
+		case <-time.After(config.PluginKillTimeout()):
 			log.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
 			return testRunner.cmd.Process.Kill()
 		}

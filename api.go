@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"net"
@@ -20,7 +21,7 @@ type stepValue struct {
 }
 
 func requestForSteps(runner *testRunner) []string {
-	message, err := getResponseForGaugeMessage(createGetStepNamesRequest(), runner.connection)
+	message, err := getResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.connection, config.RunnerRequestTimeout())
 	if err == nil {
 		allStepsResponse := message.GetStepNamesResponse()
 		return allStepsResponse.GetSteps()
