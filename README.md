@@ -51,3 +51,12 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
 [contributing]:http://github.com/getgauge/gauge/wiki/Contributing
 
+## License
+
+![GNU Public License version 3.0](http://www.gnu.org/graphics/gplv3-127x51.png)
+Gauge is released under [GNU Public License version 3.0](http://www.gnu.org/licenses/gpl-3.0.txt)
+
+## Copyright
+
+Copyright 2014 ThoughtWorks, Inc.
+
