@@ -250,7 +250,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "number")
-	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "")
+	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "d")
 }
 
 func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
@@ -269,7 +269,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
-	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "")
+	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "d")
 	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "name")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "number")
@@ -292,7 +292,7 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedInMiddle(c *C) {
 
 	c.Assert(specs[0].scenarios[0].steps[0].value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].scenarios[0].steps[0].args[0].value, Equals, "name")
-	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "")
+	c.Assert(specs[0].scenarios[0].steps[0].args[1].value, Equals, "d")
 	c.Assert(specs[0].scenarios[0].steps[0].args[2].value, Equals, "address")
 	c.Assert(specs[0].scenarios[0].steps[0].args[3].value, Equals, "number")
 }

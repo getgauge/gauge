@@ -3,25 +3,32 @@ package main
 import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
+	"strings"
 )
 
-type simpleConsoleWriter struct{}
+type simpleConsoleWriter struct {
+	indentation int
+}
 
 func newSimpleConsoleWriter() *simpleConsoleWriter {
-	return &simpleConsoleWriter{}
+	return &simpleConsoleWriter{indentation: 0}
 }
 
 func (writer *simpleConsoleWriter) Write(b []byte) (int, error) {
-	fmt.Print(string(b))
+	message := indent(string(b), writer.indentation) + "\n"
+	if strings.TrimSpace(message) == "" {
+		return len(b), nil
+	}
+	fmt.Print(message)
 	return len(b), nil
 }
 
 func (writer *simpleConsoleWriter) writeString(value string) {
-	writer.Write([]byte(value))
+	fmt.Print((value))
 }
 
 func (writer *simpleConsoleWriter) writeError(value string) {
-	writer.writeString(value)
+	writer.indentAndWrite(value)
 }
 
 func (writer *simpleConsoleWriter) writeSpecHeading(heading string) {
@@ -56,7 +63,7 @@ func (writer *simpleConsoleWriter) writeItem(item item) {
 }
 
 func (writer *simpleConsoleWriter) writeComment(comment *comment) {
-	writer.writeString(formatComment(comment))
+	writer.indentAndWrite(formatComment(comment))
 }
 
 func (writer *simpleConsoleWriter) writeScenarioHeading(scenarioHeading string) {
@@ -65,7 +72,7 @@ func (writer *simpleConsoleWriter) writeScenarioHeading(scenarioHeading string) 
 }
 
 func (writer *simpleConsoleWriter) writeStep(step *step) {
-	writer.writeString(formatStep(step))
+	writer.indentAndWrite(formatStep(step))
 }
 
 func (writer *simpleConsoleWriter) writeStepStarting(step *step) {
@@ -79,17 +86,23 @@ func (writer *simpleConsoleWriter) writeStepFinished(step *step, failed bool) {
 	} else {
 		message = fmt.Sprintf("Step Passed => %s\n", formatStep(step))
 	}
-	writer.writeString(message)
+	writer.indentAndWrite(message)
 }
 
 func (writer *simpleConsoleWriter) writeTable(table *table) {
-	writer.writeString(formatTable(table))
+	writer.indentAndWrite(formatTable(table))
 }
 
 func (writer *simpleConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	writer.writeString(formatConcept(protoConcept))
+	writer.indentAndWrite(formatConcept(protoConcept))
+	writer.indentation += 4
 }
 
 func (writer *simpleConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
-	writer.writeString(formatConcept(protoConcept))
+	writer.indentation -= 4
+	writer.indentAndWrite(formatConcept(protoConcept))
+}
+
+func (writer *simpleConsoleWriter) indentAndWrite(message string) {
+	writer.writeString(indent(message, writer.indentation) + "\n")
 }

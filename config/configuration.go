@@ -11,14 +11,14 @@ const (
 	apiRefreshInterval      = "api_refresh_interval"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
-	runnerKillTimeOut       = "runner_kill_timeout"
+	pluginKillTimeOut       = "plugin_kill_timeout"
 
-	defaultApiRefreshInterval      = time.Second * 2
+	defaultApiRefreshInterval      = time.Second * 3
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
-	defaultRunnerKillTimeOut       = time.Second * 2
+	defaultPluginKillTimeout       = time.Second * 4
 	defaultRefactorTimeout         = time.Second * 10
-	defaultRunnerAPIRequestTimeout = time.Second * 2
+	defaultRunnerRequestTimeout    = time.Second * 3
 )
 
 var ProjectRoot string
@@ -38,18 +38,17 @@ func PluginConnectionTimeout() time.Duration {
 	return convertToTime(intervalString, defaultPluginConnectionTimeout)
 }
 
-func RunnerKillTimeout() time.Duration {
-	intervalString := getFromConfig(runnerKillTimeOut)
-	return convertToTime(intervalString, defaultRunnerKillTimeOut)
+func PluginKillTimeout() time.Duration {
+	intervalString := getFromConfig(pluginKillTimeOut)
+	return convertToTime(intervalString, defaultPluginKillTimeout)
 }
 
 func RefactorTimeout() time.Duration {
 	return defaultRefactorTimeout
-
 }
 
-func RunnerAPIRequestTimeout() time.Duration {
-	return defaultRunnerAPIRequestTimeout
+func RunnerRequestTimeout() time.Duration {
+	return defaultRunnerRequestTimeout
 }
 
 func GaugeRepositoryUrl() string {
@@ -65,7 +64,7 @@ func SetProjectRoot(args []string) error {
 		value = args[0]
 	}
 	root, err := common.GetProjectRootFromSpecPath(value)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 	ProjectRoot = root
@@ -75,7 +74,6 @@ func SetProjectRoot(args []string) error {
 func setCurrentProjectEnvVariable() error {
 	return common.SetEnvVariable(common.GaugeProjectRootEnv, ProjectRoot)
 }
-
 
 func convertToTime(value string, defaultValue time.Duration) time.Duration {
 	intValue, err := strconv.Atoi(value)

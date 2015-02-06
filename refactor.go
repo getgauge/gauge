@@ -163,7 +163,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
 	var runnerError error
 	if !refactorResponse.GetSuccess() {
-		apiLog.Error("Refactoring error response from runner: %s", refactorResponse.GetError())
+		apiLog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
 	return refactorResponse.GetFilesChanged(), runnerError
@@ -220,7 +220,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (string, error) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
-	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerAPIRequestTimeout())
+	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerRequestTimeout())
 	if err != nil {
 		return "", err
 	}

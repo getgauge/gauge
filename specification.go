@@ -93,7 +93,7 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 	step.value = newStep.value
 	args := make([]*stepArg, len(newStep.args))
 	for key, value := range orderMap {
-		arg := &stepArg{value: "", argType: static}
+		arg := &stepArg{value: newStep.args[key].value, argType: static}
 		if step.isConcept {
 			*isConcept = true
 			arg = &stepArg{value: newStep.args[key].value, argType: dynamic}
