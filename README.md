@@ -58,5 +58,5 @@ Gauge is released under [GNU Public License version 3.0](http://www.gnu.org/lice
 
 ## Copyright
 
-Copyright 2014 ThoughtWorks, Inc.
+Copyright 2015 ThoughtWorks, Inc.
 

@@ -1,4 +1,4 @@
-// Copyright 2014 ThoughtWorks, Inc.
+// Copyright 2015 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -146,7 +146,7 @@ var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory f
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
-	fmt.Println("Copyright 2014 Thoughtworks\n")
+	fmt.Println("Copyright 2015 Thoughtworks\n")
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
 	fmt.Println("\tgauge specs/spec_name.spec")
