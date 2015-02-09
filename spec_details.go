@@ -42,7 +42,6 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
 	newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
 	specInfoGatherer.conceptInfos = conceptInfos
-
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
@@ -114,6 +113,7 @@ func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dic
 			apiLog.Error("Spec Parse failure: %s %s", result.fileName, result.error)
 			continue
 		}
+		specification.fileName = file
 		specs = append(specs, specification)
 	}
 	return specs
