@@ -270,6 +270,7 @@ func executeSpecs(inParallel bool) {
 
 func shuffleSpecs(allSpecs []*specification) []*specification {
 	dest := make([]*specification, len(allSpecs))
+	rand.Seed(int64(time.Now().Nanosecond()))
 	perm := rand.Perm(len(allSpecs))
 	for i, v := range perm {
 		dest[v] = allSpecs[i]
