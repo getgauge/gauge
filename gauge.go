@@ -239,7 +239,7 @@ func executeSpecs(inParallel bool) {
 	loadGaugeEnvironment()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
-	specsToExecute := getSpecsToExecute(conceptsDictionary)
+	specsToExecute, specsSkipped := getSpecsToExecute(conceptsDictionary)
 	manifest := getProjectManifest()
 	err := startAPIService(0)
 	if err != nil {
@@ -259,7 +259,7 @@ func executeSpecs(inParallel bool) {
 
 	result := execution.start()
 	execution.finish()
-	exitCode := printExecutionStatus(result)
+	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
 }
 
@@ -278,14 +278,15 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 	}
 }
 
-func getSpecsToExecute(conceptsDictionary *conceptDictionary) []*specification {
+func getSpecsToExecute(conceptsDictionary *conceptDictionary) ([]*specification, int) {
 	specsToExecute := specsFromArgs(conceptsDictionary)
 
+	totalSpecs := specsToExecute
 	if *executeTags != "" {
 		validateTagExpression(*executeTags)
 		specsToExecute = filterSpecsByTags(specsToExecute, *executeTags)
 	}
-	return sortSpecsList(specsToExecute)
+	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {
@@ -535,7 +536,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	return testRunner, nil
 }
 
-func printExecutionStatus(suiteResult *suiteResult) int {
+func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 
@@ -560,6 +561,7 @@ func printExecutionStatus(suiteResult *suiteResult) int {
 	printHookError(suiteResult.postSuite)
 	log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
 	log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
+	log.Info("%d specifications skipped\n", specsSkipped)
 	log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
 	return exitCode
 }
