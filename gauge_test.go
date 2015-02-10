@@ -356,3 +356,56 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 	specs = filterSpecsByTags(specs, "(tag1 & tag2")
 	c.Assert(len(specs), Equals, 0)
 }
+
+func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
+	tokens1 := []*token{
+		&token{kind: specKind, value: "Spec Heading1", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 3},
+	}
+	spec1, result := new(specParser).createSpecification(tokens1, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens2 := []*token{
+		&token{kind: specKind, value: "Spec Heading2", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+	}
+	spec2, result := new(specParser).createSpecification(tokens2, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens3 := []*token{
+		&token{kind: specKind, value: "Spec Heading3", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+	}
+	spec3, result := new(specParser).createSpecification(tokens3, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens4 := []*token{
+		&token{kind: specKind, value: "Spec Heading4", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+	}
+	spec4, result := new(specParser).createSpecification(tokens4, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens5 := []*token{
+		&token{kind: specKind, value: "Spec Heading5", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+	}
+	spec5, result := new(specParser).createSpecification(tokens5, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	tokens6 := []*token{
+		&token{kind: specKind, value: "Spec Heading6", lineNo: 1},
+		&token{kind: scenarioKind, value: "Scenario Heading 1", lineNo: 2},
+	}
+	spec6, result := new(specParser).createSpecification(tokens6, new(conceptDictionary))
+	c.Assert(result.ok, Equals, true)
+
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+	specs = append(specs, spec3)
+	specs = append(specs, spec4)
+	specs = append(specs, spec5)
+	specs = append(specs, spec6)
+	shuffleSpecs(specs)
+}
