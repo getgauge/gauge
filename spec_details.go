@@ -43,6 +43,10 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
 	specInfoGatherer.conceptInfos = conceptInfos
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
+
+	conceptStepsMap := specInfoGatherer.getAllStepsFromConcepts()
+	specInfoGatherer.addStepsToAvailableSteps(conceptStepsMap)
+
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
 
@@ -53,6 +57,30 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*
 	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
 }
 
+func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][]*step {
+	allStepsInConcepts := make(map[string][]*step, 0)
+	conceptFiles := findConceptFiles()
+	for _, conceptFile := range conceptFiles {
+		fileText, fileReadErr := common.ReadFileContents(conceptFile)
+		if fileReadErr != nil {
+			apiLog.Error("failed to read concept file %s", conceptFile)
+			continue
+		}
+		concepts, err := new(conceptParser).parse(fileText)
+		if err != nil {
+			apiLog.Error("Spec Parse failure: line no: %s, %s", err.lineNo, err.message)
+			continue
+		}
+		conceptSteps := make([]*step, 0)
+		for _, concept := range concepts {
+			for _, conceptStep := range concept.conceptSteps {
+				conceptSteps = append(conceptSteps, conceptStep)
+			}
+		}
+		allStepsInConcepts[conceptFile] = conceptSteps
+	}
+	return allStepsInConcepts
+}
 func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*gauge_messages.ConceptInfo {
 	conceptInfos := make([]*gauge_messages.ConceptInfo, 0)
 	for _, concept := range dictionary.conceptsMap {
@@ -74,6 +102,10 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 		newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
 		specInfoGatherer.conceptInfos = conceptInfos
 		specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
+
+		conceptStepsMap := specInfoGatherer.getAllStepsFromConcepts()
+		specInfoGatherer.addStepsToAvailableSteps(conceptStepsMap)
+
 		specInfoGatherer.mutex.Unlock()
 	}
 }
