@@ -43,6 +43,7 @@ const (
 	bin                = "bin"
 	newDirPermissions  = 0755
 	gauge              = "gauge"
+	gaugeScreenshot    = "gauge_screenshot"
 	deploy             = "deploy"
 	installShellScript = "install.sh"
 )
@@ -147,7 +148,20 @@ func runCommand(command string, arg ...string) (string, error) {
 }
 
 func compileGauge() {
-	runProcess("go", "build", "-o", getGaugeExecutablePath())
+	runProcess("go", "build", "-o", getGaugeExecutablePath(gauge))
+	compileGaugeScreenshot()
+}
+
+func compileGaugeScreenshot() {
+	getGaugeScreenshot()
+	screenshotLocation := getGaugeExecutablePath(gaugeScreenshot)
+	os.Chdir(filepath.Join(os.Getenv("GOPATH"), screenshotLocation))
+	runProcess("go", "build", "-o", screenshotLocation)
+}
+
+func getGaugeScreenshot() {
+	gaugeScreenshotLocation := "github.com/getgauge/gauge_screenshot"
+	runProcess("go", "get", "-u", "-d", gaugeScreenshotLocation)
 }
 
 func runTests(packageName string, coverage bool) {
@@ -185,7 +199,8 @@ func installFiles(files map[string]string, installDir string) {
 
 func copyGaugeFiles(installPath string) {
 	files := make(map[string]string)
-	files[getGaugeExecutablePath()] = bin
+	files[getGaugeExecutablePath(gauge)] = bin
+	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
 	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", gauge, "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", gauge, "skel", "env")
 	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", gauge)
@@ -402,8 +417,8 @@ func getUserHome() string {
 	return os.Getenv("HOME")
 }
 
-func getGaugeExecutablePath() string {
-	return filepath.Join(getBinDir(), getExecutableName())
+func getGaugeExecutablePath(file string) string {
+	return filepath.Join(getBinDir(), getExecutableName(file))
 }
 
 func getBinDir() string {
@@ -413,11 +428,11 @@ func getBinDir() string {
 	return filepath.Join(bin, fmt.Sprintf("%s_%s", getGOOS(), getGOARCH()))
 }
 
-func getExecutableName() string {
+func getExecutableName(file string) string {
 	if getGOOS() == windows {
-		return gauge + ".exe"
+		return file + ".exe"
 	}
-	return gauge
+	return file
 }
 
 func getGOARCH() string {
