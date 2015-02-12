@@ -144,11 +144,11 @@ var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to 
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var doNotRandomize = flag.Bool([]string{"-sort","-s"}, false, "run specs in Alphabetical Order. Eg: gauge --s specs")
+var doNotRandomize = flag.Bool([]string{"-sort", "-s"}, false, "run specs in Alphabetical Order. Eg: gauge --s specs")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
-	fmt.Println("Copyright 2015 Thoughtworks\n")
+	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
 	fmt.Println("\tgauge specs/spec_name.spec")
