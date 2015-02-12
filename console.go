@@ -88,13 +88,9 @@ func getCurrentConsole() consoleWriter {
 }
 
 func (writer *coloredConsoleWriter) Write(b []byte) (int, error) {
-	message := string(b)
+	message := indent(string(b), writer.indentation)
 	if writer.isInsideStep {
 		writer.linesAfterLastStep += strings.Count(message, "\n")
-	}
-	message = indent(message, writer.indentation) + "\n"
-	if strings.TrimSpace(message) == "" {
-		return len(b), nil
 	}
 	fmt.Print(message)
 	return len(b), nil
@@ -117,7 +113,7 @@ func (writer *coloredConsoleWriter) writeSpecHeading(heading string) {
 }
 
 func (writer *coloredConsoleWriter) writeComment(comment *comment) {
-	writer.indentAndWrite("%s", formatComment(comment))
+	writer.Write([]byte(formatComment(comment)))
 }
 
 func (writer *coloredConsoleWriter) writeScenarioHeading(scenarioHeading string) {
@@ -131,59 +127,64 @@ func (writer *coloredConsoleWriter) writeContextStep(step *step) {
 
 func (writer *coloredConsoleWriter) writeStep(step *step) {
 	stepText := formatStep(step)
-	writer.indentAndWrite("@b%s", stepText)
+	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
 }
 
 func (writer *coloredConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	conceptText := formatConcept(protoConcept)
-	writer.indentAndWrite("@b%s", conceptText)
+	conceptText := indent(formatConcept(protoConcept), writer.indentation)
+	terminal.Stdout.Colorf("@b%s", conceptText)
 	writer.indentation += 4
 }
 
 func (writer *coloredConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
 	writer.indentation -= 4
-	conceptText := formatConcept(protoConcept)
-	writer.indentAndWrite("@g%s", conceptText)
 }
 
 func (writer *coloredConsoleWriter) writeStepStarting(step *step) {
 	stepText := formatStep(step)
-	writer.indentAndWrite("@b%s", stepText)
+	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
 }
 
 //todo: pass protostep instead
 func (writer *coloredConsoleWriter) writeStepFinished(step *step, failed bool) {
-	stepText := formatStep(step)
-	if failed {
-		writer.indentAndWrite("@r%s", stepText)
-	} else {
-		writer.indentAndWrite("@g%s", stepText)
+	stepText := indent(formatStep(step), writer.indentation)
+	linesInStepText := strings.Count(stepText, "\n")
+	if linesInStepText == 0 {
+		linesInStepText = 1
 	}
+	linesToMoveUp := writer.linesAfterLastStep + linesInStepText
+	terminal.Stdout.Up(linesToMoveUp)
+	if failed {
+		terminal.Stdout.Colorf("@r%s", stepText)
+	} else {
+		terminal.Stdout.Colorf("@g%s", stepText)
+	}
+	terminal.Stdout.Down(linesToMoveUp)
 	writer.isInsideStep = false
 }
 
 func (writer *coloredConsoleWriter) writeTable(table *table) {
-	formattedTable := formatTable(table)
-	writer.indentAndWrite("@m%s", formattedTable)
-}
-
-func (writer *coloredConsoleWriter) indentAndWrite(color string, message string) {
-	terminal.Stdout.Colorf(color, indent(message, writer.indentation)+"\n")
+	formattedTable := indent(formatTable(table), writer.indentation)
+	terminal.Stdout.Colorf("@m%s", formattedTable)
 }
 
 func indent(message string, indentation int) string {
+	if indentation == 0 {
+		return message
+	}
 	lines := strings.Split(message, "\n")
 	prefixedLines := make([]string, 0)
 	spaces := getEmptySpacedString(indentation)
-	for _, line := range lines {
-		if line == "" {
-			continue
+	for i, line := range lines {
+		if (i == len(lines)-1) && line == "" {
+			prefixedLines = append(prefixedLines, line)
+		} else {
+			prefixedLines = append(prefixedLines, spaces+line)
 		}
-		prefixedLines = append(prefixedLines, spaces+line)
 	}
 	return strings.Join(prefixedLines, "\n")
 }

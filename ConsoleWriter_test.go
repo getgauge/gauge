@@ -46,3 +46,10 @@ func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
 		"[my-plugin Plugin] : Foo bar\n")
 
 }
+
+func (s *MySuite) TestIndentation(c *C) {
+	c.Assert("    * hello world \n", Equals, indent("* hello world \n", 4))
+	c.Assert("* hello world", Equals, indent("* hello world", 0))
+	c.Assert("   \n    \n    * hello world \n    \n", Equals, indent("\n \n * hello world \n \n", 3))
+	c.Assert("  * first\n   *second\n   *third\n", Equals, indent("* first\n *second\n *third\n", 2))
+}
