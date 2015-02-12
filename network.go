@@ -219,23 +219,27 @@ func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) 
 }
 
 func getResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
-	timeout := make(chan bool, 1)
-	received := make(chan bool, 1)
-	go func() {
-		time.Sleep(t)
-		timeout <- true
-	}()
+	responseChan := make(chan bool, 1)
+	errChan := make(chan bool, 1)
+
 	var response *gauge_messages.Message
-	var error error
+	var err error
 	go func() {
-		response, error = getResponseForGaugeMessage(message, conn)
-		received <- true
-		close(received)
+		response, err = getResponseForGaugeMessage(message, conn)
+		if err != nil {
+			errChan <- true
+			close(errChan)
+		} else {
+			responseChan <- true
+			close(responseChan)
+		}
 	}()
 	select {
-	case <-received:
-		return response, error
-	case <-timeout:
+	case <-errChan:
+		return nil, err
+	case <-responseChan:
+		return response, nil
+	case <-time.After(t):
 		return nil, errors.New("Request Timeout")
 	}
 }

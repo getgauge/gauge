@@ -96,6 +96,7 @@ func (self *specValidator) validateStep(step *step) {
 	response, err := getResponseForMessageWithTimeout(message, self.runner.connection, config.RunnerRequestTimeout())
 	if err != nil {
 		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.fileName})
+		return
 	}
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()

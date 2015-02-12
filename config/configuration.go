@@ -19,6 +19,7 @@ package config
 
 import (
 	"github.com/getgauge/common"
+	"github.com/op/go-logging"
 	"strconv"
 	"time"
 )
@@ -29,6 +30,7 @@ const (
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
+	runnerRequestTimeout    = "runner_request_timeout"
 
 	defaultApiRefreshInterval      = time.Second * 3
 	defaultRunnerConnectionTimeout = time.Second * 25
@@ -38,6 +40,7 @@ const (
 	defaultRunnerRequestTimeout    = time.Second * 3
 )
 
+var apiLog = logging.MustGetLogger("gauge-api")
 var ProjectRoot string
 
 func ApiRefreshInterval() time.Duration {
@@ -65,7 +68,8 @@ func RefactorTimeout() time.Duration {
 }
 
 func RunnerRequestTimeout() time.Duration {
-	return defaultRunnerRequestTimeout
+	intervalString := getFromConfig(pluginConnectionTimeout)
+	return convertToTime(intervalString, defaultRunnerRequestTimeout)
 }
 
 func GaugeRepositoryUrl() string {
@@ -95,6 +99,7 @@ func setCurrentProjectEnvVariable() error {
 func convertToTime(value string, defaultValue time.Duration) time.Duration {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
+		apiLog.Warning("Cannot convert %s to time", value)
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
