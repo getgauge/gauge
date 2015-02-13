@@ -79,7 +79,7 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
-  ExecShell "open" "http://getgauge.io/documentation/user"
+  ExecShell "open" "http://getgauge.io/documentation/user/current"
   Exec '"$INSTDIR\plugin-install.bat"'
 SectionEnd
 
