@@ -182,7 +182,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	if downloadLink == "" {
 		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified.", runtime.GOOS))
 	}
-	log.Info("Downloading Plugin... => ", downloadLink)
+	log.Info("Downloading Plugin... => %s", downloadLink)
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
 		return "", errors.New(fmt.Sprintf("Could not download File %s: %s", downloadLink, err.Error()))
