@@ -355,13 +355,17 @@ func createZipPackage() {
 }
 
 func createZipFromUtil(dir, name string) {
+	wd, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
 	os.Chdir(filepath.Join(dir, name))
 	output, err := runCommand("zip", "-r", filepath.Join("..", name+".zip"), ".")
 	fmt.Println(output)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to zip: %s", err))
 	}
-
+	os.Chdir(wd)
 }
 
 func createZip(dir, packageName string) {
