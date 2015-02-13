@@ -350,8 +350,18 @@ func createZipPackage() {
 	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch())
 	distroDir := filepath.Join(deploy, packageName)
 	copyGaugeFiles(distroDir)
-	createZip(deploy, packageName)
+	createZipFromUtil(deploy, packageName)
 	os.RemoveAll(distroDir)
+}
+
+func createZipFromUtil(dir, name string) {
+	os.Chdir(filepath.Join(dir, name))
+	output, err := runCommand("zip", "-r", filepath.Join("..", name+".zip"), ".")
+	fmt.Println(output)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to zip: %s", err))
+	}
+
 }
 
 func createZip(dir, packageName string) {
@@ -367,7 +377,6 @@ func createZip(dir, packageName string) {
 		panic(err)
 	}
 	defer newfile.Close()
-
 	zipWriter := zip.NewWriter(newfile)
 	defer zipWriter.Close()
 
