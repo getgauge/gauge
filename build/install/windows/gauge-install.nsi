@@ -17,12 +17,13 @@
 !include "MUI2.nsh"
 !include "EnvVarUpdate.nsh"
 !include "x64.nsh"
+!include "winmessages.nsh"
 
 ; MUI Settings
 !define MUI_ABORTWARNING
 !define MUI_ICON "gauge-install.ico"
 !define MUI_UNICON "gauge-install.ico"
-
+!define env_hklm 'HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"'
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
 ; License page
@@ -79,6 +80,8 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
+  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $INSTDIR
+  SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   ExecShell "open" "http://getgauge.io/documentation/user/current"
   Exec '"$INSTDIR\plugin-install.bat"'
 SectionEnd
@@ -101,5 +104,7 @@ Section Uninstall
   Delete "$SMPROGRAMS\Gauge\Uninstall.lnk"
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
+  DeleteRegValue ${env_hklm} GAUGE_ROOT
+  SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   SetAutoClose true
 SectionEnd
