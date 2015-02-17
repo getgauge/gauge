@@ -256,7 +256,7 @@ func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *
 
 	_, err = parser.parse("# my concept with <table: foo> \n * first step \n * second step ")
 	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(err.message, Equals, "Dynamic parameter <table: foo> could not be resolved")
 
 }
 
@@ -582,4 +582,31 @@ func (s *MySuite) TestErrorOnCircularReferenceInDeepNestedConceptConcept(c *C) {
 	err = conceptDictionary.add(concepts2, "file2.cpt")
 	c.Assert(err, NotNil)
 	c.Assert(true, Equals, strings.Contains(err.message, "Circular reference found in concept"))
+}
+
+func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("create user <user:id> <user:name> and <file>").
+		step("a step <user:id>").String()
+	step, _ := new(conceptParser).parse(conceptText)
+	c.Assert(step[0].lineText, Equals, "create user <user:id> <user:name> and <file>")
+	c.Assert(step[0].args[0].argType, Equals, dynamic)
+	c.Assert(step[0].args[1].argType, Equals, dynamic)
+	c.Assert(step[0].args[2].argType, Equals, dynamic)
+}
+
+func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("create user <user:id> <table:name> and <file>").
+		step("a step <user:id>").String()
+	_, err := new(conceptParser).parse(conceptText)
+	c.Assert(err.message, Equals, "Dynamic parameter <table:name> could not be resolved")
+}
+
+func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("create user <user:id> \"abc\" and <file>").
+		step("a step <user:id>").String()
+	_, err := new(conceptParser).parse(conceptText)
+	c.Assert(err.message, Equals, "Concept heading can have only Dynamic Parameters")
 }

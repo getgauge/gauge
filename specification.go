@@ -683,19 +683,12 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 	if typeOfArg == "special" {
 		resolvedArgValue, err := newSpecialTypeResolver().resolve(argValue)
 		if err != nil {
-			parseDetailRes := &parseDetailResult{warnings: []*warning{&warning{lineNo: token.lineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
-			stepArg, result := validateDynamicArg(argValue, token, lookup)
-			if result != nil {
-				if result.error != nil {
-					parseDetailRes.error = result.error
-				}
-				if result.warnings != nil {
-					for _, warn := range result.warnings {
-						parseDetailRes.warnings = append(parseDetailRes.warnings, warn)
-					}
-				}
+			switch err.(type) {
+			case invalidSpecialParamError:
+				return treatArgAsDynamic(argValue, token, lookup)
+			default:
+				return nil, &parseDetailResult{error: &parseError{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), lineText: token.lineText}}
 			}
-			return stepArg, parseDetailRes
 		}
 		return resolvedArgValue, nil
 	} else if typeOfArg == "static" {
@@ -703,6 +696,22 @@ func (spec *specification) createStepArg(argValue string, typeOfArg string, toke
 	} else {
 		return validateDynamicArg(argValue, token, lookup)
 	}
+}
+
+func treatArgAsDynamic(argValue string, token *token, lookup *argLookup) (*stepArg, *parseDetailResult) {
+	parseDetailRes := &parseDetailResult{warnings: []*warning{&warning{lineNo: token.lineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
+	stepArg, result := validateDynamicArg(argValue, token, lookup)
+	if result != nil {
+		if result.error != nil {
+			parseDetailRes.error = result.error
+		}
+		if result.warnings != nil {
+			for _, warn := range result.warnings {
+				parseDetailRes.warnings = append(parseDetailRes.warnings, warn)
+			}
+		}
+	}
+	return stepArg, parseDetailRes
 }
 
 func validateDynamicArg(argValue string, token *token, lookup *argLookup) (*stepArg, *parseDetailResult) {

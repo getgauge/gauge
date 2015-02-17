@@ -19,7 +19,6 @@ package main
 
 import (
 	"encoding/csv"
-	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -28,12 +27,20 @@ import (
 	"strings"
 )
 
+type invalidSpecialParamError struct {
+	message string
+}
+
 type resolverFn func(string) (*stepArg, error)
 type specialTypeResolver struct {
 	predefinedResolvers map[string]resolverFn
 }
 
 type paramResolver struct {
+}
+
+func (invalidSpecialParamError invalidSpecialParamError) Error() string {
+	return invalidSpecialParamError.message
 }
 
 func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, dataTableLookup *argLookup) []*gauge_messages.Parameter {
@@ -146,6 +153,7 @@ func convertCsvToTable(csvContents string) (*table, error) {
 }
 
 func (resolver *specialTypeResolver) resolve(arg string) (*stepArg, error) {
+	//	fmt.Println(arg)
 	regEx := regexp.MustCompile("(.*):(.*)")
 	match := regEx.FindAllStringSubmatch(arg, -1)
 	specialType := strings.TrimSpace(match[0][1])
@@ -162,5 +170,5 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 	if found {
 		return resolveFunc(value)
 	}
-	return nil, errors.New(fmt.Sprintf("Resolver not found for special param <%s>", arg))
+	return nil, invalidSpecialParamError{message: fmt.Sprintf("Resolver not found for special param <%s>", arg)}
 }

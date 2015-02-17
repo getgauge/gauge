@@ -77,6 +77,7 @@ func processStep(parser *specParser, token *token) (*parseError, bool) {
 	if err != nil {
 		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: err.Error()}, true
 	}
+
 	token.value = stepValue
 	token.args = args
 	parser.clearState()
