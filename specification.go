@@ -966,3 +966,7 @@ func convertToStepText(fragments []*gauge_messages.Fragment) string {
 	}
 	return stepText
 }
+
+func (result *parseResult) Error() string {
+	return fmt.Sprintf("[ParseError] %s : %s", result.fileName, result.error.Error())
+}

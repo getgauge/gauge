@@ -492,7 +492,7 @@ func loadEnvironment(env string) error {
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
 		if !result.ok {
-			log.Critical(fmt.Sprintf("[ParseError] %s : %s", result.fileName, result.error.Error()))
+			log.Critical(result.Error())
 			os.Exit(1)
 		}
 		if result.warnings != nil {

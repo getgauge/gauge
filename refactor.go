@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
+	"path/filepath"
 	"strings"
 )
 
@@ -58,7 +59,7 @@ func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 	}
 
 	result := &refactoringResult{success: true, errors: make([]string, 0), warnings: make([]string, 0)}
-	specs, specParseResults := findSpecs(projectRoot, &conceptDictionary{})
+	specs, specParseResults := findSpecs(filepath.Join(projectRoot, common.SpecsDirectoryName), &conceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.success {
 		return result
@@ -83,7 +84,7 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	for _, parseResult := range parseResults {
 		if !parseResult.ok {
 			refactorResult.success = false
-			refactorResult.errors = append(refactorResult.errors, parseResult.error.Error())
+			refactorResult.errors = append(refactorResult.errors, parseResult.Error())
 		}
 		refactorResult.appendWarnings(parseResult.warnings)
 	}
