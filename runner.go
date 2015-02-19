@@ -29,6 +29,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -127,10 +128,14 @@ func (testRunner *testRunner) kill() error {
 			}
 		case <-time.After(config.PluginKillTimeout()):
 			log.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
-			return testRunner.cmd.Process.Kill()
+			return testRunner.killRunner()
 		}
 	}
 	return nil
+}
+
+func (testRunner *testRunner) killRunner() error {
+	return testRunner.cmd.Process.Kill()
 }
 
 func (testRunner *testRunner) isStillRunning() bool {
@@ -147,23 +152,62 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest) (*testRunner, error) {
+func startRunner(manifest *manifest, port string) (*testRunner, error) {
 	var r runner
+	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
+	if err != nil {
+		return nil, err
+	}
+	command := getOsSpecificCommand(r)
+	currentConsole := getCurrentConsole()
+	env := getCleanEnv(port, os.Environ())
+	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, currentConsole, currentConsole, env)
+	if err != nil {
+		return nil, err
+	}
+	// Wait for the process to exit so we will get a detailed error message
+	errChannel := make(chan error)
+	waitAndGetErrorMessage(errChannel, cmd)
+	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
+}
+
+func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {
 	languageJsonFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-
 	contents, err := common.ReadFileContents(languageJsonFilePath)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-
-	err = json.Unmarshal([]byte(contents), &r)
+	err = json.Unmarshal([]byte(contents), r)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
+	return filepath.Dir(languageJsonFilePath), nil
+}
 
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd) {
+	go func() {
+		err := cmd.Wait()
+		if err != nil {
+			log.Debug("Runner exited with error: %s", err)
+			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
+		}
+	}()
+}
+
+func getCleanEnv(port string, env []string) []string {
+	//clear environment variable common.GaugeInternalPortEnvName
+	for i, k := range env {
+		if strings.HasPrefix(strings.TrimSpace(k), common.GaugeInternalPortEnvName) {
+			env[i] = ""
+		}
+	}
+	return append(env, common.GaugeInternalPortEnvName+"="+port)
+}
+
+func getOsSpecificCommand(r runner) []string {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -176,24 +220,5 @@ func startRunner(manifest *manifest) (*testRunner, error) {
 		command = r.Run.Linux
 		break
 	}
-	runnerDir := filepath.Dir(languageJsonFilePath)
-
-	currentConsole := getCurrentConsole()
-	cmd, err := common.ExecuteCommand(command, runnerDir, currentConsole, currentConsole)
-
-	if err != nil {
-		return nil, err
-	}
-	// Wait for the process to exit so we will get a detailed error message
-
-	errChannel := make(chan error)
-	go func() {
-		err := cmd.Wait()
-		if err != nil {
-			log.Debug("Runner exited with error: %s", err)
-			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
-		}
-	}()
-
-	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
+	return command
 }

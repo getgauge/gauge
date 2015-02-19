@@ -143,6 +143,7 @@ var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and sce
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
+var numberOfExecutionStreams = flag.Int([]string{"-n"}, numberOfCores(), "Specify number of parallel execution streams")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 var doNotRandomize = flag.Bool([]string{"-sort", "-s"}, false, "run specs in Alphabetical Order. Eg: gauge --s specs")
 
@@ -260,7 +261,7 @@ func executeSpecs(inParallel bool) {
 	}
 
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, *parallel)
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, *parallel, *numberOfExecutionStreams)
 
 	result := execution.start()
 	execution.finish()
@@ -531,11 +532,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	if err := common.SetEnvVariable(common.GaugeInternalPortEnvName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
-		return nil, errors.New(fmt.Sprintf("Failed to set %s. %s", common.GaugePortEnvName, err.Error()))
-	}
-
-	testRunner, err := startRunner(manifest)
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()))
 	if err != nil {
 		return nil, err
 	}
@@ -544,7 +541,10 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	testRunner.connection = runnerConnection
 	if connectionError != nil {
 		log.Debug("Runner connection error: %s", connectionError)
-		testRunner.kill()
+		err := testRunner.killRunner()
+		if err != nil {
+			log.Debug("Error while killing runner: %s", err)
+		}
 		return nil, connectionError
 	}
 	return testRunner, nil

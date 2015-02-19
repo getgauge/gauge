@@ -18,19 +18,19 @@
 package main
 
 import (
-	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"runtime"
 	"time"
 )
 
 type parallelSpecExecution struct {
-	manifest             *manifest
-	runner               *testRunner
-	specifications       []*specification
-	pluginHandler        *pluginHandler
-	currentExecutionInfo *gauge_messages.ExecutionInfo
-	aggregateResult      *suiteResult
+	manifest                 *manifest
+	specifications           []*specification
+	pluginHandler            *pluginHandler
+	currentExecutionInfo     *gauge_messages.ExecutionInfo
+	runner                   *testRunner
+	aggregateResult          *suiteResult
+	numberOfExecutionStreams int
 }
 
 type specCollection struct {
@@ -39,15 +39,12 @@ type specCollection struct {
 
 func (e *parallelSpecExecution) start() *suiteResult {
 	startTime := time.Now()
-	specCollections := e.distributeSpecs(numberOfCores())
+
+	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 
-	for i, specCollection := range specCollections {
-		if i == 0 {
-			go e.startSpecsExecution(specCollection, suiteResultChannel, e.runner)
-		} else {
-			go e.startSpecsExecution(specCollection, suiteResultChannel, nil)
-		}
+	for _, specCollection := range specCollections {
+		go e.startSpecsExecution(specCollection, suiteResultChannel, nil)
 	}
 
 	suiteResults := make([]*suiteResult, 0)
@@ -61,20 +58,18 @@ func (e *parallelSpecExecution) start() *suiteResult {
 }
 
 func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
-	if runner == nil {
-		var err error
-		runner, err = startRunnerAndMakeConnection(e.manifest)
-		if err != nil {
-			fmt.Println("Failed: " + err.Error())
-			suiteResults <- &suiteResult{}
-			return
-		}
+	var err error
+	runner, err = startRunnerAndMakeConnection(e.manifest)
+	if err != nil {
+		log.Error("Failed: " + err.Error())
+		suiteResults <- &suiteResult{}
+		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner)
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
-	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false)
+	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false, 0)
 	result := execution.start()
 	runner.kill()
 	suiteResults <- result
