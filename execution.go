@@ -29,7 +29,7 @@ type simpleExecution struct {
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *suiteResult
-	console              consoleWriter
+	writer               executionLogger
 }
 
 type execution interface {
@@ -41,11 +41,11 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo, console consoleWriter) execution {
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo, writer executionLogger) execution {
 	if parallel.inParallel {
-		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams, console: console}
+		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams, writer: writer}
 	}
-	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, console: console}
+	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, writer: writer}
 }
 
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
@@ -103,8 +103,8 @@ func (exe *simpleExecution) start() *suiteResult {
 		exe.suiteResult.setFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler)
-			protoSpecResult := executor.execute(exe.console)
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer)
+			protoSpecResult := executor.execute()
 			exe.suiteResult.addSpecResult(protoSpecResult)
 		}
 	}
@@ -129,8 +129,8 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler) *specExecutor {
+func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, writer)
 	return specExecutor
 }

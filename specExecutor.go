@@ -31,12 +31,14 @@ type specExecutor struct {
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *specResult
+	writer               executionLogger
 }
 
-func (specExecutor *specExecutor) initialize(specificationToExecute *specification, runner *testRunner, pluginHandler *pluginHandler) {
+func (specExecutor *specExecutor) initialize(specificationToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger) {
 	specExecutor.specification = specificationToExecute
 	specExecutor.runner = runner
 	specExecutor.pluginHandler = pluginHandler
+	specExecutor.writer = writer
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -65,13 +67,13 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (specExecutor *specExecutor) execute(console consoleWriter) *specResult {
+func (specExecutor *specExecutor) execute() *specResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.heading.value),
 		FileName: proto.String(specExecutor.specification.fileName),
 		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.tags)}
 	specExecutor.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 
-	console.writeSpecHeading(specInfo.GetName())
+	specExecutor.writer.SpecHeading(specInfo.GetName())
 
 	specExecutor.specResult = newSpecResult(specExecutor.specification)
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.getSpecItems())
@@ -83,14 +85,14 @@ func (specExecutor *specExecutor) execute(console consoleWriter) *specResult {
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
 		for _, step := range specExecutor.specification.contexts {
-			console.writeStep(step)
+			specExecutor.writer.Step(step)
 		}
 		dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 		if dataTableRowCount == 0 {
-			scenarioResult := specExecutor.executeScenarios(console)
+			scenarioResult := specExecutor.executeScenarios()
 			specExecutor.specResult.addScenarioResults(scenarioResult)
 		} else {
-			specExecutor.executeTableDrivenScenarios(console)
+			specExecutor.executeTableDrivenScenarios()
 		}
 	}
 
@@ -102,11 +104,11 @@ func (specExecutor *specExecutor) execute(console consoleWriter) *specResult {
 	return specExecutor.specResult
 }
 
-func (specExecutor *specExecutor) executeTableDrivenScenarios(console consoleWriter) {
+func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*scenarioResult
 	dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 	for specExecutor.dataTableIndex = 0; specExecutor.dataTableIndex < dataTableRowCount; specExecutor.dataTableIndex++ {
-		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios(console))
+		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
 	}
 	specExecutor.specResult.addTableDrivenScenarioResult(dataTableScenarioExecutionResult)
 }
@@ -138,17 +140,17 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *scenarioR
 	return executor.executeHook(message, scenarioResult)
 }
 
-func (specExecutor *specExecutor) executeScenarios(console consoleWriter) []*scenarioResult {
+func (specExecutor *specExecutor) executeScenarios() []*scenarioResult {
 	scenarioResults := make([]*scenarioResult, 0)
 	for _, scenario := range specExecutor.specification.scenarios {
-		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario, console))
+		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
 	}
 	return scenarioResults
 }
 
-func (executor *specExecutor) executeScenario(scenario *scenario, console consoleWriter) *scenarioResult {
+func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResult {
 	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: getTagValue(scenario.tags), IsFailed: proto.Bool(false)}
-	console.writeScenarioHeading(scenario.heading.value)
+	executor.writer.ScenarioHeading(scenario.heading.value)
 
 	scenarioResult := &scenarioResult{newProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
@@ -157,9 +159,9 @@ func (executor *specExecutor) executeScenario(scenario *scenario, console consol
 		addPreHook(scenarioResult, beforeHookExecutionStatus)
 		setScenarioFailure(executor.currentExecutionInfo)
 	} else {
-		executor.executeContextItems(scenarioResult, console)
+		executor.executeContextItems(scenarioResult)
 		if !scenarioResult.getFailure() {
-			executor.executeScenarioItems(scenarioResult, console)
+			executor.executeScenarioItems(scenarioResult)
 		}
 	}
 
@@ -184,15 +186,15 @@ func (executor *specExecutor) getContextItemsForScenarioExecution(specification 
 	return contextProtoItems
 }
 
-func (executor *specExecutor) executeContextItems(scenarioResult *scenarioResult, console consoleWriter) {
-	failure := executor.executeItems(scenarioResult.protoScenario.GetContexts(), console)
+func (executor *specExecutor) executeContextItems(scenarioResult *scenarioResult) {
+	failure := executor.executeItems(scenarioResult.protoScenario.GetContexts())
 	if failure {
 		scenarioResult.setFailure()
 	}
 }
 
-func (executor *specExecutor) executeScenarioItems(scenarioResult *scenarioResult, console consoleWriter) {
-	failure := executor.executeItems(scenarioResult.protoScenario.GetScenarioItems(), console)
+func (executor *specExecutor) executeScenarioItems(scenarioResult *scenarioResult) {
+	failure := executor.executeItems(scenarioResult.protoScenario.GetScenarioItems())
 	if failure {
 		scenarioResult.setFailure()
 	}
@@ -206,9 +208,9 @@ func (executor *specExecutor) resolveItems(items []item) []*gauge_messages.Proto
 	return protoItems
 }
 
-func (executor *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem, console consoleWriter) bool {
+func (executor *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem) bool {
 	for _, protoItem := range executingItems {
-		failure := executor.executeItem(protoItem, console)
+		failure := executor.executeItem(protoItem)
 		if failure == true {
 			return true
 		}
@@ -276,18 +278,18 @@ func (executor *specExecutor) dataTableLookup() *argLookup {
 	return new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 }
 
-func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem, console consoleWriter) bool {
+func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
-		return executor.executeConcept(protoItem.GetConcept(), console)
+		return executor.executeConcept(protoItem.GetConcept())
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-		return executor.executeStep(protoItem.GetStep(), console)
+		return executor.executeStep(protoItem.GetStep())
 	}
 	return false
 }
 
-func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep, console consoleWriter) bool {
+func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep) bool {
 	for _, protoStep := range protoSteps {
-		failure := executor.executeStep(protoStep, console)
+		failure := executor.executeStep(protoStep)
 		if failure {
 			return true
 		}
@@ -295,16 +297,16 @@ func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoSte
 	return false
 }
 
-func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept, console consoleWriter) bool {
-	console.writeConceptStarting(protoConcept)
+func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
+	executor.writer.ConceptStarting(protoConcept)
 	for _, step := range protoConcept.Steps {
-		failure := executor.executeItem(step, console)
+		failure := executor.executeItem(step)
 		executor.setExecutionResultForConcept(protoConcept)
 		if failure {
 			return true
 		}
 	}
-	console.writeConceptFinished(protoConcept)
+	executor.writer.ConceptFinished(protoConcept)
 	return protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
 }
 
@@ -338,14 +340,14 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 }
 
 func printStatus(executionResult *gauge_messages.ProtoExecutionResult) {
-	getCurrentConsole().writeError(executionResult.GetErrorMessage())
-	getCurrentConsole().writeError(executionResult.GetStackTrace())
+	getCurrentConsole().Error(executionResult.GetErrorMessage())
+	getCurrentConsole().Error(executionResult.GetStackTrace())
 }
 
-func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep, console consoleWriter) bool {
+func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
 	stepWithResolvedArgs := createStepFromStepRequest(stepRequest)
-	console.writeStepStarting(stepWithResolvedArgs)
+	executor.writer.StepStarting(stepWithResolvedArgs)
 
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
@@ -374,7 +376,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep, c
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
 
-	console.writeStepFinished(stepWithResolvedArgs, protoStepExecResult.GetExecutionResult().GetFailed())
+	executor.writer.StepFinished(stepWithResolvedArgs, protoStepExecResult.GetExecutionResult().GetFailed())
 	protoStep.StepExecutionResult = protoStepExecResult
 	return protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
 }

@@ -31,7 +31,7 @@ type parallelSpecExecution struct {
 	runner                   *testRunner
 	aggregateResult          *suiteResult
 	numberOfExecutionStreams int
-	console                  consoleWriter
+	writer                   executionLogger
 }
 
 type specCollection struct {
@@ -58,19 +58,20 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, console consoleWriter) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
 	var err error
-	runner, err = startRunnerAndMakeConnection(e.manifest, console)
+	runner, err = startRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
+
 		log.Error("Failed: " + err.Error())
 		suiteResults <- &suiteResult{}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, console)
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, writer)
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, console consoleWriter) {
-	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, console)
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
+	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
 	runner.kill()
 	suiteResults <- result

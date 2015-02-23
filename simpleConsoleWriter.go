@@ -22,79 +22,79 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
-type simpleConsoleWriter struct {
+type simpleLogger struct {
 	indentation int
 }
 
-func newSimpleConsoleWriter() *simpleConsoleWriter {
-	return &simpleConsoleWriter{indentation: 0}
+func newSimpleConsoleWriter() *simpleLogger {
+	return &simpleLogger{indentation: 0}
 }
 
-func (writer *simpleConsoleWriter) Write(b []byte) (int, error) {
+func (writer *simpleLogger) Write(b []byte) (int, error) {
 	message := indent(string(b), writer.indentation)
 	fmt.Print(message)
 	return len(b), nil
 }
 
-func (writer *simpleConsoleWriter) writeString(value string) {
+func (writer *simpleLogger) Text(value string) {
 	writer.Write([]byte(value))
 }
 
-func (writer *simpleConsoleWriter) writeError(value string) {
-	writer.writeString(value)
+func (writer *simpleLogger) Error(value string) {
+	writer.Text(value)
 }
 
-func (writer *simpleConsoleWriter) writeSpecHeading(heading string) {
+func (writer *simpleLogger) SpecHeading(heading string) {
 	formattedHeading := formatSpecHeading(heading)
 	writer.Write([]byte(formattedHeading))
 }
 
-func (writer *simpleConsoleWriter) writeItems(items []item) {
+func (writer *simpleLogger) writeItems(items []item) {
 	for _, item := range items {
 		writer.writeItem(item)
 	}
 }
 
-func (writer *simpleConsoleWriter) writeSteps(steps []*step) {
+func (writer *simpleLogger) Steps(steps []*step) {
 	for _, step := range steps {
 		writer.writeItem(step)
 	}
 }
 
-func (writer *simpleConsoleWriter) writeItem(item item) {
-	writeItem(item,writer)
+func (writer *simpleLogger) writeItem(item item) {
+	writeItem(item, writer)
 }
 
-func (writer *simpleConsoleWriter) writeComment(comment *comment) {
-	writer.writeString(formatComment(comment))
+func (writer *simpleLogger) Comment(comment *comment) {
+	writer.Text(formatComment(comment))
 }
 
-func (writer *simpleConsoleWriter) writeScenarioHeading(scenarioHeading string) {
+func (writer *simpleLogger) ScenarioHeading(scenarioHeading string) {
 	formattedHeading := formatScenarioHeading(scenarioHeading)
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
-func (writer *simpleConsoleWriter) writeStep(step *step) {
-	writer.writeString(formatStep(step))
+func (writer *simpleLogger) Step(step *step) {
+	writer.Text(formatStep(step))
 }
 
-func (writer *simpleConsoleWriter) writeStepStarting(step *step) {
+func (writer *simpleLogger) StepStarting(step *step) {
 }
 
 //todo: pass protostep instead
-func (writer *simpleConsoleWriter) writeStepFinished(step *step, failed bool) {
-	writeStepFinished(step,failed,writer)
+func (writer *simpleLogger) StepFinished(step *step, failed bool) {
+	StepFinished(step, failed, writer)
 }
 
-func (writer *simpleConsoleWriter) writeTable(table *table) {
-	writer.writeString(formatTable(table))
+func (writer *simpleLogger) Table(table *table) {
+	writer.Text(formatTable(table))
 }
 
-func (writer *simpleConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	writer.writeString(formatConcept(protoConcept))
+func (writer *simpleLogger) ConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
+	writer.Text(formatConcept(protoConcept))
 	writer.indentation += 4
 }
 
-func (writer *simpleConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
+func (writer *simpleLogger) ConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
 	writer.indentation -= 4
 }

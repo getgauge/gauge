@@ -314,7 +314,7 @@ func printValidationFailures(validationErrors executionValidationErrors) {
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			getCurrentConsole().writeError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
+			getCurrentConsole().Error(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
 		}
 	}
 }
@@ -528,7 +528,7 @@ func loadGaugeEnvironment() {
 
 }
 
-func startRunnerAndMakeConnection(manifest *manifest, console consoleWriter) (*testRunner, error) {
+func startRunnerAndMakeConnection(manifest *manifest, writer executionLogger) (*testRunner, error) {
 	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -537,7 +537,7 @@ func startRunnerAndMakeConnection(manifest *manifest, console consoleWriter) (*t
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()), console)
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()), writer)
 	if err != nil {
 		return nil, err
 	}
@@ -588,22 +588,22 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 	if hook != nil {
 		console := getCurrentConsole()
-		console.writeError(hook.GetErrorMessage())
-		console.writeError(hook.GetStackTrace())
+		console.Error(hook.GetErrorMessage())
+		console.Error(hook.GetStackTrace())
 	}
 }
 
 func printError(execResult *gauge_messages.ProtoExecutionResult) {
 	if execResult.GetFailed() {
 		console := getCurrentConsole()
-		console.writeError(execResult.GetErrorMessage() + "\n")
-		console.writeError(execResult.GetStackTrace() + "\n")
+		console.Error(execResult.GetErrorMessage() + "\n")
+		console.Error(execResult.GetStackTrace() + "\n")
 	}
 }
 
 func printSpecFailure(specResult *specResult) {
 	if specResult.isFailed {
-		getCurrentConsole().writeError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
+		getCurrentConsole().Error(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
@@ -626,7 +626,7 @@ func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTa
 
 func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 	if scenario.GetFailed() {
-		getCurrentConsole().writeError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
+		getCurrentConsole().Error(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
@@ -644,7 +644,7 @@ func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 func printStepFailure(step *gauge_messages.ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
-		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", step.GetActualText()))
+		getCurrentConsole().Error(fmt.Sprintf("\t %s\n", step.GetActualText()))
 		printHookError(stepExecResult.GetPreHookFailure())
 		printError(stepExecResult.ExecutionResult)
 		printHookError(stepExecResult.GetPostHookFailure())
@@ -654,7 +654,7 @@ func printStepFailure(step *gauge_messages.ProtoStep) {
 func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
-		getCurrentConsole().writeError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
+		getCurrentConsole().Error(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
 		printError(conceptExecResult.ExecutionResult)
 	}
 }

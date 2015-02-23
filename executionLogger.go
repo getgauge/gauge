@@ -24,34 +24,34 @@ import (
 	"strings"
 )
 
-type consoleWriter interface {
+type executionLogger interface {
 	Write([]byte) (int, error)
-	writeString(string)
-	writeError(string)
-	writeSpecHeading(string)
-	writeScenarioHeading(string)
-	writeComment(*comment)
-	writeStep(*step)
-	writeStepStarting(*step)
-	writeStepFinished(*step, bool)
-	writeTable(*table)
-	writeConceptStarting(*gauge_messages.ProtoConcept)
-	writeConceptFinished(*gauge_messages.ProtoConcept)
+	Text(string)
+	Error(string)
+	SpecHeading(string)
+	ScenarioHeading(string)
+	Comment(*comment)
+	Step(*step)
+	StepStarting(*step)
+	StepFinished(*step, bool)
+	Table(*table)
+	ConceptStarting(*gauge_messages.ProtoConcept)
+	ConceptFinished(*gauge_messages.ProtoConcept)
 }
 
-var currentConsoleWriter consoleWriter
+var currentLogger executionLogger
 
-type coloredConsoleWriter struct {
+type coloredLogger struct {
 	linesAfterLastStep int
 	isInsideStep       bool
 	indentation        int
 }
 
-type pluginConsoleWriter struct {
+type pluginLogger struct {
 	pluginName string
 }
 
-func (writer *pluginConsoleWriter) Write(b []byte) (int, error) {
+func (writer *pluginLogger) Write(b []byte) (int, error) {
 	message := string(b)
 	prefixedMessage := addPrefixToEachLine(message, fmt.Sprintf("[%s Plugin] : ", writer.pluginName))
 	gaugeConsoleWriter := getCurrentConsole()
@@ -72,22 +72,22 @@ func addPrefixToEachLine(text string, template string) string {
 	return strings.Join(prefixedLines, "\n")
 }
 
-func newColoredConsoleWriter() *coloredConsoleWriter {
-	return &coloredConsoleWriter{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
+func newColoredConsoleWriter() *coloredLogger {
+	return &coloredLogger{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
 }
 
-func getCurrentConsole() consoleWriter {
-	if currentConsoleWriter == nil {
+func getCurrentConsole() executionLogger {
+	if currentLogger == nil {
 		if *simpleConsoleOutput {
-			currentConsoleWriter = newSimpleConsoleWriter()
+			currentLogger = newSimpleConsoleWriter()
 		} else {
-			currentConsoleWriter = newColoredConsoleWriter()
+			currentLogger = newColoredConsoleWriter()
 		}
 	}
-	return currentConsoleWriter
+	return currentLogger
 }
 
-func (writer *coloredConsoleWriter) Write(b []byte) (int, error) {
+func (writer *coloredLogger) Write(b []byte) (int, error) {
 	message := indent(string(b), writer.indentation)
 	if writer.isInsideStep {
 		writer.linesAfterLastStep += strings.Count(message, "\n")
@@ -96,53 +96,53 @@ func (writer *coloredConsoleWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (writer *coloredConsoleWriter) writeString(value string) {
+func (writer *coloredLogger) Text(value string) {
 	writer.Write([]byte(value))
 }
 
-func (writer *coloredConsoleWriter) writeError(value string) {
+func (writer *coloredLogger) Error(value string) {
 	if writer.isInsideStep {
 		writer.linesAfterLastStep += strings.Count(value, "\n")
 	}
 	terminal.Stdout.Colorf("@r%s", value)
 }
 
-func (writer *coloredConsoleWriter) writeSpecHeading(heading string) {
+func (writer *coloredLogger) SpecHeading(heading string) {
 	formattedHeading := formatSpecHeading(heading)
 	writer.Write([]byte(formattedHeading))
 }
 
-func (writer *coloredConsoleWriter) writeComment(comment *comment) {
+func (writer *coloredLogger) Comment(comment *comment) {
 	writer.Write([]byte(formatComment(comment)))
 }
 
-func (writer *coloredConsoleWriter) writeScenarioHeading(scenarioHeading string) {
+func (writer *coloredLogger) ScenarioHeading(scenarioHeading string) {
 	formattedHeading := formatScenarioHeading(scenarioHeading)
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
-func (writer *coloredConsoleWriter) writeContextStep(step *step) {
-	writer.writeStep(step)
+func (writer *coloredLogger) writeContextStep(step *step) {
+	writer.Step(step)
 }
 
-func (writer *coloredConsoleWriter) writeStep(step *step) {
+func (writer *coloredLogger) Step(step *step) {
 	stepText := formatStep(step)
 	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
 }
 
-func (writer *coloredConsoleWriter) writeConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
+func (writer *coloredLogger) ConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
 	conceptText := indent(formatConcept(protoConcept), writer.indentation)
 	terminal.Stdout.Colorf("@b%s", conceptText)
 	writer.indentation += 4
 }
 
-func (writer *coloredConsoleWriter) writeConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
+func (writer *coloredLogger) ConceptFinished(protoConcept *gauge_messages.ProtoConcept) {
 	writer.indentation -= 4
 }
 
-func (writer *coloredConsoleWriter) writeStepStarting(step *step) {
+func (writer *coloredLogger) StepStarting(step *step) {
 	stepText := formatStep(step)
 	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
@@ -150,7 +150,7 @@ func (writer *coloredConsoleWriter) writeStepStarting(step *step) {
 }
 
 //todo: pass protostep instead
-func (writer *coloredConsoleWriter) writeStepFinished(step *step, failed bool) {
+func (writer *coloredLogger) StepFinished(step *step, failed bool) {
 	stepText := indent(formatStep(step), writer.indentation)
 	linesInStepText := strings.Count(stepText, "\n")
 	if linesInStepText == 0 {
@@ -167,7 +167,7 @@ func (writer *coloredConsoleWriter) writeStepFinished(step *step, failed bool) {
 	writer.isInsideStep = false
 }
 
-func (writer *coloredConsoleWriter) writeTable(table *table) {
+func (writer *coloredLogger) Table(table *table) {
 	formattedTable := indent(formatTable(table), writer.indentation)
 	terminal.Stdout.Colorf("@m%s", formattedTable)
 }

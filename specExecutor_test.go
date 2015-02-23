@@ -40,7 +40,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil)
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -80,7 +80,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil)
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -134,7 +134,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil)
 
 	// For first row
 	specExecutor.dataTableIndex = 0
