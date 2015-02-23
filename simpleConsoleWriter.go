@@ -62,17 +62,7 @@ func (writer *simpleConsoleWriter) writeSteps(steps []*step) {
 }
 
 func (writer *simpleConsoleWriter) writeItem(item item) {
-	switch item.kind() {
-	case commentKind:
-		comment := item.(*comment)
-		writer.writeComment(comment)
-	case stepKind:
-		step := item.(*step)
-		writer.writeStep(step)
-	case tableKind:
-		table := item.(*table)
-		writer.writeTable(table)
-	}
+	writeItem(item,writer)
 }
 
 func (writer *simpleConsoleWriter) writeComment(comment *comment) {
@@ -93,13 +83,7 @@ func (writer *simpleConsoleWriter) writeStepStarting(step *step) {
 
 //todo: pass protostep instead
 func (writer *simpleConsoleWriter) writeStepFinished(step *step, failed bool) {
-	var message string
-	if failed {
-		message = fmt.Sprintf("Step Failed => %s\n", formatStep(step))
-	} else {
-		message = fmt.Sprintf("Step Passed => %s\n", formatStep(step))
-	}
-	writer.writeString(message)
+	writeStepFinished(step,failed,writer)
 }
 
 func (writer *simpleConsoleWriter) writeTable(table *table) {

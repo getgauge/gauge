@@ -254,7 +254,7 @@ func executeSpecs(inParallel bool) {
 		os.Exit(1)
 	}
 
-	runner, runnerError := startRunnerAndMakeConnection(manifest)
+	runner, runnerError := startRunnerAndMakeConnection(manifest, getCurrentConsole())
 	if runnerError != nil {
 		log.Critical("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
@@ -266,7 +266,7 @@ func executeSpecs(inParallel bool) {
 
 	pluginHandler := startPlugins(manifest)
 	parallelInfo := &parallelInfo{inParallel: *parallel, numberOfExecutionStreams: *numberOfExecutionStreams}
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo)
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentConsole())
 
 	result := execution.start()
 	execution.finish()
@@ -528,7 +528,7 @@ func loadGaugeEnvironment() {
 
 }
 
-func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
+func startRunnerAndMakeConnection(manifest *manifest, console consoleWriter) (*testRunner, error) {
 	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -537,7 +537,7 @@ func startRunnerAndMakeConnection(manifest *manifest) (*testRunner, error) {
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()))
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()), console)
 	if err != nil {
 		return nil, err
 	}

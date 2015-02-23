@@ -31,6 +31,7 @@ type parallelSpecExecution struct {
 	runner                   *testRunner
 	aggregateResult          *suiteResult
 	numberOfExecutionStreams int
+	console                  consoleWriter
 }
 
 type specCollection struct {
@@ -43,8 +44,8 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 
-	for _, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, nil)
+	for i, specCollection := range specCollections {
+		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, newParallelExecutionConsoleWriter(i+1))
 	}
 
 	suiteResults := make([]*suiteResult, 0)
@@ -57,19 +58,19 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, console consoleWriter) {
 	var err error
-	runner, err = startRunnerAndMakeConnection(e.manifest)
+	runner, err = startRunnerAndMakeConnection(e.manifest, console)
 	if err != nil {
 		log.Error("Failed: " + err.Error())
 		suiteResults <- &suiteResult{}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner)
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, console)
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
-	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false})
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, console consoleWriter) {
+	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, console)
 	result := execution.start()
 	runner.kill()
 	suiteResults <- result

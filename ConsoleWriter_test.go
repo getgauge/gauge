@@ -22,23 +22,20 @@ import (
 )
 
 func (s *MySuite) TestPrefixingMessage(c *C) {
-	writer := &pluginConsoleWriter{pluginName: "my-plugin"}
-	prefixedLines := writer.addPrefixToEachLine("Hello\nWorld")
+	prefixedLines := addPrefixToEachLine("Hello\nWorld", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World")
 }
 
 func (s *MySuite) TestPrefixingMessageEndingWithNewLine(c *C) {
-	writer := &pluginConsoleWriter{pluginName: "my-plugin"}
-	prefixedLines := writer.addPrefixToEachLine("Hello\nWorld\n")
+	prefixedLines := addPrefixToEachLine("Hello\nWorld\n", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World\n")
 
 }
 
 func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
-	writer := &pluginConsoleWriter{pluginName: "my-plugin"}
-	prefixedLines := writer.addPrefixToEachLine("\nHello\nWorld\n\nFoo bar\n")
+	prefixedLines := addPrefixToEachLine("\nHello\nWorld\n\nFoo bar\n", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : \n"+
 		"[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World\n"+

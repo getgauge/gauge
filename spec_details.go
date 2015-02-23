@@ -113,7 +113,7 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) []string {
 	steps := make([]string, 0)
 	if runner == nil {
-		runner, connErr := startRunnerAndMakeConnection(getProjectManifest())
+		runner, connErr := startRunnerAndMakeConnection(getProjectManifest(), getCurrentConsole())
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
 			apiLog.Debug("Steps got from runner: %v", steps)

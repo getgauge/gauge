@@ -191,7 +191,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
 	loadGaugeEnvironment()
 	startAPIService(0)
-	testRunner, err := startRunnerAndMakeConnection(getProjectManifest())
+	testRunner, err := startRunnerAndMakeConnection(getProjectManifest(), getCurrentConsole())
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}

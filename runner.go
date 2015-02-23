@@ -152,16 +152,15 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest, port string) (*testRunner, error) {
+func startRunner(manifest *manifest, port string, console consoleWriter) (*testRunner, error) {
 	var r runner
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
 	}
 	command := getOsSpecificCommand(r)
-	currentConsole := getCurrentConsole()
 	env := getCleanEnv(port, os.Environ())
-	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, currentConsole, currentConsole, env)
+	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, console, console, env)
 	if err != nil {
 		return nil, err
 	}

@@ -65,13 +65,13 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (specExecutor *specExecutor) execute() *specResult {
+func (specExecutor *specExecutor) execute(console consoleWriter) *specResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.heading.value),
 		FileName: proto.String(specExecutor.specification.fileName),
 		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.tags)}
 	specExecutor.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 
-	getCurrentConsole().writeSpecHeading(specInfo.GetName())
+	console.writeSpecHeading(specInfo.GetName())
 
 	specExecutor.specResult = newSpecResult(specExecutor.specification)
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.getSpecItems())
@@ -82,16 +82,15 @@ func (specExecutor *specExecutor) execute() *specResult {
 		addPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
-		console := getCurrentConsole()
 		for _, step := range specExecutor.specification.contexts {
 			console.writeStep(step)
 		}
 		dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 		if dataTableRowCount == 0 {
-			scenarioResult := specExecutor.executeScenarios()
+			scenarioResult := specExecutor.executeScenarios(console)
 			specExecutor.specResult.addScenarioResults(scenarioResult)
 		} else {
-			specExecutor.executeTableDrivenScenarios()
+			specExecutor.executeTableDrivenScenarios(console)
 		}
 	}
 
@@ -103,11 +102,11 @@ func (specExecutor *specExecutor) execute() *specResult {
 	return specExecutor.specResult
 }
 
-func (specExecutor *specExecutor) executeTableDrivenScenarios() {
+func (specExecutor *specExecutor) executeTableDrivenScenarios(console consoleWriter) {
 	var dataTableScenarioExecutionResult [][]*scenarioResult
 	dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
 	for specExecutor.dataTableIndex = 0; specExecutor.dataTableIndex < dataTableRowCount; specExecutor.dataTableIndex++ {
-		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
+		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios(console))
 	}
 	specExecutor.specResult.addTableDrivenScenarioResult(dataTableScenarioExecutionResult)
 }
@@ -139,17 +138,17 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *scenarioR
 	return executor.executeHook(message, scenarioResult)
 }
 
-func (specExecutor *specExecutor) executeScenarios() []*scenarioResult {
+func (specExecutor *specExecutor) executeScenarios(console consoleWriter) []*scenarioResult {
 	scenarioResults := make([]*scenarioResult, 0)
 	for _, scenario := range specExecutor.specification.scenarios {
-		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
+		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario, console))
 	}
 	return scenarioResults
 }
 
-func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResult {
+func (executor *specExecutor) executeScenario(scenario *scenario, console consoleWriter) *scenarioResult {
 	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: getTagValue(scenario.tags), IsFailed: proto.Bool(false)}
-	getCurrentConsole().writeScenarioHeading(scenario.heading.value)
+	console.writeScenarioHeading(scenario.heading.value)
 
 	scenarioResult := &scenarioResult{newProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
@@ -158,9 +157,9 @@ func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResul
 		addPreHook(scenarioResult, beforeHookExecutionStatus)
 		setScenarioFailure(executor.currentExecutionInfo)
 	} else {
-		executor.executeContextItems(scenarioResult)
+		executor.executeContextItems(scenarioResult, console)
 		if !scenarioResult.getFailure() {
-			executor.executeScenarioItems(scenarioResult)
+			executor.executeScenarioItems(scenarioResult, console)
 		}
 	}
 
@@ -185,15 +184,15 @@ func (executor *specExecutor) getContextItemsForScenarioExecution(specification 
 	return contextProtoItems
 }
 
-func (executor *specExecutor) executeContextItems(scenarioResult *scenarioResult) {
-	failure := executor.executeItems(scenarioResult.protoScenario.GetContexts())
+func (executor *specExecutor) executeContextItems(scenarioResult *scenarioResult, console consoleWriter) {
+	failure := executor.executeItems(scenarioResult.protoScenario.GetContexts(), console)
 	if failure {
 		scenarioResult.setFailure()
 	}
 }
 
-func (executor *specExecutor) executeScenarioItems(scenarioResult *scenarioResult) {
-	failure := executor.executeItems(scenarioResult.protoScenario.GetScenarioItems())
+func (executor *specExecutor) executeScenarioItems(scenarioResult *scenarioResult, console consoleWriter) {
+	failure := executor.executeItems(scenarioResult.protoScenario.GetScenarioItems(), console)
 	if failure {
 		scenarioResult.setFailure()
 	}
@@ -207,9 +206,9 @@ func (executor *specExecutor) resolveItems(items []item) []*gauge_messages.Proto
 	return protoItems
 }
 
-func (executor *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem) bool {
+func (executor *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem, console consoleWriter) bool {
 	for _, protoItem := range executingItems {
-		failure := executor.executeItem(protoItem)
+		failure := executor.executeItem(protoItem, console)
 		if failure == true {
 			return true
 		}
@@ -277,18 +276,18 @@ func (executor *specExecutor) dataTableLookup() *argLookup {
 	return new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
 }
 
-func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
+func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem, console consoleWriter) bool {
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
-		return executor.executeConcept(protoItem.GetConcept())
+		return executor.executeConcept(protoItem.GetConcept(), console)
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-		return executor.executeStep(protoItem.GetStep())
+		return executor.executeStep(protoItem.GetStep(), console)
 	}
 	return false
 }
 
-func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep) bool {
+func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep, console consoleWriter) bool {
 	for _, protoStep := range protoSteps {
-		failure := executor.executeStep(protoStep)
+		failure := executor.executeStep(protoStep, console)
 		if failure {
 			return true
 		}
@@ -296,11 +295,10 @@ func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoSte
 	return false
 }
 
-func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
-	console := getCurrentConsole()
+func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept, console consoleWriter) bool {
 	console.writeConceptStarting(protoConcept)
 	for _, step := range protoConcept.Steps {
-		failure := executor.executeItem(step)
+		failure := executor.executeItem(step, console)
 		executor.setExecutionResultForConcept(protoConcept)
 		if failure {
 			return true
@@ -344,11 +342,9 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult) {
 	getCurrentConsole().writeError(executionResult.GetStackTrace())
 }
 
-func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
-
+func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep, console consoleWriter) bool {
 	stepRequest := executor.createStepRequest(protoStep)
 	stepWithResolvedArgs := createStepFromStepRequest(stepRequest)
-	console := getCurrentConsole()
 	console.writeStepStarting(stepWithResolvedArgs)
 
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}

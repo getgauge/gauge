@@ -29,6 +29,7 @@ type simpleExecution struct {
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *suiteResult
+	console              consoleWriter
 }
 
 type execution interface {
@@ -40,11 +41,11 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo) execution {
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo, console consoleWriter) execution {
 	if parallel.inParallel {
-		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams}
+		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams, console: console}
 	}
-	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
+	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, console: console}
 }
 
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
@@ -103,7 +104,7 @@ func (exe *simpleExecution) start() *suiteResult {
 	} else {
 		for _, specificationToExecute := range exe.specifications {
 			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler)
-			protoSpecResult := executor.execute()
+			protoSpecResult := executor.execute(exe.console)
 			exe.suiteResult.addSpecResult(protoSpecResult)
 		}
 	}
