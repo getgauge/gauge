@@ -57,6 +57,10 @@ type manifest struct {
 	Language string
 	Plugins  []string
 }
+type parallelInfo struct {
+	inParallel               bool
+	numberOfExecutionStreams int
+}
 
 func main() {
 	flag.Parse()
@@ -261,7 +265,8 @@ func executeSpecs(inParallel bool) {
 	}
 
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, *parallel, *numberOfExecutionStreams)
+	parallelInfo := &parallelInfo{inParallel: *parallel, numberOfExecutionStreams: *numberOfExecutionStreams}
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo)
 
 	result := execution.start()
 	execution.finish()

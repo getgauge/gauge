@@ -69,7 +69,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner) {
-	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, false, 0)
+	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false})
 	result := execution.start()
 	runner.kill()
 	suiteResults <- result

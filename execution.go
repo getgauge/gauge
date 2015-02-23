@@ -40,9 +40,9 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, inParallel bool, numberOfExecutionStreams int) execution {
-	if inParallel {
-		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: numberOfExecutionStreams}
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo) execution {
+	if parallel.inParallel {
+		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams}
 	}
 	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 }
