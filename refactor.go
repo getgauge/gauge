@@ -94,25 +94,26 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
 	refactoringResult := &refactoringResult{specsChanged: specFiles, success: false, conceptsChanged: conceptFiles, errors: make([]string, 0)}
-
-	runner, connErr := agent.startRunner()
-	if connErr != nil {
-		refactoringResult.errors = append(refactoringResult.errors, connErr.Error())
-		return refactoringResult
-	}
-	defer runner.kill()
-	stepName, err := agent.getStepNameFromRunner(runner)
-	if err != nil {
-		refactoringResult.errors = append(refactoringResult.errors, err.Error())
-		return refactoringResult
-	}
-	runnerFilesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
-	if err != nil {
-		refactoringResult.errors = append(refactoringResult.errors, fmt.Sprintf("Only spec files and concepts refactored: %s", err))
-		return refactoringResult
+	if !agent.isConcept {
+		runner, connErr := agent.startRunner()
+		if connErr != nil {
+			refactoringResult.errors = append(refactoringResult.errors, connErr.Error())
+			return refactoringResult
+		}
+		defer runner.kill()
+		stepName, err := agent.getStepNameFromRunner(runner)
+		if err != nil {
+			refactoringResult.errors = append(refactoringResult.errors, err.Error())
+			return refactoringResult
+		}
+		runnerFilesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
+		if err != nil {
+			refactoringResult.errors = append(refactoringResult.errors, fmt.Sprintf("Only spec files and concepts refactored: %s", err))
+			return refactoringResult
+		}
+		refactoringResult.runnerFilesChanged = runnerFilesChanged
 	}
 	refactoringResult.success = true
-	refactoringResult.runnerFilesChanged = runnerFilesChanged
 	return refactoringResult
 }
 
