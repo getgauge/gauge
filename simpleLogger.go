@@ -40,8 +40,28 @@ func (writer *simpleLogger) Text(value string) {
 	writer.Write([]byte(value))
 }
 
-func (writer *simpleLogger) Error(value string) {
+func (writer *simpleLogger) PrintError(value string) {
 	writer.Text(value)
+}
+
+func (writer *simpleLogger) Critical(formatString string, args ...interface{}) {
+	log.Critical(formatString, args)
+}
+
+func (writer *simpleLogger) Info(formatString string, args ...interface{}) {
+	log.Info(formatString, args)
+}
+
+func (writer *simpleLogger) Warning(formatString string, args ...interface{}) {
+	log.Warning(formatString, args)
+}
+
+func (writer *simpleLogger) Debug(formatString string, args ...interface{}) {
+	log.Debug(formatString, args)
+}
+
+func (writer *simpleLogger) Error(formatString string, args ...interface{}) {
+	log.Error(formatString, args)
 }
 
 func (writer *simpleLogger) SpecHeading(heading string) {

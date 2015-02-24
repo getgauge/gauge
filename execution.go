@@ -51,9 +51,9 @@ func newExecution(manifest *manifest, specifications []*specification, runner *t
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
 	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
+	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage, e.writer)
 	if initResult.GetFailed() {
-		log.Warning("Suite data store didn't get initialized")
+		e.writer.Warning("Suite data store didn't get initialized")
 	}
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
@@ -68,7 +68,7 @@ func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) 
 
 func (e *simpleExecution) executeHook(message *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
 	e.pluginHandler.notifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner, message)
+	executionResult := executeAndGetStatus(e.runner, message, e.writer)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -124,8 +124,8 @@ func (exe *simpleExecution) finish() {
 
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
-	if err := e.runner.kill(); err != nil {
-		log.Error("Failed to kill Runner. %s\n", err.Error())
+	if err := e.runner.kill(e.writer); err != nil {
+		e.writer.Error("Failed to kill Runner. %s\n", err.Error())
 	}
 }
 

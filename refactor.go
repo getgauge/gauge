@@ -100,7 +100,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 			refactoringResult.errors = append(refactoringResult.errors, connErr.Error())
 			return refactoringResult
 		}
-		defer runner.kill()
+		defer runner.kill(getCurrentExecutionLogger())
 		stepName, err := agent.getStepNameFromRunner(runner)
 		if err != nil {
 			refactoringResult.errors = append(refactoringResult.errors, err.Error())
@@ -191,7 +191,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
 	loadGaugeEnvironment()
 	startAPIService(0)
-	testRunner, err := startRunnerAndMakeConnection(getProjectManifest(), getCurrentConsole())
+	testRunner, err := startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}

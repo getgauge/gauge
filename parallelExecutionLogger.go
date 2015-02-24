@@ -21,7 +21,10 @@ import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"strconv"
+	"strings"
 )
+
+const WORKER = "Worker:"
 
 type parallelExecutionLogger struct {
 	name        string
@@ -29,12 +32,16 @@ type parallelExecutionLogger struct {
 }
 
 func newParallelExecutionConsoleWriter(id int) *parallelExecutionLogger {
-	return &parallelExecutionLogger{indentation: 0, name: "Worker:" + strconv.Itoa(id)}
+	return &parallelExecutionLogger{indentation: 0, name: WORKER + strconv.Itoa(id)}
 }
 
 func (writer *parallelExecutionLogger) Write(b []byte) (int, error) {
 	message := indent(string(b), writer.indentation)
-	fmt.Print(addPrefixToEachLine(message, fmt.Sprintf("[%s] : ", writer.name)))
+	value := addPrefixToEachLine(message, fmt.Sprintf("[%s] : ", writer.name))
+	if strings.TrimSpace(message) == "" {
+		value = message
+	}
+	fmt.Print(value)
 	return len(b), nil
 }
 
@@ -42,8 +49,28 @@ func (writer *parallelExecutionLogger) Text(value string) {
 	writer.Write([]byte(value))
 }
 
-func (writer *parallelExecutionLogger) Error(value string) {
+func (writer *parallelExecutionLogger) PrintError(value string) {
 	writer.Text(value)
+}
+
+func (writer *parallelExecutionLogger) Critical(formatString string, args ...interface{}) {
+	log.Critical(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+}
+
+func (writer *parallelExecutionLogger) Info(formatString string, args ...interface{}) {
+	log.Info(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+}
+
+func (writer *parallelExecutionLogger) Warning(formatString string, args ...interface{}) {
+	log.Warning(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+}
+
+func (writer *parallelExecutionLogger) Debug(formatString string, args ...interface{}) {
+	log.Debug(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+}
+
+func (writer *parallelExecutionLogger) Error(formatString string, args ...interface{}) {
+	log.Error(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) SpecHeading(heading string) {

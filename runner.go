@@ -105,7 +105,7 @@ func getRunnerInfo(language string) (*runner, error) {
 	return runnerInfo, nil
 }
 
-func (testRunner *testRunner) kill() error {
+func (testRunner *testRunner) kill(writer executionLogger) error {
 	if testRunner.isStillRunning() {
 		testRunner.sendProcessKillMessage()
 
@@ -127,7 +127,7 @@ func (testRunner *testRunner) kill() error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			log.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
+			writer.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
 			return testRunner.killRunner()
 		}
 	}
@@ -166,7 +166,7 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	}
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	waitAndGetErrorMessage(errChannel, cmd)
+	waitAndGetErrorMessage(errChannel, cmd, writer)
 	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
 }
 
@@ -186,11 +186,11 @@ func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {
 	return filepath.Dir(languageJsonFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd) {
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, writer executionLogger) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			log.Debug("Runner exited with error: %s", err)
+			writer.Debug("Runner exited with error: %s", err)
 			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
 		}
 	}()

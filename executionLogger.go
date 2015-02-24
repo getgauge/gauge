@@ -27,7 +27,7 @@ import (
 type executionLogger interface {
 	Write([]byte) (int, error)
 	Text(string)
-	Error(string)
+	PrintError(string)
 	SpecHeading(string)
 	ScenarioHeading(string)
 	Comment(*comment)
@@ -35,6 +35,11 @@ type executionLogger interface {
 	StepStarting(*step)
 	StepFinished(*step, bool)
 	Table(*table)
+	Critical(string, ...interface{})
+	Warning(string, ...interface{})
+	Info(string, ...interface{})
+	Debug(string, ...interface{})
+	Error(string, ...interface{})
 	ConceptStarting(*gauge_messages.ProtoConcept)
 	ConceptFinished(*gauge_messages.ProtoConcept)
 }
@@ -54,7 +59,7 @@ type pluginLogger struct {
 func (writer *pluginLogger) Write(b []byte) (int, error) {
 	message := string(b)
 	prefixedMessage := addPrefixToEachLine(message, fmt.Sprintf("[%s Plugin] : ", writer.pluginName))
-	gaugeConsoleWriter := getCurrentConsole()
+	gaugeConsoleWriter := getCurrentExecutionLogger()
 	_, err := gaugeConsoleWriter.Write([]byte(prefixedMessage))
 	return len(message), err
 }
@@ -76,7 +81,7 @@ func newColoredConsoleWriter() *coloredLogger {
 	return &coloredLogger{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
 }
 
-func getCurrentConsole() executionLogger {
+func getCurrentExecutionLogger() executionLogger {
 	if currentLogger == nil {
 		if *simpleConsoleOutput {
 			currentLogger = newSimpleConsoleWriter()
@@ -100,11 +105,31 @@ func (writer *coloredLogger) Text(value string) {
 	writer.Write([]byte(value))
 }
 
-func (writer *coloredLogger) Error(value string) {
+func (writer *coloredLogger) PrintError(value string) {
 	if writer.isInsideStep {
 		writer.linesAfterLastStep += strings.Count(value, "\n")
 	}
 	terminal.Stdout.Colorf("@r%s", value)
+}
+
+func (writer *coloredLogger) Critical(formatString string, args ...interface{}) {
+	log.Critical(formatString, args)
+}
+
+func (writer *coloredLogger) Info(formatString string, args ...interface{}) {
+	log.Info(formatString, args)
+}
+
+func (writer *coloredLogger) Warning(formatString string, args ...interface{}) {
+	log.Warning(formatString, args)
+}
+
+func (writer *coloredLogger) Debug(formatString string, args ...interface{}) {
+	log.Debug(formatString, args)
+}
+
+func (writer *coloredLogger) Error(formatString string, args ...interface{}) {
+	log.Error(formatString, args)
 }
 
 func (writer *coloredLogger) SpecHeading(heading string) {

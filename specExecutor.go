@@ -44,9 +44,9 @@ func (specExecutor *specExecutor) initialize(specificationToExecute *specificati
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
+	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage, e.writer)
 	if initResult.GetFailed() {
-		log.Warning("Spec data store didn't get initialized")
+		e.writer.Warning("Spec data store didn't get initialized")
 	}
 
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
@@ -62,7 +62,7 @@ func (e *specExecutor) executeAfterSpecHook() *gauge_messages.ProtoExecutionResu
 
 func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTracker execTimeTracker) *gauge_messages.ProtoExecutionResult {
 	e.pluginHandler.notifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner, message)
+	executionResult := executeAndGetStatus(e.runner, message, e.writer)
 	execTimeTracker.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -124,9 +124,9 @@ func getTagValue(tags *tags) []string {
 func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *scenarioResult) *gauge_messages.ProtoExecutionResult {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
+	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage, executor.writer)
 	if initResult.GetFailed() {
-		log.Warning("Scenario data store didn't get initialized")
+		executor.writer.Warning("Scenario data store didn't get initialized")
 	}
 
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
@@ -339,9 +339,9 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 	protoConcept.ConceptStep.StepExecutionResult = protoConcept.ConceptExecutionResult
 }
 
-func printStatus(executionResult *gauge_messages.ProtoExecutionResult) {
-	getCurrentConsole().Error(executionResult.GetErrorMessage())
-	getCurrentConsole().Error(executionResult.GetStackTrace())
+func printStatus(executionResult *gauge_messages.ProtoExecutionResult, writer executionLogger) {
+	writer.PrintError(executionResult.GetErrorMessage())
+	writer.PrintError(executionResult.GetStackTrace())
 }
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
@@ -357,13 +357,13 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		protoStepExecResult.PreHookFailure = getProtoHookFailure(beforeHookStatus)
 		protoStepExecResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true)}
 		setStepFailure(executor.currentExecutionInfo)
-		printStatus(beforeHookStatus)
+		printStatus(beforeHookStatus, executor.writer)
 	} else {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
-		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
+		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage, executor.writer)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(executor.currentExecutionInfo)
-			printStatus(stepExecutionStatus)
+			printStatus(stepExecutionStatus, executor.writer)
 		}
 		protoStepExecResult.ExecutionResult = stepExecutionStatus
 	}
@@ -371,7 +371,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 	addExecutionTimes(protoStepExecResult, beforeHookStatus, afterStepHookStatus)
 	if afterStepHookStatus.GetFailed() {
 		setStepFailure(executor.currentExecutionInfo)
-		printStatus(afterStepHookStatus)
+		printStatus(afterStepHookStatus, executor.writer)
 		protoStepExecResult.PostHookFailure = getProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
@@ -396,14 +396,14 @@ func (executor *specExecutor) executeBeforeStepHook() *gauge_messages.ProtoExecu
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepExecutionStarting.Enum(),
 		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	executor.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(executor.runner, message)
+	return executeAndGetStatus(executor.runner, message, executor.writer)
 }
 
 func (executor *specExecutor) executeAfterStepHook() *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepExecutionEnding.Enum(),
 		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
 	executor.pluginHandler.notifyPlugins(message)
-	return executeAndGetStatus(executor.runner, message)
+	return executeAndGetStatus(executor.runner, message, executor.writer)
 }
 
 func (executor *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
@@ -416,7 +416,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
 }
 
-func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message, writer executionLogger) *gauge_messages.ProtoExecutionResult {
 	response, err := getResponseForGaugeMessage(message, runner.connection)
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
@@ -426,13 +426,13 @@ func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message) *g
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			log.Critical(errMsg)
+			writer.Critical(errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	} else {
 		errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-		log.Critical(errMsg)
+		writer.Critical(errMsg)
 		return errorResult(errMsg)
 	}
 }

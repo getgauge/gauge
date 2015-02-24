@@ -62,8 +62,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	var err error
 	runner, err = startRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
-
-		log.Error("Failed: " + err.Error())
+		e.writer.Error("Failed: " + err.Error())
 		suiteResults <- &suiteResult{}
 		return
 	}
@@ -73,7 +72,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
 	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
-	runner.kill()
+	runner.kill(e.writer)
 	suiteResults <- result
 
 }
