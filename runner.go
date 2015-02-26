@@ -198,12 +198,17 @@ func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, writer executi
 
 func getCleanEnv(port string, env []string) []string {
 	//clear environment variable common.GaugeInternalPortEnvName
+	isPresent := false
 	for i, k := range env {
-		if strings.HasPrefix(strings.TrimSpace(k), common.GaugeInternalPortEnvName) {
-			env[i] = ""
+		if strings.TrimSpace(strings.Split(k, "=")[0]) == common.GaugeInternalPortEnvName {
+			isPresent = true
+			env[i] = common.GaugeInternalPortEnvName + "=" + port
 		}
 	}
-	return append(env, common.GaugeInternalPortEnvName+"="+port)
+	if !isPresent {
+		env = append(env, common.GaugeInternalPortEnvName+"="+port)
+	}
+	return env
 }
 
 func getOsSpecificCommand(r runner) []string {
