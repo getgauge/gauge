@@ -52,6 +52,7 @@ type runner struct {
 		Darwin  []string
 	}
 	Lib string
+	GaugeVersionSupport versionSupport
 }
 
 func executeInitHookForRunner(language string) error {
@@ -157,6 +158,10 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
+	}
+	compatibilityErr := checkCompatiblity(currentGaugeVersion, &r.GaugeVersionSupport)
+	if compatibilityErr != nil {
+		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found", currentGaugeVersion))
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())
