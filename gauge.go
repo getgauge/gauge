@@ -811,7 +811,7 @@ func setWorkingDir(workingDir string) {
 			os.Exit(1)
 		}
 	}
-	log.Info("Setting working directory to => %s", targetDir)
+	log.Debug("Setting working directory to => %s", targetDir)
 	err = os.Chdir(targetDir)
 	_, err = os.Getwd()
 	if err != nil {
