@@ -51,7 +51,7 @@ type runner struct {
 		Linux   []string
 		Darwin  []string
 	}
-	Lib string
+	Lib                 string
 	GaugeVersionSupport versionSupport
 }
 
