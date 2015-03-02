@@ -20,6 +20,7 @@ package main
 import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"runtime"
+	"strconv"
 	"time"
 )
 
@@ -43,11 +44,10 @@ func (e *parallelSpecExecution) start() *suiteResult {
 
 	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
-
 	for i, specCollection := range specCollections {
 		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, newParallelExecutionConsoleWriter(i+1))
 	}
-
+	e.writer.Info("Preparing %s execution streams.", strconv.Itoa(e.numberOfExecutionStreams))
 	suiteResults := make([]*suiteResult, 0)
 	for _, _ = range specCollections {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
@@ -63,6 +63,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	runner, err = startRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
+		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
 		suiteResults <- &suiteResult{}
 		return
 	}
@@ -74,7 +75,6 @@ func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *sp
 	result := execution.start()
 	runner.kill(e.writer)
 	suiteResults <- result
-
 }
 
 func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollection {
