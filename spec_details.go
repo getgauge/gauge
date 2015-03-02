@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -68,7 +69,7 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][
 		}
 		concepts, err := new(conceptParser).parse(fileText)
 		if err != nil {
-			apiLog.Error("Spec Parse failure: line no: %s, %s", err.lineNo, err.message)
+			apiLog.Error("Concept Parse failure: %s: line no: %s, %s", conceptFile, strconv.Itoa(err.lineNo), err.message)
 			continue
 		}
 		conceptSteps := make([]*step, 0)
@@ -142,7 +143,7 @@ func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dic
 		specification, result := parser.parse(specContent, dictionary)
 
 		if !result.ok {
-			apiLog.Error("Spec Parse failure: %s %s", result.fileName, result.error)
+			apiLog.Error("Spec Parse failure: %s %s", file, result.error)
 			continue
 		}
 		specification.fileName = file
