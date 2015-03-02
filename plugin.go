@@ -53,6 +53,7 @@ type pluginDescriptor struct {
 		Darwin  []string
 	}
 	Scope      []string
+	GaugeVersionSupport versionSupport
 	pluginPath string
 }
 
@@ -215,6 +216,7 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	if isPluginAdded(manifest, pd) {
 		return errors.New("Plugin " + pd.Name + " is already added")
 	}
+
 	action := setupScope
 	if err := setEnvForPlugin(action, pd, manifest, pluginArgs); err != nil {
 		return err
@@ -244,6 +246,11 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 		pd, err := getPluginDescriptor(pluginId, "")
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s", pluginId, err.Error()))
+			continue
+		}
+		compatibilityErr := checkCompatiblity(currentGaugeVersion, &pd.GaugeVersionSupport)
+		if compatibilityErr != nil {
+			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, currentGaugeVersion))
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
