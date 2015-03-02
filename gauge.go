@@ -799,12 +799,11 @@ func sortSpecsList(allSpecs []*specification) []*specification {
 }
 
 func setWorkingDir(workingDir string) {
-	pwd, err := os.Getwd()
+	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		log.Critical("Unable to read current directory : %s\n", err)
+		log.Critical("Unable to set working directory : %s\n", err)
 		os.Exit(1)
 	}
-	targetDir := path.Join(pwd, workingDir)
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
@@ -812,8 +811,9 @@ func setWorkingDir(workingDir string) {
 			os.Exit(1)
 		}
 	}
+	log.Info("Setting working directory to => %s", targetDir)
 	err = os.Chdir(targetDir)
-	pwd, err = os.Getwd()
+	_, err = os.Getwd()
 	if err != nil {
 		log.Critical("Unable to set working directory : %s\n", err)
 		os.Exit(1)

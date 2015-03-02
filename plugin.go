@@ -52,9 +52,9 @@ type pluginDescriptor struct {
 		Linux   []string
 		Darwin  []string
 	}
-	Scope      []string
+	Scope               []string
 	GaugeVersionSupport versionSupport
-	pluginPath string
+	pluginPath          string
 }
 
 type pluginHandler struct {
