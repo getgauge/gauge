@@ -104,7 +104,7 @@ func newStepName() string {
 }
 
 func refactorSteps(oldStep, newStep string) {
-	refactoringResult := performRephraseRefactoring(oldStep, newStep)
+	refactoringResult := performRephraseRefactoring(oldStep, newStep, false)
 	printRefactoringSummary(refactoringResult)
 }
 
@@ -115,6 +115,9 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 		for _, err := range refactoringResult.errors {
 			log.Error("%s \n", err)
 		}
+	}
+	for _, warning := range refactoringResult.warnings {
+		log.Warning("%s \n", warning)
 	}
 	log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
 	log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))

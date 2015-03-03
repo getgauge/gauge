@@ -107,12 +107,14 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 	if strings.TrimSpace(step.value) != strings.TrimSpace(oldStep.value) {
 		return isRefactored
 	}
+	if step.isConcept {
+		*isConcept = true
+	}
 	step.value = newStep.value
 	args := make([]*stepArg, len(newStep.args))
 	for key, value := range orderMap {
 		arg := &stepArg{value: newStep.args[key].value, argType: static}
 		if step.isConcept {
-			*isConcept = true
 			arg = &stepArg{value: newStep.args[key].value, argType: dynamic}
 		}
 		if value != -1 {
