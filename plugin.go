@@ -140,7 +140,10 @@ func getPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, err
 	if err != nil {
 		return nil, err
 	}
+	return getPluginDescriptorFromJson(pluginJson)
+}
 
+func getPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
 	pluginJsonContents, err := common.ReadFileContents(pluginJson)
 	if err != nil {
 		return nil, err

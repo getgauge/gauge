@@ -81,6 +81,8 @@ func main() {
 		initializeProject(*initialize)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
+	} else if *installZip != "" {
+		installPluginZip(*installZip)
 	} else if *update != "" {
 		updatePlugin(*update)
 	} else if *addPlugin != "" {
@@ -144,6 +146,7 @@ var initialize = flag.String([]string{"-init"}, "", "Initializes project structu
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
+var installZip = flag.String([]string{"-install-zip"}, "", "Installs the plugin from zip file. Eg: gauge --install-zip zipfile")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
@@ -180,6 +183,14 @@ func downloadAndInstallPlugin(plugin, version string) {
 		log.Warning("Failed to install plugin %s : %s\n", plugin, err)
 	} else {
 		log.Info("Successfully installed plugin => %s %s", plugin, version)
+	}
+}
+
+func installPluginZip(zipFile string) {
+	if err := installPluginFromZip(zipFile); err != nil {
+		log.Warning("Failed to install plugin from zip file : %s\n", err)
+	} else {
+		log.Info("Successfully installed plugin from zipFile")
 	}
 }
 

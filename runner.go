@@ -40,8 +40,11 @@ type testRunner struct {
 }
 
 type runner struct {
-	Name string
-	Run  struct {
+	Id          string
+	Name        string
+	Version     string
+	Description string
+	Run         struct {
 		Windows []string
 		Linux   []string
 		Darwin  []string

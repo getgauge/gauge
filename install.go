@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
@@ -195,12 +196,17 @@ func getInstallDescription(plugin string) (*installDescription, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return getInstallDescriptionFromJson(installJson)
+}
+
+func getInstallDescriptionFromJson(installJson string) (*installDescription, error) {
 	InstallJsonContents, readErr := common.ReadFileContents(installJson)
 	if readErr != nil {
 		return nil, readErr
 	}
 	installDescription := &installDescription{}
-	if err = json.Unmarshal([]byte(InstallJsonContents), installDescription); err != nil {
+	if err := json.Unmarshal([]byte(InstallJsonContents), installDescription); err != nil {
 		return nil, err
 	}
 	return installDescription, nil
@@ -283,4 +289,57 @@ func (a ByDecreasingVersion) Less(i, j int) bool {
 	version1, _ := parseVersion(a[i].Version)
 	version2, _ := parseVersion(a[j].Version)
 	return version1.isGreaterThan(version2)
+}
+
+func installPluginFromZip(zipFile string) error {
+	unzippedPluginDir, err := common.UnzipArchive(zipFile)
+	if err != nil {
+		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
+	}
+	log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
+	hasPluginJson := common.FileExists(unzippedPluginDir + fmt.Sprintf("%c", filepath.Separator) + "plugin.json")
+	if hasPluginJson {
+		return installPluginFromDir(unzippedPluginDir)
+	} else {
+		return installRunnerFromDir(unzippedPluginDir)
+	}
+}
+
+func installRunnerFromDir(unzippedPluginDir string) error {
+	jsonFile, err := common.GetFileWithJsonExtensionInDir(unzippedPluginDir)
+	if err != nil {
+		return err
+	}
+	var r runner
+	contents, err := common.ReadFileContents(unzippedPluginDir + fmt.Sprintf("%c", filepath.Separator) + jsonFile)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal([]byte(contents), &r)
+	if err != nil {
+		return err
+	}
+	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, r.Id, r.Version)
+}
+
+func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginId string, version string) error {
+	log.Info("Installing Plugin => %s %s\n", pluginId, version)
+
+	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
+	if err != nil {
+		return err
+	}
+	versionedPluginDir := path.Join(pluginsDir, pluginId, version)
+	if common.DirExists(versionedPluginDir) {
+		return errors.New(fmt.Sprintf("Plugin %s %s already installed at %s", pluginId, version, versionedPluginDir))
+	}
+	return common.MirrorDir(unzippedPluginDir, versionedPluginDir)
+}
+
+func installPluginFromDir(unzippedPluginDir string) error {
+	pd, err := getPluginDescriptorFromJson(unzippedPluginDir + fmt.Sprintf("%c", filepath.Separator) + "plugin.json")
+	if err != nil {
+		return err
+	}
+	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
