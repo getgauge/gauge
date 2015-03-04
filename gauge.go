@@ -81,6 +81,8 @@ func main() {
 		initializeProject(*initialize)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
+	} else if *update != "" {
+		updatePlugin(*update)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
 	} else if *refactor != "" && validGaugeProject {
@@ -140,6 +142,7 @@ var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to 
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
+var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
@@ -162,6 +165,14 @@ func printUsage() {
 	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
 	os.Exit(2)
+}
+
+func updatePlugin(plugin string) {
+	if err := installPlugin(plugin, ""); err != nil {
+		log.Error("%s : %s\n", plugin, err)
+		return
+	}
+	log.Info("Successfully updated plugin => %s", plugin)
 }
 
 func downloadAndInstallPlugin(plugin, version string) {
