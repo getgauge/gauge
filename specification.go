@@ -111,6 +111,12 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 		*isConcept = true
 	}
 	step.value = newStep.value
+
+	step.args = step.getArgsInOrder(newStep, orderMap, isConcept)
+	return true
+}
+
+func (step *step) getArgsInOrder(newStep step, orderMap map[int]int, isConcept *bool) []*stepArg {
 	args := make([]*stepArg, len(newStep.args))
 	for key, value := range orderMap {
 		arg := &stepArg{value: newStep.args[key].value, argType: static}
@@ -122,8 +128,7 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 		}
 		args[key] = arg
 	}
-	step.args = args
-	return true
+	return args
 }
 
 func (step *step) deepCopyStepArgs() []*stepArg {

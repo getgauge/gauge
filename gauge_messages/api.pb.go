@@ -44,6 +44,10 @@ It has these top-level messages:
 	ErrorResponse
 	PerformRefactoringRequest
 	PerformRefactoringResponse
+	GetExtractConceptInfoRequest
+	GetExtractConceptInfoResponse
+	GetFormatConceptHeadingRequest
+	GetFormatConceptHeadingResponse
 	APIMessage
 */
 package gauge_messages
@@ -75,6 +79,10 @@ const (
 	APIMessage_GetAllConceptsResponse           APIMessage_APIMessageType = 15
 	APIMessage_PerformRefactoringRequest        APIMessage_APIMessageType = 16
 	APIMessage_PerformRefactoringResponse       APIMessage_APIMessageType = 17
+	APIMessage_GetExtractConceptInfoRequest     APIMessage_APIMessageType = 18
+	APIMessage_GetExtractConceptInfoResponse    APIMessage_APIMessageType = 19
+	APIMessage_GetFormatConceptHeadingRequest   APIMessage_APIMessageType = 20
+	APIMessage_GetFormatConceptHeadingResponse  APIMessage_APIMessageType = 21
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -95,6 +103,10 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	15: "GetAllConceptsResponse",
 	16: "PerformRefactoringRequest",
 	17: "PerformRefactoringResponse",
+	18: "GetExtractConceptInfoRequest",
+	19: "GetExtractConceptInfoResponse",
+	20: "GetFormatConceptHeadingRequest",
+	21: "GetFormatConceptHeadingResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":            1,
@@ -114,6 +126,10 @@ var APIMessage_APIMessageType_value = map[string]int32{
 	"GetAllConceptsResponse":           15,
 	"PerformRefactoringRequest":        16,
 	"PerformRefactoringResponse":       17,
+	"GetExtractConceptInfoRequest":     18,
+	"GetExtractConceptInfoResponse":    19,
+	"GetFormatConceptHeadingRequest":   20,
+	"GetFormatConceptHeadingResponse":  21,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -429,27 +445,143 @@ func (m *PerformRefactoringResponse) GetFilesChanged() []string {
 	return nil
 }
 
+type GetExtractConceptInfoRequest struct {
+	Text             *string `protobuf:"bytes,1,req,name=text" json:"text,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *GetExtractConceptInfoRequest) Reset()         { *m = GetExtractConceptInfoRequest{} }
+func (m *GetExtractConceptInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*GetExtractConceptInfoRequest) ProtoMessage()    {}
+
+func (m *GetExtractConceptInfoRequest) GetText() string {
+	if m != nil && m.Text != nil {
+		return *m.Text
+	}
+	return ""
+}
+
+type GetExtractConceptInfoResponse struct {
+	IsValid          *bool   `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
+	HasParam         *bool   `protobuf:"varint,2,opt,name=hasParam" json:"hasParam,omitempty"`
+	ConceptHeading   *string `protobuf:"bytes,3,opt,name=conceptHeading" json:"conceptHeading,omitempty"`
+	Steps            *string `protobuf:"bytes,4,opt,name=steps" json:"steps,omitempty"`
+	ConceptText      *string `protobuf:"bytes,5,opt,name=conceptText" json:"conceptText,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *GetExtractConceptInfoResponse) Reset()         { *m = GetExtractConceptInfoResponse{} }
+func (m *GetExtractConceptInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*GetExtractConceptInfoResponse) ProtoMessage()    {}
+
+func (m *GetExtractConceptInfoResponse) GetIsValid() bool {
+	if m != nil && m.IsValid != nil {
+		return *m.IsValid
+	}
+	return false
+}
+
+func (m *GetExtractConceptInfoResponse) GetHasParam() bool {
+	if m != nil && m.HasParam != nil {
+		return *m.HasParam
+	}
+	return false
+}
+
+func (m *GetExtractConceptInfoResponse) GetConceptHeading() string {
+	if m != nil && m.ConceptHeading != nil {
+		return *m.ConceptHeading
+	}
+	return ""
+}
+
+func (m *GetExtractConceptInfoResponse) GetSteps() string {
+	if m != nil && m.Steps != nil {
+		return *m.Steps
+	}
+	return ""
+}
+
+func (m *GetExtractConceptInfoResponse) GetConceptText() string {
+	if m != nil && m.ConceptText != nil {
+		return *m.ConceptText
+	}
+	return ""
+}
+
+type GetFormatConceptHeadingRequest struct {
+	NewConceptHeading *string `protobuf:"bytes,1,req,name=newConceptHeading" json:"newConceptHeading,omitempty"`
+	OldConceptHeading *string `protobuf:"bytes,2,req,name=oldConceptHeading" json:"oldConceptHeading,omitempty"`
+	OldConceptText    *string `protobuf:"bytes,3,req,name=oldConceptText" json:"oldConceptText,omitempty"`
+	XXX_unrecognized  []byte  `json:"-"`
+}
+
+func (m *GetFormatConceptHeadingRequest) Reset()         { *m = GetFormatConceptHeadingRequest{} }
+func (m *GetFormatConceptHeadingRequest) String() string { return proto.CompactTextString(m) }
+func (*GetFormatConceptHeadingRequest) ProtoMessage()    {}
+
+func (m *GetFormatConceptHeadingRequest) GetNewConceptHeading() string {
+	if m != nil && m.NewConceptHeading != nil {
+		return *m.NewConceptHeading
+	}
+	return ""
+}
+
+func (m *GetFormatConceptHeadingRequest) GetOldConceptHeading() string {
+	if m != nil && m.OldConceptHeading != nil {
+		return *m.OldConceptHeading
+	}
+	return ""
+}
+
+func (m *GetFormatConceptHeadingRequest) GetOldConceptText() string {
+	if m != nil && m.OldConceptText != nil {
+		return *m.OldConceptText
+	}
+	return ""
+}
+
+type GetFormatConceptHeadingResponse struct {
+	NewConceptText   *string `protobuf:"bytes,1,req,name=newConceptText" json:"newConceptText,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *GetFormatConceptHeadingResponse) Reset()         { *m = GetFormatConceptHeadingResponse{} }
+func (m *GetFormatConceptHeadingResponse) String() string { return proto.CompactTextString(m) }
+func (*GetFormatConceptHeadingResponse) ProtoMessage()    {}
+
+func (m *GetFormatConceptHeadingResponse) GetNewConceptText() string {
+	if m != nil && m.NewConceptText != nil {
+		return *m.NewConceptText
+	}
+	return ""
+}
+
 type APIMessage struct {
-	MessageType                *APIMessage_APIMessageType        `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.APIMessage_APIMessageType" json:"messageType,omitempty"`
-	MessageId                  *int64                            `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
-	ProjectRootRequest         *GetProjectRootRequest            `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
-	ProjectRootResponse        *GetProjectRootResponse           `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
-	InstallationRootRequest    *GetInstallationRootRequest       `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
-	InstallationRootResponse   *GetInstallationRootResponse      `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
-	AllStepsRequest            *GetAllStepsRequest               `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
-	AllStepsResponse           *GetAllStepsResponse              `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
-	AllSpecsRequest            *GetAllSpecsRequest               `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
-	AllSpecsResponse           *GetAllSpecsResponse              `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
-	StepValueRequest           *GetStepValueRequest              `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
-	StepValueResponse          *GetStepValueResponse             `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
-	LibPathRequest             *GetLanguagePluginLibPathRequest  `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
-	LibPathResponse            *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
-	Error                      *ErrorResponse                    `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
-	AllConceptsRequest         *GetAllConceptsRequest            `protobuf:"bytes,16,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
-	AllConceptsResponse        *GetAllConceptsResponse           `protobuf:"bytes,17,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
-	PerformRefactoringRequest  *PerformRefactoringRequest        `protobuf:"bytes,18,opt,name=performRefactoringRequest" json:"performRefactoringRequest,omitempty"`
-	PerformRefactoringResponse *PerformRefactoringResponse       `protobuf:"bytes,19,opt,name=performRefactoringResponse" json:"performRefactoringResponse,omitempty"`
-	XXX_unrecognized           []byte                            `json:"-"`
+	MessageType                  *APIMessage_APIMessageType        `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.APIMessage_APIMessageType" json:"messageType,omitempty"`
+	MessageId                    *int64                            `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
+	ProjectRootRequest           *GetProjectRootRequest            `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
+	ProjectRootResponse          *GetProjectRootResponse           `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
+	InstallationRootRequest      *GetInstallationRootRequest       `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
+	InstallationRootResponse     *GetInstallationRootResponse      `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
+	AllStepsRequest              *GetAllStepsRequest               `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
+	AllStepsResponse             *GetAllStepsResponse              `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
+	AllSpecsRequest              *GetAllSpecsRequest               `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
+	AllSpecsResponse             *GetAllSpecsResponse              `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
+	StepValueRequest             *GetStepValueRequest              `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
+	StepValueResponse            *GetStepValueResponse             `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
+	LibPathRequest               *GetLanguagePluginLibPathRequest  `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
+	LibPathResponse              *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
+	Error                        *ErrorResponse                    `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
+	AllConceptsRequest           *GetAllConceptsRequest            `protobuf:"bytes,16,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
+	AllConceptsResponse          *GetAllConceptsResponse           `protobuf:"bytes,17,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
+	PerformRefactoringRequest    *PerformRefactoringRequest        `protobuf:"bytes,18,opt,name=performRefactoringRequest" json:"performRefactoringRequest,omitempty"`
+	PerformRefactoringResponse   *PerformRefactoringResponse       `protobuf:"bytes,19,opt,name=performRefactoringResponse" json:"performRefactoringResponse,omitempty"`
+	ExtractConceptInfoRequest    *GetExtractConceptInfoRequest     `protobuf:"bytes,20,opt,name=extractConceptInfoRequest" json:"extractConceptInfoRequest,omitempty"`
+	ExtractConceptInfoResponse   *GetExtractConceptInfoResponse    `protobuf:"bytes,21,opt,name=extractConceptInfoResponse" json:"extractConceptInfoResponse,omitempty"`
+	FormatConceptHeadingRequest  *GetFormatConceptHeadingRequest   `protobuf:"bytes,22,opt,name=formatConceptHeadingRequest" json:"formatConceptHeadingRequest,omitempty"`
+	FormatConceptHeadingResponse *GetFormatConceptHeadingResponse  `protobuf:"bytes,23,opt,name=formatConceptHeadingResponse" json:"formatConceptHeadingResponse,omitempty"`
+	XXX_unrecognized             []byte                            `json:"-"`
 }
 
 func (m *APIMessage) Reset()         { *m = APIMessage{} }
@@ -585,6 +717,34 @@ func (m *APIMessage) GetPerformRefactoringRequest() *PerformRefactoringRequest {
 func (m *APIMessage) GetPerformRefactoringResponse() *PerformRefactoringResponse {
 	if m != nil {
 		return m.PerformRefactoringResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetExtractConceptInfoRequest() *GetExtractConceptInfoRequest {
+	if m != nil {
+		return m.ExtractConceptInfoRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetExtractConceptInfoResponse() *GetExtractConceptInfoResponse {
+	if m != nil {
+		return m.ExtractConceptInfoResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetFormatConceptHeadingRequest() *GetFormatConceptHeadingRequest {
+	if m != nil {
+		return m.FormatConceptHeadingRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetFormatConceptHeadingResponse() *GetFormatConceptHeadingResponse {
+	if m != nil {
+		return m.FormatConceptHeadingResponse
 	}
 	return nil
 }

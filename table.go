@@ -39,6 +39,10 @@ func (table *table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
+func (table *table) String() string {
+	return fmt.Sprintf("%v\n%v", table.headers, table.columns)
+}
+
 func (table *table) get(header string) []tableCell {
 	if !table.headerExists(header) {
 		panic(fmt.Sprintf("Table column %s not found", header))

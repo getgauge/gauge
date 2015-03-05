@@ -112,6 +112,12 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_PerformRefactoringRequest:
 			responseMessage = handler.performRefactoring(apiMessage)
 			break
+		case gauge_messages.APIMessage_GetExtractConceptInfoRequest:
+			responseMessage = handler.getConceptExtractInformation(apiMessage)
+			break
+		case gauge_messages.APIMessage_GetFormatConceptHeadingRequest:
+			responseMessage = handler.refactorConceptExtractHeading(apiMessage)
+			break
 		}
 	}
 	handler.sendMessage(responseMessage, conn)
@@ -255,4 +261,21 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 		stepValue = strings.Replace(stepValue, PARAMETER_PLACEHOLDER, "<"+param+">", 1)
 	}
 	return stepValue
+}
+
+func (handler *gaugeApiMessageHandler) getConceptExtractInformation(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	request := message.GetExtractConceptInfoRequest()
+	heading, steps, conceptText, hasParam, isValid := getTextForConcept(request.GetText())
+	if !isValid {
+		apiLog.Error("Error response from gauge on GetBeforeExtractConceptRequest: Steps to extract are not valid")
+	}
+	response := &gauge_messages.GetExtractConceptInfoResponse{IsValid: proto.Bool(isValid), ConceptHeading: proto.String(heading), Steps: proto.String(steps), ConceptText: proto.String(conceptText), HasParam: proto.Bool(hasParam)}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_GetExtractConceptInfoResponse.Enum(), ExtractConceptInfoResponse: response}
+}
+
+func (handler *gaugeApiMessageHandler) refactorConceptExtractHeading(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	request := message.GetFormatConceptHeadingRequest()
+	newConceptText := refactorConceptHeading(request.GetNewConceptHeading(), request.GetOldConceptHeading(), request.GetOldConceptText())
+	response := &gauge_messages.GetFormatConceptHeadingResponse{NewConceptText: proto.String(newConceptText)}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_GetFormatConceptHeadingResponse.Enum(), FormatConceptHeadingResponse: response}
 }

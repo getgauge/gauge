@@ -79,11 +79,11 @@ func main() {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
-	}  else if *installZip != "" && *install != "" {
+	} else if *installZip != "" && *install != "" {
 		installPluginZip(*installZip)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
-	}else if *update != "" {
+	} else if *update != "" {
 		updatePlugin(*update)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
