@@ -48,6 +48,8 @@ const (
 	installShellScript = "install.sh"
 )
 
+var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
+
 var deployDir = filepath.Join(deploy, gauge)
 
 func isExecMode(mode os.FileMode) bool {
@@ -154,13 +156,10 @@ func compileGauge() {
 
 func compileGaugeScreenshot() {
 	getGaugeScreenshot()
-	screenshotLocation := getGaugeExecutablePath(gaugeScreenshot)
-	os.Chdir(filepath.Join(os.Getenv("GOPATH"), screenshotLocation))
-	runProcess("go", "build", "-o", screenshotLocation)
+	runProcess("go", "build", "-o", getGaugeExecutablePath(gaugeScreenshot), gaugeScreenshotLocation)
 }
 
 func getGaugeScreenshot() {
-	gaugeScreenshotLocation := "github.com/getgauge/gauge_screenshot"
 	runProcess("go", "get", "-u", "-d", gaugeScreenshotLocation)
 }
 
