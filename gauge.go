@@ -79,11 +79,11 @@ func main() {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
+	}  else if *installZip != "" && *install != "" {
+		installPluginZip(*installZip)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
-	} else if *installZip != "" {
-		installPluginZip(*installZip)
-	} else if *update != "" {
+	}else if *update != "" {
 		updatePlugin(*update)
 	} else if *addPlugin != "" {
 		addPluginToProject(*addPlugin)
@@ -146,7 +146,7 @@ var initialize = flag.String([]string{"-init"}, "", "Initializes project structu
 var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
-var installZip = flag.String([]string{"-file", "-f"}, "", "Installs the plugin from zip file. Eg: gauge --file zipfile")
+var installZip = flag.String([]string{"-file", "-f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
