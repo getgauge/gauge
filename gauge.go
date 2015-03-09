@@ -24,6 +24,7 @@ import (
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
 	"io"
@@ -206,7 +207,7 @@ func runInBackground() {
 		}
 	} else {
 		loadGaugeEnvironment()
-		port, err = getPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
+		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
 			log.Critical("Failed to start API Service. %s \n", err.Error())
 			os.Exit(1)
@@ -553,20 +554,20 @@ func loadGaugeEnvironment() {
 }
 
 func startRunnerAndMakeConnection(manifest *manifest, writer executionLogger) (*testRunner, error) {
-	port, err := getPortFromEnvironmentVariable(common.GaugePortEnvName)
+	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
 	}
-	gaugeConnectionHandler, connHandlerErr := newGaugeConnectionHandler(port, nil)
+	gaugeConnectionHandler, connHandlerErr := conn.NewGaugeConnectionHandler(port, nil)
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber()), writer)
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), writer)
 	if err != nil {
 		return nil, err
 	}
 
-	runnerConnection, connectionError := gaugeConnectionHandler.acceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
+	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
 	testRunner.connection = runnerConnection
 	if connectionError != nil {
 		writer.Debug("Runner connection error: %s", connectionError)

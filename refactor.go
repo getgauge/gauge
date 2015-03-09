@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
@@ -208,7 +209,7 @@ func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
-	response, err := getResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
+	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
 	if err != nil {
 		return &gauge_messages.RefactorResponse{Success: proto.Bool(false), Error: proto.String(err.Error())}
 	}
@@ -248,7 +249,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner, ignore bool) (string, error, *warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
-	responseMessage, err := getResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerRequestTimeout())
+	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerRequestTimeout())
 	if err != nil {
 		return "", err, nil
 	}

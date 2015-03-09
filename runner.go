@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"net"
 	"os"
@@ -151,7 +152,7 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
-	writeGaugeMessage(message, testRunner.connection)
+	conn.WriteGaugeMessage(message, testRunner.connection)
 }
 
 // Looks for a runner configuration inside the runner directory

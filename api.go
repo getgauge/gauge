@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"net"
@@ -38,7 +39,7 @@ type stepValue struct {
 }
 
 func requestForSteps(runner *testRunner) []string {
-	message, err := getResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.connection, config.RunnerRequestTimeout())
+	message, err := conn.GetResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.connection, config.RunnerRequestTimeout())
 	if err == nil {
 		allStepsResponse := message.GetStepNamesResponse()
 		return allStepsResponse.GetSteps()
@@ -54,16 +55,16 @@ func createGetStepNamesRequest() *gauge_messages.Message {
 func startAPIService(port int) error {
 	specInfoGatherer := new(specInfoGatherer)
 	apiHandler := &gaugeApiMessageHandler{specInfoGatherer}
-	gaugeConnectionHandler, err := newGaugeConnectionHandler(port, apiHandler)
+	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
 		return err
 	}
 	if port == 0 {
-		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())); err != nil {
+		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
 			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error()))
 		}
 	}
-	go gaugeConnectionHandler.handleMultipleConnections()
+	go gaugeConnectionHandler.HandleMultipleConnections()
 	specInfoGatherer.makeListOfAvailableSteps(nil)
 	return nil
 }
@@ -77,7 +78,7 @@ type gaugeApiMessageHandler struct {
 	specInfoGatherer *specInfoGatherer
 }
 
-func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, connection net.Conn) {
 	apiMessage := &gauge_messages.APIMessage{}
 	var responseMessage *gauge_messages.APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
@@ -120,16 +121,16 @@ func (handler *gaugeApiMessageHandler) messageBytesReceived(bytesRead []byte, co
 			break
 		}
 	}
-	handler.sendMessage(responseMessage, conn)
+	handler.sendMessage(responseMessage, connection)
 }
 
-func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMessage, conn net.Conn) {
+func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMessage, connection net.Conn) {
 	apiLog.Debug("Sending API response: %s", message)
 	dataBytes, err := proto.Marshal(message)
 	if err != nil {
 		apiLog.Error("Failed to respond to API request. Could not Marshal response %s\n", err.Error())
 	}
-	if err := write(conn, dataBytes); err != nil {
+	if err := conn.Write(connection, dataBytes); err != nil {
 		apiLog.Error("Failed to respond to API request. Could not write response %s\n", err.Error())
 	}
 }

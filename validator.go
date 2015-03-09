@@ -19,6 +19,7 @@ package main
 
 import (
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
@@ -93,7 +94,7 @@ func (self *specValidator) step(step *step) {
 func (self *specValidator) validateStep(step *step) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
-	response, err := getResponseForMessageWithTimeout(message, self.runner.connection, config.RunnerRequestTimeout())
+	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.connection, config.RunnerRequestTimeout())
 	if err != nil {
 		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.fileName})
 		return

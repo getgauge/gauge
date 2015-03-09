@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"net"
@@ -257,12 +258,12 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
-			gaugeConnectionHandler, err := newGaugeConnectionHandler(0, nil)
+			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
 			if err != nil {
 				warnings = append(warnings, err.Error())
 				continue
 			}
-			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.connectionPortNumber())
+			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
 			setEnvForPlugin(executionScope, pd, manifest, envProperties)
 
 			pluginCmd, err := startPlugin(pd, executionScope, false)
@@ -270,7 +271,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
-			pluginConnection, err := gaugeConnectionHandler.acceptConnection(config.PluginConnectionTimeout(), make(chan error))
+			pluginConnection, err := gaugeConnectionHandler.AcceptConnection(config.PluginConnectionTimeout(), make(chan error))
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
 				pluginCmd.Process.Kill()
@@ -339,7 +340,7 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	if err != nil {
 		return err
 	}
-	err = write(plugin.connection, messageBytes)
+	err = conn.Write(plugin.connection, messageBytes)
 	if err != nil {
 		return errors.New(fmt.Sprintf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error()))
 	}
