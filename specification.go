@@ -112,11 +112,11 @@ func (step *step) rename(oldStep step, newStep step, isRefactored bool, orderMap
 	}
 	step.value = newStep.value
 
-	step.args = step.getArgsInOrder(newStep, orderMap, isConcept)
+	step.args = step.getArgsInOrder(newStep, orderMap)
 	return true
 }
 
-func (step *step) getArgsInOrder(newStep step, orderMap map[int]int, isConcept *bool) []*stepArg {
+func (step *step) getArgsInOrder(newStep step, orderMap map[int]int) []*stepArg {
 	args := make([]*stepArg, len(newStep.args))
 	for key, value := range orderMap {
 		arg := &stepArg{value: newStep.args[key].value, argType: static}

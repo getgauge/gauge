@@ -17,29 +17,38 @@
 
 package main
 
-import (
-	"strconv"
-	"strings"
+import "strings"
+
+const (
+	CONCEPT_HEADING_TEMPLATE = "Concept Heading"
+	SPEC_HEADING_TEMPLATE    = "# S\n"
 )
 
-const CONCEPT_HEADING_TEMPLATE = "Concept Heading"
+type extractConceptResult struct {
+	heading     string
+	stepTexts   string
+	conceptText string
+	hasParam    bool
+	isValid     bool
+}
 
-func getTextForConcept(stepsToExtract string) (string, string, string, bool, bool) {
-	specs, parseResult := new(specParser).parse("# S\n"+stepsToExtract, &conceptDictionary{})
+func getTextForConcept(stepsToExtract string) *extractConceptResult {
+	specs, parseResult := new(specParser).parse(SPEC_HEADING_TEMPLATE+stepsToExtract, &conceptDictionary{})
 	if !parseResult.ok {
-		return "", "", "", false, false
+		return &extractConceptResult{heading: "", stepTexts: "", conceptText: "", hasParam: false, isValid: false}
 	}
 	steps := make([]*step, 0)
 	for _, item := range specs.items {
 		if item.kind() == stepKind {
 			steps = append(steps, item.(*step))
+		} else if item.kind() != commentKind {
+			return &extractConceptResult{heading: "", stepTexts: "", conceptText: "", hasParam: false, isValid: false}
 		}
 	}
 	stepTexts, args, table := getSteps(steps)
 	heading, text, hasParam := getHeadingAndText(args, table)
-	return heading, stepTexts, text, hasParam, true
+	return &extractConceptResult{heading: heading, stepTexts: stepTexts, conceptText: text, hasParam: hasParam, isValid: true}
 }
-
 func getSteps(steps []*step) (string, map[string]bool, table) {
 	stepTexts := ""
 	argsMap := getArgsMap(steps)
@@ -72,7 +81,8 @@ func getSteps(steps []*step) (string, map[string]bool, table) {
 }
 
 func getHeadingAndText(args map[string]bool, table table) (string, string, bool) {
-	conceptHeading := "# " + CONCEPT_HEADING_TEMPLATE
+	conceptHeading :=
+		CONCEPT_HEADING_TEMPLATE
 	conceptText := "* " + CONCEPT_HEADING_TEMPLATE
 	hasParam := false
 	for name, _ := range args {
@@ -107,24 +117,22 @@ func getArgsMap(steps []*step) map[string]int {
 }
 
 func refactorConceptHeading(newConceptHeading string, oldConceptHeading string, oldConceptText string) string {
-	removeIdentifiers := func(text string) string {
-		if strings.HasPrefix(text, "#") {
-			text = strings.TrimPrefix(text, "#")
+	removeIdentifier := func(text string, identifier string) string {
+		if strings.HasPrefix(text, identifier) {
+			text = strings.TrimPrefix(text, identifier)
 		}
 		return text
 	}
-	newConceptHeading = removeIdentifiers(newConceptHeading)
-	oldConceptHeading = removeIdentifiers(oldConceptHeading)
+	newConceptHeading = removeIdentifier(newConceptHeading, "#")
+	oldConceptHeading = removeIdentifier(oldConceptHeading, "#")
 	agent, _ := getRefactorAgent(oldConceptHeading, newConceptHeading)
 	argsOrder := agent.createOrderOfArgs()
-	spec, _ := new(specParser).parse("# SPEC_HEADING\n"+oldConceptText, &conceptDictionary{})
-	ignore := true
-	apiLog.Error(strconv.Itoa(len(spec.items)))
+	spec, _ := new(specParser).parse(SPEC_HEADING_TEMPLATE+oldConceptText, &conceptDictionary{})
 	oldConcept := spec.items[0].(*step)
 	tokens, _ := new(specParser).generateTokens("*" + newConceptHeading)
 	step, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
 	oldConcept.value = step.value
-	oldConcept.args = oldConcept.getArgsInOrder(*oldConcept, argsOrder, &ignore)
+	oldConcept.args = oldConcept.getArgsInOrder(*oldConcept, argsOrder)
 	value := formatStep(oldConcept)
 	return value
 }

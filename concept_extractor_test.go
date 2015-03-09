@@ -21,22 +21,22 @@ import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestExtractConceptWithoutParameters(c *C) {
 	STEP := "* step that takes a table \"arg\""
-	heading, text, conceptText, hasParam, _ := getTextForConcept(STEP)
+	result := getTextForConcept(STEP)
 
-	c.Assert(text, Equals, STEP+"\n")
-	c.Assert(heading, Equals, "# "+CONCEPT_HEADING_TEMPLATE)
-	c.Assert(conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE)
-	c.Assert(hasParam, Equals, false)
+	c.Assert(result.stepTexts, Equals, STEP+"\n")
+	c.Assert(result.heading, Equals, CONCEPT_HEADING_TEMPLATE)
+	c.Assert(result.conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE)
+	c.Assert(result.hasParam, Equals, false)
 }
 
 func (s *MySuite) TestExtractConcept(c *C) {
 	STEP := "* step that takes a table \"arg\""
-	heading, text, conceptText, hasParam, _ := getTextForConcept(STEP + "\n" + STEP)
+	result := getTextForConcept(STEP + "\n" + STEP)
 
-	c.Assert(text, Equals, "* step that takes a table <arg>\n* step that takes a table <arg>\n")
-	c.Assert(heading, Equals, "# "+CONCEPT_HEADING_TEMPLATE+" <arg>")
-	c.Assert(conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+" \"arg\"")
-	c.Assert(hasParam, Equals, true)
+	c.Assert(result.stepTexts, Equals, "* step that takes a table <arg>\n* step that takes a table <arg>\n")
+	c.Assert(result.heading, Equals, CONCEPT_HEADING_TEMPLATE+" <arg>")
+	c.Assert(result.conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+" \"arg\"")
+	c.Assert(result.hasParam, Equals, true)
 }
 
 func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
@@ -55,11 +55,11 @@ func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
 	|Snap   |Hosted continuous integration|
 	|Gocd   |Continuous delivery platform |
 	`
-	heading, text, conceptText, hasParam, _ := getTextForConcept(STEP)
+	result := getTextForConcept(STEP)
 
-	c.Assert(text, Equals, "* Step that takes a table <table>\n* Step that takes a table <table>\n")
-	c.Assert(heading, Equals, "# "+CONCEPT_HEADING_TEMPLATE+" <table>")
-	c.Assert(conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+`
+	c.Assert(result.stepTexts, Equals, "* Step that takes a table <table>\n* Step that takes a table <table>\n")
+	c.Assert(result.heading, Equals, CONCEPT_HEADING_TEMPLATE+" <table>")
+	c.Assert(result.conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+`
      |Product|Description                  |
      |-------|-----------------------------|
      |Gauge  |BDD style testing with ease  |
@@ -67,7 +67,7 @@ func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
      |Snap   |Hosted continuous integration|
      |Gocd   |Continuous delivery platform |
 `)
-	c.Assert(hasParam, Equals, true)
+	c.Assert(result.hasParam, Equals, true)
 }
 
 func (s *MySuite) TestExtractConceptWithTablesAsArg(c *C) {
@@ -90,17 +90,11 @@ func (s *MySuite) TestExtractConceptWithTablesAsArg(c *C) {
 	|Snap   |Hosted continuous integration|
 	|Gocd   |Continuous delivery platform |
 	`
-	heading, text, conceptText, hasParam, _ := getTextForConcept(STEP)
+	result := getTextForConcept(STEP)
 
-	c.Assert(text, Equals, `* Step that takes a table <table>
-* Step that takes a table 
-     |Product|Description                |
-     |-------|---------------------------|
-     |Gauge  |BDD style testing with ease|
-* Step that takes a table <table>
-`)
-	c.Assert(heading, Equals, "# "+CONCEPT_HEADING_TEMPLATE+" <table>")
-	c.Assert(conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+`
+	c.Assert(result.stepTexts, Equals, "* Step that takes a table <table>\n* Step that takes a table \n     |Product|Description                |\n     |-------|---------------------------|\n     |Gauge  |BDD style testing with ease|\n* Step that takes a table <table>\n")
+	c.Assert(result.heading, Equals, CONCEPT_HEADING_TEMPLATE+" <table>")
+	c.Assert(result.conceptText, Equals, "* "+CONCEPT_HEADING_TEMPLATE+`
      |Product|Description                  |
      |-------|-----------------------------|
      |Gauge  |BDD style testing with ease  |
@@ -108,5 +102,5 @@ func (s *MySuite) TestExtractConceptWithTablesAsArg(c *C) {
      |Snap   |Hosted continuous integration|
      |Gocd   |Continuous delivery platform |
 `)
-	c.Assert(hasParam, Equals, true)
+	c.Assert(result.hasParam, Equals, true)
 }

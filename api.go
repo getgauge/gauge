@@ -265,11 +265,12 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 
 func (handler *gaugeApiMessageHandler) getConceptExtractInformation(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetExtractConceptInfoRequest()
-	heading, steps, conceptText, hasParam, isValid := getTextForConcept(request.GetText())
-	if !isValid {
+	result := getTextForConcept(request.GetText())
+	if !result.isValid {
 		apiLog.Error("Error response from gauge on GetBeforeExtractConceptRequest: Steps to extract are not valid")
 	}
-	response := &gauge_messages.GetExtractConceptInfoResponse{IsValid: proto.Bool(isValid), ConceptHeading: proto.String(heading), Steps: proto.String(steps), ConceptText: proto.String(conceptText), HasParam: proto.Bool(hasParam)}
+	response := &gauge_messages.GetExtractConceptInfoResponse{IsValid: proto.Bool(result.isValid), ConceptHeading: proto.String(result.heading), Steps: proto.String(result.stepTexts),
+		ConceptText: proto.String(result.conceptText), HasParam: proto.Bool(result.hasParam)}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_GetExtractConceptInfoResponse.Enum(), ExtractConceptInfoResponse: response}
 }
 
