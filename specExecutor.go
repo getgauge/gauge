@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
@@ -417,7 +418,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 }
 
 func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message, writer executionLogger) *gauge_messages.ProtoExecutionResult {
-	response, err := getResponseForGaugeMessage(message, runner.connection)
+	response, err := conn.GetResponseForGaugeMessage(message, runner.connection)
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
 	}
