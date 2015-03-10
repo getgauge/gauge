@@ -351,6 +351,27 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 		return parseResult{ok: true}
 	})
 
+	keywordConverter := converterFn(func(token *token, state *int) bool {
+		return token.kind == keywordKind
+	}, func(token *token, spec *specification, state *int) parseResult {
+		resolvedArg, _ := newSpecialTypeResolver().resolve(token.value)
+		if isInState(*state, specScope) && !spec.dataTable.isInitialized() {
+			resolvedArg.table.lineNo = token.lineNo
+			spec.addDataTable(&resolvedArg.table)
+		} else if isInState(*state, specScope) && spec.dataTable.isInitialized() {
+			value := "Multiple data table present, ignoring table"
+			spec.addComment(&comment{token.lineText, token.lineNo})
+			return parseResult{ok: false, warnings: []*warning{&warning{value, token.lineNo}}}
+		} else {
+			value := "Data table not associated with spec"
+			spec.addComment(&comment{token.lineText, token.lineNo})
+			return parseResult{ok: false, warnings: []*warning{&warning{value, token.lineNo}}}
+		}
+		retainStates(state, specScope)
+		addStates(state, keywordScope)
+		return parseResult{ok: true}
+	})
+
 	tableHeaderConverter := converterFn(func(token *token, state *int) bool {
 		return token.kind == tableHeader && isInState(*state, specScope)
 	}, func(token *token, spec *specification, state *int) parseResult {
@@ -425,7 +446,7 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 	})
 
 	converter := []func(*token, *int, *specification) parseResult{
-		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter,
+		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter, keywordConverter,
 	}
 
 	return converter

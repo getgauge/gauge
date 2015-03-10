@@ -73,6 +73,7 @@ const (
 	stepScope      = 1 << iota
 	contextScope   = 1 << iota
 	conceptScope   = 1 << iota
+	keywordScope   = 1 << iota
 )
 
 const (
@@ -85,6 +86,7 @@ const (
 	tableRow
 	headingKind
 	tableKind
+	keywordKind
 )
 
 func (parser *specParser) initialize() {
@@ -96,6 +98,7 @@ func (parser *specParser) initialize() {
 	parser.processors[tagKind] = processTag
 	parser.processors[tableHeader] = processTable
 	parser.processors[tableRow] = processTable
+	parser.processors[keywordKind] = processKeyword
 }
 
 func (parser *specParser) parse(specText string, conceptDictionary *conceptDictionary) (*specification, *parseResult) {
@@ -134,6 +137,8 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, tableRow, tableHeader)
 			newToken = &token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
+		} else if parser.isKeyword(trimmedLine) {
+			newToken = &token{kind: keywordKind, lineNo: parser.lineNo, lineText: line, value: trimmedLine}
 		} else {
 			newToken = &token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
 		}
@@ -141,7 +146,6 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 		if error != nil {
 			return nil, error
 		}
-
 	}
 	return parser.tokens, nil
 
@@ -205,6 +209,13 @@ func (parser *specParser) isSpecUnderline(text string) bool {
 
 }
 
+func (parser *specParser) isKeyword(text string) bool {
+	lowerCased := strings.ToLower
+	tableColon := "table:"
+	tableSpaceColon := "table :"
+	return strings.HasPrefix(text, lowerCased(tableColon)) || strings.HasPrefix(text, lowerCased(tableSpaceColon))
+}
+
 func (parser *specParser) accept(token *token) *parseError {
 	error, shouldSkip := parser.processors[token.kind](parser, token)
 	if error != nil {
@@ -220,6 +231,17 @@ func (parser *specParser) accept(token *token) *parseError {
 func processSpec(parser *specParser, token *token) (*parseError, bool) {
 	if len(token.value) < 1 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Spec heading should have at least one character"}, true
+	}
+	return nil, false
+}
+
+func processKeyword(parser *specParser, token *token) (*parseError, bool) {
+	if len(token.value) < 1 {
+		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table location not specified"}, true
+	}
+	resolvedArg, err := newSpecialTypeResolver().resolve(token.value)
+	if resolvedArg == nil || err != nil {
+		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: fmt.Sprintf("Could not resolve table from %s", token.value)}, true
 	}
 	return nil, false
 }

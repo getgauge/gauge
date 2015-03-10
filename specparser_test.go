@@ -533,3 +533,20 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	c.Assert(firstStepInSpec.parent, IsNil)
 	c.Assert(secondStepInSpec.parent, IsNil)
 }
+
+func (s *MySuite) TestTableFromInvalidFile(c *C) {
+	parser := new(specParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
+
+	_, err := parser.generateTokens(specText)
+	c.Assert(err.message, Equals, "Could not resolve table from table: inputinvalid.csv")
+}
+
+func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) {
+	parser := new(specParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
+
+	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	c.Assert(parseRes.error.message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(parseRes.ok, Equals, false)
+}
