@@ -802,7 +802,15 @@ func handleWarningMessages(warnings []string) {
 }
 
 func printVersion() {
-	fmt.Printf("%s\n", currentGaugeVersion.String())
+	fmt.Printf("gauge : %s\n", currentGaugeVersion.String())
+	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		fmt.Println("Could not get plugin details : ", err)
+		return
+	}
+	for _, pluginInfo := range allPluginsWithVersion {
+		fmt.Printf("%s\n", pluginInfo)
+	}
 }
 
 type ByFileName []*specification
