@@ -44,10 +44,10 @@ It has these top-level messages:
 	ErrorResponse
 	PerformRefactoringRequest
 	PerformRefactoringResponse
-	GetExtractConceptInfoRequest
-	GetExtractConceptInfoResponse
-	GetFormatConceptHeadingRequest
-	GetFormatConceptHeadingResponse
+	ExtractConceptInfoRequest
+	ExtractConceptInfoResponse
+	FormatConceptHeadingRequest
+	FormatConceptHeadingResponse
 	APIMessage
 */
 package gauge_messages
@@ -79,10 +79,10 @@ const (
 	APIMessage_GetAllConceptsResponse           APIMessage_APIMessageType = 15
 	APIMessage_PerformRefactoringRequest        APIMessage_APIMessageType = 16
 	APIMessage_PerformRefactoringResponse       APIMessage_APIMessageType = 17
-	APIMessage_GetExtractConceptInfoRequest     APIMessage_APIMessageType = 18
-	APIMessage_GetExtractConceptInfoResponse    APIMessage_APIMessageType = 19
-	APIMessage_GetFormatConceptHeadingRequest   APIMessage_APIMessageType = 20
-	APIMessage_GetFormatConceptHeadingResponse  APIMessage_APIMessageType = 21
+	APIMessage_ExtractConceptInfoRequest        APIMessage_APIMessageType = 18
+	APIMessage_ExtractConceptInfoResponse       APIMessage_APIMessageType = 19
+	APIMessage_FormatConceptHeadingRequest      APIMessage_APIMessageType = 20
+	APIMessage_FormatConceptHeadingResponse     APIMessage_APIMessageType = 21
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -103,10 +103,10 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	15: "GetAllConceptsResponse",
 	16: "PerformRefactoringRequest",
 	17: "PerformRefactoringResponse",
-	18: "GetExtractConceptInfoRequest",
-	19: "GetExtractConceptInfoResponse",
-	20: "GetFormatConceptHeadingRequest",
-	21: "GetFormatConceptHeadingResponse",
+	18: "ExtractConceptInfoRequest",
+	19: "ExtractConceptInfoResponse",
+	20: "FormatConceptHeadingRequest",
+	21: "FormatConceptHeadingResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":            1,
@@ -126,10 +126,10 @@ var APIMessage_APIMessageType_value = map[string]int32{
 	"GetAllConceptsResponse":           15,
 	"PerformRefactoringRequest":        16,
 	"PerformRefactoringResponse":       17,
-	"GetExtractConceptInfoRequest":     18,
-	"GetExtractConceptInfoResponse":    19,
-	"GetFormatConceptHeadingRequest":   20,
-	"GetFormatConceptHeadingResponse":  21,
+	"ExtractConceptInfoRequest":        18,
+	"ExtractConceptInfoResponse":       19,
+	"FormatConceptHeadingRequest":      20,
+	"FormatConceptHeadingResponse":     21,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -149,6 +149,7 @@ func (x *APIMessage_APIMessageType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// / Request to get the Root Directory of the project
 type GetProjectRootRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -157,7 +158,9 @@ func (m *GetProjectRootRequest) Reset()         { *m = GetProjectRootRequest{} }
 func (m *GetProjectRootRequest) String() string { return proto.CompactTextString(m) }
 func (*GetProjectRootRequest) ProtoMessage()    {}
 
+// / Response of GetProjectRootRequest.
 type GetProjectRootResponse struct {
+	// / Holds the absolute path of the Project Root directory.
 	ProjectRoot      *string `protobuf:"bytes,1,req,name=projectRoot" json:"projectRoot,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -173,6 +176,7 @@ func (m *GetProjectRootResponse) GetProjectRoot() string {
 	return ""
 }
 
+// / Request to get the Root Directory of the Gauge installation
 type GetInstallationRootRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -181,7 +185,9 @@ func (m *GetInstallationRootRequest) Reset()         { *m = GetInstallationRootR
 func (m *GetInstallationRootRequest) String() string { return proto.CompactTextString(m) }
 func (*GetInstallationRootRequest) ProtoMessage()    {}
 
+// / Response of GetInstallationRootRequest
 type GetInstallationRootResponse struct {
+	// / Holds the absolute path of the Gauge installation directory
 	InstallationRoot *string `protobuf:"bytes,1,req,name=installationRoot" json:"installationRoot,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -197,6 +203,7 @@ func (m *GetInstallationRootResponse) GetInstallationRoot() string {
 	return ""
 }
 
+// / Request to get all Steps in the project
 type GetAllStepsRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -205,7 +212,9 @@ func (m *GetAllStepsRequest) Reset()         { *m = GetAllStepsRequest{} }
 func (m *GetAllStepsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAllStepsRequest) ProtoMessage()    {}
 
+// / Response to GetAllStepsRequest
 type GetAllStepsResponse struct {
+	// / Holds a collection of Steps that are defined in the project.
 	AllSteps         []*ProtoStepValue `protobuf:"bytes,1,rep,name=allSteps" json:"allSteps,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
@@ -221,6 +230,7 @@ func (m *GetAllStepsResponse) GetAllSteps() []*ProtoStepValue {
 	return nil
 }
 
+// / Request to get all Specs in the project
 type GetAllSpecsRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -229,7 +239,9 @@ func (m *GetAllSpecsRequest) Reset()         { *m = GetAllSpecsRequest{} }
 func (m *GetAllSpecsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAllSpecsRequest) ProtoMessage()    {}
 
+// / Response to GetAllSpecsRequest
 type GetAllSpecsResponse struct {
+	// / Holds a collection of Specs that are defined in the project.
 	Specs            []*ProtoSpec `protobuf:"bytes,1,rep,name=specs" json:"specs,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
@@ -245,6 +257,7 @@ func (m *GetAllSpecsResponse) GetSpecs() []*ProtoSpec {
 	return nil
 }
 
+// / Request to get all Concepts in the project
 type GetAllConceptsRequest struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -253,7 +266,9 @@ func (m *GetAllConceptsRequest) Reset()         { *m = GetAllConceptsRequest{} }
 func (m *GetAllConceptsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAllConceptsRequest) ProtoMessage()    {}
 
+// / Response to GetAllConceptsResponse
 type GetAllConceptsResponse struct {
+	// / Holds a collection of Concepts that are defined in the project.
 	Concepts         []*ConceptInfo `protobuf:"bytes,1,rep,name=concepts" json:"concepts,omitempty"`
 	XXX_unrecognized []byte         `json:"-"`
 }
@@ -269,11 +284,15 @@ func (m *GetAllConceptsResponse) GetConcepts() []*ConceptInfo {
 	return nil
 }
 
+// / Details of a Concept
 type ConceptInfo struct {
-	StepValue        *ProtoStepValue `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
-	Filepath         *string         `protobuf:"bytes,2,req,name=filepath" json:"filepath,omitempty"`
-	LineNumber       *int32          `protobuf:"varint,3,req,name=lineNumber" json:"lineNumber,omitempty"`
-	XXX_unrecognized []byte          `json:"-"`
+	// / The text that defines a concept
+	StepValue *ProtoStepValue `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	// / The absolute path to the file that contains the Concept
+	Filepath *string `protobuf:"bytes,2,req,name=filepath" json:"filepath,omitempty"`
+	// / The line number in the file where the concept is defined.
+	LineNumber       *int32 `protobuf:"varint,3,req,name=lineNumber" json:"lineNumber,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ConceptInfo) Reset()         { *m = ConceptInfo{} }
@@ -301,10 +320,13 @@ func (m *ConceptInfo) GetLineNumber() int32 {
 	return 0
 }
 
+// / Request to get a Step Value.
 type GetStepValueRequest struct {
-	StepText         *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
-	HasInlineTable   *bool   `protobuf:"varint,2,opt,name=hasInlineTable" json:"hasInlineTable,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	// / The text of the Step.
+	StepText *string `protobuf:"bytes,1,req,name=stepText" json:"stepText,omitempty"`
+	// / Flag to indicate if the Step has an inline table.
+	HasInlineTable   *bool  `protobuf:"varint,2,opt,name=hasInlineTable" json:"hasInlineTable,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *GetStepValueRequest) Reset()         { *m = GetStepValueRequest{} }
@@ -325,7 +347,9 @@ func (m *GetStepValueRequest) GetHasInlineTable() bool {
 	return false
 }
 
+// / Response to GetStepValueRequest
 type GetStepValueResponse struct {
+	// / The Step corresponding to the request provided.
 	StepValue        *ProtoStepValue `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
 	XXX_unrecognized []byte          `json:"-"`
 }
@@ -341,7 +365,9 @@ func (m *GetStepValueResponse) GetStepValue() *ProtoStepValue {
 	return nil
 }
 
+// / Request to get the location of language plugin's Lib directory
 type GetLanguagePluginLibPathRequest struct {
+	// / The language to locate the lib directory for.
 	Language         *string `protobuf:"bytes,1,req,name=language" json:"language,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -357,7 +383,9 @@ func (m *GetLanguagePluginLibPathRequest) GetLanguage() string {
 	return ""
 }
 
+// / Response to GetLanguagePluginLibPathRequest
 type GetLanguagePluginLibPathResponse struct {
+	// / Absolute apth to the Lib directory of the language.
 	Path             *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -373,7 +401,9 @@ func (m *GetLanguagePluginLibPathResponse) GetPath() string {
 	return ""
 }
 
+// / A generic failure response
 type ErrorResponse struct {
+	// / Actual error message
 	Error            *string `protobuf:"bytes,1,req,name=error" json:"error,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -389,8 +419,11 @@ func (m *ErrorResponse) GetError() string {
 	return ""
 }
 
+// / Request to perform a Refactor
 type PerformRefactoringRequest struct {
-	OldStep          *string `protobuf:"bytes,1,req,name=oldStep" json:"oldStep,omitempty"`
+	// / Step to refactor
+	OldStep *string `protobuf:"bytes,1,req,name=oldStep" json:"oldStep,omitempty"`
+	// / Change to be made
 	NewStep          *string `protobuf:"bytes,2,req,name=newStep" json:"newStep,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -413,9 +446,13 @@ func (m *PerformRefactoringRequest) GetNewStep() string {
 	return ""
 }
 
+// / Response to PerformRefactoringRequest
 type PerformRefactoringResponse struct {
-	Success          *bool    `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
-	Errors           []string `protobuf:"bytes,2,rep,name=errors" json:"errors,omitempty"`
+	// / Flag indicating Success
+	Success *bool `protobuf:"varint,1,req,name=success" json:"success,omitempty"`
+	// / Error message if the refactoring was unsuccessful.
+	Errors []string `protobuf:"bytes,2,rep,name=errors" json:"errors,omitempty"`
+	// / Collection of files that were changed as part of the Refactoring.
 	FilesChanged     []string `protobuf:"bytes,3,rep,name=filesChanged" json:"filesChanged,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
@@ -445,143 +482,189 @@ func (m *PerformRefactoringResponse) GetFilesChanged() []string {
 	return nil
 }
 
-type GetExtractConceptInfoRequest struct {
+// / Request to perform Extract to Concept refactoring
+// / The runner does not do the refactoring here, instead it provides inputs enabling the IDE to do refactoring
+type ExtractConceptInfoRequest struct {
+	// / The text blob containing steps that should be refactored to concept.
 	Text             *string `protobuf:"bytes,1,req,name=text" json:"text,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *GetExtractConceptInfoRequest) Reset()         { *m = GetExtractConceptInfoRequest{} }
-func (m *GetExtractConceptInfoRequest) String() string { return proto.CompactTextString(m) }
-func (*GetExtractConceptInfoRequest) ProtoMessage()    {}
+func (m *ExtractConceptInfoRequest) Reset()         { *m = ExtractConceptInfoRequest{} }
+func (m *ExtractConceptInfoRequest) String() string { return proto.CompactTextString(m) }
+func (*ExtractConceptInfoRequest) ProtoMessage()    {}
 
-func (m *GetExtractConceptInfoRequest) GetText() string {
+func (m *ExtractConceptInfoRequest) GetText() string {
 	if m != nil && m.Text != nil {
 		return *m.Text
 	}
 	return ""
 }
 
-type GetExtractConceptInfoResponse struct {
-	IsValid          *bool   `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
-	HasParam         *bool   `protobuf:"varint,2,opt,name=hasParam" json:"hasParam,omitempty"`
-	ConceptHeading   *string `protobuf:"bytes,3,opt,name=conceptHeading" json:"conceptHeading,omitempty"`
-	Steps            *string `protobuf:"bytes,4,opt,name=steps" json:"steps,omitempty"`
+// / Response to ExtractConceptInfoRequest
+type ExtractConceptInfoResponse struct {
+	// / Flag indicating if the request is valid.
+	IsValid *bool `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
+	// / Flag indicating the presence of parameters
+	HasParam *bool `protobuf:"varint,2,opt,name=hasParam" json:"hasParam,omitempty"`
+	// / The templated concept heading with extracted paramters
+	ConceptHeading *string `protobuf:"bytes,3,opt,name=conceptHeading" json:"conceptHeading,omitempty"`
+	// / The list of steps that are part of the extracted concept.
+	Steps *string `protobuf:"bytes,4,opt,name=steps" json:"steps,omitempty"`
+	// / The text to invoke the concept from the Spec file
+	// / This contains the value of the parameters to be passed at invocation.
 	ConceptText      *string `protobuf:"bytes,5,opt,name=conceptText" json:"conceptText,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *GetExtractConceptInfoResponse) Reset()         { *m = GetExtractConceptInfoResponse{} }
-func (m *GetExtractConceptInfoResponse) String() string { return proto.CompactTextString(m) }
-func (*GetExtractConceptInfoResponse) ProtoMessage()    {}
+func (m *ExtractConceptInfoResponse) Reset()         { *m = ExtractConceptInfoResponse{} }
+func (m *ExtractConceptInfoResponse) String() string { return proto.CompactTextString(m) }
+func (*ExtractConceptInfoResponse) ProtoMessage()    {}
 
-func (m *GetExtractConceptInfoResponse) GetIsValid() bool {
+func (m *ExtractConceptInfoResponse) GetIsValid() bool {
 	if m != nil && m.IsValid != nil {
 		return *m.IsValid
 	}
 	return false
 }
 
-func (m *GetExtractConceptInfoResponse) GetHasParam() bool {
+func (m *ExtractConceptInfoResponse) GetHasParam() bool {
 	if m != nil && m.HasParam != nil {
 		return *m.HasParam
 	}
 	return false
 }
 
-func (m *GetExtractConceptInfoResponse) GetConceptHeading() string {
+func (m *ExtractConceptInfoResponse) GetConceptHeading() string {
 	if m != nil && m.ConceptHeading != nil {
 		return *m.ConceptHeading
 	}
 	return ""
 }
 
-func (m *GetExtractConceptInfoResponse) GetSteps() string {
+func (m *ExtractConceptInfoResponse) GetSteps() string {
 	if m != nil && m.Steps != nil {
 		return *m.Steps
 	}
 	return ""
 }
 
-func (m *GetExtractConceptInfoResponse) GetConceptText() string {
+func (m *ExtractConceptInfoResponse) GetConceptText() string {
 	if m != nil && m.ConceptText != nil {
 		return *m.ConceptText
 	}
 	return ""
 }
 
-type GetFormatConceptHeadingRequest struct {
+// / Request to change the concept heading, while performing Extract to concept refactoring
+// / This is relevant because, the ExtractConceptInfoResponse has a placeholder definition of conceptHeading
+// / The user would then give a meaningful name to the concept, and its parameters
+// / This is deliberately kept separate from RefactorRequest/RefactorResponse, since those change the files physically.
+// / Changing physical files is an expensive affair and requires proper buffer management to support Undo operations.
+type FormatConceptHeadingRequest struct {
+	// / The new concept heading
 	NewConceptHeading *string `protobuf:"bytes,1,req,name=newConceptHeading" json:"newConceptHeading,omitempty"`
+	// / The current Concept Heading that is to be replaced
 	OldConceptHeading *string `protobuf:"bytes,2,req,name=oldConceptHeading" json:"oldConceptHeading,omitempty"`
-	OldConceptText    *string `protobuf:"bytes,3,req,name=oldConceptText" json:"oldConceptText,omitempty"`
-	XXX_unrecognized  []byte  `json:"-"`
+	// / The full text of the concept, including the steps
+	OldConceptText   *string `protobuf:"bytes,3,req,name=oldConceptText" json:"oldConceptText,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *GetFormatConceptHeadingRequest) Reset()         { *m = GetFormatConceptHeadingRequest{} }
-func (m *GetFormatConceptHeadingRequest) String() string { return proto.CompactTextString(m) }
-func (*GetFormatConceptHeadingRequest) ProtoMessage()    {}
+func (m *FormatConceptHeadingRequest) Reset()         { *m = FormatConceptHeadingRequest{} }
+func (m *FormatConceptHeadingRequest) String() string { return proto.CompactTextString(m) }
+func (*FormatConceptHeadingRequest) ProtoMessage()    {}
 
-func (m *GetFormatConceptHeadingRequest) GetNewConceptHeading() string {
+func (m *FormatConceptHeadingRequest) GetNewConceptHeading() string {
 	if m != nil && m.NewConceptHeading != nil {
 		return *m.NewConceptHeading
 	}
 	return ""
 }
 
-func (m *GetFormatConceptHeadingRequest) GetOldConceptHeading() string {
+func (m *FormatConceptHeadingRequest) GetOldConceptHeading() string {
 	if m != nil && m.OldConceptHeading != nil {
 		return *m.OldConceptHeading
 	}
 	return ""
 }
 
-func (m *GetFormatConceptHeadingRequest) GetOldConceptText() string {
+func (m *FormatConceptHeadingRequest) GetOldConceptText() string {
 	if m != nil && m.OldConceptText != nil {
 		return *m.OldConceptText
 	}
 	return ""
 }
 
-type GetFormatConceptHeadingResponse struct {
+// / Response to FormatConceptHeadingRequest
+type FormatConceptHeadingResponse struct {
+	// / The new concept text, with revised concept heading.
 	NewConceptText   *string `protobuf:"bytes,1,req,name=newConceptText" json:"newConceptText,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *GetFormatConceptHeadingResponse) Reset()         { *m = GetFormatConceptHeadingResponse{} }
-func (m *GetFormatConceptHeadingResponse) String() string { return proto.CompactTextString(m) }
-func (*GetFormatConceptHeadingResponse) ProtoMessage()    {}
+func (m *FormatConceptHeadingResponse) Reset()         { *m = FormatConceptHeadingResponse{} }
+func (m *FormatConceptHeadingResponse) String() string { return proto.CompactTextString(m) }
+func (*FormatConceptHeadingResponse) ProtoMessage()    {}
 
-func (m *GetFormatConceptHeadingResponse) GetNewConceptText() string {
+func (m *FormatConceptHeadingResponse) GetNewConceptText() string {
 	if m != nil && m.NewConceptText != nil {
 		return *m.NewConceptText
 	}
 	return ""
 }
 
+// / A generic message composing of all possible operations.
+// / One of the Request/Response fields will have value, depending on the MessageType set.
 type APIMessage struct {
-	MessageType                  *APIMessage_APIMessageType        `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.APIMessage_APIMessageType" json:"messageType,omitempty"`
-	MessageId                    *int64                            `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
-	ProjectRootRequest           *GetProjectRootRequest            `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
-	ProjectRootResponse          *GetProjectRootResponse           `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
-	InstallationRootRequest      *GetInstallationRootRequest       `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
-	InstallationRootResponse     *GetInstallationRootResponse      `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
-	AllStepsRequest              *GetAllStepsRequest               `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
-	AllStepsResponse             *GetAllStepsResponse              `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
-	AllSpecsRequest              *GetAllSpecsRequest               `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
-	AllSpecsResponse             *GetAllSpecsResponse              `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
-	StepValueRequest             *GetStepValueRequest              `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
-	StepValueResponse            *GetStepValueResponse             `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
-	LibPathRequest               *GetLanguagePluginLibPathRequest  `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
-	LibPathResponse              *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
-	Error                        *ErrorResponse                    `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
-	AllConceptsRequest           *GetAllConceptsRequest            `protobuf:"bytes,16,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
-	AllConceptsResponse          *GetAllConceptsResponse           `protobuf:"bytes,17,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
-	PerformRefactoringRequest    *PerformRefactoringRequest        `protobuf:"bytes,18,opt,name=performRefactoringRequest" json:"performRefactoringRequest,omitempty"`
-	PerformRefactoringResponse   *PerformRefactoringResponse       `protobuf:"bytes,19,opt,name=performRefactoringResponse" json:"performRefactoringResponse,omitempty"`
-	ExtractConceptInfoRequest    *GetExtractConceptInfoRequest     `protobuf:"bytes,20,opt,name=extractConceptInfoRequest" json:"extractConceptInfoRequest,omitempty"`
-	ExtractConceptInfoResponse   *GetExtractConceptInfoResponse    `protobuf:"bytes,21,opt,name=extractConceptInfoResponse" json:"extractConceptInfoResponse,omitempty"`
-	FormatConceptHeadingRequest  *GetFormatConceptHeadingRequest   `protobuf:"bytes,22,opt,name=formatConceptHeadingRequest" json:"formatConceptHeadingRequest,omitempty"`
-	FormatConceptHeadingResponse *GetFormatConceptHeadingResponse  `protobuf:"bytes,23,opt,name=formatConceptHeadingResponse" json:"formatConceptHeadingResponse,omitempty"`
-	XXX_unrecognized             []byte                            `json:"-"`
+	// / Type of API call being made
+	MessageType *APIMessage_APIMessageType `protobuf:"varint,1,req,name=messageType,enum=gauge.messages.APIMessage_APIMessageType" json:"messageType,omitempty"`
+	// / A unique id to represent this message. A response to the message should copy over this value.
+	// / This is used to synchronize messages & responses
+	MessageId *int64 `protobuf:"varint,2,req,name=messageId" json:"messageId,omitempty"`
+	// / [GetProjectRootRequest](#gauge.messages.GetProjectRootRequest)
+	ProjectRootRequest *GetProjectRootRequest `protobuf:"bytes,3,opt,name=projectRootRequest" json:"projectRootRequest,omitempty"`
+	// / [GetProjectRootResponse](#gauge.messages.GetProjectRootResponse)
+	ProjectRootResponse *GetProjectRootResponse `protobuf:"bytes,4,opt,name=projectRootResponse" json:"projectRootResponse,omitempty"`
+	// / [GetInstallationRootRequest](#gauge.messages.GetInstallationRootRequest)
+	InstallationRootRequest *GetInstallationRootRequest `protobuf:"bytes,5,opt,name=installationRootRequest" json:"installationRootRequest,omitempty"`
+	// / [GetInstallationRootResponse](#gauge.messages.GetInstallationRootResponse)
+	InstallationRootResponse *GetInstallationRootResponse `protobuf:"bytes,6,opt,name=installationRootResponse" json:"installationRootResponse,omitempty"`
+	// / [GetAllStepsRequest](#gauge.messages.GetAllStepsRequest)
+	AllStepsRequest *GetAllStepsRequest `protobuf:"bytes,7,opt,name=allStepsRequest" json:"allStepsRequest,omitempty"`
+	// / [GetAllStepsResponse](#gauge.messages.GetAllStepsResponse)
+	AllStepsResponse *GetAllStepsResponse `protobuf:"bytes,8,opt,name=allStepsResponse" json:"allStepsResponse,omitempty"`
+	// / [GetAllSpecsRequest](#gauge.messages.GetAllSpecsRequest)
+	AllSpecsRequest *GetAllSpecsRequest `protobuf:"bytes,9,opt,name=allSpecsRequest" json:"allSpecsRequest,omitempty"`
+	// / [GetAllSpecsResponse](#gauge.messages.GetAllSpecsResponse)
+	AllSpecsResponse *GetAllSpecsResponse `protobuf:"bytes,10,opt,name=allSpecsResponse" json:"allSpecsResponse,omitempty"`
+	// / [GetStepValueRequest](#gauge.messages.GetStepValueRequest)
+	StepValueRequest *GetStepValueRequest `protobuf:"bytes,11,opt,name=stepValueRequest" json:"stepValueRequest,omitempty"`
+	// / [GetStepValueResponse](#gauge.messages.GetStepValueResponse)
+	StepValueResponse *GetStepValueResponse `protobuf:"bytes,12,opt,name=stepValueResponse" json:"stepValueResponse,omitempty"`
+	// / [GetLanguagePluginLibPathRequest](#gauge.messages.GetLanguagePluginLibPathRequest)
+	LibPathRequest *GetLanguagePluginLibPathRequest `protobuf:"bytes,13,opt,name=libPathRequest" json:"libPathRequest,omitempty"`
+	// / [GetLanguagePluginLibPathResponse](#gauge.messages.GetLanguagePluginLibPathResponse)
+	LibPathResponse *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse" json:"libPathResponse,omitempty"`
+	// / [ErrorResponse](#gauge.messages.ErrorResponse)
+	Error *ErrorResponse `protobuf:"bytes,15,opt,name=error" json:"error,omitempty"`
+	// / [GetAllConceptsRequest](#gauge.messages.GetAllConceptsRequest)
+	AllConceptsRequest *GetAllConceptsRequest `protobuf:"bytes,16,opt,name=allConceptsRequest" json:"allConceptsRequest,omitempty"`
+	// / [GetAllConceptsResponse](#gauge.messages.GetAllConceptsResponse)
+	AllConceptsResponse *GetAllConceptsResponse `protobuf:"bytes,17,opt,name=allConceptsResponse" json:"allConceptsResponse,omitempty"`
+	// / [PerformRefactoringRequest](#gauge.messages.PerformRefactoringRequest)
+	PerformRefactoringRequest *PerformRefactoringRequest `protobuf:"bytes,18,opt,name=performRefactoringRequest" json:"performRefactoringRequest,omitempty"`
+	// / [PerformRefactoringResponse](#gauge.messages.PerformRefactoringResponse)
+	PerformRefactoringResponse *PerformRefactoringResponse `protobuf:"bytes,19,opt,name=performRefactoringResponse" json:"performRefactoringResponse,omitempty"`
+	// / [ExtractConceptInfoRequest](#gauge.messages.ExtractConceptInfoRequest)
+	ExtractConceptInfoRequest *ExtractConceptInfoRequest `protobuf:"bytes,20,opt,name=extractConceptInfoRequest" json:"extractConceptInfoRequest,omitempty"`
+	// / [ExtractConceptInfoResponse](#gauge.messages.ExtractConceptInfoResponse)
+	ExtractConceptInfoResponse *ExtractConceptInfoResponse `protobuf:"bytes,21,opt,name=extractConceptInfoResponse" json:"extractConceptInfoResponse,omitempty"`
+	// / [FormatConceptHeadingResponse](#gauge.messages.FormatConceptHeadingResponse)
+	FormatConceptHeadingRequest *FormatConceptHeadingRequest `protobuf:"bytes,22,opt,name=formatConceptHeadingRequest" json:"formatConceptHeadingRequest,omitempty"`
+	// / [FormatConceptHeadingResponse](#gauge.messages.FormatConceptHeadingResponse)
+	FormatConceptHeadingResponse *FormatConceptHeadingResponse `protobuf:"bytes,23,opt,name=formatConceptHeadingResponse" json:"formatConceptHeadingResponse,omitempty"`
+	XXX_unrecognized             []byte                        `json:"-"`
 }
 
 func (m *APIMessage) Reset()         { *m = APIMessage{} }
@@ -721,28 +804,28 @@ func (m *APIMessage) GetPerformRefactoringResponse() *PerformRefactoringResponse
 	return nil
 }
 
-func (m *APIMessage) GetExtractConceptInfoRequest() *GetExtractConceptInfoRequest {
+func (m *APIMessage) GetExtractConceptInfoRequest() *ExtractConceptInfoRequest {
 	if m != nil {
 		return m.ExtractConceptInfoRequest
 	}
 	return nil
 }
 
-func (m *APIMessage) GetExtractConceptInfoResponse() *GetExtractConceptInfoResponse {
+func (m *APIMessage) GetExtractConceptInfoResponse() *ExtractConceptInfoResponse {
 	if m != nil {
 		return m.ExtractConceptInfoResponse
 	}
 	return nil
 }
 
-func (m *APIMessage) GetFormatConceptHeadingRequest() *GetFormatConceptHeadingRequest {
+func (m *APIMessage) GetFormatConceptHeadingRequest() *FormatConceptHeadingRequest {
 	if m != nil {
 		return m.FormatConceptHeadingRequest
 	}
 	return nil
 }
 
-func (m *APIMessage) GetFormatConceptHeadingResponse() *GetFormatConceptHeadingResponse {
+func (m *APIMessage) GetFormatConceptHeadingResponse() *FormatConceptHeadingResponse {
 	if m != nil {
 		return m.FormatConceptHeadingResponse
 	}

@@ -113,10 +113,10 @@ func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_PerformRefactoringRequest:
 			responseMessage = handler.performRefactoring(apiMessage)
 			break
-		case gauge_messages.APIMessage_GetExtractConceptInfoRequest:
+		case gauge_messages.APIMessage_ExtractConceptInfoRequest:
 			responseMessage = handler.getConceptExtractInformation(apiMessage)
 			break
-		case gauge_messages.APIMessage_GetFormatConceptHeadingRequest:
+		case gauge_messages.APIMessage_FormatConceptHeadingRequest:
 			responseMessage = handler.refactorConceptExtractHeading(apiMessage)
 			break
 		}
@@ -270,14 +270,14 @@ func (handler *gaugeApiMessageHandler) getConceptExtractInformation(message *gau
 	if !result.isValid {
 		apiLog.Error("Error response from gauge on GetBeforeExtractConceptRequest: Steps to extract are not valid")
 	}
-	response := &gauge_messages.GetExtractConceptInfoResponse{IsValid: proto.Bool(result.isValid), ConceptHeading: proto.String(result.heading), Steps: proto.String(result.stepTexts),
+	response := &gauge_messages.ExtractConceptInfoResponse{IsValid: proto.Bool(result.isValid), ConceptHeading: proto.String(result.heading), Steps: proto.String(result.stepTexts),
 		ConceptText: proto.String(result.conceptText), HasParam: proto.Bool(result.hasParam)}
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_GetExtractConceptInfoResponse.Enum(), ExtractConceptInfoResponse: response}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptInfoResponse.Enum(), ExtractConceptInfoResponse: response}
 }
 
 func (handler *gaugeApiMessageHandler) refactorConceptExtractHeading(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetFormatConceptHeadingRequest()
 	newConceptText := refactorConceptHeading(request.GetNewConceptHeading(), request.GetOldConceptHeading(), request.GetOldConceptText())
-	response := &gauge_messages.GetFormatConceptHeadingResponse{NewConceptText: proto.String(newConceptText)}
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_GetFormatConceptHeadingResponse.Enum(), FormatConceptHeadingResponse: response}
+	response := &gauge_messages.FormatConceptHeadingResponse{NewConceptText: proto.String(newConceptText)}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_FormatConceptHeadingResponse.Enum(), FormatConceptHeadingResponse: response}
 }

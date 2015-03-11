@@ -54,6 +54,7 @@ import math "math"
 var _ = proto.Marshal
 var _ = math.Inf
 
+// / Enumerates various item types that the proto item can contain. Valid types are: Step, Comment, Concept, Scenario, TableDrivenScenario, Table, Tags
 type ProtoItem_ItemType int32
 
 const (
@@ -102,6 +103,7 @@ func (x *ProtoItem_ItemType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// / Enum representing the types of Fragment
 type Fragment_FragmentType int32
 
 const (
@@ -135,6 +137,7 @@ func (x *Fragment_FragmentType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// / Enum representing types of Parameter.
 type Parameter_ParameterType int32
 
 const (
@@ -177,15 +180,24 @@ func (x *Parameter_ParameterType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+// / A proto object representing a Specification
+// / A specification can contain Scenarios or Steps, besides Comments
 type ProtoSpec struct {
-	SpecHeading      *string           `protobuf:"bytes,1,req,name=specHeading" json:"specHeading,omitempty"`
-	Items            []*ProtoItem      `protobuf:"bytes,2,rep,name=items" json:"items,omitempty"`
-	IsTableDriven    *bool             `protobuf:"varint,3,req,name=isTableDriven" json:"isTableDriven,omitempty"`
-	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,4,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
-	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,5,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
-	FileName         *string           `protobuf:"bytes,6,req,name=fileName" json:"fileName,omitempty"`
-	Tags             []string          `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
-	XXX_unrecognized []byte            `json:"-"`
+	// / Heading describing the Specification
+	SpecHeading *string `protobuf:"bytes,1,req,name=specHeading" json:"specHeading,omitempty"`
+	// / A collection of items that come under this step
+	Items []*ProtoItem `protobuf:"bytes,2,rep,name=items" json:"items,omitempty"`
+	// / Flag indicating if this is a Table Driven Specification. The table is defined in the context, this is different from using a table parameter.
+	IsTableDriven *bool `protobuf:"varint,3,req,name=isTableDriven" json:"isTableDriven,omitempty"`
+	// / Contains a 'before' hook failure message. This happens when the `before_spec` hook has an error.
+	PreHookFailure *ProtoHookFailure `protobuf:"bytes,4,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
+	// / Contains a 'before' hook failure message. This happens when the `after_hook` hook has an error.
+	PostHookFailure *ProtoHookFailure `protobuf:"bytes,5,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	// / Contains the filename for that holds this specification.
+	FileName *string `protobuf:"bytes,6,req,name=fileName" json:"fileName,omitempty"`
+	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
+	Tags             []string `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoSpec) Reset()         { *m = ProtoSpec{} }
@@ -241,16 +253,25 @@ func (m *ProtoSpec) GetTags() []string {
 	return nil
 }
 
+// / Container for all valid Items under a Specification.
 type ProtoItem struct {
-	ItemType            *ProtoItem_ItemType       `protobuf:"varint,1,req,name=itemType,enum=gauge.messages.ProtoItem_ItemType" json:"itemType,omitempty"`
-	Step                *ProtoStep                `protobuf:"bytes,2,opt,name=step" json:"step,omitempty"`
-	Concept             *ProtoConcept             `protobuf:"bytes,3,opt,name=concept" json:"concept,omitempty"`
-	Scenario            *ProtoScenario            `protobuf:"bytes,4,opt,name=scenario" json:"scenario,omitempty"`
+	// / Itemtype of the current ProtoItem
+	ItemType *ProtoItem_ItemType `protobuf:"varint,1,req,name=itemType,enum=gauge.messages.ProtoItem_ItemType" json:"itemType,omitempty"`
+	// / Holds the Step definition. Valid only if ItemType = Step
+	Step *ProtoStep `protobuf:"bytes,2,opt,name=step" json:"step,omitempty"`
+	// / Holds the Concept definition. Valid only if ItemType = Concept
+	Concept *ProtoConcept `protobuf:"bytes,3,opt,name=concept" json:"concept,omitempty"`
+	// / Holds the Scenario definition. Valid only if ItemType = Scenario
+	Scenario *ProtoScenario `protobuf:"bytes,4,opt,name=scenario" json:"scenario,omitempty"`
+	// / Holds the TableDrivenScenario definition. Valid only if ItemType = TableDrivenScenario
 	TableDrivenScenario *ProtoTableDrivenScenario `protobuf:"bytes,5,opt,name=tableDrivenScenario" json:"tableDrivenScenario,omitempty"`
-	Comment             *ProtoComment             `protobuf:"bytes,6,opt,name=comment" json:"comment,omitempty"`
-	Table               *ProtoTable               `protobuf:"bytes,7,opt,name=table" json:"table,omitempty"`
-	Tags                *ProtoTags                `protobuf:"bytes,8,opt,name=tags" json:"tags,omitempty"`
-	XXX_unrecognized    []byte                    `json:"-"`
+	// / Holds the Comment definition. Valid only if ItemType = Comment
+	Comment *ProtoComment `protobuf:"bytes,6,opt,name=comment" json:"comment,omitempty"`
+	// / Holds the Table definition. Valid only if ItemType = Table
+	Table *ProtoTable `protobuf:"bytes,7,opt,name=table" json:"table,omitempty"`
+	// / Holds the Tags definition. Valid only if ItemType = Tags
+	Tags             *ProtoTags `protobuf:"bytes,8,opt,name=tags" json:"tags,omitempty"`
+	XXX_unrecognized []byte     `json:"-"`
 }
 
 func (m *ProtoItem) Reset()         { *m = ProtoItem{} }
@@ -313,16 +334,25 @@ func (m *ProtoItem) GetTags() *ProtoTags {
 	return nil
 }
 
+// / A proto object representing a Scenario
 type ProtoScenario struct {
-	ScenarioHeading  *string           `protobuf:"bytes,1,req,name=scenarioHeading" json:"scenarioHeading,omitempty"`
-	Failed           *bool             `protobuf:"varint,2,req,name=failed" json:"failed,omitempty"`
-	Contexts         []*ProtoItem      `protobuf:"bytes,3,rep,name=contexts" json:"contexts,omitempty"`
-	ScenarioItems    []*ProtoItem      `protobuf:"bytes,4,rep,name=scenarioItems" json:"scenarioItems,omitempty"`
-	PreHookFailure   *ProtoHookFailure `protobuf:"bytes,5,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
-	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,6,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
-	Tags             []string          `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
-	ExecutionTime    *int64            `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte            `json:"-"`
+	// / Heading of the given Scenario
+	ScenarioHeading *string `protobuf:"bytes,1,req,name=scenarioHeading" json:"scenarioHeading,omitempty"`
+	// / Flag to indicate if the Scenario execution failed
+	Failed *bool `protobuf:"varint,2,req,name=failed" json:"failed,omitempty"`
+	// / Collection of Context steps. The Context steps are executed before every run.
+	Contexts []*ProtoItem `protobuf:"bytes,3,rep,name=contexts" json:"contexts,omitempty"`
+	// / Collection of Items under a scenario. These could be Steps, Comments, Tags, TableDrivenScenarios or Tables
+	ScenarioItems []*ProtoItem `protobuf:"bytes,4,rep,name=scenarioItems" json:"scenarioItems,omitempty"`
+	// / Contains a 'before' hook failure message. This happens when the `before_scenario` hook has an error.
+	PreHookFailure *ProtoHookFailure `protobuf:"bytes,5,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
+	// / Contains a 'after' hook failure message. This happens when the `after_scenario` hook has an error.
+	PostHookFailure *ProtoHookFailure `protobuf:"bytes,6,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
+	Tags []string `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
+	// / Holds the time taken for executing this scenario.
+	ExecutionTime    *int64 `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ProtoScenario) Reset()         { *m = ProtoScenario{} }
@@ -385,7 +415,9 @@ func (m *ProtoScenario) GetExecutionTime() int64 {
 	return 0
 }
 
+// / A proto object representing a TableDrivenScenario
 type ProtoTableDrivenScenario struct {
+	// / Holds the Underlying scenario that is executed for every row in the table.
 	Scenarios        []*ProtoScenario `protobuf:"bytes,1,rep,name=scenarios" json:"scenarios,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
 }
@@ -401,10 +433,15 @@ func (m *ProtoTableDrivenScenario) GetScenarios() []*ProtoScenario {
 	return nil
 }
 
+// / A proto object representing a Step
 type ProtoStep struct {
-	ActualText          *string                   `protobuf:"bytes,1,req,name=actualText" json:"actualText,omitempty"`
-	ParsedText          *string                   `protobuf:"bytes,2,req,name=parsedText" json:"parsedText,omitempty"`
-	Fragments           []*Fragment               `protobuf:"bytes,3,rep,name=fragments" json:"fragments,omitempty"`
+	// / Holds the raw text of the Step as defined in the spec file. This contains the actual parameter values.
+	ActualText *string `protobuf:"bytes,1,req,name=actualText" json:"actualText,omitempty"`
+	// / Contains the parsed text of the Step. This will have placeholders for the parameters.
+	ParsedText *string `protobuf:"bytes,2,req,name=parsedText" json:"parsedText,omitempty"`
+	// / Collection of a list of fragments for a Step. A fragment could be either text or parameter.
+	Fragments []*Fragment `protobuf:"bytes,3,rep,name=fragments" json:"fragments,omitempty"`
+	// / Holds the result from the execution.
 	StepExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,4,opt,name=stepExecutionResult" json:"stepExecutionResult,omitempty"`
 	XXX_unrecognized    []byte                    `json:"-"`
 }
@@ -441,9 +478,15 @@ func (m *ProtoStep) GetStepExecutionResult() *ProtoStepExecutionResult {
 	return nil
 }
 
+// / Concept is a type of step, that can have multiple Steps.
+// / But from a caller's perspective, it is still used as any other Step
+// / A proto object representing a Concept
 type ProtoConcept struct {
-	ConceptStep            *ProtoStep                `protobuf:"bytes,1,req,name=conceptStep" json:"conceptStep,omitempty"`
-	Steps                  []*ProtoItem              `protobuf:"bytes,2,rep,name=steps" json:"steps,omitempty"`
+	// / Represents the Step value of a Concept.
+	ConceptStep *ProtoStep `protobuf:"bytes,1,req,name=conceptStep" json:"conceptStep,omitempty"`
+	// / Collection of Steps in the given concepts.
+	Steps []*ProtoItem `protobuf:"bytes,2,rep,name=steps" json:"steps,omitempty"`
+	// / Holds the execution result.
 	ConceptExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,3,opt,name=conceptExecutionResult" json:"conceptExecutionResult,omitempty"`
 	XXX_unrecognized       []byte                    `json:"-"`
 }
@@ -473,7 +516,9 @@ func (m *ProtoConcept) GetConceptExecutionResult() *ProtoStepExecutionResult {
 	return nil
 }
 
+// / A proto object representing Tags
 type ProtoTags struct {
+	// / A collection of Tags
 	Tags             []string `protobuf:"bytes,1,rep,name=tags" json:"tags,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
@@ -489,11 +534,16 @@ func (m *ProtoTags) GetTags() []string {
 	return nil
 }
 
+// / A proto object representing Fragment.
+// / Fragments, put together make up A Step
 type Fragment struct {
-	FragmentType     *Fragment_FragmentType `protobuf:"varint,1,req,name=fragmentType,enum=gauge.messages.Fragment_FragmentType" json:"fragmentType,omitempty"`
-	Text             *string                `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
-	Parameter        *Parameter             `protobuf:"bytes,3,opt,name=parameter" json:"parameter,omitempty"`
-	XXX_unrecognized []byte                 `json:"-"`
+	// / Type of Fragment, valid values are Text, Parameter
+	FragmentType *Fragment_FragmentType `protobuf:"varint,1,req,name=fragmentType,enum=gauge.messages.Fragment_FragmentType" json:"fragmentType,omitempty"`
+	// / Text part of the Fragment, valid only if FragmentType=Text
+	Text *string `protobuf:"bytes,2,opt,name=text" json:"text,omitempty"`
+	// / Parameter part of the Fragment, valid only if FragmentType=Parameter
+	Parameter        *Parameter `protobuf:"bytes,3,opt,name=parameter" json:"parameter,omitempty"`
+	XXX_unrecognized []byte     `json:"-"`
 }
 
 func (m *Fragment) Reset()         { *m = Fragment{} }
@@ -521,12 +571,17 @@ func (m *Fragment) GetParameter() *Parameter {
 	return nil
 }
 
+// / A proto object representing Fragment.
 type Parameter struct {
-	ParameterType    *Parameter_ParameterType `protobuf:"varint,1,req,name=parameterType,enum=gauge.messages.Parameter_ParameterType" json:"parameterType,omitempty"`
-	Value            *string                  `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
-	Name             *string                  `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
-	Table            *ProtoTable              `protobuf:"bytes,4,opt,name=table" json:"table,omitempty"`
-	XXX_unrecognized []byte                   `json:"-"`
+	// / Type of the Parameter. Valid values: Static, Dynamic, Special_String, Special_Table, Table
+	ParameterType *Parameter_ParameterType `protobuf:"varint,1,req,name=parameterType,enum=gauge.messages.Parameter_ParameterType" json:"parameterType,omitempty"`
+	// / Holds the value of the parameter
+	Value *string `protobuf:"bytes,2,opt,name=value" json:"value,omitempty"`
+	// / Holds the name of the parameter, used as Key to lookup the value.
+	Name *string `protobuf:"bytes,3,opt,name=name" json:"name,omitempty"`
+	// / Holds the table value, if parameterType=Table or Special_Table
+	Table            *ProtoTable `protobuf:"bytes,4,opt,name=table" json:"table,omitempty"`
+	XXX_unrecognized []byte      `json:"-"`
 }
 
 func (m *Parameter) Reset()         { *m = Parameter{} }
@@ -561,7 +616,9 @@ func (m *Parameter) GetTable() *ProtoTable {
 	return nil
 }
 
+// / A proto object representing Comment.
 type ProtoComment struct {
+	// / Text representing the Comment.
 	Text             *string `protobuf:"bytes,1,req,name=text" json:"text,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -577,8 +634,11 @@ func (m *ProtoComment) GetText() string {
 	return ""
 }
 
+// / A proto object representing Table.
 type ProtoTable struct {
-	Headers          *ProtoTableRow   `protobuf:"bytes,1,req,name=headers" json:"headers,omitempty"`
+	// / Contains the Headers for the table
+	Headers *ProtoTableRow `protobuf:"bytes,1,req,name=headers" json:"headers,omitempty"`
+	// / Contains the Rows for the table
 	Rows             []*ProtoTableRow `protobuf:"bytes,2,rep,name=rows" json:"rows,omitempty"`
 	XXX_unrecognized []byte           `json:"-"`
 }
@@ -601,7 +661,9 @@ func (m *ProtoTable) GetRows() []*ProtoTableRow {
 	return nil
 }
 
+// / A proto object representing Table.
 type ProtoTableRow struct {
+	// / Represents the cells of a given table
 	Cells            []string `protobuf:"bytes,1,rep,name=cells" json:"cells,omitempty"`
 	XXX_unrecognized []byte   `json:"-"`
 }
@@ -617,11 +679,15 @@ func (m *ProtoTableRow) GetCells() []string {
 	return nil
 }
 
+// / A proto object representing Step Execution result
 type ProtoStepExecutionResult struct {
-	ExecutionResult  *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
-	PreHookFailure   *ProtoHookFailure     `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
-	PostHookFailure  *ProtoHookFailure     `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
-	XXX_unrecognized []byte                `json:"-"`
+	// / The actual result of the execution
+	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
+	// / Contains a 'before' hook failure message. This happens when the `before_step` hook has an error.
+	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
+	// / Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
+	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	XXX_unrecognized []byte            `json:"-"`
 }
 
 func (m *ProtoStepExecutionResult) Reset()         { *m = ProtoStepExecutionResult{} }
@@ -649,14 +715,21 @@ func (m *ProtoStepExecutionResult) GetPostHookFailure() *ProtoHookFailure {
 	return nil
 }
 
+// / A proto object representing the result of an execution
 type ProtoExecutionResult struct {
-	Failed           *bool   `protobuf:"varint,1,req,name=failed" json:"failed,omitempty"`
-	RecoverableError *bool   `protobuf:"varint,2,opt,name=recoverableError" json:"recoverableError,omitempty"`
-	ErrorMessage     *string `protobuf:"bytes,3,opt,name=errorMessage" json:"errorMessage,omitempty"`
-	StackTrace       *string `protobuf:"bytes,4,opt,name=stackTrace" json:"stackTrace,omitempty"`
-	ScreenShot       []byte  `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
-	ExecutionTime    *int64  `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	// / Flag to indicate failure
+	Failed *bool `protobuf:"varint,1,req,name=failed" json:"failed,omitempty"`
+	// / Flag to indicate if the error is recoverable from.
+	RecoverableError *bool `protobuf:"varint,2,opt,name=recoverableError" json:"recoverableError,omitempty"`
+	// / The actual error message.
+	ErrorMessage *string `protobuf:"bytes,3,opt,name=errorMessage" json:"errorMessage,omitempty"`
+	// / Stacktrace of the error
+	StackTrace *string `protobuf:"bytes,4,opt,name=stackTrace" json:"stackTrace,omitempty"`
+	// / Byte array containing screenshot taken at the time of failure.
+	ScreenShot []byte `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
+	// / Holds the time taken for executing this scenario.
+	ExecutionTime    *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ProtoExecutionResult) Reset()         { *m = ProtoExecutionResult{} }
@@ -705,11 +778,16 @@ func (m *ProtoExecutionResult) GetExecutionTime() int64 {
 	return 0
 }
 
+// / A proto object representing a pre-hook failure.
+// / Used to hold failure information for before_suite, before_spec, before_scenario and before_spec hooks.
 type ProtoHookFailure struct {
-	StackTrace       *string `protobuf:"bytes,1,req,name=stackTrace" json:"stackTrace,omitempty"`
-	ErrorMessage     *string `protobuf:"bytes,2,req,name=errorMessage" json:"errorMessage,omitempty"`
-	ScreenShot       []byte  `protobuf:"bytes,3,opt,name=screenShot" json:"screenShot,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	// / Stacktrace from the failure
+	StackTrace *string `protobuf:"bytes,1,req,name=stackTrace" json:"stackTrace,omitempty"`
+	// / Error message from the failure
+	ErrorMessage *string `protobuf:"bytes,2,req,name=errorMessage" json:"errorMessage,omitempty"`
+	// / Byte array holding the screenshot taken at the time of failure.
+	ScreenShot       []byte `protobuf:"bytes,3,opt,name=screenShot" json:"screenShot,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ProtoHookFailure) Reset()         { *m = ProtoHookFailure{} }
@@ -737,15 +815,23 @@ func (m *ProtoHookFailure) GetScreenShot() []byte {
 	return nil
 }
 
+// / A proto object representing the result of entire Suite execution.
 type ProtoSuiteResult struct {
-	SpecResults      []*ProtoSpecResult `protobuf:"bytes,1,rep,name=specResults" json:"specResults,omitempty"`
-	PreHookFailure   *ProtoHookFailure  `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
-	PostHookFailure  *ProtoHookFailure  `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
-	Failed           *bool              `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
-	SpecsFailedCount *int32             `protobuf:"varint,5,req,name=specsFailedCount" json:"specsFailedCount,omitempty"`
-	ExecutionTime    *int64             `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
-	SuccessRate      *float32           `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
-	XXX_unrecognized []byte             `json:"-"`
+	// / Contains the result from the execution
+	SpecResults []*ProtoSpecResult `protobuf:"bytes,1,rep,name=specResults" json:"specResults,omitempty"`
+	// / Contains a 'before' hook failure message. This happens when the `before_suite` hook has an error
+	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
+	// / Contains a 'after' hook failure message. This happens when the `after_suite` hook has an error
+	PostHookFailure *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	// / Flag to indicate failure
+	Failed *bool `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
+	// / Holds the count of number of Specifications that failed.
+	SpecsFailedCount *int32 `protobuf:"varint,5,req,name=specsFailedCount" json:"specsFailedCount,omitempty"`
+	// / Holds the time taken for executing the whole suite.
+	ExecutionTime *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
+	// / Holds a metric indicating the success rate of the execution.
+	SuccessRate      *float32 `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoSuiteResult) Reset()         { *m = ProtoSuiteResult{} }
@@ -801,14 +887,21 @@ func (m *ProtoSuiteResult) GetSuccessRate() float32 {
 	return 0
 }
 
+// / A proto object representing the result of Spec execution.
 type ProtoSpecResult struct {
-	ProtoSpec           *ProtoSpec `protobuf:"bytes,1,req,name=protoSpec" json:"protoSpec,omitempty"`
-	ScenarioCount       *int32     `protobuf:"varint,2,req,name=scenarioCount" json:"scenarioCount,omitempty"`
-	ScenarioFailedCount *int32     `protobuf:"varint,3,req,name=scenarioFailedCount" json:"scenarioFailedCount,omitempty"`
-	Failed              *bool      `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
-	FailedDataTableRows []int32    `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
-	ExecutionTime       *int64     `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized    []byte     `json:"-"`
+	// / Represents the corresponding Specification
+	ProtoSpec *ProtoSpec `protobuf:"bytes,1,req,name=protoSpec" json:"protoSpec,omitempty"`
+	// / Holds the number of Scenarios executed
+	ScenarioCount *int32 `protobuf:"varint,2,req,name=scenarioCount" json:"scenarioCount,omitempty"`
+	// / Holds the number of Scenarios failed
+	ScenarioFailedCount *int32 `protobuf:"varint,3,req,name=scenarioFailedCount" json:"scenarioFailedCount,omitempty"`
+	// / Flag to indicate failure
+	Failed *bool `protobuf:"varint,4,req,name=failed" json:"failed,omitempty"`
+	// / Holds the row numbers, which caused the execution to fail.
+	FailedDataTableRows []int32 `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
+	// / Holds the time taken for executing the spec.
+	ExecutionTime    *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
 }
 
 func (m *ProtoSpecResult) Reset()         { *m = ProtoSpecResult{} }
@@ -857,11 +950,15 @@ func (m *ProtoSpecResult) GetExecutionTime() int64 {
 	return 0
 }
 
+// / A proto object representing a Step value.
 type ProtoStepValue struct {
-	StepValue              *string  `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
-	ParameterizedStepValue *string  `protobuf:"bytes,2,req,name=parameterizedStepValue" json:"parameterizedStepValue,omitempty"`
-	Parameters             []string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty"`
-	XXX_unrecognized       []byte   `json:"-"`
+	// / The actual string value describing he Step
+	StepValue *string `protobuf:"bytes,1,req,name=stepValue" json:"stepValue,omitempty"`
+	// / The parameterized string value describing he Step. The parameters are replaced with placeholders.
+	ParameterizedStepValue *string `protobuf:"bytes,2,req,name=parameterizedStepValue" json:"parameterizedStepValue,omitempty"`
+	// / A collection of strings representing the parameters.
+	Parameters       []string `protobuf:"bytes,3,rep,name=parameters" json:"parameters,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoStepValue) Reset()         { *m = ProtoStepValue{} }
