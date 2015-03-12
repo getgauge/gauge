@@ -269,6 +269,7 @@ func addPluginToProject(pluginName string) {
 
 func executeSpecs(inParallel bool) {
 	loadGaugeEnvironment()
+	initLoggers()
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 	specsToExecute, specsSkipped := getSpecsToExecute(conceptsDictionary)

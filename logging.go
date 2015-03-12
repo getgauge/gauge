@@ -18,6 +18,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
@@ -26,6 +27,8 @@ import (
 	"path/filepath"
 	"strings"
 )
+
+const LOGS_DIRECTORY = "logs_directory"
 
 var log = logging.MustGetLogger("gauge")
 var apiLog = logging.MustGetLogger("gauge-api")
@@ -44,8 +47,13 @@ func initLoggers() {
 
 func initGaugeLogger() {
 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	gaugeFileLogger := createFileLogger(gaugeLogFile, 20)
-
+	logsDir := os.Getenv(LOGS_DIRECTORY)
+	var gaugeFileLogger logging.Backend
+	if logsDir == "" {
+		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
+	} else {
+		gaugeFileLogger = createFileLogger(logsDir+fmt.Sprintf("%c", filepath.Separator)+"gauge.log", 20)
+	}
 	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, format)
 	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, format)
 
@@ -59,7 +67,14 @@ func initGaugeLogger() {
 }
 
 func initApiLogger() {
-	apiFileLogger := createFileLogger(apiLogFile, 10)
+	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
+	var apiFileLogger logging.Backend
+	if logsDir == "" || err != nil {
+		apiFileLogger = createFileLogger(apiLogFile, 10)
+	} else {
+		apiFileLogger = createFileLogger(logsDir+fmt.Sprintf("%c", filepath.Separator)+"api.log", 10)
+	}
+
 	fileFormatter := logging.NewBackendFormatter(apiFileLogger, format)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(loggingLevel(), "")
