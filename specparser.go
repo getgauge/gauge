@@ -137,8 +137,8 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, tableRow, tableHeader)
 			newToken = &token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
-		} else if parser.isKeyword(trimmedLine) {
-			newToken = &token{kind: keywordKind, lineNo: parser.lineNo, lineText: line, value: trimmedLine}
+		} else if value, found := parser.isKeyword(trimmedLine); found {
+			newToken = &token{kind: keywordKind, lineNo: parser.lineNo, lineText: line, value: value}
 		} else {
 			newToken = &token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
 		}
@@ -209,11 +209,16 @@ func (parser *specParser) isSpecUnderline(text string) bool {
 
 }
 
-func (parser *specParser) isKeyword(text string) bool {
+func (parser *specParser) isKeyword(text string) (string, bool) {
 	lowerCased := strings.ToLower
 	tableColon := "table:"
 	tableSpaceColon := "table :"
-	return strings.HasPrefix(text, lowerCased(tableColon)) || strings.HasPrefix(text, lowerCased(tableSpaceColon))
+	if strings.HasPrefix(lowerCased(text), tableColon) {
+		return tableColon + strings.Replace(lowerCased(text), tableColon, "", 1), true
+	} else if strings.HasPrefix(lowerCased(text), tableSpaceColon) {
+		return tableColon + strings.Replace(lowerCased(text), tableSpaceColon, "", 1), true
+	}
+	return "", false
 }
 
 func (parser *specParser) accept(token *token) *parseError {
@@ -236,12 +241,12 @@ func processSpec(parser *specParser, token *token) (*parseError, bool) {
 }
 
 func processKeyword(parser *specParser, token *token) (*parseError, bool) {
-	if len(token.value) < 1 {
+	if len(strings.Replace(token.value, "table:", "", 1)) == 0 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table location not specified"}, true
 	}
 	resolvedArg, err := newSpecialTypeResolver().resolve(token.value)
 	if resolvedArg == nil || err != nil {
-		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: fmt.Sprintf("Could not resolve table from %s", token.value)}, true
+		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: fmt.Sprintf("Could not resolve table from %s", token.lineText)}, true
 	}
 	return nil, false
 }

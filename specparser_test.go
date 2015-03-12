@@ -550,3 +550,21 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	c.Assert(parseRes.error.message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.ok, Equals, false)
 }
+
+func (s *MySuite) TestTableInputFromFile(c *C) {
+	parser := new(specParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
+
+	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	c.Assert(parseRes.error.message, Equals, "Could not resolve table from Table: inputinvalid.csv")
+	c.Assert(parseRes.ok, Equals, false)
+}
+
+func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
+	parser := new(specParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
+
+	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	c.Assert(parseRes.error.message, Equals, "Table location not specified")
+	c.Assert(parseRes.ok, Equals, false)
+}
