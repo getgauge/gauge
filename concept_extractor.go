@@ -17,122 +17,95 @@
 
 package main
 
-import "strings"
-
-const (
-	CONCEPT_HEADING_TEMPLATE = "Concept Heading"
-	SPEC_HEADING_TEMPLATE    = "# S\n"
+import (
+	"errors"
+	"fmt"
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge_messages"
+	"os"
+	"regexp"
+	"strings"
 )
 
-type extractConceptResult struct {
-	heading     string
-	stepTexts   string
-	conceptText string
-	hasParam    bool
-	isValid     bool
+const (
+	SPEC_HEADING_TEMPLATE = "# S\n"
+	TABLE                 = "table"
+)
+
+type extractor struct {
+	conceptName    string
+	conceptStep    *step
+	stepsToExtract []*gauge_messages.Step
+	stepsInConcept string
+	table          *table
 }
 
-func getTextForConcept(stepsToExtract string) *extractConceptResult {
-	specs, parseResult := new(specParser).parse(SPEC_HEADING_TEMPLATE+stepsToExtract, &conceptDictionary{})
-	if !parseResult.ok {
-		return &extractConceptResult{heading: "", stepTexts: "", conceptText: "", hasParam: false, isValid: false}
-	}
-	steps := make([]*step, 0)
-	for _, item := range specs.items {
-		if item.kind() == stepKind {
-			steps = append(steps, item.(*step))
-		} else if item.kind() != commentKind {
-			return &extractConceptResult{heading: "", stepTexts: "", conceptText: "", hasParam: false, isValid: false}
-		}
-	}
-	stepTexts, args, table := getSteps(steps)
-	heading, text, hasParam := getHeadingAndText(args, table)
-	return &extractConceptResult{heading: heading, stepTexts: stepTexts, conceptText: text, hasParam: hasParam, isValid: true}
-}
-func getSteps(steps []*step) (string, map[string]bool, table) {
-	stepTexts := ""
-	argsMap := getArgsMap(steps)
-	args := make(map[string]bool)
-	table := table{}
-	for _, step := range steps {
-		for _, arg := range step.args {
-			value := arg.String()
-			if arg.argType == tableArg {
-				value = arg.table.String()
-			}
-			if argsMap[value] > 1 {
-				value := arg.value
-				if arg.argType == tableArg && (!table.isInitialized() || table.String() == arg.table.String()) {
-					table = arg.table
-					value = "table"
-				} else if arg.argType == tableArg && table.String() != arg.table.String() {
-					continue
-				} else if arg.argType != tableArg {
-					args[value] = true
-				}
-				arg.argType = dynamic
-				arg.name = "<" + value + ">"
-				arg.value = value
-			}
-		}
-		stepTexts += formatItem(step)
-	}
-	return stepTexts, args, table
+func extractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
+	concept, conceptUsageText := getExtractedConcept(conceptName, steps)
+	specText := ReplaceExtractedStepsWithConcept(selectedTextInfo, conceptUsageText)
+	writeConceptToFile(concept, specText, conceptFileName, selectedTextInfo.GetFileName())
+	return true, errors.New(""), []string{}
 }
 
-func getHeadingAndText(args map[string]bool, table table) (string, string, bool) {
-	conceptHeading :=
-		CONCEPT_HEADING_TEMPLATE
-	conceptText := "* " + CONCEPT_HEADING_TEMPLATE
-	hasParam := false
-	for name, _ := range args {
-		hasParam = true
-		conceptHeading += " <" + name + ">"
-		conceptText += " \"" + name + "\""
-	}
-	if table.isInitialized() {
-		hasParam = true
-		conceptHeading += " <table>"
-		conceptText += "\n" + formatTable(&table)
-	}
-	return conceptHeading, conceptText, hasParam
+func ReplaceExtractedStepsWithConcept(selectedTextInfo *gauge_messages.TextInfo, conceptText string) string {
+	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
+	return replaceText(content, selectedTextInfo, conceptText)
 }
 
-func getArgsMap(steps []*step) map[string]int {
-	argsMap := make(map[string]int)
-	for _, step := range steps {
-		for _, arg := range step.args {
-			value := arg.String()
-			if arg.argType == tableArg {
-				value = arg.table.String()
-			}
-			if _, ok := argsMap[value]; !ok {
-				argsMap[value] = 1
-			} else {
-				argsMap[value] += 1
-			}
-		}
+func replaceText(content string, info *gauge_messages.TextInfo, replacement string) string {
+	parts := regexp.MustCompile("\r\n|\n").Split(content, -1)
+	for i := info.GetStartingLineNo(); i < info.GetEndLineNo(); i++ {
+		parts = append(parts[:info.GetStartingLineNo()], parts[info.GetStartingLineNo()+1:]...)
 	}
-	return argsMap
+	parts[info.GetStartingLineNo()-1] = replacement
+	return strings.Join(parts, "\n")
 }
 
-func refactorConceptHeading(newConceptHeading string, oldConceptHeading string, oldConceptText string) string {
-	removeIdentifier := func(text string, identifier string) string {
-		if strings.HasPrefix(text, identifier) {
-			text = strings.TrimPrefix(text, identifier)
-		}
-		return text
+func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string) {
+	os.Create(conceptFileName)
+	content, _ := common.ReadFileContents(conceptFileName)
+	saveFile(conceptFileName, content+"\n"+concept, true)
+	saveFile(fileName, conceptUsageText, true)
+}
+
+func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step) (string, string) {
+	tokens, _ := new(specParser).generateTokens("* " + conceptName.GetName())
+	conceptStep, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
+	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &table{}}
+	extractor.extractSteps()
+	conceptStep.replaceArgsWithDynamic(conceptStep.args)
+	if extractor.table.isInitialized() {
+		extractor.conceptName += "\n" + formatTable(extractor.table)
 	}
-	newConceptHeading = removeIdentifier(newConceptHeading, "#")
-	oldConceptHeading = removeIdentifier(oldConceptHeading, "#")
-	agent, _ := getRefactorAgent(oldConceptHeading, newConceptHeading)
-	argsOrder := agent.createOrderOfArgs()
-	spec, _ := new(specParser).parse(SPEC_HEADING_TEMPLATE+oldConceptText, &conceptDictionary{})
-	oldConcept := spec.items[0].(*step)
-	tokens, _ := new(specParser).generateTokens("*" + newConceptHeading)
-	step, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
-	oldConcept.value = step.value
-	oldConcept.args = oldConcept.getArgsInOrder(*oldConcept, argsOrder)
-	value := formatStep(oldConcept)
-	return value
+	return strings.Replace(formatItem(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName
+}
+
+func (self *extractor) extractSteps() {
+	for _, step := range self.stepsToExtract {
+		tokens, _ := new(specParser).generateTokens("*" + step.GetName())
+		stepInConcept, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
+		if step.GetTable() != nil {
+			self.handleTable(stepInConcept, step)
+		}
+		stepInConcept.replaceArgsWithDynamic(self.conceptStep.args)
+		self.stepsInConcept += formatItem(stepInConcept)
+	}
+}
+
+func (self *extractor) handleTable(stepInConcept *step, step *gauge_messages.Step) {
+	stepInConcept.value += " {}"
+	table := TABLE
+	parameterType := gauge_messages.Parameter_Table
+	parameter := &gauge_messages.Parameter{Table: step.GetTable(), Name: &table, ParameterType: &parameterType}
+	stepArgs := createStepArgsFromProtoArguments([]*gauge_messages.Parameter{parameter})
+	self.addTableAsParam(step, stepArgs)
+	stepInConcept.args = append(stepInConcept.args, stepArgs[0])
+}
+
+func (self *extractor) addTableAsParam(step *gauge_messages.Step, args []*stepArg) {
+	if step.GetParamTableName() != "" {
+		self.conceptName = strings.Replace(self.conceptName, fmt.Sprintf("\"%s\"", step.GetParamTableName()), "", 1)
+		self.table = &args[0].table
+		args[0] = &stepArg{value: step.GetParamTableName(), argType: dynamic}
+	}
 }
