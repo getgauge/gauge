@@ -21,10 +21,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
 	flag "github.com/getgauge/mflag"
 	"io"
@@ -71,6 +71,7 @@ func main() {
 	if err != nil {
 		validGaugeProject = false
 	}
+	env.LoadEnv(*currentEnv, true)
 	initLoggers()
 	if *daemonize && validGaugeProject {
 		runInBackground()
@@ -206,7 +207,7 @@ func runInBackground() {
 			os.Exit(1)
 		}
 	} else {
-		loadGaugeEnvironment()
+		env.LoadEnv(*currentEnv, false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
 			log.Critical("Failed to start API Service. %s \n", err.Error())
@@ -268,8 +269,7 @@ func addPluginToProject(pluginName string) {
 }
 
 func executeSpecs(inParallel bool) {
-	loadGaugeEnvironment()
-	initLoggers()
+	env.LoadEnv(*currentEnv, false)
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 	specsToExecute, specsSkipped := getSpecsToExecute(conceptsDictionary)
@@ -478,49 +478,6 @@ func createProjectTemplate(language string) error {
 	return executeInitHookForRunner(language)
 }
 
-// Loads all the properties files available in the specified env directory
-func loadEnvironment(env string) error {
-	var err error
-	var envDir string
-	if len(flag.Args()) == 0 {
-		envDir, err = common.GetDirInProject(common.EnvDirectoryName, "")
-	} else {
-		envDir, err = common.GetDirInProject(common.EnvDirectoryName, getSpecName(flag.Args()[0]))
-	}
-	if err != nil {
-		log.Critical("Failed to Load environment: %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	dirToRead := path.Join(envDir, env)
-	if !common.DirExists(dirToRead) {
-		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
-	}
-
-	isProperties := func(fileName string) bool {
-		return filepath.Ext(fileName) == ".properties"
-	}
-
-	err = filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
-		if isProperties(path) {
-			p, e := properties.Load(path)
-			if e != nil {
-				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, e.Error()))
-			}
-
-			for k, v := range p {
-				err := common.SetEnvVariable(k, v)
-				if err != nil {
-					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
-				}
-			}
-		}
-		return nil
-	})
-
-	return err
-}
-
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
 		if !result.ok {
@@ -533,25 +490,6 @@ func handleParseResult(results ...*parseResult) {
 			}
 		}
 	}
-}
-
-func loadGaugeEnvironment() {
-	// Loading default environment and loading user specified env
-	// this way user specified env variable can override default if required
-	err := loadEnvironment(envDefaultDirName)
-	if err != nil {
-		log.Critical("Failed to load the default environment. %s\n", err.Error())
-		os.Exit(1)
-	}
-
-	if *currentEnv != envDefaultDirName {
-		err := loadEnvironment(*currentEnv)
-		if err != nil {
-			log.Critical("Failed to load the environment: %s. %s\n", *currentEnv, err.Error())
-			os.Exit(1)
-		}
-	}
-
 }
 
 func startRunnerAndMakeConnection(manifest *manifest, writer executionLogger) (*testRunner, error) {

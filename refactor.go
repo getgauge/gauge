@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
@@ -199,7 +200,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 }
 
 func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
-	loadGaugeEnvironment()
+	env.LoadEnv(*currentEnv, false)
 	startAPIService(0)
 	testRunner, err := startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
 	if err != nil {
