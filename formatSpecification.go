@@ -35,6 +35,10 @@ func (formatter *formatter) dataTable(table *table) {
 	formatter.buffer.WriteString(formatTable(table))
 }
 
+func (formatter *formatter) externalDataTable(extDataTable *dataTable) {
+	formatter.buffer.WriteString(formatExternalDataTable(extDataTable))
+}
+
 func (formatter *formatter) contextStep(step *step) {
 	formatter.step(step)
 }

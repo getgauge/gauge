@@ -169,6 +169,16 @@ func formatTags(tags *tags) string {
 	return string(b.Bytes())
 }
 
+func formatExternalDataTable(dataTable *dataTable) string {
+	if dataTable == nil || len(dataTable.value) == 0 {
+		return ""
+	}
+	var b bytes.Buffer
+	b.WriteString(dataTable.value)
+	b.WriteString("\n")
+	return string(b.Bytes())
+}
+
 func formatSpecification(specification *specification) string {
 	var formattedSpec bytes.Buffer
 	formatter := &formatter{buffer: formattedSpec}

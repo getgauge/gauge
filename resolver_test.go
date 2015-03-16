@@ -79,7 +79,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable, 0)
+	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").value, Equals, "123")
@@ -113,7 +113,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept1 := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable, 0)
+	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").value, Equals, "123")

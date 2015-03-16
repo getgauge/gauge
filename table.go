@@ -30,6 +30,13 @@ type table struct {
 	lineNo         int
 }
 
+type dataTable struct {
+	table      table
+	value      string
+	lineNo     int
+	isExternal bool
+}
+
 type tableCell struct {
 	value    string
 	cellType argType
@@ -37,6 +44,10 @@ type tableCell struct {
 
 func (table *table) isInitialized() bool {
 	return table.headerIndexMap != nil
+}
+
+func (dataTable *dataTable) isInitialized() bool {
+	return dataTable.table.headerIndexMap != nil
 }
 
 func (table *table) String() string {
@@ -128,6 +139,10 @@ func (table *table) getRowCount() int {
 
 func (table *table) kind() tokenKind {
 	return tableKind
+}
+
+func (externalTable *dataTable) kind() tokenKind {
+	return dataTableKind
 }
 
 func getTableCell(value string) tableCell {

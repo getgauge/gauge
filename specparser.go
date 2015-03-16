@@ -86,7 +86,7 @@ const (
 	tableRow
 	headingKind
 	tableKind
-	keywordKind
+	dataTableKind
 )
 
 func (parser *specParser) initialize() {
@@ -98,7 +98,7 @@ func (parser *specParser) initialize() {
 	parser.processors[tagKind] = processTag
 	parser.processors[tableHeader] = processTable
 	parser.processors[tableRow] = processTable
-	parser.processors[keywordKind] = processKeyword
+	parser.processors[dataTableKind] = processDataTable
 }
 
 func (parser *specParser) parse(specText string, conceptDictionary *conceptDictionary) (*specification, *parseResult) {
@@ -137,8 +137,8 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, tableRow, tableHeader)
 			newToken = &token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
-		} else if value, found := parser.isKeyword(trimmedLine); found {
-			newToken = &token{kind: keywordKind, lineNo: parser.lineNo, lineText: line, value: value}
+		} else if value, found := parser.isDataTable(trimmedLine); found {
+			newToken = &token{kind: dataTableKind, lineNo: parser.lineNo, lineText: line, value: value}
 		} else {
 			newToken = &token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
 		}
@@ -209,14 +209,14 @@ func (parser *specParser) isSpecUnderline(text string) bool {
 
 }
 
-func (parser *specParser) isKeyword(text string) (string, bool) {
+func (parser *specParser) isDataTable(text string) (string, bool) {
 	lowerCased := strings.ToLower
 	tableColon := "table:"
 	tableSpaceColon := "table :"
 	if strings.HasPrefix(lowerCased(text), tableColon) {
-		return tableColon + strings.Replace(lowerCased(text), tableColon, "", 1), true
+		return tableColon + " " + strings.TrimSpace(strings.Replace(lowerCased(text), tableColon, "", 1)), true
 	} else if strings.HasPrefix(lowerCased(text), tableSpaceColon) {
-		return tableColon + strings.Replace(lowerCased(text), tableSpaceColon, "", 1), true
+		return tableColon + " " + strings.TrimSpace(strings.Replace(lowerCased(text), tableSpaceColon, "", 1)), true
 	}
 	return "", false
 }
@@ -240,8 +240,8 @@ func processSpec(parser *specParser, token *token) (*parseError, bool) {
 	return nil, false
 }
 
-func processKeyword(parser *specParser, token *token) (*parseError, bool) {
-	if len(strings.Replace(token.value, "table:", "", 1)) == 0 {
+func processDataTable(parser *specParser, token *token) (*parseError, bool) {
+	if len(strings.TrimSpace(strings.Replace(token.value, "table:", "", 1))) == 0 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table location not specified"}, true
 	}
 	resolvedArg, err := newSpecialTypeResolver().resolve(token.value)

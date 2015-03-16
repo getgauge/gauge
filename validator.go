@@ -139,3 +139,7 @@ func (self *specValidator) scenarioHeading(heading *heading) {
 func (self *specValidator) comment(comment *comment) {
 
 }
+
+func (self *specValidator) externalDataTable(dataTable *dataTable) {
+
+}

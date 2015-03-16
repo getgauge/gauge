@@ -207,21 +207,21 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 
 	c.Assert(len(spec.items), Equals, 3)
 	c.Assert(spec.items[0], Equals, spec.comments[0])
-	c.Assert(spec.items[1], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[1], DeepEquals, &spec.dataTable.table)
 	c.Assert(spec.items[2], Equals, spec.comments[1])
 
 	c.Assert(result.ok, Equals, true)
 	c.Assert(spec.dataTable, NotNil)
-	c.Assert(len(spec.dataTable.get("id")), Equals, 2)
-	c.Assert(len(spec.dataTable.get("name")), Equals, 2)
-	c.Assert(spec.dataTable.get("id")[0].value, Equals, "1")
-	c.Assert(spec.dataTable.get("id")[0].cellType, Equals, static)
-	c.Assert(spec.dataTable.get("id")[1].value, Equals, "2")
-	c.Assert(spec.dataTable.get("id")[1].cellType, Equals, static)
-	c.Assert(spec.dataTable.get("name")[0].value, Equals, "foo")
-	c.Assert(spec.dataTable.get("name")[0].cellType, Equals, static)
-	c.Assert(spec.dataTable.get("name")[1].value, Equals, "bar")
-	c.Assert(spec.dataTable.get("name")[1].cellType, Equals, static)
+	c.Assert(len(spec.dataTable.table.get("id")), Equals, 2)
+	c.Assert(len(spec.dataTable.table.get("name")), Equals, 2)
+	c.Assert(spec.dataTable.table.get("id")[0].value, Equals, "1")
+	c.Assert(spec.dataTable.table.get("id")[0].cellType, Equals, static)
+	c.Assert(spec.dataTable.table.get("id")[1].value, Equals, "2")
+	c.Assert(spec.dataTable.table.get("id")[1].cellType, Equals, static)
+	c.Assert(spec.dataTable.table.get("name")[0].value, Equals, "foo")
+	c.Assert(spec.dataTable.table.get("name")[0].cellType, Equals, static)
+	c.Assert(spec.dataTable.table.get("name")[1].value, Equals, "bar")
+	c.Assert(spec.dataTable.table.get("name")[1].cellType, Equals, static)
 }
 
 func (s *MySuite) TestStepWithInlineTable(c *C) {
@@ -629,7 +629,7 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(result.ok, Equals, true)
 
 	c.Assert(len(spec.items), Equals, 2)
-	c.Assert(spec.items[0], DeepEquals, &spec.dataTable)
+	c.Assert(spec.items[0], DeepEquals, &spec.dataTable.table)
 	c.Assert(spec.items[1], Equals, spec.scenarios[0])
 
 	scenarioItems := (spec.items[1]).(*scenario).items

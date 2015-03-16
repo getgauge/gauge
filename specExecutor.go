@@ -88,7 +88,7 @@ func (specExecutor *specExecutor) execute() *specResult {
 		for _, step := range specExecutor.specification.contexts {
 			specExecutor.writer.Step(step)
 		}
-		dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
+		dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
 			specExecutor.specResult.addScenarioResults(scenarioResult)
@@ -107,7 +107,7 @@ func (specExecutor *specExecutor) execute() *specResult {
 
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*scenarioResult
-	dataTableRowCount := specExecutor.specification.dataTable.getRowCount()
+	dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
 	for specExecutor.dataTableIndex = 0; specExecutor.dataTableIndex < dataTableRowCount; specExecutor.dataTableIndex++ {
 		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
 	}
@@ -276,7 +276,7 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 }
 
 func (executor *specExecutor) dataTableLookup() *argLookup {
-	return new(argLookup).fromDataTableRow(&executor.specification.dataTable, executor.dataTableIndex)
+	return new(argLookup).fromDataTableRow(&executor.specification.dataTable.table, executor.dataTableIndex)
 }
 
 func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
@@ -414,7 +414,7 @@ func (executor *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoS
 }
 
 func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.dataTable.get(columnName)[executor.dataTableIndex].value
+	return executor.specification.dataTable.table.get(columnName)[executor.dataTableIndex].value
 }
 
 func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message, writer executionLogger) *gauge_messages.ProtoExecutionResult {

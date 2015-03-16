@@ -21,6 +21,7 @@ type specTraverser interface {
 	specHeading(*heading)
 	specTags(*tags)
 	dataTable(*table)
+	externalDataTable(*dataTable)
 	contextStep(*step)
 	scenario(*scenario)
 	scenarioHeading(*heading)
@@ -51,6 +52,12 @@ func (spec *specification) traverse(traverser specTraverser) {
 			traverser.dataTable(item.(*table))
 		case tagKind:
 			traverser.specTags(item.(*tags))
+		case dataTableKind:
+			if !item.(*dataTable).isExternal {
+				traverser.dataTable(&item.(*dataTable).table)
+			} else {
+				traverser.externalDataTable(item.(*dataTable))
+			}
 		}
 	}
 }

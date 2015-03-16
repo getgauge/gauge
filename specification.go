@@ -179,7 +179,7 @@ type specification struct {
 	heading   *heading
 	scenarios []*scenario
 	comments  []*comment
-	dataTable table
+	dataTable dataTable
 	contexts  []*step
 	fileName  string
 	tags      *tags
@@ -357,12 +357,16 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 	})
 
 	keywordConverter := converterFn(func(token *token, state *int) bool {
-		return token.kind == keywordKind
+		return token.kind == dataTableKind
 	}, func(token *token, spec *specification, state *int) parseResult {
 		resolvedArg, _ := newSpecialTypeResolver().resolve(token.value)
 		if isInState(*state, specScope) && !spec.dataTable.isInitialized() {
-			resolvedArg.table.lineNo = token.lineNo
-			spec.addDataTable(&resolvedArg.table)
+			externalTable := &dataTable{}
+			externalTable.table = resolvedArg.table
+			externalTable.lineNo = token.lineNo
+			externalTable.value = token.value
+			externalTable.isExternal = true
+			spec.addExternalDataTable(externalTable)
 		} else if isInState(*state, specScope) && spec.dataTable.isInitialized() {
 			value := "Multiple data table present, ignoring table"
 			spec.addComment(&comment{token.lineText, token.lineNo})
@@ -388,7 +392,7 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 			latestContext := spec.latestContext()
 			addInlineTableHeader(latestContext, token)
 		} else if !isInState(*state, scenarioScope) {
-			if !spec.dataTable.isInitialized() {
+			if !spec.dataTable.table.isInitialized() {
 				dataTable := &table{}
 				dataTable.lineNo = token.lineNo
 				dataTable.addHeaders(token.args)
@@ -425,13 +429,13 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.latestScenario()
 			latestStep := latestScenario.latestStep()
-			result = addInlineTableRow(latestStep, token, new(argLookup).fromDataTable(&spec.dataTable))
+			result = addInlineTableRow(latestStep, token, new(argLookup).fromDataTable(&spec.dataTable.table))
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.latestContext()
-			result = addInlineTableRow(latestContext, token, new(argLookup).fromDataTable(&spec.dataTable))
+			result = addInlineTableRow(latestContext, token, new(argLookup).fromDataTable(&spec.dataTable.table))
 		} else {
 			//todo validate datatable rows also
-			spec.dataTable.addRowValues(token.args)
+			spec.dataTable.table.addRowValues(token.args)
 			result = parseResult{ok: true}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tableScope)
@@ -458,7 +462,7 @@ func (specParser *specParser) initializeConverters() []func(*token, *int, *speci
 }
 
 func (spec *specification) createStep(stepToken *token) (*step, *parseDetailResult) {
-	dataTableLookup := new(argLookup).fromDataTable(&spec.dataTable)
+	dataTableLookup := new(argLookup).fromDataTable(&spec.dataTable.table)
 	stepToAdd, parseDetails := spec.createStepUsingLookup(stepToken, dataTableLookup)
 
 	if parseDetails != nil && parseDetails.error != nil {
@@ -552,8 +556,13 @@ func (specification *specification) addComment(comment *comment) {
 }
 
 func (specification *specification) addDataTable(table *table) {
-	specification.dataTable = *table
+	specification.dataTable.table = *table
 	specification.addItem(table)
+}
+
+func (specification *specification) addExternalDataTable(externalTable *dataTable) {
+	specification.dataTable = *externalTable
+	specification.addItem(externalTable)
 }
 
 func (specification *specification) addTags(tags *tags) {
@@ -576,7 +585,7 @@ func (specParser *specParser) validateSpec(specification *specification) *parseE
 	if specification.heading == nil {
 		return &parseError{lineNo: 1, message: "Spec heading not found"}
 	}
-	dataTable := specification.dataTable
+	dataTable := specification.dataTable.table
 	if dataTable.isInitialized() && dataTable.getRowCount() == 0 {
 		return &parseError{lineNo: dataTable.lineNo, message: "Data table should have at least 1 data row"}
 	}
