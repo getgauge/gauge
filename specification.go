@@ -141,6 +141,16 @@ func (step *step) deepCopyStepArgs() []*stepArg {
 	return copiedStepArgs
 }
 
+func (step *step) replaceArgsWithDynamic(args []*stepArg) {
+	for i, arg := range step.args {
+		for _, conceptArg := range args {
+			if arg.String() == conceptArg.String() {
+				step.args[i] = &stepArg{value: conceptArg.value, argType: dynamic}
+			}
+		}
+	}
+}
+
 func createStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *step {
 	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
 	step := &step{value: stepReq.GetParsedStepText(),

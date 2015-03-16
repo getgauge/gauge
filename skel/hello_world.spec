@@ -26,7 +26,7 @@ This is the second scenario in this specification
 * Step that takes a table
     |Product|       Description           |
     |-------|-----------------------------|
-    |Gauge  |BDD style testing with ease  |
+    |Gauge  |Test automation with ease    |
     |Mingle |Agile project management     |
     |Snap   |Hosted continuous integration|
     |Gocd   |Continuous delivery platform |
