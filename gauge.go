@@ -273,6 +273,9 @@ func executeSpecs(inParallel bool) {
 	conceptsDictionary, conceptParseResult := createConceptsDictionary(false)
 	handleParseResult(conceptParseResult)
 	specsToExecute, specsSkipped := getSpecsToExecute(conceptsDictionary)
+	if len(specsToExecute) == 0 {
+		printExecutionStatus(nil, 0)
+	}
 	manifest := getProjectManifest(getCurrentExecutionLogger())
 	err := startAPIService(0)
 	if err != nil {
@@ -522,7 +525,10 @@ func startRunnerAndMakeConnection(manifest *manifest, writer executionLogger) (*
 func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
-
+	if suiteResult == nil {
+		log.Info("No specifications found.")
+		os.Exit(0)
+	}
 	noOfSpecificationsExecuted := len(suiteResult.specResults)
 	noOfScenariosExecuted := 0
 	noOfSpecificationsFailed := suiteResult.specsFailedCount
