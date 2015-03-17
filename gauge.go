@@ -305,6 +305,9 @@ func executeSpecs(inParallel bool) {
 }
 
 func getDataTableRows(rowCount int) indexRange {
+	if *tableRows == "" {
+		return indexRange{start: 0, end: rowCount - 1}
+	}
 	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
 	if err != nil {
 		log.Critical("Table rows validation failed. %s\n", err.Error())
