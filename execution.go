@@ -103,7 +103,7 @@ func (exe *simpleExecution) start() *suiteResult {
 		exe.suiteResult.setFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer)
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.dataTable.table.getRowCount()))
 			protoSpecResult := executor.execute()
 			exe.suiteResult.addSpecResult(protoSpecResult)
 		}
@@ -129,8 +129,8 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger) *specExecutor {
+func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger, tableRows indexRange) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, writer)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, writer, tableRows)
 	return specExecutor
 }

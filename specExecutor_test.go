@@ -40,7 +40,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -80,7 +80,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -134,10 +134,10 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 
 	// For first row
-	specExecutor.dataTableIndex = 0
+	specExecutor.currentTableRow = 0
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
@@ -164,7 +164,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	c.Assert(params[0].GetValue(), Equals, "8800")
 
 	// For second row
-	specExecutor.dataTableIndex = 1
+	specExecutor.currentTableRow = 1
 	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
 	checkConceptParameterValuesInOrder(c, protoConcept, "666", "bar", "9900")
@@ -198,4 +198,45 @@ func checkConceptParameterValuesInOrder(c *C, concept *gauge_messages.ProtoConce
 		c.Assert(param.GetValue(), Equals, paramValues[i])
 	}
 
+}
+
+func (s *MySuite) TestToGetDataTableRowsRangeFromInputFlag(c *C) {
+	rowsRange, err := getDataTableRowsRange("5-6", 7)
+	c.Assert(err, Equals, nil)
+	c.Assert(rowsRange.start, Equals, 4)
+	c.Assert(rowsRange.end, Equals, 5)
+}
+
+func (s *MySuite) TestToGetDataTableRow(c *C) {
+	rowsRange, err := getDataTableRowsRange("5", 7)
+	c.Assert(err, Equals, nil)
+	c.Assert(rowsRange.start, Equals, 4)
+	c.Assert(rowsRange.end, Equals, 4)
+}
+
+func (s *MySuite) TestToGetDataTableRowFromInvalidInput(c *C) {
+	_, err := getDataTableRowsRange("a", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("a-5", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("a-qwerty", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("aas-helloo", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("apoorva", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("8-9", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("12-9", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4:5", 6)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4-5-8", 6)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4", 3)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("0", 3)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("", 3)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
 }

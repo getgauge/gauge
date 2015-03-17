@@ -18,28 +18,38 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
+	"strconv"
+	"strings"
 )
 
 type specExecutor struct {
 	specification        *specification
-	dataTableIndex       int
+	dataTableIndex       indexRange
 	runner               *testRunner
 	conceptDictionary    *conceptDictionary
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *specResult
 	writer               executionLogger
+	currentTableRow      int
 }
 
-func (specExecutor *specExecutor) initialize(specificationToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger) {
+type indexRange struct {
+	start int
+	end   int
+}
+
+func (specExecutor *specExecutor) initialize(specificationToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger, tableRows indexRange) {
 	specExecutor.specification = specificationToExecute
 	specExecutor.runner = runner
 	specExecutor.pluginHandler = pluginHandler
 	specExecutor.writer = writer
+	specExecutor.dataTableIndex = tableRows
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -107,8 +117,8 @@ func (specExecutor *specExecutor) execute() *specResult {
 
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*scenarioResult
-	dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
-	for specExecutor.dataTableIndex = 0; specExecutor.dataTableIndex < dataTableRowCount; specExecutor.dataTableIndex++ {
+	//	dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
+	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
 		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
 	}
 	specExecutor.specResult.addTableDrivenScenarioResult(dataTableScenarioExecutionResult)
@@ -276,7 +286,7 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 }
 
 func (executor *specExecutor) dataTableLookup() *argLookup {
-	return new(argLookup).fromDataTableRow(&executor.specification.dataTable.table, executor.dataTableIndex)
+	return new(argLookup).fromDataTableRow(&executor.specification.dataTable.table, executor.currentTableRow)
 }
 
 func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
@@ -414,7 +424,7 @@ func (executor *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoS
 }
 
 func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.dataTable.table.get(columnName)[executor.dataTableIndex].value
+	return executor.specification.dataTable.table.get(columnName)[executor.currentTableRow].value
 }
 
 func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message, writer executionLogger) *gauge_messages.ProtoExecutionResult {
@@ -496,4 +506,37 @@ func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Param
 		}
 	}
 	return parameters
+}
+
+func getDataTableRowsRange(tableRows string, rowCount int) (indexRange, error) {
+	var startIndex, endIndex int
+	var err error
+	indexRanges := strings.Split(tableRows, "-")
+	if len(indexRanges) == 2 {
+		startIndex, endIndex, err = validateTableRowsRange(indexRanges[0], indexRanges[1], rowCount)
+	} else if len(indexRanges) == 1 {
+		startIndex, endIndex, err = validateTableRowsRange(tableRows, tableRows, rowCount)
+	} else {
+		return indexRange{start: 0, end: 0}, errors.New("Table rows range validation failed.")
+	}
+	if err != nil {
+		return indexRange{start: 0, end: 0}, err
+	}
+	return indexRange{start: startIndex, end: endIndex}, nil
+}
+
+func validateTableRowsRange(start string, end string, rowCount int) (int, int, error) {
+	message := "Table rows range validation failed."
+	startRow, err := strconv.Atoi(start)
+	if err != nil {
+		return 0, 0, errors.New(message)
+	}
+	endRow, err := strconv.Atoi(end)
+	if err != nil {
+		return 0, 0, errors.New(message)
+	}
+	if startRow > endRow || endRow > rowCount || startRow < 1 || endRow < 1 {
+		return 0, 0, errors.New(message)
+	}
+	return startRow - 1, endRow - 1, nil
 }

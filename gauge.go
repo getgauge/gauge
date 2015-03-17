@@ -154,6 +154,7 @@ var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified plu
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
+var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
@@ -301,6 +302,15 @@ func executeSpecs(inParallel bool) {
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
+}
+
+func getDataTableRows(rowCount int) indexRange {
+	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
+	if err != nil {
+		log.Critical("Table rows validation failed. %s\n", err.Error())
+		os.Exit(1)
+	}
+	return indexes
 }
 
 func shuffleSpecs(allSpecs []*specification) []*specification {
