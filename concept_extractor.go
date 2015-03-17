@@ -38,10 +38,12 @@ type extractor struct {
 	stepsToExtract []*gauge_messages.Step
 	stepsInConcept string
 	table          *table
+	fileContent    string
 }
 
 func extractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
-	concept, conceptUsageText := getExtractedConcept(conceptName, steps)
+	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
+	concept, conceptUsageText, _ := getExtractedConcept(conceptName, steps, content)
 	specText := ReplaceExtractedStepsWithConcept(selectedTextInfo, conceptUsageText)
 	writeConceptToFile(concept, specText, conceptFileName, selectedTextInfo.GetFileName())
 	return true, errors.New(""), []string{}
@@ -68,23 +70,29 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 	saveFile(fileName, conceptUsageText, true)
 }
 
-func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step) (string, string) {
+func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string) (string, string, error) {
 	tokens, _ := new(specParser).generateTokens("* " + conceptName.GetName())
 	conceptStep, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
-	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &table{}}
+	spec, result := new(specParser).parse(content, &conceptDictionary{})
+	if !result.ok {
+		return "", "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.error))
+	}
+	spec.scenarios = []*scenario{}
+	specText := formatSpecification(spec) + "\n##hello \n* step \n"
+	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &table{}, fileContent: specText}
 	extractor.extractSteps()
 	conceptStep.replaceArgsWithDynamic(conceptStep.args)
 	if extractor.table.isInitialized() {
 		extractor.conceptName += "\n" + formatTable(extractor.table)
 	}
-	return strings.Replace(formatItem(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName
+	return strings.Replace(formatItem(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName, nil
 }
 
 func (self *extractor) extractSteps() {
 	for _, step := range self.stepsToExtract {
 		tokens, _ := new(specParser).generateTokens("*" + step.GetName())
 		stepInConcept, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
-		if step.GetTable() != nil {
+		if step.GetTable() != "" {
 			self.handleTable(stepInConcept, step)
 		}
 		stepInConcept.replaceArgsWithDynamic(self.conceptStep.args)
@@ -94,10 +102,9 @@ func (self *extractor) extractSteps() {
 
 func (self *extractor) handleTable(stepInConcept *step, step *gauge_messages.Step) {
 	stepInConcept.value += " {}"
-	table := TABLE
-	parameterType := gauge_messages.Parameter_Table
-	parameter := &gauge_messages.Parameter{Table: step.GetTable(), Name: &table, ParameterType: &parameterType}
-	stepArgs := createStepArgsFromProtoArguments([]*gauge_messages.Parameter{parameter})
+	specText := self.fileContent + step.GetTable()
+	spec, _ := new(specParser).parse(specText, &conceptDictionary{})
+	stepArgs := []*stepArg{spec.scenarios[0].steps[0].args[0]}
 	self.addTableAsParam(step, stepArgs)
 	stepInConcept.args = append(stepInConcept.args, stepArgs[0])
 }

@@ -571,7 +571,7 @@ type Step struct {
 	// / name of the step
 	Name *string `protobuf:"bytes,1,req,name=name" json:"name,omitempty"`
 	// /  table present in step as parameter
-	Table *ProtoTable `protobuf:"bytes,2,opt,name=table" json:"table,omitempty"`
+	Table *string `protobuf:"bytes,2,opt,name=table" json:"table,omitempty"`
 	// / name of table in concept heading, if it comes as a param to concept
 	ParamTableName   *string `protobuf:"bytes,3,opt,name=paramTableName" json:"paramTableName,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -588,11 +588,11 @@ func (m *Step) GetName() string {
 	return ""
 }
 
-func (m *Step) GetTable() *ProtoTable {
-	if m != nil {
-		return m.Table
+func (m *Step) GetTable() string {
+	if m != nil && m.Table != nil {
+		return *m.Table
 	}
-	return nil
+	return ""
 }
 
 func (m *Step) GetParamTableName() string {
