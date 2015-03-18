@@ -64,8 +64,11 @@ func replaceText(content string, info *gauge_messages.TextInfo, replacement stri
 }
 
 func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string) {
-	os.Create(conceptFileName)
+	if _, err := os.Stat(conceptFileName); os.IsNotExist(err) {
+		os.Create(conceptFileName)
+	}
 	content, _ := common.ReadFileContents(conceptFileName)
+	log.Info(content)
 	saveFile(conceptFileName, content+"\n"+concept, true)
 	saveFile(fileName, conceptUsageText, true)
 }
@@ -73,12 +76,10 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string) (string, string, error) {
 	tokens, _ := new(specParser).generateTokens("* " + conceptName.GetName())
 	conceptStep, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
-	spec, result := new(specParser).parse(content, &conceptDictionary{})
-	if !result.ok {
-		return "", "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.error))
+	specText, err := getContentWithDataTable(content)
+	if err != nil {
+		return "", "", err
 	}
-	spec.scenarios = []*scenario{}
-	specText := formatSpecification(spec) + "\n##hello \n* step \n"
 	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &table{}, fileContent: specText}
 	extractor.extractSteps()
 	conceptStep.replaceArgsWithDynamic(conceptStep.args)
@@ -86,6 +87,18 @@ func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messag
 		extractor.conceptName += "\n" + formatTable(extractor.table)
 	}
 	return strings.Replace(formatItem(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName, nil
+}
+
+func getContentWithDataTable(content string) (string, error) {
+	spec, result := new(specParser).parse(content, &conceptDictionary{})
+	if !result.ok {
+		return "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.error))
+	}
+	if spec.dataTable.isInitialized() {
+		spec = &specification{items: []item{&spec.dataTable}, heading: &heading{value: "SPECHEADING"}}
+	}
+	spec = &specification{heading: &heading{value: "SPECHEADING"}}
+	return formatSpecification(spec) + "\n##hello \n* step \n", nil
 }
 
 func (self *extractor) extractSteps() {
@@ -111,7 +124,7 @@ func (self *extractor) handleTable(stepInConcept *step, step *gauge_messages.Ste
 
 func (self *extractor) addTableAsParam(step *gauge_messages.Step, args []*stepArg) {
 	if step.GetParamTableName() != "" {
-		self.conceptName = strings.Replace(self.conceptName, fmt.Sprintf("\"%s\"", step.GetParamTableName()), "", 1)
+		self.conceptName = strings.Replace(self.conceptName, fmt.Sprintf("<%s>", step.GetParamTableName()), "", 1)
 		self.table = &args[0].table
 		args[0] = &stepArg{value: step.GetParamTableName(), argType: dynamic}
 	}

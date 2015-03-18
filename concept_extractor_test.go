@@ -64,7 +64,7 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParameters(c *C) {
 
 func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
 	STEP := "step that takes a table"
-	name := "concept with \"table1\""
+	name := "concept with <table1>"
 	conceptName := &gauge_messages.Step{Name: &name}
 	tableName := TABLE + "1"
 	table := `	|id|name|
@@ -86,7 +86,7 @@ func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
 
 func (s *MySuite) TestExtractConceptWithTableAsArgAndTableWithDynamicArgs(c *C) {
 	STEP := "step that takes a table"
-	name := "concept with \"table1\""
+	name := "concept with <table1>"
 	conceptName := &gauge_messages.Step{Name: &name}
 	tableName := TABLE + "1"
 	table := `	|id|name|
@@ -95,7 +95,7 @@ func (s *MySuite) TestExtractConceptWithTableAsArgAndTableWithDynamicArgs(c *C) 
 	|2 |bar |
 	`
 	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName},
-		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}}, "# sdfdsf\n\n|foo|name|\n|hey|hello|\n\n")
+		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}}, "# sdfdsf\n\n|foo|name|\n|hey|hello|\n\n ##helloasdasdasd\n\n")
 
 	c.Assert(concept, Equals, "# concept with <table1>\n* step that takes a table <table1>\n* step that takes a table <table1>\n")
 	c.Assert(conceptText, Equals, "* concept with "+`
@@ -108,7 +108,7 @@ func (s *MySuite) TestExtractConceptWithTableAsArgAndTableWithDynamicArgs(c *C) 
 
 func (s *MySuite) TestExtractConceptWithSkippedTableAsArg(c *C) {
 	STEP := "step that takes a table"
-	name := "concept with \"table1\""
+	name := "concept with <table1>"
 	conceptName := &gauge_messages.Step{Name: &name}
 	tableName := TABLE + "1"
 	table := `	|id|name|
