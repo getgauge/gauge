@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/util"
 	flag "github.com/getgauge/mflag"
 	"io"
 	"io/ioutil"
@@ -46,12 +47,6 @@ const (
 	envDefaultDirName = "default"
 )
 
-func init() {
-	acceptedExtensions[".spec"] = true
-	acceptedExtensions[".md"] = true
-}
-
-var acceptedExtensions = make(map[string]bool)
 var defaultPlugins = []string{"html-report"}
 
 type manifest struct {
@@ -705,8 +700,8 @@ func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *pars
 func getSpecFiles(specSource string) []string {
 	specFiles := make([]string, 0)
 	if common.DirExists(specSource) {
-		specFiles = append(specFiles, findSpecsFilesIn(specSource)...)
-	} else if common.FileExists(specSource) && isValidSpecExtension(specSource) {
+		specFiles = append(specFiles, util.FindSpecFilesIn(specSource)...)
+	} else if common.FileExists(specSource) && util.IsValidSpecExtension(specSource) {
 		specFile, _ := filepath.Abs(specSource)
 		specFiles = append(specFiles, specFile)
 	}

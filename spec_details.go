@@ -18,10 +18,13 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
+	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
@@ -34,6 +37,7 @@ type specInfoGatherer struct {
 	specStepMapCache  map[string][]*step
 	conceptInfos      []*gauge_messages.ConceptInfo
 	mutex             sync.Mutex
+	projectRoot       string
 }
 
 func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) {
@@ -52,7 +56,26 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
 
+func (specInfoGatherer *specInfoGatherer) getAllTags() map[string]bool {
+	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
+	dictionary, _ := createConceptsDictionary(true)
+	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
+	allTags := make(map[string]bool, 0)
+	for _, spec := range specInfoGatherer.availableSpecs {
+		for _, value := range spec.tags.values {
+			allTags[value] = true
+		}
+		for _, scenario := range spec.scenarios {
+			for _, value := range scenario.tags.values {
+				allTags[value] = true
+			}
+		}
+	}
+	return allTags
+}
+
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
+	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	specInfoGatherer.availableSpecs = specInfoGatherer.findSpecs(common.SpecsDirectoryName, dictionary)
 	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
@@ -60,7 +83,7 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][]*step {
 	allStepsInConcepts := make(map[string][]*step, 0)
-	conceptFiles := findConceptFiles()
+	conceptFiles := util.FindConceptFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	for _, conceptFile := range conceptFiles {
 		fileText, fileReadErr := common.ReadFileContents(conceptFile)
 		if fileReadErr != nil {

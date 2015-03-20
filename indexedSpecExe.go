@@ -18,6 +18,7 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/util"
 	"regexp"
 	"strconv"
 )
@@ -50,7 +51,7 @@ func getIndex(specSource string) []int {
 }
 
 func getTypeOfSpecFile(specSource string) string {
-	for ext, accepted := range acceptedExtensions {
+	for ext, accepted := range util.AcceptedExtensions {
 		if accepted {
 			re, _ := regexp.Compile(ext)
 			if re.FindStringSubmatchIndex(specSource) != nil {

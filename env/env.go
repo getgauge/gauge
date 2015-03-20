@@ -1,14 +1,14 @@
 package env
 
 import (
-	"os"
 	"errors"
-	"path/filepath"
-	"path"
 	"fmt"
-	"github.com/getgauge/common"
 	"github.com/dmotylev/goproperties"
+	"github.com/getgauge/common"
 	"github.com/op/go-logging"
+	"os"
+	"path"
+	"path/filepath"
 )
 
 const (
@@ -58,22 +58,21 @@ func loadEnvironment(env string) error {
 	}
 
 	err = filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
-			if isProperties(path) {
-				p, e := properties.Load(path)
-				if e != nil {
-					return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, e.Error()))
-				}
+		if isProperties(path) {
+			p, e := properties.Load(path)
+			if e != nil {
+				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, e.Error()))
+			}
 
-				for k, v := range p {
-					err := common.SetEnvVariable(k, v)
-					if err != nil {
-						return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
-					}
+			for k, v := range p {
+				err := common.SetEnvVariable(k, v)
+				if err != nil {
+					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
 				}
 			}
-			return nil
-		})
+		}
+		return nil
+	})
 
 	return err
 }
-
