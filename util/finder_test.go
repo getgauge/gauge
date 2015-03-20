@@ -5,8 +5,6 @@ import (
 	"io/ioutil"
 	"testing"
 	"os"
-	"fmt"
-	"path/filepath"
 )
 func Test(t *testing.T) { TestingT(t) }
 
