@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	SPEC_HEADING_TEMPLATE = "# S\n"
+	SPEC_HEADING_TEMPLATE = "# S\n\n"
 	TABLE                 = "table"
 )
 
@@ -42,11 +42,20 @@ type extractor struct {
 }
 
 func extractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
-	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
-	concept, conceptUsageText, _ := getExtractedConcept(conceptName, steps, content)
-	specText := ReplaceExtractedStepsWithConcept(selectedTextInfo, conceptUsageText)
-	writeConceptToFile(concept, specText, conceptFileName, selectedTextInfo.GetFileName())
+	content := SPEC_HEADING_TEMPLATE
+	if isSpecFile(selectedTextInfo.GetFileName()) {
+		content, _ = common.ReadFileContents(selectedTextInfo.GetFileName())
+	}
+	concept, conceptUsageText, err := getExtractedConcept(conceptName, steps, content)
+	if err != nil {
+		return false, err, []string{}
+	}
+	writeConceptToFile(concept, conceptUsageText, conceptFileName, selectedTextInfo.GetFileName(), selectedTextInfo)
 	return true, errors.New(""), []string{}
+}
+
+func isSpecFile(fileName string) bool {
+	return strings.HasSuffix(fileName, ".spec") || strings.HasSuffix(fileName, ".md")
 }
 
 func ReplaceExtractedStepsWithConcept(selectedTextInfo *gauge_messages.TextInfo, conceptText string) string {
@@ -63,14 +72,14 @@ func replaceText(content string, info *gauge_messages.TextInfo, replacement stri
 	return strings.Join(parts, "\n")
 }
 
-func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string) {
+func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string, info *gauge_messages.TextInfo) {
 	if _, err := os.Stat(conceptFileName); os.IsNotExist(err) {
 		os.Create(conceptFileName)
 	}
 	content, _ := common.ReadFileContents(conceptFileName)
-	log.Info(content)
 	saveFile(conceptFileName, content+"\n"+concept, true)
-	saveFile(fileName, conceptUsageText, true)
+	text := ReplaceExtractedStepsWithConcept(info, conceptUsageText)
+	saveFile(fileName, text, true)
 }
 
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string) (string, string, error) {
