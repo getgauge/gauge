@@ -47,7 +47,7 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	for i, specCollection := range specCollections {
 		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, newParallelExecutionConsoleWriter(i+1))
 	}
-	e.writer.Info("Preparing %s execution streams.", strconv.Itoa(e.numberOfExecutionStreams))
+	e.writer.Info("Executing in %s parallel streams.", strconv.Itoa(len(specCollections)))
 	suiteResults := make([]*suiteResult, 0)
 	for _, _ = range specCollections {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
