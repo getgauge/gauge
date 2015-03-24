@@ -52,9 +52,8 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
-	specFiles := findSpecsFilesIn(common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
-	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
+	specInfoGatherer.availableSpecs = specInfoGatherer.findSpecs(common.SpecsDirectoryName, dictionary)
 	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
 }
 
@@ -130,26 +129,18 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 	}
 	return steps
 }
-
-func (specInfoGatherer *specInfoGatherer) parseSpecFiles(specFiles []string, dictionary *conceptDictionary) []*specification {
-	specs := make([]*specification, 0)
-	for _, file := range specFiles {
-		specContent, err := common.ReadFileContents(file)
-		if err != nil {
-			apiLog.Error("Failed to read file content: %s %s", file, err)
-			continue
-		}
-		parser := new(specParser)
-		specification, result := parser.parse(specContent, dictionary)
-
-		if !result.ok {
-			apiLog.Error("Spec Parse failure: %s %s", file, result.error)
-			continue
-		}
-		specification.fileName = file
-		specs = append(specs, specification)
-	}
+func (specInfoGatherer *specInfoGatherer) findSpecs(specSource string, conceptDictionary *conceptDictionary) []*specification {
+	specs, parseResults := findSpecs(specSource, conceptDictionary)
+	specInfoGatherer.handleParseFailures(parseResults)
 	return specs
+}
+
+func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*parseResult) {
+	for _, result := range parseResults {
+		if !result.ok {
+			apiLog.Error("Spec Parse failure: %s", result.Error())
+		}
+	}
 }
 
 func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) map[string][]*step {
