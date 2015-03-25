@@ -237,6 +237,24 @@ func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_message
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
 }
 
+func createStepValue(step *step) stepValue {
+	stepValue := stepValue{stepValue: step.value}
+	args := make([]string, 0)
+	for _, arg := range step.args {
+		switch arg.argType {
+		case static, dynamic:
+			args = append(args, arg.value)
+		case tableArg:
+			args = append(args, "table")
+		case specialString, specialTable:
+			args = append(args, arg.name)
+		}
+	}
+	stepValue.args = args
+	stepValue.parameterizedStepValue = getParameterizeStepValue(stepValue.stepValue, args)
+	return stepValue
+}
+
 func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
 	stepValueWithPlaceHolders, args, err := processStepText(stepText)
 	if err != nil {

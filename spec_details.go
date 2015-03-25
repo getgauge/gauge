@@ -41,6 +41,7 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.specStepMapCache = make(map[string][]*step)
 	specInfoGatherer.stepsFromRunner = specInfoGatherer.getStepsFromRunner(runner)
 	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
+
 	newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
 	specInfoGatherer.conceptInfos = conceptInfos
 	specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
@@ -84,11 +85,8 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][
 func (specInfoGatherer *specInfoGatherer) createConceptInfos(dictionary *conceptDictionary) []*gauge_messages.ConceptInfo {
 	conceptInfos := make([]*gauge_messages.ConceptInfo, 0)
 	for _, concept := range dictionary.conceptsMap {
-		stepValue, err := extractStepValueAndParams(concept.conceptStep.lineText, concept.conceptStep.hasInlineTable)
-		if err != nil {
-			continue
-		}
-		conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: convertToProtoStepValue(stepValue), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
+		stepValue := createStepValue(concept.conceptStep)
+		conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: convertToProtoStepValue(&stepValue), Filepath: proto.String(concept.fileName), LineNumber: proto.Int(concept.conceptStep.lineNo)})
 	}
 	return conceptInfos
 }
@@ -99,6 +97,7 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 		specInfoGatherer.mutex.Lock()
 		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
 		specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
+
 		newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
 		specInfoGatherer.conceptInfos = conceptInfos
 		specInfoGatherer.addStepsToAvailableSteps(newSpecStepMap)
@@ -163,11 +162,9 @@ func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 			if step.isConcept {
 				continue
 			}
-			stepValue, err := extractStepValueAndParams(step.lineText, step.hasInlineTable)
-			if err == nil {
-				if _, ok := specInfoGatherer.availableStepsMap[stepValue.stepValue]; !ok {
-					specInfoGatherer.availableStepsMap[stepValue.stepValue] = stepValue
-				}
+			stepValue := createStepValue(step)
+			if _, ok := specInfoGatherer.availableStepsMap[stepValue.stepValue]; !ok {
+				specInfoGatherer.availableStepsMap[stepValue.stepValue] = &stepValue
 			}
 		}
 	}

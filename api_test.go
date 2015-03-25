@@ -39,7 +39,7 @@ func (s *MySuite) TestAddingTableParamAfterStepValueExtraction(c *C) {
 	args := stepValue.args
 	c.Assert(err, Equals, nil)
 	c.Assert(len(args), Equals, 1)
-	c.Assert(args[0], Equals, "table")
+	c.Assert(args[0], Equals, string(tableArg))
 	c.Assert(stepValue.stepValue, Equals, "a simple step {}")
 	c.Assert(stepValue.parameterizedStepValue, Equals, "a simple step <table>")
 }
@@ -71,4 +71,49 @@ func (s *MySuite) TestAfterStepValueExtractionForStepWithExistingParam(c *C) {
 	c.Assert(args[2], Equals, "file:specialParam")
 	c.Assert(stepValue.stepValue, Equals, "a {} step with multiple params {} {}")
 	c.Assert(stepValue.parameterizedStepValue, Equals, "a <param1> step with multiple params <param2> <file:specialParam>")
+}
+
+func (s *MySuite) TestCreateStepValueFromStep(c *C) {
+	step := &step{value: "simple step with {} and {}", args: []*stepArg{staticArg("hello"), dynamicArg("desc")}}
+	stepValue := createStepValue(step)
+
+	args := stepValue.args
+	c.Assert(len(args), Equals, 2)
+	c.Assert(args[0], Equals, "hello")
+	c.Assert(args[1], Equals, "desc")
+	c.Assert(stepValue.stepValue, Equals, "simple step with {} and {}")
+	c.Assert(stepValue.parameterizedStepValue, Equals, "simple step with <hello> and <desc>")
+}
+
+func (s *MySuite) TestCreateStepValueFromStepWithSpecialParams(c *C) {
+	step := &step{value: "a step with {}, {} and {}", args: []*stepArg{specialTableArg("hello"), specialStringArg("file:user.txt"), tableArgument()}}
+	stepValue := createStepValue(step)
+
+	args := stepValue.args
+	c.Assert(len(args), Equals, 3)
+	c.Assert(args[0], Equals, "hello")
+	c.Assert(args[1], Equals, "file:user.txt")
+	c.Assert(args[2], Equals, "table")
+	c.Assert(stepValue.stepValue, Equals, "a step with {}, {} and {}")
+	c.Assert(stepValue.parameterizedStepValue, Equals, "a step with <hello>, <file:user.txt> and <table>")
+}
+
+func staticArg(val string) *stepArg {
+	return &stepArg{argType: static, value: val}
+}
+
+func dynamicArg(val string) *stepArg {
+	return &stepArg{argType: dynamic, value: val}
+}
+
+func tableArgument() *stepArg {
+	return &stepArg{argType: tableArg}
+}
+
+func specialTableArg(val string) *stepArg {
+	return &stepArg{argType: specialTable, name: val}
+}
+
+func specialStringArg(val string) *stepArg {
+	return &stepArg{argType: specialString, name: val}
 }
