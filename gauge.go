@@ -240,7 +240,13 @@ func formatSpecFiles(filesToFormat string) {
 }
 
 func initializeProject(language string) {
-	err := createProjectTemplate(language)
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Critical("Failed to find working directory. %s\n", err.Error())
+		os.Exit(1)
+	}
+	config.ProjectRoot = wd
+	err = createProjectTemplate(language)
 	if err != nil {
 		log.Critical("Failed to initialize. %s\n", err.Error())
 		os.Exit(1)
