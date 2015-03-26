@@ -783,17 +783,17 @@ func handleWarningMessages(warnings []string) {
 }
 
 func printVersion() {
-	fmt.Printf("gauge : %s\n", currentGaugeVersion.String())
+	fmt.Printf("Gauge : %s\n", currentGaugeVersion.String())
 	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		fmt.Println("Could not get plugin details : ", err)
 		return
 	}
 	if len(allPluginsWithVersion) > 1 {
-		fmt.Println("Plugins:\n--------\n ")
+		fmt.Println("Plugins:\n-------- ")
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
-		fmt.Printf("%s (%s)\n", pluginInfo.name, pluginInfo.version.String())
+		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
 	}
 }
 
