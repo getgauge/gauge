@@ -789,11 +789,11 @@ func printVersion() {
 		fmt.Println("Could not get plugin details : ", err)
 		return
 	}
-	for i, pluginInfo := range allPluginsWithVersion {
-		if i == 0 {
-			fmt.Println("\nPlugins\n-------")
-		}
-		fmt.Printf("%s\n", pluginInfo)
+	if len(allPluginsWithVersion) > 1 {
+		fmt.Println("Plugins:\n--------\n ")
+	}
+	for _, pluginInfo := range allPluginsWithVersion {
+		fmt.Printf("%s (%s)\n", pluginInfo.name, pluginInfo.version.String())
 	}
 }
 
