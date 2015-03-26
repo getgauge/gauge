@@ -133,6 +133,27 @@ func (s *MySuite) TestExtractConceptWithSkippedTableAsArg(c *C) {
 `)
 }
 
+func (s *MySuite) TestExtractConceptWithTableWithDynamicArgs(c *C) {
+	STEP := "step that takes a table"
+	name := "concept with"
+	conceptName := &gauge_messages.Step{Name: &name}
+	table := `|id|name|
+	|--|----|
+	|1 |<foo>|
+	|2 |bar |
+	`
+	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP, Table: &table}},
+		"# sdfdsf\n\n|foo|name|\n|hey|hello|\n\n##helloasdasdasd\n\n")
+
+	c.Assert(concept, Equals, "# concept with <foo>\n* step that takes a table "+`
+     |id|name|
+     |--|----|
+     |1 |foo |
+     |2 |bar |
+`)
+	c.Assert(conceptText, Equals, "* concept with <foo>")
+}
+
 func (s *MySuite) TestReplaceText(c *C) {
 	content := `Copyright 2015 ThoughtWorks, Inc.
 

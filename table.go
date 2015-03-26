@@ -54,6 +54,18 @@ func (table *table) String() string {
 	return fmt.Sprintf("%v\n%v", table.headers, table.columns)
 }
 
+func (table *table) getDynamicArgs() []string {
+	args := make([]string, 0)
+	for _, row := range table.columns {
+		for _, column := range row {
+			if column.cellType == dynamic {
+				args = append(args, column.value)
+			}
+		}
+	}
+	return args
+}
+
 func (table *table) get(header string) []tableCell {
 	if !table.headerExists(header) {
 		panic(fmt.Sprintf("Table column %s not found", header))
