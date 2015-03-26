@@ -46,6 +46,14 @@ func (table *table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
+func (cell *tableCell) getValue() string {
+	value := cell.value
+	if cell.cellType == dynamic {
+		value = fmt.Sprintf("<%s>", value)
+	}
+	return value
+}
+
 func (dataTable *dataTable) isInitialized() bool {
 	return dataTable.table.headerIndexMap != nil
 }
@@ -133,7 +141,7 @@ func (table *table) getRows() [][]string {
 		row := make([]string, 0)
 		for _, header := range table.headers {
 			tableCell := table.get(header)[i]
-			value := tableCell.value
+			value := tableCell.getValue()
 			row = append(row, value)
 		}
 		tableRows = append(tableRows, row)

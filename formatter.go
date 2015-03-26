@@ -138,7 +138,7 @@ func addPaddingToCell(cellValue string, width int) string {
 func findLongestCellWidth(columnCells []tableCell, minValue int) int {
 	longestLength := minValue
 	for _, cellValue := range columnCells {
-		cellValueLen := len(cellValue.value)
+		cellValueLen := len(cellValue.getValue())
 		if cellValueLen > longestLength {
 			longestLength = cellValueLen
 		}

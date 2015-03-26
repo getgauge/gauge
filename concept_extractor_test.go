@@ -146,10 +146,10 @@ func (s *MySuite) TestExtractConceptWithTableWithDynamicArgs(c *C) {
 		"# sdfdsf\n\n|foo|name|\n|hey|hello|\n\n##helloasdasdasd\n\n")
 
 	c.Assert(concept, Equals, "# concept with <foo>\n* step that takes a table "+`
-     |id|name|
-     |--|----|
-     |1 |foo |
-     |2 |bar |
+     |id|name |
+     |--|-----|
+     |1 |<foo>|
+     |2 |bar  |
 `)
 	c.Assert(conceptText, Equals, "* concept with <foo>")
 }

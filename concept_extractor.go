@@ -53,7 +53,7 @@ func extractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.St
 		return false, err, []string{}
 	}
 	writeConceptToFile(concept, conceptUsageText, conceptFileName, selectedTextInfo.GetFileName(), selectedTextInfo)
-	return true, nil, []string{}
+	return true, nil, []string{conceptFileName, selectedTextInfo.GetFileName()}
 }
 
 func isSpecFile(fileName string) bool {
