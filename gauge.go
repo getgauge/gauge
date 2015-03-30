@@ -159,6 +159,7 @@ var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to 
 var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
 var parallel = flag.Bool([]string{"-parallel"}, false, "Execute specs in parallel")
 var numberOfExecutionStreams = flag.Int([]string{"-n"}, numberOfCores(), "Specify number of parallel execution streams")
+var distribute = flag.Int([]string{"-g", "-group"}, -1, "Specify which group of specification to execute based on --n flag")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 var doNotRandomize = flag.Bool([]string{"-sort", "-s"}, false, "run specs in Alphabetical Order. Eg: gauge --s specs")
 
@@ -348,13 +349,24 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 
 func getSpecsToExecute(conceptsDictionary *conceptDictionary) ([]*specification, int) {
 	specsToExecute := specsFromArgs(conceptsDictionary)
-
 	totalSpecs := specsToExecute
+	specsToExecute = applyFlags(specsToExecute)
+	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
+}
+
+func applyFlags(specsToExecute []*specification) []*specification {
 	if *executeTags != "" {
 		validateTagExpression(*executeTags)
 		specsToExecute = filterSpecsByTags(specsToExecute, *executeTags)
+	} else if *distribute != -1 {
+		if *distribute < 1 || *distribute > *numberOfExecutionStreams {
+			return make([]*specification, 0)
+		}
+		*doNotRandomize = true
+		execution := &parallelSpecExecution{specifications: specsToExecute}
+		specsToExecute = execution.distributeSpecs(*numberOfExecutionStreams)[*distribute-1].specs
 	}
-	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
+	return specsToExecute
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {

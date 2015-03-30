@@ -409,3 +409,86 @@ func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
 	specs = append(specs, spec6)
 	shuffleSpecs(specs)
 }
+
+func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
+	spec1 := &specification{heading: &heading{value: "SPECHEADING1"}}
+	spec2 := &specification{heading: &heading{value: "SPECHEADING2"}}
+	heading3 := &heading{value: "SPECHEADING3"}
+	spec3 := &specification{heading: heading3}
+	spec4 := &specification{heading: &heading{value: "SPECHEADING4"}}
+	spec5 := &specification{heading: &heading{value: "SPECHEADING5"}}
+	spec6 := &specification{heading: &heading{value: "SPECHEADING6"}}
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+	specs = append(specs, spec3)
+	specs = append(specs, spec4)
+	specs = append(specs, spec5)
+	specs = append(specs, spec6)
+
+	value := 6
+	value1 := 3
+	numberOfExecutionStreams = &value
+	distribute = &value1
+
+	specsToExecute := applyFlags(specs)
+
+	c.Assert(len(specsToExecute), Equals, 1)
+	c.Assert(specsToExecute[0].heading, Equals, heading3)
+
+}
+
+func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
+	spec1 := &specification{heading: &heading{value: "SPECHEADING1"}}
+	spec2 := &specification{heading: &heading{value: "SPECHEADING2"}}
+	spec3 := &specification{heading: &heading{value: "SPECHEADING3"}}
+	spec4 := &specification{heading: &heading{value: "SPECHEADING4"}}
+	heading5 := &heading{value: "SPECHEADING5"}
+	spec5 := &specification{heading: heading5}
+	heading6 := &heading{value: "SPECHEADING6"}
+	spec6 := &specification{heading: heading6}
+	var specs []*specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+	specs = append(specs, spec3)
+	specs = append(specs, spec4)
+	specs = append(specs, spec5)
+	specs = append(specs, spec6)
+
+	value := 3
+	numberOfExecutionStreams = &value
+	distribute = &value
+	specsToExecute1 := applyFlags(specs)
+	c.Assert(len(specsToExecute1), Equals, 2)
+
+	specsToExecute2 := applyFlags(specs)
+	c.Assert(len(specsToExecute2), Equals, 2)
+
+	specsToExecute3 := applyFlags(specs)
+	c.Assert(len(specsToExecute3), Equals, 2)
+
+	c.Assert(specsToExecute2[0].heading, Equals, specsToExecute1[0].heading)
+	c.Assert(specsToExecute2[1].heading, Equals, specsToExecute1[1].heading)
+	c.Assert(specsToExecute3[0].heading, Equals, specsToExecute1[0].heading)
+	c.Assert(specsToExecute3[1].heading, Equals, specsToExecute1[1].heading)
+}
+
+func (s *MySuite) TestToRunSpecificSetOfSpecsGivesEmptySpecsIfDistributableNumberIsNotValid(c *C) {
+	spec1 := &specification{heading: &heading{value: "SPECHEADING1"}}
+	var specs []*specification
+	specs = append(specs, spec1)
+
+	value := 1
+	value1 := 3
+	numberOfExecutionStreams = &value
+	distribute = &value1
+	specsToExecute1 := applyFlags(specs)
+	c.Assert(len(specsToExecute1), Equals, 0)
+
+	value = 1
+	value1 = -3
+	numberOfExecutionStreams = &value
+	distribute = &value1
+	specsToExecute1 = applyFlags(specs)
+	c.Assert(len(specsToExecute1), Equals, 0)
+}
