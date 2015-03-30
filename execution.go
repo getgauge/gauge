@@ -41,9 +41,9 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, parallel *parallelInfo, writer executionLogger) execution {
-	if parallel.inParallel {
-		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: parallel.numberOfExecutionStreams, writer: writer}
+func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, info *parallelInfo, writer executionLogger) execution {
+	if info.inParallel {
+		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: info.numberOfStreams, writer: writer}
 	}
 	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, writer: writer}
 }

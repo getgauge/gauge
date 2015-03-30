@@ -39,6 +39,19 @@ type specCollection struct {
 	specs []*specification
 }
 
+type parallelInfo struct {
+	inParallel      bool
+	numberOfStreams int
+}
+
+func (self *parallelInfo) isValid() bool {
+	if self.numberOfStreams < 1 {
+		log.Error("Invalid input(%s) to --n flag",strconv.Itoa(self.numberOfStreams))
+		return false
+	}
+	return true
+}
+
 func (e *parallelSpecExecution) start() *suiteResult {
 	startTime := time.Now()
 

@@ -58,10 +58,6 @@ type manifest struct {
 	Language string
 	Plugins  []string
 }
-type parallelInfo struct {
-	inParallel               bool
-	numberOfExecutionStreams int
-}
 
 func main() {
 	flag.Parse()
@@ -284,6 +280,10 @@ func executeSpecs(inParallel bool) {
 	if len(specsToExecute) == 0 {
 		printExecutionStatus(nil, 0)
 	}
+	parallelInfo := &parallelInfo{inParallel: *parallel, numberOfStreams: *numberOfExecutionStreams}
+	if !parallelInfo.isValid() {
+		os.Exit(1)
+	}
 	manifest := getProjectManifest(getCurrentExecutionLogger())
 	err := startAPIService(0)
 	if err != nil {
@@ -300,11 +300,8 @@ func executeSpecs(inParallel bool) {
 	if !*doNotRandomize {
 		specsToExecute = shuffleSpecs(specsToExecute)
 	}
-
 	pluginHandler := startPlugins(manifest)
-	parallelInfo := &parallelInfo{inParallel: *parallel, numberOfExecutionStreams: *numberOfExecutionStreams}
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentExecutionLogger())
-
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
