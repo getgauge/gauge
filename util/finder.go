@@ -15,24 +15,29 @@ func init() {
 
 var AcceptedExtensions = make(map[string]bool)
 
+// Finds all the files in the directory of a given extension
 func findFilesIn(dirRoot string, isValidFile func(path string) bool) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
 	files := common.FindFilesInDir(absRoot, isValidFile)
 	return files
 }
 
+// Finds spec files in the given directory
 func FindSpecFilesIn(dir string) []string {
 	return findFilesIn(dir, IsValidSpecExtension)
 }
 
+// Checks if the path has a spec file extension
 func IsValidSpecExtension(path string) bool {
 	return AcceptedExtensions[filepath.Ext(path)]
 }
 
+// Finds the concept files in specified directory
 func FindConceptFilesIn(dir string) []string {
 	return findFilesIn(dir, IsValidConceptExtension)
 }
 
+// Checks if the path has a concept file extension
 func IsValidConceptExtension(path string) bool {
 	return filepath.Ext(path) == ".cpt"
 }

@@ -733,11 +733,17 @@ func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDicti
 
 func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	specFiles := getSpecFiles(specSource)
+
+	return parseSpecFiles(specFiles, conceptDictionary)
+
+}
+
+func parseSpecFiles(specFiles []string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
 	parseResultsChan := make(chan *parseResult, len(specFiles))
 	specsChan := make(chan *specification, len(specFiles))
-
 	parseResults := make([]*parseResult, 0)
 	specs := make([]*specification, 0)
+
 	for _, specFile := range specFiles {
 		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
 	}
@@ -768,16 +774,6 @@ func parseSpec(specFile string, conceptDictionary *conceptDictionary, specChanne
 	spec.fileName = specFile
 	specChannel <- spec
 	parseResultChan <- parseResult
-}
-
-func findSpecsFilesIn(dirRoot string) []string {
-	absRoot, _ := filepath.Abs(dirRoot)
-	specFiles := common.FindFilesInDir(absRoot, isValidSpecExtension)
-	return specFiles
-}
-
-func isValidSpecExtension(path string) bool {
-	return acceptedExtensions[filepath.Ext(path)]
 }
 
 func handleWarningMessages(warnings []string) {

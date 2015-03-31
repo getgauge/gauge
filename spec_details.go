@@ -56,10 +56,29 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
 }
 
-func (specInfoGatherer *specInfoGatherer) getAllTags() map[string]bool {
+func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
 	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
-	specInfoGatherer.availableSpecs = specInfoGatherer.parseSpecFiles(specFiles, dictionary)
+	availableSpecs, parseResults := parseSpecFiles(specFiles, dictionary)
+	specInfoGatherer.handleParseFailures(parseResults)
+	specInfoGatherer.availableSpecs = availableSpecs
+	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
+}
+
+func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*parseResult) {
+	for _, result := range parseResults {
+		if !result.ok {
+			apiLog.Error("Spec Parse failure: %s", result.Error())
+		}
+	}
+}
+
+func (specInfoGatherer *specInfoGatherer) getAllTags() []string {
+	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
+	dictionary, _ := createConceptsDictionary(true)
+	availableSpecs, parseResults := parseSpecFiles(specFiles, dictionary)
+	specInfoGatherer.handleParseFailures(parseResults)
+	specInfoGatherer.availableSpecs = availableSpecs
 	allTags := make(map[string]bool, 0)
 	for _, spec := range specInfoGatherer.availableSpecs {
 		for _, value := range spec.tags.values {
@@ -71,14 +90,11 @@ func (specInfoGatherer *specInfoGatherer) getAllTags() map[string]bool {
 			}
 		}
 	}
-	return allTags
-}
-
-func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
-	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
-	dictionary, _ := createConceptsDictionary(true)
-	specInfoGatherer.availableSpecs = specInfoGatherer.findSpecs(common.SpecsDirectoryName, dictionary)
-	return specInfoGatherer.findAvailableStepsInSpecs(specInfoGatherer.availableSpecs), specInfoGatherer.createConceptInfos(dictionary)
+	tags := make([]string, 0)
+	for key, _ := range allTags {
+		tags = append(tags, key)
+	}
+	return tags
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][]*step {
@@ -151,19 +167,6 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 	}
 	return steps
 }
-func (specInfoGatherer *specInfoGatherer) findSpecs(specSource string, conceptDictionary *conceptDictionary) []*specification {
-	specs, parseResults := findSpecs(specSource, conceptDictionary)
-	specInfoGatherer.handleParseFailures(parseResults)
-	return specs
-}
-
-func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*parseResult) {
-	for _, result := range parseResults {
-		if !result.ok {
-			apiLog.Error("Spec Parse failure: %s", result.Error())
-		}
-	}
-}
 
 func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) map[string][]*step {
 	specStepsMap := make(map[string][]*step)
@@ -191,7 +194,6 @@ func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 			}
 		}
 	}
-
 }
 
 func (specInfoGatherer *specInfoGatherer) updateCache(newSpecStepsMap map[string][]*step) {
