@@ -43,21 +43,25 @@ const (
 var apiLog = logging.MustGetLogger("gauge-api")
 var ProjectRoot string
 
+// The interval time in milliseconds in which gauge refreshes api cache
 func ApiRefreshInterval() time.Duration {
 	intervalString := getFromConfig(apiRefreshInterval)
 	return convertToTime(intervalString, defaultApiRefreshInterval)
 }
 
+// Timeout in milliseconds for making a connection to the language runner
 func RunnerConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(runnerConnectionTimeout)
 	return convertToTime(intervalString, defaultRunnerConnectionTimeout)
 }
 
+// Timeout in milliseconds for making a connection to plugins
 func PluginConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(pluginConnectionTimeout)
 	return convertToTime(intervalString, defaultPluginConnectionTimeout)
 }
 
+// Timeout in milliseconds for a plugin to stop after a kill message has been sent
 func PluginKillTimeout() time.Duration {
 	intervalString := getFromConfig(pluginKillTimeOut)
 	return convertToTime(intervalString, defaultPluginKillTimeout)
@@ -67,8 +71,9 @@ func RefactorTimeout() time.Duration {
 	return defaultRefactorTimeout
 }
 
+// Timeout in milliseconds for requests from the language runner.
 func RunnerRequestTimeout() time.Duration {
-	intervalString := getFromConfig(pluginConnectionTimeout)
+	intervalString := getFromConfig(runnerRequestTimeout)
 	return convertToTime(intervalString, defaultRunnerRequestTimeout)
 }
 
