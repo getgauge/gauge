@@ -18,7 +18,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
@@ -28,13 +27,18 @@ import (
 	"strings"
 )
 
-const LOGS_DIRECTORY = "logs_directory"
+const (
+	LOGS_DIRECTORY   = "logs_directory"
+	logs             = "logs"
+	gaugeLogFileName = "gauge.log"
+	apiLogFileName   = "api.log"
+)
 
 var log = logging.MustGetLogger("gauge")
 var apiLog = logging.MustGetLogger("gauge-api")
 
-var gaugeLogFile = filepath.Join("logs", "gauge.log")
-var apiLogFile = filepath.Join("logs", "api.log")
+var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
+var apiLogFile = filepath.Join(logs, apiLogFileName)
 
 var format = logging.MustStringFormatter(
 	"%{time:15:04:05.000} [%{level:.4s}] %{message}",
@@ -52,7 +56,7 @@ func initGaugeLogger() {
 	if logsDir == "" {
 		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
 	} else {
-		gaugeFileLogger = createFileLogger(logsDir+fmt.Sprintf("%c", filepath.Separator)+"gauge.log", 20)
+		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
 	}
 	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, format)
 	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, format)
@@ -72,7 +76,7 @@ func initApiLogger() {
 	if logsDir == "" || err != nil {
 		apiFileLogger = createFileLogger(apiLogFile, 10)
 	} else {
-		apiFileLogger = createFileLogger(logsDir+fmt.Sprintf("%c", filepath.Separator)+"api.log", 10)
+		apiFileLogger = createFileLogger(filepath.Join(logsDir, apiLogFileName), 10)
 	}
 
 	fileFormatter := logging.NewBackendFormatter(apiFileLogger, format)
@@ -82,8 +86,11 @@ func initApiLogger() {
 }
 
 func createFileLogger(name string, size int) logging.Backend {
+	if !filepath.IsAbs(name) {
+		name = getLogFile(name)
+	}
 	return logging.NewLogBackend(&lumberjack.Logger{
-		Filename:   getLogFile(name),
+		Filename:   name,
 		MaxSize:    size, // megabytes
 		MaxBackups: 3,
 		MaxAge:     28, //days
