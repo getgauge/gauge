@@ -46,6 +46,7 @@ const (
 	gaugeScreenshot    = "gauge_screenshot"
 	deploy             = "deploy"
 	installShellScript = "install.sh"
+	CC                 = "CC"
 )
 
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
@@ -270,8 +271,8 @@ var (
 		map[string]string{GOARCH: X86_64, GOOS: darwin, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: linux, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86_64, GOOS: linux, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86, GOOS: windows, CGO_ENABLED: "0"},
-		map[string]string{GOARCH: X86_64, GOOS: windows, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: windows, CC: "i586-mingw32-gcc", CGO_ENABLED: "1"},
+		map[string]string{GOARCH: X86_64, GOOS: windows, CC: "x86_64-w64-mingw32-gcc", CGO_ENABLED: "1"},
 	}
 )
 
