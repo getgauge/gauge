@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
@@ -68,7 +69,7 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*
 func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*parseResult) {
 	for _, result := range parseResults {
 		if !result.ok {
-			apiLog.Error("Spec Parse failure: %s", result.Error())
+			logger.ApiLog.Error("Spec Parse failure: %s", result.Error())
 		}
 	}
 }
@@ -103,12 +104,12 @@ func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][
 	for _, conceptFile := range conceptFiles {
 		fileText, fileReadErr := common.ReadFileContents(conceptFile)
 		if fileReadErr != nil {
-			apiLog.Error("failed to read concept file %s", conceptFile)
+			logger.ApiLog.Error("failed to read concept file %s", conceptFile)
 			continue
 		}
 		concepts, err := new(conceptParser).parse(fileText)
 		if err != nil {
-			apiLog.Error("Concept Parse failure: %s: line no: %s, %s", conceptFile, strconv.Itoa(err.lineNo), err.message)
+			logger.ApiLog.Error("Concept Parse failure: %s: line no: %s, %s", conceptFile, strconv.Itoa(err.lineNo), err.message)
 			continue
 		}
 		conceptSteps := make([]*step, 0)
@@ -154,16 +155,16 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 		runner, connErr := startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
-			apiLog.Debug("Steps got from runner: %v", steps)
+			logger.ApiLog.Debug("Steps got from runner: %v", steps)
 			runner.kill(getCurrentExecutionLogger())
 		}
 		if connErr != nil {
-			apiLog.Error("Runner connection failed: %s", connErr)
+			logger.ApiLog.Error("Runner connection failed: %s", connErr)
 		}
 
 	} else {
 		steps = append(steps, requestForSteps(runner)...)
-		apiLog.Debug("Steps got from runner: %v", steps)
+		logger.ApiLog.Debug("Steps got from runner: %v", steps)
 	}
 	return steps
 }

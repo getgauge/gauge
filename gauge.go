@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 	flag "github.com/getgauge/mflag"
 	"io"
@@ -63,7 +64,7 @@ func main() {
 		validGaugeProject = false
 	}
 	env.LoadEnv(*currentEnv, true)
-	initLoggers()
+	logger.Initialize(*verbosity, *logLevel)
 	if *daemonize && validGaugeProject {
 		runInBackground()
 	} else if *gaugeVersion {
@@ -88,7 +89,7 @@ func main() {
 		} else if validGaugeProject {
 			executeSpecs(*parallel)
 		} else {
-			log.Error("Could not set project root: %s", err.Error())
+			logger.Log.Error("Could not set project root: %s", err.Error())
 		}
 	}
 }
@@ -110,22 +111,22 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	if !refactoringResult.success {
 		exitCode = 1
 		for _, err := range refactoringResult.errors {
-			log.Error("%s \n", err)
+			logger.Log.Error("%s \n", err)
 		}
 	}
 	for _, warning := range refactoringResult.warnings {
-		log.Warning("%s \n", warning)
+		logger.Log.Warning("%s \n", warning)
 	}
-	log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
-	log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
-	log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	logger.Log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	logger.Log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	logger.Log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
 	os.Exit(exitCode)
 }
 
 func saveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		log.Error("Failed to refactor '%s': %s\n", fileName, err)
+		logger.Log.Error("Failed to refactor '%s': %s\n", fileName, err)
 	}
 }
 
@@ -167,25 +168,25 @@ func printUsage() {
 
 func updatePlugin(plugin string) {
 	if err := installPlugin(plugin, ""); err != nil {
-		log.Error("%s : %s\n", plugin, err)
+		logger.Log.Error("%s : %s\n", plugin, err)
 		return
 	}
-	log.Info("Successfully updated plugin => %s", plugin)
+	logger.Log.Info("Successfully updated plugin => %s", plugin)
 }
 
 func downloadAndInstallPlugin(plugin, version string) {
 	if err := installPlugin(plugin, version); err != nil {
-		log.Warning("Failed to install plugin %s : %s\n", plugin, err)
+		logger.Log.Warning("Failed to install plugin %s : %s\n", plugin, err)
 	} else {
-		log.Info("Successfully installed plugin => %s %s", plugin, version)
+		logger.Log.Info("Successfully installed plugin => %s %s", plugin, version)
 	}
 }
 
 func installPluginZip(zipFile string) {
 	if err := installPluginFromZip(zipFile); err != nil {
-		log.Warning("Failed to install plugin from zip file : %s\n", err)
+		logger.Log.Warning("Failed to install plugin from zip file : %s\n", err)
 	} else {
-		log.Info("Successfully installed plugin from zipFile")
+		logger.Log.Info("Successfully installed plugin from zipFile")
 	}
 }
 
@@ -196,14 +197,14 @@ func runInBackground() {
 		port, err = strconv.Atoi(*apiPort)
 		os.Setenv(common.ApiPortEnvVariableName, *apiPort)
 		if err != nil {
-			log.Critical("Failed to parse the port number :", *apiPort, "\n", err.Error())
+			logger.Log.Critical("Failed to parse the port number :", *apiPort, "\n", err.Error())
 			os.Exit(1)
 		}
 	} else {
 		env.LoadEnv(*currentEnv, false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
-			log.Critical("Failed to start API Service. %s \n", err.Error())
+			logger.Log.Critical("Failed to start API Service. %s \n", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -221,7 +222,7 @@ func formatSpecFiles(filesToFormat string) {
 		err := common.SaveFile(spec.fileName, formatted, true)
 		if err != nil {
 			failed = true
-			log.Error("Failed to format '%s': %s\n", spec.fileName, err)
+			logger.Log.Error("Failed to format '%s': %s\n", spec.fileName, err)
 		}
 	}
 	if failed {
@@ -234,16 +235,16 @@ func formatSpecFiles(filesToFormat string) {
 func initializeProject(language string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Critical("Failed to find working directory. %s\n", err.Error())
+		logger.Log.Critical("Failed to find working directory. %s\n", err.Error())
 		os.Exit(1)
 	}
 	config.ProjectRoot = wd
 	err = createProjectTemplate(language)
 	if err != nil {
-		log.Critical("Failed to initialize. %s\n", err.Error())
+		logger.Log.Critical("Failed to initialize. %s\n", err.Error())
 		os.Exit(1)
 	}
-	log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
+	logger.Log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
 
 func addPluginToProject(pluginName string) {
@@ -260,10 +261,10 @@ func addPluginToProject(pluginName string) {
 		}
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest(getCurrentExecutionLogger())); err != nil {
-		log.Critical("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
+		logger.Log.Critical("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
 		os.Exit(1)
 	} else {
-		log.Info("Plugin %s was successfully added to the project\n", pluginName)
+		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}
 }
 
@@ -282,13 +283,13 @@ func executeSpecs(inParallel bool) {
 	manifest := getProjectManifest(getCurrentExecutionLogger())
 	err := startAPIService(0)
 	if err != nil {
-		log.Critical("Failed to start gauge API. %s\n", err.Error())
+		logger.Log.Critical("Failed to start gauge API. %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	runner, runnerError := startRunnerAndMakeConnection(manifest, getCurrentExecutionLogger())
 	if runnerError != nil {
-		log.Critical("Failed to start a runner. %s\n", runnerError.Error())
+		logger.Log.Critical("Failed to start a runner. %s\n", runnerError.Error())
 		os.Exit(1)
 	}
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -309,7 +310,7 @@ func getDataTableRows(rowCount int) indexRange {
 	}
 	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
 	if err != nil {
-		log.Critical("Table rows validation failed. %s\n", err.Error())
+		logger.Log.Critical("Table rows validation failed. %s\n", err.Error())
 		os.Exit(1)
 	}
 	return indexes
@@ -362,7 +363,7 @@ func applyFlags(specsToExecute []*specification) []*specification {
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {
-	log.Warning("Validation failed. The following steps have errors")
+	logger.Log.Warning("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
@@ -423,13 +424,13 @@ func getProjectManifest(writer executionLogger) *manifest {
 }
 
 func showMessage(action, filename string) {
-	log.Info(" %s  %s\n", action, filename)
+	logger.Log.Info(" %s  %s\n", action, filename)
 }
 
 func createProjectTemplate(language string) error {
 	if !common.IsASupportedLanguage(language) {
-		log.Info("%s plugin is not installed \n", language)
-		log.Info("Installing plugin => %s ... \n\n", language)
+		logger.Log.Info("%s plugin is not installed \n", language)
+		logger.Log.Info("Installing plugin => %s ... \n\n", language)
 
 		if err := installPlugin(language, ""); err != nil {
 			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, err))
@@ -507,12 +508,12 @@ func createProjectTemplate(language string) error {
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
 		if !result.ok {
-			log.Critical(result.Error())
+			logger.Log.Critical(result.Error())
 			os.Exit(1)
 		}
 		if result.warnings != nil {
 			for _, warning := range result.warnings {
-				log.Warning("%s : %v", result.fileName, warning)
+				logger.Log.Warning("%s : %v", result.fileName, warning)
 			}
 		}
 	}
@@ -549,7 +550,7 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
-		log.Info("No specifications found.")
+		logger.Log.Info("No specifications found.")
 		os.Exit(0)
 	}
 	noOfSpecificationsExecuted := len(suiteResult.specResults)
@@ -558,7 +559,7 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	noOfScenariosFailed := 0
 	exitCode := 0
 	if suiteResult.isFailed {
-		log.Info("\nThe following failures occured:\n")
+		logger.Log.Info("\nThe following failures occured:\n")
 		exitCode = 1
 	}
 
@@ -571,10 +572,10 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	}
 
 	printHookError(suiteResult.postSuite)
-	log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
-	log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
-	log.Info("%d specifications skipped\n", specsSkipped)
-	log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
+	logger.Log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
+	logger.Log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
+	logger.Log.Info("%d specifications skipped\n", specsSkipped)
+	logger.Log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
 	return exitCode
 }
 
@@ -674,10 +675,10 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 	for _, conceptFile := range conceptFiles {
 		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {
-				apiLog.Error("Concept parse failure: %s %s", conceptFile, err)
+				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
-			log.Error(err.Error())
+			logger.Log.Error(err.Error())
 			return nil, &parseResult{error: err, fileName: conceptFile}
 		}
 	}
@@ -778,7 +779,7 @@ func parseSpec(specFile string, conceptDictionary *conceptDictionary, specChanne
 
 func handleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
-		log.Warning(warning)
+		logger.Log.Warning(warning)
 	}
 }
 
@@ -819,20 +820,20 @@ func sortSpecsList(allSpecs []*specification) []*specification {
 func setWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		log.Critical("Unable to set working directory : %s\n", err)
+		logger.Log.Critical("Unable to set working directory : %s\n", err)
 		os.Exit(1)
 	}
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			log.Critical("Unable to set working directory : %s\n", err)
+			logger.Log.Critical("Unable to set working directory : %s\n", err)
 			os.Exit(1)
 		}
 	}
 	err = os.Chdir(targetDir)
 	_, err = os.Getwd()
 	if err != nil {
-		log.Critical("Unable to set working directory : %s\n", err)
+		logger.Log.Critical("Unable to set working directory : %s\n", err)
 		os.Exit(1)
 	}
 }

@@ -1,11 +1,11 @@
 package util
 
 import (
-	"path/filepath"
+	"fmt"
 	"github.com/getgauge/common"
 	"io/ioutil"
-	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func init() {
@@ -44,15 +44,15 @@ func IsValidConceptExtension(path string) bool {
 
 func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
 	tempFile, err := ioutil.TempFile(dir, "gauge1")
-	fullFileName := dir + fmt.Sprintf("%c",filepath.Separator)+fileName
+	fullFileName := dir + fmt.Sprintf("%c", filepath.Separator) + fileName
 	err = os.Rename(tempFile.Name(), fullFileName)
 	err = ioutil.WriteFile(fullFileName, data, 0644)
 	return fullFileName, err
 }
 
 func CreateDirIn(dir string, dirName string) (string, error) {
-	tempDir , err := ioutil.TempDir(dir, dirName)
-	fullDirName := dir + fmt.Sprintf("%c",filepath.Separator)+ dirName
+	tempDir, err := ioutil.TempDir(dir, dirName)
+	fullDirName := dir + fmt.Sprintf("%c", filepath.Separator) + dirName
 	err = os.Rename(tempDir, fullDirName)
 	return fullDirName, err
 }

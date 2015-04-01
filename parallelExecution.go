@@ -19,6 +19,7 @@ package main
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"runtime"
 	"strconv"
 	"time"
@@ -46,7 +47,7 @@ type parallelInfo struct {
 
 func (self *parallelInfo) isValid() bool {
 	if self.numberOfStreams < 1 {
-		log.Error("Invalid input(%s) to --n flag", strconv.Itoa(self.numberOfStreams))
+		logger.Log.Error("Invalid input(%s) to --n flag", strconv.Itoa(self.numberOfStreams))
 		return false
 	}
 	return true

@@ -107,7 +107,7 @@ func (connectionHandler *GaugeConnectionHandler) handleConnectionMessages(conn n
 		if err != nil {
 			conn.Close()
 			//TODO: Move to file
-			//			log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
+			//			logger.Log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
 			return
 		}
 

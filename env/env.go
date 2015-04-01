@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
-	"github.com/op/go-logging"
+	"github.com/getgauge/gauge/logger"
 	"os"
 	"path"
 	"path/filepath"
@@ -15,15 +15,13 @@ const (
 	envDefaultDirName = "default"
 )
 
-var log = logging.MustGetLogger("gauge")
-
 // Loading default environment and loading user specified env
 // this way user specified env variable can override default if required
 func LoadEnv(env string, shouldSkip bool) {
 	err := loadEnvironment(envDefaultDirName)
 	if err != nil {
 		if !shouldSkip {
-			log.Critical("Failed to load the default environment. %s\n", err.Error())
+			logger.Log.Critical("Failed to load the default environment. %s\n", err.Error())
 			os.Exit(1)
 		}
 	}
@@ -32,7 +30,7 @@ func LoadEnv(env string, shouldSkip bool) {
 		err := loadEnvironment(env)
 		if err != nil {
 			if !shouldSkip {
-				log.Critical("Failed to load the environment: %s. %s\n", env, err.Error())
+				logger.Log.Critical("Failed to load the environment: %s. %s\n", env, err.Error())
 				os.Exit(1)
 			}
 		}

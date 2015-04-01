@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
 	"strings"
@@ -193,7 +194,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
 	var runnerError error
 	if !refactorResponse.GetSuccess() {
-		apiLog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
+		logger.ApiLog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
 	return refactorResponse.GetFilesChanged(), runnerError
