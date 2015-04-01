@@ -13,13 +13,13 @@ type MySuite struct{}
 var _ = Suite(&MySuite{})
 var dir string
 
-func (s *MySuite) SetUpTest(c *C){
+func (s *MySuite) SetUpSuite(c *C){
 	var err error
 	dir, err = ioutil.TempDir("", "gaugeTest")
 	c.Assert(err, Equals, nil)
 }
 
-func (s *MySuite) TearDownTest(c *C) {
+func (s *MySuite) TearDownSuite(c *C) {
 	err := os.RemoveAll(dir)
 	c.Assert(err, Equals, nil)
 }
@@ -40,11 +40,12 @@ Scenario 1
 	c.Assert(string(dataRead), Equals, string(data))
 	c.Assert(len(FindSpecFilesIn(dir)), Equals, 1)
 
-	_, err = CreateFileIn(dir, "gaugeSpec2.spec", data)
+	spec2, err := CreateFileIn(dir, "gaugeSpec2.spec", data)
 	c.Assert(err, Equals, nil)
+
 	c.Assert(len(FindSpecFilesIn(dir)), Equals, 2)
-
-
+	defer os.Remove(spec1)
+	defer os.Remove(spec2)
 }
 
 
@@ -53,13 +54,16 @@ func (s *MySuite) TestFindAllConceptFiles(c *C) {
 * Say "hello" to gauge
 * Hello gauge
 `)
-	_, err := CreateFileIn(dir, "concept1.cpt", data)
+	cpt1, err := CreateFileIn(dir, "concept1.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 1)
 
-	_, err = CreateFileIn(dir, "concept2.cpt", data)
+	cpt2, err := CreateFileIn(dir, "concept2.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
+
+	defer os.Remove(cpt1)
+	defer os.Remove(cpt2)
 }
 
 func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
@@ -67,14 +71,18 @@ func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 * Say "hello" to gauge
 * Hello gauge
 `)
-	_, err := CreateFileIn(dir, "concept1.cpt", data)
+	cpt1, err := CreateFileIn(dir, "concept1.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 1)
 
 	dir1, err := ioutil.TempDir(dir, "gaugeTest1")
 	c.Assert(err, Equals, nil)
 
-	_, err = CreateFileIn(dir1, "concept2.cpt", data)
+	cpt2, err := CreateFileIn(dir1, "concept2.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
+
+	defer os.Remove(cpt1)
+	defer os.Remove(cpt2)
+	defer os.Remove(dir1)
 }
