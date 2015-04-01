@@ -33,9 +33,8 @@ type scenarioIndexFilterToRetain struct {
 	currentScenarioIndex int
 }
 type ScenarioFilterBasedOnTags struct {
-	specTags       []string
-	tagExpression  string
-	isSpecSelected bool
+	specTags      []string
+	tagExpression string
 }
 
 func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
@@ -56,23 +55,16 @@ func (filter *scenarioIndexFilterToRetain) filter(item item) bool {
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
-	return &ScenarioFilterBasedOnTags{specTags, tagExp, false}
+	return &ScenarioFilterBasedOnTags{specTags, tagExp}
 }
 
 func (filter *ScenarioFilterBasedOnTags) filter(item item) bool {
 	if item.kind() == scenarioKind {
-		if filter.isSpecSelected {
-			return false
-		}
-		if filter.filterTags(filter.specTags) {
-			filter.isSpecSelected = true
-			return false
-		}
 		tags := item.(*scenario).tags
 		if tags == nil {
-			return !filter.filterTags(make([]string, 0))
+			return !filter.filterTags(filter.specTags)
 		}
-		return !filter.filterTags(tags.values)
+		return !filter.filterTags(append(tags.values, filter.specTags...))
 	}
 	return true
 }
