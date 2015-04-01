@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"strconv"
 	"strings"
 )
@@ -54,23 +55,23 @@ func (writer *parallelExecutionLogger) PrintError(value string) {
 }
 
 func (writer *parallelExecutionLogger) Critical(formatString string, args ...interface{}) {
-	log.Critical(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Critical(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Info(formatString string, args ...interface{}) {
-	log.Info(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Info(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Warning(formatString string, args ...interface{}) {
-	log.Warning(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Warning(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Debug(formatString string, args ...interface{}) {
-	log.Debug(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Debug(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Error(formatString string, args ...interface{}) {
-	log.Error(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Error(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) SpecHeading(heading string) {

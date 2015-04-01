@@ -19,6 +19,7 @@ package main
 
 import (
 	"errors"
+	"github.com/getgauge/gauge/logger"
 	"golang.org/x/tools/go/exact"
 	"golang.org/x/tools/go/types"
 	"os"
@@ -204,7 +205,7 @@ func validateTagExpression(tagExpression string) {
 	filter.replaceSpecialChar()
 	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
 	if err != nil {
-		log.Critical(err.Error())
+		logger.Log.Critical(err.Error())
 		os.Exit(1)
 	}
 }

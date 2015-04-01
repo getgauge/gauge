@@ -1,10 +1,11 @@
 package util
 
 import (
-	"path/filepath"
+	"fmt"
 	"github.com/getgauge/common"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 func init() {
@@ -47,8 +48,8 @@ func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
 }
 
 func CreateDirIn(dir string, dirName string) (string, error) {
-	tempDir , err := ioutil.TempDir(dir, dirName)
-	fullDirName := filepath.Join(dir, dirName)
+	tempDir, err := ioutil.TempDir(dir, dirName)
+	fullDirName := dir + fmt.Sprintf("%c", filepath.Separator) + dirName
 	err = os.Rename(tempDir, fullDirName)
 	return fullDirName, err
 }

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package logger
 
 import (
 	"github.com/getgauge/common"
@@ -34,8 +34,8 @@ const (
 	apiLogFileName   = "api.log"
 )
 
-var log = logging.MustGetLogger("gauge")
-var apiLog = logging.MustGetLogger("gauge-api")
+var Log = logging.MustGetLogger("gauge")
+var ApiLog = logging.MustGetLogger("gauge-api")
 
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
@@ -44,12 +44,13 @@ var format = logging.MustStringFormatter(
 	"%{time:15:04:05.000} [%{level:.4s}] %{message}",
 )
 
-func initLoggers() {
-	initGaugeLogger()
-	initApiLogger()
+func Initialize(verbose bool, logLevel string) {
+	level := loggingLevel(verbose, logLevel)
+	initGaugeLogger(level)
+	initApiLogger(level)
 }
 
-func initGaugeLogger() {
+func initGaugeLogger(level logging.Level) {
 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
 	logsDir := os.Getenv(LOGS_DIRECTORY)
 	var gaugeFileLogger logging.Backend
@@ -62,7 +63,7 @@ func initGaugeLogger() {
 	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, format)
 
 	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	stdOutLoggerLeveled.SetLevel(loggingLevel(), "")
+	stdOutLoggerLeveled.SetLevel(level, "")
 
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
@@ -70,7 +71,7 @@ func initGaugeLogger() {
 	logging.SetBackend(fileLoggerLeveled, stdOutLoggerLeveled)
 }
 
-func initApiLogger() {
+func initApiLogger(level logging.Level) {
 	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
 	var apiFileLogger logging.Backend
 	if logsDir == "" || err != nil {
@@ -81,8 +82,8 @@ func initApiLogger() {
 
 	fileFormatter := logging.NewBackendFormatter(apiFileLogger, format)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
-	fileLoggerLeveled.SetLevel(loggingLevel(), "")
-	apiLog.SetBackend(fileLoggerLeveled)
+	fileLoggerLeveled.SetLevel(level, "")
+	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
 func createFileLogger(name string, size int) logging.Backend {
@@ -109,12 +110,12 @@ func getLogFile(fileName string) string {
 	}
 }
 
-func loggingLevel() logging.Level {
-	if *verbosity {
+func loggingLevel(verbose bool, logLevel string) logging.Level {
+	if verbose {
 		return logging.DEBUG
 	}
-	if *logLevel != "" {
-		switch strings.ToLower(*logLevel) {
+	if logLevel != "" {
+		switch strings.ToLower(logLevel) {
 		case "debug":
 			return logging.DEBUG
 		case "info":

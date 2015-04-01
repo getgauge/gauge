@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/wsxiaoys/terminal"
 	"strings"
 )
@@ -113,23 +114,23 @@ func (writer *coloredLogger) PrintError(value string) {
 }
 
 func (writer *coloredLogger) Critical(formatString string, args ...interface{}) {
-	log.Critical(formatString, args)
+	logger.Log.Critical(formatString, args)
 }
 
 func (writer *coloredLogger) Info(formatString string, args ...interface{}) {
-	log.Info(formatString, args)
+	logger.Log.Info(formatString, args)
 }
 
 func (writer *coloredLogger) Warning(formatString string, args ...interface{}) {
-	log.Warning(formatString, args)
+	logger.Log.Warning(formatString, args)
 }
 
 func (writer *coloredLogger) Debug(formatString string, args ...interface{}) {
-	log.Debug(formatString, args)
+	logger.Log.Debug(formatString, args)
 }
 
 func (writer *coloredLogger) Error(formatString string, args ...interface{}) {
-	log.Error(formatString, args)
+	logger.Log.Error(formatString, args)
 }
 
 func (writer *coloredLogger) SpecHeading(heading string) {
