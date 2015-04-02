@@ -283,7 +283,6 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 func (handler *gaugeApiMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetExtractConceptRequest()
 	success, err, filesChanged := extractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
-	errMessage := err.Error()
-	response := &gauge_messages.ExtractConceptResponse{IsSuccess: proto.Bool(success), Error: &errMessage, FilesChanged: filesChanged}
+	response := &gauge_messages.ExtractConceptResponse{IsSuccess: proto.Bool(success), Error: proto.String(err.Error()), FilesChanged: filesChanged}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse.Enum(), ExtractConceptResponse: response}
 }
