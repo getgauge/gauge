@@ -53,30 +53,32 @@ func createGetStepNamesRequest() *gauge_messages.Message {
 	return &gauge_messages.Message{MessageType: gauge_messages.Message_StepNamesRequest.Enum(), StepNamesRequest: &gauge_messages.StepNamesRequest{}}
 }
 
-func startAPIService(port int) error {
+func startAPIService(port int) (error, *gaugeApiMessageHandler) {
 	specInfoGatherer := new(specInfoGatherer)
-	apiHandler := &gaugeApiMessageHandler{specInfoGatherer}
+	apiHandler := &gaugeApiMessageHandler{specInfoGatherer: specInfoGatherer}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	if port == 0 {
 		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
-			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error()))
+			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error())), nil
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-	specInfoGatherer.makeListOfAvailableSteps(nil)
-	return nil
+	apiHandler.runner = specInfoGatherer.makeListOfAvailableSteps(nil)
+	return nil, apiHandler
 }
 
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	wg.Add(1)
-	startAPIService(port)
+	_, apiHandler := startAPIService(port)
+	apiHandler.runner.kill(getCurrentExecutionLogger())
 }
 
 type gaugeApiMessageHandler struct {
 	specInfoGatherer *specInfoGatherer
+	runner           *testRunner
 }
 
 func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, connection net.Conn) {
@@ -232,7 +234,7 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	refactoringResult := performRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), true)
+	refactoringResult := performRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
 	logger.ApiLog.Info("Refactoring response from gauge: %s", refactoringResult)
 	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.success), Errors: refactoringResult.errors, FilesChanged: refactoringResult.allFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}

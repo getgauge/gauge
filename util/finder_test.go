@@ -3,8 +3,8 @@ package util
 import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
-	"testing"
 	"os"
+	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -45,7 +45,6 @@ Scenario 1
 
 	c.Assert(len(FindSpecFilesIn(dir)), Equals, 2)
 }
-
 
 func (s *MySuite) TestFindAllConceptFiles(c *C) {
 	data := []byte(`#Concept Heading`)

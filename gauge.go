@@ -102,7 +102,7 @@ func newStepName() string {
 }
 
 func refactorSteps(oldStep, newStep string) {
-	refactoringResult := performRephraseRefactoring(oldStep, newStep, false)
+	refactoringResult := performRephraseRefactoring(oldStep, newStep)
 	printRefactoringSummary(refactoringResult)
 }
 
@@ -281,7 +281,8 @@ func executeSpecs(inParallel bool) {
 		os.Exit(1)
 	}
 	manifest := getProjectManifest(getCurrentExecutionLogger())
-	err := startAPIService(0)
+	err, apiHandler := startAPIService(0)
+	apiHandler.runner.kill(getCurrentExecutionLogger())
 	if err != nil {
 		logger.Log.Critical("Failed to start gauge API. %s\n", err.Error())
 		os.Exit(1)
