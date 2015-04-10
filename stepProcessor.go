@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -38,6 +39,8 @@ const (
 	dynamicParamEnd        = '>'
 	specialParamIdentifier = ':'
 )
+
+var allEscapeChars = map[string]string{`\t`: "\t", `\n`: "\n", `\r`: "\r"}
 
 type acceptFn func(rune, int) (int, bool)
 
@@ -126,6 +129,7 @@ func processStepText(text string) (string, []string, error) {
 	for _, element := range text {
 		if currentState == inEscape {
 			currentState = lastState
+			element = getEscapedRuneIfValid(element)
 		} else if element == escape {
 			lastState = currentState
 			currentState = inEscape
@@ -150,4 +154,18 @@ func processStepText(text string) (string, []string, error) {
 
 	return strings.TrimSpace(stepValue.String()), args, nil
 
+}
+
+func getEscapedRuneIfValid(element rune) rune {
+	allEscapeChars := map[string]rune{"t": '\t', "n": '\n'}
+	elementToStr, err := strconv.Unquote(strconv.QuoteRune(element))
+	if err != nil {
+		return element
+	}
+	for key, val := range allEscapeChars {
+		if key == elementToStr {
+			return val
+		}
+	}
+	return element
 }

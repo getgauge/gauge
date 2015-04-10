@@ -142,7 +142,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 		&token{kind: tableHeader, args: []string{"id"}, lineNo: 2},
 		&token{kind: tableRow, args: []string{"1"}, lineNo: 3},
 		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 4},
-		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 5, args: []string{"user", "id"}},
+		&token{kind: stepKind, value: "enter {static} with {dynamic}", lineNo: 5, args: []string{"user \\n foo", "id"}},
 		&token{kind: stepKind, value: "sample \\{static\\}", lineNo: 6},
 	}
 
@@ -152,7 +152,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 	c.Assert(step.value, Equals, "enter {} with {}")
 	c.Assert(step.lineNo, Equals, 5)
 	c.Assert(len(step.args), Equals, 2)
-	c.Assert(step.args[0].value, Equals, "user")
+	c.Assert(step.args[0].value, Equals, "user \\n foo")
 	c.Assert(step.args[0].argType, Equals, static)
 	c.Assert(step.args[1].value, Equals, "id")
 	c.Assert(step.args[1].argType, Equals, dynamic)

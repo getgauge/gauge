@@ -17,9 +17,7 @@
 
 package main
 
-import (
-	. "gopkg.in/check.v1"
-)
+import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestParsingSimpleStep(c *C) {
 	parser := new(specParser)
@@ -212,4 +210,25 @@ func (s *MySuite) TestParsingStepWithSpecialParametersWithWhiteSpaces(c *C) {
 	c.Assert(len(tokens[2].args), Equals, 2)
 	c.Assert(tokens[2].args[0], Equals, "name")
 	c.Assert(tokens[2].args[1], Equals, "file  :something.txt")
+}
+
+func (s *MySuite) TestParsingStepWithStaticParamHavingEscapeChar(c *C) {
+	tokenValue, args, err := processStepText(`step "a\nb" only`)
+	c.Assert(err, IsNil)
+	c.Assert(args[0], Equals, "a\nb")
+	c.Assert(tokenValue, Equals, "step {static} only")
+}
+
+func (s *MySuite) TestParsingStepWithStaticParamHavingDifferentEscapeChar(c *C) {
+	tokenValue, args, err := processStepText(`step "foo bar \"hello\" all \"he\n\n\tyy \"foo\"hjhj\"" only`)
+	c.Assert(err, IsNil)
+	c.Assert(args[0], Equals, "foo bar \"hello\" all \"he\n\n\tyy \"foo\"hjhj\"")
+	c.Assert(tokenValue, Equals, "step {static} only")
+}
+
+func (s *MySuite) TestParsingStepWithStaticParamHavingNestedEscapeSequences(c *C) {
+	tokenValue, args, err := processStepText(`step "foo \t tab \n \"a\"dd r \\n" only`)
+	c.Assert(err, IsNil)
+	c.Assert(args[0], Equals, "foo \t tab \n \"a\"dd r \\n")
+	c.Assert(tokenValue, Equals, "step {static} only")
 }
