@@ -41,10 +41,10 @@ type specInfoGatherer struct {
 	projectRoot       string
 }
 
-func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) {
+func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) *testRunner {
 	specInfoGatherer.availableStepsMap = make(map[string]*stepValue)
 	specInfoGatherer.specStepMapCache = make(map[string][]*step)
-	specInfoGatherer.stepsFromRunner = specInfoGatherer.getStepsFromRunner(runner)
+	specInfoGatherer.stepsFromRunner, runner = specInfoGatherer.getStepsFromRunner(runner)
 	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.stepsFromRunner)
 
 	newSpecStepMap, conceptInfos := specInfoGatherer.getAllStepsFromSpecs()
@@ -55,6 +55,7 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.addStepsToAvailableSteps(conceptStepsMap)
 
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
+	return runner
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
@@ -149,14 +150,14 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 	}
 }
 
-func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) []string {
+func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) ([]string, *testRunner) {
 	steps := make([]string, 0)
 	if runner == nil {
-		runner, connErr := startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
+		var connErr error
+		runner, connErr = startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
 			logger.ApiLog.Debug("Steps got from runner: %v", steps)
-			runner.kill(getCurrentExecutionLogger())
 		}
 		if connErr != nil {
 			logger.ApiLog.Error("Runner connection failed: %s", connErr)
@@ -166,7 +167,7 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 		steps = append(steps, requestForSteps(runner)...)
 		logger.ApiLog.Debug("Steps got from runner: %v", steps)
 	}
-	return steps
+	return steps, runner
 }
 
 func (specInfoGatherer *specInfoGatherer) findAvailableStepsInSpecs(specs []*specification) map[string][]*step {

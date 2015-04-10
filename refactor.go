@@ -46,12 +46,9 @@ type refactoringResult struct {
 	warnings           []string
 }
 
-func performRephraseRefactoring(oldStep, newStep string, ignoreWarnings bool) *refactoringResult {
+func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 	if newStep == oldStep {
-		if ignoreWarnings {
-			return &refactoringResult{success: true}
-		}
-		return rephraseFailure("Same old step name and new step name.")
+		return &refactoringResult{success: true}
 	}
 	agent, err := getRefactorAgent(oldStep, newStep)
 
@@ -77,7 +74,7 @@ func performRephraseRefactoring(oldStep, newStep string, ignoreWarnings bool) *r
 		return result
 	}
 
-	refactorResult := agent.performRefactoringOn(specs, conceptDictionary, ignoreWarnings)
+	refactorResult := agent.performRefactoringOn(specs, conceptDictionary)
 	refactorResult.warnings = append(refactorResult.warnings, result.warnings...)
 	return refactorResult
 }
@@ -96,30 +93,26 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	}
 }
 
-func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary, ignore bool) *refactoringResult {
+func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	result := &refactoringResult{success: false, errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
-		runner, connErr := agent.startRunner()
+		apiHandler, connErr := agent.startRunner()
 		if connErr != nil {
 			result.errors = append(result.errors, connErr.Error())
 			return result
 		}
-		defer runner.kill(getCurrentExecutionLogger())
-		stepName, err, warning := agent.getStepNameFromRunner(runner, ignore)
-		if err != nil {
-			result.errors = append(result.errors, err.Error())
-			return result
-		}
-		if warning == nil {
-			runnerFilesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
+		defer apiHandler.runner.kill(getCurrentExecutionLogger())
+		stepName, ok := apiHandler.specInfoGatherer.availableStepsMap[agent.oldStep.value]
+		if !ok {
+			result.warnings = append(result.warnings, fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
+		} else {
+			runnerFilesChanged, err := agent.requestRunnerForRefactoring(apiHandler.runner, stepName.parameterizedStepValue)
 			if err != nil {
 				result.errors = append(result.errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
 				return result
 			}
 			result.runnerFilesChanged = runnerFilesChanged
-		} else {
-			result.warnings = append(result.warnings, warning.message)
 		}
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
@@ -200,14 +193,13 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 	return refactorResponse.GetFilesChanged(), runnerError
 }
 
-func (agent *rephraseRefactorer) startRunner() (*testRunner, error) {
+func (agent *rephraseRefactorer) startRunner() (*gaugeApiMessageHandler, error) {
 	env.LoadEnv(*currentEnv, false)
-	startAPIService(0)
-	testRunner, err := startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
+	err, apiHandler := startAPIService(0)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}
-	return testRunner, nil
+	return apiHandler, nil
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
