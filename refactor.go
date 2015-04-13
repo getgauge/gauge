@@ -56,13 +56,8 @@ func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 		return rephraseFailure(err.Error())
 	}
 
-	projectRoot, err := common.GetProjectRoot()
-	if err != nil {
-		return rephraseFailure(err.Error())
-	}
-
 	result := &refactoringResult{success: true, errors: make([]string, 0), warnings: make([]string, 0)}
-	specs, specParseResults := findSpecs(filepath.Join(projectRoot, common.SpecsDirectoryName), &conceptDictionary{})
+	specs, specParseResults := findSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &conceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.success {
 		return result

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"os"
 	"path"
@@ -40,11 +41,7 @@ func LoadEnv(env string, shouldSkip bool) {
 
 // Loads all the properties files available in the specified env directory
 func loadEnvironment(env string) error {
-	gaugeProjectRoot, err := common.GetProjectRoot()
-	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to Load environment: %s\n", err.Error()))
-	}
-	envDir := filepath.Join(gaugeProjectRoot, common.EnvDirectoryName)
+	envDir := filepath.Join(config.ProjectRoot, common.EnvDirectoryName)
 
 	dirToRead := path.Join(envDir, env)
 	if !common.DirExists(dirToRead) {
@@ -55,7 +52,7 @@ func loadEnvironment(env string) error {
 		return filepath.Ext(fileName) == ".properties"
 	}
 
-	err = filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
 		if isProperties(path) {
 			p, e := properties.Load(path)
 			if e != nil {

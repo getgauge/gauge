@@ -337,6 +337,7 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 	validationErrors := validator.validate()
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
+		runner.kill(getCurrentExecutionLogger())
 		os.Exit(1)
 	}
 }
@@ -395,16 +396,7 @@ type environmentVariables struct {
 }
 
 func getProjectManifest(writer executionLogger) *manifest {
-	value := ""
-	if len(flag.Args()) != 0 {
-		value = flag.Args()[0]
-	}
-	projectRoot, err := common.GetProjectRootFromSpecPath(value)
-	if err != nil {
-		writer.Critical("Failed to read manifest: %s \n", err.Error())
-		os.Exit(1)
-	}
-	contents, err := common.ReadFileContents(path.Join(projectRoot, common.ManifestFile))
+	contents, err := common.ReadFileContents(path.Join(config.ProjectRoot, common.ManifestFile))
 	if err != nil {
 		writer.Critical(err.Error())
 		os.Exit(1)
@@ -655,15 +647,7 @@ func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 }
 
 func findConceptFiles() []string {
-	value := ""
-	if len(flag.Args()) != 0 {
-		value = flag.Args()[0]
-	}
-	conceptsDir, err := common.GetDirInProject(common.SpecsDirectoryName, value)
-	if err != nil {
-		return []string{}
-	}
-
+	conceptsDir := filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
 	return common.FindFilesInDir(conceptsDir, func(path string) bool {
 		return filepath.Ext(path) == common.ConceptFileExtension
 	})

@@ -136,12 +136,7 @@ func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMe
 }
 
 func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	root, err := common.GetProjectRoot()
-	if err != nil {
-		logger.ApiLog.Error("Failed to find project root while responding to API request. %s\n", err.Error())
-		root = ""
-	}
-	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(root)}
+	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(config.ProjectRoot)}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
 
 }

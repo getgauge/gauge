@@ -112,6 +112,7 @@ func getRunnerInfo(language string) (*runner, error) {
 
 func (testRunner *testRunner) kill(writer executionLogger) error {
 	if testRunner.isStillRunning() {
+		defer testRunner.connection.Close()
 		testRunner.sendProcessKillMessage()
 
 		exited := make(chan bool, 1)
