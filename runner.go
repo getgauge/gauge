@@ -144,7 +144,7 @@ func (testRunner *testRunner) killRunner() error {
 }
 
 func (testRunner *testRunner) isStillRunning() bool {
-	return testRunner.cmd.ProcessState == nil || !testRunner.cmd.ProcessState.Exited()
+	return !(testRunner == nil) && !(testRunner.cmd == nil) && (testRunner.cmd.ProcessState == nil || !testRunner.cmd.ProcessState.Exited())
 }
 
 func (testRunner *testRunner) sendProcessKillMessage() {

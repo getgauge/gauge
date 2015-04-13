@@ -221,7 +221,8 @@ func (specInfoGatherer *specInfoGatherer) addToAvailableSteps(stepText string) {
 
 func (specInfoGatherer *specInfoGatherer) getAvailableSteps() []*stepValue {
 	if specInfoGatherer.availableStepsMap == nil {
-		specInfoGatherer.makeListOfAvailableSteps(nil)
+		runner := specInfoGatherer.makeListOfAvailableSteps(nil)
+		runner.kill(getCurrentExecutionLogger())
 	}
 	specInfoGatherer.mutex.Lock()
 	steps := make([]*stepValue, 0)
