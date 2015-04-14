@@ -24,10 +24,6 @@ import (
 	"strings"
 )
 
-const (
-	DOT = "."
-)
-
 var currentGaugeVersion = &version{0, 0, 7}
 
 type version struct {
@@ -37,24 +33,28 @@ type version struct {
 }
 
 func parseVersion(versionText string) (*version, error) {
-	splits := strings.Split(versionText, DOT)
+	splits := strings.Split(versionText, ".")
 	if len(splits) != 3 {
-		return nil, errors.New("Incorrect number of '.' characters in Version. Version should be of the form 1.5.7")
+		return nil, errors.New("Incorrect version format. Version should be in the form 1.5.7")
 	}
 	major, err := strconv.Atoi(splits[0])
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error parsing major version number %s to integer. %s", splits[0], err.Error()))
+		return nil, versionError("major", splits[0], err)
 	}
 	minor, err := strconv.Atoi(splits[1])
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error parsing minor version number %s to integer. %s", splits[0], err.Error()))
+		return nil, versionError("minor", splits[1], err)
 	}
 	patch, err := strconv.Atoi(splits[2])
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Error parsing patch version number %s to integer. %s", splits[0], err.Error()))
+		return nil, versionError("patch", splits[2], err)
 	}
 
 	return &version{major, minor, patch}, nil
+}
+
+func versionError(level, text string, err error) error {
+	return errors.New(fmt.Sprintf("Error parsing %s version %s to integer. %s", level, text, err.Error()))
 }
 
 func (version *version) isBetween(lower *version, greater *version) bool {
