@@ -65,10 +65,10 @@ func main() {
 	}
 	env.LoadEnv(*currentEnv, true)
 	logger.Initialize(*verbosity, *logLevel)
-	if *daemonize && validGaugeProject {
-		runInBackground()
-	} else if *gaugeVersion {
+	if *gaugeVersion {
 		printVersion()
+	} else if *daemonize && validGaugeProject {
+		runInBackground()
 	} else if *specFilesToFormat != "" && validGaugeProject {
 		formatSpecFiles(*specFilesToFormat)
 	} else if *initialize != "" {
@@ -769,14 +769,13 @@ func handleWarningMessages(warnings []string) {
 }
 
 func printVersion() {
-	fmt.Printf("Gauge : %s\n", currentGaugeVersion.String())
+	fmt.Printf("Gauge version: %s\n\n", currentGaugeVersion.String())
+	fmt.Println("Plugins\n-------")
 	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		fmt.Println("Could not get plugin details : ", err)
-		return
-	}
-	if len(allPluginsWithVersion) > 0 {
-		fmt.Println("Plugins:\n-------- ")
+		fmt.Println("No plugins found")
+		fmt.Println("Plugins can be installed with `gauge --install {plugin-name}`")
+		os.Exit(0)
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
 		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
