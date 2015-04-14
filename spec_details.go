@@ -59,7 +59,7 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromSpecs() (map[string][]*step, []*gauge_messages.ConceptInfo) {
-	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
+	specFiles := util.FindSpecFilesIn(config.ProjectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	availableSpecs, parseResults := parseSpecFiles(specFiles, dictionary)
 	specInfoGatherer.handleParseFailures(parseResults)
@@ -76,7 +76,7 @@ func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*pa
 }
 
 func (specInfoGatherer *specInfoGatherer) getAllTags() []string {
-	specFiles := util.FindSpecFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
+	specFiles := util.FindSpecFilesIn(config.ProjectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	dictionary, _ := createConceptsDictionary(true)
 	availableSpecs, parseResults := parseSpecFiles(specFiles, dictionary)
 	specInfoGatherer.handleParseFailures(parseResults)
@@ -101,7 +101,7 @@ func (specInfoGatherer *specInfoGatherer) getAllTags() []string {
 
 func (specInfoGatherer *specInfoGatherer) getAllStepsFromConcepts() map[string][]*step {
 	allStepsInConcepts := make(map[string][]*step, 0)
-	conceptFiles := util.FindConceptFilesIn(specInfoGatherer.projectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
+	conceptFiles := util.FindConceptFilesIn(config.ProjectRoot + fmt.Sprintf("%c", filepath.Separator) + common.SpecsDirectoryName)
 	for _, conceptFile := range conceptFiles {
 		fileText, fileReadErr := common.ReadFileContents(conceptFile)
 		if fileReadErr != nil {

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/util"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
@@ -22,10 +23,9 @@ Scenario 1
 	specFile, err := util.CreateFileIn(specsDir, "Spec1.spec", data)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
-	specInfoGatherer.projectRoot = dir
+	config.ProjectRoot = dir
 
 	stepsMap, _ := specInfoGatherer.getAllStepsFromSpecs()
-	c.Assert(specInfoGatherer.projectRoot, Equals, dir)
 	c.Assert(len(stepsMap), Equals, 1)
 	steps, ok := stepsMap[specFile]
 	c.Assert(ok, Equals, true)
@@ -52,7 +52,7 @@ tags: first scenario
 	_, err = util.CreateFileIn(specsDir, "Spec1.spec", data)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
-	specInfoGatherer.projectRoot = dir
+	config.ProjectRoot = dir
 
 	tagsMap := specInfoGatherer.getAllTags()
 	c.Assert(len(tagsMap), Equals, 3)

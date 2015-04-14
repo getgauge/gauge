@@ -98,16 +98,20 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 			return result
 		}
 		defer apiHandler.runner.kill(getCurrentExecutionLogger())
-		stepName, ok := apiHandler.specInfoGatherer.availableStepsMap[agent.oldStep.value]
-		if !ok {
-			result.warnings = append(result.warnings, fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText))
-		} else {
-			runnerFilesChanged, err := agent.requestRunnerForRefactoring(apiHandler.runner, stepName.parameterizedStepValue)
+		stepName, err, warning := agent.getStepNameFromRunner(apiHandler.runner)
+		if err != nil {
+			result.errors = append(result.errors, err.Error())
+			return result
+		}
+		if warning == nil {
+			runnerFilesChanged, err := agent.requestRunnerForRefactoring(apiHandler.runner, stepName)
 			if err != nil {
 				result.errors = append(result.errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
 				return result
 			}
 			result.runnerFilesChanged = runnerFilesChanged
+		} else {
+			result.warnings = append(result.warnings, warning.message)
 		}
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
@@ -236,7 +240,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return convertToStepText(agent.newStep.fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner, ignore bool) (string, error, *warning) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (string, error, *warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
 	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerRequestTimeout())
 	if err != nil {
