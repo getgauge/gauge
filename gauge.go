@@ -90,6 +90,7 @@ func main() {
 			executeSpecs(*parallel)
 		} else {
 			logger.Log.Error("Could not set project root: %s", err.Error())
+			os.Exit(1)
 		}
 	}
 }
