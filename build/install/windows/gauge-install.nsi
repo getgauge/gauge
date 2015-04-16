@@ -60,7 +60,7 @@ functionEnd
 
 Section "Gauge" SEC01
   SetOutPath "$INSTDIR"
-  SetOverwrite try
+  SetOverwrite on
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\*"
 SectionEnd
 
