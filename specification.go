@@ -265,12 +265,12 @@ func (specParser *specParser) createSpecification(tokens []*token, conceptDictio
 					finalResult.error = result.error
 					return nil, finalResult
 				}
-				if result.warnings != nil {
-					if finalResult.warnings == nil {
-						finalResult.warnings = make([]*warning, 0)
-					}
-					finalResult.warnings = append(finalResult.warnings, result.warnings...)
+			}
+			if result.warnings != nil {
+				if finalResult.warnings == nil {
+					finalResult.warnings = make([]*warning, 0)
 				}
+				finalResult.warnings = append(finalResult.warnings, result.warnings...)
 			}
 		}
 	}
@@ -782,20 +782,23 @@ func addInlineTableHeader(step *step, token *token) {
 func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResult {
 	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
 	tableValues := make([]tableCell, 0)
+	warnings := make([]*warning, 0)
 	for _, tableValue := range token.args {
 		if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
 			if !argLookup.containsArg(param) {
-				return parseResult{ok: false, error: &parseError{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved", param), lineText: token.lineText}}
+				tableValues = append(tableValues, tableCell{value: param, cellType: static})
+				warnings = append(warnings, &warning{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
+			} else {
+				tableValues = append(tableValues, tableCell{value: param, cellType: dynamic})
 			}
-			tableValues = append(tableValues, tableCell{value: param, cellType: dynamic})
 		} else {
 			tableValues = append(tableValues, tableCell{value: tableValue, cellType: static})
 		}
 	}
 	step.addInlineTableRow(tableValues)
-	return parseResult{ok: true}
+	return parseResult{ok: true, warnings: warnings}
 }
 
 //concept header will have dynamic param and should not be resolved through lookup, so passing nil lookup
