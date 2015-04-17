@@ -788,7 +788,7 @@ func addInlineTableRow(step *step, token *token, argLookup *argLookup) parseResu
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
 			if !argLookup.containsArg(param) {
-				tableValues = append(tableValues, tableCell{value: param, cellType: static})
+				tableValues = append(tableValues, tableCell{value: tableValue, cellType: static})
 				warnings = append(warnings, &warning{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
 			} else {
 				tableValues = append(tableValues, tableCell{value: param, cellType: dynamic})

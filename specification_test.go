@@ -303,8 +303,10 @@ func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
 		&token{kind: tableRow, args: []string{"2", "<type2>"}},
 	}
 
-	_, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
 	c.Assert(result.ok, Equals, true)
+	c.Assert(spec.scenarios[0].steps[0].args[0].table.get("id")[0].value, Equals, "1")
+	c.Assert(spec.scenarios[0].steps[0].args[0].table.get("name")[0].value, Equals, "<invalid>")
 	c.Assert(result.warnings[0].message, Equals, "Dynamic param <invalid> could not be resolved, Treating it as static param")
 }
 
