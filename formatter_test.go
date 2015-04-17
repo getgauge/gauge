@@ -28,7 +28,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 		&token{kind: stepKind, value: "Example step", lineNo: 3, lineText: "Example step"},
 		&token{kind: stepKind, value: "Step with inline table", lineNo: 3, lineText: "Step with inline table "},
 		&token{kind: tableHeader, args: []string{"id", "name"}},
-		&token{kind: tableRow, args: []string{"1", "foo"}},
+		&token{kind: tableRow, args: []string{"<1>", "foo"}},
 		&token{kind: tableRow, args: []string{"2", "bar"}},
 	}
 
@@ -43,10 +43,10 @@ Scenario Heading
 ----------------
 * Example step
 * Step with inline table 
-     |id|name|
-     |--|----|
-     |1 |foo |
-     |2 |bar |
+     |id |name|
+     |---|----|
+     |<1>|foo |
+     |2  |bar |
 `)
 }
 
