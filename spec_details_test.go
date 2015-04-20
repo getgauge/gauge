@@ -145,6 +145,107 @@ Scenario 1
 
 }
 
+func (s *MySuite) TestAddSpec(c *C) {
+	data := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+	data1 := []byte(`Specification Heading2
+=====================
+Scenario 1
+----------
+* say hello to gauge
+* testing steps with "params"
+* last step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	c.Assert(len(specInfoGatherer.specStepMapCache), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(3, Equals, len(allSteps))
+
+	util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec2.spec"))
+	c.Assert(len(specInfoGatherer.specStepMapCache), Equals, 2)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(6, Equals, len(allSteps))
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(true, Equals, stringInSlice("first step with {}", stepValues))
+	c.Assert(true, Equals, stringInSlice("say {} to me", stepValues))
+	c.Assert(true, Equals, stringInSlice("a {} step", stepValues))
+	c.Assert(true, Equals, stringInSlice("say hello to gauge", stepValues))
+	c.Assert(true, Equals, stringInSlice("testing steps with {}", stepValues))
+	c.Assert(true, Equals, stringInSlice("last step", stepValues))
+}
+
+func (s *MySuite) TestSameSpecAddedTwice(c *C) {
+	data := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	c.Assert(len(specInfoGatherer.specStepMapCache), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(3, Equals, len(allSteps))
+
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec1.spec"))
+	c.Assert(len(specInfoGatherer.specStepMapCache), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(3, Equals, len(allSteps))
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(true, Equals, stringInSlice("first step with {}", stepValues))
+	c.Assert(true, Equals, stringInSlice("say {} to me", stepValues))
+	c.Assert(true, Equals, stringInSlice("a {} step", stepValues))
+}
+
+func (s *MySuite) TestAddeingSpecWithParseFailures(c *C) {
+	data := []byte(`NO heading parse failure
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	c.Assert(len(specInfoGatherer.specStepMapCache), Equals, 0)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 0)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(0, Equals, len(allSteps))
+}
+
 func stringInSlice(a string, list []string) bool {
 	for _, b := range list {
 		if b == a {

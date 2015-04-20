@@ -37,6 +37,7 @@ type specInfoGatherer struct {
 	runnerStepValues  []*stepValue
 	specStepMapCache  map[string][]*step
 	conceptInfos      []*gauge_messages.ConceptInfo
+	conceptDictionary *conceptDictionary
 	mutex             sync.Mutex
 }
 
@@ -49,21 +50,22 @@ func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testR
 	specInfoGatherer.getAllStepsFromConcepts()
 
 	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
-//	go specInfoGatherer.watchForFileChanges()
+	//	go specInfoGatherer.watchForFileChanges()
 	return runner
 }
 
 func (specInfoGatherer *specInfoGatherer) findAllStepsFromSpecs() {
 	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
-	dictionary, _ := createConceptsDictionary(true)
-	availableSpecs, parseResults := parseSpecFiles(specFiles, dictionary)
+	var result *parseResult
+	specInfoGatherer.conceptDictionary, result = createConceptsDictionary(true)
+
+	specInfoGatherer.handleParseFailures([]*parseResult{result})
+	availableSpecs, parseResults := parseSpecFiles(specFiles, specInfoGatherer.conceptDictionary)
 
 	specInfoGatherer.handleParseFailures(parseResults)
 
-	specInfoGatherer.availableSpecs = availableSpecs
-	specInfoGatherer.conceptInfos = specInfoGatherer.createConceptInfos(dictionary)
-	stepsFound := specInfoGatherer.findAvailableStepsInSpecs(availableSpecs)
-	specInfoGatherer.addStepsToAvailableSteps(stepsFound)
+	specInfoGatherer.conceptInfos = specInfoGatherer.createConceptInfos(specInfoGatherer.conceptDictionary)
+	specInfoGatherer.addStepsForSpecs(availableSpecs)
 }
 
 func (specInfoGatherer *specInfoGatherer) handleParseFailures(parseResults []*parseResult) {
@@ -144,6 +146,27 @@ func (specInfoGatherer *specInfoGatherer) fileRenamed(fileName string) {
 }
 
 func (specInfoGatherer *specInfoGatherer) addSpec(fileName string) {
+	specs, parseResults := parseSpecFiles([]string{fileName}, specInfoGatherer.conceptDictionary)
+	specInfoGatherer.handleParseFailures(parseResults)
+	specInfoGatherer.addStepsForSpecs(specs)
+}
+
+func (specInfoGatherer *specInfoGatherer) addStepsForSpecs(specs []*specification) {
+	specInfoGatherer.mutex.Lock()
+	specInfoGatherer.addToAvailableSpecs(specs)
+	specInfoGatherer.addStepsToAvailableSteps(specInfoGatherer.findAvailableStepsInSpecs(specs))
+	specInfoGatherer.mutex.Unlock()
+}
+
+func (specInfoGatherer *specInfoGatherer) addToAvailableSpecs(specs []*specification) {
+	if specInfoGatherer.availableSpecs == nil {
+		specInfoGatherer.availableSpecs = make([]*specification, 0)
+	}
+	for _, spec := range specs {
+		if _, ok := specInfoGatherer.specStepMapCache[spec.fileName]; !ok {
+			specInfoGatherer.availableSpecs = append(specInfoGatherer.availableSpecs, spec)
+		}
+	}
 }
 
 func (specInfoGatherer *specInfoGatherer) addConcept(fileName string) {
@@ -151,8 +174,10 @@ func (specInfoGatherer *specInfoGatherer) addConcept(fileName string) {
 }
 
 func (specInfoGatherer *specInfoGatherer) removeSpec(fileName string) {
+	specInfoGatherer.mutex.Lock()
 	delete(specInfoGatherer.specStepMapCache, fileName)
 	specInfoGatherer.updateAllStepsList()
+	specInfoGatherer.mutex.Unlock()
 }
 
 func (specInfoGatherer *specInfoGatherer) removeConcept(fileName string) {
@@ -198,6 +223,7 @@ func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
 	for {
 		time.Sleep(seconds)
 		specInfoGatherer.mutex.Lock()
+
 		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
 		specInfoGatherer.findAllStepsFromSpecs()
 		specInfoGatherer.getAllStepsFromConcepts()
