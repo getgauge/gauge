@@ -230,7 +230,11 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
 	refactoringResult := performRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
-	logger.ApiLog.Info("Refactoring response from gauge: %s", refactoringResult)
+	if refactoringResult.success {
+		logger.ApiLog.Info("%s", refactoringResult.String())
+	} else {
+		logger.ApiLog.Error("Refactoring response from gauge. Errors : %s", refactoringResult.errors)
+	}
 	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.success), Errors: refactoringResult.errors, FilesChanged: refactoringResult.allFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
 }

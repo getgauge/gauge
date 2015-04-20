@@ -46,6 +46,15 @@ type refactoringResult struct {
 	warnings           []string
 }
 
+func (refactoringResult *refactoringResult) String() string {
+	result := fmt.Sprintf("Refactoring result from gauge:\n")
+	result += fmt.Sprintf("Specs changed        : %s\n", refactoringResult.specsChanged)
+	result += fmt.Sprintf("Concepts changed     : %s\n", refactoringResult.conceptsChanged)
+	result += fmt.Sprintf("Source files changed : %s\n", refactoringResult.runnerFilesChanged)
+	result += fmt.Sprintf("Warnings             : %s\n", refactoringResult.warnings)
+	return result
+}
+
 func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 	if newStep == oldStep {
 		return &refactoringResult{success: true}
