@@ -415,3 +415,12 @@ func (s *MySuite) TestGenerateNewStepNameWhenParametersAreRemoved(c *C) {
 
 	c.Assert(linetext, Equals, "changed step <address> and \"id\"")
 }
+
+func (s *MySuite) TestGenerateNewStepNameWhenParametersAreUnchanged(c *C) {
+	args := []string{"a"}
+	newStep := "make comment <a>"
+	agent, _ := getRefactorAgent("Comment <a>", newStep)
+	linetext := agent.generateNewStepName(args, agent.createOrderOfArgs())
+
+	c.Assert(linetext, Equals, "make comment <a>")
+}

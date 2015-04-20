@@ -32,6 +32,17 @@ func (s *MySuite) TestSimpleStepAfterStepValueExtraction(c *C) {
 	c.Assert(stepValue.parameterizedStepValue, Equals, "a simple step")
 }
 
+func (s *MySuite) TestSimpleStepAfterStepValueExtractionForStepWithAParam(c *C) {
+	stepText := "Comment <a>"
+	stepValue, err := extractStepValueAndParams(stepText, false)
+
+	args := stepValue.args
+	c.Assert(err, Equals, nil)
+	c.Assert(len(args), Equals, 1)
+	c.Assert(stepValue.stepValue, Equals, "Comment {}")
+	c.Assert(stepValue.parameterizedStepValue, Equals, "Comment <a>")
+}
+
 func (s *MySuite) TestAddingTableParamAfterStepValueExtraction(c *C) {
 	stepText := "a simple step"
 	stepValue, err := extractStepValueAndParams(stepText, true)
