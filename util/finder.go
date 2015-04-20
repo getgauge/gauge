@@ -41,6 +41,15 @@ func IsValidConceptExtension(path string) bool {
 	return filepath.Ext(path) == ".cpt"
 }
 
+// Returns true if spec
+func IsConcept(path string) bool {
+	return IsValidConceptExtension(path)
+}
+
+func IsSpec(path string) bool {
+	return IsValidSpecExtension(path)
+}
+
 func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
 	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
