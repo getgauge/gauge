@@ -20,6 +20,7 @@ package config
 import (
 	"github.com/getgauge/common"
 	"github.com/op/go-logging"
+	"os"
 	"strconv"
 	"time"
 )
@@ -46,25 +47,25 @@ var ProjectRoot string
 // The interval time in milliseconds in which gauge refreshes api cache
 func ApiRefreshInterval() time.Duration {
 	intervalString := getFromConfig(apiRefreshInterval)
-	return convertToTime(intervalString, defaultApiRefreshInterval)
+	return convertToTime(intervalString, defaultApiRefreshInterval, apiRefreshInterval)
 }
 
 // Timeout in milliseconds for making a connection to the language runner
 func RunnerConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(runnerConnectionTimeout)
-	return convertToTime(intervalString, defaultRunnerConnectionTimeout)
+	return convertToTime(intervalString, defaultRunnerConnectionTimeout, runnerConnectionTimeout)
 }
 
 // Timeout in milliseconds for making a connection to plugins
 func PluginConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(pluginConnectionTimeout)
-	return convertToTime(intervalString, defaultPluginConnectionTimeout)
+	return convertToTime(intervalString, defaultPluginConnectionTimeout, pluginConnectionTimeout)
 }
 
 // Timeout in milliseconds for a plugin to stop after a kill message has been sent
 func PluginKillTimeout() time.Duration {
 	intervalString := getFromConfig(pluginKillTimeOut)
-	return convertToTime(intervalString, defaultPluginKillTimeout)
+	return convertToTime(intervalString, defaultPluginKillTimeout, pluginKillTimeOut)
 }
 
 func RefactorTimeout() time.Duration {
@@ -73,8 +74,11 @@ func RefactorTimeout() time.Duration {
 
 // Timeout in milliseconds for requests from the language runner.
 func RunnerRequestTimeout() time.Duration {
-	intervalString := getFromConfig(runnerRequestTimeout)
-	return convertToTime(intervalString, defaultRunnerRequestTimeout)
+	intervalString := os.Getenv(runnerRequestTimeout)
+	if intervalString == "" {
+		intervalString = getFromConfig(runnerRequestTimeout)
+	}
+	return convertToTime(intervalString, defaultRunnerRequestTimeout, runnerRequestTimeout)
 }
 
 func GaugeRepositoryUrl() string {
@@ -101,16 +105,16 @@ func setCurrentProjectEnvVariable() error {
 	return common.SetEnvVariable(common.GaugeProjectRootEnv, ProjectRoot)
 }
 
-func convertToTime(value string, defaultValue time.Duration) time.Duration {
+func convertToTime(value string, defaultValue time.Duration, name string) time.Duration {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		apiLog.Warning("Cannot convert %s to time", value)
+		apiLog.Warning("Incorrect value for %s in property file.Cannot convert %s to time", value, name)
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
 }
 
-func getFromConfig(propertyName string) string {
+var getFromConfig = func(propertyName string) string {
 	config, err := common.GetGaugeConfiguration()
 	if err != nil {
 		return ""

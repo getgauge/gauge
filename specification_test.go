@@ -267,6 +267,7 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 		&token{kind: tableHeader, args: []string{"id", "name"}},
 		&token{kind: tableRow, args: []string{"1", "<type1>"}},
 		&token{kind: tableRow, args: []string{"2", "<type2>"}},
+		&token{kind: tableRow, args: []string{"<2>", "<type3>"}},
 	}
 
 	spec, result := new(specParser).createSpecification(tokens, new(conceptDictionary))
@@ -279,16 +280,21 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 	c.Assert(inlineTable, NotNil)
 
 	c.Assert(step.value, Equals, "Step with inline table {}")
-	c.Assert(len(inlineTable.get("id")), Equals, 2)
-	c.Assert(len(inlineTable.get("name")), Equals, 2)
+	c.Assert(len(inlineTable.get("id")), Equals, 3)
+	c.Assert(len(inlineTable.get("name")), Equals, 3)
 	c.Assert(inlineTable.get("id")[0].value, Equals, "1")
 	c.Assert(inlineTable.get("id")[0].cellType, Equals, static)
 	c.Assert(inlineTable.get("id")[1].value, Equals, "2")
 	c.Assert(inlineTable.get("id")[1].cellType, Equals, static)
+	c.Assert(inlineTable.get("id")[2].value, Equals, "<2>")
+	c.Assert(inlineTable.get("id")[2].cellType, Equals, static)
+
 	c.Assert(inlineTable.get("name")[0].value, Equals, "type1")
 	c.Assert(inlineTable.get("name")[0].cellType, Equals, dynamic)
 	c.Assert(inlineTable.get("name")[1].value, Equals, "type2")
 	c.Assert(inlineTable.get("name")[1].cellType, Equals, dynamic)
+	c.Assert(inlineTable.get("name")[2].value, Equals, "<type3>")
+	c.Assert(inlineTable.get("name")[2].cellType, Equals, static)
 }
 
 func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
