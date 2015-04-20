@@ -5,11 +5,25 @@ import (
 	"github.com/getgauge/gauge/util"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
+	"os"
 )
 
+type MySuite struct {
+	specsDir   string
+	projectDir string
+}
+
+func (s *MySuite) SetUpTest(c *C) {
+	s.projectDir, _ = ioutil.TempDir("", "gaugeTest")
+	s.specsDir, _ = util.CreateDirIn(s.projectDir, "specs")
+	config.ProjectRoot = s.projectDir
+}
+
+func (s *MySuite) TearDownTest(c *C) {
+	os.RemoveAll(s.projectDir)
+}
+
 func (s *MySuite) TestGetAllStepsFromSpecs(c *C) {
-	dir, err := ioutil.TempDir("", "gaugeTest")
-	c.Assert(err, Equals, nil)
 	data := []byte(`Specification Heading
 =====================
 Scenario 1
@@ -17,13 +31,10 @@ Scenario 1
 * say hello
 * say "hello" to me
 `)
-	specsDir, err := util.CreateDirIn(dir, "specs")
-	c.Assert(err, Equals, nil)
 
-	specFile, err := util.CreateFileIn(specsDir, "Spec1.spec", data)
+	specFile, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
-	config.ProjectRoot = dir
 
 	stepsMap, _ := specInfoGatherer.getAllStepsFromSpecs()
 	c.Assert(len(stepsMap), Equals, 1)
@@ -35,8 +46,6 @@ Scenario 1
 }
 
 func (s *MySuite) TestGetAllTagsFromSpecs(c *C) {
-	dir, err := ioutil.TempDir("", "gaugeTest")
-	c.Assert(err, Equals, nil)
 	data := []byte(`Specification Heading
 =====================
 tags : hello world, first spec
@@ -46,13 +55,9 @@ tags: first scenario
 * say hello
 * say "hello" to me
 `)
-	specsDir, err := util.CreateDirIn(dir, "specs")
-	c.Assert(err, Equals, nil)
-
-	_, err = util.CreateFileIn(specsDir, "Spec1.spec", data)
+	_, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
-	config.ProjectRoot = dir
 
 	tagsMap := specInfoGatherer.getAllTags()
 	c.Assert(len(tagsMap), Equals, 3)
