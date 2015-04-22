@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/version"
 	"net"
 	"os"
 	"os/exec"
@@ -164,9 +165,9 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	if err != nil {
 		return nil, err
 	}
-	compatibilityErr := checkCompatiblity(currentGaugeVersion, &r.GaugeVersionSupport)
+	compatibilityErr := checkCompatiblity(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
-		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found", currentGaugeVersion))
+		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found", version.CurrentGaugeVersion))
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())

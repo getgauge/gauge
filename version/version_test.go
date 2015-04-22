@@ -4,8 +4,8 @@
 
 // Gauge is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
+// the Free Software Foundation, either Version 3 of the License, or
+// (at your option) any later Version.
 
 // Gauge is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,37 +15,37 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package version
 
 import (
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestParsingVersion(c *C) {
-	version, err := parseVersion("1.5.9")
+	Version, err := parseVersion("1.5.9")
 	c.Assert(err, Equals, nil)
-	c.Assert(version.major, Equals, 1)
-	c.Assert(version.minor, Equals, 5)
-	c.Assert(version.patch, Equals, 9)
+	c.Assert(Version.major, Equals, 1)
+	c.Assert(Version.minor, Equals, 5)
+	c.Assert(Version.patch, Equals, 9)
 }
 
 func (s *MySuite) TestParsingErrorForIncorrectNumberOfDotCharacters(c *C) {
 	_, err := parseVersion("1.5.9.9")
-	c.Assert(err, ErrorMatches, "Incorrect version format. Version should be in the form 1.5.7")
+	c.Assert(err, ErrorMatches, "Incorrect Version format. Version should be in the form 1.5.7")
 
 	_, err = parseVersion("0.")
-	c.Assert(err, ErrorMatches, "Incorrect version format. Version should be in the form 1.5.7")
+	c.Assert(err, ErrorMatches, "Incorrect Version format. Version should be in the form 1.5.7")
 }
 
 func (s *MySuite) TestParsingErrorForNonIntegerVersion(c *C) {
 	_, err := parseVersion("a.9.0")
-	c.Assert(err, ErrorMatches, `Error parsing major version a to integer. strconv.ParseInt: parsing "a": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing major Version a to integer. strconv.ParseInt: parsing "a": invalid syntax`)
 
 	_, err = parseVersion("0.ffhj.78")
-	c.Assert(err, ErrorMatches, `Error parsing minor version ffhj to integer. strconv.ParseInt: parsing "ffhj": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing minor Version ffhj to integer. strconv.ParseInt: parsing "ffhj": invalid syntax`)
 
 	_, err = parseVersion("8.9.opl")
-	c.Assert(err, ErrorMatches, `Error parsing patch version opl to integer. strconv.ParseInt: parsing "opl": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing patch Version opl to integer. strconv.ParseInt: parsing "opl": invalid syntax`)
 }
 
 func (s *MySuite) TestVersionComparisonGreaterLesser(c *C) {

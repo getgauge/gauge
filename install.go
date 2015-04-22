@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/version"
 	"os"
 	"path"
 	"path/filepath"
@@ -79,19 +80,19 @@ func installPlugin(pluginName, version string) error {
 	return nil
 }
 
-func installPluginWithDescription(installDescription *installDescription, version string) error {
+func installPluginWithDescription(installDescription *installDescription, currentVersion string) error {
 	var versionInstallDescription *versionInstallDescription
 	var err error
-	if version != "" {
-		versionInstallDescription, err = installDescription.getVersion(version)
+	if currentVersion != "" {
+		versionInstallDescription, err = installDescription.getVersion(currentVersion)
 		if err != nil {
 			return err
 		}
-		if compatibilityError := checkCompatiblity(currentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
-			return errors.New(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, currentGaugeVersion.String(), compatibilityError.Error()))
+		if compatibilityError := checkCompatiblity(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
+			return errors.New(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
-		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(currentGaugeVersion)
+		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(version.CurrentGaugeVersion)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err))
 		}
@@ -244,14 +245,14 @@ func (installDesc *installDescription) getVersion(version string) (*versionInsta
 	return nil, errors.New("Could not find install description for Version " + version)
 }
 
-func (installDesc *installDescription) getLatestCompatibleVersionTo(version *version) (*versionInstallDescription, error) {
+func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersion *version.Version) (*versionInstallDescription, error) {
 	installDesc.sortVersionInstallDescriptions()
 	for _, versionInstallDesc := range installDesc.Versions {
-		if err := checkCompatiblity(version, &versionInstallDesc.GaugeVersionSupport); err == nil {
+		if err := checkCompatiblity(currentVersion, &versionInstallDesc.GaugeVersionSupport); err == nil {
 			return &versionInstallDesc, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Compatible version to %s not found", version))
+	return nil, errors.New(fmt.Sprintf("Compatible version to %s not found", currentVersion))
 
 }
 
@@ -259,27 +260,27 @@ func (installDescription *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(ByDecreasingVersion(installDescription.Versions))
 }
 
-func checkCompatiblity(version *version, versionSupport *versionSupport) error {
-	minSupportVersion, err := parseVersion(versionSupport.Minimum)
+func checkCompatiblity(currentVersion *version.Version, versionSupport *versionSupport) error {
+	minSupportVersion, err := version.ParseVersion(versionSupport.Minimum)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Invalid minimum support version %s. : %s. ", versionSupport.Minimum, err))
 	}
 	if versionSupport.Maximum != "" {
-		maxSupportVersion, err := parseVersion(versionSupport.Maximum)
+		maxSupportVersion, err := version.ParseVersion(versionSupport.Maximum)
 		if err != nil {
 			return errors.New(fmt.Sprintf("Invalid maximum support version %s. : %s. ", versionSupport.Maximum, err))
 		}
-		if version.isBetween(minSupportVersion, maxSupportVersion) {
+		if currentVersion.IsBetween(minSupportVersion, maxSupportVersion) {
 			return nil
 		} else {
-			return errors.New(fmt.Sprintf("Version %s is not between %s and %s", version, minSupportVersion, maxSupportVersion))
+			return errors.New(fmt.Sprintf("Version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion))
 		}
 	}
 
-	if minSupportVersion.isLesserThanEqualTo(version) {
+	if minSupportVersion.IsLesserThanEqualTo(currentVersion) {
 		return nil
 	}
-	return errors.New(fmt.Sprintf("Incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, version))
+	return errors.New(fmt.Sprintf("Incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, currentVersion))
 }
 
 type ByDecreasingVersion []versionInstallDescription
@@ -287,9 +288,9 @@ type ByDecreasingVersion []versionInstallDescription
 func (a ByDecreasingVersion) Len() int      { return len(a) }
 func (a ByDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByDecreasingVersion) Less(i, j int) bool {
-	version1, _ := parseVersion(a[i].Version)
-	version2, _ := parseVersion(a[j].Version)
-	return version1.isGreaterThan(version2)
+	version1, _ := version.ParseVersion(a[i].Version)
+	version2, _ := version.ParseVersion(a[j].Version)
+	return version1.IsGreaterThan(version2)
 }
 
 func installPluginFromZip(zipFile string) error {

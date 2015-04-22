@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
 	"io"
 	"io/ioutil"
@@ -157,7 +158,7 @@ var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory f
 var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alphabetical Order. Eg: gauge -s specs")
 
 func printUsage() {
-	fmt.Printf("gauge - version %s\n", currentGaugeVersion.String())
+	fmt.Printf("gauge - version %s\n", version.CurrentGaugeVersion.String())
 	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
@@ -770,7 +771,7 @@ func handleWarningMessages(warnings []string) {
 }
 
 func printVersion() {
-	fmt.Printf("Gauge version: %s\n\n", currentGaugeVersion.String())
+	fmt.Printf("Gauge version: %s\n\n", version.CurrentGaugeVersion.String())
 	fmt.Println("Plugins\n-------")
 	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
 	if err != nil {

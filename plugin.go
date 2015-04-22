@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"os/exec"
@@ -253,9 +254,9 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s", pluginId, err.Error()))
 			continue
 		}
-		compatibilityErr := checkCompatiblity(currentGaugeVersion, &pd.GaugeVersionSupport)
+		compatibilityErr := checkCompatiblity(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
 		if compatibilityErr != nil {
-			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, currentGaugeVersion))
+			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion))
 			continue
 		}
 		if isExecutionScopePlugin(pd) {
