@@ -39,15 +39,15 @@ func ParseVersion(versionText string) (*Version, error) {
 	}
 	Major, err := strconv.Atoi(splits[0])
 	if err != nil {
-		return nil, VersionError("Major", splits[0], err)
+		return nil, VersionError("major", splits[0], err)
 	}
 	Minor, err := strconv.Atoi(splits[1])
 	if err != nil {
-		return nil, VersionError("Minor", splits[1], err)
+		return nil, VersionError("minor", splits[1], err)
 	}
 	Patch, err := strconv.Atoi(splits[2])
 	if err != nil {
-		return nil, VersionError("Patch", splits[2], err)
+		return nil, VersionError("patch", splits[2], err)
 	}
 
 	return &Version{Major, Minor, Patch}, nil
