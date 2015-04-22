@@ -21,6 +21,7 @@ import (
 	"archive/zip"
 	"flag"
 	"fmt"
+	"github.com/getgauge/gauge/version"
 	"io"
 	"log"
 	"os"
@@ -210,7 +211,7 @@ func copyGaugeFiles(installPath string) {
 }
 
 func addInstallScripts(files map[string]string) map[string]string {
-	if (getOS() == darwin || getOS() == linux) && (*distroVersion != "") {
+	if (getOS() == darwin || getOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	} else if getOS() == windows {
 		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
@@ -252,7 +253,7 @@ var install = flag.Bool("install", false, "Install to the specified prefix")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
-var distroVersion = flag.String("distro", "", "Create gauge distributable for specified version")
+var distro = flag.Bool("distro", false, "Create gauge distributable")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
 
 type targetOpts struct {
@@ -282,7 +283,7 @@ func main() {
 		runTests(gauge, *coverage)
 	} else if *install {
 		installGauge()
-	} else if *distroVersion != "" {
+	} else if *distro {
 		createGaugeDistributables(*allPlatforms)
 	} else {
 		if *allPlatforms {
@@ -333,14 +334,14 @@ func createDistro() {
 }
 
 func createWindowsInstaller() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
 	if err != nil {
 		panic(err)
 	}
 	copyGaugeFiles(distroDir)
 	runProcess("makensis.exe",
-		fmt.Sprintf("/DPRODUCT_VERSION=%s", *distroVersion),
+		fmt.Sprintf("/DPRODUCT_VERSION=%s", version.CurrentGaugeVersion.String()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
@@ -348,7 +349,7 @@ func createWindowsInstaller() {
 }
 
 func createZipPackage() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, *distroVersion, getOS(), getArch())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir := filepath.Join(deploy, packageName)
 	copyGaugeFiles(distroDir)
 	createZipFromUtil(deploy, packageName)
