@@ -194,6 +194,10 @@ func (parser *conceptParser) createConceptLookup(concept *step) {
 	}
 }
 
+func newConceptDictionary() *conceptDictionary {
+	return &conceptDictionary{conceptsMap: make(map[string]*concept, 0)}
+}
+
 func (conceptDictionary *conceptDictionary) isConcept(step *step) bool {
 	_, ok := conceptDictionary.conceptsMap[step.value]
 	return ok

@@ -650,7 +650,7 @@ func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 
 func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
 	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
-	conceptsDictionary := new(conceptDictionary)
+	conceptsDictionary := newConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {
