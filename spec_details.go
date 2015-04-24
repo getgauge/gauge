@@ -27,30 +27,28 @@ import (
 	fsnotify "gopkg.in/fsnotify.v1"
 	"path/filepath"
 	"sync"
-	"time"
 )
 
 type specInfoGatherer struct {
 	availableSpecs    []*specification
 	availableStepsMap map[string]*stepValue
 	runnerStepValues  []*stepValue
-	specStepMapCache  map[string][]*step
+	fileToStepsMap    map[string][]*step
 	conceptDictionary *conceptDictionary
 	mutex             sync.Mutex
 }
 
 func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) *testRunner {
 	specInfoGatherer.availableStepsMap = make(map[string]*stepValue)
-	specInfoGatherer.specStepMapCache = make(map[string][]*step)
-	specInfoGatherer.getStepsFromRunner(runner)
+	specInfoGatherer.fileToStepsMap = make(map[string][]*step)
+	runner = specInfoGatherer.getStepsFromRunner(runner)
 
-	// Concepts first because we need to create a concept dictionary that spec parsing can use
+	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
 
-	go specInfoGatherer.refreshSteps(config.ApiRefreshInterval())
-	//	go specInfoGatherer.watchForFileChanges()
+	go specInfoGatherer.watchForFileChanges()
 	return runner
 }
 
@@ -149,6 +147,7 @@ func (specInfoGatherer *specInfoGatherer) fileRenamed(fileName string) {
 }
 
 func (specInfoGatherer *specInfoGatherer) addSpec(fileName string) {
+	logger.ApiLog.Info("Spec added/modified: %s", fileName)
 	specs, parseResults := parseSpecFiles([]string{fileName}, specInfoGatherer.getDictionary())
 	specInfoGatherer.handleParseFailures(parseResults)
 	specInfoGatherer.addStepsForSpecs(specs)
@@ -167,13 +166,14 @@ func (specInfoGatherer *specInfoGatherer) addToAvailableSpecs(specs []*specifica
 		specInfoGatherer.availableSpecs = make([]*specification, 0)
 	}
 	for _, spec := range specs {
-		if _, ok := specInfoGatherer.specStepMapCache[spec.fileName]; !ok {
+		if _, ok := specInfoGatherer.fileToStepsMap[spec.fileName]; !ok {
 			specInfoGatherer.availableSpecs = append(specInfoGatherer.availableSpecs, spec)
 		}
 	}
 }
 
 func (specInfoGatherer *specInfoGatherer) addConcept(fileName string) {
+	logger.ApiLog.Info("Concept added/modified: %s", fileName)
 	if err := addConcepts(fileName, specInfoGatherer.getDictionary()); err != nil {
 		logger.ApiLog.Error("Concept parse failure: %s %s", fileName, err)
 		return
@@ -183,14 +183,18 @@ func (specInfoGatherer *specInfoGatherer) addConcept(fileName string) {
 }
 
 func (specInfoGatherer *specInfoGatherer) removeSpec(fileName string) {
+	logger.ApiLog.Info("Spec removed: %s", fileName)
 	specInfoGatherer.mutex.Lock()
-	delete(specInfoGatherer.specStepMapCache, fileName)
+	delete(specInfoGatherer.fileToStepsMap, fileName)
 	specInfoGatherer.updateAllStepsList()
 	specInfoGatherer.mutex.Unlock()
 }
 
 func (specInfoGatherer *specInfoGatherer) removeConcept(fileName string) {
-	delete(specInfoGatherer.specStepMapCache, fileName)
+	logger.ApiLog.Info("Concept removed: %s", fileName)
+	delete(specInfoGatherer.fileToStepsMap, fileName)
+	specInfoGatherer.createConceptsDictionary()
+	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.updateAllStepsList()
 }
 
@@ -224,22 +228,8 @@ func (specInfoGatherer *specInfoGatherer) createConceptInfos() []*gauge_messages
 	return conceptInfos
 }
 
-func (specInfoGatherer *specInfoGatherer) refreshSteps(seconds time.Duration) {
-	for {
-		time.Sleep(seconds)
-		specInfoGatherer.mutex.Lock()
-
-		specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
-		specInfoGatherer.findAllStepsFromConcepts()
-		specInfoGatherer.findAllStepsFromSpecs()
-		specInfoGatherer.updateAllStepsList()
-
-		specInfoGatherer.mutex.Unlock()
-	}
-}
-
 // Gets all steps list from the runner
-func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) {
+func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner) *testRunner {
 	steps := make([]string, 0)
 	if runner == nil {
 		var connErr error
@@ -257,6 +247,7 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 		logger.ApiLog.Debug("Steps got from runner: %v", steps)
 	}
 	specInfoGatherer.runnerStepValues = specInfoGatherer.convertToStepValues(steps)
+	return runner
 }
 
 func (specInfoGatherer *specInfoGatherer) convertToStepValues(steps []string) []*stepValue {
@@ -291,7 +282,7 @@ func (specInfoGatherer *specInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 
 func (specInfoGatherer *specInfoGatherer) updateAllStepsList() {
 	specInfoGatherer.availableStepsMap = make(map[string]*stepValue, 0)
-	for _, steps := range specInfoGatherer.specStepMapCache {
+	for _, steps := range specInfoGatherer.fileToStepsMap {
 		for _, step := range steps {
 			if step.isConcept {
 				continue
@@ -306,11 +297,11 @@ func (specInfoGatherer *specInfoGatherer) updateAllStepsList() {
 }
 
 func (specInfoGatherer *specInfoGatherer) updateCache(newSpecStepsMap map[string][]*step) {
-	if specInfoGatherer.specStepMapCache == nil {
-		specInfoGatherer.specStepMapCache = make(map[string][]*step, 0)
+	if specInfoGatherer.fileToStepsMap == nil {
+		specInfoGatherer.fileToStepsMap = make(map[string][]*step, 0)
 	}
 	for fileName, specSteps := range newSpecStepsMap {
-		specInfoGatherer.specStepMapCache[fileName] = specSteps
+		specInfoGatherer.fileToStepsMap[fileName] = specSteps
 	}
 }
 
