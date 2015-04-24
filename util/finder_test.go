@@ -4,6 +4,7 @@ import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -71,4 +72,38 @@ func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 	_, err = CreateFileIn(dir1, "concept2.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
+}
+
+func (s *MySuite) TestFindAllNestedDirs(c *C) {
+	nested1 := filepath.Join(dir, "nested")
+	nested2 := filepath.Join(dir, "nested2")
+	nested3 := filepath.Join(dir, "nested2", "deep")
+	nested4 := filepath.Join(dir, "nested2", "deep", "deeper")
+	os.Mkdir(nested1, 0755)
+	os.Mkdir(nested2, 0755)
+	os.Mkdir(nested3, 0755)
+	os.Mkdir(nested4, 0755)
+
+	nestedDirs := FindAllNestedDirs(dir)
+	c.Assert(len(nestedDirs), Equals, 4)
+	c.Assert(stringInSlice(nested1, nestedDirs), Equals, true)
+	c.Assert(stringInSlice(nested2, nestedDirs), Equals, true)
+	c.Assert(stringInSlice(nested3, nestedDirs), Equals, true)
+	c.Assert(stringInSlice(nested4, nestedDirs), Equals, true)
+}
+
+func (s *MySuite) TestIsDir(c *C) {
+	c.Assert(IsDir(dir), Equals, true)
+	c.Assert(IsDir(filepath.Join(dir, "foo.txt")), Equals, false)
+	c.Assert(IsDir("unknown path"), Equals, false)
+	c.Assert(IsDir("foo/goo.txt"), Equals, false)
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

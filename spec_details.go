@@ -89,22 +89,40 @@ func (specInfoGatherer *specInfoGatherer) watchForFileChanges() {
 		for {
 			select {
 			case event := <-watcher.Events:
-				specInfoGatherer.handleEvent(event)
+				specInfoGatherer.handleEvent(event, watcher)
 			case err := <-watcher.Errors:
 				logger.ApiLog.Error("Error event while watching specs", err)
 			}
 		}
 	}()
 
+	allDirsToWatch := make([]string, 0)
+
 	specDir := filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
-	err = watcher.Add(specDir)
-	if err != nil {
-		logger.ApiLog.Error("Unable to add specDir %v to file watcher: %s", specDir, err)
+	allDirsToWatch = append(allDirsToWatch, specDir)
+	allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
+
+	for _, dir := range allDirsToWatch {
+		specInfoGatherer.addDirToFileWatcher(watcher, dir)
 	}
 	<-done
 }
 
-func (specInfoGatherer *specInfoGatherer) handleEvent(event fsnotify.Event) {
+func (specInfoGatherer *specInfoGatherer) addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
+	err := watcher.Add(dir)
+	if err != nil {
+		logger.ApiLog.Error("Unable to add directory %v to file watcher: %s", dir, err)
+	} else {
+		logger.ApiLog.Info("Watching directory: %s", dir)
+	}
+}
+
+func (specInfoGatherer *specInfoGatherer) removeWatcherOn(watcher *fsnotify.Watcher, path string) {
+	logger.ApiLog.Error("Removing watcher on : %s", path)
+	watcher.Remove(path)
+}
+
+func (specInfoGatherer *specInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
 	filePath, err := filepath.Abs(event.Name)
 	if err != nil {
 		logger.ApiLog.Error("Failed to get abs file path for %s: %s", event.Name, err)
@@ -112,21 +130,24 @@ func (specInfoGatherer *specInfoGatherer) handleEvent(event fsnotify.Event) {
 	}
 	switch event.Op {
 	case fsnotify.Create:
-		specInfoGatherer.fileAdded(filePath)
+		specInfoGatherer.fileAdded(watcher, filePath)
 	case fsnotify.Write:
-		specInfoGatherer.fileModified(filePath)
+		specInfoGatherer.fileModified(watcher, filePath)
 	case fsnotify.Rename:
-		specInfoGatherer.fileRenamed(filePath)
+		specInfoGatherer.fileRenamed(watcher, filePath)
 	case fsnotify.Remove:
-		specInfoGatherer.fileRemoved(filePath)
+		specInfoGatherer.fileRemoved(watcher, filePath)
 	}
 }
 
-func (specInfoGatherer *specInfoGatherer) fileAdded(fileName string) {
-	specInfoGatherer.fileModified(fileName)
+func (specInfoGatherer *specInfoGatherer) fileAdded(watcher *fsnotify.Watcher, fileName string) {
+	if util.IsDir(fileName) {
+		specInfoGatherer.addDirToFileWatcher(watcher, fileName)
+	}
+	specInfoGatherer.fileModified(watcher, fileName)
 }
 
-func (specInfoGatherer *specInfoGatherer) fileModified(fileName string) {
+func (specInfoGatherer *specInfoGatherer) fileModified(watcher *fsnotify.Watcher, fileName string) {
 	if util.IsSpec(fileName) {
 		specInfoGatherer.addSpec(fileName)
 	} else if util.IsConcept(fileName) {
@@ -134,16 +155,18 @@ func (specInfoGatherer *specInfoGatherer) fileModified(fileName string) {
 	}
 }
 
-func (specInfoGatherer *specInfoGatherer) fileRemoved(fileName string) {
+func (specInfoGatherer *specInfoGatherer) fileRemoved(watcher *fsnotify.Watcher, fileName string) {
 	if util.IsSpec(fileName) {
 		specInfoGatherer.removeSpec(fileName)
 	} else if util.IsConcept(fileName) {
 		specInfoGatherer.removeConcept(fileName)
+	} else {
+		specInfoGatherer.removeWatcherOn(watcher, fileName)
 	}
 }
 
-func (specInfoGatherer *specInfoGatherer) fileRenamed(fileName string) {
-	specInfoGatherer.fileRemoved(fileName)
+func (specInfoGatherer *specInfoGatherer) fileRenamed(watcher *fsnotify.Watcher, fileName string) {
+	specInfoGatherer.fileRemoved(watcher, fileName)
 }
 
 func (specInfoGatherer *specInfoGatherer) addSpec(fileName string) {

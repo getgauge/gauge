@@ -427,8 +427,9 @@ Scenario 1
 	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
 	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
 
-	util.CreateFileIn(s.specsDir, "SPEC.spec", data3)
-	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "SPEC.spec"))
+	_, err := util.CreateFileIn(filepath.Join(s.specsDir, "nested"), "SPEC.spec", data3)
+	c.Assert(err, Equals, nil)
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "nested", "SPEC.spec"))
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 3)
 	allSteps = specInfoGatherer.getAvailableSteps()
