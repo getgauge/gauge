@@ -651,17 +651,9 @@ func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	}
 }
 
-func findConceptFiles() []string {
-	conceptsDir := filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
-	return common.FindFilesInDir(conceptsDir, func(path string) bool {
-		return filepath.Ext(path) == common.ConceptFileExtension
-	})
-
-}
-
 func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
-	conceptFiles := findConceptFiles()
-	conceptsDictionary := new(conceptDictionary)
+	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+	conceptsDictionary := newConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {

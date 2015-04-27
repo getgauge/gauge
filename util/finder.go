@@ -41,7 +41,37 @@ func IsValidConceptExtension(path string) bool {
 	return filepath.Ext(path) == ".cpt"
 }
 
+// Returns true if concept file
+func IsConcept(path string) bool {
+	return IsValidConceptExtension(path)
+}
+
+// Returns true if spec file file
+func IsSpec(path string) bool {
+	return IsValidSpecExtension(path)
+}
+
+func FindAllNestedDirs(dir string) []string {
+	nestedDirs := make([]string, 0)
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if info.IsDir() && !(path == dir) && err == nil {
+			nestedDirs = append(nestedDirs, path)
+		}
+		return nil
+	})
+	return nestedDirs
+}
+
+func IsDir(path string) bool {
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return fileInfo.IsDir()
+}
+
 func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
+	os.MkdirAll(dir, 0755)
 	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
 }

@@ -6,6 +6,7 @@ import (
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
 
 type MySuite struct {
@@ -36,29 +37,430 @@ Scenario 1
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
 
-	stepsMap, _ := specInfoGatherer.getAllStepsFromSpecs()
-	c.Assert(len(stepsMap), Equals, 1)
-	steps, ok := stepsMap[specFile]
+	specInfoGatherer.findAllStepsFromSpecs()
+
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+
+	steps, ok := specInfoGatherer.fileToStepsMap[specFile]
 	c.Assert(ok, Equals, true)
 	c.Assert(len(steps), Equals, 2)
 	c.Assert(steps[0].lineText, Equals, "say hello")
 	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me")
 }
 
-func (s *MySuite) TestGetAllTagsFromSpecs(c *C) {
+func (s *MySuite) TestRemoveSpec(c *C) {
 	data := []byte(`Specification Heading
 =====================
-tags : hello world, first spec
 Scenario 1
 ----------
-tags: first scenario
 * say hello
 * say "hello" to me
 `)
-	_, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	data1 := []byte(`Specification Heading2
+=====================
+Scenario 1
+----------
+* say hello 1
+* say "hello" to me 1
+`)
+
+	specFile1, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specFile2, err := util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(specInfoGatherer)
 
-	tagsMap := specInfoGatherer.getAllTags()
-	c.Assert(len(tagsMap), Equals, 3)
+	specInfoGatherer.findAllStepsFromSpecs()
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+
+	steps, ok := specInfoGatherer.fileToStepsMap[specFile1]
+	c.Assert(ok, Equals, true)
+	c.Assert(len(steps), Equals, 2)
+	c.Assert(steps[0].lineText, Equals, "say hello")
+	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me")
+
+	steps, ok = specInfoGatherer.fileToStepsMap[specFile2]
+	c.Assert(ok, Equals, true)
+	c.Assert(len(steps), Equals, 2)
+	c.Assert(steps[0].lineText, Equals, "say hello 1")
+	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me 1")
+
+	specInfoGatherer.removeSpec(filepath.Join(s.specsDir, "Spec1.spec"))
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+
+	steps, ok = specInfoGatherer.fileToStepsMap[specFile2]
+	c.Assert(ok, Equals, true)
+
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 2)
+}
+
+func (s *MySuite) TestRemoveSpecWithCommonSteps(c *C) {
+	data := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* say hello
+* say "hello" to me
+* a common step
+`)
+	data1 := []byte(`Specification Heading2
+=====================
+Scenario 1
+----------
+* say hello 1
+* say "hello" to me 1
+* a common step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
+
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	specInfoGatherer.updateAllStepsList()
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 5)
+
+	specInfoGatherer.removeSpec(filepath.Join(s.specsDir, "Spec1.spec"))
+
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 3)
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(stringInSlice("say hello 1", stepValues), Equals, true)
+	c.Assert(stringInSlice("say {} to me 1", stepValues), Equals, true)
+	c.Assert(stringInSlice("a common step", stepValues), Equals, true)
+	c.Assert(stringInSlice("say hello", stepValues), Equals, false)
+	c.Assert(stringInSlice("say {} to me", stepValues), Equals, false)
+
+}
+
+func (s *MySuite) TestAddSpec(c *C) {
+	data := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+	data1 := []byte(`Specification Heading2
+=====================
+Scenario 1
+----------
+* say hello to gauge
+* testing steps with "params"
+* last step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 3)
+
+	util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec2.spec"))
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 6)
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("say {} to me", stepValues), Equals, true)
+	c.Assert(stringInSlice("a {} step", stepValues), Equals, true)
+	c.Assert(stringInSlice("say hello to gauge", stepValues), Equals, true)
+	c.Assert(stringInSlice("testing steps with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("last step", stepValues), Equals, true)
+}
+
+func (s *MySuite) TestSameSpecAddedTwice(c *C) {
+	data := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 3)
+
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec1.spec"))
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 3)
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("say {} to me", stepValues), Equals, true)
+	c.Assert(stringInSlice("a {} step", stepValues), Equals, true)
+}
+
+func (s *MySuite) TestAddingSpecWithParseFailures(c *C) {
+	data := []byte(`NO heading parse failure
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+
+	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromSpecs()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 0)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 0)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 0)
+}
+
+func (s *MySuite) TestFindingStepsAndConceptInfosFromConcepts(c *C) {
+	data := []byte(`# foo bar
+* first step with "foo"
+* say "hello" to me
+* a "final" step
+`)
+
+	util.CreateFileIn(s.specsDir, "concept.cpt", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromConcepts()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 0)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 3)
+
+	conceptInfos := specInfoGatherer.getConceptInfos()
+	c.Assert(len(conceptInfos), Equals, 1)
+	c.Assert(conceptInfos[0].GetFilepath(), Equals, filepath.Join(s.specsDir, "concept.cpt"))
+}
+
+func (s *MySuite) TestAddingConcepts(c *C) {
+	data := []byte(`# A concept
+* first step with "foo"
+* second say "hello" to me
+* third "foo" step
+
+# second concept
+* fourth
+* A concept
+`)
+
+	data1 := []byte(`# another cpt file
+* second say "hello" to me
+* fifth step
+
+# concept with <a>
+* sixth step with <a>
+* seventh param step
+`)
+
+	util.CreateFileIn(s.specsDir, "concept.cpt", data)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromConcepts()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 4)
+
+	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 2)
+
+	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
+
+	specInfoGatherer.addConcept(filepath.Join(s.specsDir, "concept1.cpt"))
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 7)
+
+	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+
+}
+
+func (s *MySuite) TestRemovingConcepts(c *C) {
+	data := []byte(`# A concept
+* first step with "foo"
+* second say "hello" to me
+* third "foo" step
+
+# second concept
+* fourth
+* fifth step
+* third concept
+`)
+
+	data1 := []byte(`# third concept
+* second say "hello" to me
+* A concept
+
+# fourth concept with <a>
+* sixth step with <a>
+* seventh "param" step
+`)
+
+	util.CreateFileIn(s.specsDir, "concept.cpt", data)
+	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromConcepts()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 7)
+	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+
+	firstCptFile := filepath.Join(s.specsDir, "concept.cpt")
+	os.Remove(firstCptFile)
+	specInfoGatherer.removeConcept(firstCptFile)
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 4)
+
+	stepValues := make([]string, 0)
+	for _, stepValue := range allSteps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+
+	c.Assert(stringInSlice("second say {} to me", stepValues), Equals, true)
+	c.Assert(stringInSlice("A concept", stepValues), Equals, true)
+	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
+
+	cptInfos := specInfoGatherer.getConceptInfos()
+	c.Assert(len(cptInfos), Equals, 2)
+}
+
+func (s *MySuite) TestAddingSpecsAndConcepts(c *C) {
+	data := []byte(`# A concept
+* first step with "foo"
+* second say "hello" to me
+* third "foo" step
+
+# second concept
+* fourth
+* fifth step
+* third concept
+`)
+
+	data1 := []byte(`# third concept
+* second say "hello" to me
+* A concept
+
+# fourth concept with <a>
+* sixth step with <a>
+* seventh "param" step
+`)
+
+	data3 := []byte(`Specification Heading
+=====================
+Scenario 1
+----------
+* eighth step with "foo"
+
+## scenario 2
+
+* ninth step
+`)
+
+	util.CreateFileIn(s.specsDir, "concept.cpt", data)
+	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
+	specInfoGatherer := new(specInfoGatherer)
+
+	specInfoGatherer.findAllStepsFromConcepts()
+	specInfoGatherer.updateAllStepsList()
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
+	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 7)
+	stepValues := createStepValueTexts(allSteps)
+
+	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("second say {} to me", stepValues), Equals, true)
+	c.Assert(stringInSlice("third {} step", stepValues), Equals, true)
+	c.Assert(stringInSlice("fourth", stepValues), Equals, true)
+	c.Assert(stringInSlice("fifth step", stepValues), Equals, true)
+	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
+	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
+	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+
+	_, err := util.CreateFileIn(filepath.Join(s.specsDir, "nested"), "SPEC.spec", data3)
+	c.Assert(err, Equals, nil)
+	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "nested", "SPEC.spec"))
+
+	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 3)
+	allSteps = specInfoGatherer.getAvailableSteps()
+	c.Assert(len(allSteps), Equals, 9)
+	stepValues = createStepValueTexts(allSteps)
+
+	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("second say {} to me", stepValues), Equals, true)
+	c.Assert(stringInSlice("third {} step", stepValues), Equals, true)
+	c.Assert(stringInSlice("fourth", stepValues), Equals, true)
+	c.Assert(stringInSlice("fifth step", stepValues), Equals, true)
+	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
+	c.Assert(stringInSlice("eighth step with {}", stepValues), Equals, true)
+	c.Assert(stringInSlice("ninth step", stepValues), Equals, true)
+	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+}
+
+func createStepValueTexts(steps []*stepValue) []string {
+	stepValues := make([]string, 0)
+	for _, stepValue := range steps {
+		stepValues = append(stepValues, stepValue.stepValue)
+	}
+	return stepValues
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

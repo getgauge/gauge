@@ -181,7 +181,7 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *gaug
 }
 
 func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.conceptInfos)
+	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.getConceptInfos())
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
 
 }
