@@ -279,6 +279,7 @@ func (specInfoGatherer *specInfoGatherer) convertToStepValues(steps []string) []
 		stepValue, err := extractStepValueAndParams(step, false)
 		if err != nil {
 			logger.ApiLog.Error("Failed to extract stepvalue for step - %s : %s", step, err)
+			continue
 		}
 		stepValues = append(stepValues, stepValue)
 	}
