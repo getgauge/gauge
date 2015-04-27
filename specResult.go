@@ -29,6 +29,7 @@ type suiteResult struct {
 	isFailed         bool
 	specsFailedCount int
 	executionTime    int64 //in milliseconds
+	unhandledErrors  []error
 }
 
 type specResult struct {

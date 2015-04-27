@@ -571,6 +571,9 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	logger.Log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
 	logger.Log.Info("%d specifications skipped\n", specsSkipped)
 	logger.Log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
+	for _, unhandledErr := range suiteResult.unhandledErrors {
+		logger.Log.Info(unhandledErr.Error())
+	}
 	return exitCode
 }
 

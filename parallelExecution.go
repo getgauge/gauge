@@ -18,6 +18,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"runtime"
@@ -34,6 +35,15 @@ type parallelSpecExecution struct {
 	aggregateResult          *suiteResult
 	numberOfExecutionStreams int
 	writer                   executionLogger
+}
+
+type streamExecError struct {
+	specsSkipped []string
+	message      string
+}
+
+func (s streamExecError) Error() string {
+	return fmt.Sprintf("The following specifications are not executed: %s. Reason: %s", s.specsSkipped, s.message)
 }
 
 type specCollection struct {
@@ -78,7 +88,11 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
-		suiteResults <- &suiteResult{}
+		specNames := make([]string, 0)
+		for _, spec := range specCollection.specs {
+			specNames = append(specNames, spec.fileName)
+		}
+		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specNames, message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, writer)
@@ -127,6 +141,9 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*suiteResult) *s
 		}
 		if result.postSuite != nil {
 			aggregateResult.postSuite = result.postSuite
+		}
+		if result.unhandledErrors != nil {
+			aggregateResult.unhandledErrors = append(aggregateResult.unhandledErrors, result.unhandledErrors...)
 		}
 	}
 	return aggregateResult

@@ -18,6 +18,7 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
@@ -69,4 +70,46 @@ func verifySpecCollectionsForSize(c *C, size int, specCollections ...*specCollec
 	for _, collection := range specCollections {
 		c.Assert(len(collection.specs), Equals, size)
 	}
+}
+
+func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
+	e := parallelSpecExecution{}
+	suiteRes1 := &suiteResult{executionTime: 1, specsFailedCount: 1, isFailed: true, specResults: []*specResult{&specResult{}, &specResult{}}}
+	suiteRes2 := &suiteResult{executionTime: 3, specsFailedCount: 0, isFailed: false, specResults: []*specResult{&specResult{}, &specResult{}}}
+	suiteRes3 := &suiteResult{executionTime: 5, specsFailedCount: 0, isFailed: false, specResults: []*specResult{&specResult{}, &specResult{}}}
+	suiteResults := make([]*suiteResult, 0)
+	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+
+	aggregatedRes := e.aggregateResults(suiteResults)
+	c.Assert(aggregatedRes.executionTime, Equals, int64(9))
+	c.Assert(aggregatedRes.specsFailedCount, Equals, 1)
+	c.Assert(aggregatedRes.isFailed, Equals, true)
+	c.Assert(len(aggregatedRes.specResults), Equals, 6)
+}
+
+func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
+	e := parallelSpecExecution{}
+	suiteRes1 := &suiteResult{isFailed: true, unhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
+	suiteRes2 := &suiteResult{isFailed: false, unhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
+	suiteRes3 := &suiteResult{isFailed: false}
+	suiteResults := make([]*suiteResult, 0)
+	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+
+	aggregatedRes := e.aggregateResults(suiteResults)
+	c.Assert(len(aggregatedRes.unhandledErrors), Equals, 2)
+	c.Assert(aggregatedRes.unhandledErrors[0].Error(), Equals, "The following specifications are not executed: [spec1 spec2]. Reason: Runner failed to start")
+	c.Assert(aggregatedRes.unhandledErrors[1].Error(), Equals, "The following specifications are not executed: [spec3 spec4]. Reason: Runner failed to start")
+}
+
+func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
+	e := parallelSpecExecution{}
+	suiteRes1 := &suiteResult{preSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteRes2 := &suiteResult{preSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteRes3 := &suiteResult{postSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteResults := make([]*suiteResult, 0)
+	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+
+	aggregatedRes := e.aggregateResults(suiteResults)
+	c.Assert(aggregatedRes.preSuite, Equals, suiteRes2.preSuite)
+	c.Assert(aggregatedRes.postSuite, Equals, suiteRes3.postSuite)
 }
