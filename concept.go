@@ -39,13 +39,13 @@ type conceptParser struct {
 }
 
 //concept file can have multiple concept headings
-func (parser *conceptParser) parse(text string) ([]*step, *parseError) {
+func (parser *conceptParser) parse(text string) ([]*step, *parseDetailResult) {
 	defer parser.resetState()
 
 	specParser := new(specParser)
 	tokens, err := specParser.generateTokens(text)
 	if err != nil {
-		return nil, err
+		return nil, &parseDetailResult{error: err}
 	}
 	return parser.createConcepts(tokens)
 }
@@ -55,8 +55,7 @@ func (parser *conceptParser) resetState() {
 	parser.currentConcept = nil
 }
 
-//todo: pass parseDetails.warnings to higher hierarchy
-func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseError) {
+func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseDetailResult) {
 	parser.currentState = initial
 	concepts := make([]*step, 0)
 	var parseDetails *parseDetailResult
@@ -69,7 +68,7 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			}
 			parser.currentConcept, parseDetails = parser.processConceptHeading(token)
 			if parseDetails.error != nil {
-				return nil, parseDetails.error
+				return nil, parseDetails
 			}
 			if addPreComments {
 				parser.currentConcept.preComments = preComments
@@ -78,15 +77,15 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 			addStates(&parser.currentState, conceptScope)
 		} else if parser.isStep(token) {
 			if !isInState(parser.currentState, conceptScope) {
-				return nil, &parseError{lineNo: token.lineNo, message: "Step is not defined inside a concept heading", lineText: token.lineText}
+				return nil, &parseDetailResult{error: &parseError{lineNo: token.lineNo, message: "Step is not defined inside a concept heading", lineText: token.lineText}}
 			}
 			if err := parser.processConceptStep(token); err != nil {
-				return nil, err
+				return nil, &parseDetailResult{error: err}
 			}
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
-				return nil, &parseError{lineNo: token.lineNo, message: "Table doesn't belong to any step", lineText: token.lineText}
+				return nil, &parseDetailResult{error: &parseError{lineNo: token.lineNo, message: "Table doesn't belong to any step", lineText: token.lineText}}
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
@@ -103,13 +102,13 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseErr
 		}
 	}
 	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
-		return nil, &parseError{lineNo: parser.currentConcept.lineNo, message: "Concept should have atleast one step", lineText: parser.currentConcept.lineText}
+		return nil, &parseDetailResult{error: &parseError{lineNo: parser.currentConcept.lineNo, message: "Concept should have atleast one step", lineText: parser.currentConcept.lineText}}
 	}
 
 	if parser.currentConcept != nil {
 		concepts = append(concepts, parser.currentConcept)
 	}
-	return concepts, nil
+	return concepts, parseDetails
 }
 
 func (parser *conceptParser) isConceptHeading(token *token) bool {

@@ -672,12 +672,16 @@ func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *pars
 	if fileReadErr != nil {
 		return &parseError{message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
 	}
-	concepts, err := new(conceptParser).parse(fileText)
-	if err != nil {
-		return err
+	concepts, parseResults := new(conceptParser).parse(fileText)
+	if parseResults != nil && parseResults.warnings != nil {
+		for _, warning := range parseResults.warnings {
+			logger.Log.Warning(warning.String())
+		}
 	}
-	err = conceptDictionary.add(concepts, conceptFile)
-	return err
+	if parseResults != nil && parseResults.error != nil {
+		return parseResults.error
+	}
+	return conceptDictionary.add(concepts, conceptFile)
 }
 
 func getSpecFiles(specSource string) []string {
