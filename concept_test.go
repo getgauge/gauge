@@ -234,9 +234,9 @@ func (s *MySuite) TestConceptDictionarySearch(c *C) {
 
 func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	parser := new(conceptParser)
-	concepts, err := parser.parse("# my concept \n * first step \n * second step ")
+	concepts, parseRes := parser.parse("# my concept \n * first step \n * second step ")
 
-	c.Assert(err, IsNil)
+	c.Assert(parseRes.error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -250,39 +250,39 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
 	parser := new(conceptParser)
-	_, err := parser.parse("# my concept with \"paratemer\" \n * first step \n * second step ")
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Concept heading can have only Dynamic Parameters")
+	_, parseRes := parser.parse("# my concept with \"paratemer\" \n * first step \n * second step ")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Concept heading can have only Dynamic Parameters")
 
-	_, err = parser.parse("# my concept with <table: foo> \n * first step \n * second step ")
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Dynamic parameter <table: foo> could not be resolved")
+	_, parseRes = parser.parse("# my concept with <table: foo> \n * first step \n * second step ")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Dynamic parameter <table: foo> could not be resolved")
 
 }
 
 func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
 	parser := new(conceptParser)
 
-	_, err := parser.parse("* first step \n * second step ")
+	_, parseRes := parser.parse("* first step \n * second step ")
 
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Step is not defined inside a concept heading")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Step is not defined inside a concept heading")
 }
 
 func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 	parser := new(conceptParser)
 
-	_, err := parser.parse("# my concept with \n")
+	_, parseRes := parser.parse("# my concept with \n")
 
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Concept should have atleast one step")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Concept should have atleast one step")
 }
 
 func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 	parser := new(conceptParser)
-	concepts, err := parser.parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ")
+	concepts, parseRes := parser.parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ")
 
-	c.Assert(err, IsNil)
+	c.Assert(parseRes.error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -310,25 +310,25 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 	parser := new(conceptParser)
-	_, err := parser.parse("# my concept \n * first step using \n * my concept ")
+	_, parseRes := parser.parse("# my concept \n * first step using \n * my concept ")
 
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Cyclic dependancy found. Step is calling concept again.")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Cyclic dependancy found. Step is calling concept again.")
 }
 
 func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	parser := new(conceptParser)
-	_, err := parser.parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
+	_, parseRes := parser.parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
 
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Dynamic parameter <param3> could not be resolved")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Dynamic parameter <param3> could not be resolved")
 }
 
 func (s *MySuite) TestParsingMultipleConcept(c *C) {
 	parser := new(conceptParser)
-	concepts, err := parser.parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ")
+	concepts, parseRes := parser.parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ")
 
-	c.Assert(err, IsNil)
+	c.Assert(parseRes.error, IsNil)
 	c.Assert(len(concepts), Equals, 3)
 
 	firstConcept := concepts[0]
@@ -358,9 +358,9 @@ func (s *MySuite) TestParsingMultipleConcept(c *C) {
 
 func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	parser := new(conceptParser)
-	concepts, err := parser.parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
+	concepts, parseRes := parser.parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
-	c.Assert(err, IsNil)
+	c.Assert(parseRes.error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -388,10 +388,10 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	parser := new(conceptParser)
-	_, err := parser.parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n")
+	_, parseRes := parser.parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
-	c.Assert(err, NotNil)
-	c.Assert(err.message, Equals, "Table doesn't belong to any step")
+	c.Assert(parseRes.error, NotNil)
+	c.Assert(parseRes.error.message, Equals, "Table doesn't belong to any step")
 }
 
 func (s *MySuite) TestDeepCopyOfConcept(c *C) {
@@ -551,9 +551,9 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 		step("first step").
 		step("another concept").String()
 
-	concepts, err := new(conceptParser).parse(conceptText)
-	c.Assert(err, IsNil)
-	err = conceptDictionary.add(concepts, "file.cpt")
+	concepts, parseErr := new(conceptParser).parse(conceptText)
+	c.Assert(parseErr.error, IsNil)
+	err := conceptDictionary.add(concepts, "file.cpt")
 	c.Assert(err, NotNil)
 	c.Assert(true, Equals, strings.Contains(err.message, "Circular reference found in concept"))
 }
@@ -572,11 +572,11 @@ func (s *MySuite) TestErrorOnCircularReferenceInDeepNestedConceptConcept(c *C) {
 		specHeading("second nested <c>").
 		step("a nested concept <c>").String()
 
-	concepts1, err := new(conceptParser).parse(conceptText)
-	c.Assert(err, IsNil)
-	concepts2, err := new(conceptParser).parse(secondConceptText)
+	concepts1, parseRes := new(conceptParser).parse(conceptText)
+	c.Assert(parseRes.error, IsNil)
+	concepts2, parseRes := new(conceptParser).parse(secondConceptText)
 
-	err = conceptDictionary.add(concepts1, "file.cpt")
+	err := conceptDictionary.add(concepts1, "file.cpt")
 	c.Assert(err, IsNil)
 
 	err = conceptDictionary.add(concepts2, "file2.cpt")
@@ -599,14 +599,14 @@ func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
 	conceptText := SpecBuilder().
 		specHeading("create user <user:id> <table:name> and <file>").
 		step("a step <user:id>").String()
-	_, err := new(conceptParser).parse(conceptText)
-	c.Assert(err.message, Equals, "Dynamic parameter <table:name> could not be resolved")
+	_, parseRes := new(conceptParser).parse(conceptText)
+	c.Assert(parseRes.error.message, Equals, "Dynamic parameter <table:name> could not be resolved")
 }
 
 func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 	conceptText := SpecBuilder().
 		specHeading("create user <user:id> \"abc\" and <file>").
 		step("a step <user:id>").String()
-	_, err := new(conceptParser).parse(conceptText)
-	c.Assert(err.message, Equals, "Concept heading can have only Dynamic Parameters")
+	_, parseRes := new(conceptParser).parse(conceptText)
+	c.Assert(parseRes.error.message, Equals, "Concept heading can have only Dynamic Parameters")
 }
