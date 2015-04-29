@@ -1,6 +1,7 @@
+![Gauge Logo](Gauge-Logo.png)
+
 # Welcome to Gauge
 
-![Gauge Logo](Gauge-Logo.png)
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 Gauge champions the idea of **living/executable documentation**.
