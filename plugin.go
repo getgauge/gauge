@@ -128,7 +128,9 @@ func isPluginInstalled(pluginName, pluginVersion string) bool {
 
 func getPluginJsonPath(pluginName, version string) (string, error) {
 	if !isPluginInstalled(pluginName, version) {
-		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, version))
+		if err := installPlugin(pluginName, version); err != nil {
+			return "", err
+		}
 	}
 
 	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
