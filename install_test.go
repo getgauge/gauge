@@ -127,5 +127,5 @@ func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
 
 func (s *MySuite) TestInstallRunnerFromInvalidZipNotPresent(c *C) {
 	err := installPluginFromZip("test_resources/gauge-ruby-0.0.3-darwin.x86_64.zip", "ruby")
-	c.Assert(err.Error(), Matches, "*ruby.json: no such file or directory$")
+	c.Assert(err, NotNil)
 }
