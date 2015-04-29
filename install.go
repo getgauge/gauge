@@ -293,27 +293,23 @@ func (a ByDecreasingVersion) Less(i, j int) bool {
 	return version1.IsGreaterThan(version2)
 }
 
-func installPluginFromZip(zipFile string) error {
+func installPluginFromZip(zipFile string, language string) error {
 	unzippedPluginDir, err := common.UnzipArchive(zipFile)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
 	}
 	logger.Log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
-	hasPluginJson := common.FileExists(unzippedPluginDir + fmt.Sprintf("%c", filepath.Separator) + "plugin.json")
+	hasPluginJson := common.FileExists(filepath.Join(unzippedPluginDir, "plugin.json"))
 	if hasPluginJson {
 		return installPluginFromDir(unzippedPluginDir)
 	} else {
-		return installRunnerFromDir(unzippedPluginDir)
+		return installRunnerFromDir(unzippedPluginDir, language)
 	}
 }
 
-func installRunnerFromDir(unzippedPluginDir string) error {
-	jsonFile, err := common.GetFileWithJsonExtensionInDir(unzippedPluginDir)
-	if err != nil {
-		return err
-	}
+func installRunnerFromDir(unzippedPluginDir string, language string) error {
 	var r runner
-	contents, err := common.ReadFileContents(unzippedPluginDir + fmt.Sprintf("%c", filepath.Separator) + jsonFile)
+	contents, err := common.ReadFileContents(filepath.Join(unzippedPluginDir, language+".json"))
 	if err != nil {
 		return err
 	}

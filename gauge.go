@@ -75,7 +75,7 @@ func main() {
 	} else if *initialize != "" {
 		initializeProject(*initialize)
 	} else if *installZip != "" && *install != "" {
-		installPluginZip(*installZip)
+		installPluginZip(*installZip, *install)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
 	} else if *update != "" {
@@ -184,9 +184,9 @@ func downloadAndInstallPlugin(plugin, version string) {
 	}
 }
 
-func installPluginZip(zipFile string) {
-	if err := installPluginFromZip(zipFile); err != nil {
-		logger.Log.Warning("Failed to install plugin from zip file : %s\n", err)
+func installPluginZip(zipFile string, language string) {
+	if err := installPluginFromZip(zipFile, language); err != nil {
+		logger.Log.Warning("Failed to install plugin from zip file. Invalid zip file : %s\n", err)
 	} else {
 		logger.Log.Info("Successfully installed plugin from zipFile")
 	}
