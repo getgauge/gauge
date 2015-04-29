@@ -128,9 +128,7 @@ func isPluginInstalled(pluginName, pluginVersion string) bool {
 
 func getPluginJsonPath(pluginName, version string) (string, error) {
 	if !isPluginInstalled(pluginName, version) {
-		if err := installPlugin(pluginName, version); err != nil {
-			return "", err
-		}
+		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, version))
 	}
 
 	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
@@ -216,11 +214,17 @@ func setEnvironmentProperties(properties map[string]string) error {
 }
 
 func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest) error {
+	if !isPluginInstalled(pluginName, pluginArgs["version"]) {
+		logger.Log.Info("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
+		result := installPlugin(pluginName, pluginArgs["version"])
+		if !result.success {
+			logger.Log.Error(result.getMessage())
+		}
+	}
 	pd, err := getPluginDescriptor(pluginName, pluginArgs["version"])
 	if err != nil {
 		return err
 	}
-
 	if isPluginAdded(manifest, pd) {
 		return errors.New("Plugin " + pd.Name + " is already added")
 	}
@@ -323,7 +327,7 @@ func (handler *pluginHandler) killPlugin(pluginId string) {
 	logger.Log.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		logger.Log.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		 logger.Log.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginId)
 }

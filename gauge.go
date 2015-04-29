@@ -169,19 +169,24 @@ func printUsage() {
 }
 
 func updatePlugin(plugin string) {
-	if err := installPlugin(plugin, ""); err != nil {
-		logger.Log.Error("%s : %s\n", plugin, err)
-		return
-	}
-	logger.Log.Info("Successfully updated plugin => %s", plugin)
+	downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
 }
 
 func downloadAndInstallPlugin(plugin, version string) {
-	if err := installPlugin(plugin, version); err != nil {
-		logger.Log.Warning("Failed to install plugin %s : %s\n", plugin, err)
-	} else {
-		logger.Log.Info("Successfully installed plugin => %s %s", plugin, version)
+	downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
+}
+
+func downloadAndInstall(plugin, version string, successMessage string) {
+	result := installPlugin(plugin, "")
+	if !result.success {
+		logger.Log.Error("%s : %s\n", plugin, result.getMessage())
+		os.Exit(1)
 	}
+	if result.warning != "" {
+		logger.Log.Warning(result.warning)
+		os.Exit(0)
+	}
+	logger.Log.Info(successMessage)
 }
 
 func installPluginZip(zipFile string, language string) {
@@ -427,8 +432,8 @@ func createProjectTemplate(language string) error {
 		logger.Log.Info("%s plugin is not installed \n", language)
 		logger.Log.Info("Installing plugin => %s ... \n\n", language)
 
-		if err := installPlugin(language, ""); err != nil {
-			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, err))
+		if result := installPlugin(language, ""); result.success {
+			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, result.getMessage()))
 		}
 
 	}
