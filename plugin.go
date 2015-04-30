@@ -226,7 +226,8 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return err
 	}
 	if isPluginAdded(manifest, pd) {
-		return errors.New("Plugin " + pd.Name + " is already added")
+		logger.Log.Info("Plugin " + pd.Name + " is already added")
+		return nil
 	}
 
 	action := setupScope
