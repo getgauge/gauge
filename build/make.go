@@ -165,14 +165,14 @@ func getGaugeScreenshot() {
 	runProcess("go", "get", "-u", "-d", gaugeScreenshotLocation)
 }
 
-func runTests(packageName string, coverage bool) {
+func runTests(coverage bool) {
 	if coverage {
 		runProcess("go", "test", "-covermode=count", "-coverprofile=count.out")
 		if coverage {
 			runProcess("go", "tool", "cover", "-html=count.out")
 		}
 	} else {
-		runProcess("go", "test")
+		runProcess("go", "test", "./...", "-v")
 	}
 
 }
@@ -280,7 +280,7 @@ var (
 func main() {
 	flag.Parse()
 	if *test {
-		runTests(gauge, *coverage)
+		runTests(*coverage)
 	} else if *install {
 		installGauge()
 	} else if *distro {

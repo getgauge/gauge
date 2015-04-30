@@ -69,7 +69,7 @@ type versionSupport struct {
 }
 
 type installResult struct {
-	error error
+	error   error
 	warning string
 	success bool
 }
@@ -99,15 +99,15 @@ func installPluginWithDescription(installDescription *installDescription, curren
 	if currentVersion != "" {
 		versionInstallDescription, err = installDescription.getVersion(currentVersion)
 		if err != nil {
-			return buildInstallResult(err.Error(),"")
+			return buildInstallResult(err.Error(), "")
 		}
 		if compatibilityError := checkCompatiblity(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
-			return buildInstallResult(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()),"")
+			return buildInstallResult(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()), "")
 		}
 	} else {
 		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(version.CurrentGaugeVersion)
 		if err != nil {
-			return buildInstallResult(fmt.Sprintf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err),"")
+			return buildInstallResult(fmt.Sprintf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err), "")
 		}
 	}
 	return installPluginVersion(installDescription, versionInstallDescription)
@@ -212,7 +212,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 
 func getInstallDescription(plugin string) (*installDescription, installResult) {
 	installJson, result := getPluginInstallJson(plugin)
-	if !result.success{
+	if !result.success {
 		return nil, result
 	}
 
@@ -222,13 +222,13 @@ func getInstallDescription(plugin string) (*installDescription, installResult) {
 func getInstallDescriptionFromJson(installJson string) (*installDescription, installResult) {
 	InstallJsonContents, readErr := common.ReadFileContents(installJson)
 	if readErr != nil {
-		return nil, buildInstallResult(readErr.Error(),"")
+		return nil, buildInstallResult(readErr.Error(), "")
 	}
 	installDescription := &installDescription{}
 	if err := json.Unmarshal([]byte(InstallJsonContents), installDescription); err != nil {
-		return nil, buildInstallResult(err.Error(),"")
+		return nil, buildInstallResult(err.Error(), "")
 	}
-	return installDescription, buildInstallResult("","")
+	return installDescription, buildInstallResult("", "")
 }
 
 func getPluginInstallJson(plugin string) (string, installResult) {
@@ -239,7 +239,7 @@ func getPluginInstallJson(plugin string) (string, installResult) {
 	}
 	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
 	if downloadErr != nil {
-		return "", buildInstallResult(fmt.Sprintf("Could not download %s file. Invalid plugin name", versionInstallDescriptionJsonFile),"")
+		return "", buildInstallResult(fmt.Sprintf("Could not download %s file. Invalid plugin name", versionInstallDescriptionJsonFile), "")
 	}
 	return downloadedFile, buildInstallResult("", "")
 }
@@ -248,9 +248,9 @@ func constructPluginInstallJsonUrl(plugin string) (string, installResult) {
 	installJsonFile := plugin + "-install.json"
 	repoUrl := config.GaugeRepositoryUrl()
 	if repoUrl == "" {
-		return "", buildInstallResult("Could not find gauge repository url from configuration.","")
+		return "", buildInstallResult("Could not find gauge repository url from configuration.", "")
 	}
-	return fmt.Sprintf("%s/%s", repoUrl, installJsonFile), buildInstallResult("","")
+	return fmt.Sprintf("%s/%s", repoUrl, installJsonFile), buildInstallResult("", "")
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {
