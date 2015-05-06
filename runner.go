@@ -161,6 +161,9 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func startRunner(manifest *manifest, port string, writer executionLogger) (*testRunner, error) {
 	var r runner
+	plugins := []string{manifest.Language}
+	plugins = append(plugins, manifest.Plugins...)
+	installPluginsIfNotInstalled(plugins, writer)
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
@@ -178,7 +181,6 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
 	waitAndGetErrorMessage(errChannel, cmd, writer)
-	installPluginsIfNotInstalled(manifest.Plugins, writer)
 	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
 }
 
