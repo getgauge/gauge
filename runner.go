@@ -161,9 +161,6 @@ func (testRunner *testRunner) sendProcessKillMessage() {
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func startRunner(manifest *manifest, port string, writer executionLogger) (*testRunner, error) {
 	var r runner
-	plugins := []string{manifest.Language}
-	plugins = append(plugins, manifest.Plugins...)
-	installPluginsIfNotInstalled(plugins, writer)
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
@@ -182,25 +179,6 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	errChannel := make(chan error)
 	waitAndGetErrorMessage(errChannel, cmd, writer)
 	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
-}
-
-func installPluginsIfNotInstalled(plugins []string, writer executionLogger) {
-	for _, pluginName := range plugins {
-		if !IsPluginInstalledAlready(pluginName) {
-			installResult := installPlugin(pluginName, "")
-			if !installResult.success {
-				writer.Warning("Failed to install the %s plugin.", pluginName)
-			}
-		}
-	}
-}
-
-func IsPluginInstalledAlready(name string) bool {
-	pluginsDir, err := common.GetPluginsInstallDir(name)
-	if err != nil {
-		return false
-	}
-	return common.DirExists(filepath.Join(pluginsDir, name))
 }
 
 func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {

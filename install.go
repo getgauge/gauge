@@ -358,3 +358,27 @@ func installPluginFromDir(unzippedPluginDir string) error {
 	}
 	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
+
+func installPluginsIfNotInstalled() {
+	writer := getCurrentExecutionLogger()
+	manifest := getProjectManifest(writer)
+	plugins := []string{manifest.Language}
+	plugins = append(plugins, manifest.Plugins...)
+
+	for _, pluginName := range plugins {
+		if !isPluginInstalledAlready(pluginName) {
+			installResult := installPlugin(pluginName, "")
+			if !installResult.success {
+				writer.Warning("Failed to install the %s plugin.", pluginName)
+			}
+		}
+	}
+}
+
+func isPluginInstalledAlready(name string) bool {
+	pluginsDir, err := common.GetPluginsInstallDir(name)
+	if err != nil {
+		return false
+	}
+	return common.DirExists(filepath.Join(pluginsDir, name))
+}

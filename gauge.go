@@ -78,6 +78,8 @@ func main() {
 		installPluginZip(*installZip, *install)
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
+	} else if *installAll {
+		installPluginsIfNotInstalled()
 	} else if *update != "" {
 		updatePlugin(*update)
 	} else if *addPlugin != "" {
@@ -143,6 +145,7 @@ var install = flag.String([]string{"-install"}, "", "Downloads and installs a pl
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
 var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
+var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
