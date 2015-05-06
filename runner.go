@@ -178,7 +178,27 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
 	waitAndGetErrorMessage(errChannel, cmd, writer)
+	installPluginsIfNotInstalled(manifest.Plugins, writer)
 	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
+}
+
+func installPluginsIfNotInstalled(plugins []string, writer executionLogger) {
+	for _, pluginName := range plugins {
+		if !IsPluginInstalledAlready(pluginName) {
+			installResult := installPlugin(pluginName, "")
+			if !installResult.success {
+				writer.Warning("Failed to install the %s plugin.", pluginName)
+			}
+		}
+	}
+}
+
+func IsPluginInstalledAlready(name string) bool {
+	pluginsDir, err := common.GetPluginsInstallDir(name)
+	if err != nil {
+		return false
+	}
+	return common.DirExists(filepath.Join(pluginsDir, name))
 }
 
 func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {
