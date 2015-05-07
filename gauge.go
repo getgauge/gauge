@@ -58,7 +58,8 @@ var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging f
 var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var install = flag.String([]string{"-install"}, "all", "Downloads and installs a plugin. Eg: gauge --install java")
+var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
+var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
 var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
@@ -158,31 +159,6 @@ func saveFile(fileName string, content string, backup bool) {
 		logger.Log.Error("Failed to refactor '%s': %s\n", fileName, err)
 	}
 }
-
-// Command line flags
-var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var gaugeVersion = flag.Bool([]string{"v", "-version", "version"}, false, "Print the current version and exit. Eg: gauge --version")
-var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging for debugging")
-var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
-var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
-var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
-var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
-var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
-var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
-var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
-var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
-var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
-var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
-var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
-var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
-var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
-var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
-var numberOfExecutionStreams = flag.Int([]string{"n"}, numberOfCores(), "Specify number of parallel execution streams")
-var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
-var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alphabetical Order. Eg: gauge -s specs")
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", version.CurrentGaugeVersion.String())
