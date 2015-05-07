@@ -256,7 +256,7 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 	steps := make([]string, 0)
 	if runner == nil {
 		var connErr error
-		manifest, err := getProjectManifest(getCurrentLogger())
+		manifest, err := getProjectManifest()
 		if err != nil {
 			handleCriticalError(err)
 		}

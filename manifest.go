@@ -19,11 +19,12 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"io"
 	"io/ioutil"
-	"os"
 	"path"
 	"strings"
 )
@@ -33,7 +34,7 @@ type manifest struct {
 	Plugins  []string
 }
 
-func getProjectManifest(writer executionLogger) (*manifest, error) {
+func getProjectManifest() (*manifest, error) {
 	contents, err := common.ReadFileContents(path.Join(config.ProjectRoot, common.ManifestFile))
 	if err != nil {
 		return nil, err
@@ -45,8 +46,7 @@ func getProjectManifest(writer executionLogger) (*manifest, error) {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			writer.Critical("Failed to read manifest. %s\n", err.Error())
-			os.Exit(1)
+			return nil, errors.New(fmt.Sprintf("Failed to read manifest. %s\n", err.Error()))
 		}
 	}
 

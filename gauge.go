@@ -229,7 +229,7 @@ func addPluginToProject(pluginName string) {
 			}
 		}
 	}
-	manifest, err := getProjectManifest(getCurrentLogger())
+	manifest, err := getProjectManifest()
 	if err != nil {
 		handleCriticalError(err)
 	}
@@ -252,7 +252,7 @@ func executeSpecs(inParallel bool) {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	manifest, err := getProjectManifest(getCurrentLogger())
+	manifest, err := getProjectManifest()
 	if err != nil {
 		handleCriticalError(err)
 	}

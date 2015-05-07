@@ -357,7 +357,7 @@ func installPluginFromDir(unzippedPluginDir string) error {
 }
 
 func installAllPlugins() {
-	manifest, err := getProjectManifest(getCurrentLogger())
+	manifest, err := getProjectManifest()
 	if err != nil {
 		handleCriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
 	}
