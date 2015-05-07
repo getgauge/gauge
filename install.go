@@ -359,6 +359,35 @@ func installPluginFromDir(unzippedPluginDir string) error {
 	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
 
+func updatePlugin(plugin string) {
+	downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
+}
+
+func downloadAndInstallPlugin(plugin, version string) {
+	downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
+}
+
+func downloadAndInstall(plugin, version string, successMessage string) {
+	result := installPlugin(plugin, "")
+	if !result.success {
+		logger.Log.Error("%s : %s\n", plugin, result.getMessage())
+		os.Exit(1)
+	}
+	if result.warning != "" {
+		logger.Log.Warning(result.warning)
+		os.Exit(0)
+	}
+	logger.Log.Info(successMessage)
+}
+
+func installPluginZip(zipFile string, language string) {
+	if err := installPluginFromZip(zipFile, language); err != nil {
+		logger.Log.Warning("Failed to install plugin from zip file. Invalid zip file : %s\n", err)
+	} else {
+		logger.Log.Info("Successfully installed plugin from zipFile")
+	}
+}
+
 func installPluginsIfNotInstalled() {
 	writer := getCurrentExecutionLogger()
 	manifest := getProjectManifest(writer)
