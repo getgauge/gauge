@@ -394,15 +394,21 @@ func installPluginZip(zipFile string, pluginName string) {
 }
 
 func installPluginsFromManifest(manifest *manifest) {
+	writer := getCurrentLogger()
 	plugins := []string{manifest.Language}
 	plugins = append(plugins, manifest.Plugins...)
 
 	for _, pluginName := range plugins {
 		if !isPluginInstalledAlready(pluginName) {
+			writer.Info("Installing plugin %s...", pluginName)
 			installResult := installPlugin(pluginName, "")
 			if !installResult.success {
-				getCurrentLogger().Error("Failed to install the %s plugin.", pluginName)
+				writer.Error("Failed to install the %s plugin.", pluginName)
+			} else {
+				writer.Info("Successfully installed the plugin %s.", pluginName)
 			}
+		} else {
+			writer.Info("Plugin %s is already installed.", pluginName)
 		}
 	}
 }
