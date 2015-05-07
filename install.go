@@ -309,7 +309,7 @@ func checkCompatiblity(currentVersion *version.Version, versionSupport *versionS
 func installPluginFromZip(zipFile string, language string) error {
 	unzippedPluginDir, err := common.UnzipArchive(zipFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
+		return errors.New(fmt.Sprintf("Failed to unzip plugin-zip file %s.", err))
 	}
 	logger.Log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 

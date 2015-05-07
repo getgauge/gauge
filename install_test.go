@@ -20,6 +20,7 @@ package main
 import (
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
+	"path/filepath"
 )
 
 func (s *MySuite) TestFindVersion(c *C) {
@@ -122,10 +123,15 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 
 func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
 	err := installPluginFromZip("test_resources/notPresent.zip", "ruby")
-	c.Assert(err.Error(), Equals, "Failed to Unzip plugin-zip file ZipFile test_resources/notPresent.zip does not exist.")
+	c.Assert(err.Error(), Equals, "Failed to unzip plugin-zip file ZipFile test_resources/notPresent.zip does not exist.")
 }
 
-func (s *MySuite) TestInstallRunnerFromInvalidZipNotPresent(c *C) {
-	err := installPluginFromZip("test_resources/gauge-ruby-0.0.3-darwin.x86_64.zip", "ruby")
-	c.Assert(err, NotNil)
+func (s *MySuite) TestInstallPlugin(c *C) {
+	err := installPluginFromDir("version")
+	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", pluginJson)+" doesn't exist.")
+}
+
+func (s *MySuite) TestInstallRunnerFromDir(c *C) {
+	err := installRunnerFromDir("version", "java")
+	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", "java"+jsonExt)+" doesn't exist.")
 }
