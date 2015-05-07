@@ -19,6 +19,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/util"
+	"path/filepath"
 	"strings"
 )
 
@@ -191,6 +196,38 @@ func (parser *conceptParser) createConceptLookup(concept *step) {
 	for _, arg := range concept.args {
 		concept.lookup.addArgName(arg.value)
 	}
+}
+func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
+	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+	conceptsDictionary := newConceptDictionary()
+	for _, conceptFile := range conceptFiles {
+		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
+			if shouldIgnoreErrors {
+				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
+				continue
+			}
+			logger.Log.Error(err.Error())
+			return nil, &parseResult{error: err, fileName: conceptFile}
+		}
+	}
+	return conceptsDictionary, &parseResult{ok: true}
+}
+
+func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *parseError {
+	fileText, fileReadErr := common.ReadFileContents(conceptFile)
+	if fileReadErr != nil {
+		return &parseError{message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
+	}
+	concepts, parseResults := new(conceptParser).parse(fileText)
+	if parseResults != nil && parseResults.warnings != nil {
+		for _, warning := range parseResults.warnings {
+			logger.Log.Warning(warning.String())
+		}
+	}
+	if parseResults != nil && parseResults.error != nil {
+		return parseResults.error
+	}
+	return conceptDictionary.add(concepts, conceptFile)
 }
 
 func newConceptDictionary() *conceptDictionary {

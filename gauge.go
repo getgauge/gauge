@@ -48,6 +48,32 @@ const (
 
 var defaultPlugins = []string{"html-report"}
 
+// Command line flags
+var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
+var gaugeVersion = flag.Bool([]string{"v", "-version", "version"}, false, "Print the current version and exit. Eg: gauge --version")
+var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging for debugging")
+var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
+var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
+var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
+var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
+var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
+var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
+var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
+var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
+var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
+var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
+var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
+var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
+var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
+var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
+var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
+var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
+var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
+var numberOfExecutionStreams = flag.Int([]string{"n"}, numberOfCores(), "Specify number of parallel execution streams")
+var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
+var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
+var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alphabetical Order. Eg: gauge -s specs")
+
 func main() {
 	flag.Parse()
 	setWorkingDir(*workingDir)
@@ -126,32 +152,6 @@ func saveFile(fileName string, content string, backup bool) {
 	}
 }
 
-// Command line flags
-var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var gaugeVersion = flag.Bool([]string{"v", "-version", "version"}, false, "Print the current version and exit. Eg: gauge --version")
-var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging for debugging")
-var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
-var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
-var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var install = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
-var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
-var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
-var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
-var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
-var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
-var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
-var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
-var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
-var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
-var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
-var refactor = flag.String([]string{"-refactor"}, "", "Refactor steps")
-var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
-var numberOfExecutionStreams = flag.Int([]string{"n"}, numberOfCores(), "Specify number of parallel execution streams")
-var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
-var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alphabetical Order. Eg: gauge -s specs")
-
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", version.CurrentGaugeVersion.String())
 	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
@@ -161,35 +161,6 @@ func printUsage() {
 	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
 	os.Exit(2)
-}
-
-func updatePlugin(plugin string) {
-	downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
-}
-
-func downloadAndInstallPlugin(plugin, version string) {
-	downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
-}
-
-func downloadAndInstall(plugin, version string, successMessage string) {
-	result := installPlugin(plugin, "")
-	if !result.success {
-		logger.Log.Error("%s : %s\n", plugin, result.getMessage())
-		os.Exit(1)
-	}
-	if result.warning != "" {
-		logger.Log.Warning(result.warning)
-		os.Exit(0)
-	}
-	logger.Log.Info(successMessage)
-}
-
-func installPluginZip(zipFile string, language string) {
-	if err := installPluginFromZip(zipFile, language); err != nil {
-		logger.Log.Warning("Failed to install plugin from zip file. Invalid zip file : %s\n", err)
-	} else {
-		logger.Log.Info("Successfully installed plugin from zipFile")
-	}
 }
 
 func runInBackground() {
@@ -277,7 +248,7 @@ func executeSpecs(inParallel bool) {
 	if len(specsToExecute) == 0 {
 		printExecutionStatus(nil, 0)
 	}
-	parallelInfo := &parallelInfo{inParallel: *parallel, numberOfStreams: *numberOfExecutionStreams}
+	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: *numberOfExecutionStreams}
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
@@ -331,11 +302,6 @@ func shuffleSpecs(allSpecs []*specification) []*specification {
 		dest[v] = allSpecs[i]
 	}
 	return dest
-}
-func startPlugins(manifest *manifest) *pluginHandler {
-	pluginHandler, warnings := startPluginsForExecution(manifest)
-	handleWarningMessages(warnings)
-	return pluginHandler
 }
 
 func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *testRunner, conceptDictionary *conceptDictionary) {
@@ -624,39 +590,6 @@ func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 		getCurrentLogger().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
 		printError(conceptExecResult.ExecutionResult)
 	}
-}
-
-func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
-	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
-	conceptsDictionary := newConceptDictionary()
-	for _, conceptFile := range conceptFiles {
-		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
-			if shouldIgnoreErrors {
-				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
-				continue
-			}
-			logger.Log.Error(err.Error())
-			return nil, &parseResult{error: err, fileName: conceptFile}
-		}
-	}
-	return conceptsDictionary, &parseResult{ok: true}
-}
-
-func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *parseError {
-	fileText, fileReadErr := common.ReadFileContents(conceptFile)
-	if fileReadErr != nil {
-		return &parseError{message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
-	}
-	concepts, parseResults := new(conceptParser).parse(fileText)
-	if parseResults != nil && parseResults.warnings != nil {
-		for _, warning := range parseResults.warnings {
-			logger.Log.Warning(warning.String())
-		}
-	}
-	if parseResults != nil && parseResults.error != nil {
-		return parseResults.error
-	}
-	return conceptDictionary.add(concepts, conceptFile)
 }
 
 func getSpecFiles(specSource string) []string {
