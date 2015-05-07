@@ -88,11 +88,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
-		specNames := make([]string, 0)
-		for _, spec := range specCollection.specs {
-			specNames = append(specNames, spec.fileName)
-		}
-		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specNames, message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, writer)
@@ -151,4 +147,12 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*suiteResult) *s
 
 func numberOfCores() int {
 	return runtime.NumCPU()
+}
+
+func (s *specCollection) specNames() []string {
+	specNames := make([]string, 0)
+	for _, spec := range s.specs {
+		specNames = append(specNames, spec.fileName)
+	}
+	return specNames
 }
