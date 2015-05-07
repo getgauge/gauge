@@ -60,7 +60,7 @@ type pluginLogger struct {
 func (writer *pluginLogger) Write(b []byte) (int, error) {
 	message := string(b)
 	prefixedMessage := addPrefixToEachLine(message, fmt.Sprintf("[%s Plugin] : ", writer.pluginName))
-	gaugeConsoleWriter := getCurrentExecutionLogger()
+	gaugeConsoleWriter := getCurrentLogger()
 	_, err := gaugeConsoleWriter.Write([]byte(prefixedMessage))
 	return len(message), err
 }
@@ -82,7 +82,7 @@ func newColoredConsoleWriter() *coloredLogger {
 	return &coloredLogger{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
 }
 
-func getCurrentExecutionLogger() executionLogger {
+func getCurrentLogger() executionLogger {
 	if currentLogger == nil {
 		if *simpleConsoleOutput {
 			currentLogger = newSimpleConsoleWriter()
@@ -114,23 +114,23 @@ func (writer *coloredLogger) PrintError(value string) {
 }
 
 func (writer *coloredLogger) Critical(formatString string, args ...interface{}) {
-	logger.Log.Critical(formatString, args)
+	logger.Log.Critical(formatString, args...)
 }
 
 func (writer *coloredLogger) Info(formatString string, args ...interface{}) {
-	logger.Log.Info(formatString, args)
+	logger.Log.Info(formatString, args...)
 }
 
 func (writer *coloredLogger) Warning(formatString string, args ...interface{}) {
-	logger.Log.Warning(formatString, args)
+	logger.Log.Warning(formatString, args...)
 }
 
 func (writer *coloredLogger) Debug(formatString string, args ...interface{}) {
-	logger.Log.Debug(formatString, args)
+	logger.Log.Debug(formatString, args...)
 }
 
 func (writer *coloredLogger) Error(formatString string, args ...interface{}) {
-	logger.Log.Error(formatString, args)
+	logger.Log.Error(formatString, args...)
 }
 
 func (writer *coloredLogger) SpecHeading(heading string) {

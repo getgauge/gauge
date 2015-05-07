@@ -106,7 +106,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 			result.errors = append(result.errors, connErr.Error())
 			return result
 		}
-		defer apiHandler.runner.kill(getCurrentExecutionLogger())
+		defer apiHandler.runner.kill(getCurrentLogger())
 		stepName, err, warning := agent.getStepNameFromRunner(apiHandler.runner)
 		if err != nil {
 			result.errors = append(result.errors, err.Error())

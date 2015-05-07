@@ -359,9 +359,15 @@ func installPluginFromDir(unzippedPluginDir string) error {
 	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
 
-func installPluginsIfNotInstalled() {
-	writer := getCurrentExecutionLogger()
-	manifest := getProjectManifest(writer)
+func installAllPlugins() {
+	manifest, err := getProjectManifest(getCurrentLogger())
+	if err != nil {
+		handleCriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
+	}
+	installPluginsFromManifest(manifest)
+}
+
+func installPluginsFromManifest(manifest *manifest) {
 	plugins := []string{manifest.Language}
 	plugins = append(plugins, manifest.Plugins...)
 
@@ -369,7 +375,7 @@ func installPluginsIfNotInstalled() {
 		if !isPluginInstalledAlready(pluginName) {
 			installResult := installPlugin(pluginName, "")
 			if !installResult.success {
-				writer.Warning("Failed to install the %s plugin.", pluginName)
+				getCurrentLogger().Error("Failed to install the %s plugin.", pluginName)
 			}
 		}
 	}

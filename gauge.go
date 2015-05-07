@@ -18,7 +18,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
@@ -30,8 +29,6 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
-	"io"
-	"io/ioutil"
 	"math/rand"
 	"os"
 	"path"
@@ -50,11 +47,6 @@ const (
 )
 
 var defaultPlugins = []string{"html-report"}
-
-type manifest struct {
-	Language string
-	Plugins  []string
-}
 
 func main() {
 	flag.Parse()
@@ -79,7 +71,7 @@ func main() {
 	} else if *install != "" {
 		downloadAndInstallPlugin(*install, *installVersion)
 	} else if *installAll {
-		installPluginsIfNotInstalled()
+		installAllPlugins()
 	} else if *update != "" {
 		updatePlugin(*update)
 	} else if *addPlugin != "" {
@@ -207,15 +199,13 @@ func runInBackground() {
 		port, err = strconv.Atoi(*apiPort)
 		os.Setenv(common.ApiPortEnvVariableName, *apiPort)
 		if err != nil {
-			logger.Log.Critical("Failed to parse the port number :", *apiPort, "\n", err.Error())
-			os.Exit(1)
+			handleCriticalError(errors.New(fmt.Sprintf("Failed to parse the port number :", *apiPort, "\n", err.Error())))
 		}
 	} else {
 		env.LoadEnv(*currentEnv, false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
-			logger.Log.Critical("Failed to start API Service. %s \n", err.Error())
-			os.Exit(1)
+			handleCriticalError(errors.New(fmt.Sprintf("Failed to start API Service. %s \n", err.Error())))
 		}
 	}
 	var wg sync.WaitGroup
@@ -245,14 +235,12 @@ func formatSpecFiles(filesToFormat string) {
 func initializeProject(language string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		logger.Log.Critical("Failed to find working directory. %s\n", err.Error())
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Failed to find working directory. %s\n", err.Error())))
 	}
 	config.ProjectRoot = wd
 	err = createProjectTemplate(language)
 	if err != nil {
-		logger.Log.Critical("Failed to initialize. %s\n", err.Error())
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Failed to initialize. %s\n", err.Error())))
 	}
 	logger.Log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
@@ -270,9 +258,12 @@ func addPluginToProject(pluginName string) {
 			}
 		}
 	}
-	if err := addPluginToTheProject(pluginName, additionalArgs, getProjectManifest(getCurrentExecutionLogger())); err != nil {
-		logger.Log.Critical("Failed to add plugin %s to project : %s\n", pluginName, err.Error())
-		os.Exit(1)
+	manifest, err := getProjectManifest(getCurrentLogger())
+	if err != nil {
+		handleCriticalError(err)
+	}
+	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
+		handleCriticalError(errors.New(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())))
 	} else {
 		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}
@@ -290,29 +281,35 @@ func executeSpecs(inParallel bool) {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	manifest := getProjectManifest(getCurrentExecutionLogger())
-	err, apiHandler := startAPIService(0)
-	apiHandler.runner.kill(getCurrentExecutionLogger())
+	manifest, err := getProjectManifest(getCurrentLogger())
 	if err != nil {
-		logger.Log.Critical("Failed to start gauge API. %s\n", err.Error())
-		os.Exit(1)
+		handleCriticalError(err)
+	}
+	err, apiHandler := startAPIService(0)
+	apiHandler.runner.kill(getCurrentLogger())
+	if err != nil {
+		handleCriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
 	}
 
-	runner, runnerError := startRunnerAndMakeConnection(manifest, getCurrentExecutionLogger())
+	runner, runnerError := startRunnerAndMakeConnection(manifest, getCurrentLogger())
 	if runnerError != nil {
-		logger.Log.Critical("Failed to start a runner. %s\n", runnerError.Error())
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Failed to start a runner. %s\n", runnerError.Error())))
 	}
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	if !*doNotRandomize {
 		specsToExecute = shuffleSpecs(specsToExecute)
 	}
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentExecutionLogger())
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentLogger())
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
+}
+
+func handleCriticalError(err error) {
+	getCurrentLogger().Critical(err.Error())
+	os.Exit(1)
 }
 
 func getDataTableRows(rowCount int) indexRange {
@@ -321,8 +318,7 @@ func getDataTableRows(rowCount int) indexRange {
 	}
 	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
 	if err != nil {
-		logger.Log.Critical("Table rows validation failed. %s\n", err.Error())
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
 	}
 	return indexes
 }
@@ -347,7 +343,7 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 	validationErrors := validator.validate()
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
-		runner.kill(getCurrentExecutionLogger())
+		runner.kill(getCurrentLogger())
 		os.Exit(1)
 	}
 }
@@ -379,7 +375,7 @@ func printValidationFailures(validationErrors executionValidationErrors) {
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			getCurrentExecutionLogger().PrintError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
+			getCurrentLogger().PrintError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
 		}
 	}
 }
@@ -391,39 +387,10 @@ func getSpecName(specSource string) string {
 	return specSource
 }
 
-func (m *manifest) save() error {
-	b, err := json.MarshalIndent(m, "", "  ")
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
-}
-
 // All the environment variables loaded from the
 // current environments JSON files will live here
 type environmentVariables struct {
 	Variables map[string]string
-}
-
-func getProjectManifest(writer executionLogger) *manifest {
-	contents, err := common.ReadFileContents(path.Join(config.ProjectRoot, common.ManifestFile))
-	if err != nil {
-		writer.Critical(err.Error())
-		os.Exit(1)
-	}
-	dec := json.NewDecoder(strings.NewReader(contents))
-
-	var m manifest
-	for {
-		if err := dec.Decode(&m); err == io.EOF {
-			break
-		} else if err != nil {
-			writer.Critical("Failed to read manifest. %s\n", err.Error())
-			os.Exit(1)
-		}
-	}
-
-	return &m
 }
 
 func showMessage(action, filename string) {
@@ -587,7 +554,7 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 
 func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 	if hook != nil {
-		console := getCurrentExecutionLogger()
+		console := getCurrentLogger()
 		console.PrintError(hook.GetErrorMessage())
 		console.PrintError(hook.GetStackTrace())
 	}
@@ -595,7 +562,7 @@ func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 
 func printError(execResult *gauge_messages.ProtoExecutionResult) {
 	if execResult.GetFailed() {
-		console := getCurrentExecutionLogger()
+		console := getCurrentLogger()
 		console.PrintError(execResult.GetErrorMessage() + "\n")
 		console.PrintError(execResult.GetStackTrace() + "\n")
 	}
@@ -603,7 +570,7 @@ func printError(execResult *gauge_messages.ProtoExecutionResult) {
 
 func printSpecFailure(specResult *specResult) {
 	if specResult.isFailed {
-		getCurrentExecutionLogger().PrintError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
+		getCurrentLogger().PrintError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
@@ -626,7 +593,7 @@ func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTa
 
 func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 	if scenario.GetFailed() {
-		getCurrentExecutionLogger().PrintError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
+		getCurrentLogger().PrintError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
@@ -644,7 +611,7 @@ func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 func printStepFailure(step *gauge_messages.ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
-		getCurrentExecutionLogger().PrintError(fmt.Sprintf("\t %s\n", step.GetActualText()))
+		getCurrentLogger().PrintError(fmt.Sprintf("\t %s\n", step.GetActualText()))
 		printHookError(stepExecResult.GetPreHookFailure())
 		printError(stepExecResult.ExecutionResult)
 		printHookError(stepExecResult.GetPostHookFailure())
@@ -654,7 +621,7 @@ func printStepFailure(step *gauge_messages.ProtoStep) {
 func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
-		getCurrentExecutionLogger().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
+		getCurrentLogger().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
 		printError(conceptExecResult.ExecutionResult)
 	}
 }
@@ -813,20 +780,17 @@ func sortSpecsList(allSpecs []*specification) []*specification {
 func setWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		logger.Log.Critical("Unable to set working directory : %s\n", err)
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 	}
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			logger.Log.Critical("Unable to set working directory : %s\n", err)
-			os.Exit(1)
+			handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 		}
 	}
 	err = os.Chdir(targetDir)
 	_, err = os.Getwd()
 	if err != nil {
-		logger.Log.Critical("Unable to set working directory : %s\n", err)
-		os.Exit(1)
+		handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 	}
 }

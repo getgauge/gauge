@@ -73,7 +73,7 @@ func startAPIService(port int) (error, *gaugeApiMessageHandler) {
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	wg.Add(1)
 	_, apiHandler := startAPIService(port)
-	apiHandler.runner.kill(getCurrentExecutionLogger())
+	apiHandler.runner.kill(getCurrentLogger())
 }
 
 type gaugeApiMessageHandler struct {

@@ -256,7 +256,11 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 	steps := make([]string, 0)
 	if runner == nil {
 		var connErr error
-		runner, connErr = startRunnerAndMakeConnection(getProjectManifest(getCurrentExecutionLogger()), getCurrentExecutionLogger())
+		manifest, err := getProjectManifest(getCurrentLogger())
+		if err != nil {
+			handleCriticalError(err)
+		}
+		runner, connErr = startRunnerAndMakeConnection(manifest, getCurrentLogger())
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
 			logger.ApiLog.Debug("Steps got from runner: %v", steps)
