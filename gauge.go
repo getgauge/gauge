@@ -508,12 +508,16 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	}
 
 	printHookError(suiteResult.postSuite)
+
+	for _, unhandledErr := range suiteResult.unhandledErrors {
+		specsSkipped += (unhandledErr).(streamExecError).numberOfSpecsSkipped()
+	}
 	logger.Log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
 	logger.Log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
 	logger.Log.Info("%d specifications skipped\n", specsSkipped)
 	logger.Log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.executionTime))
 	for _, unhandledErr := range suiteResult.unhandledErrors {
-		logger.Log.Info(unhandledErr.Error())
+		logger.Log.Error(unhandledErr.Error())
 	}
 	return exitCode
 }

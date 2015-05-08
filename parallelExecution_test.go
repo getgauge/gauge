@@ -97,8 +97,16 @@ func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 
 	aggregatedRes := e.aggregateResults(suiteResults)
 	c.Assert(len(aggregatedRes.unhandledErrors), Equals, 2)
-	c.Assert(aggregatedRes.unhandledErrors[0].Error(), Equals, "The following specifications are not executed: [spec1 spec2]. Reason: Runner failed to start")
-	c.Assert(aggregatedRes.unhandledErrors[1].Error(), Equals, "The following specifications are not executed: [spec3 spec4]. Reason: Runner failed to start")
+	c.Assert(aggregatedRes.unhandledErrors[0].Error(), Equals, "The following specifications could not be executed:\n"+
+		"spec1\n"+
+		"spec2\n"+
+		"Reason : Runner failed to start.")
+	c.Assert(aggregatedRes.unhandledErrors[1].Error(), Equals, "The following specifications could not be executed:\n"+
+		"spec3\n"+
+		"spec4\n"+
+		"Reason : Runner failed to start.")
+	err := (aggregatedRes.unhandledErrors[0]).(streamExecError)
+	c.Assert(len(err.specsSkipped), Equals, 2)
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {

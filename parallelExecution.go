@@ -43,11 +43,27 @@ type streamExecError struct {
 }
 
 func (s streamExecError) Error() string {
-	return fmt.Sprintf("The following specifications are not executed: %s. Reason: %s", s.specsSkipped, s.message)
+	var specNames string
+	for _, spec := range s.specsSkipped {
+		specNames += fmt.Sprintf("%s\n", spec)
+	}
+	return fmt.Sprintf("The following specifications could not be executed:\n%sReason : %s.", specNames, s.message)
+}
+
+func (s streamExecError) numberOfSpecsSkipped() int {
+	return len(s.specsSkipped)
 }
 
 type specCollection struct {
 	specs []*specification
+}
+
+func (s specCollection) getAllSpecNames() []string {
+	specNames := make([]string, 0)
+	for _, spec := range s.specs {
+		specNames = append(specNames, spec.fileName)
+	}
+	return specNames
 }
 
 type parallelInfo struct {
@@ -88,11 +104,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
-		specNames := make([]string, 0)
-		for _, spec := range specCollection.specs {
-			specNames = append(specNames, spec.fileName)
-		}
-		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specNames, message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specCollection.getAllSpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, writer)
