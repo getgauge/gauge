@@ -128,7 +128,7 @@ func isPluginInstalled(pluginName, pluginVersion string) bool {
 
 func getPluginJsonPath(pluginName, version string) (string, error) {
 	if !isPluginInstalled(pluginName, version) {
-		return "", errors.New(fmt.Sprintf("%s %s is not installed", pluginName, version))
+		return "", errors.New(fmt.Sprintf("Plugin %s %s is not installed", pluginName, version))
 	}
 
 	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
@@ -226,7 +226,7 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return err
 	}
 	if isPluginAdded(manifest, pd) {
-		logger.Log.Info("Plugin " + pd.Name + " is already added")
+		logger.Log.Info("Plugin " + pd.Name + " is already added.")
 		return nil
 	}
 
@@ -258,7 +258,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 	for _, pluginId := range manifest.Plugins {
 		pd, err := getPluginDescriptor(pluginId, "")
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s", pluginId, err.Error()))
+			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginId, err.Error(), pluginId))
 			continue
 		}
 		compatibilityErr := checkCompatiblity(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
