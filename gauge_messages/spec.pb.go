@@ -711,8 +711,10 @@ type ProtoExecutionResult struct {
 	// / Byte array containing screenshot taken at the time of failure.
 	ScreenShot []byte `protobuf:"bytes,5,opt,name=screenShot" json:"screenShot,omitempty"`
 	// / Holds the time taken for executing this scenario.
-	ExecutionTime    *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ExecutionTime *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
+	// / Additional information at exec time to be available on reports
+	Message          []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoExecutionResult) Reset()         { *m = ProtoExecutionResult{} }
@@ -759,6 +761,13 @@ func (m *ProtoExecutionResult) GetExecutionTime() int64 {
 		return *m.ExecutionTime
 	}
 	return 0
+}
+
+func (m *ProtoExecutionResult) GetMessage() []string {
+	if m != nil {
+		return m.Message
+	}
+	return nil
 }
 
 // / A proto object representing a pre-hook failure.
@@ -813,8 +822,16 @@ type ProtoSuiteResult struct {
 	// / Holds the time taken for executing the whole suite.
 	ExecutionTime *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
 	// / Holds a metric indicating the success rate of the execution.
-	SuccessRate      *float32 `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	SuccessRate *float32 `protobuf:"fixed32,7,req,name=successRate" json:"successRate,omitempty"`
+	// / The environment against which execution was done
+	Environment *string `protobuf:"bytes,8,opt,name=environment" json:"environment,omitempty"`
+	// / Tag expression used for filtering specification
+	Tags *string `protobuf:"bytes,9,opt,name=tags" json:"tags,omitempty"`
+	// / Project name
+	ProjectName *string `protobuf:"bytes,10,req,name=projectName" json:"projectName,omitempty"`
+	// / Timestamp of when execution started
+	Timestamp        *string `protobuf:"bytes,11,req,name=timestamp" json:"timestamp,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *ProtoSuiteResult) Reset()         { *m = ProtoSuiteResult{} }
@@ -868,6 +885,34 @@ func (m *ProtoSuiteResult) GetSuccessRate() float32 {
 		return *m.SuccessRate
 	}
 	return 0
+}
+
+func (m *ProtoSuiteResult) GetEnvironment() string {
+	if m != nil && m.Environment != nil {
+		return *m.Environment
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetTags() string {
+	if m != nil && m.Tags != nil {
+		return *m.Tags
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetProjectName() string {
+	if m != nil && m.ProjectName != nil {
+		return *m.ProjectName
+	}
+	return ""
+}
+
+func (m *ProtoSuiteResult) GetTimestamp() string {
+	if m != nil && m.Timestamp != nil {
+		return *m.Timestamp
+	}
+	return ""
 }
 
 // / A proto object representing the result of Spec execution.
