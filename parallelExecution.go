@@ -19,14 +19,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"time"
-	"path/filepath"
 )
 
 type parallelSpecExecution struct {

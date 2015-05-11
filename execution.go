@@ -18,11 +18,11 @@
 package main
 
 import (
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
-	"time"
+	"github.com/getgauge/gauge/gauge_messages"
 	"path/filepath"
+	"time"
 )
 
 type simpleExecution struct {

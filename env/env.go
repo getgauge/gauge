@@ -15,6 +15,7 @@ import (
 const (
 	envDefaultDirName = "default"
 )
+
 var CurrentEnv = "default"
 
 // Loading default environment and loading user specified env
