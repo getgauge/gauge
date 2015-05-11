@@ -30,6 +30,10 @@ type suiteResult struct {
 	specsFailedCount int
 	executionTime    int64 //in milliseconds
 	unhandledErrors  []error
+	environment      string
+	tags 			 string
+	projectName		 string
+	timestamp 		 string
 }
 
 type specResult struct {

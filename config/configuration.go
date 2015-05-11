@@ -39,6 +39,7 @@ const (
 	defaultPluginKillTimeout       = time.Second * 4
 	defaultRefactorTimeout         = time.Second * 10
 	defaultRunnerRequestTimeout    = time.Second * 3
+	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
 var apiLog = logging.MustGetLogger("gauge-api")

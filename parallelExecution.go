@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/config"
 	"runtime"
 	"strconv"
 	"time"
+	"path/filepath"
 )
 
 type parallelSpecExecution struct {
@@ -73,7 +75,6 @@ func (self *parallelInfo) isValid() bool {
 
 func (e *parallelSpecExecution) start() *suiteResult {
 	startTime := time.Now()
-
 	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *suiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
@@ -86,6 +87,8 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
+	e.aggregateResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
+	e.aggregateResult.projectName = filepath.Base(config.ProjectRoot)
 	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }

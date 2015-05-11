@@ -19,7 +19,9 @@ package main
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/config"
 	"time"
+	"path/filepath"
 )
 
 type simpleExecution struct {
@@ -97,6 +99,8 @@ func (e *simpleExecution) killPlugins() {
 func (exe *simpleExecution) start() *suiteResult {
 	startTime := time.Now()
 	exe.suiteResult = newSuiteResult()
+	exe.suiteResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
+	exe.suiteResult.projectName = filepath.Base(config.ProjectRoot)
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
 		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
