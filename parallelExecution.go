@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"runtime"
 	"strconv"
 	"time"
@@ -89,6 +90,7 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	e.aggregateResult = e.aggregateResults(suiteResults)
 	e.aggregateResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	e.aggregateResult.projectName = filepath.Base(config.ProjectRoot)
+	e.aggregateResult.environment = env.CurrentEnv
 	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }

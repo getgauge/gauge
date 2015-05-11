@@ -15,6 +15,7 @@ import (
 const (
 	envDefaultDirName = "default"
 )
+var CurrentEnv = "default"
 
 // Loading default environment and loading user specified env
 // this way user specified env variable can override default if required
@@ -35,6 +36,7 @@ func LoadEnv(env string, shouldSkip bool) {
 				os.Exit(1)
 			}
 		}
+		CurrentEnv = env
 	}
 
 }

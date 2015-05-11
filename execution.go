@@ -20,6 +20,7 @@ package main
 import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"time"
 	"path/filepath"
 )
@@ -101,6 +102,7 @@ func (exe *simpleExecution) start() *suiteResult {
 	exe.suiteResult = newSuiteResult()
 	exe.suiteResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	exe.suiteResult.projectName = filepath.Base(config.ProjectRoot)
+	exe.suiteResult.environment = env.CurrentEnv
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
 		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
