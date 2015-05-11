@@ -2,7 +2,7 @@
 
 # Welcome to Gauge
 
-[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/gauge?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
