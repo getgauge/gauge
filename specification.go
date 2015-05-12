@@ -200,10 +200,6 @@ type item interface {
 	kind() tokenKind
 }
 
-type specFilter interface {
-	filter(item) bool
-}
-
 type headingType int
 
 const (
@@ -671,7 +667,7 @@ func (step *step) populateFragments() {
 
 }
 
-func (spec *specification) filter(filter specFilter) {
+func (spec *specification) filter(filter specItemFilter) {
 	for i := 0; i < len(spec.items); i++ {
 		if filter.filter(spec.items[i]) {
 			spec.removeItem(i)

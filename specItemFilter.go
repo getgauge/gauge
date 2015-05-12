@@ -30,6 +30,10 @@ import (
 
 var currentTagExp string
 
+type specItemFilter interface {
+	filter(item) bool
+}
+
 type scenarioIndexFilterToRetain struct {
 	indexToNotFilter     int
 	currentScenarioIndex int
@@ -168,7 +172,7 @@ func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []
 	return listOfOperators, listOfTags
 }
 
-func filterSpecsItems(specs []*specification, filter specFilter) []*specification {
+func filterSpecsItems(specs []*specification, filter specItemFilter) []*specification {
 	filteredSpecs := make([]*specification, 0)
 	for _, spec := range specs {
 		spec.filter(filter)
