@@ -129,10 +129,9 @@ func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
 
 	value := 6
 	value1 := 3
-	numberOfExecutionStreams = &value
-	distribute = &value1
 
-	specsToExecute := applyFlags(specs)
+	groupFilter := &specsGroupFilter{value1, value}
+	specsToExecute := groupFilter.filter(specs)
 
 	c.Assert(len(specsToExecute), Equals, 1)
 	c.Assert(specsToExecute[0].heading, Equals, heading3)
@@ -157,15 +156,15 @@ func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
 	specs = append(specs, spec6)
 
 	value := 3
-	numberOfExecutionStreams = &value
-	distribute = &value
-	specsToExecute1 := applyFlags(specs)
+
+	groupFilter := &specsGroupFilter{value, value}
+	specsToExecute1 := groupFilter.filter(specs)
 	c.Assert(len(specsToExecute1), Equals, 2)
 
-	specsToExecute2 := applyFlags(specs)
+	specsToExecute2 := groupFilter.filter(specs)
 	c.Assert(len(specsToExecute2), Equals, 2)
 
-	specsToExecute3 := applyFlags(specs)
+	specsToExecute3 := groupFilter.filter(specs)
 	c.Assert(len(specsToExecute3), Equals, 2)
 
 	c.Assert(specsToExecute2[0].heading, Equals, specsToExecute1[0].heading)
@@ -181,15 +180,13 @@ func (s *MySuite) TestToRunSpecificSetOfSpecsGivesEmptySpecsIfDistributableNumbe
 
 	value := 1
 	value1 := 3
-	numberOfExecutionStreams = &value
-	distribute = &value1
-	specsToExecute1 := applyFlags(specs)
+	groupFilter := &specsGroupFilter{value1, value}
+	specsToExecute1 := groupFilter.filter(specs)
 	c.Assert(len(specsToExecute1), Equals, 0)
 
 	value = 1
 	value1 = -3
-	numberOfExecutionStreams = &value
-	distribute = &value1
-	specsToExecute1 = applyFlags(specs)
+	groupFilter = &specsGroupFilter{value1, value}
+	specsToExecute1 = groupFilter.filter(specs)
 	c.Assert(len(specsToExecute1), Equals, 0)
 }

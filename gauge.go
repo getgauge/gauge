@@ -108,6 +108,9 @@ func main() {
 		if len(flag.Args()) == 0 {
 			printUsage()
 		} else if validGaugeProject {
+			if *distribute != -1 {
+				*doNotRandomize = true
+			}
 			executeSpecs(*parallel)
 		} else {
 			logger.Log.Error("Could not set project root: %s", err.Error())
@@ -267,9 +270,6 @@ func executeSpecs(inParallel bool) {
 		handleCriticalError(errors.New(fmt.Sprintf("Failed to start a runner. %s\n", runnerError.Error())))
 	}
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	if !*doNotRandomize {
-		specsToExecute = shuffleSpecs(specsToExecute)
-	}
 	pluginHandler := startPlugins(manifest)
 	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentLogger())
 	result := execution.start()
@@ -317,23 +317,17 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 func getSpecsToExecute(conceptsDictionary *conceptDictionary) ([]*specification, int) {
 	specsToExecute := specsFromArgs(conceptsDictionary)
 	totalSpecs := specsToExecute
-	specsToExecute = applyFlags(specsToExecute)
+	specsToExecute = applyFilters(specsToExecute, specsFilters())
 	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
 }
 
-func applyFlags(specsToExecute []*specification) []*specification {
-	if *executeTags != "" {
-		validateTagExpression(*executeTags)
-		specsToExecute = filterSpecsByTags(specsToExecute, *executeTags)
-	}
-	currentTagExp = *executeTags
-	if *distribute != -1 {
-		if *distribute < 1 || *distribute > *numberOfExecutionStreams {
-			return make([]*specification, 0)
-		}
-		*doNotRandomize = true
-		execution := &parallelSpecExecution{specifications: specsToExecute}
-		specsToExecute = execution.distributeSpecs(*numberOfExecutionStreams)[*distribute-1].specs
+func specsFilters() []specsFilter {
+	return []specsFilter{&tagsFilter{*executeTags}, &specsGroupFilter{*distribute, *numberOfExecutionStreams}, &specRandomizer{*doNotRandomize}}
+}
+
+func applyFilters(specsToExecute []*specification, filters []specsFilter) []*specification {
+	for _, specsFilter := range filters {
+		specsToExecute = specsFilter.filter(specsToExecute)
 	}
 	return specsToExecute
 }
