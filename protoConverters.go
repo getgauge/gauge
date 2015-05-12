@@ -203,6 +203,7 @@ func convertToProtoSuiteResult(suiteResult *suiteResult) *gauge_messages.ProtoSu
 		SpecResults:      convertToProtoSpecResult(suiteResult.specResults),
 		SuccessRate:      proto.Float32(getSuccessRate(len(suiteResult.specResults), suiteResult.specsFailedCount)),
 		Environment:      proto.String(suiteResult.environment),
+		Tags:             proto.String(suiteResult.tags),
 		ProjectName:      proto.String(suiteResult.projectName),
 		Timestamp:        proto.String(suiteResult.timestamp),
 	}

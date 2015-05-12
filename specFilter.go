@@ -28,6 +28,8 @@ import (
 	"strings"
 )
 
+var currentTagExp string
+
 type scenarioIndexFilterToRetain struct {
 	indexToNotFilter     int
 	currentScenarioIndex int

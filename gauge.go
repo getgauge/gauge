@@ -325,7 +325,9 @@ func applyFlags(specsToExecute []*specification) []*specification {
 	if *executeTags != "" {
 		validateTagExpression(*executeTags)
 		specsToExecute = filterSpecsByTags(specsToExecute, *executeTags)
-	} else if *distribute != -1 {
+	}
+	currentTagExp = *executeTags
+	if *distribute != -1 {
 		if *distribute < 1 || *distribute > *numberOfExecutionStreams {
 			return make([]*specification, 0)
 		}

@@ -91,6 +91,7 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	e.aggregateResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	e.aggregateResult.projectName = filepath.Base(config.ProjectRoot)
 	e.aggregateResult.environment = env.CurrentEnv
+	e.aggregateResult.tags = currentTagExp
 	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }

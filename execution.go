@@ -103,6 +103,7 @@ func (exe *simpleExecution) start() *suiteResult {
 	exe.suiteResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	exe.suiteResult.projectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.environment = env.CurrentEnv
+	exe.suiteResult.tags = currentTagExp
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
 		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
