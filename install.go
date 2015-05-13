@@ -182,7 +182,6 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 		return errors.New(fmt.Sprintf("Plugin %s %s already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir))
 	}
 	return common.MirrorDir(pluginContents, versionedPluginDir)
-
 }
 
 func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
@@ -402,7 +401,7 @@ func installPluginsFromManifest(manifest *manifest) {
 	}
 
 	for pluginName, isRunner := range pluginsMap {
-		if !isCompatiblePluginInstalled(pluginName, isRunner) {
+		if !isCompatiblePluginInstalled(pluginName, "", isRunner) {
 			writer.Info("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
 			installResult := installPlugin(pluginName, "")
 			if installResult.success {
@@ -416,11 +415,11 @@ func installPluginsFromManifest(manifest *manifest) {
 	}
 }
 
-func isCompatiblePluginInstalled(pluginName string, isRunner bool) bool {
+func isCompatiblePluginInstalled(pluginName string, pluginVersion string, isRunner bool) bool {
 	if isRunner {
 		return isCompatibleLanguagePluginInstalled(pluginName)
 	} else {
-		pd, err := getPluginDescriptor(pluginName, "")
+		pd, err := getPluginDescriptor(pluginName, pluginVersion)
 		if err != nil {
 			return false
 		}
@@ -446,11 +445,7 @@ func isCompatibleLanguagePluginInstalled(name string) bool {
 	if err != nil {
 		return false
 	}
-	err = checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
-	if err != nil {
-		return false
-	}
-	return true
+	return (checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport) == nil)
 }
 
 type ByDecreasingVersion []versionInstallDescription
