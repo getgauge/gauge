@@ -92,6 +92,11 @@ func (s *MySuite) TestFindAllNestedDirs(c *C) {
 	c.Assert(stringInSlice(nested4, nestedDirs), Equals, true)
 }
 
+func (s *MySuite) TestFindAllNestedDirsWhenDirDoesNotExist(c *C) {
+	nestedDirs := FindAllNestedDirs("unknown-dir")
+	c.Assert(len(nestedDirs), Equals, 0)
+}
+
 func (s *MySuite) TestIsDir(c *C) {
 	c.Assert(IsDir(dir), Equals, true)
 	c.Assert(IsDir(filepath.Join(dir, "foo.txt")), Equals, false)
