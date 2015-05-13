@@ -368,6 +368,10 @@ func createProjectTemplate(language string) error {
 			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, result.getMessage()))
 		}
 
+	} else {
+		if !isCompatibleLanguagePluginInstalled(language) {
+			return errors.New(fmt.Sprintf("Current version of plugin %s is not supported for Gauge %s. To update plugin, run `gauge --update %s`.", language, version.CurrentGaugeVersion, language))
+		}
 	}
 
 	// Create the project manifest

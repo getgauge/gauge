@@ -418,7 +418,7 @@ func installPluginsFromManifest(manifest *manifest) {
 
 func isCompatiblePluginInstalled(pluginName string, isRunner bool) bool {
 	if isRunner {
-		return isLanguagePluginInstalled(pluginName)
+		return isCompatibleLanguagePluginInstalled(pluginName)
 	} else {
 		pd, err := getPluginDescriptor(pluginName, "")
 		if err != nil {
@@ -432,7 +432,7 @@ func isCompatiblePluginInstalled(pluginName string, isRunner bool) bool {
 	}
 }
 
-func isLanguagePluginInstalled(name string) bool {
+func isCompatibleLanguagePluginInstalled(name string) bool {
 	jsonFilePath, err := common.GetLanguageJSONFilePath(name)
 	if err != nil {
 		return false
