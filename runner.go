@@ -165,9 +165,9 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	if err != nil {
 		return nil, err
 	}
-	compatibilityErr := checkCompatiblity(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
+	compatibilityErr := checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
-		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found", version.CurrentGaugeVersion))
+		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found. To update plugin, run `gauge --update {pluginName}`.", version.CurrentGaugeVersion))
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())

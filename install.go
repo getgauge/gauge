@@ -107,7 +107,7 @@ func installPluginWithDescription(installDescription *installDescription, curren
 		if err != nil {
 			return installError(err.Error())
 		}
-		if compatibilityError := checkCompatiblity(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
+		if compatibilityError := checkCompatibility(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
 			return installError(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
@@ -271,7 +271,7 @@ func (installDesc *installDescription) getVersion(version string) (*versionInsta
 func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersion *version.Version) (*versionInstallDescription, error) {
 	installDesc.sortVersionInstallDescriptions()
 	for _, versionInstallDesc := range installDesc.Versions {
-		if err := checkCompatiblity(currentVersion, &versionInstallDesc.GaugeVersionSupport); err == nil {
+		if err := checkCompatibility(currentVersion, &versionInstallDesc.GaugeVersionSupport); err == nil {
 			return &versionInstallDesc, nil
 		}
 	}
@@ -283,7 +283,7 @@ func (installDescription *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(ByDecreasingVersion(installDescription.Versions))
 }
 
-func checkCompatiblity(currentVersion *version.Version, versionSupport *versionSupport) error {
+func checkCompatibility(currentVersion *version.Version, versionSupport *versionSupport) error {
 	minSupportVersion, err := version.ParseVersion(versionSupport.Minimum)
 	if err != nil {
 		return errors.New(fmt.Sprintf("Invalid minimum support version %s. : %s. ", versionSupport.Minimum, err))
@@ -395,17 +395,20 @@ func installPluginZip(zipFile string, pluginName string) {
 
 func installPluginsFromManifest(manifest *manifest) {
 	writer := getCurrentLogger()
-	plugins := []string{manifest.Language}
-	plugins = append(plugins, manifest.Plugins...)
+	pluginsMap := make(map[string]bool, 0)
+	pluginsMap[manifest.Language] = true
+	for _, plugin := range manifest.Plugins {
+		pluginsMap[plugin] = false
+	}
 
-	for _, pluginName := range plugins {
-		if !isPluginInstalledAlready(pluginName) {
-			writer.Info("Installing plugin %s...", pluginName)
+	for pluginName, isRunner := range pluginsMap {
+		if !isCompatiblePluginInstalled(pluginName, isRunner) {
+			writer.Info("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
 			installResult := installPlugin(pluginName, "")
-			if !installResult.success {
-				writer.Error("Failed to install the %s plugin.", pluginName)
-			} else {
+			if installResult.success {
 				writer.Info("Successfully installed the plugin %s.", pluginName)
+			} else {
+				writer.Error("Failed to install the %s plugin.", pluginName)
 			}
 		} else {
 			writer.Info("Plugin %s is already installed.", pluginName)
@@ -413,12 +416,41 @@ func installPluginsFromManifest(manifest *manifest) {
 	}
 }
 
-func isPluginInstalledAlready(name string) bool {
-	pluginsDir, err := common.GetPluginsInstallDir(name)
+func isCompatiblePluginInstalled(pluginName string, isRunner bool) bool {
+	if isRunner {
+		return isLanguagePluginInstalled(pluginName)
+	} else {
+		pd, err := getPluginDescriptor(pluginName, "")
+		if err != nil {
+			return false
+		}
+		err = checkCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
+		if err != nil {
+			return false
+		}
+		return true
+	}
+}
+
+func isLanguagePluginInstalled(name string) bool {
+	jsonFilePath, err := common.GetLanguageJSONFilePath(name)
 	if err != nil {
 		return false
 	}
-	return common.DirExists(filepath.Join(pluginsDir, name))
+	var r runner
+	contents, err := common.ReadFileContents(jsonFilePath)
+	if err != nil {
+		return false
+	}
+	err = json.Unmarshal([]byte(contents), &r)
+	if err != nil {
+		return false
+	}
+	err = checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
+	if err != nil {
+		return false
+	}
+	return true
 }
 
 type ByDecreasingVersion []versionInstallDescription

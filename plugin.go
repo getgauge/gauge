@@ -261,7 +261,7 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginId, err.Error(), pluginId))
 			continue
 		}
-		compatibilityErr := checkCompatiblity(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
+		compatibilityErr := checkCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
 		if compatibilityErr != nil {
 			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion))
 			continue

@@ -39,38 +39,38 @@ func (s *MySuite) TestFindVersionFailing(c *C) {
 func (s *MySuite) TestCheckVersionCompatibilitySuccess(c *C) {
 	versionSupported := &versionSupport{"0.6.5", "1.8.5"}
 	gaugeVersion := &version.Version{0, 6, 7}
-	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
+	c.Assert(checkCompatibility(gaugeVersion, versionSupported), Equals, nil)
 
 	versionSupported = &versionSupport{"0.0.1", "0.0.1"}
 	gaugeVersion = &version.Version{0, 0, 1}
-	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
+	c.Assert(checkCompatibility(gaugeVersion, versionSupported), Equals, nil)
 
 	versionSupported = &versionSupport{Minimum: "0.0.1"}
 	gaugeVersion = &version.Version{1, 5, 2}
-	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
+	c.Assert(checkCompatibility(gaugeVersion, versionSupported), Equals, nil)
 
 	versionSupported = &versionSupport{Minimum: "0.5.1"}
 	gaugeVersion = &version.Version{0, 5, 1}
-	c.Assert(checkCompatiblity(gaugeVersion, versionSupported), Equals, nil)
+	c.Assert(checkCompatibility(gaugeVersion, versionSupported), Equals, nil)
 
 }
 
 func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
 	versionsSupported := &versionSupport{"0.6.5", "1.8.5"}
 	gaugeVersion := &version.Version{1, 9, 9}
-	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
+	c.Assert(checkCompatibility(gaugeVersion, versionsSupported), NotNil)
 
 	versionsSupported = &versionSupport{"0.0.1", "0.0.1"}
 	gaugeVersion = &version.Version{0, 0, 2}
-	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
+	c.Assert(checkCompatibility(gaugeVersion, versionsSupported), NotNil)
 
 	versionsSupported = &versionSupport{Minimum: "1.3.1"}
 	gaugeVersion = &version.Version{1, 3, 0}
-	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
+	c.Assert(checkCompatibility(gaugeVersion, versionsSupported), NotNil)
 
 	versionsSupported = &versionSupport{Minimum: "0.5.1"}
 	gaugeVersion = &version.Version{0, 0, 9}
-	c.Assert(checkCompatiblity(gaugeVersion, versionsSupported), NotNil)
+	c.Assert(checkCompatibility(gaugeVersion, versionsSupported), NotNil)
 
 }
 
