@@ -360,20 +360,14 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
-	if !common.IsASupportedLanguage(language) {
-		logger.Log.Info("%s plugin is not installed \n", language)
+	if !isCompatibleLanguagePluginInstalled(language) {
+		logger.Log.Info("Compatible %s plugin is not installed \n", language)
 		logger.Log.Info("Installing plugin => %s ... \n\n", language)
 
-		if result := installPlugin(language, ""); result.success {
+		if result := installPlugin(language, ""); !result.success {
 			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, result.getMessage()))
 		}
-
-	} else {
-		if !isCompatibleLanguagePluginInstalled(language) {
-			return errors.New(fmt.Sprintf("Current version of plugin %s is not supported for Gauge %s. To update plugin, run `gauge --update %s`.", language, version.CurrentGaugeVersion, language))
-		}
 	}
-
 	// Create the project manifest
 	showMessage("create", common.ManifestFile)
 	if common.FileExists(common.ManifestFile) {

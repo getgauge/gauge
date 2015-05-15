@@ -248,6 +248,16 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreRemoved(c *C)
 	c.Assert(orderMap[2], Equals, 2)
 }
 
+func (s *MySuite) TestCreationOfOrderMapForStep(c *C) {
+	agent, _ := getRefactorAgent("Say <greeting> to <name>", "Say <greeting> to <name> \"DD\"")
+
+	orderMap := agent.createOrderOfArgs()
+
+	c.Assert(orderMap[0], Equals, 0)
+	c.Assert(orderMap[1], Equals, 1)
+	c.Assert(orderMap[2], Equals, -1)
+}
+
 func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
 	oldStep := "first step {static} and {static} and {static}"
 	oldStep1 := "first step <a> and <b> and <c>"

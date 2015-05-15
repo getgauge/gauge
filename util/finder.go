@@ -54,7 +54,7 @@ func IsSpec(path string) bool {
 func FindAllNestedDirs(dir string) []string {
 	nestedDirs := make([]string, 0)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if info.IsDir() && !(path == dir) && err == nil {
+		if err == nil && info.IsDir() && !(path == dir) {
 			nestedDirs = append(nestedDirs, path)
 		}
 		return nil
