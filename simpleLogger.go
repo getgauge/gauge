@@ -46,23 +46,23 @@ func (writer *simpleLogger) PrintError(value string) {
 }
 
 func (writer *simpleLogger) Critical(formatString string, args ...interface{}) {
-	logger.Log.Critical(formatString, args)
+	logger.Log.Critical(formatString, args...)
 }
 
 func (writer *simpleLogger) Info(formatString string, args ...interface{}) {
-	logger.Log.Info(formatString, args)
+	logger.Log.Info(formatString, args...)
 }
 
 func (writer *simpleLogger) Warning(formatString string, args ...interface{}) {
-	logger.Log.Warning(formatString, args)
+	logger.Log.Warning(formatString, args...)
 }
 
 func (writer *simpleLogger) Debug(formatString string, args ...interface{}) {
-	logger.Log.Debug(formatString, args)
+	logger.Log.Debug(formatString, args...)
 }
 
 func (writer *simpleLogger) Error(formatString string, args ...interface{}) {
-	logger.Log.Error(formatString, args)
+	logger.Log.Error(formatString, args...)
 }
 
 func (writer *simpleLogger) SpecHeading(heading string) {
