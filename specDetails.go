@@ -264,11 +264,9 @@ func (specInfoGatherer *specInfoGatherer) getStepsFromRunner(runner *testRunner)
 		if connErr == nil {
 			steps = append(steps, requestForSteps(runner)...)
 			logger.ApiLog.Debug("Steps got from runner: %v", steps)
-		}
-		if connErr != nil {
+		} else {
 			logger.ApiLog.Error("Runner connection failed: %s", connErr)
 		}
-
 	} else {
 		steps = append(steps, requestForSteps(runner)...)
 		logger.ApiLog.Debug("Steps got from runner: %v", steps)

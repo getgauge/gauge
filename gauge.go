@@ -260,18 +260,17 @@ func executeSpecs(inParallel bool) {
 		handleCriticalError(err)
 	}
 	err, apiHandler := startAPIService(0)
-	apiHandler.runner.kill(getCurrentLogger())
 	if err != nil {
+		apiHandler.runner.kill(getCurrentLogger())
 		handleCriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
 	}
-
-	runner, runnerError := startRunnerAndMakeConnection(manifest, getCurrentLogger())
-	if runnerError != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Failed to start a runner. %s\n", runnerError.Error())))
+	if apiHandler.runner == nil {
+		handleCriticalError(errors.New("Failed to start a runner\n"))
 	}
-	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
+
+	validateSpecs(manifest, specsToExecute, apiHandler.runner, conceptsDictionary)
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, getCurrentLogger())
+	execution := newExecution(manifest, specsToExecute, apiHandler.runner, pluginHandler, parallelInfo, getCurrentLogger())
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
