@@ -134,3 +134,46 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	c.Assert(nestedConcept2.getArg("username").value, Equals, "foo")
 
 }
+
+func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"456\" \"foo\" and \"prateek\"").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("assign id <userid> and name <username>").
+		step("add id \"some-id\"").
+		step("second nested \"s-value\"").
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name \"static-name\"").
+		specHeading("second nested <baz>").
+		step("add id <baz>").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	conceptDictionary.add(concepts, "file.cpt")
+	spec, _ := parser.parse(specText, conceptDictionary)
+	concept1 := spec.scenarios[0].steps[0]
+
+	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	populateConceptDynamicParams(concept1, dataTableLookup)
+
+	c.Assert(concept1.getArg("user-id").value, Equals, "456")
+	c.Assert(concept1.getArg("user-name").value, Equals, "foo")
+	c.Assert(concept1.getArg("user-phone").value, Equals, "prateek")
+
+	nestedConcept := concept1.conceptSteps[0]
+	c.Assert(nestedConcept.getArg("userid").value, Equals, "456")
+	c.Assert(nestedConcept.getArg("username").value, Equals, "static-name")
+
+	c.Assert(nestedConcept.conceptSteps[0].args[0].argType, Equals, static)
+	c.Assert(nestedConcept.conceptSteps[0].args[0].value, Equals, "some-id")
+
+	secondLevelNestedConcept := nestedConcept.conceptSteps[1]
+	c.Assert(secondLevelNestedConcept.getArg("baz").value, Equals, "s-value")
+	c.Assert(secondLevelNestedConcept.getArg("baz").argType, Equals, static)
+}

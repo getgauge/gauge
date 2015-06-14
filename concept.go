@@ -303,7 +303,9 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 	for i, stepInsideConcept := range conceptStep.conceptSteps {
 		if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 			//replace step with actual concept
-			conceptStep.conceptSteps[i] = nestedConcept.conceptStep
+			conceptStep.conceptSteps[i].conceptSteps = nestedConcept.conceptStep.conceptSteps
+			conceptStep.conceptSteps[i].isConcept = nestedConcept.conceptStep.isConcept
+			conceptStep.conceptSteps[i].lookup = nestedConcept.conceptStep.lookup
 		} else {
 			conceptDictionary.updateStep(stepInsideConcept)
 		}
@@ -327,7 +329,7 @@ func (conceptDictionary *conceptDictionary) updateLookupForNestedConcepts() {
 			stepInsideConcept.parent = concept.conceptStep
 			if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 				for i, arg := range nestedConcept.conceptStep.args {
-					nestedConcept.conceptStep.lookup.addArgValue(arg.value, &stepArg{argType: dynamic, value: stepInsideConcept.args[i].value})
+					nestedConcept.conceptStep.lookup.addArgValue(arg.value, &stepArg{argType: stepInsideConcept.args[i].argType, value: stepInsideConcept.args[i].value})
 				}
 			}
 		}

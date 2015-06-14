@@ -96,6 +96,44 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
 	c.Assert(len(concepts[1].items), Equals, 3)
 }
 
+func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithStaticParameters(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	conceptText := SpecBuilder().
+		specHeading("assign id <userid> and name <username>").
+		step("add id <userid>").
+		step("add name <username>").
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name \"static-value\"").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+	conceptDictionary.add(concepts, "file.cpt")
+
+	concept := conceptDictionary.search("create user {} {} and {}")
+	c.Assert(len(concept.conceptStep.conceptSteps), Equals, 1)
+	actualNestedConcept := concept.conceptStep.conceptSteps[0]
+	c.Assert(actualNestedConcept.isConcept, Equals, true)
+
+	c.Assert(actualNestedConcept.args[0].argType, Equals, dynamic)
+	c.Assert(actualNestedConcept.args[0].value, Equals, "user-id")
+
+	c.Assert(actualNestedConcept.args[1].argType, Equals, static)
+	c.Assert(actualNestedConcept.args[1].value, Equals, "static-value")
+	c.Assert(actualNestedConcept.lookup.getArg("userid").value, Equals, "user-id")
+	c.Assert(actualNestedConcept.lookup.getArg("userid").argType, Equals, dynamic)
+	c.Assert(actualNestedConcept.lookup.getArg("username").value, Equals, "static-value")
+	c.Assert(actualNestedConcept.lookup.getArg("username").argType, Equals, static)
+
+	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 2)
+	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, "add id {}")
+	c.Assert(actualNestedConcept.conceptSteps[0].args[0].argType, Equals, dynamic)
+	c.Assert(actualNestedConcept.conceptSteps[0].args[0].value, Equals, "userid")
+	c.Assert(len(concepts[0].items), Equals, 3)
+
+	c.Assert(actualNestedConcept.conceptSteps[1].value, Equals, "add name {}")
+	c.Assert(actualNestedConcept.conceptSteps[1].args[0].argType, Equals, dynamic)
+	c.Assert(actualNestedConcept.conceptSteps[1].args[0].value, Equals, "username")
+	c.Assert(len(concepts[1].items), Equals, 2)
+}
+
 func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 	conceptDictionary := new(conceptDictionary)
 	conceptText := SpecBuilder().
@@ -179,6 +217,18 @@ func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
 }
 
+/*
+# top level concept
+* nested concept
+* normal step 1
+
+# another nested concept
+* normal step 3
+
+# nested concept
+* another nested concept
+* normal step 2
+*/
 func (s *MySuite) TestMultiLevelConcept(c *C) {
 	dictionary := new(conceptDictionary)
 	normalStep1 := &step{value: "normal step 1", lineText: "normal step 1"}
@@ -448,6 +498,75 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	c.Assert(nestedConceptArg1.value, Equals, "foo")
 	nestedConceptArg2 := nestedConcept.getArg("boo")
 	c.Assert(nestedConceptArg2.value, Equals, "doo")
+}
+
+func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConceptDefinedFirst(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"foo\" \"prateek\" and \"007\"").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("assign id <userid> and name <username>").
+		step("add id <userid>").
+		step("add name <username>").
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name \"static-name\"").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	conceptDictionary.add(concepts, "file.cpt")
+	tokens, _ := parser.generateTokens(specText)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+	firstLevelConcept := spec.scenarios[0].steps[0]
+	c.Assert(firstLevelConcept.getArg("user-id").value, Equals, "foo")
+	c.Assert(firstLevelConcept.getArg("user-name").value, Equals, "prateek")
+	c.Assert(firstLevelConcept.getArg("user-phone").value, Equals, "007")
+
+	nestedConcept := firstLevelConcept.conceptSteps[0]
+
+	c.Assert(nestedConcept.getArg("userid").value, Equals, "foo")
+	c.Assert(nestedConcept.getArg("username").value, Equals, "static-name")
+
+}
+
+func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConceptDefinedSecond(c *C) {
+	parser := new(specParser)
+	conceptDictionary := new(conceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"foo\" \"prateek\" and \"007\"").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("create user <user-id> <user-name> and <user-phone>").
+		step("assign id <user-id> and name \"static-name\"").
+		specHeading("assign id <userid> and name <username>").
+		step("add id <userid>").
+		step("add name <username>").String()
+
+	concepts, _ := new(conceptParser).parse(conceptText)
+
+	conceptDictionary.add(concepts, "file.cpt")
+	tokens, _ := parser.generateTokens(specText)
+	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+
+	c.Assert(parseResult.ok, Equals, true)
+	firstLevelConcept := spec.scenarios[0].steps[0]
+	c.Assert(firstLevelConcept.getArg("user-id").value, Equals, "foo")
+	c.Assert(firstLevelConcept.getArg("user-name").value, Equals, "prateek")
+	c.Assert(firstLevelConcept.getArg("user-phone").value, Equals, "007")
+
+	nestedConcept := firstLevelConcept.conceptSteps[0]
+	c.Assert(nestedConcept.getArg("userid").value, Equals, "foo")
+	c.Assert(nestedConcept.getArg("username").value, Equals, "static-name")
+
 }
 
 func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
