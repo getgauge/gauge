@@ -15,58 +15,59 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
+	"encoding/csv"
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"strings"
 )
 
-type table struct {
+type Table struct {
 	headerIndexMap map[string]int
-	columns        [][]tableCell
+	columns        [][]TableCell
 	headers        []string
 	lineNo         int
 }
 
-type dataTable struct {
-	table      table
+type DataTable struct {
+	table      Table
 	value      string
 	lineNo     int
 	isExternal bool
 }
 
-type tableCell struct {
+type TableCell struct {
 	value    string
-	cellType argType
+	cellType ArgType
 }
 
-func (table *table) isInitialized() bool {
+func (table *Table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
-func (cell *tableCell) getValue() string {
+func (cell *TableCell) getValue() string {
 	value := cell.value
-	if cell.cellType == dynamic {
+	if cell.cellType == Dynamic {
 		value = fmt.Sprintf("<%s>", value)
 	}
 	return value
 }
 
-func (dataTable *dataTable) isInitialized() bool {
+func (dataTable *DataTable) isInitialized() bool {
 	return dataTable.table.headerIndexMap != nil
 }
 
-func (table *table) String() string {
+func (table *Table) String() string {
 	return fmt.Sprintf("%v\n%v", table.headers, table.columns)
 }
 
-func (table *table) getDynamicArgs() []string {
+func (table *Table) getDynamicArgs() []string {
 	args := make([]string, 0)
 	for _, row := range table.columns {
 		for _, column := range row {
-			if column.cellType == dynamic {
+			if column.cellType == Dynamic {
 				args = append(args, column.value)
 			}
 		}
@@ -74,47 +75,47 @@ func (table *table) getDynamicArgs() []string {
 	return args
 }
 
-func (table *table) get(header string) []tableCell {
+func (table *Table) get(header string) []TableCell {
 	if !table.headerExists(header) {
 		panic(fmt.Sprintf("Table column %s not found", header))
 	}
 	return table.columns[table.headerIndexMap[header]]
 }
 
-func (table *table) headerExists(header string) bool {
+func (table *Table) headerExists(header string) bool {
 	_, ok := table.headerIndexMap[header]
 	return ok
 }
 
-func (table *table) addHeaders(columnNames []string) {
+func (table *Table) addHeaders(columnNames []string) {
 	table.headerIndexMap = make(map[string]int)
 	table.headers = make([]string, len(columnNames))
-	table.columns = make([][]tableCell, len(columnNames))
+	table.columns = make([][]TableCell, len(columnNames))
 	for i, column := range columnNames {
 		trimmedHeader := strings.TrimSpace(column)
 		table.headers[i] = trimmedHeader
 		table.headerIndexMap[trimmedHeader] = i
-		table.columns[i] = make([]tableCell, 0)
+		table.columns[i] = make([]TableCell, 0)
 	}
 }
 
-func (table *table) addRowValues(rowValues []string) {
+func (table *Table) addRowValues(rowValues []string) {
 	tableCells := table.createTableCells(rowValues)
 	table.addRows(tableCells)
 }
 
-func (table *table) createTableCells(rowValues []string) []tableCell {
-	tableCells := make([]tableCell, 0)
+func (table *Table) createTableCells(rowValues []string) []TableCell {
+	tableCells := make([]TableCell, 0)
 	for _, value := range rowValues {
 		tableCells = append(tableCells, getTableCell(strings.TrimSpace(value)))
 	}
 	return tableCells
 }
 
-func (table *table) toHeaderSizeRow(rows []tableCell) []tableCell {
-	finalCells := make([]tableCell, 0)
+func (table *Table) toHeaderSizeRow(rows []TableCell) []TableCell {
+	finalCells := make([]TableCell, 0)
 	for i, _ := range table.headers {
-		var cell tableCell
+		var cell TableCell
 		if len(rows)-1 >= i {
 			cell = rows[i]
 		} else {
@@ -125,13 +126,13 @@ func (table *table) toHeaderSizeRow(rows []tableCell) []tableCell {
 	return finalCells
 }
 
-func (table *table) addRows(rows []tableCell) {
+func (table *Table) addRows(rows []TableCell) {
 	for i, value := range table.toHeaderSizeRow(rows) {
 		table.columns[i] = append(table.columns[i], value)
 	}
 }
 
-func (table *table) getRows() [][]string {
+func (table *Table) getRows() [][]string {
 	if !table.isInitialized() {
 		return nil
 	}
@@ -149,7 +150,7 @@ func (table *table) getRows() [][]string {
 	return tableRows
 }
 
-func (table *table) getRowCount() int {
+func (table *Table) getRowCount() int {
 	if table.isInitialized() {
 		return len(table.columns[0])
 	} else {
@@ -157,27 +158,44 @@ func (table *table) getRowCount() int {
 	}
 }
 
-func (table *table) kind() tokenKind {
+func (table *Table) kind() TokenKind {
 	return tableKind
 }
 
-func (externalTable *dataTable) kind() tokenKind {
+func (externalTable *DataTable) kind() TokenKind {
 	return dataTableKind
 }
 
-func getTableCell(value string) tableCell {
-	return tableCell{value: value, cellType: static}
+func getTableCell(value string) TableCell {
+	return TableCell{value: value, cellType: Static}
 }
 
-func getDefaultTableCell() tableCell {
-	return tableCell{value: "", cellType: static}
+func getDefaultTableCell() TableCell {
+	return TableCell{value: "", cellType: Static}
 }
 
-func tableFrom(protoTable *gauge_messages.ProtoTable) *table {
-	table := &table{}
+func tableFrom(protoTable *gauge_messages.ProtoTable) *Table {
+	table := &Table{}
 	table.addHeaders(protoTable.GetHeaders().GetCells())
 	for _, row := range protoTable.GetRows() {
 		table.addRowValues(row.GetCells())
 	}
 	return table
+}
+
+func convertCsvToTable(csvContents string) (*Table, error) {
+	r := csv.NewReader(strings.NewReader(csvContents))
+	lines, err := r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	table := new(Table)
+	for i, line := range lines {
+		if i == 0 {
+			table.addHeaders(line)
+		} else {
+			table.addRowValues(line)
+		}
+	}
+	return table, nil
 }

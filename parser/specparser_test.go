@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	. "gopkg.in/check.v1"
@@ -25,10 +25,12 @@ import (
 // Hook up gocheck into the "go test" runner.
 func Test(t *testing.T) { TestingT(t) }
 
+type MySuite struct{}
+
 var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestParsingSpecHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 
 	specText := SpecBuilder().specHeading("Spec Heading").String()
 	tokens, err := parser.generateTokens(specText)
@@ -40,7 +42,7 @@ func (s *MySuite) TestParsingSpecHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingASingleStep(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	tokens, err := parser.generateTokens("* test step \"arg\" ")
 
 	c.Assert(err, IsNil)
@@ -49,7 +51,7 @@ func (s *MySuite) TestParsingASingleStep(c *C) {
 }
 
 func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").specHeading("Another Spec Heading").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -63,7 +65,7 @@ func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("").specHeading("Another Spec Heading").String()
 
 	_, err := parser.generateTokens(specText)
@@ -73,7 +75,7 @@ func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingScenarioHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -85,7 +87,7 @@ func (s *MySuite) TestParsingScenarioHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingThrowErrorForEmptyScenarioHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("").String()
 
 	_, err := parser.generateTokens(specText)
@@ -95,7 +97,7 @@ func (s *MySuite) TestParsingThrowErrorForEmptyScenarioHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().scenarioHeading("Scenario Heading").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -106,7 +108,7 @@ func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingComments(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").text("Hello i am a comment ").text("### A h3 comment").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -122,7 +124,7 @@ func (s *MySuite) TestParsingComments(c *C) {
 }
 
 func (s *MySuite) TestParsingSpecHeadingWithUnderlineOneChar(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().text("Spec heading with underline ").text("=").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -136,7 +138,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineOneChar(c *C) {
 }
 
 func (s *MySuite) TestParsingSpecHeadingWithUnderlineMultipleChar(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().text("Spec heading with underline ").text("=====").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -150,7 +152,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineMultipleChar(c *C) {
 }
 
 func (s *MySuite) TestParsingCommentWithUnderlineAndInvalidCharacters(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().text("A comment that will be with invalid underline").text("===89s").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -166,7 +168,7 @@ func (s *MySuite) TestParsingCommentWithUnderlineAndInvalidCharacters(c *C) {
 }
 
 func (s *MySuite) TestParsingScenarioHeadingWithUnderline(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().text("Spec heading with underline ").text("=").text("Scenario heading with underline").text("-").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -183,7 +185,7 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderline(c *C) {
 }
 
 func (s *MySuite) TestParsingScenarioHeadingWithUnderlineMultipleChar(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().text("Spec heading with underline ").text("=").text("Scenario heading with underline").text("----").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -200,7 +202,7 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderlineMultipleChar(c *C) {
 }
 
 func (s *MySuite) TestParsingHeadingWithUnderlineAndHash(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").text("=====").scenarioHeading("Scenario heading with hash").text("----").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -223,7 +225,7 @@ func (s *MySuite) TestParsingHeadingWithUnderlineAndHash(c *C) {
 }
 
 func (s *MySuite) TestParseSpecTags(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").tags("tag1", "tag2").scenarioHeading("Scenario Heading").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -240,7 +242,7 @@ func (s *MySuite) TestParseSpecTags(c *C) {
 }
 
 func (s *MySuite) TestParseSpecTagsWithSpace(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").text(" tags :tag1,tag2").scenarioHeading("Scenario Heading").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -257,7 +259,7 @@ func (s *MySuite) TestParseSpecTagsWithSpace(c *C) {
 }
 
 func (s *MySuite) TestParseEmptyTags(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").tags("tag1", "", "tag2", "").scenarioHeading("Scenario Heading").String()
 	tokens, err := parser.generateTokens(specText)
 
@@ -273,7 +275,7 @@ func (s *MySuite) TestParseEmptyTags(c *C) {
 }
 
 func (s *MySuite) TestParseScenarioTags(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").tags("tag1", "tag2").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -290,7 +292,7 @@ func (s *MySuite) TestParseScenarioTags(c *C) {
 }
 
 func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().tags("tag1 ").specHeading("Spec heading with hash ").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -306,7 +308,7 @@ func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
 }
 
 func (s *MySuite) TestParsingSimpleDataTable(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|007|").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -336,7 +338,7 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 }
 
 func (s *MySuite) TestParsingMultipleDataTable(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|john|123|").text("|james|007|").step("Example step").text("|user|role|").text("|root | admin|").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -370,7 +372,7 @@ func (s *MySuite) TestParsingMultipleDataTable(c *C) {
 }
 
 func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|||").text("|john|123|").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -395,7 +397,7 @@ func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 }
 
 func (s *MySuite) TestParsingDataTableRowEscapingPipe(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id | address| phone|").text("| escape \\| pipe |second|third|").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -418,7 +420,7 @@ func (s *MySuite) TestParsingDataTableRowEscapingPipe(c *C) {
 }
 
 func (s *MySuite) TestParsingDataTableThrowsErrorWithEmptyHeader(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id |||").text("| escape \\| pipe |second|third|second|").String()
 
 	_, err := parser.generateTokens(specText)
@@ -427,7 +429,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithEmptyHeader(c *C) {
 }
 
 func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id|name|").text("|1|2|3|").String()
 
 	_, err := parser.generateTokens(specText)
@@ -436,7 +438,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
 }
 
 func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|---|--|-|").text("|---|--|-|").text("|---|--|-|").text("| escape \\| pipe |second|third|").String()
 
 	tokens, err := parser.generateTokens(specText)
@@ -458,7 +460,7 @@ func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
 }
 
 func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("A spec heading").
 		text("Hello, i am a comment").
 		text(" ").
@@ -509,16 +511,16 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 }
 
 func (s *MySuite) TestParsingConceptInSpec(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First flow").
 		step("concept step").
 		step("another step").String()
-	step1 := &step{value: "step 1"}
-	step2 := &step{value: "step 2"}
-	concept1 := &step{value: "concept step", conceptSteps: []*step{step1, step2}, isConcept: true}
-	err := conceptDictionary.add([]*step{concept1}, "file.cpt")
+	step1 := &Step{value: "step 1"}
+	step2 := &Step{value: "step 2"}
+	concept1 := &Step{value: "concept step", conceptSteps: []*Step{step1, step2}, isConcept: true}
+	err := conceptDictionary.add([]*Step{concept1}, "file.cpt")
 	tokens, err := parser.generateTokens(specText)
 	c.Assert(err, IsNil)
 	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
@@ -533,7 +535,7 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 }
 
 func (s *MySuite) TestTableFromInvalidFile(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
 	_, err := parser.generateTokens(specText)
@@ -541,28 +543,28 @@ func (s *MySuite) TestTableFromInvalidFile(c *C) {
 }
 
 func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
-	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	_, parseRes := parser.parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.error.message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.ok, Equals, false)
 }
 
 func (s *MySuite) TestTableInputFromFile(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
 
-	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	_, parseRes := parser.parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.error.message, Equals, "Could not resolve table from Table: inputinvalid.csv")
 	c.Assert(parseRes.ok, Equals, false)
 }
 
 func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
-	parser := new(specParser)
+	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
 
-	_, parseRes := parser.parse(specText, new(conceptDictionary))
+	_, parseRes := parser.parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.error.message, Equals, "Table location not specified")
 	c.Assert(parseRes.ok, Equals, false)
 }

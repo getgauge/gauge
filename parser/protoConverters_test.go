@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
@@ -61,7 +61,7 @@ func (s *MySuite) TestCopyingProtoTable(c *C) {
 }
 
 func (s *MySuite) TestCopyingStepValue(c *C) {
-	stepValue := &stepValue{[]string{"param1"}, "foo with {}", "foo with <param>"}
+	stepValue := &StepValue{[]string{"param1"}, "foo with {}", "foo with <param>"}
 	protoStepValue := convertToProtoStepValue(stepValue)
 
 	c.Assert(protoStepValue.GetStepValue(), Equals, stepValue.stepValue)

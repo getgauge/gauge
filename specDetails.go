@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	fsnotify "gopkg.in/fsnotify.v1"
@@ -30,17 +31,17 @@ import (
 )
 
 type specInfoGatherer struct {
-	availableSpecs    []*specification
+	availableSpecs    []*parser.Specification
 	availableStepsMap map[string]*stepValue
 	runnerStepValues  []*stepValue
-	fileToStepsMap    map[string][]*step
-	conceptDictionary *conceptDictionary
+	fileToStepsMap    map[string][]*parser.Step
+	conceptDictionary *parser.ConceptDictionary
 	mutex             sync.Mutex
 }
 
 func (specInfoGatherer *specInfoGatherer) makeListOfAvailableSteps(runner *testRunner) *testRunner {
 	specInfoGatherer.availableStepsMap = make(map[string]*stepValue)
-	specInfoGatherer.fileToStepsMap = make(map[string][]*step)
+	specInfoGatherer.fileToStepsMap = make(map[string][]*parser.Step)
 	runner = specInfoGatherer.getStepsFromRunner(runner)
 
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use

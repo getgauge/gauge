@@ -15,10 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
-	"encoding/csv"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -31,7 +30,7 @@ type invalidSpecialParamError struct {
 	message string
 }
 
-type resolverFn func(string) (*stepArg, error)
+type resolverFn func(string) (*StepArg, error)
 type specialTypeResolver struct {
 	predefinedResolvers map[string]resolverFn
 }
@@ -43,16 +42,16 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
-func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, dataTableLookup *argLookup) []*gauge_messages.Parameter {
+func (paramResolver *paramResolver) getResolvedParams(step *Step, parent *Step, dataTableLookup *ArgLookup) []*gauge_messages.Parameter {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.args {
 		parameter := new(gauge_messages.Parameter)
 		parameter.Name = proto.String(arg.name)
-		if arg.argType == static {
+		if arg.argType == Static {
 			parameter.ParameterType = gauge_messages.Parameter_Static.Enum()
 			parameter.Value = proto.String(arg.value)
-		} else if arg.argType == dynamic {
-			var resolvedArg *stepArg
+		} else if arg.argType == Dynamic {
+			var resolvedArg *StepArg
 			if parent != nil {
 				resolvedArg = parent.getArg(arg.value)
 			} else {
@@ -67,10 +66,10 @@ func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, 
 				parameter.ParameterType = gauge_messages.Parameter_Dynamic.Enum()
 				parameter.Value = proto.String(resolvedArg.value)
 			}
-		} else if arg.argType == specialString {
+		} else if arg.argType == SpecialString {
 			parameter.ParameterType = gauge_messages.Parameter_Special_String.Enum()
 			parameter.Value = proto.String(arg.value)
-		} else if arg.argType == specialTable {
+		} else if arg.argType == SpecialTable {
 			parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
 			parameter.Table = paramResolver.createProtoStepTable(&arg.table, dataTableLookup)
 		} else {
@@ -85,7 +84,7 @@ func (paramResolver *paramResolver) getResolvedParams(step *step, parent *step, 
 
 }
 
-func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLookup *argLookup) *gauge_messages.ProtoTable {
+func (resolver *paramResolver) createProtoStepTable(table *Table, dataTableLookup *ArgLookup) *gauge_messages.ProtoTable {
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
@@ -94,7 +93,7 @@ func (resolver *paramResolver) createProtoStepTable(table *table, dataTableLooku
 		for _, header := range table.headers {
 			tableCell := table.get(header)[i]
 			value := tableCell.value
-			if tableCell.cellType == dynamic {
+			if tableCell.cellType == Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
 				value = dataTableLookup.getArg(tableCell.value).value
 			}
@@ -114,14 +113,14 @@ func newSpecialTypeResolver() *specialTypeResolver {
 
 func initializePredefinedResolvers() map[string]resolverFn {
 	return map[string]resolverFn{
-		"file": func(filePath string) (*stepArg, error) {
+		"file": func(filePath string) (*StepArg, error) {
 			fileContent, err := common.ReadFileContents(filePath)
 			if err != nil {
 				return nil, err
 			}
-			return &stepArg{value: fileContent, argType: specialString}, nil
+			return &StepArg{value: fileContent, argType: SpecialString}, nil
 		},
-		"table": func(filePath string) (*stepArg, error) {
+		"table": func(filePath string) (*StepArg, error) {
 			csv, err := common.ReadFileContents(filePath)
 			if err != nil {
 				return nil, err
@@ -130,29 +129,12 @@ func initializePredefinedResolvers() map[string]resolverFn {
 			if err != nil {
 				return nil, err
 			}
-			return &stepArg{table: *csvTable, argType: specialTable}, nil
+			return &StepArg{table: *csvTable, argType: SpecialTable}, nil
 		},
 	}
 }
 
-func convertCsvToTable(csvContents string) (*table, error) {
-	r := csv.NewReader(strings.NewReader(csvContents))
-	lines, err := r.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-	table := new(table)
-	for i, line := range lines {
-		if i == 0 {
-			table.addHeaders(line)
-		} else {
-			table.addRowValues(line)
-		}
-	}
-	return table, nil
-}
-
-func (resolver *specialTypeResolver) resolve(arg string) (*stepArg, error) {
+func (resolver *specialTypeResolver) resolve(arg string) (*StepArg, error) {
 	//	fmt.Println(arg)
 	regEx := regexp.MustCompile("(.*):(.*)")
 	match := regEx.FindAllStringSubmatch(arg, -1)
@@ -165,10 +147,42 @@ func (resolver *specialTypeResolver) resolve(arg string) (*stepArg, error) {
 	return stepArg, err
 }
 
-func (resolver *specialTypeResolver) getStepArg(specialType string, value string, arg string) (*stepArg, error) {
+func (resolver *specialTypeResolver) getStepArg(specialType string, value string, arg string) (*StepArg, error) {
 	resolveFunc, found := resolver.predefinedResolvers[specialType]
 	if found {
 		return resolveFunc(value)
 	}
 	return nil, invalidSpecialParamError{message: fmt.Sprintf("Resolver not found for special param <%s>", arg)}
+}
+
+// Creating a copy of the lookup and populating table values
+func populateConceptDynamicParams(concept *Step, dataTableLookup *ArgLookup) {
+	//If it is a top level concept
+	if concept.parent == nil {
+		lookup := concept.lookup.getCopy()
+		for key, _ := range lookup.paramIndexMap {
+			conceptLookupArg := lookup.getArg(key)
+			if conceptLookupArg.argType == Dynamic {
+				resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
+				lookup.addArgValue(key, resolvedArg)
+			}
+		}
+		concept.lookup = *lookup
+	}
+
+	//Updating values inside the concept step as well
+	newArgs := make([]*StepArg, 0)
+	for _, arg := range concept.args {
+		if arg.argType == Dynamic {
+			if concept.parent != nil {
+				newArgs = append(newArgs, concept.parent.getArg(arg.value))
+			} else {
+				newArgs = append(newArgs, dataTableLookup.getArg(arg.value))
+			}
+		} else {
+			newArgs = append(newArgs, arg)
+		}
+	}
+	concept.args = newArgs
+	concept.populateFragments()
 }

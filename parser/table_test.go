@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestIsInitalized(c *C) {
-	var table table
+	var table Table
 	c.Assert(table.isInitialized(), Equals, false)
 	c.Assert(table.getRowCount(), Equals, 0)
 
@@ -32,7 +32,7 @@ func (s *MySuite) TestIsInitalized(c *C) {
 }
 
 func (s *MySuite) TestShouldAddHeaders(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
 
@@ -46,7 +46,7 @@ func (s *MySuite) TestShouldAddHeaders(c *C) {
 }
 
 func (s *MySuite) TestShouldAddRowValues(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
@@ -56,59 +56,59 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	column1 := table.get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].value, Equals, "foo")
-	c.Assert(column1[0].cellType, Equals, static)
+	c.Assert(column1[0].cellType, Equals, Static)
 	c.Assert(column1[1].value, Equals, "john")
-	c.Assert(column1[1].cellType, Equals, static)
+	c.Assert(column1[1].cellType, Equals, Static)
 
 	column2 := table.get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].value, Equals, "bar")
-	c.Assert(column2[0].cellType, Equals, static)
+	c.Assert(column2[0].cellType, Equals, Static)
 	c.Assert(column2[1].value, Equals, "jim")
-	c.Assert(column2[1].cellType, Equals, static)
+	c.Assert(column2[1].cellType, Equals, Static)
 
 	column3 := table.get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].value, Equals, "baz")
-	c.Assert(column3[0].cellType, Equals, static)
+	c.Assert(column3[0].cellType, Equals, Static)
 	c.Assert(column3[1].value, Equals, "")
-	c.Assert(column3[1].cellType, Equals, static)
+	c.Assert(column3[1].cellType, Equals, Static)
 
 }
 
 func (s *MySuite) TestShouldAddRows(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
-	table.addRows([]tableCell{tableCell{"foo", static}, tableCell{"bar", static}, tableCell{"baz", static}})
-	table.addRows([]tableCell{tableCell{"john", static}, tableCell{"jim", static}})
+	table.addRows([]TableCell{TableCell{"foo", Static}, TableCell{"bar", Static}, TableCell{"baz", Static}})
+	table.addRows([]TableCell{TableCell{"john", Static}, TableCell{"jim", Static}})
 
 	c.Assert(table.getRowCount(), Equals, 2)
 	column1 := table.get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].value, Equals, "foo")
-	c.Assert(column1[0].cellType, Equals, static)
+	c.Assert(column1[0].cellType, Equals, Static)
 	c.Assert(column1[1].value, Equals, "john")
-	c.Assert(column1[1].cellType, Equals, static)
+	c.Assert(column1[1].cellType, Equals, Static)
 
 	column2 := table.get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].value, Equals, "bar")
-	c.Assert(column2[0].cellType, Equals, static)
+	c.Assert(column2[0].cellType, Equals, Static)
 	c.Assert(column2[1].value, Equals, "jim")
-	c.Assert(column2[1].cellType, Equals, static)
+	c.Assert(column2[1].cellType, Equals, Static)
 
 	column3 := table.get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].value, Equals, "baz")
-	c.Assert(column3[0].cellType, Equals, static)
+	c.Assert(column3[0].cellType, Equals, Static)
 	c.Assert(column3[1].value, Equals, "")
-	c.Assert(column3[1].cellType, Equals, static)
+	c.Assert(column3[1].cellType, Equals, Static)
 
 }
 
 func (s *MySuite) TestCoulmnNameExists(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
@@ -121,7 +121,7 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 }
 
 func (s *MySuite) TestGetInvalidColumn(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
@@ -131,7 +131,7 @@ func (s *MySuite) TestGetInvalidColumn(c *C) {
 }
 
 func (s *MySuite) TestGetRows(c *C) {
-	var table table
+	var table Table
 
 	table.addHeaders([]string{"one", "two", "three"})
 	table.addRowValues([]string{"foo", "bar", "baz"})
@@ -151,12 +151,12 @@ func (s *MySuite) TestGetRows(c *C) {
 }
 
 func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
-	var table table
+	var table Table
 	table.addHeaders([]string{"id", "name"})
 
-	firstRow := table.toHeaderSizeRow([]tableCell{tableCell{"123", static}, tableCell{"foo", static}})
-	secondRow := table.toHeaderSizeRow([]tableCell{tableCell{"jim", static}, tableCell{"jack", static}})
-	thirdRow := table.toHeaderSizeRow([]tableCell{tableCell{"789", static}})
+	firstRow := table.toHeaderSizeRow([]TableCell{TableCell{"123", Static}, TableCell{"foo", Static}})
+	secondRow := table.toHeaderSizeRow([]TableCell{TableCell{"jim", Static}, TableCell{"jack", Static}})
+	thirdRow := table.toHeaderSizeRow([]TableCell{TableCell{"789", Static}})
 
 	c.Assert(len(firstRow), Equals, 2)
 	c.Assert(firstRow[0].value, Equals, "123")

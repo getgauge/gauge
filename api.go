@@ -33,12 +33,6 @@ import (
 	"sync"
 )
 
-type stepValue struct {
-	args                   []string
-	stepValue              string
-	parameterizedStepValue string
-}
-
 func requestForSteps(runner *testRunner) []string {
 	message, err := conn.GetResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.connection, config.RunnerRequestTimeout())
 	if err == nil {

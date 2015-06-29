@@ -452,38 +452,6 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 	return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(message), RecoverableError: proto.Bool(false)}
 }
 
-// Creating a copy of the lookup and populating table values
-func populateConceptDynamicParams(concept *step, dataTableLookup *argLookup) {
-	//If it is a top level concept
-	if concept.parent == nil {
-		lookup := concept.lookup.getCopy()
-		for key, _ := range lookup.paramIndexMap {
-			conceptLookupArg := lookup.getArg(key)
-			if conceptLookupArg.argType == dynamic {
-				resolvedArg := dataTableLookup.getArg(conceptLookupArg.value)
-				lookup.addArgValue(key, resolvedArg)
-			}
-		}
-		concept.lookup = *lookup
-	}
-
-	//Updating values inside the concept step as well
-	newArgs := make([]*stepArg, 0)
-	for _, arg := range concept.args {
-		if arg.argType == dynamic {
-			if concept.parent != nil {
-				newArgs = append(newArgs, concept.parent.getArg(arg.value))
-			} else {
-				newArgs = append(newArgs, dataTableLookup.getArg(arg.value))
-			}
-		} else {
-			newArgs = append(newArgs, arg)
-		}
-	}
-	concept.args = newArgs
-	concept.populateFragments()
-}
-
 func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentSpec.IsFailed = proto.Bool(true)
 }

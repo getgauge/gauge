@@ -15,19 +15,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
-	resolver.predefinedResolvers["file"] = func(value string) (*stepArg, error) {
-		return &stepArg{value: "dummy", argType: static}, nil
+	resolver.predefinedResolvers["file"] = func(value string) (*StepArg, error) {
+		return &StepArg{value: "dummy", argType: Static}, nil
 	}
 
 	stepArg, _ := resolver.resolve("file:foo")
 	c.Assert(stepArg.value, Equals, "dummy")
-	c.Assert(stepArg.argType, Equals, static)
+	c.Assert(stepArg.argType, Equals, Static)
 	c.Assert(stepArg.name, Equals, "file:foo")
 }
 
@@ -58,8 +58,8 @@ func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
 }
 
 func (s *MySuite) TestPopulatingConceptLookup(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
@@ -73,13 +73,13 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 		step("assign id <user-id> and name <user-name>").
 		step("assign number <user-phone>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").value, Equals, "123")
@@ -89,8 +89,8 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 }
 
 func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
@@ -107,13 +107,13 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept1 := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").value, Equals, "123")
@@ -136,8 +136,8 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 }
 
 func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
@@ -153,13 +153,13 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 		specHeading("second nested <baz>").
 		step("add id <baz>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept1 := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(argLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").value, Equals, "456")
@@ -170,10 +170,10 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	c.Assert(nestedConcept.getArg("userid").value, Equals, "456")
 	c.Assert(nestedConcept.getArg("username").value, Equals, "static-name")
 
-	c.Assert(nestedConcept.conceptSteps[0].args[0].argType, Equals, static)
+	c.Assert(nestedConcept.conceptSteps[0].args[0].argType, Equals, Static)
 	c.Assert(nestedConcept.conceptSteps[0].args[0].value, Equals, "some-id")
 
 	secondLevelNestedConcept := nestedConcept.conceptSteps[1]
 	c.Assert(secondLevelNestedConcept.getArg("baz").value, Equals, "s-value")
-	c.Assert(secondLevelNestedConcept.getArg("baz").argType, Equals, static)
+	c.Assert(secondLevelNestedConcept.getArg("baz").argType, Equals, Static)
 }

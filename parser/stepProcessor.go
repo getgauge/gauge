@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	"bytes"
@@ -70,7 +70,7 @@ func simpleAcceptor(start rune, end rune, after func(int), inState int) acceptFn
 	return acceptor(start, end, onEach, after, inState)
 }
 
-func processStep(parser *specParser, token *token) (*parseError, bool) {
+func processStep(parser *SpecParser, token *Token) (*parseError, bool) {
 
 	if len(token.value) == 0 {
 		return &parseError{lineNo: token.lineNo, lineText: token.lineText, message: "Step should not be blank"}, true

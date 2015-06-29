@@ -30,10 +30,6 @@ import (
 
 var currentTagExp string
 
-type specItemFilter interface {
-	filter(item) bool
-}
-
 type scenarioIndexFilterToRetain struct {
 	indexToNotFilter     int
 	currentScenarioIndex int

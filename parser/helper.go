@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	"reflect"
@@ -91,7 +91,7 @@ func arrayContains(array []string, toFind string) bool {
 	return false
 }
 
-func getIndexFor(scenario *scenario, scenarios []*scenario) int {
+func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 	for index, anItem := range scenarios {
 		if reflect.DeepEqual(scenario, anItem) {
 			return index

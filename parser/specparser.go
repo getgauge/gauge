@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	"bufio"
@@ -25,19 +25,19 @@ import (
 	"strings"
 )
 
-type specParser struct {
+type SpecParser struct {
 	scanner           *bufio.Scanner
 	lineNo            int
-	tokens            []*token
+	tokens            []*Token
 	currentState      int
-	processors        map[tokenKind]func(*specParser, *token) (*parseError, bool)
-	conceptDictionary *conceptDictionary
+	processors        map[TokenKind]func(*SpecParser, *Token) (*parseError, bool)
+	conceptDictionary *ConceptDictionary
 }
 
-type tokenKind int
+type TokenKind int
 
-type token struct {
-	kind     tokenKind
+type Token struct {
+	kind     TokenKind
 	lineNo   int
 	lineText string
 	args     []string
@@ -52,14 +52,14 @@ type parseError struct {
 
 type parseDetailResult struct {
 	error    *parseError
-	warnings []*warning
+	warnings []*Warning
 }
 
 func (se *parseError) Error() string {
 	return fmt.Sprintf("line no: %d, %s", se.lineNo, se.message)
 }
 
-func (token *token) String() string {
+func (token *Token) String() string {
 	return fmt.Sprintf("kind:%d, lineNo:%d, value:%s, line:%s, args:%s", token.kind, token.lineNo, token.value, token.lineText, token.args)
 }
 
@@ -77,7 +77,7 @@ const (
 )
 
 const (
-	specKind tokenKind = iota
+	specKind TokenKind = iota
 	tagKind
 	scenarioKind
 	commentKind
@@ -89,8 +89,8 @@ const (
 	dataTableKind
 )
 
-func (parser *specParser) initialize() {
-	parser.processors = make(map[tokenKind]func(*specParser, *token) (*parseError, bool))
+func (parser *SpecParser) initialize() {
+	parser.processors = make(map[TokenKind]func(*SpecParser, *Token) (*parseError, bool))
 	parser.processors[specKind] = processSpec
 	parser.processors[scenarioKind] = processScenario
 	parser.processors[commentKind] = processComment
@@ -101,27 +101,27 @@ func (parser *specParser) initialize() {
 	parser.processors[dataTableKind] = processDataTable
 }
 
-func (parser *specParser) parse(specText string, conceptDictionary *conceptDictionary) (*specification, *parseResult) {
+func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
 	tokens, parseError := parser.generateTokens(specText)
 	if parseError != nil {
-		return nil, &parseResult{error: parseError, ok: false}
+		return nil, &ParseResult{error: parseError, ok: false}
 	}
 	return parser.createSpecification(tokens, conceptDictionary)
 }
 
-func (parser *specParser) generateTokens(specText string) ([]*token, *parseError) {
+func (parser *SpecParser) generateTokens(specText string) ([]*Token, *parseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial
 	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
 		trimmedLine := strings.TrimSpace(line)
-		var newToken *token
+		var newToken *Token
 		if len(trimmedLine) == 0 {
-			newToken = &token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: "\n"}
+			newToken = &Token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: "\n"}
 		} else if parser.isScenarioHeading(trimmedLine) {
-			newToken = &token{kind: scenarioKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[2:])}
+			newToken = &Token{kind: scenarioKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
-			newToken = &token{kind: specKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{kind: specKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[1:])}
 		} else if parser.isSpecUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.kind = specKind
@@ -131,16 +131,16 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 			newToken.kind = scenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
-			newToken = &token{kind: stepKind, lineNo: parser.lineNo, lineText: strings.TrimSpace(trimmedLine[1:]), value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{kind: stepKind, lineNo: parser.lineNo, lineText: strings.TrimSpace(trimmedLine[1:]), value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found {
-			newToken = &token{kind: tagKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[startIndex:])}
+			newToken = &Token{kind: tagKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[startIndex:])}
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, tableRow, tableHeader)
-			newToken = &token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
+			newToken = &Token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
 		} else if value, found := parser.isDataTable(trimmedLine); found {
-			newToken = &token{kind: dataTableKind, lineNo: parser.lineNo, lineText: line, value: value}
+			newToken = &Token{kind: dataTableKind, lineNo: parser.lineNo, lineText: line, value: value}
 		} else {
-			newToken = &token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
+			newToken = &Token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
 		}
 		error := parser.accept(newToken)
 		if error != nil {
@@ -151,7 +151,7 @@ func (parser *specParser) generateTokens(specText string) ([]*token, *parseError
 
 }
 
-func (parser *specParser) tokenKindBasedOnCurrentState(state int, matchingToken tokenKind, alternateToken tokenKind) tokenKind {
+func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken TokenKind, alternateToken TokenKind) TokenKind {
 	if isInState(parser.currentState, state) {
 		return matchingToken
 	} else {
@@ -159,7 +159,7 @@ func (parser *specParser) tokenKindBasedOnCurrentState(state int, matchingToken 
 	}
 }
 
-func (parser *specParser) isSpecHeading(text string) bool {
+func (parser *SpecParser) isSpecHeading(text string) bool {
 	if len(text) > 1 {
 		return text[0] == '#' && text[1] != '#'
 	} else {
@@ -167,7 +167,7 @@ func (parser *specParser) isSpecHeading(text string) bool {
 	}
 }
 
-func (parser *specParser) checkTag(text string) (bool, int) {
+func (parser *SpecParser) checkTag(text string) (bool, int) {
 	lowerCased := strings.ToLower
 	tagColon := "tags:"
 	tagSpaceColon := "tags :"
@@ -179,7 +179,7 @@ func (parser *specParser) checkTag(text string) (bool, int) {
 	return false, -1
 }
 
-func (parser *specParser) isScenarioHeading(text string) bool {
+func (parser *SpecParser) isScenarioHeading(text string) bool {
 	if len(text) > 2 {
 		return text[0] == '#' && text[1] == '#' && text[2] != '#'
 	} else if len(text) == 2 {
@@ -188,7 +188,7 @@ func (parser *specParser) isScenarioHeading(text string) bool {
 	return false
 }
 
-func (parser *specParser) isStep(text string) bool {
+func (parser *SpecParser) isStep(text string) bool {
 	if len(text) > 1 {
 		return text[0] == '*' && text[1] != '*'
 	} else {
@@ -196,20 +196,20 @@ func (parser *specParser) isStep(text string) bool {
 	}
 }
 
-func (parser *specParser) isScenarioUnderline(text string) bool {
+func (parser *SpecParser) isScenarioUnderline(text string) bool {
 	return isUnderline(text, rune('-'))
 }
 
-func (parser *specParser) isTableRow(text string) bool {
+func (parser *SpecParser) isTableRow(text string) bool {
 	return text[0] == '|' && text[len(text)-1] == '|'
 }
 
-func (parser *specParser) isSpecUnderline(text string) bool {
+func (parser *SpecParser) isSpecUnderline(text string) bool {
 	return isUnderline(text, rune('='))
 
 }
 
-func (parser *specParser) isDataTable(text string) (string, bool) {
+func (parser *SpecParser) isDataTable(text string) (string, bool) {
 	lowerCased := strings.ToLower
 	tableColon := "table:"
 	tableSpaceColon := "table :"
@@ -221,7 +221,7 @@ func (parser *specParser) isDataTable(text string) (string, bool) {
 	return "", false
 }
 
-func (parser *specParser) accept(token *token) *parseError {
+func (parser *SpecParser) accept(token *Token) *parseError {
 	error, shouldSkip := parser.processors[token.kind](parser, token)
 	if error != nil {
 		return error
@@ -233,14 +233,14 @@ func (parser *specParser) accept(token *token) *parseError {
 	return nil
 }
 
-func processSpec(parser *specParser, token *token) (*parseError, bool) {
+func processSpec(parser *SpecParser, token *Token) (*parseError, bool) {
 	if len(token.value) < 1 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Spec heading should have at least one character"}, true
 	}
 	return nil, false
 }
 
-func processDataTable(parser *specParser, token *token) (*parseError, bool) {
+func processDataTable(parser *SpecParser, token *Token) (*parseError, bool) {
 	if len(strings.TrimSpace(strings.Replace(token.value, "table:", "", 1))) == 0 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table location not specified"}, true
 	}
@@ -251,7 +251,7 @@ func processDataTable(parser *specParser, token *token) (*parseError, bool) {
 	return nil, false
 }
 
-func processScenario(parser *specParser, token *token) (*parseError, bool) {
+func processScenario(parser *SpecParser, token *Token) (*parseError, bool) {
 	if len(token.value) < 1 {
 		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Scenario heading should have at least one character"}, true
 	}
@@ -259,13 +259,13 @@ func processScenario(parser *specParser, token *token) (*parseError, bool) {
 	return nil, false
 }
 
-func processComment(parser *specParser, token *token) (*parseError, bool) {
+func processComment(parser *SpecParser, token *Token) (*parseError, bool) {
 	parser.clearState()
 	addStates(&parser.currentState, commentScope)
 	return nil, false
 }
 
-func processTag(parser *specParser, token *token) (*parseError, bool) {
+func processTag(parser *SpecParser, token *Token) (*parseError, bool) {
 	parser.clearState()
 	tokens := splitAndTrimTags(token.value)
 
@@ -285,7 +285,7 @@ func splitAndTrimTags(tag string) []string {
 	return listOfTags
 }
 
-func processTable(parser *specParser, token *token) (*parseError, bool) {
+func processTable(parser *SpecParser, token *Token) (*parseError, bool) {
 
 	var buffer bytes.Buffer
 	shouldEscape := false
@@ -330,7 +330,7 @@ func processTable(parser *specParser, token *token) (*parseError, bool) {
 	return nil, false
 }
 
-func (parser *specParser) nextLine() (string, bool) {
+func (parser *SpecParser) nextLine() (string, bool) {
 	scanned := parser.scanner.Scan()
 	if scanned {
 		parser.lineNo++
@@ -343,6 +343,6 @@ func (parser *specParser) nextLine() (string, bool) {
 	return "", false
 }
 
-func (parser *specParser) clearState() {
+func (parser *SpecParser) clearState() {
 	parser.currentState = 0
 }

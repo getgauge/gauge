@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package parser
 
 import (
 	"fmt"
@@ -27,27 +27,27 @@ import (
 	"strings"
 )
 
-type conceptDictionary struct {
+type ConceptDictionary struct {
 	conceptsMap     map[string]*concept
-	constructionMap map[string][]*step
-	referenceMap    map[*step][]*step
+	constructionMap map[string][]*Step
+	referenceMap    map[*Step][]*Step
 }
 
 type concept struct {
-	conceptStep *step
+	conceptStep *Step
 	fileName    string
 }
 
-type conceptParser struct {
+type ConceptParser struct {
 	currentState   int
-	currentConcept *step
+	currentConcept *Step
 }
 
 //concept file can have multiple concept headings
-func (parser *conceptParser) parse(text string) ([]*step, *parseDetailResult) {
+func (parser *ConceptParser) parse(text string) ([]*Step, *parseDetailResult) {
 	defer parser.resetState()
 
-	specParser := new(specParser)
+	specParser := new(SpecParser)
 	tokens, err := specParser.generateTokens(text)
 	if err != nil {
 		return nil, &parseDetailResult{error: err}
@@ -55,16 +55,16 @@ func (parser *conceptParser) parse(text string) ([]*step, *parseDetailResult) {
 	return parser.createConcepts(tokens)
 }
 
-func (parser *conceptParser) resetState() {
+func (parser *ConceptParser) resetState() {
 	parser.currentState = initial
 	parser.currentConcept = nil
 }
 
-func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseDetailResult) {
+func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *parseDetailResult) {
 	parser.currentState = initial
-	concepts := make([]*step, 0)
+	concepts := make([]*Step, 0)
 	var parseDetails *parseDetailResult
-	preComments := make([]*comment, 0)
+	preComments := make([]*Comment, 0)
 	addPreComments := false
 	for _, token := range tokens {
 		if parser.isConceptHeading(token) {
@@ -97,7 +97,7 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseDet
 		} else if parser.isTableDataRow(token) {
 			parser.processTableDataRow(token, &parser.currentConcept.lookup)
 		} else {
-			comment := &comment{value: token.value, lineNo: token.lineNo}
+			comment := &Comment{value: token.value, lineNo: token.lineNo}
 			if parser.currentConcept == nil {
 				preComments = append(preComments, comment)
 				addPreComments = true
@@ -116,28 +116,28 @@ func (parser *conceptParser) createConcepts(tokens []*token) ([]*step, *parseDet
 	return concepts, parseDetails
 }
 
-func (parser *conceptParser) isConceptHeading(token *token) bool {
+func (parser *ConceptParser) isConceptHeading(token *Token) bool {
 	return token.kind == specKind || token.kind == scenarioKind
 }
 
-func (parser *conceptParser) isStep(token *token) bool {
+func (parser *ConceptParser) isStep(token *Token) bool {
 	return token.kind == stepKind
 }
 
-func (parser *conceptParser) isTableHeader(token *token) bool {
+func (parser *ConceptParser) isTableHeader(token *Token) bool {
 	return token.kind == tableHeader
 }
 
-func (parser *conceptParser) isTableDataRow(token *token) bool {
+func (parser *ConceptParser) isTableDataRow(token *Token) bool {
 	return token.kind == tableRow
 }
 
-func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseDetailResult) {
-	processStep(new(specParser), token)
+func (parser *ConceptParser) processConceptHeading(token *Token) (*Step, *parseDetailResult) {
+	processStep(new(SpecParser), token)
 	token.lineText = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(token.lineText), "#"))
-	var concept *step
+	var concept *Step
 	var parseDetails *parseDetailResult
-	concept, parseDetails = new(specification).createStepUsingLookup(token, nil)
+	concept, parseDetails = new(Specification).createStepUsingLookup(token, nil)
 	if parseDetails != nil && parseDetails.error != nil {
 		return nil, parseDetails
 	}
@@ -152,9 +152,9 @@ func (parser *conceptParser) processConceptHeading(token *token) (*step, *parseD
 	return concept, parseDetails
 }
 
-func (parser *conceptParser) processConceptStep(token *token) *parseError {
-	processStep(new(specParser), token)
-	conceptStep, parseDetails := new(specification).createStepUsingLookup(token, &parser.currentConcept.lookup)
+func (parser *ConceptParser) processConceptStep(token *Token) *parseError {
+	processStep(new(SpecParser), token)
+	conceptStep, parseDetails := new(Specification).createStepUsingLookup(token, &parser.currentConcept.lookup)
 	if parseDetails != nil && parseDetails.error != nil {
 		return parseDetails.error
 	}
@@ -167,7 +167,7 @@ func (parser *conceptParser) processConceptStep(token *token) *parseError {
 	return nil
 }
 
-func (parser *conceptParser) processTableHeader(token *token) {
+func (parser *ConceptParser) processTableHeader(token *Token) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	addInlineTableHeader(currentStep, token)
@@ -175,7 +175,7 @@ func (parser *conceptParser) processTableHeader(token *token) {
 	items[len(items)-1] = currentStep
 }
 
-func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLookup) {
+func (parser *ConceptParser) processTableDataRow(token *Token, argLookup *ArgLookup) {
 	steps := parser.currentConcept.conceptSteps
 	currentStep := steps[len(steps)-1]
 	addInlineTableRow(currentStep, token, argLookup)
@@ -183,21 +183,21 @@ func (parser *conceptParser) processTableDataRow(token *token, argLookup *argLoo
 	items[len(items)-1] = currentStep
 }
 
-func (parser *conceptParser) hasOnlyDynamicParams(step *step) bool {
+func (parser *ConceptParser) hasOnlyDynamicParams(step *Step) bool {
 	for _, arg := range step.args {
-		if arg.argType != "dynamic" {
+		if arg.argType != Dynamic {
 			return false
 		}
 	}
 	return true
 }
 
-func (parser *conceptParser) createConceptLookup(concept *step) {
+func (parser *ConceptParser) createConceptLookup(concept *Step) {
 	for _, arg := range concept.args {
 		concept.lookup.addArgName(arg.value)
 	}
 }
-func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *parseResult) {
+func createConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *ParseResult) {
 	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
 	conceptsDictionary := newConceptDictionary()
 	for _, conceptFile := range conceptFiles {
@@ -207,18 +207,18 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*conceptDictionary, *par
 				continue
 			}
 			logger.Log.Error(err.Error())
-			return nil, &parseResult{error: err, fileName: conceptFile}
+			return nil, &ParseResult{error: err, fileName: conceptFile}
 		}
 	}
-	return conceptsDictionary, &parseResult{ok: true}
+	return conceptsDictionary, &ParseResult{ok: true}
 }
 
-func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *parseError {
+func addConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *parseError {
 	fileText, fileReadErr := common.ReadFileContents(conceptFile)
 	if fileReadErr != nil {
 		return &parseError{message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
 	}
-	concepts, parseResults := new(conceptParser).parse(fileText)
+	concepts, parseResults := new(ConceptParser).parse(fileText)
 	if parseResults != nil && parseResults.warnings != nil {
 		for _, warning := range parseResults.warnings {
 			logger.Log.Warning(warning.String())
@@ -230,21 +230,21 @@ func addConcepts(conceptFile string, conceptDictionary *conceptDictionary) *pars
 	return conceptDictionary.add(concepts, conceptFile)
 }
 
-func newConceptDictionary() *conceptDictionary {
-	return &conceptDictionary{conceptsMap: make(map[string]*concept, 0)}
+func newConceptDictionary() *ConceptDictionary {
+	return &ConceptDictionary{conceptsMap: make(map[string]*concept, 0)}
 }
 
-func (conceptDictionary *conceptDictionary) isConcept(step *step) bool {
+func (conceptDictionary *ConceptDictionary) isConcept(step *Step) bool {
 	_, ok := conceptDictionary.conceptsMap[step.value]
 	return ok
 
 }
-func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile string) *parseError {
+func (conceptDictionary *ConceptDictionary) add(concepts []*Step, conceptFile string) *parseError {
 	if conceptDictionary.conceptsMap == nil {
 		conceptDictionary.conceptsMap = make(map[string]*concept)
 	}
 	if conceptDictionary.constructionMap == nil {
-		conceptDictionary.constructionMap = make(map[string][]*step)
+		conceptDictionary.constructionMap = make(map[string][]*Step)
 	}
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.conceptsMap[conceptStep.value]; exists {
@@ -257,14 +257,14 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 	return conceptDictionary.validateConcepts()
 }
 
-func (conceptDictionary *conceptDictionary) search(stepValue string) *concept {
+func (conceptDictionary *ConceptDictionary) search(stepValue string) *concept {
 	if concept, ok := conceptDictionary.conceptsMap[stepValue]; ok {
 		return concept
 	}
 	return nil
 }
 
-func (conceptDictionary *conceptDictionary) validateConcepts() *parseError {
+func (conceptDictionary *ConceptDictionary) validateConcepts() *parseError {
 	for _, concept := range conceptDictionary.conceptsMap {
 		err := conceptDictionary.checkCircularReferencing(concept.conceptStep, nil)
 		if err != nil {
@@ -275,7 +275,7 @@ func (conceptDictionary *conceptDictionary) validateConcepts() *parseError {
 	return nil
 }
 
-func (conceptDictionary *conceptDictionary) checkCircularReferencing(concept *step, traversedSteps map[string]string) *parseError {
+func (conceptDictionary *ConceptDictionary) checkCircularReferencing(concept *Step, traversedSteps map[string]string) *parseError {
 	if traversedSteps == nil {
 		traversedSteps = make(map[string]string, 0)
 	}
@@ -298,7 +298,7 @@ func (conceptDictionary *conceptDictionary) checkCircularReferencing(concept *st
 	return nil
 }
 
-func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptStep *step) {
+func (conceptDictionary *ConceptDictionary) replaceNestedConceptSteps(conceptStep *Step) {
 	conceptDictionary.updateStep(conceptStep)
 	for i, stepInsideConcept := range conceptStep.conceptSteps {
 		if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
@@ -313,25 +313,25 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 }
 
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
-func (conceptDictionary *conceptDictionary) updateStep(step *step) {
-	conceptDictionary.constructionMap[step.value] = append(conceptDictionary.constructionMap[step.value], step)
-	if !conceptDictionary.constructionMap[step.value][0].isConcept {
-		conceptDictionary.constructionMap[step.value] = append(conceptDictionary.constructionMap[step.value], step)
-		for _, allSteps := range conceptDictionary.constructionMap[step.value] {
-			allSteps.isConcept = step.isConcept
-			allSteps.conceptSteps = step.conceptSteps
-			allSteps.lookup = step.lookup
+func (conceptDictionary *ConceptDictionary) updateStep(step *Step) {
+	conceptDictionary.constructionMap[step.Value] = append(conceptDictionary.constructionMap[step.Value], step)
+	if !conceptDictionary.constructionMap[step.Value][0].IsConcept {
+		conceptDictionary.constructionMap[step.Value] = append(conceptDictionary.constructionMap[step.Value], step)
+		for _, allSteps := range conceptDictionary.constructionMap[step.Value] {
+			allSteps.IsConcept = step.IsConcept
+			allSteps.ConceptSteps = step.ConceptSteps
+			allSteps.Lookup = step.Lookup
 		}
 	}
 }
 
-func (conceptDictionary *conceptDictionary) updateLookupForNestedConcepts() {
+func (conceptDictionary *ConceptDictionary) updateLookupForNestedConcepts() {
 	for _, concept := range conceptDictionary.conceptsMap {
 		for _, stepInsideConcept := range concept.conceptStep.conceptSteps {
 			stepInsideConcept.parent = concept.conceptStep
 			if nestedConcept := conceptDictionary.search(stepInsideConcept.value); nestedConcept != nil {
 				for i, arg := range nestedConcept.conceptStep.args {
-					nestedConcept.conceptStep.lookup.addArgValue(arg.value, &stepArg{argType: stepInsideConcept.args[i].argType, value: stepInsideConcept.args[i].value})
+					nestedConcept.conceptStep.lookup.addArgValue(arg.value, &StepArg{argType: stepInsideConcept.args[i].argType, value: stepInsideConcept.args[i].value})
 				}
 			}
 		}
