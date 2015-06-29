@@ -32,6 +32,8 @@ It has these top-level messages:
 	TextInfo
 	Step
 	ExtractConceptResponse
+	FormatSpecsRequest
+	FormatSpecsResponse
 	APIMessage
 */
 package gauge_messages
@@ -65,6 +67,8 @@ const (
 	APIMessage_PerformRefactoringResponse       APIMessage_APIMessageType = 17
 	APIMessage_ExtractConceptRequest            APIMessage_APIMessageType = 18
 	APIMessage_ExtractConceptResponse           APIMessage_APIMessageType = 19
+	APIMessage_FormatSpecsRequest               APIMessage_APIMessageType = 20
+	APIMessage_FormatSpecsResponse              APIMessage_APIMessageType = 21
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -87,6 +91,8 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	17: "PerformRefactoringResponse",
 	18: "ExtractConceptRequest",
 	19: "ExtractConceptResponse",
+	20: "FormatSpecsRequest",
+	21: "FormatSpecsResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":            1,
@@ -108,6 +114,8 @@ var APIMessage_APIMessageType_value = map[string]int32{
 	"PerformRefactoringResponse":       17,
 	"ExtractConceptRequest":            18,
 	"ExtractConceptResponse":           19,
+	"FormatSpecsRequest":               20,
+	"FormatSpecsResponse":              21,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -363,7 +371,7 @@ func (m *GetLanguagePluginLibPathRequest) GetLanguage() string {
 
 // / Response to GetLanguagePluginLibPathRequest
 type GetLanguagePluginLibPathResponse struct {
-	// / Absolute apth to the Lib directory of the language.
+	// / Absolute path to the Lib directory of the language.
 	Path             *string `protobuf:"bytes,1,req,name=path" json:"path,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
@@ -638,6 +646,51 @@ func (m *ExtractConceptResponse) GetFilesChanged() []string {
 	return nil
 }
 
+// / Request to format spec files
+type FormatSpecsRequest struct {
+	// / Specs to be formatted
+	Specs            []string `protobuf:"bytes,1,rep,name=specs" json:"specs,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *FormatSpecsRequest) Reset()         { *m = FormatSpecsRequest{} }
+func (m *FormatSpecsRequest) String() string { return proto.CompactTextString(m) }
+func (*FormatSpecsRequest) ProtoMessage()    {}
+
+func (m *FormatSpecsRequest) GetSpecs() []string {
+	if m != nil {
+		return m.Specs
+	}
+	return nil
+}
+
+// / Response on formatting spec files
+type FormatSpecsResponse struct {
+	// / Errors occurred on formatting
+	Errors []string `protobuf:"bytes,1,rep,name=errors" json:"errors,omitempty"`
+	// / Warnings occurred on formatting
+	Warnings         []string `protobuf:"bytes,2,rep,name=warnings" json:"warnings,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
+}
+
+func (m *FormatSpecsResponse) Reset()         { *m = FormatSpecsResponse{} }
+func (m *FormatSpecsResponse) String() string { return proto.CompactTextString(m) }
+func (*FormatSpecsResponse) ProtoMessage()    {}
+
+func (m *FormatSpecsResponse) GetErrors() []string {
+	if m != nil {
+		return m.Errors
+	}
+	return nil
+}
+
+func (m *FormatSpecsResponse) GetWarnings() []string {
+	if m != nil {
+		return m.Warnings
+	}
+	return nil
+}
+
 // / A generic message composing of all possible operations.
 // / One of the Request/Response fields will have value, depending on the MessageType set.
 type APIMessage struct {
@@ -684,7 +737,11 @@ type APIMessage struct {
 	ExtractConceptRequest *ExtractConceptRequest `protobuf:"bytes,20,opt,name=extractConceptRequest" json:"extractConceptRequest,omitempty"`
 	// / [ExtractConceptResponse](#gauge.messages.ExtractConceptResponse)
 	ExtractConceptResponse *ExtractConceptResponse `protobuf:"bytes,21,opt,name=extractConceptResponse" json:"extractConceptResponse,omitempty"`
-	XXX_unrecognized       []byte                  `json:"-"`
+	// / [FormatSpecsRequest] (#gauge.messages.FormatSpecsRequest)
+	FormatSpecsRequest *FormatSpecsRequest `protobuf:"bytes,22,opt,name=formatSpecsRequest" json:"formatSpecsRequest,omitempty"`
+	// / [FormatSpecsResponse] (#gauge.messages.FormatSpecsResponse)
+	FormatSpecsResponse *FormatSpecsResponse `protobuf:"bytes,23,opt,name=formatSpecsResponse" json:"formatSpecsResponse,omitempty"`
+	XXX_unrecognized    []byte               `json:"-"`
 }
 
 func (m *APIMessage) Reset()         { *m = APIMessage{} }
@@ -834,6 +891,20 @@ func (m *APIMessage) GetExtractConceptRequest() *ExtractConceptRequest {
 func (m *APIMessage) GetExtractConceptResponse() *ExtractConceptResponse {
 	if m != nil {
 		return m.ExtractConceptResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetFormatSpecsRequest() *FormatSpecsRequest {
+	if m != nil {
+		return m.FormatSpecsRequest
+	}
+	return nil
+}
+
+func (m *APIMessage) GetFormatSpecsResponse() *FormatSpecsResponse {
+	if m != nil {
+		return m.FormatSpecsResponse
 	}
 	return nil
 }

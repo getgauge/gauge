@@ -119,6 +119,9 @@ func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_ExtractConceptRequest:
 			responseMessage = handler.extractConcept(apiMessage)
 			break
+		case gauge_messages.APIMessage_FormatSpecsRequest:
+			responseMessage = handler.formatSpecs(apiMessage)
+			break
 		}
 	}
 	handler.sendMessage(responseMessage, connection)
@@ -286,4 +289,25 @@ func (handler *gaugeApiMessageHandler) extractConcept(message *gauge_messages.AP
 	success, err, filesChanged := extractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
 	response := &gauge_messages.ExtractConceptResponse{IsSuccess: proto.Bool(success), Error: proto.String(err.Error()), FilesChanged: filesChanged}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse.Enum(), ExtractConceptResponse: response}
+}
+
+func (handler *gaugeApiMessageHandler) formatSpecs(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	request := message.GetFormatSpecsRequest()
+	results := formatSpecFiles(request.GetSpecs()...)
+	warnings := make([]string, 0)
+	errors := make([]string, 0)
+	for _, result := range results {
+		if result.error != nil {
+			errors = append(errors, result.error.Error())
+		}
+		if result.warnings != nil {
+			warningTexts := make([]string, 0)
+			for _, warning := range result.warnings {
+				warningTexts = append(warningTexts, warning.String())
+			}
+			warnings = append(warnings, warningTexts...)
+		}
+	}
+	formatResponse := &gauge_messages.FormatSpecsResponse{Errors: errors, Warnings: warnings}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_FormatSpecsResponse.Enum(), FormatSpecsResponse: formatResponse}
 }
