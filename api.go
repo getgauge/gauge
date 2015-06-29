@@ -122,6 +122,8 @@ func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_FormatSpecsRequest:
 			responseMessage = handler.formatSpecs(apiMessage)
 			break
+		default:
+			responseMessage = handler.createUnsupportedApiMessageResponse(apiMessage)
 		}
 	}
 	handler.sendMessage(responseMessage, connection)
@@ -310,4 +312,10 @@ func (handler *gaugeApiMessageHandler) formatSpecs(message *gauge_messages.APIMe
 	}
 	formatResponse := &gauge_messages.FormatSpecsResponse{Errors: errors, Warnings: warnings}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_FormatSpecsResponse.Enum(), FormatSpecsResponse: formatResponse}
+}
+
+func (handler *gaugeApiMessageHandler) createUnsupportedApiMessageResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	return &gauge_messages.APIMessage{MessageId: message.MessageId,
+		MessageType:                   gauge_messages.APIMessage_UnsupportedApiMessageResponse.Enum(),
+		UnsupportedApiMessageResponse: &gauge_messages.UnsupportedApiMessageResponse{}}
 }

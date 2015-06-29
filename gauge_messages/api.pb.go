@@ -34,6 +34,7 @@ It has these top-level messages:
 	ExtractConceptResponse
 	FormatSpecsRequest
 	FormatSpecsResponse
+	UnsupportedApiMessageResponse
 	APIMessage
 */
 package gauge_messages
@@ -69,6 +70,7 @@ const (
 	APIMessage_ExtractConceptResponse           APIMessage_APIMessageType = 19
 	APIMessage_FormatSpecsRequest               APIMessage_APIMessageType = 20
 	APIMessage_FormatSpecsResponse              APIMessage_APIMessageType = 21
+	APIMessage_UnsupportedApiMessageResponse    APIMessage_APIMessageType = 22
 )
 
 var APIMessage_APIMessageType_name = map[int32]string{
@@ -93,6 +95,7 @@ var APIMessage_APIMessageType_name = map[int32]string{
 	19: "ExtractConceptResponse",
 	20: "FormatSpecsRequest",
 	21: "FormatSpecsResponse",
+	22: "UnsupportedApiMessageResponse",
 }
 var APIMessage_APIMessageType_value = map[string]int32{
 	"GetProjectRootRequest":            1,
@@ -116,6 +119,7 @@ var APIMessage_APIMessageType_value = map[string]int32{
 	"ExtractConceptResponse":           19,
 	"FormatSpecsRequest":               20,
 	"FormatSpecsResponse":              21,
+	"UnsupportedApiMessageResponse":    22,
 }
 
 func (x APIMessage_APIMessageType) Enum() *APIMessage_APIMessageType {
@@ -691,6 +695,15 @@ func (m *FormatSpecsResponse) GetWarnings() []string {
 	return nil
 }
 
+// / Response when a API message request is not supported.
+type UnsupportedApiMessageResponse struct {
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *UnsupportedApiMessageResponse) Reset()         { *m = UnsupportedApiMessageResponse{} }
+func (m *UnsupportedApiMessageResponse) String() string { return proto.CompactTextString(m) }
+func (*UnsupportedApiMessageResponse) ProtoMessage()    {}
+
 // / A generic message composing of all possible operations.
 // / One of the Request/Response fields will have value, depending on the MessageType set.
 type APIMessage struct {
@@ -741,7 +754,9 @@ type APIMessage struct {
 	FormatSpecsRequest *FormatSpecsRequest `protobuf:"bytes,22,opt,name=formatSpecsRequest" json:"formatSpecsRequest,omitempty"`
 	// / [FormatSpecsResponse] (#gauge.messages.FormatSpecsResponse)
 	FormatSpecsResponse *FormatSpecsResponse `protobuf:"bytes,23,opt,name=formatSpecsResponse" json:"formatSpecsResponse,omitempty"`
-	XXX_unrecognized    []byte               `json:"-"`
+	// / [UnsupportedApiMessageResponse] (#gauge.messages.UnsupportedApiMessageResponse)
+	UnsupportedApiMessageResponse *UnsupportedApiMessageResponse `protobuf:"bytes,24,opt,name=unsupportedApiMessageResponse" json:"unsupportedApiMessageResponse,omitempty"`
+	XXX_unrecognized              []byte                         `json:"-"`
 }
 
 func (m *APIMessage) Reset()         { *m = APIMessage{} }
@@ -905,6 +920,13 @@ func (m *APIMessage) GetFormatSpecsRequest() *FormatSpecsRequest {
 func (m *APIMessage) GetFormatSpecsResponse() *FormatSpecsResponse {
 	if m != nil {
 		return m.FormatSpecsResponse
+	}
+	return nil
+}
+
+func (m *APIMessage) GetUnsupportedApiMessageResponse() *UnsupportedApiMessageResponse {
+	if m != nil {
+		return m.UnsupportedApiMessageResponse
 	}
 	return nil
 }
