@@ -82,17 +82,20 @@ Section -Post
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
   WriteRegExpandStr ${env_hklm} GAUGE_ROOT $INSTDIR
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  ExecShell "open" "http://getgauge.io/documentation/user/current"
+  IfSilent +2 0
+    ExecShell "open" "http://getgauge.io/documentation/user/current"
   Exec '"$INSTDIR\plugin-install.bat"'
 SectionEnd
 
 Function un.onUninstSuccess
-  HideWindow
-  MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) was successfully removed from your computer."
+  IfSilent +3 0
+    HideWindow
+      MessageBox MB_ICONINFORMATION|MB_OK "$(^Name) was successfully removed from your computer."
 FunctionEnd
 
 Function un.onInit
-  MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
+  IfSilent +3 0
+    MessageBox MB_ICONQUESTION|MB_YESNO|MB_DEFBUTTON2 "Are you sure you want to completely remove $(^Name) and all of its components?" IDYES +2
   Abort
 FunctionEnd
 
@@ -105,6 +108,7 @@ Section Uninstall
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
   DeleteRegValue ${env_hklm} GAUGE_ROOT
+  RMDir "$INSTDIR"
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   SetAutoClose true
 SectionEnd
