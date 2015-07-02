@@ -255,7 +255,7 @@ func (executor *specExecutor) resolveToProtoStepItem(step *step) *gauge_messages
 	return protoStepItem
 }
 
-// Not passing poiter as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
+// Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
 func (executor *specExecutor) resolveToProtoConceptItem(concept step) *gauge_messages.ProtoItem {
 	paramResolver := new(paramResolver)
 

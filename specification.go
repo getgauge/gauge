@@ -90,6 +90,11 @@ type step struct {
 }
 
 func (step *step) getArg(name string) *stepArg {
+	arg := step.lookup.getArg(name)
+	// Return static values
+	if arg != nil && arg.argType != dynamic {
+		return arg
+	}
 	if step.parent == nil {
 		return step.lookup.getArg(name)
 	}

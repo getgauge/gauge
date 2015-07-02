@@ -89,7 +89,7 @@ func main() {
 	} else if *daemonize && validGaugeProject {
 		runInBackground()
 	} else if *specFilesToFormat != "" && validGaugeProject {
-		formatSpecFiles(*specFilesToFormat)
+		formatSpecFilesIn(*specFilesToFormat)
 	} else if *initialize != "" {
 		initializeProject(*initialize)
 	} else if *installZip != "" && *install != "" {
@@ -187,23 +187,10 @@ func runInBackground() {
 	wg.Wait()
 }
 
-func formatSpecFiles(filesToFormat string) {
-	specs, specParseResults := findSpecs(filesToFormat, &conceptDictionary{})
-	handleParseResult(specParseResults...)
-	failed := false
-	for _, spec := range specs {
-		formatted := formatSpecification(spec)
-		err := common.SaveFile(spec.fileName, formatted, true)
-		if err != nil {
-			failed = true
-			logger.Log.Error("Failed to format '%s': %s\n", spec.fileName, err)
-		}
-	}
-	if failed {
-		os.Exit(1)
-	} else {
-		os.Exit(0)
-	}
+func formatSpecFilesIn(filesLocation string) {
+	specFiles := getSpecFiles(filesLocation)
+	parseResults := formatSpecFiles(specFiles...)
+	handleParseResult(parseResults...)
 }
 
 func initializeProject(language string) {

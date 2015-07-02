@@ -88,11 +88,21 @@ func GetResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) 
 		return nil, err
 	}
 	responseMessage := &gauge_messages.Message{}
-	err = proto.Unmarshal(responseBytes, responseMessage)
-	if err != nil {
+	if err := proto.Unmarshal(responseBytes, responseMessage); err != nil {
 		return nil, err
 	}
+
+	if err := checkUnsupportedResponseMessage(responseMessage); err != nil {
+		return responseMessage, err
+	}
 	return responseMessage, err
+}
+
+func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
+	if message.GetMessageType() == gauge_messages.Message_UnsupportedMessageResponse {
+		return errors.New(fmt.Sprintf("Unsupported Message response received. Message not supported. %s", message.GetUnsupportedMessageResponse().GetMessage()))
+	}
+	return nil
 }
 
 func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {

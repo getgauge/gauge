@@ -20,6 +20,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
 	"sort"
 	"strings"
@@ -28,6 +29,16 @@ import (
 const (
 	TABLE_LEFT_SPACING = 5
 )
+
+func formatSpecFiles(specFiles ...string) []*parseResult {
+	specs, results := parseSpecFiles(specFiles, &conceptDictionary{})
+	for i, spec := range specs {
+		if err := formatAndSave(spec); err != nil {
+			results[i].error = &parseError{message: err.Error()}
+		}
+	}
+	return results
+}
 
 func getRepeatedChars(character string, repeatCount int) string {
 	formatted := ""
@@ -177,6 +188,14 @@ func formatExternalDataTable(dataTable *dataTable) string {
 	b.WriteString(dataTable.value)
 	b.WriteString("\n")
 	return string(b.Bytes())
+}
+
+func formatAndSave(spec *specification) error {
+	formatted := formatSpecification(spec)
+	if err := common.SaveFile(spec.fileName, formatted, true); err != nil {
+		return err
+	}
+	return nil
 }
 
 func formatSpecification(specification *specification) string {

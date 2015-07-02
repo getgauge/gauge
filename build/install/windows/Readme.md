@@ -3,7 +3,9 @@
 ## Tools required
 
 * Nullsoft Install System (http://nsis.sourceforge.net)
+* Get [special builds](http://nsis.sourceforge.net/Special_Builds) with support for 8192 length Strings - copy and overwrite the binaries into the NSIS install location.
 * NIS Edit (Optional, just for authoring the script files)
+
 
 NSIS binaries should be added to path 
 

@@ -37,6 +37,7 @@ It has these top-level messages:
 	RefactorResponse
 	StepNameRequest
 	StepNameResponse
+	UnsupportedMessageResponse
 	Message
 */
 package gauge_messages
@@ -51,29 +52,30 @@ var _ = math.Inf
 type Message_MessageType int32
 
 const (
-	Message_ExecutionStarting         Message_MessageType = 0
-	Message_SpecExecutionStarting     Message_MessageType = 1
-	Message_SpecExecutionEnding       Message_MessageType = 2
-	Message_ScenarioExecutionStarting Message_MessageType = 3
-	Message_ScenarioExecutionEnding   Message_MessageType = 4
-	Message_StepExecutionStarting     Message_MessageType = 5
-	Message_StepExecutionEnding       Message_MessageType = 6
-	Message_ExecuteStep               Message_MessageType = 7
-	Message_ExecutionEnding           Message_MessageType = 8
-	Message_StepValidateRequest       Message_MessageType = 9
-	Message_StepValidateResponse      Message_MessageType = 10
-	Message_ExecutionStatusResponse   Message_MessageType = 11
-	Message_StepNamesRequest          Message_MessageType = 12
-	Message_StepNamesResponse         Message_MessageType = 13
-	Message_KillProcessRequest        Message_MessageType = 14
-	Message_SuiteExecutionResult      Message_MessageType = 15
-	Message_ScenarioDataStoreInit     Message_MessageType = 16
-	Message_SpecDataStoreInit         Message_MessageType = 17
-	Message_SuiteDataStoreInit        Message_MessageType = 18
-	Message_StepNameRequest           Message_MessageType = 19
-	Message_StepNameResponse          Message_MessageType = 20
-	Message_RefactorRequest           Message_MessageType = 21
-	Message_RefactorResponse          Message_MessageType = 22
+	Message_ExecutionStarting          Message_MessageType = 0
+	Message_SpecExecutionStarting      Message_MessageType = 1
+	Message_SpecExecutionEnding        Message_MessageType = 2
+	Message_ScenarioExecutionStarting  Message_MessageType = 3
+	Message_ScenarioExecutionEnding    Message_MessageType = 4
+	Message_StepExecutionStarting      Message_MessageType = 5
+	Message_StepExecutionEnding        Message_MessageType = 6
+	Message_ExecuteStep                Message_MessageType = 7
+	Message_ExecutionEnding            Message_MessageType = 8
+	Message_StepValidateRequest        Message_MessageType = 9
+	Message_StepValidateResponse       Message_MessageType = 10
+	Message_ExecutionStatusResponse    Message_MessageType = 11
+	Message_StepNamesRequest           Message_MessageType = 12
+	Message_StepNamesResponse          Message_MessageType = 13
+	Message_KillProcessRequest         Message_MessageType = 14
+	Message_SuiteExecutionResult       Message_MessageType = 15
+	Message_ScenarioDataStoreInit      Message_MessageType = 16
+	Message_SpecDataStoreInit          Message_MessageType = 17
+	Message_SuiteDataStoreInit         Message_MessageType = 18
+	Message_StepNameRequest            Message_MessageType = 19
+	Message_StepNameResponse           Message_MessageType = 20
+	Message_RefactorRequest            Message_MessageType = 21
+	Message_RefactorResponse           Message_MessageType = 22
+	Message_UnsupportedMessageResponse Message_MessageType = 23
 )
 
 var Message_MessageType_name = map[int32]string{
@@ -100,31 +102,33 @@ var Message_MessageType_name = map[int32]string{
 	20: "StepNameResponse",
 	21: "RefactorRequest",
 	22: "RefactorResponse",
+	23: "UnsupportedMessageResponse",
 }
 var Message_MessageType_value = map[string]int32{
-	"ExecutionStarting":         0,
-	"SpecExecutionStarting":     1,
-	"SpecExecutionEnding":       2,
-	"ScenarioExecutionStarting": 3,
-	"ScenarioExecutionEnding":   4,
-	"StepExecutionStarting":     5,
-	"StepExecutionEnding":       6,
-	"ExecuteStep":               7,
-	"ExecutionEnding":           8,
-	"StepValidateRequest":       9,
-	"StepValidateResponse":      10,
-	"ExecutionStatusResponse":   11,
-	"StepNamesRequest":          12,
-	"StepNamesResponse":         13,
-	"KillProcessRequest":        14,
-	"SuiteExecutionResult":      15,
-	"ScenarioDataStoreInit":     16,
-	"SpecDataStoreInit":         17,
-	"SuiteDataStoreInit":        18,
-	"StepNameRequest":           19,
-	"StepNameResponse":          20,
-	"RefactorRequest":           21,
-	"RefactorResponse":          22,
+	"ExecutionStarting":          0,
+	"SpecExecutionStarting":      1,
+	"SpecExecutionEnding":        2,
+	"ScenarioExecutionStarting":  3,
+	"ScenarioExecutionEnding":    4,
+	"StepExecutionStarting":      5,
+	"StepExecutionEnding":        6,
+	"ExecuteStep":                7,
+	"ExecutionEnding":            8,
+	"StepValidateRequest":        9,
+	"StepValidateResponse":       10,
+	"ExecutionStatusResponse":    11,
+	"StepNamesRequest":           12,
+	"StepNamesResponse":          13,
+	"KillProcessRequest":         14,
+	"SuiteExecutionResult":       15,
+	"ScenarioDataStoreInit":      16,
+	"SpecDataStoreInit":          17,
+	"SuiteDataStoreInit":         18,
+	"StepNameRequest":            19,
+	"StepNameResponse":           20,
+	"RefactorRequest":            21,
+	"RefactorResponse":           22,
+	"UnsupportedMessageResponse": 23,
 }
 
 func (x Message_MessageType) Enum() *Message_MessageType {
@@ -791,6 +795,23 @@ func (m *StepNameResponse) GetHasAlias() bool {
 	return false
 }
 
+// / Response when a unsupported message request is sent.
+type UnsupportedMessageResponse struct {
+	Message          *string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *UnsupportedMessageResponse) Reset()         { *m = UnsupportedMessageResponse{} }
+func (m *UnsupportedMessageResponse) String() string { return proto.CompactTextString(m) }
+func (*UnsupportedMessageResponse) ProtoMessage()    {}
+
+func (m *UnsupportedMessageResponse) GetMessage() string {
+	if m != nil && m.Message != nil {
+		return *m.Message
+	}
+	return ""
+}
+
 // / This is the message which gets transferred all the time
 // / with proper message type set
 // / One of the Request/Response fields will have value, depending on the MessageType set.
@@ -845,7 +866,9 @@ type Message struct {
 	RefactorRequest *RefactorRequest `protobuf:"bytes,24,opt,name=refactorRequest" json:"refactorRequest,omitempty"`
 	// / [RefactorResponse](#gauge.messages.RefactorResponse)
 	RefactorResponse *RefactorResponse `protobuf:"bytes,25,opt,name=refactorResponse" json:"refactorResponse,omitempty"`
-	XXX_unrecognized []byte            `json:"-"`
+	// / [UnsupportedMessageResponse](#gauge.messages.UnsupportedMessageResponse)
+	UnsupportedMessageResponse *UnsupportedMessageResponse `protobuf:"bytes,26,opt,name=unsupportedMessageResponse" json:"unsupportedMessageResponse,omitempty"`
+	XXX_unrecognized           []byte                      `json:"-"`
 }
 
 func (m *Message) Reset()         { *m = Message{} }
@@ -1023,6 +1046,13 @@ func (m *Message) GetRefactorRequest() *RefactorRequest {
 func (m *Message) GetRefactorResponse() *RefactorResponse {
 	if m != nil {
 		return m.RefactorResponse
+	}
+	return nil
+}
+
+func (m *Message) GetUnsupportedMessageResponse() *UnsupportedMessageResponse {
+	if m != nil {
+		return m.UnsupportedMessageResponse
 	}
 	return nil
 }
