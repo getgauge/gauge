@@ -27,8 +27,8 @@ import (
 type Table struct {
 	headerIndexMap map[string]int
 	columns        [][]TableCell
-	headers        []string
-	lineNo         int
+	Headers        []string
+	LineNo         int
 }
 
 type DataTable struct {
@@ -47,7 +47,7 @@ func (table *Table) isInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
-func (cell *TableCell) getValue() string {
+func (cell *TableCell) GetValue() string {
 	value := cell.value
 	if cell.cellType == Dynamic {
 		value = fmt.Sprintf("<%s>", value)
@@ -60,7 +60,7 @@ func (dataTable *DataTable) isInitialized() bool {
 }
 
 func (table *Table) String() string {
-	return fmt.Sprintf("%v\n%v", table.headers, table.columns)
+	return fmt.Sprintf("%v\n%v", table.Headers, table.columns)
 }
 
 func (table *Table) getDynamicArgs() []string {
@@ -75,7 +75,7 @@ func (table *Table) getDynamicArgs() []string {
 	return args
 }
 
-func (table *Table) get(header string) []TableCell {
+func (table *Table) Get(header string) []TableCell {
 	if !table.headerExists(header) {
 		panic(fmt.Sprintf("Table column %s not found", header))
 	}
@@ -89,11 +89,11 @@ func (table *Table) headerExists(header string) bool {
 
 func (table *Table) addHeaders(columnNames []string) {
 	table.headerIndexMap = make(map[string]int)
-	table.headers = make([]string, len(columnNames))
+	table.Headers = make([]string, len(columnNames))
 	table.columns = make([][]TableCell, len(columnNames))
 	for i, column := range columnNames {
 		trimmedHeader := strings.TrimSpace(column)
-		table.headers[i] = trimmedHeader
+		table.Headers[i] = trimmedHeader
 		table.headerIndexMap[trimmedHeader] = i
 		table.columns[i] = make([]TableCell, 0)
 	}
@@ -114,7 +114,7 @@ func (table *Table) createTableCells(rowValues []string) []TableCell {
 
 func (table *Table) toHeaderSizeRow(rows []TableCell) []TableCell {
 	finalCells := make([]TableCell, 0)
-	for i, _ := range table.headers {
+	for i, _ := range table.Headers {
 		var cell TableCell
 		if len(rows)-1 >= i {
 			cell = rows[i]
@@ -132,7 +132,7 @@ func (table *Table) addRows(rows []TableCell) {
 	}
 }
 
-func (table *Table) getRows() [][]string {
+func (table *Table) Rows() [][]string {
 	if !table.isInitialized() {
 		return nil
 	}
@@ -140,9 +140,9 @@ func (table *Table) getRows() [][]string {
 	tableRows := make([][]string, 0)
 	for i := 0; i < len(table.columns[0]); i++ {
 		row := make([]string, 0)
-		for _, header := range table.headers {
-			tableCell := table.get(header)[i]
-			value := tableCell.getValue()
+		for _, header := range table.Headers {
+			tableCell := table.Get(header)[i]
+			value := tableCell.GetValue()
 			row = append(row, value)
 		}
 		tableRows = append(tableRows, row)
@@ -174,7 +174,7 @@ func getDefaultTableCell() TableCell {
 	return TableCell{value: "", cellType: Static}
 }
 
-func tableFrom(protoTable *gauge_messages.ProtoTable) *Table {
+func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
 	table := &Table{}
 	table.addHeaders(protoTable.GetHeaders().GetCells())
 	for _, row := range protoTable.GetRows() {
@@ -198,4 +198,8 @@ func convertCsvToTable(csvContents string) (*Table, error) {
 		}
 	}
 	return table, nil
+}
+
+func (table DataTable) Value() string {
+	return table.value
 }

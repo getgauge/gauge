@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
 	"sort"
 	"strings"
 )
@@ -30,11 +31,11 @@ const (
 	TABLE_LEFT_SPACING = 5
 )
 
-func formatSpecFiles(specFiles ...string) []*parseResult {
-	specs, results := parseSpecFiles(specFiles, &conceptDictionary{})
+func formatSpecFiles(specFiles ...string) []*parser.ParseResult {
+	specs, results := parser.ParseSpecFiles(specFiles, &parser.ConceptDictionary{})
 	for i, spec := range specs {
 		if err := formatAndSave(spec); err != nil {
-			results[i].error = &parseError{message: err.Error()}
+			results[i].ParseError = &parser.ParseError{Message: err.Error()}
 		}
 	}
 	return results
@@ -56,23 +57,23 @@ func formatScenarioHeading(scenarioHeading string) string {
 	return fmt.Sprintf("%s", formatHeading(scenarioHeading, "-"))
 }
 
-func formatStep(step *step) string {
-	text := step.value
-	paramCount := strings.Count(text, PARAMETER_PLACEHOLDER)
+func formatStep(step *parser.Step) string {
+	text := step.Value()
+	paramCount := strings.Count(text, parser.ParameterPlaceholder)
 	for i := 0; i < paramCount; i++ {
-		argument := step.args[i]
+		argument := step.Args()[i]
 		formattedArg := ""
-		if argument.argType == tableArg {
-			formattedTable := formatTable(&argument.table)
+		if argument.ArgType == parser.TableArg {
+			formattedTable := formatTable(&argument.Table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
-		} else if argument.argType == dynamic {
-			formattedArg = fmt.Sprintf("<%s>", getUnescapedString(argument.value))
-		} else if argument.argType == specialString || argument.argType == specialTable {
-			formattedArg = fmt.Sprintf("<%s>", getUnescapedString(argument.name))
+		} else if argument.ArgType == parser.Dynamic {
+			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Value))
+		} else if argument.ArgType == parser.SpecialString || argument.ArgType == parser.SpecialTable {
+			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
 		} else {
-			formattedArg = fmt.Sprintf("\"%s\"", getUnescapedString(argument.value))
+			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
-		text = strings.Replace(text, PARAMETER_PLACEHOLDER, formattedArg, 1)
+		text = strings.Replace(text, parser.ParameterPlaceholder, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
@@ -90,7 +91,7 @@ func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 			conceptText = conceptText + fragment.GetText()
 		} else if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
 			if fragment.GetParameter().GetParameterType() == (gauge_messages.Parameter_Table | gauge_messages.Parameter_Special_Table) {
-				conceptText += "\n" + formatTable(tableFrom(fragment.GetParameter().GetTable()))
+				conceptText += "\n" + formatTable(parser.TableFrom(fragment.GetParameter().GetTable()))
 			} else {
 				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""
 			}
@@ -105,31 +106,31 @@ func formatHeading(heading, headingChar string) string {
 	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 
-func formatTable(table *table) string {
+func formatTable(table *parser.Table) string {
 	columnToWidthMap := make(map[int]int)
-	for i, header := range table.headers {
+	for i, header := range table.Headers {
 		//table.get(header) returns a list of cells in that particular column
-		cells := table.get(header)
+		cells := table.Get(header)
 		columnToWidthMap[i] = findLongestCellWidth(cells, len(header))
 	}
 
 	var tableStringBuffer bytes.Buffer
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
-	for i, header := range table.headers {
+	for i, header := range table.Headers {
 		width := columnToWidthMap[i]
 		tableStringBuffer.WriteString(fmt.Sprintf("%s|", addPaddingToCell(header, width)))
 	}
 
 	tableStringBuffer.WriteString("\n")
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
-	for i, _ := range table.headers {
+	for i, _ := range table.Headers {
 		width := columnToWidthMap[i]
 		cell := getRepeatedChars("-", width)
 		tableStringBuffer.WriteString(fmt.Sprintf("%s|", addPaddingToCell(cell, width)))
 	}
 
 	tableStringBuffer.WriteString("\n")
-	for _, row := range table.getRows() {
+	for _, row := range table.Rows() {
 		tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
 		for i, cell := range row {
 			width := columnToWidthMap[i]
@@ -146,10 +147,10 @@ func addPaddingToCell(cellValue string, width int) string {
 	return fmt.Sprintf("%s%s", cellValue, padding)
 }
 
-func findLongestCellWidth(columnCells []tableCell, minValue int) int {
+func findLongestCellWidth(columnCells []parser.TableCell, minValue int) int {
 	longestLength := minValue
 	for _, cellValue := range columnCells {
-		cellValueLen := len(cellValue.getValue())
+		cellValueLen := len(cellValue.GetValue())
 		if cellValueLen > longestLength {
 			longestLength = cellValueLen
 		}
@@ -157,22 +158,22 @@ func findLongestCellWidth(columnCells []tableCell, minValue int) int {
 	return longestLength
 }
 
-func formatComment(comment *comment) string {
-	if comment.value == "\n" {
-		return comment.value
+func formatComment(comment *parser.Comment) string {
+	if comment.Value() == "\n" {
+		return comment.Value()
 	}
-	return fmt.Sprintf("%s\n", comment.value)
+	return fmt.Sprintf("%s\n", comment.Value())
 }
 
-func formatTags(tags *tags) string {
-	if tags == nil || len(tags.values) == 0 {
+func formatTags(tags *parser.Tags) string {
+	if tags == nil || len(tags.Values()) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
 	b.WriteString("tags: ")
-	for i, tag := range tags.values {
+	for i, tag := range tags.Values() {
 		b.WriteString(tag)
-		if (i + 1) != len(tags.values) {
+		if (i + 1) != len(tags.Values()) {
 			b.WriteString(", ")
 		}
 	}
@@ -180,32 +181,32 @@ func formatTags(tags *tags) string {
 	return string(b.Bytes())
 }
 
-func formatExternalDataTable(dataTable *dataTable) string {
-	if dataTable == nil || len(dataTable.value) == 0 {
+func formatExternalDataTable(dataTable *parser.DataTable) string {
+	if dataTable == nil || len(dataTable.Value()) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
-	b.WriteString(dataTable.value)
+	b.WriteString(dataTable.Value())
 	b.WriteString("\n")
 	return string(b.Bytes())
 }
 
-func formatAndSave(spec *specification) error {
+func formatAndSave(spec *parser.Specification) error {
 	formatted := formatSpecification(spec)
-	if err := common.SaveFile(spec.fileName, formatted, true); err != nil {
+	if err := common.SaveFile(spec.FileName, formatted, true); err != nil {
 		return err
 	}
 	return nil
 }
 
-func formatSpecification(specification *specification) string {
+func formatSpecification(specification *parser.Specification) string {
 	var formattedSpec bytes.Buffer
 	formatter := &formatter{buffer: formattedSpec}
-	specification.traverse(formatter)
+	specification.Traverse(formatter)
 	return string(formatter.buffer.Bytes())
 }
 
-type ByLineNo []*concept
+type ByLineNo []*parser.Concept
 
 func (s ByLineNo) Len() int {
 	return len(s)
@@ -219,8 +220,8 @@ func (s ByLineNo) Less(i, j int) bool {
 	return s[i].conceptStep.lineNo < s[j].conceptStep.lineNo
 }
 
-func sortConcepts(conceptDictionary *conceptDictionary, conceptMap map[string]string) []*concept {
-	concepts := make([]*concept, 0)
+func sortConcepts(conceptDictionary *parser.ConceptDictionary, conceptMap map[string]string) []*parser.Concept {
+	concepts := make([]*parser.Concept, 0)
 	for _, concept := range conceptDictionary.conceptsMap {
 		conceptMap[concept.fileName] = ""
 		concepts = append(concepts, concept)
@@ -229,14 +230,14 @@ func sortConcepts(conceptDictionary *conceptDictionary, conceptMap map[string]st
 	return concepts
 }
 
-func formatConceptSteps(conceptMap map[string]string, concept *concept) {
+func formatConceptSteps(conceptMap map[string]string, concept *parser.Concept) {
 	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatStep(concept.conceptStep), "*", "#", 1)) + "\n"
 	for i := 1; i < len(concept.conceptStep.items); i++ {
 		conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
 	}
 }
 
-func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
+func formatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.conceptStep.preComments {
@@ -247,7 +248,7 @@ func formatConcepts(conceptDictionary *conceptDictionary) map[string]string {
 	return conceptMap
 }
 
-func formatItem(item item) string {
+func formatItem(item parser.Item) string {
 	switch item.kind() {
 	case commentKind:
 		comment := item.(*comment)

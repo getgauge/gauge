@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package execLogger
 
 import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 	"strconv"
 	"strings"
 )
@@ -79,37 +80,13 @@ func (writer *parallelExecutionLogger) SpecHeading(heading string) {
 	writer.Write([]byte(formattedHeading))
 }
 
-func (writer *parallelExecutionLogger) writeItems(items []item) {
-	for _, item := range items {
-		writer.writeItem(item)
-	}
-}
-
-func (writer *parallelExecutionLogger) Steps(steps []*step) {
+func (writer *parallelExecutionLogger) Steps(steps []*parser.Step) {
 	for _, step := range steps {
-		writer.writeItem(step)
-	}
-}
-
-func (writer *parallelExecutionLogger) writeItem(item item) {
-	writeItem(item, writer)
-}
-
-func writeItem(item item, writer executionLogger) {
-	switch item.kind() {
-	case commentKind:
-		comment := item.(*comment)
-		writer.Comment(comment)
-	case stepKind:
-		step := item.(*step)
 		writer.Step(step)
-	case tableKind:
-		table := item.(*table)
-		writer.Table(table)
 	}
 }
 
-func (writer *parallelExecutionLogger) Comment(comment *comment) {
+func (writer *parallelExecutionLogger) Comment(comment *parser.Comment) {
 	writer.Text(formatComment(comment))
 }
 
@@ -118,18 +95,18 @@ func (writer *parallelExecutionLogger) ScenarioHeading(scenarioHeading string) {
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
-func (writer *parallelExecutionLogger) Step(step *step) {
+func (writer *parallelExecutionLogger) Step(step *parser.Step) {
 }
 
-func (writer *parallelExecutionLogger) StepStarting(step *step) {
+func (writer *parallelExecutionLogger) StepStarting(step *parser.Step) {
 }
 
 //todo: pass protostep instead
-func (writer *parallelExecutionLogger) StepFinished(step *step, failed bool) {
+func (writer *parallelExecutionLogger) StepFinished(step *parser.Step, failed bool) {
 	StepFinished(step, failed, writer)
 }
 
-func StepFinished(step *step, failed bool, writer executionLogger) {
+func StepFinished(step *parser.Step, failed bool, writer ExecutionLogger) {
 	var message string
 	if failed {
 		message = fmt.Sprintf("Step Failed => %s\n", formatStep(step))
@@ -139,7 +116,7 @@ func StepFinished(step *step, failed bool, writer executionLogger) {
 	writer.Text(message)
 }
 
-func (writer *parallelExecutionLogger) Table(table *table) {
+func (writer *parallelExecutionLogger) Table(table *parser.Table) {
 	writer.Text(formatTable(table))
 }
 

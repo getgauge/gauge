@@ -36,13 +36,13 @@ func (s *MySuite) TestShouldAddHeaders(c *C) {
 
 	table.addHeaders([]string{"one", "two", "three"})
 
-	c.Assert(len(table.headers), Equals, 3)
+	c.Assert(len(table.Headers), Equals, 3)
 	c.Assert(table.headerIndexMap["one"], Equals, 0)
-	c.Assert(table.headers[0], Equals, "one")
+	c.Assert(table.Headers[0], Equals, "one")
 	c.Assert(table.headerIndexMap["two"], Equals, 1)
-	c.Assert(table.headers[1], Equals, "two")
+	c.Assert(table.Headers[1], Equals, "two")
 	c.Assert(table.headerIndexMap["three"], Equals, 2)
-	c.Assert(table.headers[2], Equals, "three")
+	c.Assert(table.Headers[2], Equals, "three")
 }
 
 func (s *MySuite) TestShouldAddRowValues(c *C) {
@@ -53,21 +53,21 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	table.addRowValues([]string{"john", "jim"})
 
 	c.Assert(table.getRowCount(), Equals, 2)
-	column1 := table.get("one")
+	column1 := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].value, Equals, "foo")
 	c.Assert(column1[0].cellType, Equals, Static)
 	c.Assert(column1[1].value, Equals, "john")
 	c.Assert(column1[1].cellType, Equals, Static)
 
-	column2 := table.get("two")
+	column2 := table.Get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].value, Equals, "bar")
 	c.Assert(column2[0].cellType, Equals, Static)
 	c.Assert(column2[1].value, Equals, "jim")
 	c.Assert(column2[1].cellType, Equals, Static)
 
-	column3 := table.get("three")
+	column3 := table.Get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].value, Equals, "baz")
 	c.Assert(column3[0].cellType, Equals, Static)
@@ -84,21 +84,21 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	table.addRows([]TableCell{TableCell{"john", Static}, TableCell{"jim", Static}})
 
 	c.Assert(table.getRowCount(), Equals, 2)
-	column1 := table.get("one")
+	column1 := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].value, Equals, "foo")
 	c.Assert(column1[0].cellType, Equals, Static)
 	c.Assert(column1[1].value, Equals, "john")
 	c.Assert(column1[1].cellType, Equals, Static)
 
-	column2 := table.get("two")
+	column2 := table.Get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].value, Equals, "bar")
 	c.Assert(column2[0].cellType, Equals, Static)
 	c.Assert(column2[1].value, Equals, "jim")
 	c.Assert(column2[1].cellType, Equals, Static)
 
-	column3 := table.get("three")
+	column3 := table.Get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].value, Equals, "baz")
 	c.Assert(column3[0].cellType, Equals, Static)
@@ -127,7 +127,7 @@ func (s *MySuite) TestGetInvalidColumn(c *C) {
 	table.addRowValues([]string{"foo", "bar", "baz"})
 	table.addRowValues([]string{"john", "jim", "jack"})
 
-	c.Assert(func() { table.get("four") }, Panics, "Table column four not found")
+	c.Assert(func() { table.Get("four") }, Panics, "Table column four not found")
 }
 
 func (s *MySuite) TestGetRows(c *C) {
@@ -137,7 +137,7 @@ func (s *MySuite) TestGetRows(c *C) {
 	table.addRowValues([]string{"foo", "bar", "baz"})
 	table.addRowValues([]string{"john", "jim", "jack"})
 
-	rows := table.getRows()
+	rows := table.Rows()
 	c.Assert(len(rows), Equals, 2)
 	firstRow := rows[0]
 	c.Assert(firstRow[0], Equals, "foo")

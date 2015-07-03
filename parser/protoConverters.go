@@ -18,8 +18,8 @@
 package parser
 
 import (
-	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/result"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -164,25 +164,25 @@ func convertToProtoParameters(args []*StepArg) []*gauge_messages.Parameter {
 }
 
 func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
-	switch arg.argType {
+	switch arg.ArgType {
 	case Static:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
 	case Dynamic:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
 	case TableArg:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.Table), Name: proto.String(arg.Name)}
 	case SpecialString:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(arg.value), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
 	case SpecialTable:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.table), Name: proto.String(arg.name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.Table), Name: proto.String(arg.Name)}
 	}
 	return nil
 }
 
 func convertToProtoTableParam(table *Table) *gauge_messages.ProtoTable {
 	protoTableParam := &gauge_messages.ProtoTable{Rows: make([]*gauge_messages.ProtoTableRow, 0)}
-	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.headers}
-	for _, row := range table.getRows() {
+	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
+	for _, row := range table.Rows() {
 		protoTableParam.Rows = append(protoTableParam.Rows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	return protoTableParam
@@ -194,7 +194,7 @@ func addExecutionResult(protoItem *gauge_messages.ProtoItem, protoStepExecutionR
 	}
 }
 
-func convertToProtoSuiteResult(suiteResult *execution.SuiteResult) *gauge_messages.ProtoSuiteResult {
+func convertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
 		PreHookFailure:   suiteResult.PreSuite,
 		PostHookFailure:  suiteResult.PostSuite,
@@ -218,7 +218,7 @@ func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
 	return (float32)(100.0 * (totalSpecs - failedSpecs) / totalSpecs)
 }
 
-func convertToProtoSpecResult(specResults []*execution.SpecResult) []*gauge_messages.ProtoSpecResult {
+func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_messages.ProtoSpecResult {
 	protoSpecResults := make([]*gauge_messages.ProtoSpecResult, 0)
 	for _, specResult := range specResults {
 		protoSpecResult := &gauge_messages.ProtoSpecResult{
@@ -257,14 +257,14 @@ func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 		Items:         make([]*gauge_messages.ProtoItem, 0),
 		SpecHeading:   proto.String(specification.heading.value),
 		IsTableDriven: proto.Bool(false),
-		FileName:      proto.String(specification.fileName),
+		FileName:      proto.String(specification.FileName),
 		Tags:          getTags(specification.tags),
 	}
 
 }
 
-func newSpecResult(specification *Specification) *execution.SpecResult {
-	return &execution.SpecResult{
+func newSpecResult(specification *Specification) *result.SpecResult {
+	return &result.SpecResult{
 		ProtoSpec:           newProtoSpec(specification),
 		FailedDataTableRows: make([]int32, 0),
 	}

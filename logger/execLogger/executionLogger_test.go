@@ -15,11 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package execLogger
 
 import (
 	. "gopkg.in/check.v1"
 )
+
+type MySuite struct{}
 
 func (s *MySuite) TestPrefixingMessage(c *C) {
 	prefixedLines := addPrefixToEachLine("Hello\nWorld", "[my-plugin Plugin] : ")

@@ -168,19 +168,19 @@ func (s *MySuite) TestSpecBuilderWithSampleSpec(c *C) {
 }
 
 func (s *MySuite) TestUnescapedString(c *C) {
-	unEscapedString := getUnescapedString("hello \n world")
+	unEscapedString := GetUnescapedString("hello \n world")
 	c.Assert(unEscapedString, Equals, `hello \n world`)
 
-	unEscapedString = getUnescapedString("hello \n \"world")
+	unEscapedString = GetUnescapedString("hello \n \"world")
 	c.Assert(unEscapedString, Equals, `hello \n \"world`)
 
-	unEscapedString = getUnescapedString("\"hello \n \"world\"\"")
+	unEscapedString = GetUnescapedString("\"hello \n \"world\"\"")
 	c.Assert(unEscapedString, Equals, `\"hello \n \"world\"\"`)
 
-	unEscapedString = getUnescapedString("\"\"")
+	unEscapedString = GetUnescapedString("\"\"")
 	c.Assert(unEscapedString, Equals, `\"\"`)
 
-	unEscapedString = getUnescapedString("")
+	unEscapedString = GetUnescapedString("")
 	c.Assert(unEscapedString, Equals, "")
 
 }

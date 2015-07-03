@@ -21,6 +21,8 @@ import (
 	. "gopkg.in/check.v1"
 )
 
+type MySuite struct{}
+
 func (s *MySuite) TestFormatSpecification(c *C) {
 	tokens := []*token{
 		&token{kind: specKind, value: "Spec Heading", lineNo: 1},

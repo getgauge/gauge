@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package execLogger
 
 import (
 	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 )
 
 type simpleLogger struct {
@@ -70,23 +71,13 @@ func (writer *simpleLogger) SpecHeading(heading string) {
 	writer.Write([]byte(formattedHeading))
 }
 
-func (writer *simpleLogger) writeItems(items []item) {
-	for _, item := range items {
-		writer.writeItem(item)
-	}
-}
-
-func (writer *simpleLogger) Steps(steps []*step) {
+func (writer *simpleLogger) Steps(steps []*parser.Step) {
 	for _, step := range steps {
 		writer.writeItem(step)
 	}
 }
 
-func (writer *simpleLogger) writeItem(item item) {
-	writeItem(item, writer)
-}
-
-func (writer *simpleLogger) Comment(comment *comment) {
+func (writer *simpleLogger) Comment(comment *parser.Comment) {
 	writer.Text(formatComment(comment))
 }
 
@@ -95,19 +86,19 @@ func (writer *simpleLogger) ScenarioHeading(scenarioHeading string) {
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
-func (writer *simpleLogger) Step(step *step) {
+func (writer *simpleLogger) Step(step *parser.Step) {
 	writer.Text(formatStep(step))
 }
 
-func (writer *simpleLogger) StepStarting(step *step) {
+func (writer *simpleLogger) StepStarting(step *parser.Step) {
 }
 
 //todo: pass protostep instead
-func (writer *simpleLogger) StepFinished(step *step, failed bool) {
+func (writer *simpleLogger) StepFinished(step *parser.Step, failed bool) {
 	StepFinished(step, failed, writer)
 }
 
-func (writer *simpleLogger) Table(table *table) {
+func (writer *simpleLogger) Table(table *parser.Table) {
 	writer.Text(formatTable(table))
 }
 

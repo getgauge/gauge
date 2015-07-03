@@ -22,13 +22,13 @@ import . "gopkg.in/check.v1"
 func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
 	resolver.predefinedResolvers["file"] = func(value string) (*StepArg, error) {
-		return &StepArg{value: "dummy", argType: Static}, nil
+		return &StepArg{Value: "dummy", ArgType: Static}, nil
 	}
 
 	stepArg, _ := resolver.resolve("file:foo")
-	c.Assert(stepArg.value, Equals, "dummy")
-	c.Assert(stepArg.argType, Equals, Static)
-	c.Assert(stepArg.name, Equals, "file:foo")
+	c.Assert(stepArg.Value, Equals, "dummy")
+	c.Assert(stepArg.ArgType, Equals, Static)
+	c.Assert(stepArg.Name, Equals, "file:foo")
 }
 
 func (s *MySuite) TestParsingInvalidSpecialType(c *C) {
@@ -41,11 +41,11 @@ func (s *MySuite) TestParsingInvalidSpecialType(c *C) {
 func (s *MySuite) TestConvertCsvToTable(c *C) {
 	table, _ := convertCsvToTable("id,name \n1,foo\n2,bar")
 
-	idColumn := table.get("id")
+	idColumn := table.Get("id")
 	c.Assert(idColumn[0].value, Equals, "1")
 	c.Assert(idColumn[1].value, Equals, "2")
 
-	nameColumn := table.get("name")
+	nameColumn := table.Get("name")
 	c.Assert(nameColumn[0].value, Equals, "foo")
 	c.Assert(nameColumn[1].value, Equals, "bar")
 }
@@ -82,9 +82,9 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept, dataTableLookup)
 
-	c.Assert(concept.getArg("user-id").value, Equals, "123")
-	c.Assert(concept.getArg("user-name").value, Equals, "foo")
-	c.Assert(concept.getArg("user-phone").value, Equals, "888")
+	c.Assert(concept.getArg("user-id").Value, Equals, "123")
+	c.Assert(concept.getArg("user-name").Value, Equals, "foo")
+	c.Assert(concept.getArg("user-phone").Value, Equals, "888")
 
 }
 
@@ -116,22 +116,22 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
-	c.Assert(concept1.getArg("user-id").value, Equals, "123")
-	c.Assert(concept1.getArg("user-name").value, Equals, "prateek")
-	c.Assert(concept1.getArg("user-phone").value, Equals, "8800")
+	c.Assert(concept1.getArg("user-id").Value, Equals, "123")
+	c.Assert(concept1.getArg("user-name").Value, Equals, "prateek")
+	c.Assert(concept1.getArg("user-phone").Value, Equals, "8800")
 
 	nestedConcept := concept1.conceptSteps[0]
-	c.Assert(nestedConcept.getArg("userid").value, Equals, "123")
-	c.Assert(nestedConcept.getArg("username").value, Equals, "prateek")
+	c.Assert(nestedConcept.getArg("userid").Value, Equals, "123")
+	c.Assert(nestedConcept.getArg("username").Value, Equals, "prateek")
 
 	concept2 := spec.scenarios[0].steps[1]
-	c.Assert(concept2.getArg("user-id").value, Equals, "456")
-	c.Assert(concept2.getArg("user-name").value, Equals, "foo")
-	c.Assert(concept2.getArg("user-phone").value, Equals, "9900")
+	c.Assert(concept2.getArg("user-id").Value, Equals, "456")
+	c.Assert(concept2.getArg("user-name").Value, Equals, "foo")
+	c.Assert(concept2.getArg("user-phone").Value, Equals, "9900")
 
 	nestedConcept2 := concept2.conceptSteps[0]
-	c.Assert(nestedConcept2.getArg("userid").value, Equals, "456")
-	c.Assert(nestedConcept2.getArg("username").value, Equals, "foo")
+	c.Assert(nestedConcept2.getArg("userid").Value, Equals, "456")
+	c.Assert(nestedConcept2.getArg("username").Value, Equals, "foo")
 
 }
 
@@ -162,18 +162,18 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
-	c.Assert(concept1.getArg("user-id").value, Equals, "456")
-	c.Assert(concept1.getArg("user-name").value, Equals, "foo")
-	c.Assert(concept1.getArg("user-phone").value, Equals, "prateek")
+	c.Assert(concept1.getArg("user-id").Value, Equals, "456")
+	c.Assert(concept1.getArg("user-name").Value, Equals, "foo")
+	c.Assert(concept1.getArg("user-phone").Value, Equals, "prateek")
 
 	nestedConcept := concept1.conceptSteps[0]
-	c.Assert(nestedConcept.getArg("userid").value, Equals, "456")
-	c.Assert(nestedConcept.getArg("username").value, Equals, "static-name")
+	c.Assert(nestedConcept.getArg("userid").Value, Equals, "456")
+	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-name")
 
-	c.Assert(nestedConcept.conceptSteps[0].args[0].argType, Equals, Static)
-	c.Assert(nestedConcept.conceptSteps[0].args[0].value, Equals, "some-id")
+	c.Assert(nestedConcept.conceptSteps[0].args[0].ArgType, Equals, Static)
+	c.Assert(nestedConcept.conceptSteps[0].args[0].Value, Equals, "some-id")
 
 	secondLevelNestedConcept := nestedConcept.conceptSteps[1]
-	c.Assert(secondLevelNestedConcept.getArg("baz").value, Equals, "s-value")
-	c.Assert(secondLevelNestedConcept.getArg("baz").argType, Equals, Static)
+	c.Assert(secondLevelNestedConcept.getArg("baz").Value, Equals, "s-value")
+	c.Assert(secondLevelNestedConcept.getArg("baz").ArgType, Equals, Static)
 }

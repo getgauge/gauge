@@ -15,12 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package execution
 
 import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
 	"path/filepath"
 	"time"
 )
@@ -28,10 +29,10 @@ import (
 type simpleExecution struct {
 	manifest             *manifest
 	runner               *testRunner
-	specifications       []*specification
+	specifications       []*parser.Specification
 	pluginHandler        *pluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	suiteResult          *suiteResult
+	suiteResult          *SuiteResult
 	writer               executionLogger
 }
 

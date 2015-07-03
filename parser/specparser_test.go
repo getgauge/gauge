@@ -525,7 +525,7 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	c.Assert(err, IsNil)
 	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
 
-	c.Assert(parseResult.ok, Equals, true)
+	c.Assert(parseResult.Ok, Equals, true)
 	firstStepInSpec := spec.scenarios[0].steps[0]
 	secondStepInSpec := spec.scenarios[0].steps[1]
 	c.Assert(firstStepInSpec.conceptSteps[0].parent, Equals, firstStepInSpec)
@@ -539,7 +539,7 @@ func (s *MySuite) TestTableFromInvalidFile(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
 	_, err := parser.generateTokens(specText)
-	c.Assert(err.message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(err.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 }
 
 func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) {
@@ -547,8 +547,8 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
 	_, parseRes := parser.parse(specText, new(ConceptDictionary))
-	c.Assert(parseRes.error.message, Equals, "Could not resolve table from table: inputinvalid.csv")
-	c.Assert(parseRes.ok, Equals, false)
+	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(parseRes.Ok, Equals, false)
 }
 
 func (s *MySuite) TestTableInputFromFile(c *C) {
@@ -556,8 +556,8 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
 
 	_, parseRes := parser.parse(specText, new(ConceptDictionary))
-	c.Assert(parseRes.error.message, Equals, "Could not resolve table from Table: inputinvalid.csv")
-	c.Assert(parseRes.ok, Equals, false)
+	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
+	c.Assert(parseRes.Ok, Equals, false)
 }
 
 func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
@@ -565,6 +565,6 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
 
 	_, parseRes := parser.parse(specText, new(ConceptDictionary))
-	c.Assert(parseRes.error.message, Equals, "Table location not specified")
-	c.Assert(parseRes.ok, Equals, false)
+	c.Assert(parseRes.ParseError.Message, Equals, "Table location not specified")
+	c.Assert(parseRes.Ok, Equals, false)
 }

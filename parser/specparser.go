@@ -30,7 +30,7 @@ type SpecParser struct {
 	lineNo            int
 	tokens            []*Token
 	currentState      int
-	processors        map[TokenKind]func(*SpecParser, *Token) (*parseError, bool)
+	processors        map[TokenKind]func(*SpecParser, *Token) (*ParseError, bool)
 	conceptDictionary *ConceptDictionary
 }
 
@@ -44,19 +44,19 @@ type Token struct {
 	value    string
 }
 
-type parseError struct {
-	lineNo   int
-	message  string
-	lineText string
+type ParseError struct {
+	LineNo   int
+	Message  string
+	LineText string
 }
 
 type parseDetailResult struct {
-	error    *parseError
+	error    *ParseError
 	warnings []*Warning
 }
 
-func (se *parseError) Error() string {
-	return fmt.Sprintf("line no: %d, %s", se.lineNo, se.message)
+func (se *ParseError) Error() string {
+	return fmt.Sprintf("line no: %d, %s", se.LineNo, se.Message)
 }
 
 func (token *Token) String() string {
@@ -90,7 +90,7 @@ const (
 )
 
 func (parser *SpecParser) initialize() {
-	parser.processors = make(map[TokenKind]func(*SpecParser, *Token) (*parseError, bool))
+	parser.processors = make(map[TokenKind]func(*SpecParser, *Token) (*ParseError, bool))
 	parser.processors[specKind] = processSpec
 	parser.processors[scenarioKind] = processScenario
 	parser.processors[commentKind] = processComment
@@ -104,12 +104,12 @@ func (parser *SpecParser) initialize() {
 func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
 	tokens, parseError := parser.generateTokens(specText)
 	if parseError != nil {
-		return nil, &ParseResult{error: parseError, ok: false}
+		return nil, &ParseResult{ParseError: parseError, Ok: false}
 	}
 	return parser.createSpecification(tokens, conceptDictionary)
 }
 
-func (parser *SpecParser) generateTokens(specText string) ([]*Token, *parseError) {
+func (parser *SpecParser) generateTokens(specText string) ([]*Token, *ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial
@@ -221,7 +221,7 @@ func (parser *SpecParser) isDataTable(text string) (string, bool) {
 	return "", false
 }
 
-func (parser *SpecParser) accept(token *Token) *parseError {
+func (parser *SpecParser) accept(token *Token) *ParseError {
 	error, shouldSkip := parser.processors[token.kind](parser, token)
 	if error != nil {
 		return error
@@ -233,39 +233,39 @@ func (parser *SpecParser) accept(token *Token) *parseError {
 	return nil
 }
 
-func processSpec(parser *SpecParser, token *Token) (*parseError, bool) {
+func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(token.value) < 1 {
-		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Spec heading should have at least one character"}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Spec heading should have at least one character"}, true
 	}
 	return nil, false
 }
 
-func processDataTable(parser *SpecParser, token *Token) (*parseError, bool) {
+func processDataTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(strings.TrimSpace(strings.Replace(token.value, "table:", "", 1))) == 0 {
-		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table location not specified"}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table location not specified"}, true
 	}
 	resolvedArg, err := newSpecialTypeResolver().resolve(token.value)
 	if resolvedArg == nil || err != nil {
-		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: fmt.Sprintf("Could not resolve table from %s", token.lineText)}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: fmt.Sprintf("Could not resolve table from %s", token.lineText)}, true
 	}
 	return nil, false
 }
 
-func processScenario(parser *SpecParser, token *Token) (*parseError, bool) {
+func processScenario(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(token.value) < 1 {
-		return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Scenario heading should have at least one character"}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Scenario heading should have at least one character"}, true
 	}
 	parser.clearState()
 	return nil, false
 }
 
-func processComment(parser *SpecParser, token *Token) (*parseError, bool) {
+func processComment(parser *SpecParser, token *Token) (*ParseError, bool) {
 	parser.clearState()
 	addStates(&parser.currentState, commentScope)
 	return nil, false
 }
 
-func processTag(parser *SpecParser, token *Token) (*parseError, bool) {
+func processTag(parser *SpecParser, token *Token) (*ParseError, bool) {
 	parser.clearState()
 	tokens := splitAndTrimTags(token.value)
 
@@ -285,7 +285,7 @@ func splitAndTrimTags(tag string) []string {
 	return listOfTags
 }
 
-func processTable(parser *SpecParser, token *Token) (*parseError, bool) {
+func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 
 	var buffer bytes.Buffer
 	shouldEscape := false
@@ -306,11 +306,11 @@ func processTable(parser *SpecParser, token *Token) (*parseError, bool) {
 
 			if token.kind == tableHeader {
 				if len(trimmedValue) == 0 {
-					return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table header should not be blank"}, true
+					return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table header should not be blank"}, true
 				}
 
 				if arrayContains(token.args, trimmedValue) {
-					return &parseError{lineNo: parser.lineNo, lineText: token.value, message: "Table header cannot have repeated column values"}, true
+					return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table header cannot have repeated column values"}, true
 				}
 			}
 			token.args = append(token.args, trimmedValue)

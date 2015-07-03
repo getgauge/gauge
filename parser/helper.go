@@ -100,7 +100,7 @@ func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 	return -1
 }
 
-func getUnescapedString(string1 string) string {
+func GetUnescapedString(string1 string) string {
 	unescaped := strconv.Quote(string1)
 	return unescaped[1 : len(unescaped)-1]
 }

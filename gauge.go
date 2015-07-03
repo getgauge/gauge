@@ -617,44 +617,6 @@ func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*spec
 
 }
 
-func parseSpecFiles(specFiles []string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
-	parseResultsChan := make(chan *parseResult, len(specFiles))
-	specsChan := make(chan *specification, len(specFiles))
-	parseResults := make([]*parseResult, 0)
-	specs := make([]*specification, 0)
-
-	for _, specFile := range specFiles {
-		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
-	}
-	for _, _ = range specFiles {
-		parseResults = append(parseResults, <-parseResultsChan)
-		spec := <-specsChan
-		if spec != nil {
-			specs = append(specs, spec)
-		}
-	}
-	return specs, parseResults
-}
-
-func parseSpec(specFile string, conceptDictionary *conceptDictionary, specChannel chan *specification, parseResultChan chan *parseResult) {
-	specFileContent, err := common.ReadFileContents(specFile)
-	if err != nil {
-		specChannel <- nil
-		parseResultChan <- &parseResult{error: &parseError{message: err.Error()}, ok: false, fileName: specFile}
-		return
-	}
-	spec, parseResult := new(specParser).parse(specFileContent, conceptDictionary)
-	parseResult.fileName = specFile
-	if !parseResult.ok {
-		specChannel <- nil
-		parseResultChan <- parseResult
-		return
-	}
-	spec.fileName = specFile
-	specChannel <- spec
-	parseResultChan <- parseResult
-}
-
 func handleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
 		logger.Log.Warning(warning)
