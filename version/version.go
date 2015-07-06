@@ -24,7 +24,7 @@ import (
 	"strings"
 )
 
-var CurrentGaugeVersion = &Version{0, 1, 5}
+var CurrentGaugeVersion = &Version{0, 1, 6}
 
 type Version struct {
 	Major int
