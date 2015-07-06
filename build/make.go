@@ -33,21 +33,24 @@ import (
 )
 
 const (
-	CGO_ENABLED        = "CGO_ENABLED"
-	GOARCH             = "GOARCH"
-	GOOS               = "GOOS"
-	X86                = "386"
-	X86_64             = "amd64"
-	darwin             = "darwin"
-	linux              = "linux"
-	windows            = "windows"
-	bin                = "bin"
-	newDirPermissions  = 0755
-	gauge              = "gauge"
-	gaugeScreenshot    = "gauge_screenshot"
-	deploy             = "deploy"
-	installShellScript = "install.sh"
-	CC                 = "CC"
+	CGO_ENABLED          = "CGO_ENABLED"
+	GOARCH               = "GOARCH"
+	GOOS                 = "GOOS"
+	X86                  = "386"
+	X86_64               = "amd64"
+	darwin               = "darwin"
+	linux                = "linux"
+	windows              = "windows"
+	bin                  = "bin"
+	newDirPermissions    = 0755
+	gauge                = "gauge"
+	gaugeScreenshot      = "gauge_screenshot"
+	deploy               = "deploy"
+	installShellScript   = "install.sh"
+	CC                   = "CC"
+	mpkg                 = ".mpkg"
+	darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
+	packagesBuild        = "packagesbuild"
 )
 
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
@@ -275,6 +278,7 @@ var (
 		map[string]string{GOARCH: X86, GOOS: windows, CC: "i586-mingw32-gcc", CGO_ENABLED: "1"},
 		map[string]string{GOARCH: X86_64, GOOS: windows, CC: "x86_64-w64-mingw32-gcc", CGO_ENABLED: "1"},
 	}
+	osDistroMap = map[string]distroFunc{windows: createWindowsDistro, linux: createLinuxPackage, darwin: createDarwinPackage}
 )
 
 func main() {
@@ -323,16 +327,17 @@ func createGaugeDistributables(forAllPlatforms bool) {
 
 }
 
+type distroFunc func()
+
 func createDistro() {
-	if getOS() == windows {
-		if !*skipWindowsDistro {
-			createWindowsInstaller()
-		}
-	} else {
-		createZipPackage()
-	}
+	osDistroMap[getOS()]()
 }
 
+func createWindowsDistro() {
+	if !*skipWindowsDistro {
+		createWindowsInstaller()
+	}
+}
 func createWindowsInstaller() {
 	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
@@ -348,7 +353,15 @@ func createWindowsInstaller() {
 	os.RemoveAll(distroDir)
 }
 
-func createZipPackage() {
+func createDarwinPackage() {
+	distroDir := filepath.Join(deploy, gauge)
+	copyGaugeFiles(distroDir)
+	runProcess(packagesBuild, "-v", darwinPackageProject)
+	runProcess("mv", filepath.Join(deploy, gauge+mpkg), filepath.Join(deploy, gauge+"-"+getArch()+mpkg))
+	os.RemoveAll(distroDir)
+}
+
+func createLinuxPackage() {
 	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir := filepath.Join(deploy, packageName)
 	copyGaugeFiles(distroDir)
