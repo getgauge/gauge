@@ -33,23 +33,23 @@ import (
 )
 
 const (
-	CGO_ENABLED          = "CGO_ENABLED"
-	GOARCH               = "GOARCH"
-	GOOS                 = "GOOS"
-	X86                  = "386"
-	X86_64               = "amd64"
-	darwin               = "darwin"
-	linux                = "linux"
-	windows              = "windows"
-	bin                  = "bin"
-	newDirPermissions    = 0755
-	gauge                = "gauge"
-	gaugeScreenshot      = "gauge_screenshot"
-	deploy               = "deploy"
-	installShellScript   = "install.sh"
-	CC                   = "CC"
-	mpkg                 = ".mpkg"
-	packagesBuild        = "packagesbuild"
+	CGO_ENABLED        = "CGO_ENABLED"
+	GOARCH             = "GOARCH"
+	GOOS               = "GOOS"
+	X86                = "386"
+	X86_64             = "amd64"
+	darwin             = "darwin"
+	linux              = "linux"
+	windows            = "windows"
+	bin                = "bin"
+	newDirPermissions  = 0755
+	gauge              = "gauge"
+	gaugeScreenshot    = "gauge_screenshot"
+	deploy             = "deploy"
+	installShellScript = "install.sh"
+	CC                 = "CC"
+	pkg                = ".pkg"
+	packagesBuild      = "packagesbuild"
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
@@ -358,7 +358,7 @@ func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeFiles(distroDir)
 	runProcess(packagesBuild, "-v", darwinPackageProject)
-	runProcess("mv", filepath.Join(deploy, gauge+mpkg), filepath.Join(deploy, gauge+"-"+getArch()+mpkg))
+	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch(), pkg)))
 	os.RemoveAll(distroDir)
 }
 
