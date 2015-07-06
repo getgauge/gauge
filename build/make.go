@@ -49,9 +49,10 @@ const (
 	installShellScript   = "install.sh"
 	CC                   = "CC"
 	mpkg                 = ".mpkg"
-	darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 	packagesBuild        = "packagesbuild"
 )
+
+var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
 
