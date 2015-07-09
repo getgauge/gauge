@@ -68,6 +68,43 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, normalStep1.value)
 }
 
+func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameter(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	conceptText := SpecBuilder().
+		specHeading("assign id").
+		step("add id").
+		specHeading("create user").
+		step("assign id").
+		step("assign id").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+	conceptDictionary.add(concepts, "file.cpt")
+	concept := conceptDictionary.search("create user")
+	c.Assert(concept.conceptStep.conceptSteps[0].value, Equals, "assign id")
+	c.Assert(concept.conceptStep.conceptSteps[0].isConcept, Equals, true)
+	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, "assign id")
+	c.Assert(concept.conceptStep.conceptSteps[1].isConcept, Equals, true)
+}
+
+func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithDefinitionAfterUsage(c *C) {
+	conceptDictionary := new(conceptDictionary)
+	conceptText := SpecBuilder().
+		specHeading("create user").
+		step("assign id").
+		step("assign id").
+		step("assign id").
+		specHeading("assign id").
+		step("add id").String()
+	concepts, _ := new(conceptParser).parse(conceptText)
+	conceptDictionary.add(concepts, "file.cpt")
+	concept := conceptDictionary.search("create user")
+	c.Assert(concept.conceptStep.conceptSteps[0].value, Equals, "assign id")
+	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, "assign id")
+	c.Assert(concept.conceptStep.conceptSteps[2].value, Equals, "assign id")
+	c.Assert(concept.conceptStep.conceptSteps[0].isConcept, Equals, true)
+	c.Assert(concept.conceptStep.conceptSteps[1].isConcept, Equals, true)
+	c.Assert(concept.conceptStep.conceptSteps[2].isConcept, Equals, true)
+}
+
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
 	conceptDictionary := new(conceptDictionary)
 	conceptText := SpecBuilder().

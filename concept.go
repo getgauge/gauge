@@ -29,7 +29,7 @@ import (
 
 type conceptDictionary struct {
 	conceptsMap     map[string]*concept
-	constructionMap map[string]*step
+	constructionMap map[string][]*step
 	referenceMap    map[*step][]*step
 }
 
@@ -244,7 +244,7 @@ func (conceptDictionary *conceptDictionary) add(concepts []*step, conceptFile st
 		conceptDictionary.conceptsMap = make(map[string]*concept)
 	}
 	if conceptDictionary.constructionMap == nil {
-		conceptDictionary.constructionMap = make(map[string]*step)
+		conceptDictionary.constructionMap = make(map[string][]*step)
 	}
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.conceptsMap[conceptStep.value]; exists {
@@ -314,12 +314,14 @@ func (conceptDictionary *conceptDictionary) replaceNestedConceptSteps(conceptSte
 
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
 func (conceptDictionary *conceptDictionary) updateStep(step *step) {
-	if conceptDictionary.constructionMap[step.value] == nil {
-		conceptDictionary.constructionMap[step.value] = step
-	} else if !conceptDictionary.constructionMap[step.value].isConcept {
-		conceptDictionary.constructionMap[step.value].isConcept = step.isConcept
-		conceptDictionary.constructionMap[step.value].conceptSteps = step.conceptSteps
-		conceptDictionary.constructionMap[step.value].lookup = step.lookup
+	conceptDictionary.constructionMap[step.value] = append(conceptDictionary.constructionMap[step.value], step)
+	if !conceptDictionary.constructionMap[step.value][0].isConcept {
+		conceptDictionary.constructionMap[step.value] = append(conceptDictionary.constructionMap[step.value], step)
+		for _, allSteps := range conceptDictionary.constructionMap[step.value] {
+			allSteps.isConcept = step.isConcept
+			allSteps.conceptSteps = step.conceptSteps
+			allSteps.lookup = step.lookup
+		}
 	}
 }
 

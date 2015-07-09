@@ -81,7 +81,6 @@ func (self *specValidator) step(step *step) {
 	if step.isConcept {
 		for _, conceptStep := range step.conceptSteps {
 			if _, ok := self.stepValidationCache[conceptStep.value]; !ok {
-				self.stepValidationCache[conceptStep.value] = true
 				self.step(conceptStep)
 			}
 		}
