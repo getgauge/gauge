@@ -258,9 +258,9 @@ func formatItem(item item) string {
 	case stepKind:
 		step := item.(*step)
 		return formatStep(step)
-	case tableKind:
-		table := item.(*table)
-		return formatTable(table)
+	case dataTableKind:
+		dataTable := item.(*dataTable)
+		return formatTable(&dataTable.table)
 	case tagKind:
 		tags := item.(*tags)
 		return formatTags(tags)

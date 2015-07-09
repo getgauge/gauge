@@ -157,10 +157,6 @@ func (table *table) getRowCount() int {
 	}
 }
 
-func (table *table) kind() tokenKind {
-	return tableKind
-}
-
 func (externalTable *dataTable) kind() tokenKind {
 	return dataTableKind
 }

@@ -568,7 +568,7 @@ func (specification *specification) addComment(comment *comment) {
 
 func (specification *specification) addDataTable(table *table) {
 	specification.dataTable.table = *table
-	specification.addItem(table)
+	specification.addItem(&specification.dataTable)
 }
 
 func (specification *specification) addExternalDataTable(externalTable *dataTable) {

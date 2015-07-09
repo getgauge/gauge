@@ -103,9 +103,9 @@ func writeItem(item item, writer executionLogger) {
 	case stepKind:
 		step := item.(*step)
 		writer.Step(step)
-	case tableKind:
-		table := item.(*table)
-		writer.Table(table)
+	case dataTableKind:
+		dataTable := item.(*dataTable)
+		writer.Table(&dataTable.table)
 	}
 }
 

@@ -48,8 +48,6 @@ func (spec *specification) traverse(traverser specTraverser) {
 			traverser.contextStep(item.(*step))
 		case commentKind:
 			traverser.comment(item.(*comment))
-		case tableKind:
-			traverser.dataTable(item.(*table))
 		case tagKind:
 			traverser.specTags(item.(*tags))
 		case dataTableKind:

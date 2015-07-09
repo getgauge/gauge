@@ -30,8 +30,8 @@ func convertToProtoItem(item item) *gauge_messages.ProtoItem {
 		return convertToProtoStepItem(item.(*step))
 	case commentKind:
 		return convertToProtoCommentItem(item.(*comment))
-	case tableKind:
-		return convertToProtoTableItem(item.(*table))
+	case dataTableKind:
+		return convertToProtoDataTableItem(item.(*dataTable))
 	case tagKind:
 		return convertToProtoTagItem(item.(*tags))
 	}
@@ -150,8 +150,8 @@ func convertToProtoCommentItem(comment *comment) *gauge_messages.ProtoItem {
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.value)}}
 }
 
-func convertToProtoTableItem(table *table) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table.Enum(), Table: convertToProtoTableParam(table)}
+func convertToProtoDataTableItem(dataTable *dataTable) *gauge_messages.ProtoItem {
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table.Enum(), Table: convertToProtoTableParam(&dataTable.table)}
 }
 
 func convertToProtoParameters(args []*stepArg) []*gauge_messages.Parameter {
