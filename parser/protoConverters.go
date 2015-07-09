@@ -24,16 +24,16 @@ import (
 )
 
 func convertToProtoItem(item Item) *gauge_messages.ProtoItem {
-	switch item.kind() {
-	case scenarioKind:
+	switch item.Kind() {
+	case ScenarioKind:
 		return convertToProtoScenarioItem(item.(*Scenario))
-	case stepKind:
+	case StepKind:
 		return convertToProtoStepItem(item.(*Step))
-	case commentKind:
+	case CommentKind:
 		return convertToProtoCommentItem(item.(*Comment))
-	case tableKind:
+	case TableKind:
 		return convertToProtoTableItem(item.(*Table))
-	case tagKind:
+	case TagKind:
 		return convertToProtoTagItem(item.(*Tags))
 	}
 	return nil
@@ -44,7 +44,7 @@ func convertToProtoTagItem(tags *Tags) *gauge_messages.ProtoItem {
 }
 
 func convertToProtoStepItem(step *Step) *gauge_messages.ProtoItem {
-	if step.isConcept {
+	if step.IsConcept {
 		return convertToProtoConcept(step)
 	}
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
@@ -60,7 +60,7 @@ func convertToProtoStepItems(steps []*Step) []*gauge_messages.ProtoItem {
 
 func convertToProtoScenarioItem(scenario *Scenario) *gauge_messages.ProtoItem {
 	scenarioItems := make([]*gauge_messages.ProtoItem, 0)
-	for _, item := range scenario.items {
+	for _, item := range scenario.Items {
 		scenarioItems = append(scenarioItems, convertToProtoItem(item))
 	}
 	protoScenario := newProtoScenario(scenario)
@@ -68,13 +68,13 @@ func convertToProtoScenarioItem(scenario *Scenario) *gauge_messages.ProtoItem {
 }
 
 func convertToProtoConcept(concept *Step) *gauge_messages.ProtoItem {
-	protoConcept := &gauge_messages.ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.conceptSteps)}
+	protoConcept := &gauge_messages.ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.ConceptSteps)}
 	protoConceptItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Concept.Enum(), Concept: protoConcept}
 	return protoConceptItem
 }
 
 func convertToProtoStep(step *Step) *gauge_messages.ProtoStep {
-	return &gauge_messages.ProtoStep{ActualText: proto.String(step.lineText), ParsedText: proto.String(step.value), Fragments: makeFragmentsCopy(step.fragments)}
+	return &gauge_messages.ProtoStep{ActualText: proto.String(step.LineText), ParsedText: proto.String(step.Value), Fragments: makeFragmentsCopy(step.Fragments)}
 }
 
 func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
@@ -84,7 +84,7 @@ func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
 
 func getAllTags(tags *Tags) []string {
 	allTags := make([]string, 0)
-	for _, tag := range tags.values {
+	for _, tag := range tags.Values {
 		allTags = append(allTags, *proto.String(tag))
 	}
 	return allTags
@@ -148,7 +148,7 @@ func convertToProtoSteps(steps []*Step) []*gauge_messages.ProtoStep {
 }
 
 func convertToProtoCommentItem(comment *Comment) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.value)}}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.Value)}}
 }
 
 func convertToProtoTableItem(table *Table) *gauge_messages.ProtoItem {
@@ -237,7 +237,7 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 func convertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
 	protoItems := make([]*gauge_messages.ProtoItem, 0)
-	for _, item := range spec.items {
+	for _, item := range spec.Items {
 		protoItems = append(protoItems, convertToProtoItem(item))
 	}
 	protoSpec.Items = protoItems
@@ -255,7 +255,7 @@ func convertToProtoStepValue(stepValue *StepValue) *gauge_messages.ProtoStepValu
 func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 	return &gauge_messages.ProtoSpec{
 		Items:         make([]*gauge_messages.ProtoItem, 0),
-		SpecHeading:   proto.String(specification.heading.value),
+		SpecHeading:   proto.String(specification.heading.Value),
 		IsTableDriven: proto.Bool(false),
 		FileName:      proto.String(specification.FileName),
 		Tags:          getTags(specification.tags),
@@ -272,7 +272,7 @@ func newSpecResult(specification *Specification) *result.SpecResult {
 
 func newProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
-		ScenarioHeading: proto.String(scenario.heading.value),
+		ScenarioHeading: proto.String(scenario.heading.Value),
 		Failed:          proto.Bool(false),
 		Tags:            getTags(scenario.tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
@@ -282,7 +282,7 @@ func newProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 
 func getTags(tags *Tags) []string {
 	if tags != nil {
-		return tags.values
+		return tags.Values
 	} else {
 		return make([]string, 0)
 	}

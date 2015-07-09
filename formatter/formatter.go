@@ -58,10 +58,10 @@ func formatScenarioHeading(scenarioHeading string) string {
 }
 
 func formatStep(step *parser.Step) string {
-	text := step.Value()
+	text := step.Value
 	paramCount := strings.Count(text, parser.ParameterPlaceholder)
 	for i := 0; i < paramCount; i++ {
-		argument := step.Args()[i]
+		argument := step.Args[i]
 		formattedArg := ""
 		if argument.ArgType == parser.TableArg {
 			formattedTable := formatTable(&argument.Table)
@@ -159,21 +159,21 @@ func findLongestCellWidth(columnCells []parser.TableCell, minValue int) int {
 }
 
 func formatComment(comment *parser.Comment) string {
-	if comment.Value() == "\n" {
-		return comment.Value()
+	if comment.Value == "\n" {
+		return comment.Value
 	}
-	return fmt.Sprintf("%s\n", comment.Value())
+	return fmt.Sprintf("%s\n", comment.Value)
 }
 
 func formatTags(tags *parser.Tags) string {
-	if tags == nil || len(tags.Values()) == 0 {
+	if tags == nil || len(tags.Values) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
 	b.WriteString("tags: ")
-	for i, tag := range tags.Values() {
+	for i, tag := range tags.Values {
 		b.WriteString(tag)
-		if (i + 1) != len(tags.Values()) {
+		if (i + 1) != len(tags.Values) {
 			b.WriteString(", ")
 		}
 	}
@@ -182,11 +182,11 @@ func formatTags(tags *parser.Tags) string {
 }
 
 func formatExternalDataTable(dataTable *parser.DataTable) string {
-	if dataTable == nil || len(dataTable.Value()) == 0 {
+	if dataTable == nil || len(dataTable.Value) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
-	b.WriteString(dataTable.Value())
+	b.WriteString(dataTable.Value)
 	b.WriteString("\n")
 	return string(b.Bytes())
 }
@@ -206,42 +206,28 @@ func formatSpecification(specification *parser.Specification) string {
 	return string(formatter.buffer.Bytes())
 }
 
-type ByLineNo []*parser.Concept
-
-func (s ByLineNo) Len() int {
-	return len(s)
-}
-
-func (s ByLineNo) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s ByLineNo) Less(i, j int) bool {
-	return s[i].conceptStep.lineNo < s[j].conceptStep.lineNo
-}
-
 func sortConcepts(conceptDictionary *parser.ConceptDictionary, conceptMap map[string]string) []*parser.Concept {
 	concepts := make([]*parser.Concept, 0)
-	for _, concept := range conceptDictionary.conceptsMap {
-		conceptMap[concept.fileName] = ""
+	for _, concept := range conceptDictionary.ConceptsMap {
+		conceptMap[concept.FileName] = ""
 		concepts = append(concepts, concept)
 	}
-	sort.Sort(ByLineNo(concepts))
+	sort.Sort(parser.ByLineNo(concepts))
 	return concepts
 }
 
 func formatConceptSteps(conceptMap map[string]string, concept *parser.Concept) {
-	conceptMap[concept.fileName] += strings.TrimSpace(strings.Replace(formatStep(concept.conceptStep), "*", "#", 1)) + "\n"
-	for i := 1; i < len(concept.conceptStep.items); i++ {
-		conceptMap[concept.fileName] += formatItem(concept.conceptStep.items[i])
+	conceptMap[concept.FileName] += strings.TrimSpace(strings.Replace(formatStep(concept.ConceptStep), "*", "#", 1)) + "\n"
+	for i := 1; i < len(concept.ConceptStep.Items); i++ {
+		conceptMap[concept.FileName] += formatItem(concept.ConceptStep.Items[i])
 	}
 }
 
 func formatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
-		for _, comment := range concept.conceptStep.preComments {
-			conceptMap[concept.fileName] += formatComment(comment)
+		for _, comment := range concept.ConceptStep.PreComments {
+			conceptMap[concept.FileName] += formatComment(comment)
 		}
 		formatConceptSteps(conceptMap, concept)
 	}
@@ -249,21 +235,21 @@ func formatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]stri
 }
 
 func formatItem(item parser.Item) string {
-	switch item.kind() {
-	case commentKind:
-		comment := item.(*comment)
-		if comment.value == "\n" {
-			return comment.value
+	switch item.Kind() {
+	case parser.CommentKind:
+		comment := item.(*parser.Comment)
+		if comment.Value == "\n" {
+			return comment.Value
 		}
-		return fmt.Sprintf("%s\n", comment.value)
-	case stepKind:
-		step := item.(*step)
+		return fmt.Sprintf("%s\n", comment.Value)
+	case parser.StepKind:
+		step := item.(*parser.Step)
 		return formatStep(step)
-	case tableKind:
-		table := item.(*table)
+	case parser.TableKind:
+		table := item.(*parser.Table)
 		return formatTable(table)
-	case tagKind:
-		tags := item.(*tags)
+	case parser.TagKind:
+		tags := item.(*parser.Tags)
 		return formatTags(tags)
 	}
 	return ""

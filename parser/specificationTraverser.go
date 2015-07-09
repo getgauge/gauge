@@ -39,22 +39,22 @@ type ScenarioTraverser interface {
 
 func (spec *Specification) Traverse(traverser SpecTraverser) {
 	traverser.SpecHeading(spec.heading)
-	for _, item := range spec.items {
-		switch item.kind() {
-		case scenarioKind:
+	for _, item := range spec.Items {
+		switch item.Kind() {
+		case ScenarioKind:
 			item.(*Scenario).Traverse(traverser)
 			traverser.Scenario(item.(*Scenario))
-		case stepKind:
+		case StepKind:
 			traverser.ContextStep(item.(*Step))
-		case commentKind:
+		case CommentKind:
 			traverser.Comment(item.(*Comment))
-		case tableKind:
+		case TableKind:
 			traverser.DataTable(item.(*Table))
-		case tagKind:
+		case TagKind:
 			traverser.SpecTags(item.(*Tags))
-		case dataTableKind:
-			if !item.(*DataTable).isExternal {
-				traverser.DataTable(&item.(*DataTable).table)
+		case DataTableKind:
+			if !item.(*DataTable).IsExternal {
+				traverser.DataTable(&item.(*DataTable).Table)
 			} else {
 				traverser.ExternalDataTable(item.(*DataTable))
 			}
@@ -64,13 +64,13 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 
 func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
 	traverser.ScenarioHeading(scenario.heading)
-	for _, item := range scenario.items {
-		switch item.kind() {
-		case stepKind:
+	for _, item := range scenario.Items {
+		switch item.Kind() {
+		case StepKind:
 			traverser.Step(item.(*Step))
-		case commentKind:
+		case CommentKind:
 			traverser.Comment(item.(*Comment))
-		case tagKind:
+		case TagKind:
 			traverser.ScenarioTags(item.(*Tags))
 		}
 	}

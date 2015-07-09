@@ -18,23 +18,30 @@
 package main
 
 import (
+	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
+	"testing"
 )
+
+
+func Test(t *testing.T) { TestingT(t) }
 
 type MySuite struct{}
 
+var _ = Suite(&MySuite{})
+
 func (s *MySuite) TestFormatSpecification(c *C) {
-	tokens := []*token{
-		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
-		&token{kind: stepKind, value: "Example step", lineNo: 3, lineText: "Example step"},
-		&token{kind: stepKind, value: "Step with inline table", lineNo: 3, lineText: "Step with inline table "},
-		&token{kind: tableHeader, args: []string{"id", "name"}},
-		&token{kind: tableRow, args: []string{"<1>", "foo"}},
-		&token{kind: tableRow, args: []string{"2", "bar"}},
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 3, LineText: "Example step"},
+		&parser.Token{Kind: parser.StepKind, Value: "Step with inline table", LineNo: 3, LineText: "Step with inline table "},
+		&parser.Token{Kind: parser.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"<1>", "foo"}},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 
 	formatted := formatSpecification(spec)
 
@@ -53,10 +60,10 @@ Scenario Heading
 }
 
 func (s *MySuite) TestFormatConcepts(c *C) {
-	dictionary := new(conceptDictionary)
-	step1 := &step{value: "sdsf", lineText: "sdsf", isConcept: true, lineNo: 1, preComments: []*comment{&comment{value: "COMMENT", lineNo: 1}}}
-	step2 := &step{value: "dsfdsfdsf", lineText: "dsfdsfdsf", isConcept: true, lineNo: 2, items: []item{&step{value: "sfd", lineText: "sfd", isConcept: false}, &step{value: "sdfsdf" + "T", lineText: "sdfsdf" + "T", isConcept: false}}}
-	dictionary.add([]*step{step1, step2}, "file.cpt")
+	dictionary := new(parser.ConceptDictionary)
+	step1 := &parser.Step{Value: "sdsf", LineText: "sdsf", IsConcept: true, LineNo: 1, PreComments: []*parser.Comment{&parser.Comment{Value: "COMMENT", LineNo: 1}}}
+	step2 := &parser.Step{Value: "dsfdsfdsf", LineText: "dsfdsfdsf", IsConcept: true, LineNo: 2, Items: []parser.Item{&parser.Step{Value: "sfd", LineText: "sfd", IsConcept: false}, &parser.Step{Value: "sdfsdf" + "T", LineText: "sdfsdf" + "T", IsConcept: false}}}
+	dictionary.Add([]*parser.Step{step1, step2}, "file.cpt")
 
 	formatted := formatConcepts(dictionary)
 	c.Assert(formatted["file.cpt"], Equals, `COMMENT
@@ -67,18 +74,18 @@ func (s *MySuite) TestFormatConcepts(c *C) {
 }
 
 func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
-	tokens := []*token{
-		&token{kind: specKind, value: "My Spec Heading", lineNo: 1},
-		&token{kind: tagKind, args: []string{"tag1", "tag2"}, lineNo: 2},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
-		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 4},
-		&token{kind: stepKind, value: "Example step", lineNo: 5, lineText: "Example step"},
-		&token{kind: scenarioKind, value: "Scenario Heading1", lineNo: 6},
-		&token{kind: tagKind, args: []string{"tag3", "tag4"}, lineNo: 7},
-		&token{kind: stepKind, value: "Example step", lineNo: 8, lineText: "Example step"},
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 4},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 5, LineText: "Example step"},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading1", LineNo: 6},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 7},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step"},
 	}
 
-	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 	formatted := formatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -97,26 +104,26 @@ tags: tag3, tag4
 }
 
 func (s *MySuite) TestFormatStep(c *C) {
-	step := &step{value: "my step with {}, {}, {} and {}", args: []*stepArg{&stepArg{value: "static \"foo\"", argType: static},
-		&stepArg{value: "dynamic \"foo\"", argType: dynamic},
-		&stepArg{name: "file:user\".txt", argType: specialString},
-		&stepArg{name: "table :hell\".csv", argType: specialTable}}}
+	step := &parser.Step{Value: "my step with {}, {}, {} and {}", Args: []*parser.StepArg{&parser.StepArg{Value: "static \"foo\"", ArgType: parser.Static},
+		&parser.StepArg{Value: "dynamic \"foo\"", ArgType: parser.Dynamic},
+		&parser.StepArg{Name: "file:user\".txt", ArgType: parser.SpecialString},
+		&parser.StepArg{Name: "table :hell\".csv", ArgType: parser.SpecialTable}}}
 	formatted := formatStep(step)
 	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic \"foo\">, <file:user\".txt> and <table :hell\".csv>
 `)
 }
 
 func (s *MySuite) TestFormattingWithTableAsAComment(c *C) {
-	tokens := []*token{
-		&token{kind: specKind, value: "My Spec Heading", lineNo: 1},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 3},
-		&token{kind: tableHeader, args: []string{"id", "name"}, lineText: " |id|name|"},
-		&token{kind: tableRow, args: []string{"1", "foo"}, lineText: " |1|foo|"},
-		&token{kind: tableRow, args: []string{"2", "bar"}, lineText: "|2|bar|"},
-		&token{kind: stepKind, value: "Example step", lineNo: 5, lineText: "Example step"},
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		&parser.Token{Kind: parser.TableHeader, Args: []string{"id", "name"}, LineText: " |id|name|"},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"1", "foo"}, LineText: " |1|foo|"},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"2", "bar"}, LineText: "|2|bar|"},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 5, LineText: "Example step"},
 	}
 
-	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 	formatted := formatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -131,19 +138,19 @@ Scenario Heading
 }
 
 func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c *C) {
-	tokens := []*token{
-		&token{kind: specKind, value: "Spec Heading", lineNo: 1},
-		&token{kind: tableHeader, args: []string{"id", "foo"}},
-		&token{kind: tableRow, args: []string{"1", "f"}},
-		&token{kind: scenarioKind, value: "Scenario Heading", lineNo: 2},
-		&token{kind: stepKind, value: "Example step", lineNo: 3, lineText: "Example step"},
-		&token{kind: stepKind, value: "Step with inline table", lineNo: 3, lineText: "Step with inline table "},
-		&token{kind: tableHeader, args: []string{"id", "name"}},
-		&token{kind: tableRow, args: []string{"1", "<foo>"}},
-		&token{kind: tableRow, args: []string{"2", "bar"}},
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.TableHeader, Args: []string{"id", "foo"}},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"1", "f"}},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 3, LineText: "Example step"},
+		&parser.Token{Kind: parser.StepKind, Value: "Step with inline table", LineNo: 3, LineText: "Step with inline table "},
+		&parser.Token{Kind: parser.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"1", "<foo>"}},
+		&parser.Token{Kind: parser.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(specParser).createSpecification(tokens, new(conceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 
 	formatted := formatSpecification(spec)
 

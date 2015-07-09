@@ -30,7 +30,7 @@ type Scenario struct {
 	steps    []*Step
 	comments []*Comment
 	tags     *Tags
-	items    []Item
+	Items    []Item
 }
 
 type ArgType string
@@ -79,18 +79,18 @@ func (argLookup ArgLookup) String() string {
 }
 
 type Step struct {
-	lineNo         int
-	value          string
-	lineText       string
-	args           []*StepArg
-	isConcept      bool
-	lookup         ArgLookup
-	conceptSteps   []*Step
-	fragments      []*gauge_messages.Fragment
-	parent         *Step
-	hasInlineTable bool
-	items          []Item
-	preComments    []*Comment
+	LineNo         int
+	Value          string
+	LineText       string
+	Args           []*StepArg
+	IsConcept      bool
+	Lookup         ArgLookup
+	ConceptSteps   []*Step
+	Fragments      []*gauge_messages.Fragment
+	Parent         *Step
+	HasInlineTable bool
+	Items          []Item
+	PreComments    []*Comment
 }
 
 type StepValue struct {
@@ -100,46 +100,46 @@ type StepValue struct {
 }
 
 func (step *Step) getArg(name string) *StepArg {
-	arg := step.lookup.getArg(name)
+	arg := step.Lookup.getArg(name)
 	// Return static values
 	if arg != nil && arg.ArgType != Dynamic {
 		return arg
 	}
-	if step.parent == nil {
-		return step.lookup.getArg(name)
+	if step.Parent == nil {
+		return step.Lookup.getArg(name)
 	}
-	return step.parent.getArg(step.lookup.getArg(name).Value)
+	return step.Parent.getArg(step.Lookup.getArg(name).Value)
 }
 
 func (step *Step) getLineText() string {
-	if step.hasInlineTable {
-		return fmt.Sprintf("%s <%s>", step.lineText, TableArg)
+	if step.HasInlineTable {
+		return fmt.Sprintf("%s <%s>", step.LineText, TableArg)
 	}
-	return step.lineText
+	return step.LineText
 }
 
 func (step *Step) rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
-	if strings.TrimSpace(step.value) != strings.TrimSpace(oldStep.value) {
+	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
 		return isRefactored
 	}
-	if step.isConcept {
+	if step.IsConcept {
 		*isConcept = true
 	}
-	step.value = newStep.value
+	step.Value = newStep.Value
 
-	step.args = step.getArgsInOrder(newStep, orderMap)
+	step.Args = step.getArgsInOrder(newStep, orderMap)
 	return true
 }
 
 func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg {
-	args := make([]*StepArg, len(newStep.args))
+	args := make([]*StepArg, len(newStep.Args))
 	for key, value := range orderMap {
-		arg := &StepArg{Value: newStep.args[key].Value, ArgType: Static}
-		if step.isConcept {
-			arg = &StepArg{Value: newStep.args[key].Value, ArgType: Dynamic}
+		arg := &StepArg{Value: newStep.Args[key].Value, ArgType: Static}
+		if step.IsConcept {
+			arg = &StepArg{Value: newStep.Args[key].Value, ArgType: Dynamic}
 		}
 		if value != -1 {
-			arg = step.args[value]
+			arg = step.Args[value]
 		}
 		args[key] = arg
 	}
@@ -148,7 +148,7 @@ func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg 
 
 func (step *Step) deepCopyStepArgs() []*StepArg {
 	copiedStepArgs := make([]*StepArg, 0)
-	for _, conceptStepArg := range step.args {
+	for _, conceptStepArg := range step.Args {
 		temp := new(StepArg)
 		*temp = *conceptStepArg
 		copiedStepArgs = append(copiedStepArgs, temp)
@@ -157,10 +157,10 @@ func (step *Step) deepCopyStepArgs() []*StepArg {
 }
 
 func (step *Step) replaceArgsWithDynamic(args []*StepArg) {
-	for i, arg := range step.args {
+	for i, arg := range step.Args {
 		for _, conceptArg := range args {
 			if arg.String() == conceptArg.String() {
-				step.args[i] = &StepArg{Value: conceptArg.Value, ArgType: Dynamic}
+				step.Args[i] = &StepArg{Value: conceptArg.Value, ArgType: Dynamic}
 			}
 		}
 	}
@@ -168,8 +168,8 @@ func (step *Step) replaceArgsWithDynamic(args []*StepArg) {
 
 func createStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *Step {
 	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
-	step := &Step{value: stepReq.GetParsedStepText(),
-		lineText: stepReq.GetActualStepText()}
+	step := &Step{Value: stepReq.GetParsedStepText(),
+		LineText: stepReq.GetActualStepText()}
 	step.addArgs(args...)
 	return step
 }
@@ -208,33 +208,33 @@ type Specification struct {
 	contexts  []*Step
 	FileName  string
 	tags      *Tags
-	items     []Item
+	Items     []Item
 }
 
 type Item interface {
-	kind() TokenKind
+	Kind() TokenKind
 }
 
 type HeadingType int
 
 const (
 	SpecHeading     = 0
-	scenarioHeading = 1
+	ScenarioHeading = 1
 )
 
 type Heading struct {
-	value       string
-	lineNo      int
-	headingType HeadingType
+	Value       string
+	LineNo      int
+	HeadingType HeadingType
 }
 
 type Comment struct {
-	value  string
-	lineNo int
+	Value  string
+	LineNo int
 }
 
 type Tags struct {
-	values []string
+	Values []string
 }
 
 type Warning struct {
@@ -260,7 +260,7 @@ func converterFn(predicate func(token *Token, state *int) bool, apply func(token
 
 }
 
-func (specParser *SpecParser) createSpecification(tokens []*Token, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
+func (specParser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
 	specParser.conceptDictionary = conceptDictionary
 	converters := specParser.initializeConverters()
 	specification := &Specification{}
@@ -299,30 +299,30 @@ func (specParser *SpecParser) createSpecification(tokens []*Token, conceptDictio
 
 func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Specification) ParseResult {
 	specConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == specKind
+		return token.Kind == SpecKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		if spec.heading != nil {
-			return ParseResult{Ok: false, ParseError: &ParseError{token.lineNo, "Parse error: Multiple spec headings found in same file", token.lineText}}
+			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Multiple spec headings found in same file", token.LineText}}
 		}
 
-		spec.addHeading(&Heading{lineNo: token.lineNo, value: token.value})
+		spec.addHeading(&Heading{LineNo: token.LineNo, Value: token.Value})
 		addStates(state, specScope)
 		return ParseResult{Ok: true}
 	})
 
 	scenarioConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == scenarioKind
+		return token.Kind == ScenarioKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		if spec.heading == nil {
-			return ParseResult{Ok: false, ParseError: &ParseError{token.lineNo, "Parse error: Scenario should be defined after the spec heading", token.lineText}}
+			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Scenario should be defined after the spec heading", token.LineText}}
 		}
 		for _, scenario := range spec.scenarios {
-			if strings.ToLower(scenario.heading.value) == strings.ToLower(token.value) {
-				return ParseResult{Ok: false, ParseError: &ParseError{token.lineNo, "Parse error: Duplicate scenario definitions are not allowed in the same specification", token.lineText}}
+			if strings.ToLower(scenario.heading.Value) == strings.ToLower(token.Value) {
+				return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Duplicate scenario definitions are not allowed in the same specification", token.LineText}}
 			}
 		}
 		scenario := &Scenario{}
-		scenario.addHeading(&Heading{value: token.value, lineNo: token.lineNo})
+		scenario.addHeading(&Heading{Value: token.Value, LineNo: token.LineNo})
 		spec.addScenario(scenario)
 
 		retainStates(state, specScope)
@@ -331,7 +331,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	stepConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == stepKind && isInState(*state, scenarioScope)
+		return token.Kind == StepKind && isInState(*state, scenarioScope)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		latestScenario := spec.latestScenario()
 		stepToAdd, parseDetails := spec.createStep(token)
@@ -348,7 +348,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	contextConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == stepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
+		return token.Kind == StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := spec.createStep(token)
 		if parseDetails != nil && parseDetails.error != nil {
@@ -364,9 +364,9 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	commentConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == commentKind
+		return token.Kind == CommentKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
-		comment := &Comment{token.value, token.lineNo}
+		comment := &Comment{token.Value, token.LineNo}
 		if isInState(*state, scenarioScope) {
 			spec.latestScenario().addComment(comment)
 		} else {
@@ -378,24 +378,24 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	keywordConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == dataTableKind
+		return token.Kind == DataTableKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
-		resolvedArg, _ := newSpecialTypeResolver().resolve(token.value)
+		resolvedArg, _ := newSpecialTypeResolver().resolve(token.Value)
 		if isInState(*state, specScope) && !spec.dataTable.isInitialized() {
 			externalTable := &DataTable{}
-			externalTable.table = resolvedArg.Table
-			externalTable.lineNo = token.lineNo
-			externalTable.value = token.value
-			externalTable.isExternal = true
+			externalTable.Table = resolvedArg.Table
+			externalTable.LineNo = token.LineNo
+			externalTable.Value = token.Value
+			externalTable.IsExternal = true
 			spec.addExternalDataTable(externalTable)
 		} else if isInState(*state, specScope) && spec.dataTable.isInitialized() {
 			value := "Multiple data table present, ignoring table"
-			spec.addComment(&Comment{token.lineText, token.lineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.lineNo}}}
+			spec.addComment(&Comment{token.LineText, token.LineNo})
+			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
 		} else {
 			value := "Data table not associated with spec"
-			spec.addComment(&Comment{token.lineText, token.lineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.lineNo}}}
+			spec.addComment(&Comment{token.LineText, token.LineNo})
+			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
 		}
 		retainStates(state, specScope)
 		addStates(state, keywordScope)
@@ -403,7 +403,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	tableHeaderConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == tableHeader && isInState(*state, specScope)
+		return token.Kind == TableHeader && isInState(*state, specScope)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		if isInState(*state, stepScope) {
 			latestScenario := spec.latestScenario()
@@ -413,20 +413,20 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			latestContext := spec.latestContext()
 			addInlineTableHeader(latestContext, token)
 		} else if !isInState(*state, scenarioScope) {
-			if !spec.dataTable.table.isInitialized() {
+			if !spec.dataTable.Table.isInitialized() {
 				dataTable := &Table{}
-				dataTable.LineNo = token.lineNo
-				dataTable.addHeaders(token.args)
+				dataTable.LineNo = token.LineNo
+				dataTable.addHeaders(token.Args)
 				spec.addDataTable(dataTable)
 			} else {
 				value := "Multiple data table present, ignoring table"
-				spec.addComment(&Comment{token.lineText, token.lineNo})
-				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.lineNo}}}
+				spec.addComment(&Comment{token.LineText, token.LineNo})
+				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
 			}
 		} else {
 			value := "Table not associated with a step, ignoring table"
-			spec.latestScenario().addComment(&Comment{token.lineText, token.lineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.lineNo}}}
+			spec.latestScenario().addComment(&Comment{token.LineText, token.LineNo})
+			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope)
 		addStates(state, tableScope)
@@ -434,29 +434,29 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	tableRowConverter := converterFn(func(token *Token, state *int) bool {
-		return token.kind == tableRow
+		return token.Kind == TableRow
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		var result ParseResult
 		//When table is to be treated as a comment
 		if !isInState(*state, tableScope) {
 			if isInState(*state, scenarioScope) {
-				spec.latestScenario().addComment(&Comment{token.lineText, token.lineNo})
+				spec.latestScenario().addComment(&Comment{token.LineText, token.LineNo})
 			} else {
-				spec.addComment(&Comment{token.lineText, token.lineNo})
+				spec.addComment(&Comment{token.LineText, token.LineNo})
 			}
-		} else if areUnderlined(token.args) {
+		} else if areUnderlined(token.Args) {
 			// skip table separator
 			result = ParseResult{Ok: true}
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.latestScenario()
 			latestStep := latestScenario.latestStep()
-			result = addInlineTableRow(latestStep, token, new(ArgLookup).fromDataTable(&spec.dataTable.table))
+			result = addInlineTableRow(latestStep, token, new(ArgLookup).fromDataTable(&spec.dataTable.Table))
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.latestContext()
-			result = addInlineTableRow(latestContext, token, new(ArgLookup).fromDataTable(&spec.dataTable.table))
+			result = addInlineTableRow(latestContext, token, new(ArgLookup).fromDataTable(&spec.dataTable.Table))
 		} else {
 			//todo validate datatable rows also
-			spec.dataTable.table.addRowValues(token.args)
+			spec.dataTable.Table.addRowValues(token.Args)
 			result = ParseResult{Ok: true}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tableScope)
@@ -464,9 +464,9 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	tagConverter := converterFn(func(token *Token, state *int) bool {
-		return (token.kind == tagKind)
+		return (token.Kind == TagKind)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
-		tags := &Tags{values: token.args}
+		tags := &Tags{Values: token.Args}
 		if isInState(*state, scenarioScope) {
 			spec.latestScenario().addTags(tags)
 		} else {
@@ -483,7 +483,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 }
 
 func (spec *Specification) createStep(stepToken *Token) (*Step, *parseDetailResult) {
-	dataTableLookup := new(ArgLookup).fromDataTable(&spec.dataTable.table)
+	dataTableLookup := new(ArgLookup).fromDataTable(&spec.dataTable.Table)
 	stepToAdd, parseDetails := spec.createStepUsingLookup(stepToken, dataTableLookup)
 
 	if parseDetails != nil && parseDetails.error != nil {
@@ -493,15 +493,15 @@ func (spec *Specification) createStep(stepToken *Token) (*Step, *parseDetailResu
 }
 
 func (spec *Specification) createStepUsingLookup(stepToken *Token, lookup *ArgLookup) (*Step, *parseDetailResult) {
-	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.value)
-	if argsType != nil && len(argsType) != len(stepToken.args) {
-		return nil, &parseDetailResult{error: &ParseError{stepToken.lineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.lineText}, warnings: nil}
+	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
+	if argsType != nil && len(argsType) != len(stepToken.Args) {
+		return nil, &parseDetailResult{error: &ParseError{stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}, warnings: nil}
 	}
-	step := &Step{lineNo: stepToken.lineNo, value: stepValue, lineText: strings.TrimSpace(stepToken.lineText)}
+	step := &Step{LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
 	arguments := make([]*StepArg, 0)
 	var warnings []*Warning
 	for i, argType := range argsType {
-		argument, parseDetails := spec.createStepArg(stepToken.args[i], argType, stepToken, lookup)
+		argument, parseDetails := spec.createStepArg(stepToken.Args[i], argType, stepToken, lookup)
 		if parseDetails != nil && parseDetails.error != nil {
 			return nil, parseDetails
 		}
@@ -528,36 +528,36 @@ func (specification *Specification) processConceptStepsFrom(conceptDictionary *C
 }
 
 func (specification *Specification) processConceptStep(step *Step, conceptDictionary *ConceptDictionary) {
-	if conceptFromDictionary := conceptDictionary.search(step.value); conceptFromDictionary != nil {
+	if conceptFromDictionary := conceptDictionary.search(step.Value); conceptFromDictionary != nil {
 		specification.createConceptStep(conceptFromDictionary.ConceptStep, step)
 	}
 }
 
 func (specification *Specification) createConceptStep(concept *Step, originalStep *Step) {
 	stepCopy := concept.getCopy()
-	originalArgs := originalStep.args
+	originalArgs := originalStep.Args
 	originalStep.copyFrom(stepCopy)
-	originalStep.args = originalArgs
+	originalStep.Args = originalArgs
 
 	// set parent of all concept steps to be the current concept (referred as originalStep here)
 	// this is used to fetch from parent's lookup when nested
-	for _, conceptStep := range originalStep.conceptSteps {
-		conceptStep.parent = originalStep
+	for _, conceptStep := range originalStep.ConceptSteps {
+		conceptStep.Parent = originalStep
 	}
 
-	specification.populateConceptLookup(&originalStep.lookup, concept.args, originalStep.args)
+	specification.populateConceptLookup(&originalStep.Lookup, concept.Args, originalStep.Args)
 }
 
 func (specification *Specification) addItem(itemToAdd Item) {
-	if specification.items == nil {
-		specification.items = make([]Item, 0)
+	if specification.Items == nil {
+		specification.Items = make([]Item, 0)
 	}
 
-	specification.items = append(specification.items, itemToAdd)
+	specification.Items = append(specification.Items, itemToAdd)
 }
 
 func (specification *Specification) addHeading(heading *Heading) {
-	heading.headingType = SpecHeading
+	heading.HeadingType = SpecHeading
 	specification.heading = heading
 }
 
@@ -577,7 +577,7 @@ func (specification *Specification) addComment(comment *Comment) {
 }
 
 func (specification *Specification) addDataTable(table *Table) {
-	specification.dataTable.table = *table
+	specification.dataTable.Table = *table
 	specification.addItem(table)
 }
 
@@ -600,13 +600,13 @@ func (specification *Specification) latestContext() *Step {
 }
 
 func (specParser *SpecParser) validateSpec(specification *Specification) *ParseError {
-	if len(specification.items) == 0 {
+	if len(specification.Items) == 0 {
 		return &ParseError{LineNo: 1, Message: "Spec does not have any elements"}
 	}
 	if specification.heading == nil {
 		return &ParseError{LineNo: 1, Message: "Spec heading not found"}
 	}
-	dataTable := specification.dataTable.table
+	dataTable := specification.dataTable.Table
 	if dataTable.isInitialized() && dataTable.getRowCount() == 0 {
 		return &ParseError{LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
@@ -637,7 +637,7 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 }
 
 func (step *Step) addArgs(args ...*StepArg) {
-	step.args = append(step.args, args...)
+	step.Args = append(step.Args, args...)
 	step.populateFragments()
 }
 
@@ -648,7 +648,7 @@ func (step *Step) addInlineTableHeaders(headers []string) {
 }
 
 func (step *Step) addInlineTableRow(row []TableCell) {
-	lastArg := step.args[len(step.args)-1]
+	lastArg := step.Args[len(step.Args)-1]
 	lastArg.Table.addRows(row)
 	step.populateFragments()
 }
@@ -660,31 +660,31 @@ func (step *Step) populateFragments() {
 		returns
 		[[6 8] [13 15]]
 	*/
-	argSplitIndices := r.FindAllStringSubmatchIndex(step.value, -1)
-	step.fragments = make([]*gauge_messages.Fragment, 0)
-	if len(step.args) == 0 {
-		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value)})
+	argSplitIndices := r.FindAllStringSubmatchIndex(step.Value, -1)
+	step.Fragments = make([]*gauge_messages.Fragment, 0)
+	if len(step.Args) == 0 {
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value)})
 		return
 	}
 
 	textStartIndex := 0
 	for argIndex, argIndices := range argSplitIndices {
 		if textStartIndex < argIndices[0] {
-			step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:argIndices[0]])})
+			step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value[textStartIndex:argIndices[0]])})
 		}
-		parameter := convertToProtoParameter(step.args[argIndex])
-		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: parameter})
+		parameter := convertToProtoParameter(step.Args[argIndex])
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: parameter})
 		textStartIndex = argIndices[1]
 	}
-	if textStartIndex < len(step.value) {
-		step.fragments = append(step.fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.value[textStartIndex:len(step.value)])})
+	if textStartIndex < len(step.Value) {
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value[textStartIndex:len(step.Value)])})
 	}
 
 }
 
 func (spec *Specification) filter(filter specItemFilter) {
-	for i := 0; i < len(spec.items); i++ {
-		if filter.filter(spec.items[i]) {
+	for i := 0; i < len(spec.Items); i++ {
+		if filter.filter(spec.Items[i]) {
 			spec.removeItem(i)
 			i--
 		}
@@ -692,15 +692,15 @@ func (spec *Specification) filter(filter specItemFilter) {
 }
 
 func (spec *Specification) removeItem(itemIndex int) {
-	item := spec.items[itemIndex]
-	if len(spec.items)-1 == itemIndex {
-		spec.items = spec.items[:itemIndex]
+	item := spec.Items[itemIndex]
+	if len(spec.Items)-1 == itemIndex {
+		spec.Items = spec.Items[:itemIndex]
 	} else if 0 == itemIndex {
-		spec.items = spec.items[itemIndex+1:]
+		spec.Items = spec.Items[itemIndex+1:]
 	} else {
-		spec.items = append(spec.items[:itemIndex], spec.items[itemIndex+1:]...)
+		spec.Items = append(spec.Items[:itemIndex], spec.Items[itemIndex+1:]...)
 	}
-	if item.kind() == scenarioKind {
+	if item.Kind() == ScenarioKind {
 		spec.removeScenario(item.(*Scenario))
 	}
 }
@@ -745,7 +745,7 @@ func (spec *Specification) createStepArg(argValue string, typeOfArg string, toke
 			case invalidSpecialParamError:
 				return treatArgAsDynamic(argValue, token, lookup)
 			default:
-				return nil, &parseDetailResult{error: &ParseError{LineNo: token.lineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.lineText}}
+				return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
 			}
 		}
 		return resolvedArgValue, nil
@@ -757,7 +757,7 @@ func (spec *Specification) createStepArg(argValue string, typeOfArg string, toke
 }
 
 func treatArgAsDynamic(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *parseDetailResult) {
-	parseDetailRes := &parseDetailResult{warnings: []*Warning{&Warning{lineNo: token.lineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
+	parseDetailRes := &parseDetailResult{warnings: []*Warning{&Warning{lineNo: token.LineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
 	stepArg, result := validateDynamicArg(argValue, token, lookup)
 	if result != nil {
 		if result.error != nil {
@@ -774,7 +774,7 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *ArgLookup) (*StepA
 
 func validateDynamicArg(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *parseDetailResult) {
 	if !isConceptHeader(lookup) && !lookup.containsArg(argValue) {
-		return nil, &parseDetailResult{error: &ParseError{LineNo: token.lineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.lineText}}
+		return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
 	}
 	stepArgument := &StepArg{ArgType: Dynamic, Value: argValue, Name: argValue}
 	return stepArgument, nil
@@ -784,9 +784,9 @@ func validateDynamicArg(argValue string, token *Token, lookup *ArgLookup) (*Step
 //Step value is modified when inline table is found to account for the new parameter by appending {}
 //todo validate headers for dynamic
 func addInlineTableHeader(step *Step, token *Token) {
-	step.value = fmt.Sprintf("%s %s", step.value, ParameterPlaceholder)
-	step.hasInlineTable = true
-	step.addInlineTableHeaders(token.args)
+	step.Value = fmt.Sprintf("%s %s", step.Value, ParameterPlaceholder)
+	step.HasInlineTable = true
+	step.addInlineTableHeaders(token.Args)
 
 }
 
@@ -794,18 +794,18 @@ func addInlineTableRow(step *Step, token *Token, argLookup *ArgLookup) ParseResu
 	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
 	tableValues := make([]TableCell, 0)
 	warnings := make([]*Warning, 0)
-	for _, tableValue := range token.args {
+	for _, tableValue := range token.Args {
 		if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
 			if !argLookup.containsArg(param) {
-				tableValues = append(tableValues, TableCell{value: tableValue, cellType: Static})
-				warnings = append(warnings, &Warning{lineNo: token.lineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
+				tableValues = append(tableValues, TableCell{Value: tableValue, CellType: Static})
+				warnings = append(warnings, &Warning{lineNo: token.LineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
 			} else {
-				tableValues = append(tableValues, TableCell{value: param, cellType: Dynamic})
+				tableValues = append(tableValues, TableCell{Value: param, CellType: Dynamic})
 			}
 		} else {
-			tableValues = append(tableValues, TableCell{value: tableValue, cellType: Static})
+			tableValues = append(tableValues, TableCell{Value: tableValue, CellType: Static})
 		}
 	}
 	step.addInlineTableRow(tableValues)
@@ -866,7 +866,7 @@ func (lookup *ArgLookup) fromDataTableRow(datatable *Table, index int) *ArgLooku
 	}
 	for _, header := range datatable.Headers {
 		dataTableLookup.addArgName(header)
-		dataTableLookup.addArgValue(header, &StepArg{Value: datatable.Get(header)[index].value, ArgType: Static})
+		dataTableLookup.addArgValue(header, &StepArg{Value: datatable.Get(header)[index].Value, ArgType: Static})
 	}
 	return dataTableLookup
 }
@@ -887,12 +887,12 @@ func (warning *Warning) String() string {
 	return fmt.Sprintf("line no: %d, %s", warning.lineNo, warning.message)
 }
 
-func (scenario Scenario) kind() TokenKind {
-	return scenarioKind
+func (scenario Scenario) Kind() TokenKind {
+	return ScenarioKind
 }
 
 func (scenario *Scenario) addHeading(heading *Heading) {
-	heading.headingType = scenarioHeading
+	heading.HeadingType = ScenarioHeading
 	scenario.heading = heading
 }
 
@@ -921,36 +921,36 @@ func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[i
 }
 
 func (scenario *Scenario) addItem(itemToAdd Item) {
-	if scenario.items == nil {
-		scenario.items = make([]Item, 0)
+	if scenario.Items == nil {
+		scenario.Items = make([]Item, 0)
 	}
-	scenario.items = append(scenario.items, itemToAdd)
+	scenario.Items = append(scenario.Items, itemToAdd)
 }
 
 func (scenario *Scenario) latestStep() *Step {
 	return scenario.steps[len(scenario.steps)-1]
 }
 
-func (heading *Heading) kind() TokenKind {
-	return headingKind
+func (heading *Heading) Kind() TokenKind {
+	return HeadingKind
 }
 
-func (comment *Comment) kind() TokenKind {
-	return commentKind
+func (comment *Comment) Kind() TokenKind {
+	return CommentKind
 }
 
-func (tags *Tags) kind() TokenKind {
-	return tagKind
+func (tags *Tags) Kind() TokenKind {
+	return TagKind
 }
 
-func (step Step) kind() TokenKind {
-	return stepKind
+func (step Step) Kind() TokenKind {
+	return StepKind
 }
 
 func (specification *Specification) getSpecItems() []Item {
 	specItems := make([]Item, 0)
-	for _, item := range specification.items {
-		if item.kind() != scenarioKind {
+	for _, item := range specification.Items {
+		if item.Kind() != ScenarioKind {
 			specItems = append(specItems, item)
 		}
 	}
@@ -960,51 +960,51 @@ func (specification *Specification) getSpecItems() []Item {
 // Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
 // are copied and their parent copying again comes back to copy the same concept.
 func (self *Step) getCopy() *Step {
-	if !self.isConcept {
+	if !self.IsConcept {
 		return self
 	}
 	nestedStepsCopy := make([]*Step, 0)
-	for _, nestedStep := range self.conceptSteps {
+	for _, nestedStep := range self.ConceptSteps {
 		nestedStepsCopy = append(nestedStepsCopy, nestedStep.getCopy())
 	}
 
 	copiedConceptStep := new(Step)
 	*copiedConceptStep = *self
-	copiedConceptStep.conceptSteps = nestedStepsCopy
-	copiedConceptStep.lookup = *self.lookup.getCopy()
+	copiedConceptStep.ConceptSteps = nestedStepsCopy
+	copiedConceptStep.Lookup = *self.Lookup.getCopy()
 	return copiedConceptStep
 }
 
 func (self *Step) copyFrom(another *Step) {
-	self.isConcept = another.isConcept
+	self.IsConcept = another.IsConcept
 
-	if another.args == nil {
-		self.args = nil
+	if another.Args == nil {
+		self.Args = nil
 	} else {
-		self.args = make([]*StepArg, len(another.args))
-		copy(self.args, another.args)
+		self.Args = make([]*StepArg, len(another.Args))
+		copy(self.Args, another.Args)
 	}
 
-	if another.conceptSteps == nil {
-		self.conceptSteps = nil
+	if another.ConceptSteps == nil {
+		self.ConceptSteps = nil
 	} else {
-		self.conceptSteps = make([]*Step, len(another.conceptSteps))
-		copy(self.conceptSteps, another.conceptSteps)
+		self.ConceptSteps = make([]*Step, len(another.ConceptSteps))
+		copy(self.ConceptSteps, another.ConceptSteps)
 	}
 
-	if another.fragments == nil {
-		self.fragments = nil
+	if another.Fragments == nil {
+		self.Fragments = nil
 	} else {
-		self.fragments = make([]*gauge_messages.Fragment, len(another.fragments))
-		copy(self.fragments, another.fragments)
+		self.Fragments = make([]*gauge_messages.Fragment, len(another.Fragments))
+		copy(self.Fragments, another.Fragments)
 	}
 
-	self.lineNo = another.lineNo
-	self.lineText = another.lineText
-	self.hasInlineTable = another.hasInlineTable
-	self.value = another.value
-	self.lookup = another.lookup
-	self.parent = another.parent
+	self.LineNo = another.LineNo
+	self.LineText = another.LineText
+	self.HasInlineTable = another.HasInlineTable
+	self.Value = another.Value
+	self.Lookup = another.Lookup
+	self.Parent = another.Parent
 }
 
 func convertToStepText(fragments []*gauge_messages.Fragment) string {
@@ -1030,24 +1030,4 @@ func convertToStepText(fragments []*gauge_messages.Fragment) string {
 
 func (result *ParseResult) Error() string {
 	return fmt.Sprintf("[ParseError] %s : %s", result.FileName, result.ParseError.Error())
-}
-
-func (heading Heading) Value() string {
-	return heading.value
-}
-
-func (comment Comment) Value() string {
-	return comment.value
-}
-
-func (tags Tags) Values() []string {
-	return tags.values
-}
-
-func (step Step) Value() string {
-	return step.value
-}
-
-func (step Step) Args() []*StepArg {
-	return step.args
 }

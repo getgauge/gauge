@@ -29,8 +29,8 @@ func (s *MySuite) TestParsingSimpleStep(c *C) {
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
-	c.Assert(stepToken.kind, Equals, stepKind)
-	c.Assert(stepToken.value, Equals, "sample step")
+	c.Assert(stepToken.Kind, Equals, StepKind)
+	c.Assert(stepToken.Value, Equals, "sample step")
 }
 
 func (s *MySuite) TestParsingEmptyStepTextShouldThrowError(c *C) {
@@ -53,10 +53,10 @@ func (s *MySuite) TestParsingStepWithParams(c *C) {
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
-	c.Assert(stepToken.kind, Equals, stepKind)
-	c.Assert(stepToken.value, Equals, "enter user {static}")
-	c.Assert(len(stepToken.args), Equals, 1)
-	c.Assert(stepToken.args[0], Equals, "john")
+	c.Assert(stepToken.Kind, Equals, StepKind)
+	c.Assert(stepToken.Value, Equals, "enter user {static}")
+	c.Assert(len(stepToken.Args), Equals, 1)
+	c.Assert(stepToken.Args[0], Equals, "john")
 }
 
 func (s *MySuite) TestParsingStepWithParametersWithQuotes(c *C) {
@@ -69,17 +69,17 @@ func (s *MySuite) TestParsingStepWithParametersWithQuotes(c *C) {
 	c.Assert(len(tokens), Equals, 4)
 
 	firstStepToken := tokens[2]
-	c.Assert(firstStepToken.kind, Equals, stepKind)
-	c.Assert(firstStepToken.value, Equals, "{static} step")
-	c.Assert(len(firstStepToken.args), Equals, 1)
-	c.Assert(firstStepToken.args[0], Equals, "param \"in quote\"")
+	c.Assert(firstStepToken.Kind, Equals, StepKind)
+	c.Assert(firstStepToken.Value, Equals, "{static} step")
+	c.Assert(len(firstStepToken.Args), Equals, 1)
+	c.Assert(firstStepToken.Args[0], Equals, "param \"in quote\"")
 
 	secondStepToken := tokens[3]
-	c.Assert(secondStepToken.kind, Equals, stepKind)
-	c.Assert(secondStepToken.value, Equals, "another * step with {static} and {static}")
-	c.Assert(len(secondStepToken.args), Equals, 2)
-	c.Assert(secondStepToken.args[0], Equals, "john 12 *-_{} \\ './;[]")
-	c.Assert(secondStepToken.args[1], Equals, "second")
+	c.Assert(secondStepToken.Kind, Equals, StepKind)
+	c.Assert(secondStepToken.Value, Equals, "another * step with {static} and {static}")
+	c.Assert(len(secondStepToken.Args), Equals, 2)
+	c.Assert(secondStepToken.Args[0], Equals, "john 12 *-_{} \\ './;[]")
+	c.Assert(secondStepToken.Args[1], Equals, "second")
 
 }
 
@@ -101,7 +101,7 @@ func (s *MySuite) TestParsingStepWithEscaping(c *C) {
 
 	c.Assert(err, IsNil)
 	stepToken := tokens[2]
-	c.Assert(stepToken.value, Equals, "step with")
+	c.Assert(stepToken.Value, Equals, "step with")
 }
 
 func (s *MySuite) TestParsingExceptionIfStepContainsReservedChars(c *C) {
@@ -122,7 +122,7 @@ func (s *MySuite) TestParsingStepContainsEscapedReservedChars(c *C) {
 
 	c.Assert(err, IsNil)
 	stepToken := tokens[2]
-	c.Assert(stepToken.value, Equals, "step with {braces}")
+	c.Assert(stepToken.Value, Equals, "step with {braces}")
 }
 
 func (s *MySuite) TestParsingSimpleStepWithDynamicParameter(c *C) {
@@ -134,9 +134,9 @@ func (s *MySuite) TestParsingSimpleStepWithDynamicParameter(c *C) {
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
-	c.Assert(stepToken.value, Equals, "Step with {static} and {dynamic}")
-	c.Assert(stepToken.args[0], Equals, "static param")
-	c.Assert(stepToken.args[1], Equals, "name1")
+	c.Assert(stepToken.Value, Equals, "Step with {static} and {dynamic}")
+	c.Assert(stepToken.Args[0], Equals, "static param")
+	c.Assert(stepToken.Args[1], Equals, "name1")
 }
 
 func (s *MySuite) TestParsingStepWithUnmatchedDynamicParameterCharacter(c *C) {
@@ -158,9 +158,9 @@ func (s *MySuite) TestParsingContext(c *C) {
 
 	c.Assert(err, IsNil)
 	contextToken := tokens[1]
-	c.Assert(contextToken.kind, Equals, stepKind)
-	c.Assert(contextToken.value, Equals, "Context with {static}")
-	c.Assert(contextToken.args[0], Equals, "param")
+	c.Assert(contextToken.Kind, Equals, StepKind)
+	c.Assert(contextToken.Value, Equals, "Context with {static}")
+	c.Assert(contextToken.Args[0], Equals, "param")
 }
 
 func (s *MySuite) TestParsingThrowsErrorWhenStepIsPresentWithoutStep(c *C) {
@@ -170,8 +170,8 @@ func (s *MySuite) TestParsingThrowsErrorWhenStepIsPresentWithoutStep(c *C) {
 	tokens, err := parser.generateTokens(specText)
 
 	c.Assert(err, IsNil)
-	c.Assert(tokens[0].kind, Equals, stepKind)
-	c.Assert(tokens[0].value, Equals, "step without spec heading")
+	c.Assert(tokens[0].Kind, Equals, StepKind)
+	c.Assert(tokens[0].Value, Equals, "step without spec heading")
 
 }
 
@@ -184,10 +184,10 @@ func (s *MySuite) TestParsingStepWithSimpleSpecialParameter(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[2].kind, Equals, stepKind)
-	c.Assert(tokens[2].value, Equals, "Step with special parameter {special}")
-	c.Assert(len(tokens[2].args), Equals, 1)
-	c.Assert(tokens[2].args[0], Equals, "table:user.csv")
+	c.Assert(tokens[2].Kind, Equals, StepKind)
+	c.Assert(tokens[2].Value, Equals, "Step with special parameter {special}")
+	c.Assert(len(tokens[2].Args), Equals, 1)
+	c.Assert(tokens[2].Args[0], Equals, "table:user.csv")
 }
 
 func (s *MySuite) TestParsingStepWithSpecialParametersWithWhiteSpaces(c *C) {
@@ -199,17 +199,17 @@ func (s *MySuite) TestParsingStepWithSpecialParametersWithWhiteSpaces(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].kind, Equals, stepKind)
-	c.Assert(tokens[1].value, Equals, "Step with {static} and special parameter {special}")
-	c.Assert(len(tokens[1].args), Equals, 2)
-	c.Assert(tokens[1].args[0], Equals, "first")
-	c.Assert(tokens[1].args[1], Equals, "table : user.csv")
+	c.Assert(tokens[1].Kind, Equals, StepKind)
+	c.Assert(tokens[1].Value, Equals, "Step with {static} and special parameter {special}")
+	c.Assert(len(tokens[1].Args), Equals, 2)
+	c.Assert(tokens[1].Args[0], Equals, "first")
+	c.Assert(tokens[1].Args[1], Equals, "table : user.csv")
 
-	c.Assert(tokens[2].kind, Equals, stepKind)
-	c.Assert(tokens[2].value, Equals, "Another with {dynamic} and {special}")
-	c.Assert(len(tokens[2].args), Equals, 2)
-	c.Assert(tokens[2].args[0], Equals, "name")
-	c.Assert(tokens[2].args[1], Equals, "file  :something.txt")
+	c.Assert(tokens[2].Kind, Equals, StepKind)
+	c.Assert(tokens[2].Value, Equals, "Another with {dynamic} and {special}")
+	c.Assert(len(tokens[2].Args), Equals, 2)
+	c.Assert(tokens[2].Args[0], Equals, "name")
+	c.Assert(tokens[2].Args[1], Equals, "file  :something.txt")
 }
 
 func (s *MySuite) TestParsingStepWithStaticParamHavingEscapeChar(c *C) {

@@ -37,11 +37,11 @@ type SpecParser struct {
 type TokenKind int
 
 type Token struct {
-	kind     TokenKind
-	lineNo   int
-	lineText string
-	args     []string
-	value    string
+	Kind     TokenKind
+	LineNo   int
+	LineText string
+	Args     []string
+	Value    string
 }
 
 type ParseError struct {
@@ -60,7 +60,7 @@ func (se *ParseError) Error() string {
 }
 
 func (token *Token) String() string {
-	return fmt.Sprintf("kind:%d, lineNo:%d, value:%s, line:%s, args:%s", token.kind, token.lineNo, token.value, token.lineText, token.args)
+	return fmt.Sprintf("kind:%d, lineNo:%d, value:%s, line:%s, args:%s", token.Kind, token.LineNo, token.Value, token.LineText, token.Args)
 }
 
 const (
@@ -77,28 +77,28 @@ const (
 )
 
 const (
-	specKind TokenKind = iota
-	tagKind
-	scenarioKind
-	commentKind
-	stepKind
-	tableHeader
-	tableRow
-	headingKind
-	tableKind
-	dataTableKind
+	SpecKind TokenKind = iota
+	TagKind
+	ScenarioKind
+	CommentKind
+	StepKind
+	TableHeader
+	TableRow
+	HeadingKind
+	TableKind
+	DataTableKind
 )
 
 func (parser *SpecParser) initialize() {
 	parser.processors = make(map[TokenKind]func(*SpecParser, *Token) (*ParseError, bool))
-	parser.processors[specKind] = processSpec
-	parser.processors[scenarioKind] = processScenario
-	parser.processors[commentKind] = processComment
-	parser.processors[stepKind] = processStep
-	parser.processors[tagKind] = processTag
-	parser.processors[tableHeader] = processTable
-	parser.processors[tableRow] = processTable
-	parser.processors[dataTableKind] = processDataTable
+	parser.processors[SpecKind] = processSpec
+	parser.processors[ScenarioKind] = processScenario
+	parser.processors[CommentKind] = processComment
+	parser.processors[StepKind] = processStep
+	parser.processors[TagKind] = processTag
+	parser.processors[TableHeader] = processTable
+	parser.processors[TableRow] = processTable
+	parser.processors[DataTableKind] = processDataTable
 }
 
 func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
@@ -106,7 +106,7 @@ func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDicti
 	if parseError != nil {
 		return nil, &ParseResult{ParseError: parseError, Ok: false}
 	}
-	return parser.createSpecification(tokens, conceptDictionary)
+	return parser.CreateSpecification(tokens, conceptDictionary)
 }
 
 func (parser *SpecParser) generateTokens(specText string) ([]*Token, *ParseError) {
@@ -117,30 +117,30 @@ func (parser *SpecParser) generateTokens(specText string) ([]*Token, *ParseError
 		trimmedLine := strings.TrimSpace(line)
 		var newToken *Token
 		if len(trimmedLine) == 0 {
-			newToken = &Token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: "\n"}
+			newToken = &Token{Kind: CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
 		} else if parser.isScenarioHeading(trimmedLine) {
-			newToken = &Token{kind: scenarioKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[2:])}
+			newToken = &Token{Kind: ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
-			newToken = &Token{kind: specKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if parser.isSpecUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.kind = specKind
+			newToken.Kind = SpecKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isScenarioUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.kind = scenarioKind
+			newToken.Kind = ScenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
-			newToken = &Token{kind: stepKind, lineNo: parser.lineNo, lineText: strings.TrimSpace(trimmedLine[1:]), value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found {
-			newToken = &Token{kind: tagKind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine[startIndex:])}
+			newToken = &Token{Kind: TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
 		} else if parser.isTableRow(trimmedLine) {
-			kind := parser.tokenKindBasedOnCurrentState(tableScope, tableRow, tableHeader)
-			newToken = &Token{kind: kind, lineNo: parser.lineNo, lineText: line, value: strings.TrimSpace(trimmedLine)}
+			kind := parser.tokenKindBasedOnCurrentState(tableScope, TableRow, TableHeader)
+			newToken = &Token{Kind: kind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine)}
 		} else if value, found := parser.isDataTable(trimmedLine); found {
-			newToken = &Token{kind: dataTableKind, lineNo: parser.lineNo, lineText: line, value: value}
+			newToken = &Token{Kind: DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
 		} else {
-			newToken = &Token{kind: commentKind, lineNo: parser.lineNo, lineText: line, value: common.TrimTrailingSpace(line)}
+			newToken = &Token{Kind: CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
 		error := parser.accept(newToken)
 		if error != nil {
@@ -222,7 +222,7 @@ func (parser *SpecParser) isDataTable(text string) (string, bool) {
 }
 
 func (parser *SpecParser) accept(token *Token) *ParseError {
-	error, shouldSkip := parser.processors[token.kind](parser, token)
+	error, shouldSkip := parser.processors[token.Kind](parser, token)
 	if error != nil {
 		return error
 	}
@@ -234,26 +234,26 @@ func (parser *SpecParser) accept(token *Token) *ParseError {
 }
 
 func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(token.value) < 1 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Spec heading should have at least one character"}, true
+	if len(token.Value) < 1 {
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Spec heading should have at least one character"}, true
 	}
 	return nil, false
 }
 
 func processDataTable(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(strings.TrimSpace(strings.Replace(token.value, "table:", "", 1))) == 0 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table location not specified"}, true
+	if len(strings.TrimSpace(strings.Replace(token.Value, "table:", "", 1))) == 0 {
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table location not specified"}, true
 	}
-	resolvedArg, err := newSpecialTypeResolver().resolve(token.value)
+	resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
 	if resolvedArg == nil || err != nil {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: fmt.Sprintf("Could not resolve table from %s", token.lineText)}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}, true
 	}
 	return nil, false
 }
 
 func processScenario(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(token.value) < 1 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Scenario heading should have at least one character"}, true
+	if len(token.Value) < 1 {
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Scenario heading should have at least one character"}, true
 	}
 	parser.clearState()
 	return nil, false
@@ -267,11 +267,11 @@ func processComment(parser *SpecParser, token *Token) (*ParseError, bool) {
 
 func processTag(parser *SpecParser, token *Token) (*ParseError, bool) {
 	parser.clearState()
-	tokens := splitAndTrimTags(token.value)
+	tokens := splitAndTrimTags(token.Value)
 
 	for _, tagValue := range tokens {
 		if len(tagValue) > 0 {
-			token.args = append(token.args, tagValue)
+			token.Args = append(token.Args, tagValue)
 		}
 	}
 	return nil, false
@@ -289,7 +289,7 @@ func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 
 	var buffer bytes.Buffer
 	shouldEscape := false
-	for i, element := range token.value {
+	for i, element := range token.Value {
 		if i == 0 {
 			continue
 		}
@@ -304,16 +304,16 @@ func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 		} else if element == '|' {
 			trimmedValue := strings.TrimSpace(buffer.String())
 
-			if token.kind == tableHeader {
+			if token.Kind == TableHeader {
 				if len(trimmedValue) == 0 {
-					return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table header should not be blank"}, true
+					return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table header should not be blank"}, true
 				}
 
-				if arrayContains(token.args, trimmedValue) {
-					return &ParseError{LineNo: parser.lineNo, LineText: token.value, Message: "Table header cannot have repeated column values"}, true
+				if arrayContains(token.Args, trimmedValue) {
+					return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table header cannot have repeated column values"}, true
 				}
 			}
-			token.args = append(token.args, trimmedValue)
+			token.Args = append(token.Args, trimmedValue)
 			buffer.Reset()
 		} else {
 			buffer.WriteRune(element)

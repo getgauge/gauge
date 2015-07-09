@@ -42,12 +42,12 @@ func (s *MySuite) TestConvertCsvToTable(c *C) {
 	table, _ := convertCsvToTable("id,name \n1,foo\n2,bar")
 
 	idColumn := table.Get("id")
-	c.Assert(idColumn[0].value, Equals, "1")
-	c.Assert(idColumn[1].value, Equals, "2")
+	c.Assert(idColumn[0].Value, Equals, "1")
+	c.Assert(idColumn[1].Value, Equals, "2")
 
 	nameColumn := table.Get("name")
-	c.Assert(nameColumn[0].value, Equals, "foo")
-	c.Assert(nameColumn[1].value, Equals, "bar")
+	c.Assert(nameColumn[0].Value, Equals, "foo")
+	c.Assert(nameColumn[1].Value, Equals, "bar")
 }
 
 func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
@@ -75,11 +75,11 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
 	populateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").Value, Equals, "123")
@@ -109,18 +109,18 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept1 := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "123")
 	c.Assert(concept1.getArg("user-name").Value, Equals, "prateek")
 	c.Assert(concept1.getArg("user-phone").Value, Equals, "8800")
 
-	nestedConcept := concept1.conceptSteps[0]
+	nestedConcept := concept1.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "123")
 	c.Assert(nestedConcept.getArg("username").Value, Equals, "prateek")
 
@@ -129,7 +129,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	c.Assert(concept2.getArg("user-name").Value, Equals, "foo")
 	c.Assert(concept2.getArg("user-phone").Value, Equals, "9900")
 
-	nestedConcept2 := concept2.conceptSteps[0]
+	nestedConcept2 := concept2.ConceptSteps[0]
 	c.Assert(nestedConcept2.getArg("userid").Value, Equals, "456")
 	c.Assert(nestedConcept2.getArg("username").Value, Equals, "foo")
 
@@ -155,25 +155,25 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
 	concept1 := spec.scenarios[0].steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "456")
 	c.Assert(concept1.getArg("user-name").Value, Equals, "foo")
 	c.Assert(concept1.getArg("user-phone").Value, Equals, "prateek")
 
-	nestedConcept := concept1.conceptSteps[0]
+	nestedConcept := concept1.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "456")
 	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-name")
 
-	c.Assert(nestedConcept.conceptSteps[0].args[0].ArgType, Equals, Static)
-	c.Assert(nestedConcept.conceptSteps[0].args[0].Value, Equals, "some-id")
+	c.Assert(nestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Static)
+	c.Assert(nestedConcept.ConceptSteps[0].Args[0].Value, Equals, "some-id")
 
-	secondLevelNestedConcept := nestedConcept.conceptSteps[1]
+	secondLevelNestedConcept := nestedConcept.ConceptSteps[1]
 	c.Assert(secondLevelNestedConcept.getArg("baz").Value, Equals, "s-value")
 	c.Assert(secondLevelNestedConcept.getArg("baz").ArgType, Equals, Static)
 }

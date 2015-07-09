@@ -32,15 +32,15 @@ type Table struct {
 }
 
 type DataTable struct {
-	table      Table
-	value      string
-	lineNo     int
-	isExternal bool
+	Table      Table
+	Value      string
+	LineNo     int
+	IsExternal bool
 }
 
 type TableCell struct {
-	value    string
-	cellType ArgType
+	Value    string
+	CellType ArgType
 }
 
 func (table *Table) isInitialized() bool {
@@ -48,15 +48,15 @@ func (table *Table) isInitialized() bool {
 }
 
 func (cell *TableCell) GetValue() string {
-	value := cell.value
-	if cell.cellType == Dynamic {
+	value := cell.Value
+	if cell.CellType == Dynamic {
 		value = fmt.Sprintf("<%s>", value)
 	}
 	return value
 }
 
 func (dataTable *DataTable) isInitialized() bool {
-	return dataTable.table.headerIndexMap != nil
+	return dataTable.Table.headerIndexMap != nil
 }
 
 func (table *Table) String() string {
@@ -67,8 +67,8 @@ func (table *Table) getDynamicArgs() []string {
 	args := make([]string, 0)
 	for _, row := range table.columns {
 		for _, column := range row {
-			if column.cellType == Dynamic {
-				args = append(args, column.value)
+			if column.CellType == Dynamic {
+				args = append(args, column.Value)
 			}
 		}
 	}
@@ -158,20 +158,20 @@ func (table *Table) getRowCount() int {
 	}
 }
 
-func (table *Table) kind() TokenKind {
-	return tableKind
+func (table *Table) Kind() TokenKind {
+	return TableKind
 }
 
-func (externalTable *DataTable) kind() TokenKind {
-	return dataTableKind
+func (externalTable *DataTable) Kind() TokenKind {
+	return DataTableKind
 }
 
 func getTableCell(value string) TableCell {
-	return TableCell{value: value, cellType: Static}
+	return TableCell{Value: value, CellType: Static}
 }
 
 func getDefaultTableCell() TableCell {
-	return TableCell{value: "", cellType: Static}
+	return TableCell{Value: "", CellType: Static}
 }
 
 func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
@@ -198,8 +198,4 @@ func convertCsvToTable(csvContents string) (*Table, error) {
 		}
 	}
 	return table, nil
-}
-
-func (table DataTable) Value() string {
-	return table.value
 }

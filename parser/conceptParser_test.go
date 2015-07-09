@@ -24,24 +24,24 @@ import (
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	dictionary := new(ConceptDictionary)
-	step1 := &Step{value: "test step 1"}
-	step2 := &Step{value: "test step 2"}
+	step1 := &Step{Value: "test step 1"}
+	step2 := &Step{Value: "test step 2"}
 
-	err := dictionary.add([]*Step{step1, step2}, "file.cpt")
+	err := dictionary.Add([]*Step{step1, step2}, "file.cpt")
 
 	c.Assert(err, IsNil)
-	c.Assert(dictionary.conceptsMap["test step 1"].ConceptStep, Equals, step1)
-	c.Assert(dictionary.conceptsMap["test step 1"].FileName, Equals, "file.cpt")
-	c.Assert(dictionary.conceptsMap["test step 2"].ConceptStep, Equals, step2)
-	c.Assert(dictionary.conceptsMap["test step 2"].FileName, Equals, "file.cpt")
+	c.Assert(dictionary.ConceptsMap["test step 1"].ConceptStep, Equals, step1)
+	c.Assert(dictionary.ConceptsMap["test step 1"].FileName, Equals, "file.cpt")
+	c.Assert(dictionary.ConceptsMap["test step 2"].ConceptStep, Equals, step2)
+	c.Assert(dictionary.ConceptsMap["test step 2"].FileName, Equals, "file.cpt")
 }
 
 func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	dictionary := new(ConceptDictionary)
-	step1 := &Step{value: "test step {}", lineText: "test step <first>"}
-	step2 := &Step{value: "test step {}", lineText: "test step <second>"}
+	step1 := &Step{Value: "test step {}", LineText: "test step <first>"}
+	step2 := &Step{Value: "test step {}", LineText: "test step <second>"}
 
-	err := dictionary.add([]*Step{step1, step2}, "file.cpt")
+	err := dictionary.Add([]*Step{step1, step2}, "file.cpt")
 
 	c.Assert(err, NotNil)
 	c.Assert(err.Message, Equals, "Duplicate concept definition found")
@@ -49,23 +49,23 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 
 func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 	dictionary := new(ConceptDictionary)
-	normalStep1 := &Step{value: "normal step 1", lineText: "normal step 1"}
-	normalStep2 := &Step{value: "normal step 2", lineText: "normal step 2"}
-	nestedConceptStep := &Step{value: "nested concept", lineText: "nested concept"}
-	nestedConcept := &Step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*Step{normalStep2}}
+	normalStep1 := &Step{Value: "normal step 1", LineText: "normal step 1"}
+	normalStep2 := &Step{Value: "normal step 2", LineText: "normal step 2"}
+	nestedConceptStep := &Step{Value: "nested concept", LineText: "nested concept"}
+	nestedConcept := &Step{Value: "nested concept", LineText: "nested concept", IsConcept: true, ConceptSteps: []*Step{normalStep2}}
 
-	topLevelConcept := &Step{value: "top level concept", isConcept: true, conceptSteps: []*Step{nestedConceptStep, normalStep1}}
+	topLevelConcept := &Step{Value: "top level concept", IsConcept: true, ConceptSteps: []*Step{nestedConceptStep, normalStep1}}
 
-	dictionary.add([]*Step{nestedConcept}, "file1.cpt")
-	dictionary.add([]*Step{topLevelConcept}, "file2.cpt")
+	dictionary.Add([]*Step{nestedConcept}, "file1.cpt")
+	dictionary.Add([]*Step{topLevelConcept}, "file2.cpt")
 
 	concept := dictionary.search("top level concept")
-	c.Assert(len(concept.ConceptStep.conceptSteps), Equals, 2)
-	actualnestedConcept := concept.ConceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
-	c.Assert(concept.ConceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+	c.Assert(len(concept.ConceptStep.ConceptSteps), Equals, 2)
+	actualnestedConcept := concept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualnestedConcept.IsConcept, Equals, true)
+	c.Assert(len(actualnestedConcept.ConceptSteps), Equals, 1)
+	c.Assert(actualnestedConcept.ConceptSteps[0].Value, Equals, normalStep2.Value)
+	c.Assert(concept.ConceptStep.ConceptSteps[1].Value, Equals, normalStep1.Value)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameter(c *C) {
@@ -114,23 +114,23 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 	concepts, _ := new(ConceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
-	c.Assert(len(concept.ConceptStep.conceptSteps), Equals, 1)
-	actualnestedConcept := concept.ConceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
+	c.Assert(len(concept.ConceptStep.ConceptSteps), Equals, 1)
+	actualnestedConcept := concept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualnestedConcept.IsConcept, Equals, true)
 
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 2)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, "add id {}")
-	c.Assert(actualnestedConcept.conceptSteps[0].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualnestedConcept.conceptSteps[0].args[0].Value, Equals, "userid")
-	c.Assert(len(concepts[0].items), Equals, 2)
+	c.Assert(len(actualnestedConcept.ConceptSteps), Equals, 2)
+	c.Assert(actualnestedConcept.ConceptSteps[0].Value, Equals, "add id {}")
+	c.Assert(actualnestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualnestedConcept.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(len(concepts[0].Items), Equals, 2)
 
-	c.Assert(actualnestedConcept.conceptSteps[1].value, Equals, "add name {}")
-	c.Assert(actualnestedConcept.conceptSteps[1].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualnestedConcept.conceptSteps[1].args[0].Value, Equals, "username")
-	c.Assert(len(concepts[1].items), Equals, 3)
+	c.Assert(actualnestedConcept.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(actualnestedConcept.ConceptSteps[1].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualnestedConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(len(concepts[1].Items), Equals, 3)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithStaticParameters(c *C) {
@@ -142,33 +142,33 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithStaticParameters(c 
 		specHeading("create user <user-id> <user-name> and <user-phone>").
 		step("assign id <user-id> and name \"static-value\"").String()
 	concepts, _ := new(ConceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
-	c.Assert(len(concept.ConceptStep.conceptSteps), Equals, 1)
-	actualNestedConcept := concept.ConceptStep.conceptSteps[0]
-	c.Assert(actualNestedConcept.isConcept, Equals, true)
+	c.Assert(len(concept.ConceptStep.ConceptSteps), Equals, 1)
+	actualNestedConcept := concept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualNestedConcept.IsConcept, Equals, true)
 
-	c.Assert(actualNestedConcept.args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualNestedConcept.args[0].Value, Equals, "user-id")
+	c.Assert(actualNestedConcept.Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualNestedConcept.Args[0].Value, Equals, "user-id")
 
-	c.Assert(actualNestedConcept.args[1].ArgType, Equals, Static)
-	c.Assert(actualNestedConcept.args[1].Value, Equals, "static-value")
-	c.Assert(actualNestedConcept.lookup.getArg("userid").Value, Equals, "user-id")
-	c.Assert(actualNestedConcept.lookup.getArg("userid").ArgType, Equals, Dynamic)
-	c.Assert(actualNestedConcept.lookup.getArg("username").Value, Equals, "static-value")
-	c.Assert(actualNestedConcept.lookup.getArg("username").ArgType, Equals, Static)
+	c.Assert(actualNestedConcept.Args[1].ArgType, Equals, Static)
+	c.Assert(actualNestedConcept.Args[1].Value, Equals, "static-value")
+	c.Assert(actualNestedConcept.Lookup.getArg("userid").Value, Equals, "user-id")
+	c.Assert(actualNestedConcept.Lookup.getArg("userid").ArgType, Equals, Dynamic)
+	c.Assert(actualNestedConcept.Lookup.getArg("username").Value, Equals, "static-value")
+	c.Assert(actualNestedConcept.Lookup.getArg("username").ArgType, Equals, Static)
 
-	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 2)
-	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, "add id {}")
-	c.Assert(actualNestedConcept.conceptSteps[0].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualNestedConcept.conceptSteps[0].args[0].Value, Equals, "userid")
-	c.Assert(len(concepts[0].items), Equals, 3)
+	c.Assert(len(actualNestedConcept.ConceptSteps), Equals, 2)
+	c.Assert(actualNestedConcept.ConceptSteps[0].Value, Equals, "add id {}")
+	c.Assert(actualNestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualNestedConcept.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(len(concepts[0].Items), Equals, 3)
 
-	c.Assert(actualNestedConcept.conceptSteps[1].value, Equals, "add name {}")
-	c.Assert(actualNestedConcept.conceptSteps[1].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualNestedConcept.conceptSteps[1].args[0].Value, Equals, "username")
-	c.Assert(len(concepts[1].items), Equals, 2)
+	c.Assert(actualNestedConcept.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(actualNestedConcept.ConceptSteps[1].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualNestedConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(len(concepts[1].Items), Equals, 2)
 }
 
 func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
@@ -182,34 +182,34 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 		step("add name <username>").
 		text("Comment1").String()
 	concepts, _ := new(ConceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
-	c.Assert(len(concept.ConceptStep.conceptSteps), Equals, 1)
-	actualnestedConcept := concept.ConceptStep.conceptSteps[0]
-	c.Assert(actualnestedConcept.isConcept, Equals, true)
+	c.Assert(len(concept.ConceptStep.ConceptSteps), Equals, 1)
+	actualnestedConcept := concept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualnestedConcept.IsConcept, Equals, true)
 
-	c.Assert(len(actualnestedConcept.conceptSteps), Equals, 2)
-	c.Assert(actualnestedConcept.conceptSteps[0].value, Equals, "add id {}")
-	c.Assert(actualnestedConcept.conceptSteps[0].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualnestedConcept.conceptSteps[0].args[0].Value, Equals, "userid")
-	c.Assert(len(concepts[0].items), Equals, 3)
-	c.Assert(concepts[0].items[2].(*Comment).value, Equals, "Comments")
+	c.Assert(len(actualnestedConcept.ConceptSteps), Equals, 2)
+	c.Assert(actualnestedConcept.ConceptSteps[0].Value, Equals, "add id {}")
+	c.Assert(actualnestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualnestedConcept.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(len(concepts[0].Items), Equals, 3)
+	c.Assert(concepts[0].Items[2].(*Comment).Value, Equals, "Comments")
 
-	c.Assert(actualnestedConcept.conceptSteps[1].value, Equals, "add name {}")
-	c.Assert(actualnestedConcept.conceptSteps[1].args[0].ArgType, Equals, Dynamic)
-	c.Assert(actualnestedConcept.conceptSteps[1].args[0].Value, Equals, "username")
-	c.Assert(len(concepts[1].items), Equals, 4)
+	c.Assert(actualnestedConcept.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(actualnestedConcept.ConceptSteps[1].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(actualnestedConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(len(concepts[1].Items), Equals, 4)
 }
 
 func (s *MySuite) TestConceptHavingItemsWithTablesAndPreComments(c *C) {
 	conceptDictionary := new(ConceptDictionary)
 	concepts, _ := new(ConceptParser).parse("COMMENT\n# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
-	conceptDictionary.add(concepts, "concept.cpt")
+	conceptDictionary.Add(concepts, "concept.cpt")
 
-	c.Assert(len(concepts[0].items), Equals, 3)
-	c.Assert(len(concepts[0].preComments), Equals, 1)
-	c.Assert(concepts[0].preComments[0].value, Equals, "COMMENT")
+	c.Assert(len(concepts[0].Items), Equals, 3)
+	c.Assert(len(concepts[0].PreComments), Equals, 1)
+	c.Assert(concepts[0].PreComments[0].Value, Equals, "COMMENT")
 }
 
 /*
@@ -225,33 +225,33 @@ func (s *MySuite) TestConceptHavingItemsWithTablesAndPreComments(c *C) {
 */
 func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 	dictionary := new(ConceptDictionary)
-	normalStep1 := &Step{value: "normal step 1", lineText: "normal step 1"}
-	normalStep2 := &Step{value: "normal step 2", lineText: "normal step 2"}
+	normalStep1 := &Step{Value: "normal step 1", LineText: "normal step 1"}
+	normalStep2 := &Step{Value: "normal step 2", LineText: "normal step 2"}
 
-	nestedConceptStep := &Step{value: "nested concept", lineText: "nested concept"}
+	nestedConceptStep := &Step{Value: "nested concept", LineText: "nested concept"}
 
-	topLevelConcept := &Step{value: "top level concept", isConcept: true, conceptSteps: []*Step{nestedConceptStep, normalStep1}}
-	anotherTopLevelConcept := &Step{value: "top level concept 2", isConcept: true, conceptSteps: []*Step{nestedConceptStep}}
-	nestedConcept := &Step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*Step{normalStep2}}
+	topLevelConcept := &Step{Value: "top level concept", IsConcept: true, ConceptSteps: []*Step{nestedConceptStep, normalStep1}}
+	anotherTopLevelConcept := &Step{Value: "top level concept 2", IsConcept: true, ConceptSteps: []*Step{nestedConceptStep}}
+	nestedConcept := &Step{Value: "nested concept", LineText: "nested concept", IsConcept: true, ConceptSteps: []*Step{normalStep2}}
 
-	dictionary.add([]*Step{topLevelConcept}, "file1.cpt")
-	dictionary.add([]*Step{anotherTopLevelConcept}, "file1.cpt")
-	dictionary.add([]*Step{nestedConcept}, "file2.cpt")
+	dictionary.Add([]*Step{topLevelConcept}, "file1.cpt")
+	dictionary.Add([]*Step{anotherTopLevelConcept}, "file1.cpt")
+	dictionary.Add([]*Step{nestedConcept}, "file2.cpt")
 
 	concept := dictionary.search("top level concept")
-	c.Assert(len(concept.ConceptStep.conceptSteps), Equals, 2)
-	actualNestedConcept := concept.ConceptStep.conceptSteps[0]
-	c.Assert(actualNestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
-	c.Assert(concept.ConceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+	c.Assert(len(concept.ConceptStep.ConceptSteps), Equals, 2)
+	actualNestedConcept := concept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualNestedConcept.IsConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.ConceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.ConceptSteps[0].Value, Equals, normalStep2.Value)
+	c.Assert(concept.ConceptStep.ConceptSteps[1].Value, Equals, normalStep1.Value)
 
 	topLevelConcept2 := dictionary.search("top level concept 2")
-	c.Assert(len(topLevelConcept2.ConceptStep.conceptSteps), Equals, 1)
-	actualNestedConcept = topLevelConcept2.ConceptStep.conceptSteps[0]
-	c.Assert(actualNestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 1)
-	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, normalStep2.value)
+	c.Assert(len(topLevelConcept2.ConceptStep.ConceptSteps), Equals, 1)
+	actualNestedConcept = topLevelConcept2.ConceptStep.ConceptSteps[0]
+	c.Assert(actualNestedConcept.IsConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.ConceptSteps), Equals, 1)
+	c.Assert(actualNestedConcept.ConceptSteps[0].Value, Equals, normalStep2.Value)
 }
 
 /*
@@ -268,55 +268,55 @@ func (s *MySuite) TestNestedConceptsWhenReferencedConceptParsedLater(c *C) {
 */
 func (s *MySuite) TestMultiLevelConcept(c *C) {
 	dictionary := new(ConceptDictionary)
-	normalStep1 := &Step{value: "normal step 1", lineText: "normal step 1"}
-	normalStep2 := &Step{value: "normal step 2", lineText: "normal step 2"}
-	normalStep3 := &Step{value: "normal step 3", lineText: "normal step 3"}
-	nestedConceptStep := &Step{value: "nested concept", lineText: "nested concept"}
+	normalStep1 := &Step{Value: "normal step 1", LineText: "normal step 1"}
+	normalStep2 := &Step{Value: "normal step 2", LineText: "normal step 2"}
+	normalStep3 := &Step{Value: "normal step 3", LineText: "normal step 3"}
+	nestedConceptStep := &Step{Value: "nested concept", LineText: "nested concept"}
 
-	topLevelConcept := &Step{value: "top level concept", isConcept: true, conceptSteps: []*Step{nestedConceptStep, normalStep1}}
-	anotherNestedConcept := &Step{value: "another nested concept", isConcept: true, conceptSteps: []*Step{normalStep3}}
-	nestedConcept := &Step{value: "nested concept", isConcept: true, conceptSteps: []*Step{anotherNestedConcept, normalStep2}}
+	topLevelConcept := &Step{Value: "top level concept", IsConcept: true, ConceptSteps: []*Step{nestedConceptStep, normalStep1}}
+	anotherNestedConcept := &Step{Value: "another nested concept", IsConcept: true, ConceptSteps: []*Step{normalStep3}}
+	nestedConcept := &Step{Value: "nested concept", IsConcept: true, ConceptSteps: []*Step{anotherNestedConcept, normalStep2}}
 
-	dictionary.add([]*Step{topLevelConcept}, "file1.cpt")
-	dictionary.add([]*Step{anotherNestedConcept}, "file1.cpt")
-	dictionary.add([]*Step{nestedConcept}, "file1.cpt")
+	dictionary.Add([]*Step{topLevelConcept}, "file1.cpt")
+	dictionary.Add([]*Step{anotherNestedConcept}, "file1.cpt")
+	dictionary.Add([]*Step{nestedConcept}, "file1.cpt")
 
 	actualTopLevelConcept := dictionary.search("top level concept")
-	c.Assert(len(actualTopLevelConcept.ConceptStep.conceptSteps), Equals, 2)
-	actualNestedConcept := actualTopLevelConcept.ConceptStep.conceptSteps[0]
-	c.Assert(actualNestedConcept.isConcept, Equals, true)
-	c.Assert(len(actualNestedConcept.conceptSteps), Equals, 2)
-	c.Assert(actualNestedConcept.conceptSteps[0].value, Equals, anotherNestedConcept.value)
-	c.Assert(actualNestedConcept.conceptSteps[1].value, Equals, normalStep2.value)
-	c.Assert(actualTopLevelConcept.ConceptStep.conceptSteps[1].value, Equals, normalStep1.value)
+	c.Assert(len(actualTopLevelConcept.ConceptStep.ConceptSteps), Equals, 2)
+	actualNestedConcept := actualTopLevelConcept.ConceptStep.ConceptSteps[0]
+	c.Assert(actualNestedConcept.IsConcept, Equals, true)
+	c.Assert(len(actualNestedConcept.ConceptSteps), Equals, 2)
+	c.Assert(actualNestedConcept.ConceptSteps[0].Value, Equals, anotherNestedConcept.Value)
+	c.Assert(actualNestedConcept.ConceptSteps[1].Value, Equals, normalStep2.Value)
+	c.Assert(actualTopLevelConcept.ConceptStep.ConceptSteps[1].Value, Equals, normalStep1.Value)
 
 	actualAnotherNestedConcept := dictionary.search("another nested concept")
-	c.Assert(len(actualAnotherNestedConcept.ConceptStep.conceptSteps), Equals, 1)
-	step := actualAnotherNestedConcept.ConceptStep.conceptSteps[0]
-	c.Assert(step.isConcept, Equals, false)
-	c.Assert(step.value, Equals, normalStep3.value)
+	c.Assert(len(actualAnotherNestedConcept.ConceptStep.ConceptSteps), Equals, 1)
+	step := actualAnotherNestedConcept.ConceptStep.ConceptSteps[0]
+	c.Assert(step.IsConcept, Equals, false)
+	c.Assert(step.Value, Equals, normalStep3.Value)
 
 	nestedConcept2 := dictionary.search("nested concept")
-	c.Assert(len(nestedConcept2.ConceptStep.conceptSteps), Equals, 2)
-	actualAnotherNestedConcept2 := nestedConcept2.ConceptStep.conceptSteps[0]
-	c.Assert(actualAnotherNestedConcept2.isConcept, Equals, true)
-	c.Assert(len(actualAnotherNestedConcept2.conceptSteps), Equals, 1)
-	c.Assert(actualAnotherNestedConcept2.conceptSteps[0].value, Equals, normalStep3.value)
-	c.Assert(nestedConcept2.ConceptStep.conceptSteps[1].value, Equals, normalStep2.value)
+	c.Assert(len(nestedConcept2.ConceptStep.ConceptSteps), Equals, 2)
+	actualAnotherNestedConcept2 := nestedConcept2.ConceptStep.ConceptSteps[0]
+	c.Assert(actualAnotherNestedConcept2.IsConcept, Equals, true)
+	c.Assert(len(actualAnotherNestedConcept2.ConceptSteps), Equals, 1)
+	c.Assert(actualAnotherNestedConcept2.ConceptSteps[0].Value, Equals, normalStep3.Value)
+	c.Assert(nestedConcept2.ConceptStep.ConceptSteps[1].Value, Equals, normalStep2.Value)
 
 }
 
 func (s *MySuite) TestConceptDictionarySearch(c *C) {
 	dictionary := new(ConceptDictionary)
-	step1 := &Step{value: "test step 1"}
-	step2 := &Step{value: "test step 2"}
+	step1 := &Step{Value: "test step 1"}
+	step2 := &Step{Value: "test step 2"}
 
-	dictionary.add([]*Step{step1, step2}, "file.cpt")
+	dictionary.Add([]*Step{step1, step2}, "file.cpt")
 
-	c.Assert(dictionary.search(step1.value).ConceptStep, Equals, step1)
-	c.Assert(dictionary.search(step1.value).FileName, Equals, "file.cpt")
-	c.Assert(dictionary.search(step2.value).ConceptStep, Equals, step2)
-	c.Assert(dictionary.search(step2.value).FileName, Equals, "file.cpt")
+	c.Assert(dictionary.search(step1.Value).ConceptStep, Equals, step1)
+	c.Assert(dictionary.search(step1.Value).FileName, Equals, "file.cpt")
+	c.Assert(dictionary.search(step2.Value).ConceptStep, Equals, step2)
+	c.Assert(dictionary.search(step2.Value).FileName, Equals, "file.cpt")
 }
 
 func (s *MySuite) TestParsingSimpleConcept(c *C) {
@@ -328,10 +328,10 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 
 	concept := concepts[0]
 
-	c.Assert(concept.isConcept, Equals, true)
-	c.Assert(len(concept.conceptSteps), Equals, 2)
-	c.Assert(concept.conceptSteps[0].value, Equals, "first step")
-	c.Assert(concept.conceptSteps[1].value, Equals, "second step")
+	c.Assert(concept.IsConcept, Equals, true)
+	c.Assert(len(concept.ConceptSteps), Equals, 2)
+	c.Assert(concept.ConceptSteps[0].Value, Equals, "first step")
+	c.Assert(concept.ConceptSteps[1].Value, Equals, "second step")
 
 }
 
@@ -373,25 +373,25 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
-	c.Assert(concept.isConcept, Equals, true)
-	c.Assert(len(concept.conceptSteps), Equals, 2)
-	c.Assert(len(concept.lookup.paramValue), Equals, 2)
-	c.Assert(concept.lookup.containsArg("param0"), Equals, true)
-	c.Assert(concept.lookup.containsArg("param1"), Equals, true)
+	c.Assert(concept.IsConcept, Equals, true)
+	c.Assert(len(concept.ConceptSteps), Equals, 2)
+	c.Assert(len(concept.Lookup.paramValue), Equals, 2)
+	c.Assert(concept.Lookup.containsArg("param0"), Equals, true)
+	c.Assert(concept.Lookup.containsArg("param1"), Equals, true)
 
-	firstConcept := concept.conceptSteps[0]
-	c.Assert(firstConcept.value, Equals, "first step using {}")
-	c.Assert(len(firstConcept.args), Equals, 1)
-	c.Assert(firstConcept.args[0].ArgType, Equals, Dynamic)
-	c.Assert(firstConcept.args[0].Value, Equals, "param0")
+	firstConcept := concept.ConceptSteps[0]
+	c.Assert(firstConcept.Value, Equals, "first step using {}")
+	c.Assert(len(firstConcept.Args), Equals, 1)
+	c.Assert(firstConcept.Args[0].ArgType, Equals, Dynamic)
+	c.Assert(firstConcept.Args[0].Value, Equals, "param0")
 
-	secondConcept := concept.conceptSteps[1]
-	c.Assert(secondConcept.value, Equals, "second step using {} and {}")
-	c.Assert(len(secondConcept.args), Equals, 2)
-	c.Assert(secondConcept.args[0].ArgType, Equals, Static)
-	c.Assert(secondConcept.args[0].Value, Equals, "value")
-	c.Assert(secondConcept.args[1].ArgType, Equals, Dynamic)
-	c.Assert(secondConcept.args[1].Value, Equals, "param1")
+	secondConcept := concept.ConceptSteps[1]
+	c.Assert(secondConcept.Value, Equals, "second step using {} and {}")
+	c.Assert(len(secondConcept.Args), Equals, 2)
+	c.Assert(secondConcept.Args[0].ArgType, Equals, Static)
+	c.Assert(secondConcept.Args[0].Value, Equals, "value")
+	c.Assert(secondConcept.Args[1].ArgType, Equals, Dynamic)
+	c.Assert(secondConcept.Args[1].Value, Equals, "param1")
 
 }
 
@@ -422,24 +422,24 @@ func (s *MySuite) TestParsingMultipleConcept(c *C) {
 	secondConcept := concepts[1]
 	thirdConcept := concepts[2]
 
-	c.Assert(firstConcept.isConcept, Equals, true)
-	c.Assert(len(firstConcept.conceptSteps), Equals, 2)
-	c.Assert(firstConcept.conceptSteps[0].value, Equals, "first step")
-	c.Assert(firstConcept.conceptSteps[1].value, Equals, "second step")
+	c.Assert(firstConcept.IsConcept, Equals, true)
+	c.Assert(len(firstConcept.ConceptSteps), Equals, 2)
+	c.Assert(firstConcept.ConceptSteps[0].Value, Equals, "first step")
+	c.Assert(firstConcept.ConceptSteps[1].Value, Equals, "second step")
 
-	c.Assert(secondConcept.isConcept, Equals, true)
-	c.Assert(len(secondConcept.conceptSteps), Equals, 1)
-	c.Assert(secondConcept.conceptSteps[0].value, Equals, "next step")
+	c.Assert(secondConcept.IsConcept, Equals, true)
+	c.Assert(len(secondConcept.ConceptSteps), Equals, 1)
+	c.Assert(secondConcept.ConceptSteps[0].Value, Equals, "next step")
 
-	c.Assert(thirdConcept.isConcept, Equals, true)
-	c.Assert(len(thirdConcept.conceptSteps), Equals, 1)
-	c.Assert(thirdConcept.conceptSteps[0].value, Equals, "next step {} and {}")
-	c.Assert(len(thirdConcept.conceptSteps[0].args), Equals, 2)
-	c.Assert(thirdConcept.conceptSteps[0].args[0].ArgType, Equals, Dynamic)
-	c.Assert(thirdConcept.conceptSteps[0].args[1].ArgType, Equals, Static)
+	c.Assert(thirdConcept.IsConcept, Equals, true)
+	c.Assert(len(thirdConcept.ConceptSteps), Equals, 1)
+	c.Assert(thirdConcept.ConceptSteps[0].Value, Equals, "next step {} and {}")
+	c.Assert(len(thirdConcept.ConceptSteps[0].Args), Equals, 2)
+	c.Assert(thirdConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(thirdConcept.ConceptSteps[0].Args[1].ArgType, Equals, Static)
 
-	c.Assert(len(thirdConcept.lookup.paramValue), Equals, 1)
-	c.Assert(thirdConcept.lookup.containsArg("param0"), Equals, true)
+	c.Assert(len(thirdConcept.Lookup.paramValue), Equals, 1)
+	c.Assert(thirdConcept.Lookup.containsArg("param0"), Equals, true)
 
 }
 
@@ -452,25 +452,25 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 
 	concept := concepts[0]
 
-	c.Assert(concept.isConcept, Equals, true)
-	c.Assert(len(concept.conceptSteps), Equals, 1)
-	c.Assert(concept.conceptSteps[0].value, Equals, "first step with {} and inline table {}")
+	c.Assert(concept.IsConcept, Equals, true)
+	c.Assert(len(concept.ConceptSteps), Equals, 1)
+	c.Assert(concept.ConceptSteps[0].Value, Equals, "first step with {} and inline table {}")
 
-	tableArgument := concept.conceptSteps[0].args[1]
+	tableArgument := concept.ConceptSteps[0].Args[1]
 	c.Assert(tableArgument.ArgType, Equals, TableArg)
 
 	inlineTable := tableArgument.Table
 	c.Assert(inlineTable.isInitialized(), Equals, true)
 	c.Assert(len(inlineTable.Get("id")), Equals, 2)
 	c.Assert(len(inlineTable.Get("name")), Equals, 2)
-	c.Assert(inlineTable.Get("id")[0].value, Equals, "1")
-	c.Assert(inlineTable.Get("id")[0].cellType, Equals, Static)
-	c.Assert(inlineTable.Get("id")[1].value, Equals, "2")
-	c.Assert(inlineTable.Get("id")[1].cellType, Equals, Static)
-	c.Assert(inlineTable.Get("name")[0].value, Equals, "vishnu")
-	c.Assert(inlineTable.Get("name")[0].cellType, Equals, Static)
-	c.Assert(inlineTable.Get("name")[1].value, Equals, "prateek")
-	c.Assert(inlineTable.Get("name")[1].cellType, Equals, Static)
+	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")
+	c.Assert(inlineTable.Get("id")[0].CellType, Equals, Static)
+	c.Assert(inlineTable.Get("id")[1].Value, Equals, "2")
+	c.Assert(inlineTable.Get("id")[1].CellType, Equals, Static)
+	c.Assert(inlineTable.Get("name")[0].Value, Equals, "vishnu")
+	c.Assert(inlineTable.Get("name")[0].CellType, Equals, Static)
+	c.Assert(inlineTable.Get("name")[1].Value, Equals, "prateek")
+	c.Assert(inlineTable.Get("name")[1].CellType, Equals, Static)
 }
 
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
@@ -483,16 +483,16 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 
 func (s *MySuite) TestDeepCopyOfConcept(c *C) {
 	dictionary := new(ConceptDictionary)
-	normalStep1 := &Step{value: "normal step 1", lineText: "normal step 1"}
-	normalStep2 := &Step{value: "normal step 2", lineText: "normal step 2"}
+	normalStep1 := &Step{Value: "normal step 1", LineText: "normal step 1"}
+	normalStep2 := &Step{Value: "normal step 2", LineText: "normal step 2"}
 
-	nestedConceptStep := &Step{value: "nested concept", lineText: "nested concept"}
+	nestedConceptStep := &Step{Value: "nested concept", LineText: "nested concept"}
 
-	topLevelConcept := &Step{value: "top level concept", isConcept: true, conceptSteps: []*Step{nestedConceptStep, normalStep1}}
-	nestedConcept := &Step{value: "nested concept", lineText: "nested concept", isConcept: true, conceptSteps: []*Step{normalStep2}}
+	topLevelConcept := &Step{Value: "top level concept", IsConcept: true, ConceptSteps: []*Step{nestedConceptStep, normalStep1}}
+	nestedConcept := &Step{Value: "nested concept", LineText: "nested concept", IsConcept: true, ConceptSteps: []*Step{normalStep2}}
 
-	dictionary.add([]*Step{topLevelConcept}, "file1.cpt")
-	dictionary.add([]*Step{nestedConcept}, "file2.cpt")
+	dictionary.Add([]*Step{topLevelConcept}, "file1.cpt")
+	dictionary.Add([]*Step{nestedConcept}, "file2.cpt")
 
 	actualConcept := dictionary.search("top level concept")
 
@@ -524,13 +524,13 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.generateTokens(specText)
-	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.Ok, Equals, true)
 	firstStepInSpec := spec.scenarios[0].steps[0]
-	nestedConcept := firstStepInSpec.conceptSteps[0]
+	nestedConcept := firstStepInSpec.ConceptSteps[0]
 	nestedConceptArg1 := nestedConcept.getArg("baz")
 	c.Assert(nestedConceptArg1.Value, Equals, "foo")
 	nestedConceptArg2 := nestedConcept.getArg("boo")
@@ -555,9 +555,9 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.generateTokens(specText)
-	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.Ok, Equals, true)
 	firstLevelConcept := spec.scenarios[0].steps[0]
@@ -565,7 +565,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 	c.Assert(firstLevelConcept.getArg("user-name").Value, Equals, "prateek")
 	c.Assert(firstLevelConcept.getArg("user-phone").Value, Equals, "007")
 
-	nestedConcept := firstLevelConcept.conceptSteps[0]
+	nestedConcept := firstLevelConcept.ConceptSteps[0]
 
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "foo")
 	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-name")
@@ -590,9 +590,9 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.generateTokens(specText)
-	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.Ok, Equals, true)
 	firstLevelConcept := spec.scenarios[0].steps[0]
@@ -600,7 +600,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 	c.Assert(firstLevelConcept.getArg("user-name").Value, Equals, "prateek")
 	c.Assert(firstLevelConcept.getArg("user-phone").Value, Equals, "007")
 
-	nestedConcept := firstLevelConcept.conceptSteps[0]
+	nestedConcept := firstLevelConcept.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "foo")
 	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-name")
 
@@ -628,14 +628,14 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.generateTokens(specText)
-	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.Ok, Equals, true)
 
 	firstStepInSpec := spec.scenarios[0].steps[0]
-	c.Assert(firstStepInSpec.isConcept, Equals, true)
+	c.Assert(firstStepInSpec.IsConcept, Equals, true)
 	c.Assert(firstStepInSpec.getArg("user-id").ArgType, Equals, Dynamic)
 	c.Assert(firstStepInSpec.getArg("user-name").ArgType, Equals, Dynamic)
 	c.Assert(firstStepInSpec.getArg("user-phone").ArgType, Equals, Dynamic)
@@ -643,7 +643,7 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 	c.Assert(firstStepInSpec.getArg("user-name").Value, Equals, "name")
 	c.Assert(firstStepInSpec.getArg("user-phone").Value, Equals, "phone")
 
-	nestedConcept := firstStepInSpec.conceptSteps[0]
+	nestedConcept := firstStepInSpec.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("userid").ArgType, Equals, Dynamic)
 	c.Assert(nestedConcept.getArg("username").ArgType, Equals, Dynamic)
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "id")
@@ -673,14 +673,14 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
-	conceptDictionary.add(concepts, "file.cpt")
+	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.generateTokens(specText)
-	spec, parseResult := parser.createSpecification(tokens, conceptDictionary)
+	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(parseResult.Ok, Equals, true)
 
 	firstStepInSpec := spec.scenarios[0].steps[0]
-	c.Assert(firstStepInSpec.isConcept, Equals, true)
+	c.Assert(firstStepInSpec.IsConcept, Equals, true)
 	c.Assert(firstStepInSpec.getArg("user-id").ArgType, Equals, Dynamic)
 	c.Assert(firstStepInSpec.getArg("user-name").ArgType, Equals, Dynamic)
 	c.Assert(firstStepInSpec.getArg("user-phone").ArgType, Equals, Dynamic)
@@ -688,7 +688,7 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 	c.Assert(firstStepInSpec.getArg("user-name").Value, Equals, "name")
 	c.Assert(firstStepInSpec.getArg("user-phone").Value, Equals, "phone")
 
-	nestedConcept := firstStepInSpec.conceptSteps[0]
+	nestedConcept := firstStepInSpec.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("user-id").ArgType, Equals, Dynamic)
 	c.Assert(nestedConcept.getArg("user-name").ArgType, Equals, Dynamic)
 	c.Assert(nestedConcept.getArg("user-id").Value, Equals, "id")
@@ -709,7 +709,7 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 
 	concepts, parseErr := new(ConceptParser).parse(conceptText)
 	c.Assert(parseErr.error, IsNil)
-	err := conceptDictionary.add(concepts, "file.cpt")
+	err := conceptDictionary.Add(concepts, "file.cpt")
 	c.Assert(err, NotNil)
 	c.Assert(true, Equals, strings.Contains(err.Message, "Circular reference found in concept"))
 }
@@ -732,10 +732,10 @@ func (s *MySuite) TestErrorOnCircularReferenceInDeepNestedConceptConcept(c *C) {
 	c.Assert(parseRes.error, IsNil)
 	concepts2, parseRes := new(ConceptParser).parse(secondConceptText)
 
-	err := conceptDictionary.add(concepts1, "file.cpt")
+	err := conceptDictionary.Add(concepts1, "file.cpt")
 	c.Assert(err, IsNil)
 
-	err = conceptDictionary.add(concepts2, "file2.cpt")
+	err = conceptDictionary.Add(concepts2, "file2.cpt")
 	c.Assert(err, NotNil)
 	c.Assert(true, Equals, strings.Contains(err.Message, "Circular reference found in concept"))
 }
@@ -745,10 +745,10 @@ func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
 		specHeading("create user <user:id> <user:name> and <file>").
 		step("a step <user:id>").String()
 	step, _ := new(ConceptParser).parse(conceptText)
-	c.Assert(step[0].lineText, Equals, "create user <user:id> <user:name> and <file>")
-	c.Assert(step[0].args[0].ArgType, Equals, Dynamic)
-	c.Assert(step[0].args[1].ArgType, Equals, Dynamic)
-	c.Assert(step[0].args[2].ArgType, Equals, Dynamic)
+	c.Assert(step[0].LineText, Equals, "create user <user:id> <user:name> and <file>")
+	c.Assert(step[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(step[0].Args[1].ArgType, Equals, Dynamic)
+	c.Assert(step[0].Args[2].ArgType, Equals, Dynamic)
 }
 
 func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {

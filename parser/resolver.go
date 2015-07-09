@@ -44,7 +44,7 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 
 func (paramResolver *paramResolver) getResolvedParams(step *Step, parent *Step, dataTableLookup *ArgLookup) []*gauge_messages.Parameter {
 	parameters := make([]*gauge_messages.Parameter, 0)
-	for _, arg := range step.args {
+	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
 		parameter.Name = proto.String(arg.Name)
 		if arg.ArgType == Static {
@@ -92,10 +92,10 @@ func (resolver *paramResolver) createProtoStepTable(table *Table, dataTableLooku
 		row := make([]string, 0)
 		for _, header := range table.Headers {
 			tableCell := table.Get(header)[i]
-			value := tableCell.value
-			if tableCell.cellType == Dynamic {
+			value := tableCell.Value
+			if tableCell.CellType == Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
-				value = dataTableLookup.getArg(tableCell.value).Value
+				value = dataTableLookup.getArg(tableCell.Value).Value
 			}
 			row = append(row, value)
 		}
@@ -158,8 +158,8 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 // Creating a copy of the lookup and populating table values
 func populateConceptDynamicParams(concept *Step, dataTableLookup *ArgLookup) {
 	//If it is a top level concept
-	if concept.parent == nil {
-		lookup := concept.lookup.getCopy()
+	if concept.Parent == nil {
+		lookup := concept.Lookup.getCopy()
 		for key, _ := range lookup.paramIndexMap {
 			conceptLookupArg := lookup.getArg(key)
 			if conceptLookupArg.ArgType == Dynamic {
@@ -167,15 +167,15 @@ func populateConceptDynamicParams(concept *Step, dataTableLookup *ArgLookup) {
 				lookup.addArgValue(key, resolvedArg)
 			}
 		}
-		concept.lookup = *lookup
+		concept.Lookup = *lookup
 	}
 
 	//Updating values inside the concept step as well
 	newArgs := make([]*StepArg, 0)
-	for _, arg := range concept.args {
+	for _, arg := range concept.Args {
 		if arg.ArgType == Dynamic {
-			if concept.parent != nil {
-				newArgs = append(newArgs, concept.parent.getArg(arg.Value))
+			if concept.Parent != nil {
+				newArgs = append(newArgs, concept.Parent.getArg(arg.Value))
 			} else {
 				newArgs = append(newArgs, dataTableLookup.getArg(arg.Value))
 			}
@@ -183,6 +183,6 @@ func populateConceptDynamicParams(concept *Step, dataTableLookup *ArgLookup) {
 			newArgs = append(newArgs, arg)
 		}
 	}
-	concept.args = newArgs
+	concept.Args = newArgs
 	concept.populateFragments()
 }
