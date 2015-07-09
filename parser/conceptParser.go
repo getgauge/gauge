@@ -28,8 +28,8 @@ import (
 )
 
 type ConceptDictionary struct {
-	conceptsMap     map[string]*Concept
-	constructionMap map[string]*[]Step
+	ConceptsMap     map[string]*Concept
+	constructionMap map[string][]*Step
 	referenceMap    map[*Step][]*Step
 }
 

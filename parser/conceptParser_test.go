@@ -69,24 +69,24 @@ func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameter(c *C) {
-	conceptDictionary := new(conceptDictionary)
+	conceptDictionary := new(ConceptDictionary)
 	conceptText := SpecBuilder().
 		specHeading("assign id").
 		step("add id").
 		specHeading("create user").
 		step("assign id").
 		step("assign id").String()
-	concepts, _ := new(conceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
+	concepts, _ := new(ConceptParser).parse(conceptText)
+	conceptDictionary.Add(concepts, "file.cpt")
 	concept := conceptDictionary.search("create user")
-	c.Assert(concept.conceptStep.conceptSteps[0].value, Equals, "assign id")
-	c.Assert(concept.conceptStep.conceptSteps[0].isConcept, Equals, true)
-	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, "assign id")
-	c.Assert(concept.conceptStep.conceptSteps[1].isConcept, Equals, true)
+	c.Assert(concept.ConceptStep.ConceptSteps[0].Value, Equals, "assign id")
+	c.Assert(concept.ConceptStep.ConceptSteps[0].IsConcept, Equals, true)
+	c.Assert(concept.ConceptStep.ConceptSteps[1].Value, Equals, "assign id")
+	c.Assert(concept.ConceptStep.ConceptSteps[1].IsConcept, Equals, true)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithDefinitionAfterUsage(c *C) {
-	conceptDictionary := new(conceptDictionary)
+	conceptDictionary := new(ConceptDictionary)
 	conceptText := SpecBuilder().
 		specHeading("create user").
 		step("assign id").
@@ -94,15 +94,15 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithDefinitionAfterUsag
 		step("assign id").
 		specHeading("assign id").
 		step("add id").String()
-	concepts, _ := new(conceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
+	concepts, _ := new(ConceptParser).parse(conceptText)
+	conceptDictionary.Add(concepts, "file.cpt")
 	concept := conceptDictionary.search("create user")
-	c.Assert(concept.conceptStep.conceptSteps[0].value, Equals, "assign id")
-	c.Assert(concept.conceptStep.conceptSteps[1].value, Equals, "assign id")
-	c.Assert(concept.conceptStep.conceptSteps[2].value, Equals, "assign id")
-	c.Assert(concept.conceptStep.conceptSteps[0].isConcept, Equals, true)
-	c.Assert(concept.conceptStep.conceptSteps[1].isConcept, Equals, true)
-	c.Assert(concept.conceptStep.conceptSteps[2].isConcept, Equals, true)
+	c.Assert(concept.ConceptStep.ConceptSteps[0].Value, Equals, "assign id")
+	c.Assert(concept.ConceptStep.ConceptSteps[1].Value, Equals, "assign id")
+	c.Assert(concept.ConceptStep.ConceptSteps[2].Value, Equals, "assign id")
+	c.Assert(concept.ConceptStep.ConceptSteps[0].IsConcept, Equals, true)
+	c.Assert(concept.ConceptStep.ConceptSteps[1].IsConcept, Equals, true)
+	c.Assert(concept.ConceptStep.ConceptSteps[2].IsConcept, Equals, true)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
