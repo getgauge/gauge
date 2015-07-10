@@ -215,7 +215,7 @@ func formatConceptSteps(conceptMap map[string]string, concept *parser.Concept) {
 	}
 }
 
-func formatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]string {
+func FormatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.ConceptStep.PreComments {

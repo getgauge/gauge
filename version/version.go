@@ -32,6 +32,11 @@ type Version struct {
 	Patch int
 }
 
+type VersionSupport struct {
+	Minimum string
+	Maximum string
+}
+
 func ParseVersion(versionText string) (*Version, error) {
 	splits := strings.Split(versionText, ".")
 	if len(splits) != 3 {

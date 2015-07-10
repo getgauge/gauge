@@ -49,7 +49,7 @@ func (specExecutor *specExecutor) initialize(specificationToExecute *specificati
 	specExecutor.runner = runner
 	specExecutor.pluginHandler = pluginHandler
 	specExecutor.writer = writer
-	specExecutor.dataTableIndex = tableRows
+	specExecutor.DataTableIndex = tableRows
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -79,9 +79,9 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 }
 
 func (specExecutor *specExecutor) execute() *specResult {
-	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.heading.value),
+	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.Heading.value),
 		FileName: proto.String(specExecutor.specification.fileName),
-		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.tags)}
+		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.Tags)}
 	specExecutor.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 
 	specExecutor.writer.SpecHeading(specInfo.GetName())
@@ -95,10 +95,10 @@ func (specExecutor *specExecutor) execute() *specResult {
 		addPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
-		for _, step := range specExecutor.specification.contexts {
+		for _, step := range specExecutor.specification.Contexts {
 			specExecutor.writer.Step(step)
 		}
-		dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
+		dataTableRowCount := specExecutor.specification.DataTable.table.getRowCount()
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
 			specExecutor.specResult.addScenarioResults(scenarioResult)
@@ -117,8 +117,8 @@ func (specExecutor *specExecutor) execute() *specResult {
 
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*scenarioResult
-	//	dataTableRowCount := specExecutor.specification.dataTable.table.getRowCount()
-	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
+	//	dataTableRowCount := specExecutor.specification.DataTable.table.getRowCount()
+	for specExecutor.currentTableRow = specExecutor.DataTableIndex.start; specExecutor.currentTableRow <= specExecutor.DataTableIndex.end; specExecutor.currentTableRow++ {
 		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
 	}
 	specExecutor.specResult.addTableDrivenScenarioResult(dataTableScenarioExecutionResult)
@@ -153,15 +153,15 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *scenarioR
 
 func (specExecutor *specExecutor) executeScenarios() []*scenarioResult {
 	scenarioResults := make([]*scenarioResult, 0)
-	for _, scenario := range specExecutor.specification.scenarios {
+	for _, scenario := range specExecutor.specification.Scenarios {
 		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
 	}
 	return scenarioResults
 }
 
 func (executor *specExecutor) executeScenario(scenario *scenario) *scenarioResult {
-	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.heading.value), Tags: getTagValue(scenario.tags), IsFailed: proto.Bool(false)}
-	executor.writer.ScenarioHeading(scenario.heading.value)
+	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
+	executor.writer.ScenarioHeading(scenario.Heading.value)
 
 	scenarioResult := &scenarioResult{newProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
@@ -188,7 +188,7 @@ func (executor *specExecutor) addAllItemsForScenarioExecution(scenario *scenario
 }
 
 func (executor *specExecutor) getContextItemsForScenarioExecution(specification *specification) []*gauge_messages.ProtoItem {
-	contextSteps := specification.contexts
+	contextSteps := specification.Contexts
 	items := make([]item, len(contextSteps))
 	for i, context := range contextSteps {
 		items[i] = context
@@ -250,7 +250,7 @@ func (executor *specExecutor) resolveToProtoItem(item item) *gauge_messages.Prot
 func (executor *specExecutor) resolveToProtoStepItem(step *step) *gauge_messages.ProtoItem {
 	protoStepItem := convertToProtoItem(step)
 	paramResolver := new(paramResolver)
-	parameters := paramResolver.getResolvedParams(step, nil, executor.dataTableLookup())
+	parameters := paramResolver.getResolvedParams(step, nil, executor.DataTableLookup())
 	updateProtoStepParameters(protoStepItem.Step, parameters)
 	return protoStepItem
 }
@@ -259,7 +259,7 @@ func (executor *specExecutor) resolveToProtoStepItem(step *step) *gauge_messages
 func (executor *specExecutor) resolveToProtoConceptItem(concept step) *gauge_messages.ProtoItem {
 	paramResolver := new(paramResolver)
 
-	populateConceptDynamicParams(&concept, executor.dataTableLookup())
+	populateConceptDynamicParams(&concept, executor.DataTableLookup())
 	protoConceptItem := convertToProtoItem(&concept)
 
 	for stepIndex, step := range concept.conceptSteps {
@@ -268,7 +268,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept step) *gauge_mes
 			step.parent = &concept
 			protoConceptItem.GetConcept().GetSteps()[stepIndex] = executor.resolveToProtoConceptItem(*step)
 		} else {
-			stepParameters := paramResolver.getResolvedParams(step, &concept, executor.dataTableLookup())
+			stepParameters := paramResolver.getResolvedParams(step, &concept, executor.DataTableLookup())
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
 		}
 	}
@@ -286,7 +286,7 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 }
 
 func (executor *specExecutor) dataTableLookup() *argLookup {
-	return new(argLookup).fromDataTableRow(&executor.specification.dataTable.table, executor.currentTableRow)
+	return new(argLookup).fromDataTableRow(&executor.specification.DataTable.table, executor.currentTableRow)
 }
 
 func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
@@ -424,7 +424,7 @@ func (executor *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoS
 }
 
 func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.dataTable.table.get(columnName)[executor.currentTableRow].value
+	return executor.specification.DataTable.table.get(columnName)[executor.currentTableRow].value
 }
 
 func executeAndGetStatus(runner *testRunner, message *gauge_messages.Message, writer executionLogger) *gauge_messages.ProtoExecutionResult {

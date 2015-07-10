@@ -41,7 +41,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	spec, _ := parser.parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -81,7 +81,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	spec, _ := parser.parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
@@ -138,7 +138,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	// For first row
 	specExecutor.currentTableRow = 0
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
@@ -165,7 +165,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	// For second row
 	specExecutor.currentTableRow = 1
-	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.scenarios[0].steps[0]).GetConcept()
+	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
 	checkConceptParameterValuesInOrder(c, protoConcept, "666", "bar", "9900")
 

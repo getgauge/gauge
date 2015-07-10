@@ -50,9 +50,9 @@ type ParseError struct {
 	LineText string
 }
 
-type parseDetailResult struct {
-	error    *ParseError
-	warnings []*Warning
+type ParseDetailResult struct {
+	Error    *ParseError
+	Warnings []*Warning
 }
 
 func (se *ParseError) Error() string {
@@ -102,14 +102,14 @@ func (parser *SpecParser) initialize() {
 }
 
 func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
-	tokens, parseError := parser.generateTokens(specText)
+	tokens, parseError := parser.GenerateTokens(specText)
 	if parseError != nil {
 		return nil, &ParseResult{ParseError: parseError, Ok: false}
 	}
 	return parser.CreateSpecification(tokens, conceptDictionary)
 }
 
-func (parser *SpecParser) generateTokens(specText string) ([]*Token, *ParseError) {
+func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial

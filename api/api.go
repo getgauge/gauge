@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package api
 
 import (
 	"errors"
@@ -29,26 +29,26 @@ import (
 	"net"
 	"path"
 	"strconv"
-	"strings"
 	"sync"
+	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/refactor"
 )
 
-func requestForSteps(runner *testRunner) []string {
-	message, err := conn.GetResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.connection, config.RunnerRequestTimeout())
-	if err == nil {
-		allStepsResponse := message.GetStepNamesResponse()
-		return allStepsResponse.GetSteps()
+func StartAPI() (*gaugeApiMessageHandler, error) {
+	env.LoadEnv(*currentEnv, false)
+	err, apiHandler := startAPIService(0)
+	if err != nil {
+		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}
-	logger.ApiLog.Error("Error response from runner on getStepNamesRequest: %s", err)
-	return make([]string, 0)
-}
-
-func createGetStepNamesRequest() *gauge_messages.Message {
-	return &gauge_messages.Message{MessageType: gauge_messages.Message_StepNamesRequest.Enum(), StepNamesRequest: &gauge_messages.StepNamesRequest{}}
+	return apiHandler, nil
 }
 
 func startAPIService(port int) (error, *gaugeApiMessageHandler) {
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(infoGatherer.SpecInfoGatherer)
 	apiHandler := &gaugeApiMessageHandler{specInfoGatherer: specInfoGatherer}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
@@ -60,19 +60,19 @@ func startAPIService(port int) (error, *gaugeApiMessageHandler) {
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-	apiHandler.runner = specInfoGatherer.makeListOfAvailableSteps(nil)
+	apiHandler.runner = specInfoGatherer.MakeListOfAvailableSteps(nil)
 	return nil, apiHandler
 }
 
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	wg.Add(1)
 	_, apiHandler := startAPIService(port)
-	apiHandler.runner.kill(getCurrentLogger())
+	apiHandler.runner.Kill(execLogger.Current())
 }
 
 type gaugeApiMessageHandler struct {
-	specInfoGatherer *specInfoGatherer
-	runner           *testRunner
+	specInfoGatherer *infoGatherer.SpecInfoGatherer
+	runner           *runner.TestRunner
 }
 
 func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, connection net.Conn) {
@@ -137,7 +137,6 @@ func (handler *gaugeApiMessageHandler) sendMessage(message *gauge_messages.APIMe
 func (handler *gaugeApiMessageHandler) projectRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(config.ProjectRoot)}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
-
 }
 
 func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -151,17 +150,17 @@ func (handler *gaugeApiMessageHandler) installationRootRequestResponse(message *
 }
 
 func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	stepValues := handler.specInfoGatherer.getAvailableSteps()
+	stepValues := handler.specInfoGatherer.GetAvailableSteps()
 	stepValueResponses := make([]*gauge_messages.ProtoStepValue, 0)
 	for _, stepValue := range stepValues {
-		stepValueResponses = append(stepValueResponses, convertToProtoStepValue(stepValue))
+		stepValueResponses = append(stepValueResponses, parser.ConvertToProtoStepValue(stepValue))
 	}
 	getAllStepsResponse := &gauge_messages.GetAllStepsResponse{AllSteps: stepValueResponses}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
 func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.availableSpecs)
+	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.AvailableSpecs)
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
 }
 
@@ -169,20 +168,19 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *gaug
 	request := message.GetStepValueRequest()
 	stepText := request.GetStepText()
 	hasInlineTable := request.GetHasInlineTable()
-	stepValue, err := extractStepValueAndParams(stepText, hasInlineTable)
+	stepValue, err := parser.ExtractStepValueAndParams(stepText, hasInlineTable)
 
 	if err != nil {
 		return handler.getErrorResponse(message, err)
 	}
-	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: convertToProtoStepValue(stepValue)}
+	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: parser.ConvertToProtoStepValue(stepValue)}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }
 
 func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.getConceptInfos())
+	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.GetConceptInfos())
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
-
 }
 
 func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -192,7 +190,7 @@ func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *gauge_m
 	if err != nil {
 		return handler.getErrorMessage(err)
 	}
-	runnerInfo, err := getRunnerInfo(language)
+	runnerInfo, err := runner.GetRunnerInfo(language)
 	if err != nil {
 		return handler.getErrorMessage(err)
 	}
@@ -214,10 +212,10 @@ func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *gauge_message
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
 }
 
-func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*specification) *gauge_messages.GetAllSpecsResponse {
+func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*parser.Specification) *gauge_messages.GetAllSpecsResponse {
 	protoSpecs := make([]*gauge_messages.ProtoSpec, 0)
 	for _, spec := range specs {
-		protoSpecs = append(protoSpecs, convertToProtoSpec(spec))
+		protoSpecs = append(protoSpecs, parser.ConvertToProtoSpec(spec))
 	}
 	return &gauge_messages.GetAllSpecsResponse{Specs: protoSpecs}
 }
@@ -228,7 +226,7 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	refactoringResult := performRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
+	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
 	if refactoringResult.success {
 		logger.ApiLog.Info("%s", refactoringResult.String())
 	} else {
@@ -236,48 +234,6 @@ func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_message
 	}
 	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.success), Errors: refactoringResult.errors, FilesChanged: refactoringResult.allFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
-}
-
-func createStepValue(step *step) stepValue {
-	stepValue := stepValue{stepValue: step.value}
-	args := make([]string, 0)
-	for _, arg := range step.args {
-		switch arg.argType {
-		case static, dynamic:
-			args = append(args, arg.value)
-		case tableArg:
-			args = append(args, "table")
-		case specialString, specialTable:
-			args = append(args, arg.name)
-		}
-	}
-	stepValue.args = args
-	stepValue.parameterizedStepValue = getParameterizeStepValue(stepValue.stepValue, args)
-	return stepValue
-}
-
-func extractStepValueAndParams(stepText string, hasInlineTable bool) (*stepValue, error) {
-	stepValueWithPlaceHolders, args, err := processStepText(stepText)
-	if err != nil {
-		return nil, err
-	}
-
-	extractedStepValue, _ := extractStepValueAndParameterTypes(stepValueWithPlaceHolders)
-	if hasInlineTable {
-		extractedStepValue += " " + PARAMETER_PLACEHOLDER
-		args = append(args, string(tableArg))
-	}
-	parameterizedStepValue := getParameterizeStepValue(extractedStepValue, args)
-
-	return &stepValue{args, extractedStepValue, parameterizedStepValue}, nil
-
-}
-
-func getParameterizeStepValue(stepValue string, params []string) string {
-	for _, param := range params {
-		stepValue = strings.Replace(stepValue, PARAMETER_PLACEHOLDER, "<"+param+">", 1)
-	}
-	return stepValue
 }
 
 func (handler *gaugeApiMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {

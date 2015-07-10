@@ -62,7 +62,7 @@ func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFil
 
 func (filter *ScenarioFilterBasedOnTags) filter(item item) bool {
 	if item.kind() == scenarioKind {
-		tags := item.(*scenario).tags
+		tags := item.(*scenario).Tags
 		if tags == nil {
 			return !filter.filterTags(filter.specTags)
 		}
@@ -172,7 +172,7 @@ func filterSpecsItems(specs []*specification, filter specItemFilter) []*specific
 	filteredSpecs := make([]*specification, 0)
 	for _, spec := range specs {
 		spec.filter(filter)
-		if len(spec.scenarios) != 0 {
+		if len(spec.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
 		}
 	}
@@ -183,11 +183,11 @@ func filterSpecsByTags(specs []*specification, tagExpression string) []*specific
 	filteredSpecs := make([]*specification, 0)
 	for _, spec := range specs {
 		tagValues := make([]string, 0)
-		if spec.tags != nil {
-			tagValues = spec.tags.values
+		if spec.Tags != nil {
+			tagValues = spec.Tags.values
 		}
 		spec.filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
-		if len(spec.scenarios) != 0 {
+		if len(spec.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
 		}
 	}

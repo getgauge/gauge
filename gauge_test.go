@@ -55,9 +55,9 @@ func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
 
 	c.Assert(result.ok, Equals, true)
 
-	c.Assert(len(spec.tags.values), Equals, 2)
-	c.Assert(spec.tags.values[0], Equals, "tag1")
-	c.Assert(spec.tags.values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.values), Equals, 2)
+	c.Assert(spec.Tags.values[0], Equals, "tag1")
+	c.Assert(spec.Tags.values[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
@@ -71,9 +71,9 @@ func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
 
 	c.Assert(result.ok, Equals, true)
 
-	c.Assert(len(spec.scenarios[0].tags.values), Equals, 2)
-	c.Assert(spec.scenarios[0].tags.values[0], Equals, "tag1")
-	c.Assert(spec.scenarios[0].tags.values[1], Equals, "tag2")
+	c.Assert(len(spec.Scenarios[0].Tags.values), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.values[0], Equals, "tag1")
+	c.Assert(spec.Scenarios[0].Tags.values[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestToSplitTagNames(c *C) {
@@ -134,7 +134,7 @@ func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
 	specsToExecute := groupFilter.filter(specs)
 
 	c.Assert(len(specsToExecute), Equals, 1)
-	c.Assert(specsToExecute[0].heading, Equals, heading3)
+	c.Assert(specsToExecute[0].Heading, Equals, heading3)
 
 }
 
@@ -167,10 +167,10 @@ func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
 	specsToExecute3 := groupFilter.filter(specs)
 	c.Assert(len(specsToExecute3), Equals, 2)
 
-	c.Assert(specsToExecute2[0].heading, Equals, specsToExecute1[0].heading)
-	c.Assert(specsToExecute2[1].heading, Equals, specsToExecute1[1].heading)
-	c.Assert(specsToExecute3[0].heading, Equals, specsToExecute1[0].heading)
-	c.Assert(specsToExecute3[1].heading, Equals, specsToExecute1[1].heading)
+	c.Assert(specsToExecute2[0].Heading, Equals, specsToExecute1[0].Heading)
+	c.Assert(specsToExecute2[1].Heading, Equals, specsToExecute1[1].Heading)
+	c.Assert(specsToExecute3[0].Heading, Equals, specsToExecute1[0].Heading)
+	c.Assert(specsToExecute3[1].Heading, Equals, specsToExecute1[1].Heading)
 }
 
 func (s *MySuite) TestToRunSpecificSetOfSpecsGivesEmptySpecsIfDistributableNumberIsNotValid(c *C) {

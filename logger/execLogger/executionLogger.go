@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/wsxiaoys/terminal"
+	"os"
 	"strings"
 )
 
@@ -64,7 +65,7 @@ type pluginLogger struct {
 func (writer *pluginLogger) Write(b []byte) (int, error) {
 	message := string(b)
 	prefixedMessage := addPrefixToEachLine(message, fmt.Sprintf("[%s Plugin] : ", writer.pluginName))
-	gaugeConsoleWriter := getCurrentLogger()
+	gaugeConsoleWriter := Current()
 	_, err := gaugeConsoleWriter.Write([]byte(prefixedMessage))
 	return len(message), err
 }
@@ -86,7 +87,7 @@ func newColoredConsoleWriter() *coloredLogger {
 	return &coloredLogger{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
 }
 
-func getCurrentLogger() ExecutionLogger {
+func Current() ExecutionLogger {
 	if currentLogger == nil {
 		if SimpleConsoleOutput {
 			currentLogger = newSimpleConsoleWriter()
@@ -225,4 +226,9 @@ func getEmptySpacedString(numOfSpaces int) string {
 		text += " "
 	}
 	return text
+}
+
+func CriticalError(err error) {
+	Current().Critical(err.Error())
+	os.Exit(1)
 }

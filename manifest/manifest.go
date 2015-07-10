@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package manifest
 
 import (
 	"encoding/json"
@@ -29,31 +29,31 @@ import (
 	"strings"
 )
 
-type manifest struct {
+type Manifest struct {
 	Language string
 	Plugins  []string
 }
 
-func getProjectManifest() (*manifest, error) {
+func ProjectManifest() (*Manifest, error) {
 	contents, err := common.ReadFileContents(path.Join(config.ProjectRoot, common.ManifestFile))
 	if err != nil {
 		return nil, err
 	}
 	dec := json.NewDecoder(strings.NewReader(contents))
 
-	var m manifest
+	var m Manifest
 	for {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, errors.New(fmt.Sprintf("Failed to read manifest. %s\n", err.Error()))
+			return nil, errors.New(fmt.Sprintf("Failed to read Manifest. %s\n", err.Error()))
 		}
 	}
 
 	return &m, nil
 }
 
-func (m *manifest) save() error {
+func (m *Manifest) save() error {
 	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return err

@@ -39,6 +39,7 @@ import (
 	"sync"
 	"time"
 	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
 )
 
 const (
@@ -130,7 +131,7 @@ func newStepName() string {
 }
 
 func refactorSteps(oldStep, newStep string) {
-	refactoringResult := performRephraseRefactoring(oldStep, newStep)
+	refactoringResult := PerformRephraseRefactoring(oldStep, newStep)
 	printRefactoringSummary(refactoringResult)
 }
 
@@ -151,12 +152,6 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	os.Exit(exitCode)
 }
 
-func saveFile(fileName string, content string, backup bool) {
-	err := common.SaveFile(fileName, content, backup)
-	if err != nil {
-		logger.Log.Error("Failed to refactor '%s': %s\n", fileName, err)
-	}
-}
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", version.CurrentGaugeVersion.String())
@@ -176,13 +171,13 @@ func runInBackground() {
 		port, err = strconv.Atoi(*apiPort)
 		os.Setenv(common.ApiPortEnvVariableName, *apiPort)
 		if err != nil {
-			handleCriticalError(errors.New(fmt.Sprintf("Failed to parse the port number :", *apiPort, "\n", err.Error())))
+			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to parse the port number :", *apiPort, "\n", err.Error())))
 		}
 	} else {
 		env.LoadEnv(*currentEnv, false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
-			handleCriticalError(errors.New(fmt.Sprintf("Failed to start API Service. %s \n", err.Error())))
+			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start API Service. %s \n", err.Error())))
 		}
 	}
 	var wg sync.WaitGroup
@@ -199,12 +194,12 @@ func formatSpecFilesIn(filesLocation string) {
 func initializeProject(language string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Failed to find working directory. %s\n", err.Error())))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to find working directory. %s\n", err.Error())))
 	}
 	config.ProjectRoot = wd
 	err = createProjectTemplate(language)
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Failed to initialize. %s\n", err.Error())))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to initialize. %s\n", err.Error())))
 	}
 	logger.Log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
@@ -222,12 +217,12 @@ func addPluginToProject(pluginName string) {
 			}
 		}
 	}
-	manifest, err := getProjectManifest()
+	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		handleCriticalError(err)
+		execLogger.CriticalError(err)
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())))
 	} else {
 		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}
@@ -245,31 +240,26 @@ func executeSpecs(inParallel bool) {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	manifest, err := getProjectManifest()
+	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		handleCriticalError(err)
+		execLogger.CriticalError(err)
 	}
 	err, apiHandler := startAPIService(0)
 	if err != nil {
-		apiHandler.runner.kill(getCurrentLogger())
-		handleCriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
+		apiHandler.runner.kill(execLogger.Current())
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
 	}
 	if apiHandler.runner == nil {
-		handleCriticalError(errors.New("Failed to start a runner\n"))
+		execLogger.CriticalError(errors.New("Failed to start a runner\n"))
 	}
 
 	validateSpecs(manifest, specsToExecute, apiHandler.runner, conceptsDictionary)
 	pluginHandler := startPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, apiHandler.runner, pluginHandler, parallelInfo, getCurrentLogger())
+	execution := newExecution(manifest, specsToExecute, apiHandler.runner, pluginHandler, parallelInfo, execLogger.Current())
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
-}
-
-func handleCriticalError(err error) {
-	getCurrentLogger().Critical(err.Error())
-	os.Exit(1)
 }
 
 func getDataTableRows(rowCount int) indexRange {
@@ -278,7 +268,7 @@ func getDataTableRows(rowCount int) indexRange {
 	}
 	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
 	}
 	return indexes
 }
@@ -298,7 +288,7 @@ func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *
 	validationErrors := validator.validate()
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
-		runner.kill(getCurrentLogger())
+		runner.kill(execLogger.Current())
 		os.Exit(1)
 	}
 }
@@ -326,7 +316,7 @@ func printValidationFailures(validationErrors executionValidationErrors) {
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			getCurrentLogger().PrintError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
+			execLogger.Current().PrintError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.lineNo, stepValidationError.message, s.getLineText()))
 		}
 	}
 }
@@ -438,33 +428,6 @@ func handleParseResult(results ...*parseResult) {
 	}
 }
 
-func startRunnerAndMakeConnection(manifest *manifest, writer executionLogger) (*testRunner, error) {
-	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
-	if err != nil {
-		port = 0
-	}
-	gaugeConnectionHandler, connHandlerErr := conn.NewGaugeConnectionHandler(port, nil)
-	if connHandlerErr != nil {
-		return nil, connHandlerErr
-	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), writer)
-	if err != nil {
-		return nil, err
-	}
-
-	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
-	testRunner.connection = runnerConnection
-	if connectionError != nil {
-		writer.Debug("Runner connection error: %s", connectionError)
-		err := testRunner.killRunner()
-		if err != nil {
-			writer.Debug("Error while killing runner: %s", err)
-		}
-		return nil, connectionError
-	}
-	return testRunner, nil
-}
-
 func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
@@ -507,7 +470,7 @@ func printExecutionStatus(suiteResult *suiteResult, specsSkipped int) int {
 
 func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 	if hook != nil {
-		console := getCurrentLogger()
+		console := execLogger.Current()
 		console.PrintError(hook.GetErrorMessage())
 		console.PrintError(hook.GetStackTrace())
 	}
@@ -515,7 +478,7 @@ func printHookError(hook *(gauge_messages.ProtoHookFailure)) {
 
 func printError(execResult *gauge_messages.ProtoExecutionResult) {
 	if execResult.GetFailed() {
-		console := getCurrentLogger()
+		console := execLogger.Current()
 		console.PrintError(execResult.GetErrorMessage() + "\n")
 		console.PrintError(execResult.GetStackTrace() + "\n")
 	}
@@ -523,7 +486,7 @@ func printError(execResult *gauge_messages.ProtoExecutionResult) {
 
 func printSpecFailure(specResult *specResult) {
 	if specResult.isFailed {
-		getCurrentLogger().PrintError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
+		execLogger.Current().PrintError(fmt.Sprintf("%s : %s \n", specResult.protoSpec.GetFileName(), specResult.protoSpec.GetSpecHeading()))
 		printHookError(specResult.protoSpec.GetPreHookFailure())
 
 		for _, specItem := range specResult.protoSpec.Items {
@@ -546,7 +509,7 @@ func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTa
 
 func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 	if scenario.GetFailed() {
-		getCurrentLogger().PrintError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
+		execLogger.Current().PrintError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
 		printHookError(scenario.GetPreHookFailure())
 
 		for _, scenarioItem := range scenario.GetScenarioItems() {
@@ -564,7 +527,7 @@ func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
 func printStepFailure(step *gauge_messages.ProtoStep) {
 	stepExecResult := step.StepExecutionResult
 	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
-		getCurrentLogger().PrintError(fmt.Sprintf("\t %s\n", step.GetActualText()))
+		execLogger.Current().PrintError(fmt.Sprintf("\t %s\n", step.GetActualText()))
 		printHookError(stepExecResult.GetPreHookFailure())
 		printError(stepExecResult.ExecutionResult)
 		printHookError(stepExecResult.GetPostHookFailure())
@@ -574,20 +537,9 @@ func printStepFailure(step *gauge_messages.ProtoStep) {
 func printConceptFailure(concept *gauge_messages.ProtoConcept) {
 	conceptExecResult := concept.ConceptExecutionResult
 	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
-		getCurrentLogger().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
+		execLogger.Current().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
 		printError(conceptExecResult.ExecutionResult)
 	}
-}
-
-func getSpecFiles(specSource string) []string {
-	specFiles := make([]string, 0)
-	if common.DirExists(specSource) {
-		specFiles = append(specFiles, util.FindSpecFilesIn(specSource)...)
-	} else if common.FileExists(specSource) && util.IsValidSpecExtension(specSource) {
-		specFile, _ := filepath.Abs(specSource)
-		specFiles = append(specFiles, specFile)
-	}
-	return specFiles
 }
 
 func specsFromArgs(conceptDictionary *conceptDictionary) []*specification {
@@ -611,13 +563,6 @@ func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDicti
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := findSpecs(specName, conceptDictionary)
 	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
-}
-
-func findSpecs(specSource string, conceptDictionary *conceptDictionary) ([]*specification, []*parseResult) {
-	specFiles := getSpecFiles(specSource)
-
-	return parseSpecFiles(specFiles, conceptDictionary)
-
 }
 
 func handleWarningMessages(warnings []string) {
@@ -662,17 +607,17 @@ func sortSpecsList(allSpecs []*specification) []*specification {
 func setWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 	}
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+			execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 		}
 	}
 	err = os.Chdir(targetDir)
 	_, err = os.Getwd()
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
 	}
 }

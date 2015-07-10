@@ -77,9 +77,9 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
-	concept := spec.scenarios[0].steps[0]
+	concept := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
 	populateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").Value, Equals, "123")
@@ -111,9 +111,9 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
-	concept1 := spec.scenarios[0].steps[0]
+	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "123")
@@ -124,7 +124,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "123")
 	c.Assert(nestedConcept.getArg("username").Value, Equals, "prateek")
 
-	concept2 := spec.scenarios[0].steps[1]
+	concept2 := spec.Scenarios[0].Steps[1]
 	c.Assert(concept2.getArg("user-id").Value, Equals, "456")
 	c.Assert(concept2.getArg("user-name").Value, Equals, "foo")
 	c.Assert(concept2.getArg("user-phone").Value, Equals, "9900")
@@ -157,9 +157,9 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.parse(specText, conceptDictionary)
-	concept1 := spec.scenarios[0].steps[0]
+	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.dataTable.Table, 0)
+	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
 	populateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "456")

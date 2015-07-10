@@ -62,11 +62,11 @@ func (s *MySuite) TestCopyingProtoTable(c *C) {
 
 func (s *MySuite) TestCopyingStepValue(c *C) {
 	stepValue := &StepValue{[]string{"param1"}, "foo with {}", "foo with <param>"}
-	protoStepValue := convertToProtoStepValue(stepValue)
+	protoStepValue := ConvertToProtoStepValue(stepValue)
 
-	c.Assert(protoStepValue.GetStepValue(), Equals, stepValue.stepValue)
-	c.Assert(protoStepValue.GetParameterizedStepValue(), Equals, stepValue.parameterizedStepValue)
-	c.Assert(protoStepValue.GetParameters(), DeepEquals, stepValue.args)
+	c.Assert(protoStepValue.GetStepValue(), Equals, stepValue.StepValue)
+	c.Assert(protoStepValue.GetParameterizedStepValue(), Equals, stepValue.ParameterizedStepValue)
+	c.Assert(protoStepValue.GetParameters(), DeepEquals, stepValue.Args)
 }
 
 func compareFragments(fragmentList1 []*gauge_messages.Fragment, fragmentList2 []*gauge_messages.Fragment, c *C) {

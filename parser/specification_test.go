@@ -79,19 +79,19 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 
 	c.Assert(len(spec.Items), Equals, 1)
-	c.Assert(spec.Items[0], Equals, spec.scenarios[0])
+	c.Assert(spec.Items[0], Equals, spec.Scenarios[0])
 	scenarioItems := (spec.Items[0]).(*Scenario).Items
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].steps[0])
+	c.Assert(scenarioItems[0], Equals, spec.Scenarios[0].Steps[0])
 
 	c.Assert(result.Ok, Equals, true)
-	c.Assert(spec.heading.LineNo, Equals, 1)
-	c.Assert(spec.heading.Value, Equals, "Spec Heading")
+	c.Assert(spec.Heading.LineNo, Equals, 1)
+	c.Assert(spec.Heading.Value, Equals, "Spec Heading")
 
-	c.Assert(len(spec.scenarios), Equals, 1)
-	c.Assert(spec.scenarios[0].heading.LineNo, Equals, 2)
-	c.Assert(spec.scenarios[0].heading.Value, Equals, "Scenario Heading")
-	c.Assert(len(spec.scenarios[0].steps), Equals, 1)
-	c.Assert(spec.scenarios[0].steps[0].Value, Equals, "Example step")
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	c.Assert(spec.Scenarios[0].Heading.LineNo, Equals, 2)
+	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "Scenario Heading")
+	c.Assert(len(spec.Scenarios[0].Steps), Equals, 1)
+	c.Assert(spec.Scenarios[0].Steps[0].Value, Equals, "Example step")
 }
 
 func (s *MySuite) TestStepsAndComments(c *C) {
@@ -106,34 +106,34 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 	c.Assert(len(spec.Items), Equals, 2)
-	c.Assert(spec.Items[0], Equals, spec.comments[0])
-	c.Assert(spec.Items[1], Equals, spec.scenarios[0])
+	c.Assert(spec.Items[0], Equals, spec.Comments[0])
+	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
 
 	scenarioItems := (spec.Items[1]).(*Scenario).Items
 	c.Assert(3, Equals, len(scenarioItems))
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].comments[0])
-	c.Assert(scenarioItems[1], Equals, spec.scenarios[0].steps[0])
-	c.Assert(scenarioItems[2], Equals, spec.scenarios[0].comments[1])
+	c.Assert(scenarioItems[0], Equals, spec.Scenarios[0].Comments[0])
+	c.Assert(scenarioItems[1], Equals, spec.Scenarios[0].Steps[0])
+	c.Assert(scenarioItems[2], Equals, spec.Scenarios[0].Comments[1])
 
 	c.Assert(result.Ok, Equals, true)
-	c.Assert(spec.heading.Value, Equals, "Spec Heading")
+	c.Assert(spec.Heading.Value, Equals, "Spec Heading")
 
-	c.Assert(len(spec.comments), Equals, 1)
-	c.Assert(spec.comments[0].LineNo, Equals, 2)
-	c.Assert(spec.comments[0].Value, Equals, "A comment with some text and **bold** characters")
+	c.Assert(len(spec.Comments), Equals, 1)
+	c.Assert(spec.Comments[0].LineNo, Equals, 2)
+	c.Assert(spec.Comments[0].Value, Equals, "A comment with some text and **bold** characters")
 
-	c.Assert(len(spec.scenarios), Equals, 1)
-	scenario := spec.scenarios[0]
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	scenario := spec.Scenarios[0]
 
-	c.Assert(2, Equals, len(scenario.comments))
-	c.Assert(scenario.comments[0].LineNo, Equals, 4)
-	c.Assert(scenario.comments[0].Value, Equals, "Another comment")
+	c.Assert(2, Equals, len(scenario.Comments))
+	c.Assert(scenario.Comments[0].LineNo, Equals, 4)
+	c.Assert(scenario.Comments[0].Value, Equals, "Another comment")
 
-	c.Assert(scenario.comments[1].LineNo, Equals, 6)
-	c.Assert(scenario.comments[1].Value, Equals, "Third comment")
+	c.Assert(scenario.Comments[1].LineNo, Equals, 6)
+	c.Assert(scenario.Comments[1].Value, Equals, "Third comment")
 
-	c.Assert(scenario.heading.Value, Equals, "Scenario Heading")
-	c.Assert(len(scenario.steps), Equals, 1)
+	c.Assert(scenario.Heading.Value, Equals, "Scenario Heading")
+	c.Assert(len(scenario.Steps), Equals, 1)
 }
 
 func (s *MySuite) TestStepsWithParam(c *C) {
@@ -148,7 +148,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 	c.Assert(result.Ok, Equals, true)
-	step := spec.scenarios[0].steps[0]
+	step := spec.Scenarios[0].Steps[0]
 	c.Assert(step.Value, Equals, "enter {} with {}")
 	c.Assert(step.LineNo, Equals, 5)
 	c.Assert(len(step.Args), Equals, 2)
@@ -158,7 +158,7 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
 	c.Assert(step.Args[1].Name, Equals, "id")
 
-	escapedStep := spec.scenarios[0].steps[1]
+	escapedStep := spec.Scenarios[0].Steps[1]
 	c.Assert(escapedStep.Value, Equals, "sample \\{static\\}")
 	c.Assert(len(escapedStep.Args), Equals, 0)
 }
@@ -206,22 +206,22 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 
 	c.Assert(len(spec.Items), Equals, 3)
-	c.Assert(spec.Items[0], Equals, spec.comments[0])
-	c.Assert(spec.Items[1], DeepEquals, &spec.dataTable.Table)
-	c.Assert(spec.Items[2], Equals, spec.comments[1])
+	c.Assert(spec.Items[0], Equals, spec.Comments[0])
+	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable.Table)
+	c.Assert(spec.Items[2], Equals, spec.Comments[1])
 
 	c.Assert(result.Ok, Equals, true)
-	c.Assert(spec.dataTable, NotNil)
-	c.Assert(len(spec.dataTable.Table.Get("id")), Equals, 2)
-	c.Assert(len(spec.dataTable.Table.Get("name")), Equals, 2)
-	c.Assert(spec.dataTable.Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.dataTable.Table.Get("id")[0].CellType, Equals, Static)
-	c.Assert(spec.dataTable.Table.Get("id")[1].Value, Equals, "2")
-	c.Assert(spec.dataTable.Table.Get("id")[1].CellType, Equals, Static)
-	c.Assert(spec.dataTable.Table.Get("name")[0].Value, Equals, "foo")
-	c.Assert(spec.dataTable.Table.Get("name")[0].CellType, Equals, Static)
-	c.Assert(spec.dataTable.Table.Get("name")[1].Value, Equals, "bar")
-	c.Assert(spec.dataTable.Table.Get("name")[1].CellType, Equals, Static)
+	c.Assert(spec.DataTable, NotNil)
+	c.Assert(len(spec.DataTable.Table.Get("id")), Equals, 2)
+	c.Assert(len(spec.DataTable.Table.Get("name")), Equals, 2)
+	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
+	c.Assert(spec.DataTable.Table.Get("id")[0].CellType, Equals, Static)
+	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "2")
+	c.Assert(spec.DataTable.Table.Get("id")[1].CellType, Equals, Static)
+	c.Assert(spec.DataTable.Table.Get("name")[0].Value, Equals, "foo")
+	c.Assert(spec.DataTable.Table.Get("name")[0].CellType, Equals, Static)
+	c.Assert(spec.DataTable.Table.Get("name")[1].Value, Equals, "bar")
+	c.Assert(spec.DataTable.Table.Get("name")[1].CellType, Equals, Static)
 }
 
 func (s *MySuite) TestStepWithInlineTable(c *C) {
@@ -237,7 +237,7 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 
 	c.Assert(result.Ok, Equals, true)
-	step := spec.scenarios[0].steps[0]
+	step := spec.Scenarios[0].Steps[0]
 
 	c.Assert(step.Args[0].ArgType, Equals, TableArg)
 	inlineTable := step.Args[0].Table
@@ -273,7 +273,7 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 
 	c.Assert(result.Ok, Equals, true)
-	step := spec.scenarios[0].steps[0]
+	step := spec.Scenarios[0].Steps[0]
 
 	c.Assert(step.Args[0].ArgType, Equals, TableArg)
 	inlineTable := step.Args[0].Table
@@ -311,9 +311,9 @@ func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
 
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 	c.Assert(result.Ok, Equals, true)
-	c.Assert(spec.scenarios[0].steps[0].Args[0].Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.scenarios[0].steps[0].Args[0].Table.Get("name")[0].Value, Equals, "<invalid>")
-	c.Assert(result.Warnings[0].message, Equals, "Dynamic param <invalid> could not be resolved, Treating it as static param")
+	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Get("id")[0].Value, Equals, "1")
+	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Get("name")[0].Value, Equals, "<invalid>")
+	c.Assert(result.Warnings[0].Message, Equals, "Dynamic param <invalid> could not be resolved, Treating it as static param")
 }
 
 func (s *MySuite) TestContextWithInlineTable(c *C) {
@@ -329,11 +329,11 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 	spec, result := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
 	c.Assert(len(spec.Items), Equals, 2)
-	c.Assert(spec.Items[0], DeepEquals, spec.contexts[0])
-	c.Assert(spec.Items[1], Equals, spec.scenarios[0])
+	c.Assert(spec.Items[0], DeepEquals, spec.Contexts[0])
+	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
 
 	c.Assert(result.Ok, Equals, true)
-	context := spec.contexts[0]
+	context := spec.Contexts[0]
 
 	c.Assert(context.Args[0].ArgType, Equals, TableArg)
 	inlineTable := context.Args[0].Table
@@ -424,9 +424,9 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.tags.Values), Equals, 2)
-	c.Assert(spec.tags.Values[0], Equals, "tag1")
-	c.Assert(spec.tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.Values), Equals, 2)
+	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
@@ -441,11 +441,11 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.tags.Values), Equals, 2)
-	c.Assert(spec.tags.Values[0], Equals, "tag1")
-	c.Assert(spec.tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.Values), Equals, 2)
+	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values[1], Equals, "tag2")
 
-	tags := spec.scenarios[0].tags
+	tags := spec.Scenarios[0].Tags
 	c.Assert(len(tags.Values), Equals, 2)
 	c.Assert(tags.Values[0], Equals, "tag3")
 	c.Assert(tags.Values[1], Equals, "tag4")
@@ -574,8 +574,8 @@ func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.scenarios[0].steps), Equals, 1)
-	specConceptStep := spec.scenarios[0].steps[0]
+	c.Assert(len(spec.Scenarios[0].Steps), Equals, 1)
+	specConceptStep := spec.Scenarios[0].Steps[0]
 	c.Assert(specConceptStep.IsConcept, Equals, true)
 	c.Assert(specConceptStep.ConceptSteps[0], Equals, firstStep)
 	c.Assert(specConceptStep.ConceptSteps[1], Equals, secondStep)
@@ -596,9 +596,9 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
+	c.Assert(len(spec.Scenarios[0].Steps), Equals, 2)
 
-	firstConceptStep := spec.scenarios[0].steps[0]
+	firstConceptStep := spec.Scenarios[0].Steps[0]
 	c.Assert(firstConceptStep.IsConcept, Equals, true)
 	c.Assert(firstConceptStep.ConceptSteps[0].Value, Equals, "enter user {}")
 	c.Assert(firstConceptStep.ConceptSteps[0].Args[0].Value, Equals, "username")
@@ -607,7 +607,7 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(len(firstConceptStep.Lookup.paramValue), Equals, 1)
 	c.Assert(firstConceptStep.getArg("username").Value, Equals, "foo")
 
-	secondConceptStep := spec.scenarios[0].steps[1]
+	secondConceptStep := spec.Scenarios[0].Steps[1]
 	c.Assert(secondConceptStep.IsConcept, Equals, true)
 	c.Assert(secondConceptStep.ConceptSteps[0].Value, Equals, "enter user {}")
 	c.Assert(secondConceptStep.ConceptSteps[0].Args[0].Value, Equals, "username")
@@ -635,16 +635,16 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Items), Equals, 2)
-	c.Assert(spec.Items[0], DeepEquals, &spec.dataTable.Table)
-	c.Assert(spec.Items[1], Equals, spec.scenarios[0])
+	c.Assert(spec.Items[0], DeepEquals, &spec.DataTable.Table)
+	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
 
 	scenarioItems := (spec.Items[1]).(*Scenario).Items
-	c.Assert(scenarioItems[0], Equals, spec.scenarios[0].steps[0])
-	c.Assert(scenarioItems[1], DeepEquals, spec.scenarios[0].steps[1])
+	c.Assert(scenarioItems[0], Equals, spec.Scenarios[0].Steps[0])
+	c.Assert(scenarioItems[1], DeepEquals, spec.Scenarios[0].Steps[1])
 
-	c.Assert(len(spec.scenarios[0].steps), Equals, 2)
+	c.Assert(len(spec.Scenarios[0].Steps), Equals, 2)
 
-	firstConcept := spec.scenarios[0].steps[0]
+	firstConcept := spec.Scenarios[0].Steps[0]
 	c.Assert(firstConcept.IsConcept, Equals, true)
 	c.Assert(firstConcept.ConceptSteps[0].Value, Equals, "enter user {} and {}")
 	c.Assert(firstConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
@@ -666,7 +666,7 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(arg2.Value, Equals, "description")
 	c.Assert(arg2.ArgType, Equals, Dynamic)
 
-	secondConcept := spec.scenarios[0].steps[1]
+	secondConcept := spec.Scenarios[0].Steps[1]
 	c.Assert(secondConcept.IsConcept, Equals, true)
 	c.Assert(secondConcept.ConceptSteps[0].Value, Equals, "enter user {} and {}")
 	c.Assert(secondConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
@@ -705,7 +705,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
 	c.Assert(result.Ok, Equals, true)
 
-	steps := spec.scenarios[0].steps
+	steps := spec.Scenarios[0].Steps
 	c.Assert(len(steps), Equals, 1)
 	c.Assert(steps[0].IsConcept, Equals, true)
 	c.Assert(steps[0].Value, Equals, "create users {}")
@@ -735,7 +735,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
 	c.Assert(result.Ok, Equals, true)
 
-	steps := spec.scenarios[0].steps
+	steps := spec.Scenarios[0].Steps
 	c.Assert(len(steps), Equals, 2)
 	c.Assert(steps[0].IsConcept, Equals, true)
 	c.Assert(steps[1].IsConcept, Equals, true)
@@ -755,7 +755,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
 	step := &Step{Value: "This is a simple step"}
 
-	step.populateFragments()
+	step.PopulateFragments()
 
 	c.Assert(len(step.Fragments), Equals, 1)
 	fragment := step.Fragments[0]
@@ -798,7 +798,7 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	stepArgs := []*StepArg{arg1, arg2, arg3, arg4}
 	step := &Step{Value: "{} step with {} and {}, {}", Args: stepArgs}
 
-	step.populateFragments()
+	step.PopulateFragments()
 
 	c.Assert(len(step.Fragments), Equals, 7)
 	fragment1 := step.Fragments[0]
@@ -939,7 +939,7 @@ func (s *MySuite) TestRenameStep(c *C) {
 	orderMap[0] = 1
 	orderMap[1] = 0
 	IsConcept := false
-	isRefactored := originalStep.rename(*originalStep, *newStep, false, orderMap, &IsConcept)
+	isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
 
 	c.Assert(isRefactored, Equals, true)
 	c.Assert(originalStep.Value, Equals, "step from {} {}")
@@ -970,7 +970,7 @@ func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 		&Token{Kind: StepKind, Value: "Example {special} step", LineNo: 3, Args: []string{"unknown:foo"}},
 	}
 	spec, parseResults := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
-	c.Assert(spec.scenarios[0].steps[0].Args[0].ArgType, Equals, Dynamic)
+	c.Assert(spec.Scenarios[0].Steps[0].Args[0].ArgType, Equals, Dynamic)
 	c.Assert(len(parseResults.Warnings), Equals, 1)
-	c.Assert(parseResults.Warnings[0].message, Equals, "Could not resolve special param type <unknown:foo>. Treating it as dynamic param.")
+	c.Assert(parseResults.Warnings[0].Message, Equals, "Could not resolve special param type <unknown:foo>. Treating it as dynamic param.")
 }

@@ -26,10 +26,10 @@ import (
 )
 
 type Scenario struct {
-	heading  *Heading
-	steps    []*Step
-	comments []*Comment
-	tags     *Tags
+	Heading  *Heading
+	Steps    []*Step
+	Comments []*Comment
+	Tags     *Tags
 	Items    []Item
 }
 
@@ -94,9 +94,9 @@ type Step struct {
 }
 
 type StepValue struct {
-	args                   []string
-	stepValue              string
-	parameterizedStepValue string
+	Args                   []string
+	StepValue              string
+	ParameterizedStepValue string
 }
 
 func (step *Step) getArg(name string) *StepArg {
@@ -118,7 +118,7 @@ func (step *Step) getLineText() string {
 	return step.LineText
 }
 
-func (step *Step) rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
+func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
 	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
 		return isRefactored
 	}
@@ -201,13 +201,13 @@ func createStepArgsFromProtoArguments(parameters []*gauge_messages.Parameter) []
 }
 
 type Specification struct {
-	heading   *Heading
-	scenarios []*Scenario
-	comments  []*Comment
-	dataTable DataTable
-	contexts  []*Step
+	Heading   *Heading
+	Scenarios []*Scenario
+	Comments  []*Comment
+	DataTable DataTable
+	Contexts  []*Step
 	FileName  string
-	tags      *Tags
+	Tags      *Tags
 	Items     []Item
 }
 
@@ -238,8 +238,8 @@ type Tags struct {
 }
 
 type Warning struct {
-	message string
-	lineNo  int
+	Message string
+	LineNo  int
 }
 
 type ParseResult struct {
@@ -301,7 +301,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	specConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == SpecKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
-		if spec.heading != nil {
+		if spec.Heading != nil {
 			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Multiple spec headings found in same file", token.LineText}}
 		}
 
@@ -313,11 +313,11 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	scenarioConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == ScenarioKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
-		if spec.heading == nil {
+		if spec.Heading == nil {
 			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Scenario should be defined after the spec heading", token.LineText}}
 		}
-		for _, scenario := range spec.scenarios {
-			if strings.ToLower(scenario.heading.Value) == strings.ToLower(token.Value) {
+		for _, scenario := range spec.Scenarios {
+			if strings.ToLower(scenario.Heading.Value) == strings.ToLower(token.Value) {
 				return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Duplicate scenario definitions are not allowed in the same specification", token.LineText}}
 			}
 		}
@@ -335,32 +335,32 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		latestScenario := spec.latestScenario()
 		stepToAdd, parseDetails := spec.createStep(token)
-		if parseDetails != nil && parseDetails.error != nil {
-			return ParseResult{ParseError: parseDetails.error, Ok: false, Warnings: parseDetails.warnings}
+		if parseDetails != nil && parseDetails.Error != nil {
+			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		latestScenario.addStep(stepToAdd)
 		retainStates(state, specScope, scenarioScope)
 		addStates(state, stepScope)
-		if parseDetails.warnings != nil {
-			return ParseResult{Ok: false, Warnings: parseDetails.warnings}
+		if parseDetails.Warnings != nil {
+			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
-		return ParseResult{Ok: true, Warnings: parseDetails.warnings}
+		return ParseResult{Ok: true, Warnings: parseDetails.Warnings}
 	})
 
 	contextConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := spec.createStep(token)
-		if parseDetails != nil && parseDetails.error != nil {
-			return ParseResult{ParseError: parseDetails.error, Ok: false, Warnings: parseDetails.warnings}
+		if parseDetails != nil && parseDetails.Error != nil {
+			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.addContext(stepToAdd)
 		retainStates(state, specScope)
 		addStates(state, contextScope)
-		if parseDetails.warnings != nil {
-			return ParseResult{Ok: false, Warnings: parseDetails.warnings}
+		if parseDetails.Warnings != nil {
+			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
-		return ParseResult{Ok: true, Warnings: parseDetails.warnings}
+		return ParseResult{Ok: true, Warnings: parseDetails.Warnings}
 	})
 
 	commentConverter := converterFn(func(token *Token, state *int) bool {
@@ -381,14 +381,14 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		return token.Kind == DataTableKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		resolvedArg, _ := newSpecialTypeResolver().resolve(token.Value)
-		if isInState(*state, specScope) && !spec.dataTable.isInitialized() {
+		if isInState(*state, specScope) && !spec.DataTable.isInitialized() {
 			externalTable := &DataTable{}
 			externalTable.Table = resolvedArg.Table
 			externalTable.LineNo = token.LineNo
 			externalTable.Value = token.Value
 			externalTable.IsExternal = true
 			spec.addExternalDataTable(externalTable)
-		} else if isInState(*state, specScope) && spec.dataTable.isInitialized() {
+		} else if isInState(*state, specScope) && spec.DataTable.isInitialized() {
 			value := "Multiple data table present, ignoring table"
 			spec.addComment(&Comment{token.LineText, token.LineNo})
 			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
@@ -413,7 +413,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			latestContext := spec.latestContext()
 			addInlineTableHeader(latestContext, token)
 		} else if !isInState(*state, scenarioScope) {
-			if !spec.dataTable.Table.isInitialized() {
+			if !spec.DataTable.Table.isInitialized() {
 				dataTable := &Table{}
 				dataTable.LineNo = token.LineNo
 				dataTable.addHeaders(token.Args)
@@ -450,13 +450,13 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.latestScenario()
 			latestStep := latestScenario.latestStep()
-			result = addInlineTableRow(latestStep, token, new(ArgLookup).fromDataTable(&spec.dataTable.Table))
+			result = addInlineTableRow(latestStep, token, new(ArgLookup).fromDataTable(&spec.DataTable.Table))
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.latestContext()
-			result = addInlineTableRow(latestContext, token, new(ArgLookup).fromDataTable(&spec.dataTable.Table))
+			result = addInlineTableRow(latestContext, token, new(ArgLookup).fromDataTable(&spec.DataTable.Table))
 		} else {
 			//todo validate datatable rows also
-			spec.dataTable.Table.addRowValues(token.Args)
+			spec.DataTable.Table.addRowValues(token.Args)
 			result = ParseResult{Ok: true}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tableScope)
@@ -482,46 +482,46 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	return converter
 }
 
-func (spec *Specification) createStep(stepToken *Token) (*Step, *parseDetailResult) {
-	dataTableLookup := new(ArgLookup).fromDataTable(&spec.dataTable.Table)
-	stepToAdd, parseDetails := spec.createStepUsingLookup(stepToken, dataTableLookup)
+func (spec *Specification) createStep(stepToken *Token) (*Step, *ParseDetailResult) {
+	dataTableLookup := new(ArgLookup).fromDataTable(&spec.DataTable.Table)
+	stepToAdd, parseDetails := spec.CreateStepUsingLookup(stepToken, dataTableLookup)
 
-	if parseDetails != nil && parseDetails.error != nil {
+	if parseDetails != nil && parseDetails.Error != nil {
 		return nil, parseDetails
 	}
 	return stepToAdd, parseDetails
 }
 
-func (spec *Specification) createStepUsingLookup(stepToken *Token, lookup *ArgLookup) (*Step, *parseDetailResult) {
+func (spec *Specification) CreateStepUsingLookup(stepToken *Token, lookup *ArgLookup) (*Step, *ParseDetailResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
-		return nil, &parseDetailResult{error: &ParseError{stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}, warnings: nil}
+		return nil, &ParseDetailResult{Error: &ParseError{stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}, Warnings: nil}
 	}
 	step := &Step{LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
 	arguments := make([]*StepArg, 0)
 	var warnings []*Warning
 	for i, argType := range argsType {
 		argument, parseDetails := spec.createStepArg(stepToken.Args[i], argType, stepToken, lookup)
-		if parseDetails != nil && parseDetails.error != nil {
+		if parseDetails != nil && parseDetails.Error != nil {
 			return nil, parseDetails
 		}
 		arguments = append(arguments, argument)
-		if parseDetails != nil && parseDetails.warnings != nil {
-			for _, warn := range parseDetails.warnings {
+		if parseDetails != nil && parseDetails.Warnings != nil {
+			for _, warn := range parseDetails.Warnings {
 				warnings = append(warnings, warn)
 			}
 		}
 	}
 	step.addArgs(arguments...)
-	return step, &parseDetailResult{warnings: warnings}
+	return step, &ParseDetailResult{Warnings: warnings}
 }
 
 func (specification *Specification) processConceptStepsFrom(conceptDictionary *ConceptDictionary) {
-	for _, step := range specification.contexts {
+	for _, step := range specification.Contexts {
 		specification.processConceptStep(step, conceptDictionary)
 	}
-	for _, scenario := range specification.scenarios {
-		for _, step := range scenario.steps {
+	for _, scenario := range specification.Scenarios {
+		for _, step := range scenario.Steps {
 			specification.processConceptStep(step, conceptDictionary)
 		}
 	}
@@ -558,55 +558,55 @@ func (specification *Specification) addItem(itemToAdd Item) {
 
 func (specification *Specification) addHeading(heading *Heading) {
 	heading.HeadingType = SpecHeading
-	specification.heading = heading
+	specification.Heading = heading
 }
 
 func (specification *Specification) addScenario(scenario *Scenario) {
-	specification.scenarios = append(specification.scenarios, scenario)
+	specification.Scenarios = append(specification.Scenarios, scenario)
 	specification.addItem(scenario)
 }
 
 func (specification *Specification) addContext(contextStep *Step) {
-	specification.contexts = append(specification.contexts, contextStep)
+	specification.Contexts = append(specification.Contexts, contextStep)
 	specification.addItem(contextStep)
 }
 
 func (specification *Specification) addComment(comment *Comment) {
-	specification.comments = append(specification.comments, comment)
+	specification.Comments = append(specification.Comments, comment)
 	specification.addItem(comment)
 }
 
 func (specification *Specification) addDataTable(table *Table) {
-	specification.dataTable.Table = *table
+	specification.DataTable.Table = *table
 	specification.addItem(table)
 }
 
 func (specification *Specification) addExternalDataTable(externalTable *DataTable) {
-	specification.dataTable = *externalTable
+	specification.DataTable = *externalTable
 	specification.addItem(externalTable)
 }
 
 func (specification *Specification) addTags(tags *Tags) {
-	specification.tags = tags
+	specification.Tags = tags
 	specification.addItem(tags)
 }
 
 func (specification *Specification) latestScenario() *Scenario {
-	return specification.scenarios[len(specification.scenarios)-1]
+	return specification.Scenarios[len(specification.Scenarios)-1]
 }
 
 func (specification *Specification) latestContext() *Step {
-	return specification.contexts[len(specification.contexts)-1]
+	return specification.Contexts[len(specification.Contexts)-1]
 }
 
 func (specParser *SpecParser) validateSpec(specification *Specification) *ParseError {
 	if len(specification.Items) == 0 {
 		return &ParseError{LineNo: 1, Message: "Spec does not have any elements"}
 	}
-	if specification.heading == nil {
+	if specification.Heading == nil {
 		return &ParseError{LineNo: 1, Message: "Spec heading not found"}
 	}
-	dataTable := specification.dataTable.Table
+	dataTable := specification.DataTable.Table
 	if dataTable.isInitialized() && dataTable.getRowCount() == 0 {
 		return &ParseError{LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
@@ -638,7 +638,7 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 
 func (step *Step) addArgs(args ...*StepArg) {
 	step.Args = append(step.Args, args...)
-	step.populateFragments()
+	step.PopulateFragments()
 }
 
 func (step *Step) addInlineTableHeaders(headers []string) {
@@ -650,10 +650,10 @@ func (step *Step) addInlineTableHeaders(headers []string) {
 func (step *Step) addInlineTableRow(row []TableCell) {
 	lastArg := step.Args[len(step.Args)-1]
 	lastArg.Table.addRows(row)
-	step.populateFragments()
+	step.PopulateFragments()
 }
 
-func (step *Step) populateFragments() {
+func (step *Step) PopulateFragments() {
 	r := regexp.MustCompile(ParameterPlaceholder)
 	/*
 		enter {} and {} bar
@@ -706,13 +706,13 @@ func (spec *Specification) removeItem(itemIndex int) {
 }
 
 func (spec *Specification) removeScenario(scenario *Scenario) {
-	index := getIndexFor(scenario, spec.scenarios)
-	if len(spec.scenarios)-1 == index {
-		spec.scenarios = spec.scenarios[:index]
+	index := getIndexFor(scenario, spec.Scenarios)
+	if len(spec.Scenarios)-1 == index {
+		spec.Scenarios = spec.Scenarios[:index]
 	} else if index == 0 {
-		spec.scenarios = spec.scenarios[index+1:]
+		spec.Scenarios = spec.Scenarios[index+1:]
 	} else {
-		spec.scenarios = append(spec.scenarios[:index], spec.scenarios[index+1:]...)
+		spec.Scenarios = append(spec.Scenarios[:index], spec.Scenarios[index+1:]...)
 	}
 }
 
@@ -722,13 +722,13 @@ func (spec *Specification) populateConceptLookup(lookup *ArgLookup, conceptArgs 
 	}
 }
 
-func (spec *Specification) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
+func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
 	isRefactored := false
-	for _, step := range spec.contexts {
+	for _, step := range spec.Contexts {
 		isConcept := false
-		isRefactored = step.rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
-	for _, scenario := range spec.scenarios {
+	for _, scenario := range spec.Scenarios {
 		refactor := scenario.renameSteps(oldStep, newStep, orderMap)
 		if refactor {
 			isRefactored = refactor
@@ -737,7 +737,7 @@ func (spec *Specification) renameSteps(oldStep Step, newStep Step, orderMap map[
 	return isRefactored
 }
 
-func (spec *Specification) createStepArg(argValue string, typeOfArg string, token *Token, lookup *ArgLookup) (*StepArg, *parseDetailResult) {
+func (spec *Specification) createStepArg(argValue string, typeOfArg string, token *Token, lookup *ArgLookup) (*StepArg, *ParseDetailResult) {
 	if typeOfArg == "special" {
 		resolvedArgValue, err := newSpecialTypeResolver().resolve(argValue)
 		if err != nil {
@@ -745,7 +745,7 @@ func (spec *Specification) createStepArg(argValue string, typeOfArg string, toke
 			case invalidSpecialParamError:
 				return treatArgAsDynamic(argValue, token, lookup)
 			default:
-				return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
+				return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
 			}
 		}
 		return resolvedArgValue, nil
@@ -756,25 +756,25 @@ func (spec *Specification) createStepArg(argValue string, typeOfArg string, toke
 	}
 }
 
-func treatArgAsDynamic(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *parseDetailResult) {
-	parseDetailRes := &parseDetailResult{warnings: []*Warning{&Warning{lineNo: token.LineNo, message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
+func treatArgAsDynamic(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *ParseDetailResult) {
+	parseDetailRes := &ParseDetailResult{Warnings: []*Warning{&Warning{LineNo: token.LineNo, Message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
 	stepArg, result := validateDynamicArg(argValue, token, lookup)
 	if result != nil {
-		if result.error != nil {
-			parseDetailRes.error = result.error
+		if result.Error != nil {
+			parseDetailRes.Error = result.Error
 		}
-		if result.warnings != nil {
-			for _, warn := range result.warnings {
-				parseDetailRes.warnings = append(parseDetailRes.warnings, warn)
+		if result.Warnings != nil {
+			for _, warn := range result.Warnings {
+				parseDetailRes.Warnings = append(parseDetailRes.Warnings, warn)
 			}
 		}
 	}
 	return stepArg, parseDetailRes
 }
 
-func validateDynamicArg(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *parseDetailResult) {
+func validateDynamicArg(argValue string, token *Token, lookup *ArgLookup) (*StepArg, *ParseDetailResult) {
 	if !isConceptHeader(lookup) && !lookup.containsArg(argValue) {
-		return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
+		return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
 	}
 	stepArgument := &StepArg{ArgType: Dynamic, Value: argValue, Name: argValue}
 	return stepArgument, nil
@@ -800,7 +800,7 @@ func addInlineTableRow(step *Step, token *Token, argLookup *ArgLookup) ParseResu
 			param := match[0][1]
 			if !argLookup.containsArg(param) {
 				tableValues = append(tableValues, TableCell{Value: tableValue, CellType: Static})
-				warnings = append(warnings, &Warning{lineNo: token.LineNo, message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
+				warnings = append(warnings, &Warning{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Treating it as static param", param)})
 			} else {
 				tableValues = append(tableValues, TableCell{Value: param, CellType: Dynamic})
 			}
@@ -884,7 +884,7 @@ func (lookup *ArgLookup) fromDataTable(datatable *Table) *ArgLookup {
 }
 
 func (warning *Warning) String() string {
-	return fmt.Sprintf("line no: %d, %s", warning.lineNo, warning.message)
+	return fmt.Sprintf("line no: %d, %s", warning.LineNo, warning.Message)
 }
 
 func (scenario Scenario) Kind() TokenKind {
@@ -893,29 +893,29 @@ func (scenario Scenario) Kind() TokenKind {
 
 func (scenario *Scenario) addHeading(heading *Heading) {
 	heading.HeadingType = ScenarioHeading
-	scenario.heading = heading
+	scenario.Heading = heading
 }
 
 func (scenario *Scenario) addStep(step *Step) {
-	scenario.steps = append(scenario.steps, step)
+	scenario.Steps = append(scenario.Steps, step)
 	scenario.addItem(step)
 }
 
 func (scenario *Scenario) addTags(tags *Tags) {
-	scenario.tags = tags
+	scenario.Tags = tags
 	scenario.addItem(tags)
 }
 
 func (scenario *Scenario) addComment(comment *Comment) {
-	scenario.comments = append(scenario.comments, comment)
+	scenario.Comments = append(scenario.Comments, comment)
 	scenario.addItem(comment)
 }
 
 func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
 	isRefactored := false
-	for _, step := range scenario.steps {
+	for _, step := range scenario.Steps {
 		isConcept := false
-		isRefactored = step.rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
 	return isRefactored
 }
@@ -928,7 +928,7 @@ func (scenario *Scenario) addItem(itemToAdd Item) {
 }
 
 func (scenario *Scenario) latestStep() *Step {
-	return scenario.steps[len(scenario.steps)-1]
+	return scenario.Steps[len(scenario.Steps)-1]
 }
 
 func (heading *Heading) Kind() TokenKind {
@@ -1007,7 +1007,7 @@ func (self *Step) copyFrom(another *Step) {
 	self.Parent = another.Parent
 }
 
-func convertToStepText(fragments []*gauge_messages.Fragment) string {
+func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 	stepText := ""
 	for _, fragment := range fragments {
 		value := ""

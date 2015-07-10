@@ -82,3 +82,14 @@ func CreateDirIn(dir string, dirName string) (string, error) {
 	err = os.Rename(tempDir, fullDirName)
 	return fullDirName, err
 }
+
+func GetSpecFiles(specSource string) []string {
+	specFiles := make([]string, 0)
+	if common.DirExists(specSource) {
+		specFiles = append(specFiles, FindSpecFilesIn(specSource)...)
+	} else if common.FileExists(specSource) && IsValidSpecExtension(specSource) {
+		specFile, _ := filepath.Abs(specSource)
+		specFiles = append(specFiles, specFile)
+	}
+	return specFiles
+}

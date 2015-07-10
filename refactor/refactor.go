@@ -29,11 +29,17 @@ import (
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
 	"strings"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/formatter"
+	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/api"
 )
 
 type rephraseRefactorer struct {
-	oldStep   *step
-	newStep   *step
+	oldStep   *parser.Step
+	newStep   *parser.Step
 	isConcept bool
 }
 
@@ -55,7 +61,7 @@ func (refactoringResult *refactoringResult) String() string {
 	return result
 }
 
-func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
+func PerformRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 	if newStep == oldStep {
 		return &refactoringResult{success: true}
 	}
@@ -66,12 +72,12 @@ func performRephraseRefactoring(oldStep, newStep string) *refactoringResult {
 	}
 
 	result := &refactoringResult{success: true, errors: make([]string, 0), warnings: make([]string, 0)}
-	specs, specParseResults := findSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &conceptDictionary{})
+	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &parser.ConceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.success {
 		return result
 	}
-	conceptDictionary, parseResult := createConceptsDictionary(false)
+	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.success {
@@ -87,26 +93,26 @@ func rephraseFailure(errors ...string) *refactoringResult {
 	return &refactoringResult{success: false, errors: errors}
 }
 
-func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, parseResults ...*parseResult) {
+func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, parseResults ...*parser.ParseResult) {
 	for _, parseResult := range parseResults {
-		if !parseResult.ok {
+		if !parseResult.Ok {
 			refactorResult.success = false
 			refactorResult.errors = append(refactorResult.errors, parseResult.Error())
 		}
-		refactorResult.appendWarnings(parseResult.warnings)
+		refactorResult.appendWarnings(parseResult.Warnings)
 	}
 }
 
-func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, conceptDictionary *conceptDictionary) *refactoringResult {
+func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	result := &refactoringResult{success: false, errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
-		apiHandler, connErr := agent.startRunner()
+		apiHandler, connErr := api.StartAPI()
 		if connErr != nil {
 			result.errors = append(result.errors, connErr.Error())
 			return result
 		}
-		defer apiHandler.runner.kill(getCurrentLogger())
+		defer apiHandler.runner.kill(execLogger.Current())
 		stepName, err, warning := agent.getStepNameFromRunner(apiHandler.runner)
 		if err != nil {
 			result.errors = append(result.errors, err.Error())
@@ -120,7 +126,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 			}
 			result.runnerFilesChanged = runnerFilesChanged
 		} else {
-			result.warnings = append(result.warnings, warning.message)
+			result.warnings = append(result.warnings, warning.Message)
 		}
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
@@ -130,21 +136,21 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*specification, co
 	return result
 }
 
-func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*specification, conceptDictionary *conceptDictionary) (map[*specification]bool, map[string]bool) {
-	specsRefactored := make(map[*specification]bool, 0)
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*parser.Specification, conceptDictionary *parser.ConceptDictionary) (map[*parser.Specification]bool, map[string]bool) {
+	specsRefactored := make(map[*parser.Specification]bool, 0)
 	conceptFilesRefactored := make(map[string]bool, 0)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
-		specsRefactored[spec] = spec.renameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		specsRefactored[spec] = spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
 	}
 	isConcept := false
-	for _, concept := range conceptDictionary.conceptsMap {
-		_, ok := conceptFilesRefactored[concept.fileName]
-		conceptFilesRefactored[concept.fileName] = !ok && false || conceptFilesRefactored[concept.fileName]
-		for _, item := range concept.conceptStep.items {
-			isRefactored := conceptFilesRefactored[concept.fileName]
-			conceptFilesRefactored[concept.fileName] = item.kind() == stepKind &&
-				item.(*step).rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
+	for _, concept := range conceptDictionary.ConceptsMap {
+		_, ok := conceptFilesRefactored[concept.FileName]
+		conceptFilesRefactored[concept.FileName] = !ok && false || conceptFilesRefactored[concept.FileName]
+		for _, item := range concept.ConceptStep.Items {
+			isRefactored := conceptFilesRefactored[concept.FileName]
+			conceptFilesRefactored[concept.FileName] = item.Kind() == parser.StepKind &&
+				item.(*parser.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
 				isRefactored
 		}
 	}
@@ -153,9 +159,9 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*specificat
 }
 
 func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
-	orderMap := make(map[int]int, len(agent.newStep.args))
-	for i, arg := range agent.newStep.args {
-		orderMap[i] = SliceIndex(len(agent.oldStep.args), func(i int) bool { return agent.oldStep.args[i].String() == arg.String() })
+	orderMap := make(map[int]int, len(agent.newStep.Args))
+	for i, arg := range agent.newStep.Args {
+		orderMap[i] = SliceIndex(len(agent.oldStep.Args), func(i int) bool { return agent.oldStep.Args[i].String() == arg.String() })
 	}
 	return orderMap
 }
@@ -170,24 +176,24 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 }
 
 func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, error) {
-	parser := new(specParser)
-	stepTokens, err := parser.generateTokens("* " + oldStepText + "\n" + "*" + newStepText)
+	specParser := new(parser.SpecParser)
+	stepTokens, err := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
 	if err != nil {
 		return nil, err
 	}
-	spec := &specification{}
-	steps := make([]*step, 0)
+	spec := &parser.Specification{}
+	steps := make([]*parser.Step, 0)
 	for _, stepToken := range stepTokens {
-		step, parseDetails := spec.createStepUsingLookup(stepToken, nil)
-		if parseDetails != nil && parseDetails.error != nil {
-			return nil, parseDetails.error
+		step, parseDetails := spec.CreateStepUsingLookup(stepToken, nil)
+		if parseDetails != nil && parseDetails.Error != nil {
+			return nil, parseDetails.Error
 		}
 		steps = append(steps, step)
 	}
 	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
 }
 
-func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRunner, stepName string) ([]string, error) {
+func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.TestRunner, stepName string) ([]string, error) {
 	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName)
 	if err != nil {
 		return nil, err
@@ -201,17 +207,8 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *testRun
 	return refactorResponse.GetFilesChanged(), runnerError
 }
 
-func (agent *rephraseRefactorer) startRunner() (*gaugeApiMessageHandler, error) {
-	env.LoadEnv(*currentEnv, false)
-	err, apiHandler := startAPIService(0)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
-	}
-	return apiHandler, nil
-}
-
-func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
-	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.connection, config.RefactorTimeout())
+func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *runner.TestRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
+	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.Connection, config.RefactorTimeout())
 	if err != nil {
 		return &gauge_messages.RefactorResponse{Success: proto.Bool(false), Error: proto.String(err.Error())}
 	}
@@ -219,26 +216,26 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *testRunner, ref
 }
 
 //Todo: Check for inline tables
-func (agent *rephraseRefactorer) createRefactorRequest(runner *testRunner, stepName string) (*gauge_messages.Message, error) {
+func (agent *rephraseRefactorer) createRefactorRequest(runner *runner.TestRunner, stepName string) (*gauge_messages.Message, error) {
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
 	}
 	orderMap := agent.createOrderOfArgs()
-	newStepName := agent.generateNewStepName(oldStepValue.args, orderMap)
-	newStepValue, err := extractStepValueAndParams(newStepName, false)
+	newStepName := agent.generateNewStepName(oldStepValue.Args, orderMap)
+	newStepValue, err := parser.ExtractStepValueAndParams(newStepName, false)
 	if err != nil {
 		return nil, err
 	}
-	oldProtoStepValue := convertToProtoStepValue(oldStepValue)
-	newProtoStepValue := convertToProtoStepValue(newStepValue)
+	oldProtoStepValue := parser.ConvertToProtoStepValue(oldStepValue)
+	newProtoStepValue := parser.ConvertToProtoStepValue(newStepValue)
 	return &gauge_messages.Message{MessageType: gauge_messages.Message_RefactorRequest.Enum(), RefactorRequest: &gauge_messages.RefactorRequest{OldStepValue: oldProtoStepValue, NewStepValue: newProtoStepValue, ParamPositions: agent.createParameterPositions(orderMap)}}, nil
 }
 
 func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map[int]int) string {
-	agent.newStep.populateFragments()
+	agent.newStep.PopulateFragments()
 	paramIndex := 0
-	for _, fragment := range agent.newStep.fragments {
+	for _, fragment := range agent.newStep.Fragments {
 		if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
 			if orderMap[paramIndex] != -1 {
 				fragment.GetParameter().Value = proto.String(args[orderMap[paramIndex]])
@@ -246,17 +243,17 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 			paramIndex++
 		}
 	}
-	return convertToStepText(agent.newStep.fragments)
+	return parser.ConvertToStepText(agent.newStep.Fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *testRunner) (string, error, *warning) {
-	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.value)}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.connection, config.RunnerRequestTimeout())
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner *runner.TestRunner) (string, error, *parser.Warning) {
+	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.Value)}}
+	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
 		return "", err, nil
 	}
 	if !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		return "", nil, &warning{message: fmt.Sprintf("Step implementation not found: %s", agent.oldStep.lineText)}
+		return "", nil, &parser.Warning{Message: fmt.Sprintf("Step implementation not found: %s", agent.oldStep.LineText)}
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
 		return "", errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), nil
@@ -272,36 +269,36 @@ func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) 
 	return paramPositions
 }
 
-func (agent *rephraseRefactorer) getStepValueFor(step *step, stepName string) (*stepValue, error) {
-	return extractStepValueAndParams(stepName, false)
+func (agent *rephraseRefactorer) getStepValueFor(step *parser.Step, stepName string) (*parser.StepValue, error) {
+	return parser.ExtractStepValueAndParams(stepName, false)
 }
 
-func writeToConceptAndSpecFiles(specs []*specification, conceptDictionary *conceptDictionary, specsRefactored map[*specification]bool, conceptFilesRefactored map[string]bool) ([]string, []string) {
+func writeToConceptAndSpecFiles(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary, specsRefactored map[*parser.Specification]bool, conceptFilesRefactored map[string]bool) ([]string, []string) {
 	specFiles := make([]string, 0)
 	conceptFiles := make([]string, 0)
 	for _, spec := range specs {
 		if specsRefactored[spec] {
-			specFiles = append(specFiles, spec.fileName)
-			formatted := formatSpecification(spec)
-			saveFile(spec.fileName, formatted, true)
+			specFiles = append(specFiles, spec.FileName)
+			formatted := formatter.FormatSpecification(spec)
+			util.SaveFile(spec.FileName, formatted, true)
 		}
 	}
-	conceptMap := formatConcepts(conceptDictionary)
+	conceptMap := formatter.FormatConcepts(conceptDictionary)
 	for fileName, concept := range conceptMap {
 		if conceptFilesRefactored[fileName] {
 			conceptFiles = append(conceptFiles, fileName)
-			saveFile(fileName, concept, true)
+			util.SaveFile(fileName, concept, true)
 		}
 	}
 	return specFiles, conceptFiles
 }
 
-func (refactoringResult *refactoringResult) appendWarnings(warnings []*warning) {
+func (refactoringResult *refactoringResult) appendWarnings(warnings []*parser.Warning) {
 	if refactoringResult.warnings == nil {
 		refactoringResult.warnings = make([]string, 0)
 	}
 	for _, warning := range warnings {
-		refactoringResult.warnings = append(refactoringResult.warnings, warning.message)
+		refactoringResult.warnings = append(refactoringResult.warnings, warning.Message)
 	}
 }
 

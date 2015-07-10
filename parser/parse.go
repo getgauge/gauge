@@ -19,6 +19,8 @@ package parser
 
 import (
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/util"
+	"strings"
 )
 
 func ParseSpecFiles(specFiles []string, conceptDictionary *ConceptDictionary) ([]*Specification, []*ParseResult) {
@@ -57,4 +59,52 @@ func parseSpec(specFile string, conceptDictionary *ConceptDictionary, specChanne
 	spec.FileName = specFile
 	specChannel <- spec
 	parseResultChan <- parseResult
+}
+
+func FindSpecs(specSource string, conceptDictionary *ConceptDictionary) ([]*Specification, []*ParseResult) {
+	specFiles := util.GetSpecFiles(specSource)
+
+	return ParseSpecFiles(specFiles, conceptDictionary)
+}
+
+func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*StepValue, error) {
+	stepValueWithPlaceHolders, args, err := processStepText(stepText)
+	if err != nil {
+		return nil, err
+	}
+
+	extractedStepValue, _ := extractStepValueAndParameterTypes(stepValueWithPlaceHolders)
+	if hasInlineTable {
+		extractedStepValue += " " + ParameterPlaceholder
+		args = append(args, string(TableArg))
+	}
+	parameterizedStepValue := getParameterizeStepValue(extractedStepValue, args)
+
+	return &StepValue{args, extractedStepValue, parameterizedStepValue}, nil
+
+}
+
+func CreateStepValue(step *Step) StepValue {
+	stepValue := StepValue{StepValue: step.Value}
+	args := make([]string, 0)
+	for _, arg := range step.Args {
+		switch arg.ArgType {
+		case Static, Dynamic:
+			args = append(args, arg.Value)
+		case TableArg:
+			args = append(args, "table")
+		case SpecialString, SpecialTable:
+			args = append(args, arg.Name)
+		}
+	}
+	stepValue.Args = args
+	stepValue.ParameterizedStepValue = getParameterizeStepValue(stepValue.StepValue, args)
+	return stepValue
+}
+
+func getParameterizeStepValue(stepValue string, params []string) string {
+	for _, param := range params {
+		stepValue = strings.Replace(stepValue, ParameterPlaceholder, "<"+param+">", 1)
+	}
+	return stepValue
 }

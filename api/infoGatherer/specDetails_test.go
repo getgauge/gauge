@@ -1,4 +1,4 @@
-package main
+package infoGatherer
 
 import (
 	"github.com/getgauge/gauge/config"
@@ -39,7 +39,7 @@ Scenario 1
 
 	specInfoGatherer.findAllStepsFromSpecs()
 
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 1)
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
 
 	steps, ok := specInfoGatherer.fileToStepsMap[specFile]
@@ -72,7 +72,7 @@ Scenario 1
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 2)
 
 	steps, ok := specInfoGatherer.fileToStepsMap[specFile1]
 	c.Assert(ok, Equals, true)
@@ -89,12 +89,12 @@ Scenario 1
 	specInfoGatherer.removeSpec(filepath.Join(s.specsDir, "Spec1.spec"))
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 2)
 
 	steps, ok = specInfoGatherer.fileToStepsMap[specFile2]
 	c.Assert(ok, Equals, true)
 
-	allSteps := specInfoGatherer.getAvailableSteps()
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 2)
 }
 
@@ -124,14 +124,14 @@ Scenario 1
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 2)
 
-	allSteps := specInfoGatherer.getAvailableSteps()
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 5)
 
 	specInfoGatherer.removeSpec(filepath.Join(s.specsDir, "Spec1.spec"))
 
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 3)
 
 	stepValues := make([]string, 0)
@@ -172,16 +172,16 @@ Scenario 1
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 3)
 
 	util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
 	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec2.spec"))
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 2)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 2)
 
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 6)
 
 	stepValues := make([]string, 0)
@@ -214,15 +214,15 @@ Scenario 1
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 1)
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 3)
 
 	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "Spec1.spec"))
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 1)
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 1)
 
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 3)
 
 	stepValues := make([]string, 0)
@@ -249,8 +249,8 @@ func (s *MySuite) TestAddingSpecWithParseFailures(c *C) {
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 0)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 0)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 0)
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 0)
 }
 
@@ -268,11 +268,11 @@ func (s *MySuite) TestFindingStepsAndConceptInfosFromConcepts(c *C) {
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	c.Assert(len(specInfoGatherer.availableSpecs), Equals, 0)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	c.Assert(len(specInfoGatherer.AvailableSpecs), Equals, 0)
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 3)
 
-	conceptInfos := specInfoGatherer.getConceptInfos()
+	conceptInfos := specInfoGatherer.GetConceptInfos()
 	c.Assert(len(conceptInfos), Equals, 1)
 	c.Assert(conceptInfos[0].GetFilepath(), Equals, filepath.Join(s.specsDir, "concept.cpt"))
 }
@@ -304,18 +304,18 @@ func (s *MySuite) TestAddingConcepts(c *C) {
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 4)
 
-	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 2)
+	c.Assert(len(specInfoGatherer.GetConceptInfos()), Equals, 2)
 
 	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
 
 	specInfoGatherer.addConcept(filepath.Join(s.specsDir, "concept1.cpt"))
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 7)
 
-	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+	c.Assert(len(specInfoGatherer.GetConceptInfos()), Equals, 4)
 
 }
 
@@ -348,16 +348,16 @@ func (s *MySuite) TestRemovingConcepts(c *C) {
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 7)
-	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+	c.Assert(len(specInfoGatherer.GetConceptInfos()), Equals, 4)
 
 	firstCptFile := filepath.Join(s.specsDir, "concept.cpt")
 	os.Remove(firstCptFile)
 	specInfoGatherer.removeConcept(firstCptFile)
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 1)
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 4)
 
 	stepValues := make([]string, 0)
@@ -370,7 +370,7 @@ func (s *MySuite) TestRemovingConcepts(c *C) {
 	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
 	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
 
-	cptInfos := specInfoGatherer.getConceptInfos()
+	cptInfos := specInfoGatherer.GetConceptInfos()
 	c.Assert(len(cptInfos), Equals, 2)
 }
 
@@ -414,7 +414,7 @@ Scenario 1
 	specInfoGatherer.updateAllStepsList()
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
-	allSteps := specInfoGatherer.getAvailableSteps()
+	allSteps := specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 7)
 	stepValues := createStepValueTexts(allSteps)
 
@@ -425,14 +425,14 @@ Scenario 1
 	c.Assert(stringInSlice("fifth step", stepValues), Equals, true)
 	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
 	c.Assert(stringInSlice("sixth step with {}", stepValues), Equals, true)
-	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+	c.Assert(len(specInfoGatherer.GetConceptInfos()), Equals, 4)
 
 	_, err := util.CreateFileIn(filepath.Join(s.specsDir, "nested"), "SPEC.spec", data3)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer.addSpec(filepath.Join(s.specsDir, "nested", "SPEC.spec"))
 
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 3)
-	allSteps = specInfoGatherer.getAvailableSteps()
+	allSteps = specInfoGatherer.GetAvailableSteps()
 	c.Assert(len(allSteps), Equals, 9)
 	stepValues = createStepValueTexts(allSteps)
 
@@ -445,10 +445,10 @@ Scenario 1
 	c.Assert(stringInSlice("seventh {} step", stepValues), Equals, true)
 	c.Assert(stringInSlice("eighth step with {}", stepValues), Equals, true)
 	c.Assert(stringInSlice("ninth step", stepValues), Equals, true)
-	c.Assert(len(specInfoGatherer.getConceptInfos()), Equals, 4)
+	c.Assert(len(specInfoGatherer.GetConceptInfos()), Equals, 4)
 }
 
-func createStepValueTexts(steps []*stepValue) []string {
+func createStepValueTexts(steps []*parser.StepValue) []string {
 	stepValues := make([]string, 0)
 	for _, stepValue := range steps {
 		stepValues = append(stepValues, stepValue.stepValue)

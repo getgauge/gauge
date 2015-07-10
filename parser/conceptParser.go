@@ -44,13 +44,13 @@ type ConceptParser struct {
 }
 
 //concept file can have multiple concept headings
-func (parser *ConceptParser) parse(text string) ([]*Step, *parseDetailResult) {
+func (parser *ConceptParser) parse(text string) ([]*Step, *ParseDetailResult) {
 	defer parser.resetState()
 
 	specParser := new(SpecParser)
-	tokens, err := specParser.generateTokens(text)
+	tokens, err := specParser.GenerateTokens(text)
 	if err != nil {
-		return nil, &parseDetailResult{error: err}
+		return nil, &ParseDetailResult{Error: err}
 	}
 	return parser.createConcepts(tokens)
 }
@@ -60,10 +60,10 @@ func (parser *ConceptParser) resetState() {
 	parser.currentConcept = nil
 }
 
-func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *parseDetailResult) {
+func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *ParseDetailResult) {
 	parser.currentState = initial
 	concepts := make([]*Step, 0)
-	var parseDetails *parseDetailResult
+	var parseDetails *ParseDetailResult
 	preComments := make([]*Comment, 0)
 	addPreComments := false
 	for _, token := range tokens {
@@ -72,7 +72,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *parseDet
 				concepts = append(concepts, parser.currentConcept)
 			}
 			parser.currentConcept, parseDetails = parser.processConceptHeading(token)
-			if parseDetails.error != nil {
+			if parseDetails.Error != nil {
 				return nil, parseDetails
 			}
 			if addPreComments {
@@ -82,15 +82,15 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *parseDet
 			addStates(&parser.currentState, conceptScope)
 		} else if parser.isStep(token) {
 			if !isInState(parser.currentState, conceptScope) {
-				return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText}}
+				return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText}}
 			}
 			if err := parser.processConceptStep(token); err != nil {
-				return nil, &parseDetailResult{error: err}
+				return nil, &ParseDetailResult{Error: err}
 			}
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
-				return nil, &parseDetailResult{error: &ParseError{LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText}}
+				return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText}}
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
@@ -107,7 +107,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*Step, *parseDet
 		}
 	}
 	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
-		return nil, &parseDetailResult{error: &ParseError{LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText}}
+		return nil, &ParseDetailResult{Error: &ParseError{LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText}}
 	}
 
 	if parser.currentConcept != nil {
@@ -132,17 +132,17 @@ func (parser *ConceptParser) isTableDataRow(token *Token) bool {
 	return token.Kind == TableRow
 }
 
-func (parser *ConceptParser) processConceptHeading(token *Token) (*Step, *parseDetailResult) {
+func (parser *ConceptParser) processConceptHeading(token *Token) (*Step, *ParseDetailResult) {
 	processStep(new(SpecParser), token)
 	token.LineText = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(token.LineText), "#"))
 	var concept *Step
-	var parseDetails *parseDetailResult
-	concept, parseDetails = new(Specification).createStepUsingLookup(token, nil)
-	if parseDetails != nil && parseDetails.error != nil {
+	var parseDetails *ParseDetailResult
+	concept, parseDetails = new(Specification).CreateStepUsingLookup(token, nil)
+	if parseDetails != nil && parseDetails.Error != nil {
 		return nil, parseDetails
 	}
 	if !parser.hasOnlyDynamicParams(concept) {
-		parseDetails.error = &ParseError{LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters"}
+		parseDetails.Error = &ParseError{LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters"}
 		return nil, parseDetails
 	}
 
@@ -154,9 +154,9 @@ func (parser *ConceptParser) processConceptHeading(token *Token) (*Step, *parseD
 
 func (parser *ConceptParser) processConceptStep(token *Token) *ParseError {
 	processStep(new(SpecParser), token)
-	conceptStep, parseDetails := new(Specification).createStepUsingLookup(token, &parser.currentConcept.Lookup)
-	if parseDetails != nil && parseDetails.error != nil {
-		return parseDetails.error
+	conceptStep, parseDetails := new(Specification).CreateStepUsingLookup(token, &parser.currentConcept.Lookup)
+	if parseDetails != nil && parseDetails.Error != nil {
+		return parseDetails.Error
 	}
 	if conceptStep.Value == parser.currentConcept.Value {
 		return &ParseError{LineNo: conceptStep.LineNo, Message: "Cyclic dependancy found. Step is calling concept again.", LineText: conceptStep.LineText}
@@ -197,11 +197,11 @@ func (parser *ConceptParser) createConceptLookup(concept *Step) {
 		concept.Lookup.addArgName(arg.Value)
 	}
 }
-func createConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *ParseResult) {
+func CreateConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *ParseResult) {
 	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
-	conceptsDictionary := newConceptDictionary()
+	conceptsDictionary := NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
-		if err := addConcepts(conceptFile, conceptsDictionary); err != nil {
+		if err := AddConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {
 				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
@@ -213,24 +213,24 @@ func createConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *Par
 	return conceptsDictionary, &ParseResult{Ok: true}
 }
 
-func addConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *ParseError {
+func AddConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *ParseError {
 	fileText, fileReadErr := common.ReadFileContents(conceptFile)
 	if fileReadErr != nil {
 		return &ParseError{Message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
 	}
 	concepts, parseResults := new(ConceptParser).parse(fileText)
-	if parseResults != nil && parseResults.warnings != nil {
-		for _, warning := range parseResults.warnings {
+	if parseResults != nil && parseResults.Warnings != nil {
+		for _, warning := range parseResults.Warnings {
 			logger.Log.Warning(warning.String())
 		}
 	}
-	if parseResults != nil && parseResults.error != nil {
-		return parseResults.error
+	if parseResults != nil && parseResults.Error != nil {
+		return parseResults.Error
 	}
 	return conceptDictionary.Add(concepts, conceptFile)
 }
 
-func newConceptDictionary() *ConceptDictionary {
+func NewConceptDictionary() *ConceptDictionary {
 	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept, 0)}
 }
 

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package runner
 
 import (
 	"encoding/json"
@@ -33,15 +33,18 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
+	"strconv"
 )
 
-type testRunner struct {
-	cmd          *exec.Cmd
-	connection   net.Conn
-	errorChannel chan error
+type TestRunner struct {
+	Cmd          *exec.Cmd
+	Connection   net.Conn
+	ErrorChannel chan error
 }
 
-type runner struct {
+type Runner struct {
 	Id          string
 	Name        string
 	Version     string
@@ -57,14 +60,14 @@ type runner struct {
 		Darwin  []string
 	}
 	Lib                 string
-	GaugeVersionSupport versionSupport
+	GaugeVersionSupport version.VersionSupport
 }
 
 func executeInitHookForRunner(language string) error {
 	if err := config.SetProjectRoot([]string{}); err != nil {
 		return err
 	}
-	runnerInfo, err := getRunnerInfo(language)
+	runnerInfo, err := GetRunnerInfo(language)
 	if err != nil {
 		return err
 	}
@@ -92,8 +95,8 @@ func executeInitHookForRunner(language string) error {
 	return cmd.Wait()
 }
 
-func getRunnerInfo(language string) (*runner, error) {
-	runnerInfo := new(runner)
+func GetRunnerInfo(language string) (*Runner, error) {
+	runnerInfo := new(Runner)
 	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
 	if err != nil {
 		return nil, err
@@ -111,9 +114,9 @@ func getRunnerInfo(language string) (*runner, error) {
 	return runnerInfo, nil
 }
 
-func (testRunner *testRunner) kill(writer executionLogger) error {
+func (testRunner *TestRunner) Kill(writer execLogger.ExecutionLogger) error {
 	if testRunner.isStillRunning() {
-		defer testRunner.connection.Close()
+		defer testRunner.Connection.Close()
 		testRunner.sendProcessKillMessage()
 
 		exited := make(chan bool, 1)
@@ -134,38 +137,38 @@ func (testRunner *testRunner) kill(writer executionLogger) error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			writer.Warning("Killing runner with PID:%d forcefully\n", testRunner.cmd.Process.Pid)
+			writer.Warning("Killing runner with PID:%d forcefully\n", testRunner.Cmd.Process.Pid)
 			return testRunner.killRunner()
 		}
 	}
 	return nil
 }
 
-func (testRunner *testRunner) killRunner() error {
-	return testRunner.cmd.Process.Kill()
+func (testRunner *TestRunner) killRunner() error {
+	return testRunner.Cmd.Process.Kill()
 }
 
-func (testRunner *testRunner) isStillRunning() bool {
-	return !(testRunner == nil) && !(testRunner.cmd == nil) && (testRunner.cmd.ProcessState == nil || !testRunner.cmd.ProcessState.Exited())
+func (testRunner *TestRunner) isStillRunning() bool {
+	return !(testRunner == nil) && !(testRunner.Cmd == nil) && (testRunner.Cmd.ProcessState == nil || !testRunner.Cmd.ProcessState.Exited())
 }
 
-func (testRunner *testRunner) sendProcessKillMessage() {
+func (testRunner *TestRunner) sendProcessKillMessage() {
 	id := common.GetUniqueId()
 	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
-	conn.WriteGaugeMessage(message, testRunner.connection)
+	conn.WriteGaugeMessage(message, testRunner.Connection)
 }
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest, port string, writer executionLogger) (*testRunner, error) {
-	var r runner
+func startRunner(manifest *manifest.Manifest, port string, writer execLogger.ExecutionLogger) (*TestRunner, error) {
+	var r Runner
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
 	}
-	compatibilityErr := checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
+	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
 		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found. To update plugin, run `gauge --update {pluginName}`.", version.CurrentGaugeVersion))
 	}
@@ -178,10 +181,10 @@ func startRunner(manifest *manifest, port string, writer executionLogger) (*test
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
 	waitAndGetErrorMessage(errChannel, cmd, writer)
-	return &testRunner{cmd: cmd, errorChannel: errChannel}, nil
+	return &TestRunner{Cmd: cmd, ErrorChannel: errChannel}, nil
 }
 
-func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {
+func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, error) {
 	languageJsonFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return "", err
@@ -197,7 +200,7 @@ func getLanguageJSONFilePath(manifest *manifest, r *runner) (string, error) {
 	return filepath.Dir(languageJsonFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, writer executionLogger) {
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, writer execLogger.ExecutionLogger) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
@@ -222,7 +225,7 @@ func getCleanEnv(port string, env []string) []string {
 	return env
 }
 
-func getOsSpecificCommand(r runner) []string {
+func getOsSpecificCommand(r Runner) []string {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -236,4 +239,31 @@ func getOsSpecificCommand(r runner) []string {
 		break
 	}
 	return command
+}
+
+func StartRunnerAndMakeConnection(manifest *manifest.Manifest, writer execLogger.ExecutionLogger) (*TestRunner, error) {
+	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
+	if err != nil {
+		port = 0
+	}
+	gaugeConnectionHandler, connHandlerErr := conn.NewGaugeConnectionHandler(port, nil)
+	if connHandlerErr != nil {
+		return nil, connHandlerErr
+	}
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), writer)
+	if err != nil {
+		return nil, err
+	}
+
+	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.ErrorChannel)
+	testRunner.Connection = runnerConnection
+	if connectionError != nil {
+		writer.Debug("Runner connection error: %s", connectionError)
+		err := testRunner.killRunner()
+		if err != nil {
+			writer.Debug("Error while killing runner: %s", err)
+		}
+		return nil, connectionError
+	}
+	return testRunner, nil
 }

@@ -234,7 +234,7 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 	return protoSpecResults
 }
 
-func convertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
+func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
 	protoItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range spec.Items {
@@ -244,21 +244,21 @@ func convertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	return protoSpec
 }
 
-func convertToProtoStepValue(stepValue *StepValue) *gauge_messages.ProtoStepValue {
+func ConvertToProtoStepValue(stepValue *StepValue) *gauge_messages.ProtoStepValue {
 	return &gauge_messages.ProtoStepValue{
-		StepValue:              proto.String(stepValue.stepValue),
-		ParameterizedStepValue: proto.String(stepValue.parameterizedStepValue),
-		Parameters:             stepValue.args,
+		StepValue:              proto.String(stepValue.StepValue),
+		ParameterizedStepValue: proto.String(stepValue.ParameterizedStepValue),
+		Parameters:             stepValue.Args,
 	}
 }
 
 func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 	return &gauge_messages.ProtoSpec{
 		Items:         make([]*gauge_messages.ProtoItem, 0),
-		SpecHeading:   proto.String(specification.heading.Value),
+		SpecHeading:   proto.String(specification.Heading.Value),
 		IsTableDriven: proto.Bool(false),
 		FileName:      proto.String(specification.FileName),
-		Tags:          getTags(specification.tags),
+		Tags:          getTags(specification.Tags),
 	}
 
 }
@@ -272,9 +272,9 @@ func newSpecResult(specification *Specification) *result.SpecResult {
 
 func newProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
-		ScenarioHeading: proto.String(scenario.heading.Value),
+		ScenarioHeading: proto.String(scenario.Heading.Value),
 		Failed:          proto.Bool(false),
-		Tags:            getTags(scenario.tags),
+		Tags:            getTags(scenario.Tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
 	}

@@ -31,6 +31,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/runner"
 )
 
 const (
@@ -46,7 +48,7 @@ type installDescription struct {
 
 type versionInstallDescription struct {
 	Version             string
-	GaugeVersionSupport versionSupport
+	GaugeVersionSupport version.VersionSupport
 	Install             platformSpecificCommand
 	DownloadUrls        downloadUrls
 }
@@ -66,11 +68,6 @@ type platformSpecificUrl struct {
 	Windows string
 	Linux   string
 	Darwin  string
-}
-
-type versionSupport struct {
-	Minimum string
-	Maximum string
 }
 
 type installResult struct {
@@ -282,29 +279,6 @@ func (installDescription *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(ByDecreasingVersion(installDescription.Versions))
 }
 
-func checkCompatibility(currentVersion *version.Version, versionSupport *versionSupport) error {
-	minSupportVersion, err := version.ParseVersion(versionSupport.Minimum)
-	if err != nil {
-		return errors.New(fmt.Sprintf("Invalid minimum support version %s. : %s. ", versionSupport.Minimum, err))
-	}
-	if versionSupport.Maximum != "" {
-		maxSupportVersion, err := version.ParseVersion(versionSupport.Maximum)
-		if err != nil {
-			return errors.New(fmt.Sprintf("Invalid maximum support version %s. : %s. ", versionSupport.Maximum, err))
-		}
-		if currentVersion.IsBetween(minSupportVersion, maxSupportVersion) {
-			return nil
-		} else {
-			return errors.New(fmt.Sprintf("Version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion))
-		}
-	}
-
-	if minSupportVersion.IsLesserThanEqualTo(currentVersion) {
-		return nil
-	}
-	return errors.New(fmt.Sprintf("Incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, currentVersion))
-}
-
 func installPluginFromZip(zipFile string, language string) error {
 	unzippedPluginDir, err := common.UnzipArchive(zipFile)
 	if err != nil {
@@ -321,7 +295,7 @@ func installPluginFromZip(zipFile string, language string) error {
 }
 
 func installRunnerFromDir(unzippedPluginDir string, language string) error {
-	var r runner
+	var r runner.Runner
 	contents, err := common.ReadFileContents(filepath.Join(unzippedPluginDir, language+jsonExt))
 	if err != nil {
 		return err
@@ -356,9 +330,9 @@ func installPluginFromDir(unzippedPluginDir string) error {
 }
 
 func installAllPlugins() {
-	manifest, err := getProjectManifest()
+	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		handleCriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
+		execLogger.CriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
 	}
 	installPluginsFromManifest(manifest)
 }
@@ -392,8 +366,8 @@ func installPluginZip(zipFile string, pluginName string) {
 	}
 }
 
-func installPluginsFromManifest(manifest *manifest) {
-	writer := getCurrentLogger()
+func installPluginsFromManifest(manifest *manifest.Manifest) {
+	writer := execLogger.Current()
 	pluginsMap := make(map[string]bool, 0)
 	pluginsMap[manifest.Language] = true
 	for _, plugin := range manifest.Plugins {

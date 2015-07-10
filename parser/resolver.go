@@ -184,5 +184,5 @@ func populateConceptDynamicParams(concept *Step, dataTableLookup *ArgLookup) {
 		}
 	}
 	concept.Args = newArgs
-	concept.populateFragments()
+	concept.PopulateFragments()
 }

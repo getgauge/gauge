@@ -64,7 +64,7 @@ func (s *MySuite) TestFormatConcepts(c *C) {
 	step2 := &parser.Step{Value: "dsfdsfdsf", LineText: "dsfdsfdsf", IsConcept: true, LineNo: 2, Items: []parser.Item{&parser.Step{Value: "sfd", LineText: "sfd", IsConcept: false}, &parser.Step{Value: "sdfsdf" + "T", LineText: "sdfsdf" + "T", IsConcept: false}}}
 	dictionary.Add([]*parser.Step{step1, step2}, "file.cpt")
 
-	formatted := formatConcepts(dictionary)
+	formatted := FormatConcepts(dictionary)
 	c.Assert(formatted["file.cpt"], Equals, `COMMENT
 # sdsf
 # dsfdsfdsf

@@ -38,7 +38,7 @@ type ScenarioTraverser interface {
 }
 
 func (spec *Specification) Traverse(traverser SpecTraverser) {
-	traverser.SpecHeading(spec.heading)
+	traverser.SpecHeading(spec.Heading)
 	for _, item := range spec.Items {
 		switch item.Kind() {
 		case ScenarioKind:
@@ -63,7 +63,7 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 }
 
 func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
-	traverser.ScenarioHeading(scenario.heading)
+	traverser.ScenarioHeading(scenario.Heading)
 	for _, item := range scenario.Items {
 		switch item.Kind() {
 		case StepKind:

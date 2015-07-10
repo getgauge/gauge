@@ -27,11 +27,13 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/runner"
 )
 
 type parallelSpecExecution struct {
 	manifest                 *manifest
-	specifications           []*specification
+	specifications           []*parser.Specification
 	pluginHandler            *pluginHandler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *testRunner
@@ -58,7 +60,7 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 }
 
 type specCollection struct {
-	specs []*specification
+	specs []*parser.Specification
 }
 
 type parallelInfo struct {
@@ -91,21 +93,21 @@ func (e *parallelSpecExecution) start() *suiteResult {
 	e.aggregateResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	e.aggregateResult.projectName = filepath.Base(config.ProjectRoot)
 	e.aggregateResult.environment = env.CurrentEnv
-	e.aggregateResult.tags = *executeTags
+	e.aggregateResult.Tags = *executeTags
 	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, testRunner *testRunner, writer executionLogger) {
 	var err error
-	runner, err = startRunnerAndMakeConnection(e.manifest, writer)
+	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
 		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, runner, writer)
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, writer)
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
@@ -123,7 +125,7 @@ func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollec
 	for i := 0; i < len(e.specifications); i++ {
 		mod := i % distributions
 		if specCollections[mod] == nil {
-			specCollections[mod] = &specCollection{specs: make([]*specification, 0)}
+			specCollections[mod] = &specCollection{specs: make([]*parser.Specification, 0)}
 		}
 		specCollections[mod].specs = append(specCollections[mod].specs, e.specifications[i])
 	}

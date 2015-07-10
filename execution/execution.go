@@ -45,7 +45,7 @@ type executionInfo struct {
 	currentSpec specification
 }
 
-func newExecution(manifest *manifest, specifications []*specification, runner *testRunner, pluginHandler *pluginHandler, info *parallelInfo, writer executionLogger) execution {
+func newExecution(manifest *manifest, specifications []*parser.Specification, runner *testRunner, pluginHandler *pluginHandler, info *parallelInfo, writer executionLogger) execution {
 	if info.inParallel {
 		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: info.numberOfStreams, writer: writer}
 	}
@@ -104,14 +104,14 @@ func (exe *simpleExecution) start() *suiteResult {
 	exe.suiteResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
 	exe.suiteResult.projectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.environment = env.CurrentEnv
-	exe.suiteResult.tags = *executeTags
+	exe.suiteResult.Tags = *executeTags
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
 		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
 		exe.suiteResult.setFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.dataTable.table.getRowCount()))
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.DataTable.table.getRowCount()))
 			protoSpecResult := executor.execute()
 			exe.suiteResult.addSpecResult(protoSpecResult)
 		}
@@ -137,7 +137,7 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger, tableRows indexRange) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger, tableRows indexRange) *specExecutor {
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, writer, tableRows)
 	return specExecutor

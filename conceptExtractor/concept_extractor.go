@@ -79,9 +79,9 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 		os.Create(conceptFileName)
 	}
 	content, _ := common.ReadFileContents(conceptFileName)
-	saveFile(conceptFileName, content+"\n"+concept, true)
+	util.SaveFile(conceptFileName, content+"\n"+concept, true)
 	text := ReplaceExtractedStepsWithConcept(info, conceptUsageText)
-	saveFile(fileName, text, true)
+	util.SaveFile(fileName, text, true)
 }
 
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string) (string, string, error) {
@@ -118,8 +118,8 @@ func getContentWithDataTable(content string) (string, error) {
 		return "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.error))
 	}
 	newSpec := &specification{heading: &heading{value: "SPECHEADING"}}
-	if spec.dataTable.isInitialized() {
-		newSpec = &specification{items: []item{&spec.dataTable}, heading: &heading{value: "SPECHEADING"}}
+	if spec.DataTable.isInitialized() {
+		newSpec = &specification{items: []item{&spec.DataTable}, heading: &heading{value: "SPECHEADING"}}
 	}
 	return formatSpecification(newSpec) + "\n##hello \n* step \n", nil
 }
@@ -144,7 +144,7 @@ func (self *extractor) handleTable(stepInConcept *step, step *gauge_messages.Ste
 		self.errors = append(self.errors, result.error)
 		return
 	}
-	stepArgs := []*stepArg{spec.scenarios[0].steps[0].args[0]}
+	stepArgs := []*stepArg{spec.Scenarios[0].Steps[0].args[0]}
 	self.addTableAsParam(step, stepArgs)
 	stepInConcept.args = append(stepInConcept.args, stepArgs[0])
 }
