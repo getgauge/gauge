@@ -19,6 +19,7 @@ package execLogger
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -87,7 +88,7 @@ func (writer *parallelExecutionLogger) Steps(steps []*parser.Step) {
 }
 
 func (writer *parallelExecutionLogger) Comment(comment *parser.Comment) {
-	writer.Text(formatComment(comment))
+	writer.Text(formatter.FormatComment(comment))
 }
 
 func (writer *parallelExecutionLogger) ScenarioHeading(scenarioHeading string) {
@@ -109,19 +110,19 @@ func (writer *parallelExecutionLogger) StepFinished(step *parser.Step, failed bo
 func StepFinished(step *parser.Step, failed bool, writer ExecutionLogger) {
 	var message string
 	if failed {
-		message = fmt.Sprintf("Step Failed => %s\n", formatStep(step))
+		message = fmt.Sprintf("Step Failed => %s\n", formatter.FormatStep(step))
 	} else {
-		message = fmt.Sprintf("Step Passed => %s\n", formatStep(step))
+		message = fmt.Sprintf("Step Passed => %s\n", formatter.FormatStep(step))
 	}
 	writer.Text(message)
 }
 
 func (writer *parallelExecutionLogger) Table(table *parser.Table) {
-	writer.Text(formatTable(table))
+	writer.Text(formatter.FormatTable(table))
 }
 
 func (writer *parallelExecutionLogger) ConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	writer.Text(formatConcept(protoConcept))
+	writer.Text(formatter.FormatConcept(protoConcept))
 	writer.indentation += 4
 }
 

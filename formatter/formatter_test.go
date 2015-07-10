@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package formatter
 
 import (
 	"github.com/getgauge/gauge/parser"
@@ -42,7 +42,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 
-	formatted := formatSpecification(spec)
+	formatted := FormatSpecification(spec)
 
 	c.Assert(formatted, Equals,
 		`Spec Heading
@@ -85,7 +85,7 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	}
 
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
-	formatted := formatSpecification(spec)
+	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
@@ -107,7 +107,7 @@ func (s *MySuite) TestFormatStep(c *C) {
 		&parser.StepArg{Value: "dynamic \"foo\"", ArgType: parser.Dynamic},
 		&parser.StepArg{Name: "file:user\".txt", ArgType: parser.SpecialString},
 		&parser.StepArg{Name: "table :hell\".csv", ArgType: parser.SpecialTable}}}
-	formatted := formatStep(step)
+	formatted := FormatStep(step)
 	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic \"foo\">, <file:user\".txt> and <table :hell\".csv>
 `)
 }
@@ -123,7 +123,7 @@ func (s *MySuite) TestFormattingWithTableAsAComment(c *C) {
 	}
 
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
-	formatted := formatSpecification(spec)
+	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
@@ -151,7 +151,7 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 
-	formatted := formatSpecification(spec)
+	formatted := FormatSpecification(spec)
 
 	c.Assert(formatted, Equals,
 		`Spec Heading

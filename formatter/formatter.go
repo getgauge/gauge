@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package formatter
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ const (
 	TABLE_LEFT_SPACING = 5
 )
 
-func formatSpecFiles(specFiles ...string) []*parser.ParseResult {
+func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 	specs, results := parser.ParseSpecFiles(specFiles, &parser.ConceptDictionary{})
 	for i, spec := range specs {
 		if err := formatAndSave(spec); err != nil {
@@ -41,30 +41,22 @@ func formatSpecFiles(specFiles ...string) []*parser.ParseResult {
 	return results
 }
 
-func getRepeatedChars(character string, repeatCount int) string {
-	formatted := ""
-	for i := 0; i < repeatCount; i++ {
-		formatted = fmt.Sprintf("%s%s", formatted, character)
-	}
-	return formatted
+func FormatSpecHeading(specHeading string) string {
+	return FormatHeading(specHeading, "=")
 }
 
-func formatSpecHeading(specHeading string) string {
-	return formatHeading(specHeading, "=")
+func FormatScenarioHeading(scenarioHeading string) string {
+	return fmt.Sprintf("%s", FormatHeading(scenarioHeading, "-"))
 }
 
-func formatScenarioHeading(scenarioHeading string) string {
-	return fmt.Sprintf("%s", formatHeading(scenarioHeading, "-"))
-}
-
-func formatStep(step *parser.Step) string {
+func FormatStep(step *parser.Step) string {
 	text := step.Value
 	paramCount := strings.Count(text, parser.ParameterPlaceholder)
 	for i := 0; i < paramCount; i++ {
 		argument := step.Args[i]
 		formattedArg := ""
 		if argument.ArgType == parser.TableArg {
-			formattedTable := formatTable(&argument.Table)
+			formattedTable := FormatTable(&argument.Table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
 		} else if argument.ArgType == parser.Dynamic {
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Value))
@@ -84,14 +76,14 @@ func formatStep(step *parser.Step) string {
 	return stepText
 }
 
-func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
+func FormatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 	conceptText := "* "
 	for _, fragment := range protoConcept.ConceptStep.GetFragments() {
 		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
 			conceptText = conceptText + fragment.GetText()
 		} else if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
 			if fragment.GetParameter().GetParameterType() == (gauge_messages.Parameter_Table | gauge_messages.Parameter_Special_Table) {
-				conceptText += "\n" + formatTable(parser.TableFrom(fragment.GetParameter().GetTable()))
+				conceptText += "\n" + FormatTable(parser.TableFrom(fragment.GetParameter().GetTable()))
 			} else {
 				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""
 			}
@@ -100,13 +92,13 @@ func formatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 	return conceptText + "\n"
 }
 
-func formatHeading(heading, headingChar string) string {
+func FormatHeading(heading, headingChar string) string {
 	trimmedHeading := strings.TrimSpace(heading)
 	length := len(trimmedHeading)
 	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 
-func formatTable(table *parser.Table) string {
+func FormatTable(table *parser.Table) string {
 	columnToWidthMap := make(map[int]int)
 	for i, header := range table.Headers {
 		//table.get(header) returns a list of cells in that particular column
@@ -158,14 +150,14 @@ func findLongestCellWidth(columnCells []parser.TableCell, minValue int) int {
 	return longestLength
 }
 
-func formatComment(comment *parser.Comment) string {
+func FormatComment(comment *parser.Comment) string {
 	if comment.Value == "\n" {
 		return comment.Value
 	}
 	return fmt.Sprintf("%s\n", comment.Value)
 }
 
-func formatTags(tags *parser.Tags) string {
+func FormatTags(tags *parser.Tags) string {
 	if tags == nil || len(tags.Values) == 0 {
 		return ""
 	}
@@ -181,7 +173,7 @@ func formatTags(tags *parser.Tags) string {
 	return string(b.Bytes())
 }
 
-func formatExternalDataTable(dataTable *parser.DataTable) string {
+func FormatExternalDataTable(dataTable *parser.DataTable) string {
 	if dataTable == nil || len(dataTable.Value) == 0 {
 		return ""
 	}
@@ -192,14 +184,14 @@ func formatExternalDataTable(dataTable *parser.DataTable) string {
 }
 
 func formatAndSave(spec *parser.Specification) error {
-	formatted := formatSpecification(spec)
+	formatted := FormatSpecification(spec)
 	if err := common.SaveFile(spec.FileName, formatted, true); err != nil {
 		return err
 	}
 	return nil
 }
 
-func formatSpecification(specification *parser.Specification) string {
+func FormatSpecification(specification *parser.Specification) string {
 	var formattedSpec bytes.Buffer
 	formatter := &formatter{buffer: formattedSpec}
 	specification.Traverse(formatter)
@@ -217,7 +209,7 @@ func sortConcepts(conceptDictionary *parser.ConceptDictionary, conceptMap map[st
 }
 
 func formatConceptSteps(conceptMap map[string]string, concept *parser.Concept) {
-	conceptMap[concept.FileName] += strings.TrimSpace(strings.Replace(formatStep(concept.ConceptStep), "*", "#", 1)) + "\n"
+	conceptMap[concept.FileName] += strings.TrimSpace(strings.Replace(FormatStep(concept.ConceptStep), "*", "#", 1)) + "\n"
 	for i := 1; i < len(concept.ConceptStep.Items); i++ {
 		conceptMap[concept.FileName] += formatItem(concept.ConceptStep.Items[i])
 	}
@@ -227,7 +219,7 @@ func formatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]stri
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.ConceptStep.PreComments {
-			conceptMap[concept.FileName] += formatComment(comment)
+			conceptMap[concept.FileName] += FormatComment(comment)
 		}
 		formatConceptSteps(conceptMap, concept)
 	}
@@ -244,13 +236,21 @@ func formatItem(item parser.Item) string {
 		return fmt.Sprintf("%s\n", comment.Value)
 	case parser.StepKind:
 		step := item.(*parser.Step)
-		return formatStep(step)
+		return FormatStep(step)
 	case parser.TableKind:
 		table := item.(*parser.Table)
-		return formatTable(table)
+		return FormatTable(table)
 	case parser.TagKind:
 		tags := item.(*parser.Tags)
-		return formatTags(tags)
+		return FormatTags(tags)
 	}
 	return ""
+}
+
+func getRepeatedChars(character string, repeatCount int) string {
+	formatted := ""
+	for i := 0; i < repeatCount; i++ {
+		formatted = fmt.Sprintf("%s%s", formatted, character)
+	}
+	return formatted
 }

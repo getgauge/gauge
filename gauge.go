@@ -38,6 +38,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"github.com/getgauge/gauge/logger/execLogger"
 )
 
 const (
@@ -77,6 +78,8 @@ var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alph
 func main() {
 	flag.Parse()
 	setWorkingDir(*workingDir)
+	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
+
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package formatter
 
 import (
 	"bytes"
@@ -27,19 +27,19 @@ type formatter struct {
 }
 
 func (formatter *formatter) SpecHeading(specHeading *parser.Heading) {
-	formatter.buffer.WriteString(formatHeading(specHeading.Value, "="))
+	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "="))
 }
 
 func (formatter *formatter) SpecTags(tags *parser.Tags) {
-	formatter.buffer.WriteString(formatTags(tags))
+	formatter.buffer.WriteString(FormatTags(tags))
 }
 
 func (formatter *formatter) DataTable(table *parser.Table) {
-	formatter.buffer.WriteString(formatTable(table))
+	formatter.buffer.WriteString(FormatTable(table))
 }
 
 func (formatter *formatter) ExternalDataTable(extDataTable *parser.DataTable) {
-	formatter.buffer.WriteString(formatExternalDataTable(extDataTable))
+	formatter.buffer.WriteString(FormatExternalDataTable(extDataTable))
 }
 
 func (formatter *formatter) ContextStep(step *parser.Step) {
@@ -50,7 +50,7 @@ func (formatter *formatter) Scenario(scenario *parser.Scenario) {
 }
 
 func (formatter *formatter) ScenarioHeading(scenarioHeading *parser.Heading) {
-	formatter.buffer.WriteString(formatHeading(scenarioHeading.Value, "-"))
+	formatter.buffer.WriteString(FormatHeading(scenarioHeading.Value, "-"))
 }
 
 func (formatter *formatter) ScenarioTags(scenarioTags *parser.Tags) {
@@ -58,9 +58,9 @@ func (formatter *formatter) ScenarioTags(scenarioTags *parser.Tags) {
 }
 
 func (formatter *formatter) Step(step *parser.Step) {
-	formatter.buffer.WriteString(formatStep(step))
+	formatter.buffer.WriteString(FormatStep(step))
 }
 
 func (formatter *formatter) Comment(comment *parser.Comment) {
-	formatter.buffer.WriteString(formatComment(comment))
+	formatter.buffer.WriteString(FormatComment(comment))
 }

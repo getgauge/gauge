@@ -19,6 +19,7 @@ package execLogger
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -47,6 +48,8 @@ type ExecutionLogger interface {
 }
 
 var currentLogger ExecutionLogger
+
+var SimpleConsoleOutput = false
 
 type coloredLogger struct {
 	linesAfterLastStep int
@@ -85,7 +88,7 @@ func newColoredConsoleWriter() *coloredLogger {
 
 func getCurrentLogger() ExecutionLogger {
 	if currentLogger == nil {
-		if *simpleConsoleOutput {
+		if SimpleConsoleOutput {
 			currentLogger = newSimpleConsoleWriter()
 		} else {
 			currentLogger = newColoredConsoleWriter()
@@ -135,16 +138,16 @@ func (writer *coloredLogger) Error(formatString string, args ...interface{}) {
 }
 
 func (writer *coloredLogger) SpecHeading(heading string) {
-	formattedHeading := formatSpecHeading(heading)
+	formattedHeading := formatter.FormatSpecHeading(heading)
 	writer.Write([]byte(formattedHeading))
 }
 
 func (writer *coloredLogger) Comment(comment *parser.Comment) {
-	writer.Write([]byte(formatComment(comment)))
+	writer.Write([]byte(formatter.FormatComment(comment)))
 }
 
 func (writer *coloredLogger) ScenarioHeading(scenarioHeading string) {
-	formattedHeading := formatScenarioHeading(scenarioHeading)
+	formattedHeading := formatter.FormatScenarioHeading(scenarioHeading)
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
@@ -153,14 +156,14 @@ func (writer *coloredLogger) writeContextStep(step *parser.Step) {
 }
 
 func (writer *coloredLogger) Step(step *parser.Step) {
-	stepText := formatStep(step)
+	stepText := formatter.FormatStep(step)
 	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
 }
 
 func (writer *coloredLogger) ConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	conceptText := indent(formatConcept(protoConcept), writer.indentation)
+	conceptText := indent(formatter.FormatConcept(protoConcept), writer.indentation)
 	terminal.Stdout.Colorf("@b%s", conceptText)
 	writer.indentation += 4
 }
@@ -170,7 +173,7 @@ func (writer *coloredLogger) ConceptFinished(protoConcept *gauge_messages.ProtoC
 }
 
 func (writer *coloredLogger) StepStarting(step *parser.Step) {
-	stepText := formatStep(step)
+	stepText := formatter.FormatStep(step)
 	terminal.Stdout.Colorf("@b%s", stepText)
 	writer.isInsideStep = true
 	writer.linesAfterLastStep = 0
@@ -178,7 +181,7 @@ func (writer *coloredLogger) StepStarting(step *parser.Step) {
 
 //todo: pass protostep instead
 func (writer *coloredLogger) StepFinished(step *parser.Step, failed bool) {
-	stepText := indent(formatStep(step), writer.indentation)
+	stepText := indent(formatter.FormatStep(step), writer.indentation)
 	linesInStepText := strings.Count(stepText, "\n")
 	if linesInStepText == 0 {
 		linesInStepText = 1
@@ -195,7 +198,7 @@ func (writer *coloredLogger) StepFinished(step *parser.Step, failed bool) {
 }
 
 func (writer *coloredLogger) Table(table *parser.Table) {
-	formattedTable := indent(formatTable(table), writer.indentation)
+	formattedTable := indent(formatter.FormatTable(table), writer.indentation)
 	terminal.Stdout.Colorf("@m%s", formattedTable)
 }
 

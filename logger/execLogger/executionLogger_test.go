@@ -19,9 +19,14 @@ package execLogger
 
 import (
 	. "gopkg.in/check.v1"
+	"testing"
 )
 
+func Test(t *testing.T) { TestingT(t) }
+
 type MySuite struct{}
+
+var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestPrefixingMessage(c *C) {
 	prefixedLines := addPrefixToEachLine("Hello\nWorld", "[my-plugin Plugin] : ")

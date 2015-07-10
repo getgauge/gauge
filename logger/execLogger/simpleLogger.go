@@ -19,6 +19,7 @@ package execLogger
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -67,27 +68,27 @@ func (writer *simpleLogger) Error(formatString string, args ...interface{}) {
 }
 
 func (writer *simpleLogger) SpecHeading(heading string) {
-	formattedHeading := formatSpecHeading(heading)
+	formattedHeading := formatter.FormatSpecHeading(heading)
 	writer.Write([]byte(formattedHeading))
 }
 
 func (writer *simpleLogger) Steps(steps []*parser.Step) {
 	for _, step := range steps {
-		writer.writeItem(step)
+		writer.Step(step)
 	}
 }
 
 func (writer *simpleLogger) Comment(comment *parser.Comment) {
-	writer.Text(formatComment(comment))
+	writer.Text(formatter.FormatComment(comment))
 }
 
 func (writer *simpleLogger) ScenarioHeading(scenarioHeading string) {
-	formattedHeading := formatScenarioHeading(scenarioHeading)
+	formattedHeading := formatter.FormatScenarioHeading(scenarioHeading)
 	writer.Write([]byte(fmt.Sprintf("\n%s", formattedHeading)))
 }
 
 func (writer *simpleLogger) Step(step *parser.Step) {
-	writer.Text(formatStep(step))
+	writer.Text(formatter.FormatStep(step))
 }
 
 func (writer *simpleLogger) StepStarting(step *parser.Step) {
@@ -99,11 +100,11 @@ func (writer *simpleLogger) StepFinished(step *parser.Step, failed bool) {
 }
 
 func (writer *simpleLogger) Table(table *parser.Table) {
-	writer.Text(formatTable(table))
+	writer.Text(formatter.FormatTable(table))
 }
 
 func (writer *simpleLogger) ConceptStarting(protoConcept *gauge_messages.ProtoConcept) {
-	writer.Text(formatConcept(protoConcept))
+	writer.Text(formatter.FormatConcept(protoConcept))
 	writer.indentation += 4
 }
 
