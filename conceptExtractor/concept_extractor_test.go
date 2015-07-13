@@ -20,7 +20,15 @@ package conceptExtractor
 import (
 	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
+	"testing"
 )
+
+
+func Test(t *testing.T) { TestingT(t) }
+
+type MySuite struct{}
+
+var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestExtractConceptWithoutParameters(c *C) {
 	STEP := "step that takes a table"
