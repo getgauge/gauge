@@ -1,8 +1,8 @@
 package version
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 )
 
 func CheckCompatibility(currentVersion *Version, versionSupport *VersionSupport) error {

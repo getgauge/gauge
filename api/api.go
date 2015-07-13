@@ -38,6 +38,11 @@ import (
 	"github.com/getgauge/gauge/refactor"
 )
 
+type interface APIStarter {
+	StartAPI() *runner, error
+}
+
+
 func StartAPI() (*gaugeApiMessageHandler, error) {
 	env.LoadEnv(*currentEnv, false)
 	err, apiHandler := startAPIService(0)

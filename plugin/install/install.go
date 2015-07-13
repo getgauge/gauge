@@ -24,6 +24,8 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/version"
 	"os"
 	"path"
@@ -31,8 +33,6 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/runner"
 )
 
 const (

@@ -26,6 +26,8 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
@@ -38,8 +40,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/manifest"
 )
 
 const (
@@ -151,7 +151,6 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	logger.Log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
 	os.Exit(exitCode)
 }
-
 
 func printUsage() {
 	fmt.Printf("gauge - version %s\n", version.CurrentGaugeVersion.String())

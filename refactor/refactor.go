@@ -23,24 +23,22 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	"path/filepath"
 	"strings"
-	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/formatter"
-	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/api"
 )
 
 type rephraseRefactorer struct {
 	oldStep   *parser.Step
 	newStep   *parser.Step
 	isConcept bool
+	runner    *runner.TestRunner
 }
 
 type refactoringResult struct {
@@ -61,11 +59,11 @@ func (refactoringResult *refactoringResult) String() string {
 	return result
 }
 
-func PerformRephraseRefactoring(oldStep, newStep string) *refactoringResult {
+func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunner) *refactoringResult {
 	if newStep == oldStep {
 		return &refactoringResult{success: true}
 	}
-	agent, err := getRefactorAgent(oldStep, newStep)
+	agent, err := getRefactorAgent(oldStep, newStep, runner)
 
 	if err != nil {
 		return rephraseFailure(err.Error())
@@ -105,21 +103,24 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
+
 	result := &refactoringResult{success: false, errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
-		apiHandler, connErr := api.StartAPI()
-		if connErr != nil {
-			result.errors = append(result.errors, connErr.Error())
-			return result
-		}
-		defer apiHandler.runner.kill(execLogger.Current())
-		stepName, err, warning := agent.getStepNameFromRunner(apiHandler.runner)
+
+		// todo: call when performing starting refactoring
+		//		apiHandler, connErr := api.StartAPI()
+		//		if connErr != nil {
+		//			result.errors = append(result.errors, connErr.Error())
+		//			return result
+		//		}
+		//		defer apiHandler.runner.kill(execLogger.Current())
+		stepName, err, warning := agent.getStepNameFromRunner(agent.runner)
 		if err != nil {
 			result.errors = append(result.errors, err.Error())
 			return result
 		}
 		if warning == nil {
-			runnerFilesChanged, err := agent.requestRunnerForRefactoring(apiHandler.runner, stepName)
+			runnerFilesChanged, err := agent.requestRunnerForRefactoring(agent.runner, stepName)
 			if err != nil {
 				result.errors = append(result.errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
 				return result
@@ -175,7 +176,7 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, error) {
+func getRefactorAgent(oldStepText, newStepText string, runner *runner.TestRunner) (*rephraseRefactorer, error) {
 	specParser := new(parser.SpecParser)
 	stepTokens, err := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
 	if err != nil {
@@ -190,7 +191,7 @@ func getRefactorAgent(oldStepText, newStepText string) (*rephraseRefactorer, err
 		}
 		steps = append(steps, step)
 	}
-	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1]}, nil
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], runner: runner}, nil
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.TestRunner, stepName string) ([]string, error) {

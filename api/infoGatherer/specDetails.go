@@ -20,18 +20,18 @@ package infoGatherer
 import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	fsnotify "gopkg.in/fsnotify.v1"
 	"path/filepath"
 	"sync"
-	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/conn"
 )
 
 type SpecInfoGatherer struct {
