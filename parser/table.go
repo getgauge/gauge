@@ -43,7 +43,7 @@ type TableCell struct {
 	CellType ArgType
 }
 
-func (table *Table) isInitialized() bool {
+func (table *Table) IsInitialized() bool {
 	return table.headerIndexMap != nil
 }
 
@@ -55,7 +55,7 @@ func (cell *TableCell) GetValue() string {
 	return value
 }
 
-func (dataTable *DataTable) isInitialized() bool {
+func (dataTable *DataTable) IsInitialized() bool {
 	return dataTable.Table.headerIndexMap != nil
 }
 
@@ -63,7 +63,7 @@ func (table *Table) String() string {
 	return fmt.Sprintf("%v\n%v", table.Headers, table.columns)
 }
 
-func (table *Table) getDynamicArgs() []string {
+func (table *Table) GetDynamicArgs() []string {
 	args := make([]string, 0)
 	for _, row := range table.columns {
 		for _, column := range row {
@@ -133,7 +133,7 @@ func (table *Table) addRows(rows []TableCell) {
 }
 
 func (table *Table) Rows() [][]string {
-	if !table.isInitialized() {
+	if !table.IsInitialized() {
 		return nil
 	}
 
@@ -151,7 +151,7 @@ func (table *Table) Rows() [][]string {
 }
 
 func (table *Table) getRowCount() int {
-	if table.isInitialized() {
+	if table.IsInitialized() {
 		return len(table.columns[0])
 	} else {
 		return 0

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package refactor
 
 import (
 	"errors"
@@ -42,11 +42,11 @@ type rephraseRefactorer struct {
 }
 
 type refactoringResult struct {
-	success            bool
+	Success            bool
 	specsChanged       []string
 	conceptsChanged    []string
 	runnerFilesChanged []string
-	errors             []string
+	Errors             []string
 	warnings           []string
 }
 
@@ -61,7 +61,7 @@ func (refactoringResult *refactoringResult) String() string {
 
 func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunner) *refactoringResult {
 	if newStep == oldStep {
-		return &refactoringResult{success: true}
+		return &refactoringResult{Success: true}
 	}
 	agent, err := getRefactorAgent(oldStep, newStep, runner)
 
@@ -69,16 +69,16 @@ func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunn
 		return rephraseFailure(err.Error())
 	}
 
-	result := &refactoringResult{success: true, errors: make([]string, 0), warnings: make([]string, 0)}
+	result := &refactoringResult{Success: true, Errors: make([]string, 0), warnings: make([]string, 0)}
 	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &parser.ConceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
-	if !result.success {
+	if !result.Success {
 		return result
 	}
 	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
-	if !result.success {
+	if !result.Success {
 		return result
 	}
 
@@ -88,14 +88,14 @@ func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunn
 }
 
 func rephraseFailure(errors ...string) *refactoringResult {
-	return &refactoringResult{success: false, errors: errors}
+	return &refactoringResult{Success: false, Errors: errors}
 }
 
 func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, parseResults ...*parser.ParseResult) {
 	for _, parseResult := range parseResults {
 		if !parseResult.Ok {
-			refactorResult.success = false
-			refactorResult.errors = append(refactorResult.errors, parseResult.Error())
+			refactorResult.Success = false
+			refactorResult.Errors = append(refactorResult.Errors, parseResult.Error())
 		}
 		refactorResult.appendWarnings(parseResult.Warnings)
 	}
@@ -104,7 +104,7 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 
-	result := &refactoringResult{success: false, errors: make([]string, 0), warnings: make([]string, 0)}
+	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
 
 		// todo: call when performing starting refactoring
@@ -116,13 +116,13 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 		//		defer apiHandler.runner.kill(execLogger.Current())
 		stepName, err, warning := agent.getStepNameFromRunner(agent.runner)
 		if err != nil {
-			result.errors = append(result.errors, err.Error())
+			result.Errors = append(result.Errors, err.Error())
 			return result
 		}
 		if warning == nil {
 			runnerFilesChanged, err := agent.requestRunnerForRefactoring(agent.runner, stepName)
 			if err != nil {
-				result.errors = append(result.errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
+				result.Errors = append(result.Errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
 				return result
 			}
 			result.runnerFilesChanged = runnerFilesChanged
@@ -132,7 +132,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
 	result.specsChanged = specFiles
-	result.success = true
+	result.Success = true
 	result.conceptsChanged = conceptFiles
 	return result
 }
@@ -303,7 +303,7 @@ func (refactoringResult *refactoringResult) appendWarnings(warnings []*parser.Wa
 	}
 }
 
-func (refactoringResult *refactoringResult) allFilesChanges() []string {
+func (refactoringResult *refactoringResult) AllFilesChanges() []string {
 	filesChanged := make([]string, 0)
 	filesChanged = append(filesChanged, refactoringResult.specsChanged...)
 	filesChanged = append(filesChanged, refactoringResult.conceptsChanged...)

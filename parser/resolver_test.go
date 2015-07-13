@@ -76,7 +76,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
@@ -110,7 +110,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
@@ -156,7 +156,7 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	concepts, _ := new(ConceptParser).parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)

@@ -80,13 +80,13 @@ func main() {
 	flag.Parse()
 	setWorkingDir(*workingDir)
 	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
-
+	env.ProjectEnv = *currentEnv
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
 		validGaugeProject = false
 	}
-	env.LoadEnv(*currentEnv, true)
+	env.LoadEnv(true)
 	logger.Initialize(*verbosity, *logLevel)
 	if *gaugeVersion {
 		printVersion()

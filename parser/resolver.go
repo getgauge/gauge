@@ -59,7 +59,7 @@ func (paramResolver *paramResolver) getResolvedParams(step *Step, parent *Step, 
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = proto.String(resolvedArg.Name)
-			if resolvedArg.Table.isInitialized() {
+			if resolvedArg.Table.IsInitialized() {
 				parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
 				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.Table, dataTableLookup)
 			} else {

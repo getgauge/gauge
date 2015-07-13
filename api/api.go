@@ -21,30 +21,27 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/conceptExtractor"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/refactor"
+	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
 	"net"
 	"path"
 	"strconv"
 	"sync"
-	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/api/infoGatherer"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/refactor"
 )
 
-type interface APIStarter {
-	StartAPI() *runner, error
-}
-
-
 func StartAPI() (*gaugeApiMessageHandler, error) {
-	env.LoadEnv(*currentEnv, false)
+	env.LoadEnv(false)
 	err, apiHandler := startAPIService(0)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
@@ -231,35 +228,35 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep())
-	if refactoringResult.success {
+	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), nil)
+	if refactoringResult.Success {
 		logger.ApiLog.Info("%s", refactoringResult.String())
 	} else {
-		logger.ApiLog.Error("Refactoring response from gauge. Errors : %s", refactoringResult.errors)
+		logger.ApiLog.Error("Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
 	}
-	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.success), Errors: refactoringResult.errors, FilesChanged: refactoringResult.allFilesChanges()}
+	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.Success), Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
 }
 
 func (handler *gaugeApiMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetExtractConceptRequest()
-	success, err, filesChanged := extractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
+	success, err, filesChanged := conceptExtractor.ExtractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
 	response := &gauge_messages.ExtractConceptResponse{IsSuccess: proto.Bool(success), Error: proto.String(err.Error()), FilesChanged: filesChanged}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse.Enum(), ExtractConceptResponse: response}
 }
 
 func (handler *gaugeApiMessageHandler) formatSpecs(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetFormatSpecsRequest()
-	results := formatSpecFiles(request.GetSpecs()...)
+	results := formatter.FormatSpecFiles(request.GetSpecs()...)
 	warnings := make([]string, 0)
 	errors := make([]string, 0)
 	for _, result := range results {
-		if result.error != nil {
-			errors = append(errors, result.error.Error())
+		if result.ParseError != nil {
+			errors = append(errors, result.ParseError.Error())
 		}
-		if result.warnings != nil {
+		if result.Warnings != nil {
 			warningTexts := make([]string, 0)
-			for _, warning := range result.warnings {
+			for _, warning := range result.Warnings {
 				warningTexts = append(warningTexts, warning.String())
 			}
 			warnings = append(warnings, warningTexts...)

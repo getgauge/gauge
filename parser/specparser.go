@@ -101,7 +101,7 @@ func (parser *SpecParser) initialize() {
 	parser.processors[DataTableKind] = processDataTable
 }
 
-func (parser *SpecParser) parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
+func (parser *SpecParser) Parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
 	tokens, parseError := parser.GenerateTokens(specText)
 	if parseError != nil {
 		return nil, &ParseResult{ParseError: parseError, Ok: false}

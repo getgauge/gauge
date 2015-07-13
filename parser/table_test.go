@@ -23,12 +23,12 @@ import (
 
 func (s *MySuite) TestIsInitalized(c *C) {
 	var table Table
-	c.Assert(table.isInitialized(), Equals, false)
+	c.Assert(table.IsInitialized(), Equals, false)
 	c.Assert(table.getRowCount(), Equals, 0)
 
 	table.addHeaders([]string{"one", "two", "three"})
 
-	c.Assert(table.isInitialized(), Equals, true)
+	c.Assert(table.IsInitialized(), Equals, true)
 }
 
 func (s *MySuite) TestShouldAddHeaders(c *C) {

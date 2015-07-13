@@ -2,12 +2,18 @@ package infoGatherer
 
 import (
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
+
+var _ = Suite(&MySuite{})
 
 type MySuite struct {
 	specsDir   string
@@ -35,7 +41,7 @@ Scenario 1
 
 	specFile, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 
@@ -45,8 +51,8 @@ Scenario 1
 	steps, ok := specInfoGatherer.fileToStepsMap[specFile]
 	c.Assert(ok, Equals, true)
 	c.Assert(len(steps), Equals, 2)
-	c.Assert(steps[0].lineText, Equals, "say hello")
-	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me")
+	c.Assert(steps[0].LineText, Equals, "say hello")
+	c.Assert(steps[1].LineText, Equals, "say \"hello\" to me")
 }
 
 func (s *MySuite) TestRemoveSpec(c *C) {
@@ -68,7 +74,7 @@ Scenario 1
 	specFile1, err := util.CreateFileIn(s.specsDir, "Spec1.spec", data)
 	specFile2, err := util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	c.Assert(len(specInfoGatherer.fileToStepsMap), Equals, 2)
@@ -77,14 +83,14 @@ Scenario 1
 	steps, ok := specInfoGatherer.fileToStepsMap[specFile1]
 	c.Assert(ok, Equals, true)
 	c.Assert(len(steps), Equals, 2)
-	c.Assert(steps[0].lineText, Equals, "say hello")
-	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me")
+	c.Assert(steps[0].LineText, Equals, "say hello")
+	c.Assert(steps[1].LineText, Equals, "say \"hello\" to me")
 
 	steps, ok = specInfoGatherer.fileToStepsMap[specFile2]
 	c.Assert(ok, Equals, true)
 	c.Assert(len(steps), Equals, 2)
-	c.Assert(steps[0].lineText, Equals, "say hello 1")
-	c.Assert(steps[1].lineText, Equals, "say \"hello\" to me 1")
+	c.Assert(steps[0].LineText, Equals, "say hello 1")
+	c.Assert(steps[1].LineText, Equals, "say \"hello\" to me 1")
 
 	specInfoGatherer.removeSpec(filepath.Join(s.specsDir, "Spec1.spec"))
 
@@ -119,7 +125,7 @@ Scenario 1
 	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
 	util.CreateFileIn(s.specsDir, "Spec2.spec", data1)
 
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
@@ -136,7 +142,7 @@ Scenario 1
 
 	stepValues := make([]string, 0)
 	for _, stepValue := range allSteps {
-		stepValues = append(stepValues, stepValue.stepValue)
+		stepValues = append(stepValues, stepValue.StepValue)
 	}
 
 	c.Assert(stringInSlice("say hello 1", stepValues), Equals, true)
@@ -166,7 +172,7 @@ Scenario 1
 `)
 
 	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
@@ -186,7 +192,7 @@ Scenario 1
 
 	stepValues := make([]string, 0)
 	for _, stepValue := range allSteps {
-		stepValues = append(stepValues, stepValue.stepValue)
+		stepValues = append(stepValues, stepValue.StepValue)
 	}
 
 	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
@@ -208,7 +214,7 @@ Scenario 1
 `)
 
 	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
@@ -227,7 +233,7 @@ Scenario 1
 
 	stepValues := make([]string, 0)
 	for _, stepValue := range allSteps {
-		stepValues = append(stepValues, stepValue.stepValue)
+		stepValues = append(stepValues, stepValue.StepValue)
 	}
 
 	c.Assert(stringInSlice("first step with {}", stepValues), Equals, true)
@@ -243,7 +249,7 @@ func (s *MySuite) TestAddingSpecWithParseFailures(c *C) {
 `)
 
 	util.CreateFileIn(s.specsDir, "Spec1.spec", data)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
@@ -262,7 +268,7 @@ func (s *MySuite) TestFindingStepsAndConceptInfosFromConcepts(c *C) {
 `)
 
 	util.CreateFileIn(s.specsDir, "concept.cpt", data)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.updateAllStepsList()
@@ -298,7 +304,7 @@ func (s *MySuite) TestAddingConcepts(c *C) {
 `)
 
 	util.CreateFileIn(s.specsDir, "concept.cpt", data)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.updateAllStepsList()
@@ -342,7 +348,7 @@ func (s *MySuite) TestRemovingConcepts(c *C) {
 
 	util.CreateFileIn(s.specsDir, "concept.cpt", data)
 	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.updateAllStepsList()
@@ -362,7 +368,7 @@ func (s *MySuite) TestRemovingConcepts(c *C) {
 
 	stepValues := make([]string, 0)
 	for _, stepValue := range allSteps {
-		stepValues = append(stepValues, stepValue.stepValue)
+		stepValues = append(stepValues, stepValue.StepValue)
 	}
 
 	c.Assert(stringInSlice("second say {} to me", stepValues), Equals, true)
@@ -408,7 +414,7 @@ Scenario 1
 
 	util.CreateFileIn(s.specsDir, "concept.cpt", data)
 	util.CreateFileIn(s.specsDir, "concept1.cpt", data1)
-	specInfoGatherer := new(specInfoGatherer)
+	specInfoGatherer := new(SpecInfoGatherer)
 
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.updateAllStepsList()
@@ -451,7 +457,7 @@ Scenario 1
 func createStepValueTexts(steps []*parser.StepValue) []string {
 	stepValues := make([]string, 0)
 	for _, stepValue := range steps {
-		stepValues = append(stepValues, stepValue.stepValue)
+		stepValues = append(stepValues, stepValue.StepValue)
 	}
 	return stepValues
 }

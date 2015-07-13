@@ -49,7 +49,7 @@ func parseSpec(specFile string, conceptDictionary *ConceptDictionary, specChanne
 		parseResultChan <- &ParseResult{ParseError: &ParseError{Message: err.Error()}, Ok: false, FileName: specFile}
 		return
 	}
-	spec, parseResult := new(SpecParser).parse(specFileContent, conceptDictionary)
+	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary)
 	parseResult.FileName = specFile
 	if !parseResult.Ok {
 		specChannel <- nil

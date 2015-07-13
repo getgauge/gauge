@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package conceptExtractor
 
 import (
 	"errors"
@@ -25,6 +25,9 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/formatter"
 )
 
 const (
@@ -34,16 +37,16 @@ const (
 
 type extractor struct {
 	conceptName    string
-	conceptStep    *step
+	conceptStep    *parser.Step
 	stepsToExtract []*gauge_messages.Step
 	stepsInConcept string
-	table          *table
+	table          *parser.Table
 	fileContent    string
 	dynamicArgs    []string
 	errors         []error
 }
 
-func extractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
+func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
 	content := SPEC_HEADING_TEMPLATE
 	if isSpecFile(selectedTextInfo.GetFileName()) {
 		content, _ = common.ReadFileContents(selectedTextInfo.GetFileName())
@@ -85,76 +88,76 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 }
 
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string) (string, string, error) {
-	tokens, _ := new(specParser).generateTokens("* " + conceptName.GetName())
-	conceptStep, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
+	tokens, _ := new(parser.SpecParser).GenerateTokens("* " + conceptName.GetName())
+	conceptStep, _ := (&parser.Specification{}).CreateStepUsingLookup(tokens[0], nil)
 	specText, err := getContentWithDataTable(content)
 	if err != nil {
 		return "", "", err
 	}
-	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &table{}, fileContent: specText, errors: make([]error, 0)}
+	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &parser.Table{}, fileContent: specText, errors: make([]error, 0)}
 	extractor.extractSteps()
 	if len(extractor.errors) != 0 {
 		return "", "", err
 	}
-	conceptStep.replaceArgsWithDynamic(conceptStep.args)
+	conceptStep.ReplaceArgsWithDynamic(conceptStep.Args)
 	addArgsFromTable(conceptStep, &extractor.conceptName, extractor.dynamicArgs)
-	if extractor.table.isInitialized() {
-		extractor.conceptName += "\n" + formatTable(extractor.table)
+	if extractor.table.IsInitialized() {
+		extractor.conceptName += "\n" + formatter.FormatTable(extractor.table)
 	}
-	return strings.Replace(formatStep(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName, nil
+	return strings.Replace(formatter.FormatStep(conceptStep), "* ", "# ", 1) + (extractor.stepsInConcept), extractor.conceptName, nil
 }
 
-func addArgsFromTable(concept *step, conceptName *string, args []string) {
+func addArgsFromTable(concept *parser.Step, conceptName *string, args []string) {
 	for _, arg := range args {
-		concept.value += " {}"
-		concept.args = append(concept.args, &stepArg{value: arg, argType: dynamic, name: arg})
+		concept.Value += " {}"
+		concept.Args = append(concept.Args, &parser.StepArg{Value: arg, ArgType: parser.Dynamic, Name: arg})
 		*conceptName += fmt.Sprintf(" <%s>", arg)
 	}
 }
 
 func getContentWithDataTable(content string) (string, error) {
-	spec, result := new(specParser).parse(content, &conceptDictionary{})
-	if !result.ok {
-		return "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.error))
+	spec, result := new(parser.SpecParser).Parse(content, &parser.ConceptDictionary{})
+	if !result.Ok {
+		return "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.ParseError))
 	}
-	newSpec := &specification{heading: &heading{value: "SPECHEADING"}}
-	if spec.DataTable.isInitialized() {
-		newSpec = &specification{items: []item{&spec.DataTable}, heading: &heading{value: "SPECHEADING"}}
+	newSpec := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING"}}
+	if spec.DataTable.IsInitialized() {
+		newSpec = &parser.Specification{Items: []parser.Item{&spec.DataTable}, Heading: &parser.Heading{Value: "SPECHEADING"}}
 	}
-	return formatSpecification(newSpec) + "\n##hello \n* step \n", nil
+	return formatter.FormatSpecification(newSpec) + "\n##hello \n* step \n", nil
 }
 
 func (self *extractor) extractSteps() {
 	for _, step := range self.stepsToExtract {
-		tokens, _ := new(specParser).generateTokens("*" + step.GetName())
-		stepInConcept, _ := (&specification{}).createStepUsingLookup(tokens[0], nil)
+		tokens, _ := new(parser.SpecParser).GenerateTokens("*" + step.GetName())
+		stepInConcept, _ := (&parser.Specification{}).CreateStepUsingLookup(tokens[0], nil)
 		if step.GetTable() != "" {
 			self.handleTable(stepInConcept, step)
 		}
-		stepInConcept.replaceArgsWithDynamic(self.conceptStep.args)
-		self.stepsInConcept += formatItem(stepInConcept)
+		stepInConcept.ReplaceArgsWithDynamic(self.conceptStep.Args)
+		self.stepsInConcept += formatter.FormatStep(stepInConcept)
 	}
 }
 
-func (self *extractor) handleTable(stepInConcept *step, step *gauge_messages.Step) {
-	stepInConcept.value += " {}"
+func (self *extractor) handleTable(stepInConcept *parser.Step, step *gauge_messages.Step) {
+	stepInConcept.Value += " {}"
 	specText := self.fileContent + step.GetTable()
-	spec, result := new(specParser).parse(specText, &conceptDictionary{})
-	if !result.ok {
-		self.errors = append(self.errors, result.error)
+	spec, result := new(parser.SpecParser).Parse(specText, &parser.ConceptDictionary{})
+	if !result.Ok {
+		self.errors = append(self.errors, result.ParseError)
 		return
 	}
-	stepArgs := []*stepArg{spec.Scenarios[0].Steps[0].args[0]}
+	stepArgs := []*parser.StepArg{spec.Scenarios[0].Steps[0].Args[0]}
 	self.addTableAsParam(step, stepArgs)
-	stepInConcept.args = append(stepInConcept.args, stepArgs[0])
+	stepInConcept.Args = append(stepInConcept.Args, stepArgs[0])
 }
 
-func (self *extractor) addTableAsParam(step *gauge_messages.Step, args []*stepArg) {
+func (self *extractor) addTableAsParam(step *gauge_messages.Step, args []*parser.StepArg) {
 	if step.GetParamTableName() != "" {
 		self.conceptName = strings.Replace(self.conceptName, fmt.Sprintf("<%s>", step.GetParamTableName()), "", 1)
-		self.table = &args[0].table
-		args[0] = &stepArg{value: step.GetParamTableName(), argType: dynamic}
+		self.table = &args[0].Table
+		args[0] = &parser.StepArg{Value: step.GetParamTableName(), ArgType: parser.Dynamic}
 	} else {
-		self.dynamicArgs = append(self.dynamicArgs, (&args[0].table).getDynamicArgs()...)
+		self.dynamicArgs = append(self.dynamicArgs, (&args[0].Table).GetDynamicArgs()...)
 	}
 }

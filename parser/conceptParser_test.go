@@ -460,7 +460,7 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	c.Assert(tableArgument.ArgType, Equals, TableArg)
 
 	inlineTable := tableArgument.Table
-	c.Assert(inlineTable.isInitialized(), Equals, true)
+	c.Assert(inlineTable.IsInitialized(), Equals, true)
 	c.Assert(len(inlineTable.Get("id")), Equals, 2)
 	c.Assert(len(inlineTable.Get("name")), Equals, 2)
 	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")

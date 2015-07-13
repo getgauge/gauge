@@ -17,10 +17,11 @@ const (
 )
 
 var CurrentEnv = "default"
+var ProjectEnv = "default"
 
 // Loading default environment and loading user specified env
 // this way user specified env variable can override default if required
-func LoadEnv(env string, shouldSkip bool) {
+func LoadEnv(shouldSkip bool) {
 	err := loadEnvironment(envDefaultDirName)
 	if err != nil {
 		if !shouldSkip {
@@ -29,15 +30,15 @@ func LoadEnv(env string, shouldSkip bool) {
 		}
 	}
 
-	if env != envDefaultDirName {
-		err := loadEnvironment(env)
+	if ProjectEnv != envDefaultDirName {
+		err := loadEnvironment(ProjectEnv)
 		if err != nil {
 			if !shouldSkip {
-				logger.Log.Critical("Failed to load the environment: %s. %s\n", env, err.Error())
+				logger.Log.Critical("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
 				os.Exit(1)
 			}
 		}
-		CurrentEnv = env
+		CurrentEnv = ProjectEnv
 	}
 
 }

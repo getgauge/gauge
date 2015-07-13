@@ -546,7 +546,7 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
-	_, parseRes := parser.parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -555,7 +555,7 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
 
-	_, parseRes := parser.parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -564,7 +564,7 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
 
-	_, parseRes := parser.parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
 	c.Assert(parseRes.ParseError.Message, Equals, "Table location not specified")
 	c.Assert(parseRes.Ok, Equals, false)
 }

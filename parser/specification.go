@@ -156,7 +156,7 @@ func (step *Step) deepCopyStepArgs() []*StepArg {
 	return copiedStepArgs
 }
 
-func (step *Step) replaceArgsWithDynamic(args []*StepArg) {
+func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {
 	for i, arg := range step.Args {
 		for _, conceptArg := range args {
 			if arg.String() == conceptArg.String() {
@@ -381,14 +381,14 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		return token.Kind == DataTableKind
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		resolvedArg, _ := newSpecialTypeResolver().resolve(token.Value)
-		if isInState(*state, specScope) && !spec.DataTable.isInitialized() {
+		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
 			externalTable := &DataTable{}
 			externalTable.Table = resolvedArg.Table
 			externalTable.LineNo = token.LineNo
 			externalTable.Value = token.Value
 			externalTable.IsExternal = true
 			spec.addExternalDataTable(externalTable)
-		} else if isInState(*state, specScope) && spec.DataTable.isInitialized() {
+		} else if isInState(*state, specScope) && spec.DataTable.IsInitialized() {
 			value := "Multiple data table present, ignoring table"
 			spec.addComment(&Comment{token.LineText, token.LineNo})
 			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
@@ -413,7 +413,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			latestContext := spec.latestContext()
 			addInlineTableHeader(latestContext, token)
 		} else if !isInState(*state, scenarioScope) {
-			if !spec.DataTable.Table.isInitialized() {
+			if !spec.DataTable.Table.IsInitialized() {
 				dataTable := &Table{}
 				dataTable.LineNo = token.LineNo
 				dataTable.addHeaders(token.Args)
@@ -607,7 +607,7 @@ func (specParser *SpecParser) validateSpec(specification *Specification) *ParseE
 		return &ParseError{LineNo: 1, Message: "Spec heading not found"}
 	}
 	dataTable := specification.DataTable.Table
-	if dataTable.isInitialized() && dataTable.getRowCount() == 0 {
+	if dataTable.IsInitialized() && dataTable.getRowCount() == 0 {
 		return &ParseError{LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
 	return nil
@@ -861,7 +861,7 @@ func (lookup *ArgLookup) getCopy() *ArgLookup {
 
 func (lookup *ArgLookup) fromDataTableRow(datatable *Table, index int) *ArgLookup {
 	dataTableLookup := new(ArgLookup)
-	if !datatable.isInitialized() {
+	if !datatable.IsInitialized() {
 		return dataTableLookup
 	}
 	for _, header := range datatable.Headers {
@@ -874,7 +874,7 @@ func (lookup *ArgLookup) fromDataTableRow(datatable *Table, index int) *ArgLooku
 //create an empty lookup with only args to resolve dynamic params for steps
 func (lookup *ArgLookup) fromDataTable(datatable *Table) *ArgLookup {
 	dataTableLookup := new(ArgLookup)
-	if !datatable.isInitialized() {
+	if !datatable.IsInitialized() {
 		return dataTableLookup
 	}
 	for _, header := range datatable.Headers {
