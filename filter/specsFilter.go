@@ -15,10 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package filter
+
+import (
+	"github.com/getgauge/gauge/execution"
+	"github.com/getgauge/gauge/parser"
+	"math/rand"
+	"time"
+)
 
 type specsFilter interface {
-	filter([]*specification) []*specification
+	filter([]*parser.Specification) []*parser.Specification
 }
 
 type tagsFilter struct {
@@ -34,7 +41,7 @@ type specRandomizer struct {
 	dontRandomize bool
 }
 
-func (tagsFilter *tagsFilter) filter(specs []*specification) []*specification {
+func (tagsFilter *tagsFilter) filter(specs []*parser.Specification) []*parser.Specification {
 	if tagsFilter.tagExp != "" {
 		validateTagExpression(tagsFilter.tagExp)
 		specs = filterSpecsByTags(specs, tagsFilter.tagExp)
@@ -42,21 +49,30 @@ func (tagsFilter *tagsFilter) filter(specs []*specification) []*specification {
 	return specs
 }
 
-func (groupFilter *specsGroupFilter) filter(specs []*specification) []*specification {
+func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*parser.Specification {
 	if groupFilter.group == -1 {
 		return specs
 	}
 
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
-		return make([]*specification, 0)
+		return make([]*parser.Specification, 0)
 	}
-	execution := &parallelSpecExecution{specifications: specs}
-	return execution.distributeSpecs(groupFilter.execStreams)[groupFilter.group-1].specs
+	return execution.DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1].Specs
 }
 
-func (randomizer *specRandomizer) filter(specs []*specification) []*specification {
+func (randomizer *specRandomizer) filter(specs []*parser.Specification) []*parser.Specification {
 	if !randomizer.dontRandomize {
 		return shuffleSpecs(specs)
 	}
 	return specs
+}
+
+func shuffleSpecs(allSpecs []*parser.Specification) []*parser.Specification {
+	dest := make([]*parser.Specification, len(allSpecs))
+	rand.Seed(int64(time.Now().Nanosecond()))
+	perm := rand.Perm(len(allSpecs))
+	for i, v := range perm {
+		dest[v] = allSpecs[i]
+	}
+	return dest
 }

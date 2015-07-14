@@ -70,8 +70,8 @@ type ArgLookup struct {
 	paramValue    []paramNameValue
 }
 
-type specItemFilter interface {
-	filter(Item) bool
+type SpecItemFilter interface {
+	Filter(Item) bool
 }
 
 func (argLookup ArgLookup) String() string {
@@ -682,9 +682,9 @@ func (step *Step) PopulateFragments() {
 
 }
 
-func (spec *Specification) filter(filter specItemFilter) {
+func (spec *Specification) Filter(filter SpecItemFilter) {
 	for i := 0; i < len(spec.Items); i++ {
-		if filter.filter(spec.Items[i]) {
+		if filter.Filter(spec.Items[i]) {
 			spec.removeItem(i)
 			i--
 		}

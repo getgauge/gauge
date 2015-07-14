@@ -64,7 +64,7 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 }
 
 type specCollection struct {
-	specs []*parser.Specification
+	Specs []*parser.Specification
 }
 
 type parallelInfo struct {
@@ -82,7 +82,7 @@ func (self *parallelInfo) isValid() bool {
 
 func (e *parallelSpecExecution) start() *result.SuiteResult {
 	startTime := time.Now()
-	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
+	specCollections := DistributeSpecs(e.specifications, e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
 		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, execLogger.NewParallelExecutionConsoleWriter(i+1))
@@ -107,7 +107,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
-		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
+		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
 		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
@@ -115,23 +115,23 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollecti
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
-	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
+	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
 	runner.Kill(e.writer)
 	suiteResults <- result
 }
 
-func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollection {
-	if distributions > len(e.specifications) {
-		distributions = len(e.specifications)
+func DistributeSpecs(specifications []*parser.Specification, distributions int) []*specCollection {
+	if distributions > len(specifications) {
+		distributions = len(specifications)
 	}
 	specCollections := make([]*specCollection, distributions)
-	for i := 0; i < len(e.specifications); i++ {
+	for i := 0; i < len(specifications); i++ {
 		mod := i % distributions
 		if specCollections[mod] == nil {
-			specCollections[mod] = &specCollection{specs: make([]*parser.Specification, 0)}
+			specCollections[mod] = &specCollection{Specs: make([]*parser.Specification, 0)}
 		}
-		specCollections[mod].specs = append(specCollections[mod].specs, e.specifications[i])
+		specCollections[mod].Specs = append(specCollections[mod].Specs, specifications[i])
 	}
 	return specCollections
 }
@@ -171,7 +171,7 @@ func numberOfCores() int {
 
 func (s *specCollection) specNames() []string {
 	specNames := make([]string, 0)
-	for _, spec := range s.specs {
+	for _, spec := range s.Specs {
 		specNames = append(specNames, spec.FileName)
 	}
 	return specNames

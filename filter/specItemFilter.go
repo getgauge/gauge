@@ -15,11 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package filter
 
 import (
 	"errors"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 	"golang.org/x/tools/go/exact"
 	"golang.org/x/tools/go/types"
 	"os"
@@ -43,8 +44,8 @@ func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
 	return &scenarioIndexFilterToRetain{index, 0}
 }
 
-func (filter *scenarioIndexFilterToRetain) filter(item item) bool {
-	if item.kind() == scenarioKind {
+func (filter *scenarioIndexFilterToRetain) Filter(item parser.Item) bool {
+	if item.Kind() == parser.ScenarioKind {
 		if filter.currentScenarioIndex != filter.indexToNotFilter {
 			filter.currentScenarioIndex++
 			return true
@@ -60,13 +61,13 @@ func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFil
 	return &ScenarioFilterBasedOnTags{specTags, tagExp}
 }
 
-func (filter *ScenarioFilterBasedOnTags) filter(item item) bool {
-	if item.kind() == scenarioKind {
-		tags := item.(*scenario).Tags
+func (filter *ScenarioFilterBasedOnTags) Filter(item parser.Item) bool {
+	if item.Kind() == parser.ScenarioKind {
+		tags := item.(*parser.Scenario).Tags
 		if tags == nil {
 			return !filter.filterTags(filter.specTags)
 		}
-		return !filter.filterTags(append(tags.values, filter.specTags...))
+		return !filter.filterTags(append(tags.Values, filter.specTags...))
 	}
 	return true
 }
@@ -168,10 +169,10 @@ func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []
 	return listOfOperators, listOfTags
 }
 
-func filterSpecsItems(specs []*specification, filter specItemFilter) []*specification {
-	filteredSpecs := make([]*specification, 0)
+func filterSpecsItems(specs []*parser.Specification, filter parser.SpecItemFilter) []*parser.Specification {
+	filteredSpecs := make([]*parser.Specification, 0)
 	for _, spec := range specs {
-		spec.filter(filter)
+		spec.Filter(filter)
 		if len(spec.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
 		}
@@ -179,14 +180,14 @@ func filterSpecsItems(specs []*specification, filter specItemFilter) []*specific
 	return filteredSpecs
 }
 
-func filterSpecsByTags(specs []*specification, tagExpression string) []*specification {
-	filteredSpecs := make([]*specification, 0)
+func filterSpecsByTags(specs []*parser.Specification, tagExpression string) []*parser.Specification {
+	filteredSpecs := make([]*parser.Specification, 0)
 	for _, spec := range specs {
 		tagValues := make([]string, 0)
 		if spec.Tags != nil {
-			tagValues = spec.Tags.values
+			tagValues = spec.Tags.Values
 		}
-		spec.filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
+		spec.Filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
 		if len(spec.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
 		}

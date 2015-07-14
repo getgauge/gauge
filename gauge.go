@@ -264,16 +264,6 @@ func executeSpecs(inParallel bool) {
 	os.Exit(exitCode)
 }
 
-func shuffleSpecs(allSpecs []*specification) []*specification {
-	dest := make([]*specification, len(allSpecs))
-	rand.Seed(int64(time.Now().Nanosecond()))
-	perm := rand.Perm(len(allSpecs))
-	for i, v := range perm {
-		dest[v] = allSpecs[i]
-	}
-	return dest
-}
-
 func validateSpecs(manifest *manifest, specsToExecute []*specification, runner *testRunner, conceptDictionary *conceptDictionary) {
 	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
 	validationErrors := validator.validate()

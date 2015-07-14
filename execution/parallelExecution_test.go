@@ -32,38 +32,37 @@ type MySuite struct{}
 var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestDistributionOfSpecs(c *C) {
-	e := parallelSpecExecution{specifications: createSpecsList(10)}
-	specCollections := e.distributeSpecs(10)
+	specs := createSpecsList(10)
+	specCollections := DistributeSpecs(specs, 10)
 	c.Assert(len(specCollections), Equals, 10)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
 
-	specCollections = e.distributeSpecs(5)
+	specCollections = DistributeSpecs(specs, 5)
 	c.Assert(len(specCollections), Equals, 5)
 	verifySpecCollectionsForSize(c, 2, specCollections...)
 
-	specCollections = e.distributeSpecs(4)
+	specCollections = DistributeSpecs(specs, 4)
 	c.Assert(len(specCollections), Equals, 4)
 	verifySpecCollectionsForSize(c, 3, specCollections[:2]...)
 	verifySpecCollectionsForSize(c, 2, specCollections[2:]...)
 
-	specCollections = e.distributeSpecs(3)
+	specCollections = DistributeSpecs(specs, 3)
 	c.Assert(len(specCollections), Equals, 3)
 	verifySpecCollectionsForSize(c, 4, specCollections[0])
 	verifySpecCollectionsForSize(c, 3, specCollections[1:]...)
 }
 
 func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
-	e := parallelSpecExecution{specifications: createSpecsList(6)}
-	specCollections := e.distributeSpecs(10)
+	specs := createSpecsList(6)
+	specCollections := DistributeSpecs(specs, 10)
 	c.Assert(len(specCollections), Equals, 6)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
 
-	specCollections = e.distributeSpecs(17)
+	specCollections = DistributeSpecs(specs, 17)
 	c.Assert(len(specCollections), Equals, 6)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
 
-	e = parallelSpecExecution{specifications: createSpecsList(0)}
-	specCollections = e.distributeSpecs(17)
+	specCollections = DistributeSpecs(createSpecsList(0), 17)
 	c.Assert(len(specCollections), Equals, 0)
 }
 
@@ -77,7 +76,7 @@ func createSpecsList(number int) []*parser.Specification {
 
 func verifySpecCollectionsForSize(c *C, size int, specCollections ...*specCollection) {
 	for _, collection := range specCollections {
-		c.Assert(len(collection.specs), Equals, size)
+		c.Assert(len(collection.Specs), Equals, size)
 	}
 }
 
