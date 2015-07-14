@@ -23,7 +23,6 @@ import (
 	"testing"
 )
 
-
 func Test(t *testing.T) { TestingT(t) }
 
 type MySuite struct{}

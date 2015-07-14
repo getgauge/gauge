@@ -21,13 +21,13 @@ import (
 	"errors"
 	"fmt"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 	"os"
 	"regexp"
 	"strings"
-	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/formatter"
 )
 
 const (

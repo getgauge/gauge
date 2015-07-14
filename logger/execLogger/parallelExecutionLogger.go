@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 	"strconv"
 	"strings"
 )
@@ -40,7 +41,7 @@ func newParallelExecutionConsoleWriter(id int) *parallelExecutionLogger {
 
 func (writer *parallelExecutionLogger) Write(b []byte) (int, error) {
 	message := indent(string(b), writer.indentation)
-	value := addPrefixToEachLine(message, fmt.Sprintf("[%s] : ", writer.name))
+	value := util.AddPrefixToEachLine(message, fmt.Sprintf("[%s] : ", writer.name))
 	if strings.TrimSpace(message) == "" {
 		value = message
 	}
@@ -57,23 +58,23 @@ func (writer *parallelExecutionLogger) PrintError(value string) {
 }
 
 func (writer *parallelExecutionLogger) Critical(formatString string, args ...interface{}) {
-	logger.Log.Critical(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Critical(util.AddPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Info(formatString string, args ...interface{}) {
-	logger.Log.Info(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Info(util.AddPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Warning(formatString string, args ...interface{}) {
-	logger.Log.Warning(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Warning(util.AddPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Debug(formatString string, args ...interface{}) {
-	logger.Log.Debug(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Debug(util.AddPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) Error(formatString string, args ...interface{}) {
-	logger.Log.Error(addPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
+	logger.Log.Error(util.AddPrefixToEachLine(fmt.Sprintf("[%s] : ", writer.name), formatString), args)
 }
 
 func (writer *parallelExecutionLogger) SpecHeading(heading string) {

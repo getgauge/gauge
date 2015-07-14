@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package plugin
 
 import (
 	"encoding/json"
@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 	"net"
@@ -41,7 +42,6 @@ import (
 
 const (
 	executionScope          = "execution"
-	setupScope              = "setup"
 	pluginConnectionPortEnv = "plugin_connection_port"
 )
 
@@ -56,7 +56,7 @@ type pluginDescriptor struct {
 		Darwin  []string
 	}
 	Scope               []string
-	GaugeVersionSupport versionSupport
+	GaugeVersionSupport version.VersionSupport
 	pluginPath          string
 }
 
@@ -103,7 +103,7 @@ func (plugin *plugin) isStillRunning() bool {
 	return plugin.pluginCmd.ProcessState == nil || !plugin.pluginCmd.ProcessState.Exited()
 }
 
-func isPluginInstalled(pluginName, pluginVersion string) bool {
+func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	pluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
 		return false
@@ -127,7 +127,7 @@ func isPluginInstalled(pluginName, pluginVersion string) bool {
 }
 
 func getPluginJsonPath(pluginName, version string) (string, error) {
-	if !isPluginInstalled(pluginName, version) {
+	if !IsPluginInstalled(pluginName, version) {
 		return "", errors.New(fmt.Sprintf("Plugin %s %s is not installed", pluginName, version))
 	}
 
@@ -138,15 +138,15 @@ func getPluginJsonPath(pluginName, version string) (string, error) {
 	return filepath.Join(pluginInstallDir, common.PluginJsonFile), nil
 }
 
-func getPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, error) {
+func GetPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, error) {
 	pluginJson, err := getPluginJsonPath(pluginId, pluginVersion)
 	if err != nil {
 		return nil, err
 	}
-	return getPluginDescriptorFromJson(pluginJson)
+	return GetPluginDescriptorFromJson(pluginJson)
 }
 
-func getPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
+func GetPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
 	pluginJsonContents, err := common.ReadFileContents(pluginJson)
 	if err != nil {
 		return nil, err
@@ -160,7 +160,7 @@ func getPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
 	return &pd, nil
 }
 
-func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, error) {
+func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, error) {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -195,7 +195,7 @@ func startPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 	return cmd, nil
 }
 
-func setEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest, pluginEnvVars map[string]string) error {
+func SetEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
 	pluginEnvVars[fmt.Sprintf("%s_action", pd.Id)] = action
 	pluginEnvVars["test_language"] = manifest.Language
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
@@ -213,35 +213,7 @@ func setEnvironmentProperties(properties map[string]string) error {
 	return nil
 }
 
-func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest) error {
-	if !isPluginInstalled(pluginName, pluginArgs["version"]) {
-		logger.Log.Info("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
-		result := installPlugin(pluginName, pluginArgs["version"])
-		if !result.success {
-			logger.Log.Error(result.getMessage())
-		}
-	}
-	pd, err := getPluginDescriptor(pluginName, pluginArgs["version"])
-	if err != nil {
-		return err
-	}
-	if isPluginAdded(manifest, pd) {
-		logger.Log.Info("Plugin " + pd.Name + " is already added.")
-		return nil
-	}
-
-	action := setupScope
-	if err := setEnvForPlugin(action, pd, manifest, pluginArgs); err != nil {
-		return err
-	}
-	if _, err := startPlugin(pd, action, true); err != nil {
-		return err
-	}
-	manifest.Plugins = append(manifest.Plugins, pd.Id)
-	return manifest.save()
-}
-
-func isPluginAdded(manifest *manifest, descriptor *pluginDescriptor) bool {
+func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bool {
 	for _, pluginId := range manifest.Plugins {
 		if pluginId == descriptor.Id {
 			return true
@@ -250,18 +222,18 @@ func isPluginAdded(manifest *manifest, descriptor *pluginDescriptor) bool {
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
+func startPluginsForExecution(manifest *manifest.Manifest) (*pluginHandler, []string) {
 	warnings := make([]string, 0)
 	handler := &pluginHandler{}
 	envProperties := make(map[string]string)
 
 	for _, pluginId := range manifest.Plugins {
-		pd, err := getPluginDescriptor(pluginId, "")
+		pd, err := GetPluginDescriptor(pluginId, "")
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginId, err.Error(), pluginId))
 			continue
 		}
-		compatibilityErr := checkCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
+		compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
 		if compatibilityErr != nil {
 			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion))
 			continue
@@ -273,9 +245,9 @@ func startPluginsForExecution(manifest *manifest) (*pluginHandler, []string) {
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
-			setEnvForPlugin(executionScope, pd, manifest, envProperties)
+			SetEnvForPlugin(executionScope, pd, manifest, envProperties)
 
-			pluginCmd, err := startPlugin(pd, executionScope, false)
+			pluginCmd, err := StartPlugin(pd, executionScope, false)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
@@ -356,8 +328,8 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func startPlugins(manifest *manifest) *pluginHandler {
+func startPlugins(manifest *manifest.Manifest) *pluginHandler {
 	pluginHandler, warnings := startPluginsForExecution(manifest)
-	handleWarningMessages(warnings)
+	logger.HandleWarningMessages(warnings)
 	return pluginHandler
 }

@@ -20,7 +20,14 @@ package runner
 import (
 	"github.com/getgauge/common"
 	. "gopkg.in/check.v1"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
+
+type MySuite struct{}
+
+var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestGetCleanEnvGivesRemovesGAUGE_INTERNAL_PORTAndSetsPortNumber(c *C) {
 	HELLO := "HELLO"

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package install
 
 import (
 	"encoding/json"
@@ -24,7 +24,9 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/version"
 	"os"
@@ -38,6 +40,7 @@ import (
 const (
 	pluginJson = "plugin.json"
 	jsonExt    = ".json"
+	setupScope = "setup"
 )
 
 type installDescription struct {
@@ -104,7 +107,7 @@ func installPluginWithDescription(installDescription *installDescription, curren
 		if err != nil {
 			return installError(err.Error())
 		}
-		if compatibilityError := checkCompatibility(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
+		if compatibilityError := version.CheckCompatibility(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
 			return installError(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
@@ -267,7 +270,7 @@ func (installDesc *installDescription) getVersion(version string) (*versionInsta
 func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersion *version.Version) (*versionInstallDescription, error) {
 	installDesc.sortVersionInstallDescriptions()
 	for _, versionInstallDesc := range installDesc.Versions {
-		if err := checkCompatibility(currentVersion, &versionInstallDesc.GaugeVersionSupport); err == nil {
+		if err := version.CheckCompatibility(currentVersion, &versionInstallDesc.GaugeVersionSupport); err == nil {
 			return &versionInstallDesc, nil
 		}
 	}
@@ -322,7 +325,7 @@ func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginId string,
 }
 
 func installPluginFromDir(unzippedPluginDir string) error {
-	pd, err := getPluginDescriptorFromJson(filepath.Join(unzippedPluginDir, pluginJson))
+	pd, err := plugin.GetPluginDescriptorFromJson(filepath.Join(unzippedPluginDir, pluginJson))
 	if err != nil {
 		return err
 	}
@@ -393,11 +396,11 @@ func isCompatiblePluginInstalled(pluginName string, pluginVersion string, isRunn
 	if isRunner {
 		return isCompatibleLanguagePluginInstalled(pluginName)
 	} else {
-		pd, err := getPluginDescriptor(pluginName, pluginVersion)
+		pd, err := plugin.GetPluginDescriptor(pluginName, pluginVersion)
 		if err != nil {
 			return false
 		}
-		err = checkCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
+		err = version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
 		if err != nil {
 			return false
 		}
@@ -410,7 +413,7 @@ func isCompatibleLanguagePluginInstalled(name string) bool {
 	if err != nil {
 		return false
 	}
-	var r runner
+	var r runner.Runner
 	contents, err := common.ReadFileContents(jsonFilePath)
 	if err != nil {
 		return false
@@ -419,7 +422,7 @@ func isCompatibleLanguagePluginInstalled(name string) bool {
 	if err != nil {
 		return false
 	}
-	return (checkCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport) == nil)
+	return (version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport) == nil)
 }
 
 type ByDecreasingVersion []versionInstallDescription
@@ -430,4 +433,32 @@ func (a ByDecreasingVersion) Less(i, j int) bool {
 	version1, _ := version.ParseVersion(a[i].Version)
 	version2, _ := version.ParseVersion(a[j].Version)
 	return version1.IsGreaterThan(version2)
+}
+
+func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest.Manifest) error {
+	if !plugin.IsPluginInstalled(pluginName, pluginArgs["version"]) {
+		logger.Log.Info("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
+		result := installPlugin(pluginName, pluginArgs["version"])
+		if !result.success {
+			logger.Log.Error(result.getMessage())
+		}
+	}
+	pd, err := plugin.GetPluginDescriptor(pluginName, pluginArgs["version"])
+	if err != nil {
+		return err
+	}
+	if plugin.IsPluginAdded(manifest, pd) {
+		logger.Log.Info("Plugin " + pd.Name + " is already added.")
+		return nil
+	}
+
+	action := setupScope
+	if err := plugin.SetEnvForPlugin(action, pd, manifest, pluginArgs); err != nil {
+		return err
+	}
+	if _, err := plugin.StartPlugin(pd, action, true); err != nil {
+		return err
+	}
+	manifest.Plugins = append(manifest.Plugins, pd.Id)
+	return manifest.Save()
 }

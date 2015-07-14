@@ -53,7 +53,7 @@ func ProjectManifest() (*Manifest, error) {
 	return &m, nil
 }
 
-func (m *Manifest) save() error {
+func (m *Manifest) Save() error {
 	b, err := json.MarshalIndent(m, "", "  ")
 	if err != nil {
 		return err

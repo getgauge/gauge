@@ -15,45 +15,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package execLogger
+package util
 
 import (
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
-
 func (s *MySuite) TestPrefixingMessage(c *C) {
-	prefixedLines := addPrefixToEachLine("Hello\nWorld", "[my-plugin Plugin] : ")
+	prefixedLines := AddPrefixToEachLine("Hello\nWorld", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World")
 }
 
 func (s *MySuite) TestPrefixingMessageEndingWithNewLine(c *C) {
-	prefixedLines := addPrefixToEachLine("Hello\nWorld\n", "[my-plugin Plugin] : ")
+	prefixedLines := AddPrefixToEachLine("Hello\nWorld\n", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World\n")
 
 }
 
 func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
-	prefixedLines := addPrefixToEachLine("\nHello\nWorld\n\nFoo bar\n", "[my-plugin Plugin] : ")
+	prefixedLines := AddPrefixToEachLine("\nHello\nWorld\n\nFoo bar\n", "[my-plugin Plugin] : ")
 	c.Assert(prefixedLines, Equals, "[my-plugin Plugin] : \n"+
 		"[my-plugin Plugin] : Hello\n"+
 		"[my-plugin Plugin] : World\n"+
 		"[my-plugin Plugin] : \n"+
 		"[my-plugin Plugin] : Foo bar\n")
 
-}
-
-func (s *MySuite) TestIndentation(c *C) {
-	c.Assert("    * hello world \n", Equals, indent("* hello world \n", 4))
-	c.Assert("* hello world", Equals, indent("* hello world", 0))
-	c.Assert("   \n    \n    * hello world \n    \n", Equals, indent("\n \n * hello world \n \n", 3))
-	c.Assert("  * first\n   *second\n   *third\n", Equals, indent("* first\n *second\n *third\n", 2))
 }

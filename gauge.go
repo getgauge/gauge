@@ -564,12 +564,6 @@ func getSpecWithScenarioIndex(specSource string, conceptDictionary *conceptDicti
 	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
 }
 
-func handleWarningMessages(warnings []string) {
-	for _, warning := range warnings {
-		logger.Log.Warning(warning)
-	}
-}
-
 func printVersion() {
 	fmt.Printf("Gauge version: %s\n\n", version.CurrentGaugeVersion.String())
 	fmt.Println("Plugins\n-------")

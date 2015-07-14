@@ -133,3 +133,9 @@ func loggingLevel(verbose bool, logLevel string) logging.Level {
 	return logging.INFO
 
 }
+
+func HandleWarningMessages(warnings []string) {
+	for _, warning := range warnings {
+		Log.Warning(warning)
+	}
+}

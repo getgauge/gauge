@@ -58,31 +58,6 @@ type coloredLogger struct {
 	indentation        int
 }
 
-type pluginLogger struct {
-	pluginName string
-}
-
-func (writer *pluginLogger) Write(b []byte) (int, error) {
-	message := string(b)
-	prefixedMessage := addPrefixToEachLine(message, fmt.Sprintf("[%s Plugin] : ", writer.pluginName))
-	gaugeConsoleWriter := Current()
-	_, err := gaugeConsoleWriter.Write([]byte(prefixedMessage))
-	return len(message), err
-}
-
-func addPrefixToEachLine(text string, template string) string {
-	lines := strings.Split(text, "\n")
-	prefixedLines := make([]string, 0)
-	for i, line := range lines {
-		if (i == len(lines)-1) && line == "" {
-			prefixedLines = append(prefixedLines, line)
-		} else {
-			prefixedLines = append(prefixedLines, template+line)
-		}
-	}
-	return strings.Join(prefixedLines, "\n")
-}
-
 func newColoredConsoleWriter() *coloredLogger {
 	return &coloredLogger{linesAfterLastStep: 0, isInsideStep: false, indentation: 0}
 }
