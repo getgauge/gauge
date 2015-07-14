@@ -21,25 +21,29 @@ import (
 	"fmt"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/runner"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"time"
-	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/runner"
 )
 
 type parallelSpecExecution struct {
-	manifest                 *manifest
+	manifest                 *manifest.Manifest
 	specifications           []*parser.Specification
-	pluginHandler            *pluginHandler
+	pluginHandler            *plugin.PluginHandler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
-	runner                   *testRunner
-	aggregateResult          *suiteResult
+	runner                   *runner.TestRunner
+	aggregateResult          *result.SuiteResult
 	numberOfExecutionStreams int
-	writer                   executionLogger
+	writer                   execLogger.ExecutionLogger
 }
 
 type streamExecError struct {
@@ -76,44 +80,44 @@ func (self *parallelInfo) isValid() bool {
 	return true
 }
 
-func (e *parallelSpecExecution) start() *suiteResult {
+func (e *parallelSpecExecution) start() *result.SuiteResult {
 	startTime := time.Now()
 	specCollections := e.distributeSpecs(e.numberOfExecutionStreams)
-	suiteResultChannel := make(chan *suiteResult, len(specCollections))
+	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, newParallelExecutionConsoleWriter(i+1))
+		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, execLogger.NewParallelExecutionConsoleWriter(i+1))
 	}
 	e.writer.Info("Executing in %s parallel streams.", strconv.Itoa(len(specCollections)))
-	suiteResults := make([]*suiteResult, 0)
+	suiteResults := make([]*result.SuiteResult, 0)
 	for _, _ = range specCollections {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
-	e.aggregateResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
-	e.aggregateResult.projectName = filepath.Base(config.ProjectRoot)
-	e.aggregateResult.environment = env.CurrentEnv
-	e.aggregateResult.Tags = *executeTags
-	e.aggregateResult.executionTime = int64(time.Since(startTime) / 1e6)
+	e.aggregateResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	e.aggregateResult.ProjectName = filepath.Base(config.ProjectRoot)
+	e.aggregateResult.Environment = env.CurrentEnv
+	e.aggregateResult.Tags = ExecuteTags
+	e.aggregateResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *suiteResult, testRunner *testRunner, writer executionLogger) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	var err error
 	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.specs)))
-		suiteResults <- &suiteResult{unhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, writer)
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *suiteResult, runner *testRunner, writer executionLogger) {
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	execution := newExecution(e.manifest, specCollection.specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
-	runner.kill(e.writer)
+	runner.Kill(e.writer)
 	suiteResults <- result
 }
 
@@ -134,28 +138,28 @@ func (e *parallelSpecExecution) distributeSpecs(distributions int) []*specCollec
 
 func (e *parallelSpecExecution) finish() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.aggregateResult)}}
-	e.pluginHandler.notifyPlugins(message)
-	e.pluginHandler.gracefullyKillPlugins()
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: parser.ConvertToProtoSuiteResult(e.aggregateResult)}}
+	e.pluginHandler.NotifyPlugins(message)
+	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (e *parallelSpecExecution) aggregateResults(suiteResults []*suiteResult) *suiteResult {
-	aggregateResult := &suiteResult{isFailed: false, specResults: make([]*specResult, 0)}
+func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
+	aggregateResult := &result.SuiteResult{IsFailed: false, SpecResults: make([]*result.SpecResult, 0)}
 	for _, result := range suiteResults {
-		aggregateResult.executionTime += result.executionTime
-		aggregateResult.specsFailedCount += result.specsFailedCount
-		aggregateResult.specResults = append(aggregateResult.specResults, result.specResults...)
-		if result.isFailed {
-			aggregateResult.isFailed = true
+		aggregateResult.ExecutionTime += result.ExecutionTime
+		aggregateResult.SpecsFailedCount += result.SpecsFailedCount
+		aggregateResult.SpecResults = append(aggregateResult.SpecResults, result.SpecResults...)
+		if result.IsFailed {
+			aggregateResult.IsFailed = true
 		}
-		if result.preSuite != nil {
-			aggregateResult.preSuite = result.preSuite
+		if result.PreSuite != nil {
+			aggregateResult.PreSuite = result.PreSuite
 		}
-		if result.postSuite != nil {
-			aggregateResult.postSuite = result.postSuite
+		if result.PostSuite != nil {
+			aggregateResult.PostSuite = result.PostSuite
 		}
-		if result.unhandledErrors != nil {
-			aggregateResult.unhandledErrors = append(aggregateResult.unhandledErrors, result.unhandledErrors...)
+		if result.UnhandledErrors != nil {
+			aggregateResult.UnhandledErrors = append(aggregateResult.UnhandledErrors, result.UnhandledErrors...)
 		}
 	}
 	return aggregateResult
@@ -168,7 +172,7 @@ func numberOfCores() int {
 func (s *specCollection) specNames() []string {
 	specNames := make([]string, 0)
 	for _, spec := range s.specs {
-		specNames = append(specNames, spec.fileName)
+		specNames = append(specNames, spec.FileName)
 	}
 	return specNames
 }

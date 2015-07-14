@@ -24,7 +24,7 @@ import (
 func (s *MySuite) TestIsInitalized(c *C) {
 	var table Table
 	c.Assert(table.IsInitialized(), Equals, false)
-	c.Assert(table.getRowCount(), Equals, 0)
+	c.Assert(table.GetRowCount(), Equals, 0)
 
 	table.addHeaders([]string{"one", "two", "three"})
 
@@ -52,7 +52,7 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	table.addRowValues([]string{"foo", "bar", "baz"})
 	table.addRowValues([]string{"john", "jim"})
 
-	c.Assert(table.getRowCount(), Equals, 2)
+	c.Assert(table.GetRowCount(), Equals, 2)
 	column1 := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].Value, Equals, "foo")
@@ -83,7 +83,7 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	table.addRows([]TableCell{TableCell{"foo", Static}, TableCell{"bar", Static}, TableCell{"baz", Static}})
 	table.addRows([]TableCell{TableCell{"john", Static}, TableCell{"jim", Static}})
 
-	c.Assert(table.getRowCount(), Equals, 2)
+	c.Assert(table.GetRowCount(), Equals, 2)
 	column1 := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].Value, Equals, "foo")

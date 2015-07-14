@@ -73,14 +73,14 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 		step("assign id <user-id> and name <user-name>").
 		step("assign number <user-phone>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
-	populateConceptDynamicParams(concept, dataTableLookup)
+	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	PopulateConceptDynamicParams(concept, dataTableLookup)
 
 	c.Assert(concept.getArg("user-id").Value, Equals, "123")
 	c.Assert(concept.getArg("user-name").Value, Equals, "foo")
@@ -107,14 +107,14 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
-	populateConceptDynamicParams(concept1, dataTableLookup)
+	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	PopulateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "123")
 	c.Assert(concept1.getArg("user-name").Value, Equals, "prateek")
@@ -153,14 +153,14 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 		specHeading("second nested <baz>").
 		step("add id <baz>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).fromDataTableRow(&spec.DataTable.Table, 0)
-	populateConceptDynamicParams(concept1, dataTableLookup)
+	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	PopulateConceptDynamicParams(concept1, dataTableLookup)
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "456")
 	c.Assert(concept1.getArg("user-name").Value, Equals, "foo")

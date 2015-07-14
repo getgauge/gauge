@@ -44,7 +44,7 @@ type ConceptParser struct {
 }
 
 //concept file can have multiple concept headings
-func (parser *ConceptParser) parse(text string) ([]*Step, *ParseDetailResult) {
+func (parser *ConceptParser) Parse(text string) ([]*Step, *ParseDetailResult) {
 	defer parser.resetState()
 
 	specParser := new(SpecParser)
@@ -218,7 +218,7 @@ func AddConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *Pars
 	if fileReadErr != nil {
 		return &ParseError{Message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
 	}
-	concepts, parseResults := new(ConceptParser).parse(fileText)
+	concepts, parseResults := new(ConceptParser).Parse(fileText)
 	if parseResults != nil && parseResults.Warnings != nil {
 		for _, warning := range parseResults.Warnings {
 			logger.Log.Warning(warning.String())

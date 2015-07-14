@@ -150,7 +150,7 @@ func (table *Table) Rows() [][]string {
 	return tableRows
 }
 
-func (table *Table) getRowCount() int {
+func (table *Table) GetRowCount() int {
 	if table.IsInitialized() {
 		return len(table.columns[0])
 	} else {

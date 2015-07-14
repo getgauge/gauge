@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
@@ -81,6 +82,8 @@ func main() {
 	setWorkingDir(*workingDir)
 	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
 	env.ProjectEnv = *currentEnv
+	execution.ExecuteTags = *executeTags
+	execution.TableRows = *tableRows
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
@@ -259,17 +262,6 @@ func executeSpecs(inParallel bool) {
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
-}
-
-func getDataTableRows(rowCount int) indexRange {
-	if *tableRows == "" {
-		return indexRange{start: 0, end: rowCount - 1}
-	}
-	indexes, err := getDataTableRowsRange(*tableRows, rowCount)
-	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
-	}
-	return indexes
 }
 
 func shuffleSpecs(allSpecs []*specification) []*specification {

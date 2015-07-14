@@ -30,7 +30,7 @@ func (s *MySuite) TestScenarioIndexFilter(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(specParser).parse(specText, new(conceptDictionary))
+	spec, parseResult := new(specParser).Parse(specText, new(conceptDictionary))
 	c.Assert(parseResult.ok, Equals, true)
 
 	spec.filter(newScenarioIndexFilterToRetain(2))
@@ -50,7 +50,7 @@ func (s *MySuite) TestScenarioIndexFilterLastScenario(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(specParser).parse(specText, new(conceptDictionary))
+	spec, parseResult := new(specParser).Parse(specText, new(conceptDictionary))
 	c.Assert(parseResult.ok, Equals, true)
 
 	spec.filter(newScenarioIndexFilterToRetain(3))
@@ -70,7 +70,7 @@ func (s *MySuite) TestScenarioIndexFilterFirstScenario(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(specParser).parse(specText, new(conceptDictionary))
+	spec, parseResult := new(specParser).Parse(specText, new(conceptDictionary))
 	c.Assert(parseResult.ok, Equals, true)
 
 	spec.filter(newScenarioIndexFilterToRetain(0))
@@ -84,7 +84,7 @@ func (s *MySuite) TestScenarioIndexFilterForSingleScenarioSpec(c *C) {
 		scenarioHeading("First scenario").
 		step("a step").String()
 
-	spec, parseResult := new(specParser).parse(specText, new(conceptDictionary))
+	spec, parseResult := new(specParser).Parse(specText, new(conceptDictionary))
 	c.Assert(parseResult.ok, Equals, true)
 
 	spec.filter(newScenarioIndexFilterToRetain(0))
@@ -97,7 +97,7 @@ func (s *MySuite) TestScenarioIndexFilterWithWrongScenarioIndex(c *C) {
 		scenarioHeading("First scenario").
 		step("a step").String()
 
-	spec, parseResult := new(specParser).parse(specText, new(conceptDictionary))
+	spec, parseResult := new(specParser).Parse(specText, new(conceptDictionary))
 	c.Assert(parseResult.ok, Equals, true)
 
 	spec.filter(newScenarioIndexFilterToRetain(1))

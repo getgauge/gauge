@@ -18,13 +18,82 @@
 package execution
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 )
 
+type specBuilder struct {
+	lines []string
+}
+
+func SpecBuilder() *specBuilder {
+	return &specBuilder{lines: make([]string, 0)}
+}
+
+func (specBuilder *specBuilder) addPrefix(prefix string, line string) string {
+	return fmt.Sprintf("%s%s\n", prefix, line)
+}
+
+func (specBuilder *specBuilder) String() string {
+	var result string
+	for _, line := range specBuilder.lines {
+		result = fmt.Sprintf("%s%s", result, line)
+	}
+	return result
+}
+
+func (specBuilder *specBuilder) specHeading(heading string) *specBuilder {
+	line := specBuilder.addPrefix("#", heading)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) scenarioHeading(heading string) *specBuilder {
+	line := specBuilder.addPrefix("##", heading)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) step(stepText string) *specBuilder {
+	line := specBuilder.addPrefix("* ", stepText)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) tags(tags ...string) *specBuilder {
+	tagText := ""
+	for i, tag := range tags {
+		tagText = fmt.Sprintf("%s%s", tagText, tag)
+		if i != len(tags)-1 {
+			tagText = fmt.Sprintf("%s,", tagText)
+		}
+	}
+	line := specBuilder.addPrefix("tags: ", tagText)
+	specBuilder.lines = append(specBuilder.lines, line)
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) tableHeader(cells ...string) *specBuilder {
+	return specBuilder.tableRow(cells...)
+}
+func (specBuilder *specBuilder) tableRow(cells ...string) *specBuilder {
+	rowInMarkdown := "|"
+	for _, cell := range cells {
+		rowInMarkdown = fmt.Sprintf("%s%s|", rowInMarkdown, cell)
+	}
+	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", rowInMarkdown))
+	return specBuilder
+}
+
+func (specBuilder *specBuilder) text(comment string) *specBuilder {
+	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", comment))
+	return specBuilder
+}
+
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	conceptDictionary := new(parser.ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
@@ -36,9 +105,9 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 		step("assign id <user-id> and name <user-name>").
 		step("assign phone <user-phone>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
+	conceptDictionary.Add(concepts, "file.cpt")
+	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
@@ -60,8 +129,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	conceptDictionary := new(parser.ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
@@ -76,9 +144,10 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
+	conceptDictionary.Add(concepts, "file.cpt")
+	parser := new(parser.SpecParser)
+	spec, _ := parser.Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
@@ -111,8 +180,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
-	parser := new(specParser)
-	conceptDictionary := new(conceptDictionary)
+	conceptDictionary := new(parser.ConceptDictionary)
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
@@ -130,9 +198,10 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(conceptParser).parse(conceptText)
-	conceptDictionary.add(concepts, "file.cpt")
-	spec, _ := parser.parse(specText, conceptDictionary)
+	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
+	conceptDictionary.Add(concepts, "file.cpt")
+	parser := new(parser.SpecParser)
+	spec, _ := parser.Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
 

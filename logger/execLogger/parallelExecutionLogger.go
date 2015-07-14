@@ -35,7 +35,7 @@ type parallelExecutionLogger struct {
 	indentation int
 }
 
-func newParallelExecutionConsoleWriter(id int) *parallelExecutionLogger {
+func NewParallelExecutionConsoleWriter(id int) *parallelExecutionLogger {
 	return &parallelExecutionLogger{indentation: 0, name: WORKER + strconv.Itoa(id)}
 }
 

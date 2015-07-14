@@ -166,7 +166,7 @@ func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {
 	}
 }
 
-func createStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *Step {
+func CreateStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *Step {
 	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
 	step := &Step{Value: stepReq.GetParsedStepText(),
 		LineText: stepReq.GetActualStepText()}
@@ -607,7 +607,7 @@ func (specParser *SpecParser) validateSpec(specification *Specification) *ParseE
 		return &ParseError{LineNo: 1, Message: "Spec heading not found"}
 	}
 	dataTable := specification.DataTable.Table
-	if dataTable.IsInitialized() && dataTable.getRowCount() == 0 {
+	if dataTable.IsInitialized() && dataTable.GetRowCount() == 0 {
 		return &ParseError{LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
 	return nil
@@ -859,7 +859,7 @@ func (lookup *ArgLookup) getCopy() *ArgLookup {
 	return lookupCopy
 }
 
-func (lookup *ArgLookup) fromDataTableRow(datatable *Table, index int) *ArgLookup {
+func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) *ArgLookup {
 	dataTableLookup := new(ArgLookup)
 	if !datatable.IsInitialized() {
 		return dataTableLookup

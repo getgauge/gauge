@@ -15,32 +15,35 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package execution
 
 import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
 )
 
 type validator struct {
-	manifest           *manifest
-	specsToExecute     []*specification
-	runner             *testRunner
-	conceptsDictionary *conceptDictionary
+	manifest           *manifest.Manifest
+	specsToExecute     []*parser.Specification
+	runner             *runner.TestRunner
+	conceptsDictionary *parser.ConceptDictionary
 }
 
 type specValidator struct {
-	specification        *specification
-	runner               *testRunner
-	conceptsDictionary   *conceptDictionary
+	specification        *parser.Specification
+	runner               *runner.TestRunner
+	conceptsDictionary   *parser.ConceptDictionary
 	stepValidationErrors []*stepValidationError
 	stepValidationCache  map[string]bool
 }
 
 type stepValidationError struct {
-	step     *step
+	step     *parser.Step
 	message  string
 	fileName string
 }
@@ -49,9 +52,9 @@ func (e *stepValidationError) Error() string {
 	return e.message
 }
 
-type executionValidationErrors map[*specification][]*stepValidationError
+type executionValidationErrors map[*parser.Specification][]*stepValidationError
 
-func newValidator(manifest *manifest, specsToExecute []*specification, runner *testRunner, conceptsDictionary *conceptDictionary) *validator {
+func newValidator(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptsDictionary *parser.ConceptDictionary) *validator {
 	return &validator{manifest: manifest, specsToExecute: specsToExecute, runner: runner, conceptsDictionary: conceptsDictionary}
 }
 
@@ -73,72 +76,72 @@ func (self *validator) validate() executionValidationErrors {
 }
 
 func (self *specValidator) validate() []*stepValidationError {
-	self.specification.traverse(self)
+	self.specification.Traverse(self)
 	return self.stepValidationErrors
 }
 
-func (self *specValidator) step(step *step) {
-	if step.isConcept {
-		for _, conceptStep := range step.conceptSteps {
-			if _, ok := self.stepValidationCache[conceptStep.value]; !ok {
-				self.step(conceptStep)
+func (self *specValidator) Step(step *parser.Step) {
+	if step.IsConcept {
+		for _, conceptStep := range step.ConceptSteps {
+			if _, ok := self.stepValidationCache[conceptStep.Value]; !ok {
+				self.Step(conceptStep)
 			}
 		}
-	} else if _, ok := self.stepValidationCache[step.value]; !ok {
-		self.stepValidationCache[step.value] = true
+	} else if _, ok := self.stepValidationCache[step.Value]; !ok {
+		self.stepValidationCache[step.Value] = true
 		self.validateStep(step)
 	}
 }
 
-func (self *specValidator) validateStep(step *step) {
+func (self *specValidator) validateStep(step *parser.Step) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.value), NumberOfParameters: proto.Int(len(step.args))}}
-	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.connection, config.RunnerRequestTimeout())
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
+	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.fileName})
+		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.FileName})
 		return
 	}
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: validateResponse.GetErrorMessage(), fileName: self.specification.fileName})
+			self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: validateResponse.GetErrorMessage(), fileName: self.specification.FileName})
 		}
 	} else {
-		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: "Invalid response from runner for Validation request", fileName: self.specification.fileName})
+		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: "Invalid response from runner for Validation request", fileName: self.specification.FileName})
 	}
 }
 
-func (self *specValidator) contextStep(step *step) {
-	self.step(step)
+func (self *specValidator) ContextStep(step *parser.Step) {
+	self.Step(step)
 }
 
-func (self *specValidator) specHeading(heading *heading) {
+func (self *specValidator) SpecHeading(heading *parser.Heading) {
 	self.stepValidationErrors = make([]*stepValidationError, 0)
 }
 
-func (self *specValidator) specTags(tags *tags) {
+func (self *specValidator) SpecTags(tags *parser.Tags) {
 
 }
 
-func (self *specValidator) scenarioTags(tags *tags) {
+func (self *specValidator) ScenarioTags(tags *parser.Tags) {
 
 }
 
-func (self *specValidator) dataTable(dataTable *table) {
+func (self *specValidator) DataTable(dataTable *parser.Table) {
 
 }
 
-func (self *specValidator) scenario(scenario *scenario) {
+func (self *specValidator) Scenario(scenario *parser.Scenario) {
 
 }
 
-func (self *specValidator) scenarioHeading(heading *heading) {
+func (self *specValidator) ScenarioHeading(heading *parser.Heading) {
 }
 
-func (self *specValidator) comment(comment *comment) {
+func (self *specValidator) Comment(comment *parser.Comment) {
 
 }
 
-func (self *specValidator) externalDataTable(dataTable *dataTable) {
+func (self *specValidator) ExternalDataTable(dataTable *parser.DataTable) {
 
 }

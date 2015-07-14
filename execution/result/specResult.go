@@ -52,11 +52,11 @@ type ScenarioResult struct {
 type Result interface {
 	getPreHook() **(gauge_messages.ProtoHookFailure)
 	getPostHook() **(gauge_messages.ProtoHookFailure)
-	setFailure()
+	SetFailure()
 }
 
-type execTimeTracker interface {
-	addExecTime(int64)
+type ExecTimeTracker interface {
+	AddExecTime(int64)
 }
 
 func (suiteResult *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
@@ -67,7 +67,7 @@ func (suiteResult *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure
 	return &suiteResult.PostSuite
 }
 
-func (suiteResult *SuiteResult) setFailure() {
+func (suiteResult *SuiteResult) SetFailure() {
 	suiteResult.IsFailed = true
 }
 
@@ -79,7 +79,7 @@ func (specResult *SpecResult) getPostHook() **(gauge_messages.ProtoHookFailure) 
 	return &specResult.ProtoSpec.PostHookFailure
 }
 
-func (specResult *SpecResult) setFailure() {
+func (specResult *SpecResult) SetFailure() {
 	specResult.IsFailed = true
 }
 
@@ -91,39 +91,39 @@ func (scenarioResult *ScenarioResult) getPostHook() **(gauge_messages.ProtoHookF
 	return &scenarioResult.ProtoScenario.PostHookFailure
 }
 
-func (scenarioResult *ScenarioResult) setFailure() {
+func (scenarioResult *ScenarioResult) SetFailure() {
 	scenarioResult.ProtoScenario.Failed = proto.Bool(true)
 }
 
-func (scenarioResult *ScenarioResult) getFailure() bool {
+func (scenarioResult *ScenarioResult) GetFailure() bool {
 	return scenarioResult.ProtoScenario.GetFailed()
 }
 
-func (specResult *SpecResult) addSpecItems(resolvedItems []*gauge_messages.ProtoItem) {
+func (specResult *SpecResult) AddSpecItems(resolvedItems []*gauge_messages.ProtoItem) {
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, resolvedItems...)
 }
 
-func newSuiteResult() *SuiteResult {
+func NewSuiteResult() *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
 	return result
 }
 
-func addPreHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
+func AddPreHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
 	if executionResult.GetFailed() {
-		*(result.getPreHook()) = getProtoHookFailure(executionResult)
-		result.setFailure()
+		*(result.getPreHook()) = GetProtoHookFailure(executionResult)
+		result.SetFailure()
 	}
 }
 
-func addPostHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
+func AddPostHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
 	if executionResult.GetFailed() {
-		*(result.getPostHook()) = getProtoHookFailure(executionResult)
-		result.setFailure()
+		*(result.getPostHook()) = GetProtoHookFailure(executionResult)
+		result.SetFailure()
 	}
 }
 
-func (suiteResult *SuiteResult) addSpecResult(specResult *SpecResult) {
+func (suiteResult *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	if specResult.IsFailed {
 		suiteResult.IsFailed = true
 		suiteResult.SpecsFailedCount++
@@ -133,7 +133,7 @@ func (suiteResult *SuiteResult) addSpecResult(specResult *SpecResult) {
 
 }
 
-func getProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *(gauge_messages.ProtoHookFailure) {
+func GetProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *(gauge_messages.ProtoHookFailure) {
 	return &gauge_messages.ProtoHookFailure{StackTrace: executionResult.StackTrace, ErrorMessage: executionResult.ErrorMessage, ScreenShot: executionResult.ScreenShot}
 }
 
@@ -141,19 +141,19 @@ func (specResult *SpecResult) setFileName(fileName string) {
 	specResult.ProtoSpec.FileName = proto.String(fileName)
 }
 
-func (specResult *SpecResult) addScenarioResults(scenarioResults []*ScenarioResult) {
+func (specResult *SpecResult) AddScenarioResults(scenarioResults []*ScenarioResult) {
 	for _, scenarioResult := range scenarioResults {
 		if scenarioResult.ProtoScenario.GetFailed() {
 			specResult.IsFailed = true
 			specResult.ScenarioFailedCount++
 		}
-		specResult.addExecTime(scenarioResult.ProtoScenario.GetExecutionTime())
+		specResult.AddExecTime(scenarioResult.ProtoScenario.GetExecutionTime())
 		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: scenarioResult.ProtoScenario})
 	}
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
-func (specResult *SpecResult) addTableDrivenScenarioResult(scenarioResults [][](*ScenarioResult)) {
+func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][](*ScenarioResult)) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
@@ -162,7 +162,7 @@ func (specResult *SpecResult) addTableDrivenScenarioResult(scenarioResults [][](
 		for rowIndex, eachRow := range scenarioResults {
 			protoScenario := eachRow[scenarioIndex].ProtoScenario
 			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), protoScenario)
-			specResult.addExecTime(protoScenario.GetExecutionTime())
+			specResult.AddExecTime(protoScenario.GetExecutionTime())
 			if protoScenario.GetFailed() {
 				scenarioFailed = true
 				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(rowIndex))
@@ -179,19 +179,19 @@ func (specResult *SpecResult) addTableDrivenScenarioResult(scenarioResults [][](
 	specResult.ScenarioCount += numberOfScenarios
 }
 
-func (specResult *SpecResult) addExecTime(execTime int64) {
+func (specResult *SpecResult) AddExecTime(execTime int64) {
 	specResult.ExecutionTime += execTime
 }
 
-func (scenarioResult *ScenarioResult) addItems(protoItems []*gauge_messages.ProtoItem) {
+func (scenarioResult *ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
 	scenarioResult.ProtoScenario.ScenarioItems = append(scenarioResult.ProtoScenario.ScenarioItems, protoItems...)
 }
 
-func (scenarioResult *ScenarioResult) addContexts(contextProtoItems []*gauge_messages.ProtoItem) {
+func (scenarioResult *ScenarioResult) AddContexts(contextProtoItems []*gauge_messages.ProtoItem) {
 	scenarioResult.ProtoScenario.Contexts = append(scenarioResult.ProtoScenario.Contexts, contextProtoItems...)
 }
 
-func (scenarioResult *ScenarioResult) updateExecutionTime() {
+func (scenarioResult *ScenarioResult) UpdateExecutionTime() {
 	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetContexts())
 	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetScenarioItems())
 }
@@ -200,15 +200,15 @@ func (scenarioResult *ScenarioResult) updateExecutionTimeFromItems(protoItems []
 	for _, item := range protoItems {
 		if item.GetItemType() == gauge_messages.ProtoItem_Step {
 			stepExecTime := item.GetStep().GetStepExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.addExecTime(stepExecTime)
+			scenarioResult.AddExecTime(stepExecTime)
 		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
 			conceptExecTime := item.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.addExecTime(conceptExecTime)
+			scenarioResult.AddExecTime(conceptExecTime)
 		}
 	}
 }
 
-func (scenarioResult *ScenarioResult) addExecTime(execTime int64) {
+func (scenarioResult *ScenarioResult) AddExecTime(execTime int64) {
 	currentScenarioExecTime := scenarioResult.ProtoScenario.GetExecutionTime()
 	scenarioResult.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
 }

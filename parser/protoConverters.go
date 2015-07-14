@@ -18,12 +18,12 @@
 package parser
 
 import (
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/result"
 	"github.com/golang/protobuf/proto"
 )
 
-func convertToProtoItem(item Item) *gauge_messages.ProtoItem {
+func ConvertToProtoItem(item Item) *gauge_messages.ProtoItem {
 	switch item.Kind() {
 	case ScenarioKind:
 		return convertToProtoScenarioItem(item.(*Scenario))
@@ -61,9 +61,9 @@ func convertToProtoStepItems(steps []*Step) []*gauge_messages.ProtoItem {
 func convertToProtoScenarioItem(scenario *Scenario) *gauge_messages.ProtoItem {
 	scenarioItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range scenario.Items {
-		scenarioItems = append(scenarioItems, convertToProtoItem(item))
+		scenarioItems = append(scenarioItems, ConvertToProtoItem(item))
 	}
-	protoScenario := newProtoScenario(scenario)
+	protoScenario := NewProtoScenario(scenario)
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: protoScenario}
 }
 
@@ -194,7 +194,7 @@ func addExecutionResult(protoItem *gauge_messages.ProtoItem, protoStepExecutionR
 	}
 }
 
-func convertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
+func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
 		PreHookFailure:   suiteResult.PreSuite,
 		PostHookFailure:  suiteResult.PostSuite,
@@ -238,7 +238,7 @@ func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
 	protoItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range spec.Items {
-		protoItems = append(protoItems, convertToProtoItem(item))
+		protoItems = append(protoItems, ConvertToProtoItem(item))
 	}
 	protoSpec.Items = protoItems
 	return protoSpec
@@ -263,14 +263,14 @@ func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 
 }
 
-func newSpecResult(specification *Specification) *result.SpecResult {
+func NewSpecResult(specification *Specification) *result.SpecResult {
 	return &result.SpecResult{
 		ProtoSpec:           newProtoSpec(specification),
 		FailedDataTableRows: make([]int32, 0),
 	}
 }
 
-func newProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
+func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
 		ScenarioHeading: proto.String(scenario.Heading.Value),
 		Failed:          proto.Bool(false),

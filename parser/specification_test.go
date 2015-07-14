@@ -542,9 +542,9 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable.addRowValues([]string{"1", "admin"})
 	dataTable.addRowValues([]string{"2", "root"})
 
-	emptyLookup := new(ArgLookup).fromDataTableRow(new(Table), 0)
-	lookup1 := new(ArgLookup).fromDataTableRow(dataTable, 0)
-	lookup2 := new(ArgLookup).fromDataTableRow(dataTable, 1)
+	emptyLookup := new(ArgLookup).FromDataTableRow(new(Table), 0)
+	lookup1 := new(ArgLookup).FromDataTableRow(dataTable, 0)
+	lookup2 := new(ArgLookup).FromDataTableRow(dataTable, 1)
 
 	c.Assert(emptyLookup.paramIndexMap, IsNil)
 
@@ -589,7 +589,7 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 		&Token{Kind: StepKind, Value: "create user {static}", Args: []string{"bar"}, LineNo: 4},
 	}
 
-	concepts, _ := new(ConceptParser).parse("#create user <username> \n * enter user <username> \n *select \"finish\"")
+	concepts, _ := new(ConceptParser).Parse("#create user <username> \n * enter user <username> \n *select \"finish\"")
 	conceptsDictionary := new(ConceptDictionary)
 	conceptsDictionary.Add(concepts, "file.cpt")
 
@@ -628,7 +628,7 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 		&Token{Kind: StepKind, Value: "create user {static} and {static}", Args: []string{"456", "Regular fellow"}, LineNo: 6},
 	}
 
-	concepts, _ := new(ConceptParser).parse("#create user <user-id> and <user-description> \n * enter user <user-id> and <user-description> \n *select \"finish\"")
+	concepts, _ := new(ConceptParser).Parse("#create user <user-id> and <user-description> \n * enter user <user-id> and <user-description> \n *select \"finish\"")
 	conceptsDictionary := new(ConceptDictionary)
 	conceptsDictionary.Add(concepts, "file.cpt")
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
@@ -699,7 +699,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 		&Token{Kind: TableRow, Args: []string{"456", "normal fellow"}, LineNo: 6},
 	}
 
-	concepts, _ := new(ConceptParser).parse("#create users <table> \n * enter details from <table> \n *select \"finish\"")
+	concepts, _ := new(ConceptParser).Parse("#create users <table> \n * enter details from <table> \n *select \"finish\"")
 	conceptsDictionary := new(ConceptDictionary)
 	conceptsDictionary.Add(concepts, "file.cpt")
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
@@ -729,7 +729,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 		&Token{Kind: TableRow, Args: []string{"1", "normal", "wheel"}, LineNo: 11},
 	}
 
-	concepts, _ := new(ConceptParser).parse("#create users <id> \n * enter details from <id> \n *select \"finish\"")
+	concepts, _ := new(ConceptParser).Parse("#create users <id> \n * enter details from <id> \n *select \"finish\"")
 	conceptsDictionary := new(ConceptDictionary)
 	conceptsDictionary.Add(concepts, "file.cpt")
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
@@ -885,7 +885,7 @@ func (s *MySuite) TestCreateConceptStep(c *C) {
 		step("nested concept with <foo>").
 		specHeading("nested concept with <baz>").
 		step("nested concept step wiht <baz>").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	dictionary := new(ConceptDictionary)
 	dictionary.Add(concepts, "file.cpt")

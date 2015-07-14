@@ -18,34 +18,44 @@
 package execution
 
 import (
+	"errors"
+	"fmt"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/runner"
 	"path/filepath"
 	"time"
 )
 
+var ExecuteTags = ""
+var TableRows = ""
+
 type simpleExecution struct {
-	manifest             *manifest
-	runner               *testRunner
+	manifest             *manifest.Manifest
+	runner               *runner.TestRunner
 	specifications       []*parser.Specification
-	pluginHandler        *pluginHandler
+	pluginHandler        *plugin.PluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	suiteResult          *SuiteResult
-	writer               executionLogger
+	suiteResult          *result.SuiteResult
+	writer               execLogger.ExecutionLogger
 }
 
 type execution interface {
-	start() *suiteResult
+	start() *result.SuiteResult
 	finish()
 }
 
 type executionInfo struct {
-	currentSpec specification
+	currentSpec parser.Specification
 }
 
-func newExecution(manifest *manifest, specifications []*parser.Specification, runner *testRunner, pluginHandler *pluginHandler, info *parallelInfo, writer executionLogger) execution {
+func newExecution(manifest *manifest.Manifest, specifications []*parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, info *parallelInfo, writer execLogger.ExecutionLogger) execution {
 	if info.inParallel {
 		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: info.numberOfStreams, writer: writer}
 	}
@@ -71,58 +81,69 @@ func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) 
 }
 
 func (e *simpleExecution) executeHook(message *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
-	e.pluginHandler.notifyPlugins(message)
+	e.pluginHandler.NotifyPlugins(message)
 	executionResult := executeAndGetStatus(e.runner, message, e.writer)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
 
 func (e *simpleExecution) addExecTime(execTime int64) {
-	e.suiteResult.executionTime += execTime
+	e.suiteResult.ExecutionTime += execTime
 }
 
 func (e *simpleExecution) notifyExecutionResult() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: convertToProtoSuiteResult(e.suiteResult)}}
-	e.pluginHandler.notifyPlugins(message)
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: parser.ConvertToProtoSuiteResult(e.suiteResult)}}
+	e.pluginHandler.NotifyPlugins(message)
 }
 
 func (e *simpleExecution) notifyExecutionStop() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
-	e.pluginHandler.notifyPlugins(message)
-	e.pluginHandler.gracefullyKillPlugins()
+	e.pluginHandler.NotifyPlugins(message)
+	e.pluginHandler.GracefullyKillPlugins()
 }
 
 func (e *simpleExecution) killPlugins() {
-	e.pluginHandler.gracefullyKillPlugins()
+	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (exe *simpleExecution) start() *suiteResult {
+func (exe *simpleExecution) start() *result.SuiteResult {
 	startTime := time.Now()
-	exe.suiteResult = newSuiteResult()
-	exe.suiteResult.timestamp = startTime.Format(config.LayoutForTimeStamp)
-	exe.suiteResult.projectName = filepath.Base(config.ProjectRoot)
-	exe.suiteResult.environment = env.CurrentEnv
-	exe.suiteResult.Tags = *executeTags
+	exe.suiteResult = result.NewSuiteResult()
+	exe.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
+	exe.suiteResult.Environment = env.CurrentEnv
+	exe.suiteResult.Tags = ExecuteTags
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
-		addPreHook(exe.suiteResult, beforeSuiteHookExecResult)
-		exe.suiteResult.setFailure()
+		result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
+		exe.suiteResult.SetFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.DataTable.table.getRowCount()))
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()))
 			protoSpecResult := executor.execute()
-			exe.suiteResult.addSpecResult(protoSpecResult)
+			exe.suiteResult.AddSpecResult(protoSpecResult)
 		}
 	}
 	afterSuiteHookExecResult := exe.endExecution()
 	if afterSuiteHookExecResult.GetFailed() {
-		addPostHook(exe.suiteResult, afterSuiteHookExecResult)
-		exe.suiteResult.setFailure()
+		result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
+		exe.suiteResult.SetFailure()
 	}
-	exe.suiteResult.executionTime = int64(time.Since(startTime) / 1e6)
+	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return exe.suiteResult
+}
+
+func getDataTableRows(rowCount int) indexRange {
+	if TableRows == "" {
+		return indexRange{start: 0, end: rowCount - 1}
+	}
+	indexes, err := getDataTableRowsRange(TableRows, rowCount)
+	if err != nil {
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
+	}
+	return indexes
 }
 
 func (exe *simpleExecution) finish() {
@@ -132,12 +153,12 @@ func (exe *simpleExecution) finish() {
 
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
-	if err := e.runner.kill(e.writer); err != nil {
+	if err := e.runner.Kill(e.writer); err != nil {
 		e.writer.Error("Failed to kill Runner. %s\n", err.Error())
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *testRunner, pluginHandler *pluginHandler, writer executionLogger, tableRows indexRange) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, writer execLogger.ExecutionLogger, tableRows indexRange) *specExecutor {
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, writer, tableRows)
 	return specExecutor

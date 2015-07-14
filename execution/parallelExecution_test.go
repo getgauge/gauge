@@ -18,9 +18,18 @@
 package execution
 
 import (
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
+	"testing"
 )
+
+func Test(t *testing.T) { TestingT(t) }
+
+type MySuite struct{}
+
+var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestDistributionOfSpecs(c *C) {
 	e := parallelSpecExecution{specifications: createSpecsList(10)}
@@ -58,10 +67,10 @@ func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
 	c.Assert(len(specCollections), Equals, 0)
 }
 
-func createSpecsList(number int) []*specification {
-	specs := make([]*specification, 0)
+func createSpecsList(number int) []*parser.Specification {
+	specs := make([]*parser.Specification, 0)
 	for i := 0; i < number; i++ {
-		specs = append(specs, &specification{})
+		specs = append(specs, &parser.Specification{})
 	}
 	return specs
 }
@@ -74,50 +83,50 @@ func verifySpecCollectionsForSize(c *C, size int, specCollections ...*specCollec
 
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	e := parallelSpecExecution{}
-	suiteRes1 := &suiteResult{executionTime: 1, specsFailedCount: 1, isFailed: true, specResults: []*specResult{&specResult{}, &specResult{}}}
-	suiteRes2 := &suiteResult{executionTime: 3, specsFailedCount: 0, isFailed: false, specResults: []*specResult{&specResult{}, &specResult{}}}
-	suiteRes3 := &suiteResult{executionTime: 5, specsFailedCount: 0, isFailed: false, specResults: []*specResult{&specResult{}, &specResult{}}}
-	suiteResults := make([]*suiteResult, 0)
+	suiteRes1 := &result.SuiteResult{ExecutionTime: 1, SpecsFailedCount: 1, IsFailed: true, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
+	suiteRes2 := &result.SuiteResult{ExecutionTime: 3, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
+	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
+	suiteResults := make([]*result.SuiteResult, 0)
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 
 	aggregatedRes := e.aggregateResults(suiteResults)
-	c.Assert(aggregatedRes.executionTime, Equals, int64(9))
-	c.Assert(aggregatedRes.specsFailedCount, Equals, 1)
-	c.Assert(aggregatedRes.isFailed, Equals, true)
-	c.Assert(len(aggregatedRes.specResults), Equals, 6)
+	c.Assert(aggregatedRes.ExecutionTime, Equals, int64(9))
+	c.Assert(aggregatedRes.SpecsFailedCount, Equals, 1)
+	c.Assert(aggregatedRes.IsFailed, Equals, true)
+	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	e := parallelSpecExecution{}
-	suiteRes1 := &suiteResult{isFailed: true, unhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
-	suiteRes2 := &suiteResult{isFailed: false, unhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
-	suiteRes3 := &suiteResult{isFailed: false}
-	suiteResults := make([]*suiteResult, 0)
+	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
+	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
+	suiteRes3 := &result.SuiteResult{IsFailed: false}
+	suiteResults := make([]*result.SuiteResult, 0)
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 
 	aggregatedRes := e.aggregateResults(suiteResults)
-	c.Assert(len(aggregatedRes.unhandledErrors), Equals, 2)
-	c.Assert(aggregatedRes.unhandledErrors[0].Error(), Equals, "The following specifications could not be executed:\n"+
+	c.Assert(len(aggregatedRes.UnhandledErrors), Equals, 2)
+	c.Assert(aggregatedRes.UnhandledErrors[0].Error(), Equals, "The following specifications could not be executed:\n"+
 		"spec1\n"+
 		"spec2\n"+
 		"Reason : Runner failed to start.")
-	c.Assert(aggregatedRes.unhandledErrors[1].Error(), Equals, "The following specifications could not be executed:\n"+
+	c.Assert(aggregatedRes.UnhandledErrors[1].Error(), Equals, "The following specifications could not be executed:\n"+
 		"spec3\n"+
 		"spec4\n"+
 		"Reason : Runner failed to start.")
-	err := (aggregatedRes.unhandledErrors[0]).(streamExecError)
+	err := (aggregatedRes.UnhandledErrors[0]).(streamExecError)
 	c.Assert(len(err.specsSkipped), Equals, 2)
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 	e := parallelSpecExecution{}
-	suiteRes1 := &suiteResult{preSuite: &gauge_messages.ProtoHookFailure{}}
-	suiteRes2 := &suiteResult{preSuite: &gauge_messages.ProtoHookFailure{}}
-	suiteRes3 := &suiteResult{postSuite: &gauge_messages.ProtoHookFailure{}}
-	suiteResults := make([]*suiteResult, 0)
+	suiteRes1 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteRes2 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteRes3 := &result.SuiteResult{PostSuite: &gauge_messages.ProtoHookFailure{}}
+	suiteResults := make([]*result.SuiteResult, 0)
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 
 	aggregatedRes := e.aggregateResults(suiteResults)
-	c.Assert(aggregatedRes.preSuite, Equals, suiteRes2.preSuite)
-	c.Assert(aggregatedRes.postSuite, Equals, suiteRes3.postSuite)
+	c.Assert(aggregatedRes.PreSuite, Equals, suiteRes2.PreSuite)
+	c.Assert(aggregatedRes.PostSuite, Equals, suiteRes3.PostSuite)
 }

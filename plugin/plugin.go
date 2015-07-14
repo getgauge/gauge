@@ -60,7 +60,7 @@ type pluginDescriptor struct {
 	pluginPath          string
 }
 
-type pluginHandler struct {
+type PluginHandler struct {
 	pluginsMap map[string]*plugin
 }
 
@@ -222,9 +222,9 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (*pluginHandler, []string) {
+func startPluginsForExecution(manifest *manifest.Manifest) (*PluginHandler, []string) {
 	warnings := make([]string, 0)
-	handler := &pluginHandler{}
+	handler := &PluginHandler{}
 	envProperties := make(map[string]string)
 
 	for _, pluginId := range manifest.Plugins {
@@ -274,18 +274,18 @@ func isExecutionScopePlugin(pd *pluginDescriptor) bool {
 	return false
 }
 
-func (handler *pluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
+func (handler *PluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
 	if handler.pluginsMap == nil {
 		handler.pluginsMap = make(map[string]*plugin)
 	}
 	handler.pluginsMap[pluginId] = pluginToAdd
 }
 
-func (handler *pluginHandler) removePlugin(pluginId string) {
+func (handler *PluginHandler) removePlugin(pluginId string) {
 	delete(handler.pluginsMap, pluginId)
 }
 
-func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
+func (handler *PluginHandler) NotifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
@@ -295,7 +295,7 @@ func (handler *pluginHandler) notifyPlugins(message *gauge_messages.Message) {
 	}
 }
 
-func (handler *pluginHandler) killPlugin(pluginId string) {
+func (handler *PluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
 	logger.Log.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
@@ -305,7 +305,7 @@ func (handler *pluginHandler) killPlugin(pluginId string) {
 	handler.removePlugin(pluginId)
 }
 
-func (handler *pluginHandler) gracefullyKillPlugins() {
+func (handler *PluginHandler) GracefullyKillPlugins() {
 	var wg sync.WaitGroup
 	for _, plugin := range handler.pluginsMap {
 		wg.Add(1)
@@ -328,8 +328,8 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func startPlugins(manifest *manifest.Manifest) *pluginHandler {
-	pluginHandler, warnings := startPluginsForExecution(manifest)
+func startPlugins(manifest *manifest.Manifest) *PluginHandler {
+	PluginHandler, warnings := startPluginsForExecution(manifest)
 	logger.HandleWarningMessages(warnings)
-	return pluginHandler
+	return PluginHandler
 }

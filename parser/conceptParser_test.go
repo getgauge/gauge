@@ -76,7 +76,7 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameter(c *C) {
 		specHeading("create user").
 		step("assign id").
 		step("assign id").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
 	concept := conceptDictionary.search("create user")
 	c.Assert(concept.ConceptStep.ConceptSteps[0].Value, Equals, "assign id")
@@ -94,7 +94,7 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithDefinitionAfterUsag
 		step("assign id").
 		specHeading("assign id").
 		step("add id").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
 	concept := conceptDictionary.search("create user")
 	c.Assert(concept.ConceptStep.ConceptSteps[0].Value, Equals, "assign id")
@@ -113,7 +113,7 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithParameters(c *C) {
 		specHeading("assign id <userid> and name <username>").
 		step("add id <userid>").
 		step("add name <username>").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
@@ -141,7 +141,7 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithStaticParameters(c 
 		step("add name <username>").
 		specHeading("create user <user-id> <user-name> and <user-phone>").
 		step("assign id <user-id> and name \"static-value\"").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
@@ -181,7 +181,7 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 		step("add id <userid>").
 		step("add name <username>").
 		text("Comment1").String()
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
 
 	concept := conceptDictionary.search("create user {} {} and {}")
@@ -204,7 +204,7 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 
 func (s *MySuite) TestConceptHavingItemsWithTablesAndPreComments(c *C) {
 	conceptDictionary := new(ConceptDictionary)
-	concepts, _ := new(ConceptParser).parse("COMMENT\n# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
+	concepts, _ := new(ConceptParser).Parse("COMMENT\n# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n comment")
 	conceptDictionary.Add(concepts, "concept.cpt")
 
 	c.Assert(len(concepts[0].Items), Equals, 3)
@@ -321,7 +321,7 @@ func (s *MySuite) TestConceptDictionarySearch(c *C) {
 
 func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	parser := new(ConceptParser)
-	concepts, parseRes := parser.parse("# my concept \n * first step \n * second step ")
+	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step ")
 
 	c.Assert(parseRes.Error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
@@ -337,11 +337,11 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
 	parser := new(ConceptParser)
-	_, parseRes := parser.parse("# my concept with \"paratemer\" \n * first step \n * second step ")
+	_, parseRes := parser.Parse("# my concept with \"paratemer\" \n * first step \n * second step ")
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Concept heading can have only Dynamic Parameters")
 
-	_, parseRes = parser.parse("# my concept with <table: foo> \n * first step \n * second step ")
+	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ")
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <table: foo> could not be resolved")
 
@@ -350,7 +350,7 @@ func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *
 func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
 	parser := new(ConceptParser)
 
-	_, parseRes := parser.parse("* first step \n * second step ")
+	_, parseRes := parser.Parse("* first step \n * second step ")
 
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Step is not defined inside a concept heading")
@@ -359,7 +359,7 @@ func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
 func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 	parser := new(ConceptParser)
 
-	_, parseRes := parser.parse("# my concept with \n")
+	_, parseRes := parser.Parse("# my concept with \n")
 
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Concept should have atleast one step")
@@ -367,7 +367,7 @@ func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 
 func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 	parser := new(ConceptParser)
-	concepts, parseRes := parser.parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ")
+	concepts, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ")
 
 	c.Assert(parseRes.Error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
@@ -397,7 +397,7 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 	parser := new(ConceptParser)
-	_, parseRes := parser.parse("# my concept \n * first step using \n * my concept ")
+	_, parseRes := parser.Parse("# my concept \n * first step using \n * my concept ")
 
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Cyclic dependancy found. Step is calling concept again.")
@@ -405,7 +405,7 @@ func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	parser := new(ConceptParser)
-	_, parseRes := parser.parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
+	_, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
 
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <param3> could not be resolved")
@@ -413,7 +413,7 @@ func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 
 func (s *MySuite) TestParsingMultipleConcept(c *C) {
 	parser := new(ConceptParser)
-	concepts, parseRes := parser.parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ")
+	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ")
 
 	c.Assert(parseRes.Error, IsNil)
 	c.Assert(len(concepts), Equals, 3)
@@ -445,7 +445,7 @@ func (s *MySuite) TestParsingMultipleConcept(c *C) {
 
 func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	parser := new(ConceptParser)
-	concepts, parseRes := parser.parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
+	concepts, parseRes := parser.Parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
 	c.Assert(parseRes.Error, IsNil)
 	c.Assert(len(concepts), Equals, 1)
@@ -475,7 +475,7 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	parser := new(ConceptParser)
-	_, parseRes := parser.parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n")
+	_, parseRes := parser.Parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
 	c.Assert(parseRes.Error, NotNil)
 	c.Assert(parseRes.Error.Message, Equals, "Table doesn't belong to any step")
@@ -522,7 +522,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 		step("add admin rights <baz>").
 		step("give root access").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.GenerateTokens(specText)
@@ -553,7 +553,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 		specHeading("create user <user-id> <user-name> and <user-phone>").
 		step("assign id <user-id> and name \"static-name\"").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.GenerateTokens(specText)
@@ -588,7 +588,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParentPresentWhenNestedConcept
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.GenerateTokens(specText)
@@ -626,7 +626,7 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 		step("add id <userid>").
 		step("add name <username>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.GenerateTokens(specText)
@@ -671,7 +671,7 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 		step("add id <user-id>").
 		step("add name <user-name>").String()
 
-	concepts, _ := new(ConceptParser).parse(conceptText)
+	concepts, _ := new(ConceptParser).Parse(conceptText)
 
 	conceptDictionary.Add(concepts, "file.cpt")
 	tokens, _ := parser.GenerateTokens(specText)
@@ -707,7 +707,7 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 		step("first step").
 		step("another concept").String()
 
-	concepts, parseErr := new(ConceptParser).parse(conceptText)
+	concepts, parseErr := new(ConceptParser).Parse(conceptText)
 	c.Assert(parseErr.Error, IsNil)
 	err := conceptDictionary.Add(concepts, "file.cpt")
 	c.Assert(err, NotNil)
@@ -728,9 +728,9 @@ func (s *MySuite) TestErrorOnCircularReferenceInDeepNestedConceptConcept(c *C) {
 		specHeading("second nested <c>").
 		step("a nested concept <c>").String()
 
-	concepts1, parseRes := new(ConceptParser).parse(conceptText)
+	concepts1, parseRes := new(ConceptParser).Parse(conceptText)
 	c.Assert(parseRes.Error, IsNil)
-	concepts2, parseRes := new(ConceptParser).parse(secondConceptText)
+	concepts2, parseRes := new(ConceptParser).Parse(secondConceptText)
 
 	err := conceptDictionary.Add(concepts1, "file.cpt")
 	c.Assert(err, IsNil)
@@ -744,7 +744,7 @@ func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
 	conceptText := SpecBuilder().
 		specHeading("create user <user:id> <user:name> and <file>").
 		step("a step <user:id>").String()
-	step, _ := new(ConceptParser).parse(conceptText)
+	step, _ := new(ConceptParser).Parse(conceptText)
 	c.Assert(step[0].LineText, Equals, "create user <user:id> <user:name> and <file>")
 	c.Assert(step[0].Args[0].ArgType, Equals, Dynamic)
 	c.Assert(step[0].Args[1].ArgType, Equals, Dynamic)
@@ -755,7 +755,7 @@ func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
 	conceptText := SpecBuilder().
 		specHeading("create user <user:id> <table:name> and <file>").
 		step("a step <user:id>").String()
-	_, parseRes := new(ConceptParser).parse(conceptText)
+	_, parseRes := new(ConceptParser).Parse(conceptText)
 	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <table:name> could not be resolved")
 }
 
@@ -763,6 +763,6 @@ func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 	conceptText := SpecBuilder().
 		specHeading("create user <user:id> \"abc\" and <file>").
 		step("a step <user:id>").String()
-	_, parseRes := new(ConceptParser).parse(conceptText)
+	_, parseRes := new(ConceptParser).Parse(conceptText)
 	c.Assert(parseRes.Error.Message, Equals, "Concept heading can have only Dynamic Parameters")
 }
