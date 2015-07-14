@@ -504,3 +504,51 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 	specs = filterSpecsByTags(specs, "tag3")
 	c.Assert(len(specs), Equals, 0)
 }
+
+func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+	}
+
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+
+	c.Assert(result.Ok, Equals, true)
+
+	c.Assert(len(spec.Tags.Values), Equals, 2)
+	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values[1], Equals, "tag2")
+}
+
+func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 3},
+	}
+
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+
+	c.Assert(result.Ok, Equals, true)
+
+	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "tag2")
+}
+
+func (s *MySuite) TestToSortSpecs(c *C) {
+	spec1 := &parser.Specification{FileName: "ab"}
+	spec2 := &parser.Specification{FileName: "b"}
+	spec3 := &parser.Specification{FileName: "c"}
+	var specs []*parser.Specification
+	specs = append(specs, spec3)
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	specs = sortSpecsList(specs)
+
+	c.Assert(specs[0].FileName, Equals, spec1.FileName)
+	c.Assert(specs[1].FileName, Equals, spec2.FileName)
+	c.Assert(specs[2].FileName, Equals, spec3.FileName)
+}

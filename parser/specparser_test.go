@@ -568,3 +568,10 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	c.Assert(parseRes.ParseError.Message, Equals, "Table location not specified")
 	c.Assert(parseRes.Ok, Equals, false)
 }
+
+func (s *MySuite) TestToSplitTagNames(c *C) {
+	allTags := splitAndTrimTags("tag1 , tag2,   tag3")
+	c.Assert(allTags[0], Equals, "tag1")
+	c.Assert(allTags[1], Equals, "tag2")
+	c.Assert(allTags[2], Equals, "tag3")
+}

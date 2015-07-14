@@ -29,14 +29,11 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
-	"math/rand"
 	"os"
 	"path"
 	"path/filepath"
-	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -397,7 +394,7 @@ func createProjectTemplate(language string) error {
 
 func handleParseResult(results ...*parseResult) {
 	for _, result := range results {
-		if !result.ok {
+		if !result.Ok {
 			logger.Log.Critical(result.Error())
 			os.Exit(1)
 		}
@@ -558,25 +555,6 @@ func printVersion() {
 	for _, pluginInfo := range allPluginsWithVersion {
 		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
 	}
-}
-
-type ByFileName []*specification
-
-func (s ByFileName) Len() int {
-	return len(s)
-}
-
-func (s ByFileName) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s ByFileName) Less(i, j int) bool {
-	return s[i].fileName < s[j].fileName
-}
-
-func sortSpecsList(allSpecs []*specification) []*specification {
-	sort.Sort(ByFileName(allSpecs))
-	return allSpecs
 }
 
 func setWorkingDir(workingDir string) {

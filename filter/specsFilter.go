@@ -21,6 +21,7 @@ import (
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/parser"
 	"math/rand"
+	"sort"
 	"time"
 )
 
@@ -75,4 +76,23 @@ func shuffleSpecs(allSpecs []*parser.Specification) []*parser.Specification {
 		dest[v] = allSpecs[i]
 	}
 	return dest
+}
+
+type ByFileName []*parser.Specification
+
+func (s ByFileName) Len() int {
+	return len(s)
+}
+
+func (s ByFileName) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s ByFileName) Less(i, j int) bool {
+	return s[i].FileName < s[j].FileName
+}
+
+func sortSpecsList(allSpecs []*parser.Specification) []*parser.Specification {
+	sort.Sort(ByFileName(allSpecs))
+	return allSpecs
 }
