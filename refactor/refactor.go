@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -309,5 +310,27 @@ func (refactoringResult *refactoringResult) AllFilesChanges() []string {
 	filesChanged = append(filesChanged, refactoringResult.conceptsChanged...)
 	filesChanged = append(filesChanged, refactoringResult.runnerFilesChanged...)
 	return filesChanged
+}
 
+func printRefactoringSummary(refactoringResult *refactoringResult) {
+	exitCode := 0
+	if !refactoringResult.Success {
+		exitCode = 1
+		for _, err := range refactoringResult.Errors {
+			logger.Log.Error("%s \n", err)
+		}
+	}
+	for _, warning := range refactoringResult.warnings {
+		logger.Log.Warning("%s \n", warning)
+	}
+	logger.Log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	logger.Log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	logger.Log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	os.Exit(exitCode)
+}
+
+func RefactorSteps(oldStep, newStep string) {
+	//Todo: pass runner
+	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, nil)
+	printRefactoringSummary(refactoringResult)
 }

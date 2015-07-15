@@ -19,7 +19,9 @@ package parser
 
 import (
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
+	"os"
 	"strings"
 )
 
@@ -107,4 +109,18 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 		stepValue = strings.Replace(stepValue, ParameterPlaceholder, "<"+param+">", 1)
 	}
 	return stepValue
+}
+
+func HandleParseResult(results ...*ParseResult) {
+	for _, result := range results {
+		if !result.Ok {
+			logger.Log.Critical(result.Error())
+			os.Exit(1)
+		}
+		if result.Warnings != nil {
+			for _, warning := range result.Warnings {
+				logger.Log.Warning("%s : %v", result.FileName, warning)
+			}
+		}
+	}
 }

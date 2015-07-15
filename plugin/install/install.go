@@ -39,8 +39,8 @@ import (
 
 const (
 	pluginJson = "plugin.json"
-	jsonExt    = ".json"
 	setupScope = "setup"
+	jsonExt    = ".json"
 )
 
 type installDescription struct {
@@ -74,26 +74,26 @@ type platformSpecificUrl struct {
 }
 
 type installResult struct {
-	error   error
-	warning string
-	success bool
+	Error   error
+	Warning string
+	Success bool
 }
 
 func (self *installResult) getMessage() string {
-	return self.error.Error()
+	return self.Error.Error()
 }
 
 func installError(err string) installResult {
-	return installResult{error: errors.New(err), success: false}
+	return installResult{Error: errors.New(err), Success: false}
 }
 
 func installSuccess(warning string) installResult {
-	return installResult{warning: warning, success: true}
+	return installResult{Warning: warning, Success: true}
 }
 
-func installPlugin(pluginName, version string) installResult {
+func InstallPlugin(pluginName, version string) installResult {
 	installDescription, result := getInstallDescription(pluginName)
-	if !result.success {
+	if !result.Success {
 		return result
 	}
 	return installPluginWithDescription(installDescription, version)
@@ -217,7 +217,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 
 func getInstallDescription(plugin string) (*installDescription, installResult) {
 	installJson, result := getPluginInstallJson(plugin)
-	if !result.success {
+	if !result.Success {
 		return nil, result
 	}
 
@@ -239,8 +239,8 @@ func getInstallDescriptionFromJson(installJson string) (*installDescription, ins
 func getPluginInstallJson(plugin string) (string, installResult) {
 	versionInstallDescriptionJsonFile := plugin + "-install.json"
 	versionInstallDescriptionJsonUrl, result := constructPluginInstallJsonUrl(plugin)
-	if !result.success {
-		return "", installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.error))
+	if !result.Success {
+		return "", installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.Error))
 	}
 	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJsonUrl)
 	if downloadErr != nil {
@@ -332,7 +332,7 @@ func installPluginFromDir(unzippedPluginDir string) error {
 	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
 
-func installAllPlugins() {
+func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		execLogger.CriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
@@ -340,28 +340,28 @@ func installAllPlugins() {
 	installPluginsFromManifest(manifest)
 }
 
-func updatePlugin(plugin string) {
+func UpdatePlugin(plugin string) {
 	downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
 }
 
-func downloadAndInstallPlugin(plugin, version string) {
+func DownloadAndInstallPlugin(plugin, version string) {
 	downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
 }
 
 func downloadAndInstall(plugin, version string, successMessage string) {
-	result := installPlugin(plugin, version)
-	if !result.success {
+	result := InstallPlugin(plugin, version)
+	if !result.Success {
 		logger.Log.Error("%s : %s\n", plugin, result.getMessage())
 		os.Exit(1)
 	}
-	if result.warning != "" {
-		logger.Log.Warning(result.warning)
+	if result.Warning != "" {
+		logger.Log.Warning(result.Warning)
 		os.Exit(0)
 	}
 	logger.Log.Info(successMessage)
 }
 
-func installPluginZip(zipFile string, pluginName string) {
+func InstallPluginZip(zipFile string, pluginName string) {
 	if err := installPluginFromZip(zipFile, pluginName); err != nil {
 		logger.Log.Warning("Failed to install plugin. Invalid zip file : %s\n", err)
 	} else {
@@ -380,8 +380,8 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 	for pluginName, isRunner := range pluginsMap {
 		if !isCompatiblePluginInstalled(pluginName, "", isRunner) {
 			writer.Info("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
-			installResult := installPlugin(pluginName, "")
-			if installResult.success {
+			installResult := InstallPlugin(pluginName, "")
+			if installResult.Success {
 				writer.Info("Successfully installed the plugin %s.", pluginName)
 			} else {
 				writer.Error("Failed to install the %s plugin.", pluginName)
@@ -394,7 +394,7 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 
 func isCompatiblePluginInstalled(pluginName string, pluginVersion string, isRunner bool) bool {
 	if isRunner {
-		return isCompatibleLanguagePluginInstalled(pluginName)
+		return IsCompatibleLanguagePluginInstalled(pluginName)
 	} else {
 		pd, err := plugin.GetPluginDescriptor(pluginName, pluginVersion)
 		if err != nil {
@@ -408,7 +408,7 @@ func isCompatiblePluginInstalled(pluginName string, pluginVersion string, isRunn
 	}
 }
 
-func isCompatibleLanguagePluginInstalled(name string) bool {
+func IsCompatibleLanguagePluginInstalled(name string) bool {
 	jsonFilePath, err := common.GetLanguageJSONFilePath(name)
 	if err != nil {
 		return false
@@ -435,11 +435,35 @@ func (a ByDecreasingVersion) Less(i, j int) bool {
 	return version1.IsGreaterThan(version2)
 }
 
+func AddPluginToProject(pluginName string, pluginArgs string) {
+	additionalArgs := make(map[string]string)
+	if pluginArgs != "" {
+		// plugin args will be comma separated values
+		// eg: version=1.0, foo_version = 2.41
+		args := strings.Split(pluginArgs, ",")
+		for _, arg := range args {
+			keyValuePair := strings.Split(arg, "=")
+			if len(keyValuePair) == 2 {
+				additionalArgs[strings.TrimSpace(keyValuePair[0])] = strings.TrimSpace(keyValuePair[1])
+			}
+		}
+	}
+	manifest, err := manifest.ProjectManifest()
+	if err != nil {
+		execLogger.CriticalError(err)
+	}
+	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())))
+	} else {
+		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
+	}
+}
+
 func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest.Manifest) error {
 	if !plugin.IsPluginInstalled(pluginName, pluginArgs["version"]) {
 		logger.Log.Info("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
-		result := installPlugin(pluginName, pluginArgs["version"])
-		if !result.success {
+		result := InstallPlugin(pluginName, pluginArgs["version"])
+		if !result.Success {
 			logger.Log.Error(result.getMessage())
 		}
 	}

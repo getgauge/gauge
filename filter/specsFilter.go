@@ -18,7 +18,6 @@
 package filter
 
 import (
-	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/parser"
 	"math/rand"
 	"sort"
@@ -58,7 +57,34 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*parser.Specification, 0)
 	}
-	return execution.DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1].Specs
+	return DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1].Specs
+}
+
+func DistributeSpecs(specifications []*parser.Specification, distributions int) []*SpecCollection {
+	if distributions > len(specifications) {
+		distributions = len(specifications)
+	}
+	specCollections := make([]*SpecCollection, distributions)
+	for i := 0; i < len(specifications); i++ {
+		mod := i % distributions
+		if specCollections[mod] == nil {
+			specCollections[mod] = &SpecCollection{Specs: make([]*parser.Specification, 0)}
+		}
+		specCollections[mod].Specs = append(specCollections[mod].Specs, specifications[i])
+	}
+	return specCollections
+}
+
+type SpecCollection struct {
+	Specs []*parser.Specification
+}
+
+func (s *SpecCollection) SpecNames() []string {
+	specNames := make([]string, 0)
+	for _, spec := range s.Specs {
+		specNames = append(specNames, spec.FileName)
+	}
+	return specNames
 }
 
 func (randomizer *specRandomizer) filter(specs []*parser.Specification) []*parser.Specification {

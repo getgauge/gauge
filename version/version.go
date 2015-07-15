@@ -20,6 +20,8 @@ package version
 import (
 	"errors"
 	"fmt"
+	"github.com/getgauge/common"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -35,6 +37,20 @@ type Version struct {
 type VersionSupport struct {
 	Minimum string
 	Maximum string
+}
+
+func PrintVersion() {
+	fmt.Printf("Gauge version: %s\n\n", CurrentGaugeVersion.String())
+	fmt.Println("Plugins\n-------")
+	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		fmt.Println("No plugins found")
+		fmt.Println("Plugins can be installed with `gauge --install {plugin-name}`")
+		os.Exit(0)
+	}
+	for _, pluginInfo := range allPluginsWithVersion {
+		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
+	}
 }
 
 func ParseVersion(versionText string) (*Version, error) {

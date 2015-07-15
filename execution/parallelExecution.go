@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
@@ -30,7 +31,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"time"
 )
@@ -63,10 +63,6 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 	return len(s.specsSkipped)
 }
 
-type specCollection struct {
-	Specs []*parser.Specification
-}
-
 type parallelInfo struct {
 	inParallel      bool
 	numberOfStreams int
@@ -82,7 +78,7 @@ func (self *parallelInfo) isValid() bool {
 
 func (e *parallelSpecExecution) start() *result.SuiteResult {
 	startTime := time.Now()
-	specCollections := DistributeSpecs(e.specifications, e.numberOfExecutionStreams)
+	specCollections := filter.DistributeSpecs(e.specifications, e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
 		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, execLogger.NewParallelExecutionConsoleWriter(i+1))
@@ -102,38 +98,23 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *specCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, writer execLogger.ExecutionLogger) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	var err error
 	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer)
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
-		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.specNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, writer)
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *specCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
 	runner.Kill(e.writer)
 	suiteResults <- result
-}
-
-func DistributeSpecs(specifications []*parser.Specification, distributions int) []*specCollection {
-	if distributions > len(specifications) {
-		distributions = len(specifications)
-	}
-	specCollections := make([]*specCollection, distributions)
-	for i := 0; i < len(specifications); i++ {
-		mod := i % distributions
-		if specCollections[mod] == nil {
-			specCollections[mod] = &specCollection{Specs: make([]*parser.Specification, 0)}
-		}
-		specCollections[mod].Specs = append(specCollections[mod].Specs, specifications[i])
-	}
-	return specCollections
 }
 
 func (e *parallelSpecExecution) finish() {
@@ -163,16 +144,4 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteRes
 		}
 	}
 	return aggregateResult
-}
-
-func numberOfCores() int {
-	return runtime.NumCPU()
-}
-
-func (s *specCollection) specNames() []string {
-	specNames := make([]string, 0)
-	for _, spec := range s.Specs {
-		specNames = append(specNames, spec.FileName)
-	}
-	return specNames
 }

@@ -3,6 +3,7 @@ package util
 import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
+	"runtime"
 	"strings"
 )
 
@@ -24,4 +25,8 @@ func AddPrefixToEachLine(text string, template string) string {
 		}
 	}
 	return strings.Join(prefixedLines, "\n")
+}
+
+func NumberOfCores() int {
+	return runtime.NumCPU()
 }

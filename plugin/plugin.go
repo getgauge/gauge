@@ -328,7 +328,7 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func startPlugins(manifest *manifest.Manifest) *PluginHandler {
+func StartPlugins(manifest *manifest.Manifest) *PluginHandler {
 	PluginHandler, warnings := startPluginsForExecution(manifest)
 	logger.HandleWarningMessages(warnings)
 	return PluginHandler

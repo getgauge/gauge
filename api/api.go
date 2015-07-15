@@ -35,6 +35,7 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
 	"net"
+	"os"
 	"path"
 	"strconv"
 	"sync"
@@ -42,14 +43,14 @@ import (
 
 func StartAPI() (*gaugeApiMessageHandler, error) {
 	env.LoadEnv(false)
-	err, apiHandler := startAPIService(0)
+	err, apiHandler := StartAPIService(0)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}
 	return apiHandler, nil
 }
 
-func startAPIService(port int) (error, *gaugeApiMessageHandler) {
+func StartAPIService(port int) (error, *gaugeApiMessageHandler) {
 	specInfoGatherer := new(infoGatherer.SpecInfoGatherer)
 	apiHandler := &gaugeApiMessageHandler{specInfoGatherer: specInfoGatherer}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
@@ -62,19 +63,40 @@ func startAPIService(port int) (error, *gaugeApiMessageHandler) {
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-	apiHandler.runner = specInfoGatherer.MakeListOfAvailableSteps(nil)
+	apiHandler.Runner = specInfoGatherer.MakeListOfAvailableSteps(nil)
 	return nil, apiHandler
 }
 
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	wg.Add(1)
-	_, apiHandler := startAPIService(port)
-	apiHandler.runner.Kill(execLogger.Current())
+	_, apiHandler := StartAPIService(port)
+	apiHandler.Runner.Kill(execLogger.Current())
+}
+
+func RunInBackground(apiPort string) {
+	var port int
+	var err error
+	if apiPort != "" {
+		port, err = strconv.Atoi(apiPort)
+		os.Setenv(common.ApiPortEnvVariableName, apiPort)
+		if err != nil {
+			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to parse the port number :", apiPort, "\n", err.Error())))
+		}
+	} else {
+		env.LoadEnv(false)
+		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
+		if err != nil {
+			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start API Service. %s \n", err.Error())))
+		}
+	}
+	var wg sync.WaitGroup
+	runAPIServiceIndefinitely(port, &wg)
+	wg.Wait()
 }
 
 type gaugeApiMessageHandler struct {
 	specInfoGatherer *infoGatherer.SpecInfoGatherer
-	runner           *runner.TestRunner
+	Runner           *runner.TestRunner
 }
 
 func (handler *gaugeApiMessageHandler) MessageBytesReceived(bytesRead []byte, connection net.Conn) {

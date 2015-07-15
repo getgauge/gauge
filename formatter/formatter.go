@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 	"sort"
 	"strings"
 )
@@ -253,4 +254,10 @@ func getRepeatedChars(character string, repeatCount int) string {
 		formatted = fmt.Sprintf("%s%s", formatted, character)
 	}
 	return formatted
+}
+
+func FormatSpecFilesIn(filesLocation string) {
+	specFiles := util.GetSpecFiles(filesLocation)
+	parseResults := FormatSpecFiles(specFiles...)
+	parser.HandleParseResult(parseResults...)
 }

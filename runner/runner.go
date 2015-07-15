@@ -63,7 +63,7 @@ type Runner struct {
 	GaugeVersionSupport version.VersionSupport
 }
 
-func executeInitHookForRunner(language string) error {
+func ExecuteInitHookForRunner(language string) error {
 	if err := config.SetProjectRoot([]string{}); err != nil {
 		return err
 	}
