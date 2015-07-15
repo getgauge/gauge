@@ -20,11 +20,11 @@ import (
 
 var NumberOfExecutionStreams int
 
-func ExecuteSpecs(inParallel bool) {
+func ExecuteSpecs(inParallel bool, args []string) {
 	env.LoadEnv(false)
 	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
 	parser.HandleParseResult(conceptParseResult)
-	specsToExecute, specsSkipped := filter.GetSpecsToExecute(conceptsDictionary)
+	specsToExecute, specsSkipped := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {
 		printExecutionStatus(nil, 0)
 	}

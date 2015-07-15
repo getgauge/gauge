@@ -1,7 +1,6 @@
 package filter
 
 import (
-	"flag"
 	"github.com/getgauge/gauge/parser"
 )
 
@@ -10,8 +9,8 @@ var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
 
-func GetSpecsToExecute(conceptsDictionary *parser.ConceptDictionary) ([]*parser.Specification, int) {
-	specsToExecute := specsFromArgs(conceptsDictionary)
+func GetSpecsToExecute(conceptsDictionary *parser.ConceptDictionary, args []string) ([]*parser.Specification, int) {
+	specsToExecute := specsFromArgs(conceptsDictionary, args)
 	totalSpecs := specsToExecute
 	specsToExecute = applyFilters(specsToExecute, specsFilters())
 	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
@@ -28,11 +27,11 @@ func applyFilters(specsToExecute []*parser.Specification, filters []specsFilter)
 	return specsToExecute
 }
 
-func specsFromArgs(conceptDictionary *parser.ConceptDictionary) []*parser.Specification {
+func specsFromArgs(conceptDictionary *parser.ConceptDictionary, args []string) []*parser.Specification {
 	allSpecs := make([]*parser.Specification, 0)
 	specs := make([]*parser.Specification, 0)
 	var specParseResults []*parser.ParseResult
-	for _, arg := range flag.Args() {
+	for _, arg := range args {
 		specSource := arg
 		if isIndexedSpec(specSource) {
 			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)

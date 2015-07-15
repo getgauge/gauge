@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
@@ -34,7 +35,6 @@ import (
 	flag "github.com/getgauge/mflag"
 	"os"
 	"time"
-	"github.com/getgauge/gauge/filter"
 )
 
 // Command line flags
@@ -103,7 +103,8 @@ func main() {
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
 	} else if *refactorSteps != "" && validGaugeProject {
-		refactor.RefactorSteps(*refactorSteps, newStepName())
+		testRunner, _ := api.StartAPI()
+		refactor.RefactorSteps(*refactorSteps, newStepName(), testRunner)
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
@@ -111,19 +112,12 @@ func main() {
 			if *distribute != -1 {
 				*doNotRandomize = true
 			}
-			execution.ExecuteSpecs(*parallel)
+			execution.ExecuteSpecs(*parallel, flag.Args())
 		} else {
 			logger.Log.Error("Could not set project root: %s", err.Error())
 			os.Exit(1)
 		}
 	}
-}
-
-func newStepName() string {
-	if len(flag.Args()) != 1 {
-		printUsage()
-	}
-	return flag.Args()[0]
 }
 
 func printUsage() {
@@ -135,4 +129,11 @@ func printUsage() {
 	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
 	os.Exit(2)
+}
+
+func newStepName() string {
+	if len(flag.Args()) != 1 {
+		printUsage()
+	}
+	return flag.Args()[0]
 }

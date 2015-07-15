@@ -41,13 +41,13 @@ import (
 	"sync"
 )
 
-func StartAPI() (*gaugeApiMessageHandler, error) {
+func StartAPI() (*runner.TestRunner, error) {
 	env.LoadEnv(false)
 	err, apiHandler := StartAPIService(0)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
 	}
-	return apiHandler, nil
+	return apiHandler.Runner, nil
 }
 
 func StartAPIService(port int) (error, *gaugeApiMessageHandler) {
@@ -250,7 +250,8 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), nil)
+	testRunner, _ := StartAPI()
+	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), testRunner)
 	if refactoringResult.Success {
 		logger.ApiLog.Info("%s", refactoringResult.String())
 	} else {

@@ -33,6 +33,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/getgauge/gauge/logger/execLogger"
 )
 
 type rephraseRefactorer struct {
@@ -107,14 +108,10 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 
 	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
-
-		// todo: call when performing starting refactoring
-		//		apiHandler, connErr := api.StartAPI()
-		//		if connErr != nil {
-		//			result.errors = append(result.errors, connErr.Error())
-		//			return result
-		//		}
-		//		defer apiHandler.runner.kill(execLogger.Current())
+		if agent.runner == nil {
+			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner.")
+			return result
+		}
 		stepName, err, warning := agent.getStepNameFromRunner(agent.runner)
 		if err != nil {
 			result.Errors = append(result.Errors, err.Error())
@@ -130,6 +127,9 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 		} else {
 			result.warnings = append(result.warnings, warning.Message)
 		}
+	}
+	if agent.runner != nil {
+		agent.runner.Kill(execLogger.Current())
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
 	result.specsChanged = specFiles
@@ -329,8 +329,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	os.Exit(exitCode)
 }
 
-func RefactorSteps(oldStep, newStep string) {
-	//Todo: pass runner
-	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, nil)
+func RefactorSteps(oldStep, newStep string, runner *runner.TestRunner) {
+	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, runner)
 	printRefactoringSummary(refactoringResult)
 }
