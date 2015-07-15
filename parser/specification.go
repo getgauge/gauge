@@ -947,7 +947,7 @@ func (step Step) Kind() TokenKind {
 	return StepKind
 }
 
-func (specification *Specification) getSpecItems() []Item {
+func (specification *Specification) GetSpecItems() []Item {
 	specItems := make([]Item, 0)
 	for _, item := range specification.Items {
 		if item.Kind() != ScenarioKind {

@@ -92,7 +92,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specExecutor.writer.SpecHeading(specInfo.GetName())
 
 	specExecutor.specResult = parser.NewSpecResult(specExecutor.specification)
-	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.Items)
+	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
 	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
 
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()

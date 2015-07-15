@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
@@ -33,7 +34,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/getgauge/gauge/logger/execLogger"
 )
 
 type rephraseRefactorer struct {
