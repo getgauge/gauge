@@ -66,17 +66,7 @@ var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alph
 func main() {
 	flag.Parse()
 	project_init.SetWorkingDir(*workingDir)
-
-	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
-	env.ProjectEnv = *currentEnv
-	execution.ExecuteTags = *executeTags
-	execution.TableRows = *tableRows
-	execution.NumberOfExecutionStreams = *numberOfExecutionStreams
-	filter.ExecuteTags = *executeTags
-	filter.DoNotRandomize = *doNotRandomize
-	filter.Distribute = *distribute
-	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
-
+	initPackageFlags()
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
@@ -136,4 +126,16 @@ func newStepName() string {
 		printUsage()
 	}
 	return flag.Args()[0]
+}
+
+func initPackageFlags() {
+	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
+	env.ProjectEnv = *currentEnv
+	execution.ExecuteTags = *executeTags
+	execution.TableRows = *tableRows
+	execution.NumberOfExecutionStreams = *numberOfExecutionStreams
+	filter.ExecuteTags = *executeTags
+	filter.DoNotRandomize = *doNotRandomize
+	filter.Distribute = *distribute
+	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 }
