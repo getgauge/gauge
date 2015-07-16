@@ -238,9 +238,9 @@ func formatItem(item parser.Item) string {
 	case parser.StepKind:
 		step := item.(*parser.Step)
 		return FormatStep(step)
-	case parser.TableKind:
-		table := item.(*parser.Table)
-		return FormatTable(table)
+	case parser.DataTableKind:
+		dataTable := item.(*parser.DataTable)
+		return FormatTable(&dataTable.Table)
 	case parser.TagKind:
 		tags := item.(*parser.Tags)
 		return FormatTags(tags)
