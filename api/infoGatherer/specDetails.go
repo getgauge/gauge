@@ -43,18 +43,16 @@ type SpecInfoGatherer struct {
 	mutex             sync.Mutex
 }
 
-func (specInfoGatherer *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) *runner.TestRunner {
+func (specInfoGatherer *SpecInfoGatherer) MakeListOfAvailableSteps(killChannel chan bool) (*runner.TestRunner, error) {
 	specInfoGatherer.availableStepsMap = make(map[string]*parser.StepValue)
 	specInfoGatherer.fileToStepsMap = make(map[string][]*parser.Step)
-	runner = specInfoGatherer.getStepsFromRunner(runner)
-
+	runner, err := specInfoGatherer.getStepsFromRunner(killChannel)
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	specInfoGatherer.findAllStepsFromConcepts()
 	specInfoGatherer.findAllStepsFromSpecs()
 	specInfoGatherer.updateAllStepsList()
-
 	go specInfoGatherer.watchForFileChanges()
-	return runner
+	return runner, err
 }
 
 // Parse all specifications in the project and find all the steps
@@ -257,27 +255,21 @@ func (specInfoGatherer *SpecInfoGatherer) createConceptInfos() []*gauge_messages
 }
 
 // Gets all steps list from the runner
-func (specInfoGatherer *SpecInfoGatherer) getStepsFromRunner(testRunner *runner.TestRunner) *runner.TestRunner {
+func (specInfoGatherer *SpecInfoGatherer) getStepsFromRunner(killChannel chan bool) (*runner.TestRunner, error) {
 	steps := make([]string, 0)
-	if testRunner == nil {
-		var connErr error
-		manifest, err := manifest.ProjectManifest()
-		if err != nil {
-			execLogger.CriticalError(err)
-		}
-		testRunner, connErr = runner.StartRunnerAndMakeConnection(manifest, execLogger.Current())
-		if connErr == nil {
-			steps = append(steps, requestForSteps(testRunner)...)
-			logger.ApiLog.Debug("Steps got from runner: %v", steps)
-		} else {
-			logger.ApiLog.Error("Runner connection failed: %s", connErr)
-		}
-	} else {
+	manifest, err := manifest.ProjectManifest()
+	if err != nil {
+		execLogger.CriticalError(err)
+	}
+	testRunner, connErr := runner.StartRunnerAndMakeConnection(manifest, execLogger.Current(), killChannel)
+	if connErr == nil {
 		steps = append(steps, requestForSteps(testRunner)...)
 		logger.ApiLog.Debug("Steps got from runner: %v", steps)
+	} else {
+		logger.ApiLog.Error("Runner connection failed: %s", connErr)
 	}
 	specInfoGatherer.runnerStepValues = specInfoGatherer.convertToStepValues(steps)
-	return testRunner
+	return testRunner, connErr
 }
 
 func requestForSteps(runner *runner.TestRunner) []string {

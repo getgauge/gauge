@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	"regexp"
 	"strings"
@@ -114,14 +115,14 @@ func newSpecialTypeResolver() *specialTypeResolver {
 func initializePredefinedResolvers() map[string]resolverFn {
 	return map[string]resolverFn{
 		"file": func(filePath string) (*StepArg, error) {
-			fileContent, err := common.ReadFileContents(filePath)
+			fileContent, err := common.ReadFileContents(util.GetPathToFile(filePath))
 			if err != nil {
 				return nil, err
 			}
 			return &StepArg{Value: fileContent, ArgType: SpecialString}, nil
 		},
 		"table": func(filePath string) (*StepArg, error) {
-			csv, err := common.ReadFileContents(filePath)
+			csv, err := common.ReadFileContents(util.GetPathToFile(filePath))
 			if err != nil {
 				return nil, err
 			}

@@ -41,36 +41,46 @@ import (
 	"sync"
 )
 
-func StartAPI() (*runner.TestRunner, error) {
+func StartAPI() *runner.StartChannels {
 	env.LoadEnv(false)
-	err, apiHandler := StartAPIService(0)
-	if err != nil {
-		return nil, errors.New(fmt.Sprintf("Failed to connect to test runner: %s", err))
-	}
-	return apiHandler.Runner, nil
+	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	go StartAPIService(0, startChan)
+	return startChan
 }
 
-func StartAPIService(port int) (error, *gaugeApiMessageHandler) {
+func StartAPIService(port int, startChannels *runner.StartChannels) {
 	specInfoGatherer := new(infoGatherer.SpecInfoGatherer)
 	apiHandler := &gaugeApiMessageHandler{specInfoGatherer: specInfoGatherer}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
-		return err, nil
+		startChannels.ErrorChan <- err
+		return
 	}
 	if port == 0 {
 		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
-			return errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error())), nil
+			startChannels.ErrorChan <- errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error()))
+			return
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-	apiHandler.Runner = specInfoGatherer.MakeListOfAvailableSteps(nil)
-	return nil, apiHandler
+	runner, err := specInfoGatherer.MakeListOfAvailableSteps(startChannels.KillChan)
+	if err != nil {
+		startChannels.ErrorChan <- err
+		return
+	}
+	startChannels.RunnerChan <- runner
 }
 
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	wg.Add(1)
-	_, apiHandler := StartAPIService(port)
-	apiHandler.Runner.Kill(execLogger.Current())
+	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	go StartAPIService(port, startChan)
+	select {
+	case runner := <-startChan.RunnerChan:
+		runner.Kill(execLogger.Current())
+	case err := <-startChan.ErrorChan:
+		fmt.Println(err)
+	}
 }
 
 func RunInBackground(apiPort string) {
@@ -250,8 +260,8 @@ func (handler *gaugeApiMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeApiMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	testRunner, _ := StartAPI()
-	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), testRunner)
+	startChan := StartAPI()
+	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), startChan)
 	if refactoringResult.Success {
 		logger.ApiLog.Info("%s", refactoringResult.String())
 	} else {

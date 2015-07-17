@@ -93,8 +93,8 @@ func main() {
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
 	} else if *refactorSteps != "" && validGaugeProject {
-		testRunner, _ := api.StartAPI()
-		refactor.RefactorSteps(*refactorSteps, newStepName(), testRunner)
+		startChan := api.StartAPI()
+		refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()

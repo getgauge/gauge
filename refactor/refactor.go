@@ -40,7 +40,7 @@ type rephraseRefactorer struct {
 	oldStep   *parser.Step
 	newStep   *parser.Step
 	isConcept bool
-	runner    *runner.TestRunner
+	startChan *runner.StartChannels
 }
 
 type refactoringResult struct {
@@ -61,13 +61,15 @@ func (refactoringResult *refactoringResult) String() string {
 	return result
 }
 
-func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunner) *refactoringResult {
+func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels) *refactoringResult {
 	if newStep == oldStep {
+		startChan.KillChan <- true
 		return &refactoringResult{Success: true}
 	}
-	agent, err := getRefactorAgent(oldStep, newStep, runner)
+	agent, err := getRefactorAgent(oldStep, newStep, startChan)
 
 	if err != nil {
+		startChan.KillChan <- true
 		return rephraseFailure(err.Error())
 	}
 
@@ -75,12 +77,14 @@ func PerformRephraseRefactoring(oldStep, newStep string, runner *runner.TestRunn
 	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &parser.ConceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.Success {
+		startChan.KillChan <- true
 		return result
 	}
 	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {
+		startChan.KillChan <- true
 		return result
 	}
 
@@ -108,17 +112,20 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 
 	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
 	if !agent.isConcept {
-		if agent.runner == nil {
-			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner.")
+		var runner *runner.TestRunner
+		select {
+		case runner = <-agent.startChan.RunnerChan:
+		case err := <-agent.startChan.ErrorChan:
+			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
 			return result
 		}
-		stepName, err, warning := agent.getStepNameFromRunner(agent.runner)
+		stepName, err, warning := agent.getStepNameFromRunner(runner)
 		if err != nil {
 			result.Errors = append(result.Errors, err.Error())
 			return result
 		}
 		if warning == nil {
-			runnerFilesChanged, err := agent.requestRunnerForRefactoring(agent.runner, stepName)
+			runnerFilesChanged, err := agent.requestRunnerForRefactoring(runner, stepName)
 			if err != nil {
 				result.Errors = append(result.Errors, fmt.Sprintf("Cannot perform refactoring: %s", err))
 				return result
@@ -127,9 +134,13 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 		} else {
 			result.warnings = append(result.warnings, warning.Message)
 		}
-	}
-	if agent.runner != nil {
-		agent.runner.Kill(execLogger.Current())
+		runner.Kill(execLogger.Current())
+	} else {
+		select {
+		case runner := <-agent.startChan.RunnerChan:
+			runner.Kill(execLogger.Current())
+		case <-agent.startChan.ErrorChan:
+		}
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
 	result.specsChanged = specFiles
@@ -177,7 +188,7 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string, runner *runner.TestRunner) (*rephraseRefactorer, error) {
+func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, error) {
 	specParser := new(parser.SpecParser)
 	stepTokens, err := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
 	if err != nil {
@@ -192,7 +203,7 @@ func getRefactorAgent(oldStepText, newStepText string, runner *runner.TestRunner
 		}
 		steps = append(steps, step)
 	}
-	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], runner: runner}, nil
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, nil
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.TestRunner, stepName string) ([]string, error) {
@@ -329,7 +340,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	os.Exit(exitCode)
 }
 
-func RefactorSteps(oldStep, newStep string, runner *runner.TestRunner) {
-	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, runner)
+func RefactorSteps(oldStep, newStep string, startChan *runner.StartChannels) {
+	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, startChan)
 	printRefactoringSummary(refactoringResult)
 }

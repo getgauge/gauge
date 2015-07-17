@@ -18,6 +18,7 @@
 package util
 
 import (
+	"github.com/getgauge/gauge/config"
 	. "gopkg.in/check.v1"
 )
 
@@ -42,4 +43,15 @@ func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
 		"[my-plugin Plugin] : \n"+
 		"[my-plugin Plugin] : Foo bar\n")
 
+}
+
+func (s *MySuite) TestGetPathToFile(c *C) {
+	var path string
+	config.ProjectRoot = ""
+
+	path = GetPathToFile("/resources")
+	c.Assert(path, Equals, "/resources")
+
+	path = GetPathToFile("resources")
+	c.Assert(path, Equals, "resources")
 }

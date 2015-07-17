@@ -100,7 +100,7 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 
 func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	var err error
-	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer)
+	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer, make(chan bool))
 	if err != nil {
 		e.writer.Error("Failed: " + err.Error())
 		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))

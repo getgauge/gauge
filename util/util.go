@@ -2,7 +2,9 @@ package util
 
 import (
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"path/filepath"
 	"runtime"
 	"strings"
 )
@@ -29,4 +31,11 @@ func AddPrefixToEachLine(text string, template string) string {
 
 func NumberOfCores() int {
 	return runtime.NumCPU()
+}
+
+func GetPathToFile(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(config.ProjectRoot, path)
 }

@@ -162,7 +162,7 @@ func (testRunner *TestRunner) sendProcessKillMessage() {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest.Manifest, port string, writer execLogger.ExecutionLogger) (*TestRunner, error) {
+func startRunner(manifest *manifest.Manifest, port string, writer execLogger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
 	var r Runner
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -178,6 +178,12 @@ func startRunner(manifest *manifest.Manifest, port string, writer execLogger.Exe
 	if err != nil {
 		return nil, err
 	}
+	go func() {
+		select {
+		case <-killChannel:
+			cmd.Process.Kill()
+		}
+	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
 	waitAndGetErrorMessage(errChannel, cmd, writer)
@@ -241,7 +247,16 @@ func getOsSpecificCommand(r Runner) []string {
 	return command
 }
 
-func StartRunnerAndMakeConnection(manifest *manifest.Manifest, writer execLogger.ExecutionLogger) (*TestRunner, error) {
+type StartChannels struct {
+	// this will hold the runner
+	RunnerChan chan *TestRunner
+	// this will hold the error while creating runner
+	ErrorChan chan error
+	// this holds a flag based on which the runner is terminated
+	KillChan chan bool
+}
+
+func StartRunnerAndMakeConnection(manifest *manifest.Manifest, writer execLogger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -250,7 +265,7 @@ func StartRunnerAndMakeConnection(manifest *manifest.Manifest, writer execLogger
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), writer)
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), writer, killChannel)
 	if err != nil {
 		return nil, err
 	}

@@ -36,22 +36,26 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	if err != nil {
 		execLogger.CriticalError(err)
 	}
-	err, apiHandler := api.StartAPIService(0)
-	if err != nil {
-		apiHandler.Runner.Kill(execLogger.Current())
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
-	}
-	if apiHandler.Runner == nil {
-		execLogger.CriticalError(errors.New("Failed to start a runner\n"))
-	}
-
-	validateSpecs(manifest, specsToExecute, apiHandler.Runner, conceptsDictionary)
+	runner := startApi()
+	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	pluginHandler := plugin.StartPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, apiHandler.Runner, pluginHandler, parallelInfo, execLogger.Current())
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, execLogger.Current())
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)
 	os.Exit(exitCode)
+}
+
+func startApi() *runner.TestRunner {
+	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	go api.StartAPIService(0, startChan)
+	select {
+	case runner := <-startChan.RunnerChan:
+		return runner
+	case err := <-startChan.ErrorChan:
+		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
+	}
+	return nil
 }
 
 func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) {
