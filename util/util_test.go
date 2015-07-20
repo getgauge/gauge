@@ -20,6 +20,7 @@ package util
 import (
 	"github.com/getgauge/gauge/config"
 	. "gopkg.in/check.v1"
+	"path/filepath"
 )
 
 func (s *MySuite) TestPrefixingMessage(c *C) {
@@ -47,11 +48,11 @@ func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
 
 func (s *MySuite) TestGetPathToFile(c *C) {
 	var path string
-	config.ProjectRoot = ""
+	config.ProjectRoot = "PROJECT_ROOT"
 
-	path = GetPathToFile("/resources")
-	c.Assert(path, Equals, "/resources")
+	path = GetPathToFile(string(filepath.Separator) + "resources")
+	c.Assert(path, Equals, string(filepath.Separator) + "resources")
 
 	path = GetPathToFile("resources")
-	c.Assert(path, Equals, "resources")
+	c.Assert(path, Equals, filepath.Join(config.ProjectRoot,"resources"))
 }
