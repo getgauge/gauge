@@ -49,9 +49,9 @@ func (s *MySuite) TestPrefixingMultiLineMessagWithNewLine(c *C) {
 func (s *MySuite) TestGetPathToFile(c *C) {
 	var path string
 	config.ProjectRoot = "PROJECT_ROOT"
-
-	path = GetPathToFile(string(filepath.Separator) + "resources")
-	c.Assert(path, Equals, string(filepath.Separator) + "resources")
+	absPath, _ := filepath.Abs("resources")
+	path = GetPathToFile(absPath)
+	c.Assert(path, Equals, absPath)
 
 	path = GetPathToFile("resources")
 	c.Assert(path, Equals, filepath.Join(config.ProjectRoot,"resources"))
