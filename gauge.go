@@ -76,10 +76,18 @@ func main() {
 	logger.Initialize(*verbosity, *logLevel)
 	if *gaugeVersion {
 		version.PrintVersion()
-	} else if *daemonize && validGaugeProject {
-		api.RunInBackground(*apiPort)
-	} else if *specFilesToFormat != "" && validGaugeProject {
-		formatter.FormatSpecFilesIn(*specFilesToFormat)
+	} else if *daemonize {
+		if validGaugeProject {
+			api.RunInBackground(*apiPort)
+		} else {
+			logger.Log.Error(err.Error())
+		}
+	} else if *specFilesToFormat != "" {
+		if validGaugeProject {
+			formatter.FormatSpecFilesIn(*specFilesToFormat)
+		} else {
+			logger.Log.Error(err.Error())
+		}
 	} else if *initialize != "" {
 		project_init.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
@@ -92,9 +100,13 @@ func main() {
 		install.UpdatePlugin(*update)
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
-	} else if *refactorSteps != "" && validGaugeProject {
-		startChan := api.StartAPI()
-		refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
+	} else if *refactorSteps != "" {
+		if validGaugeProject {
+			startChan := api.StartAPI()
+			refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
+		} else {
+			logger.Log.Error(err.Error())
+		}
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
