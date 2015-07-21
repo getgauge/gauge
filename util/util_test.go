@@ -54,5 +54,5 @@ func (s *MySuite) TestGetPathToFile(c *C) {
 	c.Assert(path, Equals, absPath)
 
 	path = GetPathToFile("resources")
-	c.Assert(path, Equals, filepath.Join(config.ProjectRoot,"resources"))
+	c.Assert(path, Equals, filepath.Join(config.ProjectRoot, "resources"))
 }
