@@ -62,14 +62,13 @@ func (refactoringResult *refactoringResult) String() string {
 }
 
 func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels) *refactoringResult {
+	defer killRunner(startChan)
 	if newStep == oldStep {
-		startChan.KillChan <- true
 		return &refactoringResult{Success: true}
 	}
 	agent, err := getRefactorAgent(oldStep, newStep, startChan)
 
 	if err != nil {
-		startChan.KillChan <- true
 		return rephraseFailure(err.Error())
 	}
 
@@ -77,20 +76,22 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &parser.ConceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.Success {
-		startChan.KillChan <- true
 		return result
 	}
 	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {
-		startChan.KillChan <- true
 		return result
 	}
 
 	refactorResult := agent.performRefactoringOn(specs, conceptDictionary)
 	refactorResult.warnings = append(refactorResult.warnings, result.warnings...)
 	return refactorResult
+}
+
+func killRunner(startChan *runner.StartChannels) {
+	startChan.KillChan <- true
 }
 
 func rephraseFailure(errors ...string) *refactoringResult {
@@ -119,6 +120,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
 			return result
 		}
+		defer runner.Kill(execLogger.Current())
 		stepName, err, warning := agent.getStepNameFromRunner(runner)
 		if err != nil {
 			result.Errors = append(result.Errors, err.Error())
@@ -133,13 +135,6 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 			result.runnerFilesChanged = runnerFilesChanged
 		} else {
 			result.warnings = append(result.warnings, warning.Message)
-		}
-		runner.Kill(execLogger.Current())
-	} else {
-		select {
-		case runner := <-agent.startChan.RunnerChan:
-			runner.Kill(execLogger.Current())
-		case <-agent.startChan.ErrorChan:
 		}
 	}
 	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)

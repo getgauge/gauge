@@ -78,8 +78,7 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	select {
 	case runner := <-startChan.RunnerChan:
 		runner.Kill(execLogger.Current())
-	case err := <-startChan.ErrorChan:
-		fmt.Println(err)
+	case <-startChan.ErrorChan:
 	}
 }
 
