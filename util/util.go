@@ -39,3 +39,7 @@ func GetPathToFile(path string) string {
 	}
 	return filepath.Join(config.ProjectRoot, path)
 }
+
+func IsWindows() bool {
+	return runtime.GOOS == "windows"
+}

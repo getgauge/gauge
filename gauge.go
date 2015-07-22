@@ -141,6 +141,9 @@ func newStepName() string {
 }
 
 func initPackageFlags() {
+	if util.IsWindows() {
+		*simpleConsoleOutput = true
+	}
 	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
 	env.ProjectEnv = *currentEnv
 	execution.ExecuteTags = *executeTags
