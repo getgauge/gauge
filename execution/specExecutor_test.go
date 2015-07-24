@@ -109,7 +109,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -149,7 +149,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	parser := new(parser.SpecParser)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0})
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -203,7 +203,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	parser := new(parser.SpecParser)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, indexRange{start: 0, end: 0})
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0})
 
 	// For first row
 	specExecutor.currentTableRow = 0

@@ -113,7 +113,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecC
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
 	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
 	result := execution.start()
-	runner.Kill(e.writer)
+	runner.Kill()
 	suiteResults <- result
 }
 

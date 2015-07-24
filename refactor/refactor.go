@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
@@ -120,7 +119,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
 			return result
 		}
-		defer runner.Kill(execLogger.Current())
+		defer runner.Kill()
 		stepName, err, warning := agent.getStepNameFromRunner(runner)
 		if err != nil {
 			result.Errors = append(result.Errors, err.Error())

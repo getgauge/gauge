@@ -1,13 +1,10 @@
 package execution
 
 import (
-	"errors"
-	"fmt"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
@@ -34,7 +31,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	}
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		execLogger.CriticalError(err)
+		logger.Log.Critical(err.Error())
 	}
 	runner := startApi()
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -53,7 +50,8 @@ func startApi() *runner.TestRunner {
 	case runner := <-startChan.RunnerChan:
 		return runner
 	case err := <-startChan.ErrorChan:
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start gauge API. %s\n", err.Error())))
+		logger.Log.Critical("Failed to start gauge API: %s", err.Error())
+		os.Exit(1)
 	}
 	return nil
 }
@@ -63,123 +61,51 @@ func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specifi
 	validationErrors := validator.validate()
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
-		runner.Kill(execLogger.Current())
+		runner.Kill()
 		os.Exit(1)
 	}
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, specsSkipped int) int {
+func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
 		logger.Log.Info("No specifications found.")
 		os.Exit(0)
 	}
-	noOfSpecificationsExecuted := len(suiteResult.SpecResults)
-	noOfScenariosExecuted := 0
-	noOfSpecificationsFailed := suiteResult.SpecsFailedCount
-	noOfScenariosFailed := 0
+
+	specsExecCount := len(suiteResult.SpecResults)
+	specsFailedCount := suiteResult.SpecsFailedCount
+	specsPassedCount := specsExecCount - specsFailedCount
+
+	scenarioExecCount := 0
+	scenarioFailedCount := 0
+	scenarioPassedCount := 0
+
 	exitCode := 0
 	if suiteResult.IsFailed {
-		logger.Log.Info("\nThe following failures occured:\n")
 		exitCode = 1
 	}
 
-	printHookError(suiteResult.PreSuite)
-
 	for _, specResult := range suiteResult.SpecResults {
-		noOfScenariosExecuted += specResult.ScenarioCount
-		noOfScenariosFailed += specResult.ScenarioFailedCount
-		printSpecFailure(specResult)
+		scenarioExecCount += specResult.ScenarioCount
+		scenarioFailedCount += specResult.ScenarioFailedCount
 	}
 
-	printHookError(suiteResult.PostSuite)
+	scenarioPassedCount = scenarioExecCount - scenarioFailedCount
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
-		specsSkipped += (unhandledErr).(streamExecError).numberOfSpecsSkipped()
+		specsSkippedCount += (unhandledErr).(streamExecError).numberOfSpecsSkipped()
 	}
-	logger.Log.Info("%d scenarios executed, %d failed\n", noOfScenariosExecuted, noOfScenariosFailed)
-	logger.Log.Info("%d specifications executed, %d failed\n", noOfSpecificationsExecuted, noOfSpecificationsFailed)
-	logger.Log.Info("%d specifications skipped\n", specsSkipped)
-	logger.Log.Info("%s\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+
+	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, specsSkippedCount)
+	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed", scenarioExecCount, scenarioPassedCount, scenarioFailedCount)
+	logger.Log.Info("total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())
 	}
 	return exitCode
-}
-
-func printSpecFailure(specResult *result.SpecResult) {
-	if specResult.IsFailed {
-		execLogger.Current().PrintError(fmt.Sprintf("%s : %s \n", specResult.ProtoSpec.GetFileName(), specResult.ProtoSpec.GetSpecHeading()))
-		printHookError(specResult.ProtoSpec.GetPreHookFailure())
-
-		for _, specItem := range specResult.ProtoSpec.Items {
-			if specItem.GetItemType() == gauge_messages.ProtoItem_Scenario {
-				printScenarioFailure(specItem.GetScenario())
-			} else if specItem.GetItemType() == gauge_messages.ProtoItem_TableDrivenScenario {
-				printTableDrivenScenarioFailure(specItem.GetTableDrivenScenario())
-			}
-		}
-
-		printHookError(specResult.ProtoSpec.GetPostHookFailure())
-	}
-}
-
-func printTableDrivenScenarioFailure(tableDrivenScenario *gauge_messages.ProtoTableDrivenScenario) {
-	for _, scenario := range tableDrivenScenario.GetScenarios() {
-		printScenarioFailure(scenario)
-	}
-}
-
-func printScenarioFailure(scenario *gauge_messages.ProtoScenario) {
-	if scenario.GetFailed() {
-		execLogger.Current().PrintError(fmt.Sprintf(" %s: \n", scenario.GetScenarioHeading()))
-		printHookError(scenario.GetPreHookFailure())
-
-		for _, scenarioItem := range scenario.GetScenarioItems() {
-			if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Step {
-				printStepFailure(scenarioItem.GetStep())
-			} else if scenarioItem.GetItemType() == gauge_messages.ProtoItem_Concept {
-				printConceptFailure(scenarioItem.GetConcept())
-			}
-		}
-		printHookError(scenario.GetPostHookFailure())
-	}
-
-}
-
-func printStepFailure(step *gauge_messages.ProtoStep) {
-	stepExecResult := step.StepExecutionResult
-	if stepExecResult != nil && stepExecResult.ExecutionResult.GetFailed() {
-		execLogger.Current().PrintError(fmt.Sprintf("\t %s\n", step.GetActualText()))
-		printHookError(stepExecResult.GetPreHookFailure())
-		printError(stepExecResult.ExecutionResult)
-		printHookError(stepExecResult.GetPostHookFailure())
-	}
-}
-
-func printConceptFailure(concept *gauge_messages.ProtoConcept) {
-	conceptExecResult := concept.ConceptExecutionResult
-	if conceptExecResult != nil && conceptExecResult.GetExecutionResult().GetFailed() {
-		execLogger.Current().PrintError(fmt.Sprintf("\t %s\n", concept.ConceptStep.GetActualText()))
-		printError(conceptExecResult.ExecutionResult)
-	}
-}
-
-func printError(execResult *gauge_messages.ProtoExecutionResult) {
-	if execResult.GetFailed() {
-		console := execLogger.Current()
-		console.PrintError(execResult.GetErrorMessage() + "\n")
-		console.PrintError(execResult.GetStackTrace() + "\n")
-	}
-}
-
-func printHookError(hook *gauge_messages.ProtoHookFailure) {
-	if hook != nil {
-		console := execLogger.Current()
-		console.PrintError(hook.GetErrorMessage())
-		console.PrintError(hook.GetStackTrace())
-	}
 }
 
 func printValidationFailures(validationErrors executionValidationErrors) {
@@ -187,7 +113,7 @@ func printValidationFailures(validationErrors executionValidationErrors) {
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			execLogger.Current().PrintError(fmt.Sprintf("%s:%d: %s. %s\n", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText))
+			logger.Log.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }
