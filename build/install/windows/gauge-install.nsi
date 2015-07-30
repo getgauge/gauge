@@ -28,6 +28,8 @@
 !insertmacro MUI_PAGE_WELCOME
 ; License page
 !insertmacro MUI_PAGE_LICENSE "gpl.txt"
+; Plugin options page
+!insertmacro MUI_PAGE_COMPONENTS
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
@@ -59,10 +61,20 @@ function .onInit
 functionEnd
 
 Section "Gauge" SEC01
+  SectionIn RO
   SetOutPath "$INSTDIR"
   SetOverwrite on
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\*"
 SectionEnd
+
+SectionGroup /e "Language Plugins"
+  Section "Java" SEC_JAVA
+  SectionEnd
+  Section /o "C#" SEC_CSHARP
+  SectionEnd
+  Section /o "Ruby" SEC_RUBY
+  SectionEnd
+SectionGroupEnd
 
 Section -AdditionalIcons
   SetOutPath $INSTDIR
@@ -84,7 +96,23 @@ Section -Post
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   IfSilent +2 0
     ExecShell "open" "http://getgauge.io/documentation/user/current"
-  Exec '"$INSTDIR\plugin-install.bat"'
+  ExecWait '"$INSTDIR\plugin-install.bat" "html-report"'
+  
+  SectionGetFlags ${SEC_JAVA} $R0
+  SectionGetFlags ${SEC_CSHARP} $R1
+  SectionGetFlags ${SEC_RUBY} $R2
+
+  ${If} $R0 == 1
+    ExecWait '"$INSTDIR\plugin-install.bat" "java"'
+  ${EndIf}
+
+  ${If} $R1 == 1
+    ExecWait '"$INSTDIR\plugin-install.bat" "csharp"'
+  ${EndIf}
+
+  ${If} $R2 == 1
+    ExecWait '"$INSTDIR\plugin-install.bat" "ruby"'
+  ${EndIf}
 SectionEnd
 
 Function un.onUninstSuccess
