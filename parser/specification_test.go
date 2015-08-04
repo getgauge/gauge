@@ -207,7 +207,7 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 
 	c.Assert(len(spec.Items), Equals, 3)
 	c.Assert(spec.Items[0], Equals, spec.Comments[0])
-	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable.Table)
+	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable)
 	c.Assert(spec.Items[2], Equals, spec.Comments[1])
 
 	c.Assert(result.Ok, Equals, true)
@@ -635,7 +635,7 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Items), Equals, 2)
-	c.Assert(spec.Items[0], DeepEquals, &spec.DataTable.Table)
+	c.Assert(spec.Items[0], DeepEquals, &spec.DataTable)
 	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
 
 	scenarioItems := (spec.Items[1]).(*Scenario).Items
