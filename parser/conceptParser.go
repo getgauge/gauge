@@ -305,7 +305,7 @@ func (conceptDictionary *ConceptDictionary) replaceNestedConceptSteps(conceptSte
 			//replace step with actual concept
 			conceptStep.ConceptSteps[i].ConceptSteps = nestedConcept.ConceptStep.ConceptSteps
 			conceptStep.ConceptSteps[i].IsConcept = nestedConcept.ConceptStep.IsConcept
-			conceptStep.ConceptSteps[i].Lookup = nestedConcept.ConceptStep.Lookup
+			conceptStep.ConceptSteps[i].Lookup = *nestedConcept.ConceptStep.Lookup.getCopy()
 		} else {
 			conceptDictionary.updateStep(stepInsideConcept)
 		}
@@ -320,7 +320,7 @@ func (conceptDictionary *ConceptDictionary) updateStep(step *Step) {
 		for _, allSteps := range conceptDictionary.constructionMap[step.Value] {
 			allSteps.IsConcept = step.IsConcept
 			allSteps.ConceptSteps = step.ConceptSteps
-			allSteps.Lookup = step.Lookup
+			allSteps.Lookup = *step.Lookup.getCopy()
 		}
 	}
 }
@@ -331,7 +331,7 @@ func (conceptDictionary *ConceptDictionary) updateLookupForNestedConcepts() {
 			stepInsideConcept.Parent = concept.ConceptStep
 			if nestedConcept := conceptDictionary.search(stepInsideConcept.Value); nestedConcept != nil {
 				for i, arg := range nestedConcept.ConceptStep.Args {
-					nestedConcept.ConceptStep.Lookup.addArgValue(arg.Value, &StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value})
+					stepInsideConcept.Lookup.addArgValue(arg.Value, &StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value})
 				}
 			}
 		}

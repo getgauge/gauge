@@ -17,7 +17,9 @@
 
 package parser
 
-import . "gopkg.in/check.v1"
+import (
+	. "gopkg.in/check.v1"
+)
 
 func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
@@ -176,4 +178,74 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	secondLevelNestedConcept := nestedConcept.ConceptSteps[1]
 	c.Assert(secondLevelNestedConcept.getArg("baz").Value, Equals, "s-value")
 	c.Assert(secondLevelNestedConcept.getArg("baz").ArgType, Equals, Static)
+}
+
+func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("Concept").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("Concept").
+		step("Heading \"a\"").
+		step("Heading \"b\"").
+		specHeading("Heading <h>").
+		step("Say <h> to <h>").String()
+
+	concepts, _ := new(ConceptParser).Parse(conceptText)
+
+	conceptDictionary.Add(concepts, "file.cpt")
+	spec, _ := parser.Parse(specText, conceptDictionary)
+	concept1 := spec.Scenarios[0].Steps[0]
+
+	nestedConcept := concept1.ConceptSteps[0]
+	nestedConcept1 := concept1.ConceptSteps[1]
+
+	c.Assert(nestedConcept.getArg("h").Value, Equals, "a")
+	c.Assert(nestedConcept1.getArg("h").Value, Equals, "b")
+}
+
+func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParamsIncludingDynamicParams(c *C) {
+	parser := new(SpecParser)
+	conceptDictionary := new(ConceptDictionary)
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("Concept \"abc\"").
+		String()
+
+	conceptText := SpecBuilder().
+		specHeading("Concept <message>").
+		step("Heading \"a\" and \"a\"").
+		step("Heading \"b\" and \"b\"").
+		step("Heading <message> and \"a\"").
+		step("Heading \"c\" and \"a\"").
+		specHeading("Heading <h> and <i>").
+		step("Say <h> to <i>").String()
+
+	concepts, _ := new(ConceptParser).Parse(conceptText)
+
+	conceptDictionary.Add(concepts, "file.cpt")
+	spec, _ := parser.Parse(specText, conceptDictionary)
+	concept1 := spec.Scenarios[0].Steps[0]
+
+	nestedConcept := concept1.ConceptSteps[0]
+	c.Assert(nestedConcept.getArg("h").Value, Equals, "a")
+	c.Assert(nestedConcept.getArg("i").Value, Equals, "a")
+
+	nestedConcept1 := concept1.ConceptSteps[1]
+	c.Assert(nestedConcept1.getArg("h").Value, Equals, "b")
+	c.Assert(nestedConcept1.getArg("i").Value, Equals, "b")
+
+	nestedConcept2 := concept1.ConceptSteps[2]
+	c.Assert(nestedConcept2.getArg("h").Value, Equals, "abc")
+	c.Assert(nestedConcept2.getArg("i").Value, Equals, "a")
+
+	nestedConcept3 := concept1.ConceptSteps[3]
+	c.Assert(nestedConcept3.getArg("h").Value, Equals, "c")
+	c.Assert(nestedConcept3.getArg("i").Value, Equals, "a")
 }
