@@ -48,7 +48,7 @@ type extractor struct {
 
 func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
 	content := SPEC_HEADING_TEMPLATE
-	if isSpecFile(selectedTextInfo.GetFileName()) {
+	if util.IsSpec(selectedTextInfo.GetFileName()) {
 		content, _ = common.ReadFileContents(selectedTextInfo.GetFileName())
 	}
 	concept, conceptUsageText, err := getExtractedConcept(conceptName, steps, content)
@@ -57,10 +57,6 @@ func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.St
 	}
 	writeConceptToFile(concept, conceptUsageText, conceptFileName, selectedTextInfo.GetFileName(), selectedTextInfo)
 	return true, errors.New(""), []string{conceptFileName, selectedTextInfo.GetFileName()}
-}
-
-func isSpecFile(fileName string) bool {
-	return strings.HasSuffix(fileName, ".spec") || strings.HasSuffix(fileName, ".md")
 }
 
 func ReplaceExtractedStepsWithConcept(selectedTextInfo *gauge_messages.TextInfo, conceptText string) string {
