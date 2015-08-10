@@ -138,6 +138,9 @@ func (table *Table) Rows() [][]string {
 	}
 
 	tableRows := make([][]string, 0)
+	if (len(table.columns) == 0){
+		return tableRows
+	}
 	for i := 0; i < len(table.columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.Headers {

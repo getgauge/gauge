@@ -52,6 +52,11 @@ func (s *MySuite) TestConvertCsvToTable(c *C) {
 	c.Assert(nameColumn[1].Value, Equals, "bar")
 }
 
+func (s *MySuite) TestConvertEmptyCsvToTable(c *C) {
+	table, _ := convertCsvToTable("")
+	c.Assert(len(table.columns), Equals, 0)
+}
+
 func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
 
