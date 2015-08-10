@@ -111,7 +111,7 @@ func processStepText(text string) (string, []string, error) {
 	}, inQuotes)
 
 	acceptSpecialDynamicParam := acceptor(rune(dynamicParamStart), rune(dynamicParamEnd), func(currentChar rune, state int) int {
-		if currentChar == specialParamIdentifier {
+		if currentChar == specialParamIdentifier && state == inDynamicParam {
 			return state | inSpecialParam
 		}
 		return state
