@@ -65,7 +65,7 @@ func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseError.Message, Equals, "Parse error: Duplicate scenario definitions are not allowed in the same specification")
+	c.Assert(result.ParseError.Message, Equals, "Parse error: Duplicate scenario definition 'Scenario Heading' found in the same specification")
 	c.Assert(result.ParseError.LineNo, Equals, 4)
 }
 

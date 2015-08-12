@@ -318,7 +318,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		}
 		for _, scenario := range spec.Scenarios {
 			if strings.ToLower(scenario.Heading.Value) == strings.ToLower(token.Value) {
-				return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Duplicate scenario definitions are not allowed in the same specification", token.LineText}}
+				return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}
 			}
 		}
 		scenario := &Scenario{}
