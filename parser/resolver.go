@@ -89,7 +89,7 @@ func (resolver *ParamResolver) createProtoStepTable(table *Table, dataTableLooku
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
-	if (len(table.columns) == 0){
+	if len(table.columns) == 0 {
 		protoTable.Rows = tableRows
 		return protoTable
 	}

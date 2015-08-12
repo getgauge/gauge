@@ -319,6 +319,7 @@ func (specInfoGatherer *SpecInfoGatherer) addStepsToAvailableSteps(newSpecStepsM
 
 func (specInfoGatherer *SpecInfoGatherer) updateAllStepsList() {
 	specInfoGatherer.availableStepsMap = make(map[string]*parser.StepValue, 0)
+	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.runnerStepValues)
 	for _, steps := range specInfoGatherer.fileToStepsMap {
 		for _, step := range steps {
 			if step.IsConcept {
@@ -330,7 +331,6 @@ func (specInfoGatherer *SpecInfoGatherer) updateAllStepsList() {
 			}
 		}
 	}
-	specInfoGatherer.addStepValuesToAvailableSteps(specInfoGatherer.runnerStepValues)
 }
 
 func (specInfoGatherer *SpecInfoGatherer) updateCache(newSpecStepsMap map[string][]*parser.Step) {
