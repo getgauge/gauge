@@ -100,7 +100,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 
 	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, specsSkippedCount)
 	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed", scenarioExecCount, scenarioPassedCount, scenarioFailedCount)
-	logger.Log.Info("total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Log.Info("Total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())

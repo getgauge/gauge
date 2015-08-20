@@ -99,6 +99,9 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
+		for _, step := range specExecutor.specification.Contexts {
+			logger.Log.Debug("Executing Spec: %s", formatter.FormatStep(step))
+		}
 		dataTableRowCount := specExecutor.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
@@ -359,7 +362,7 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult) {
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
-
+	logger.Log.Debug("Executing Step: %s", formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest)))
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 
