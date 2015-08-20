@@ -5,7 +5,7 @@ This is an executable specification file. This file follows markdown syntax. Eve
 
 To execute this specification, use
 
-	gauge spec/hello_world.spec
+	gauge specs/hello_world.spec
 
 * A context step which gets executed before every scenario
 
