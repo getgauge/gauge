@@ -45,6 +45,7 @@ var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to 
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
 var installPlugin = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
+var uninstallPlugin = flag.String([]string{"-uninstall"}, "", "Uninstalls a plugin. Eg: gauge --uninstall java")
 var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
 var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
@@ -94,6 +95,8 @@ func main() {
 		install.InstallPluginZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {
 		install.DownloadAndInstallPlugin(*installPlugin, *installVersion)
+	} else if *uninstallPlugin != "" {
+		install.UninstallPlugin(*uninstallPlugin)
 	} else if *installAll {
 		install.InstallAllPlugins()
 	} else if *update != "" {

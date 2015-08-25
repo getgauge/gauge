@@ -184,6 +184,28 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 	return common.MirrorDir(pluginContents, versionedPluginDir)
 }
 
+func UninstallPlugin(pluginName string) {
+	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
+	if err != nil {
+		handleUninstallFailure(err, pluginName)
+	}
+	pluginInstallationDir := path.Join(pluginsDir, pluginName)
+	if common.DirExists(pluginInstallationDir) {
+		if err = os.RemoveAll(pluginInstallationDir); err != nil {
+			handleUninstallFailure(err, pluginName)
+		} else {
+			logger.Log.Info("%s plugin uninstalled successfully", pluginName)
+		}
+	} else {
+		logger.Log.Info("%s plugin is not installed", pluginName)
+	}
+}
+
+func handleUninstallFailure(err error, pluginName string) {
+	logger.Log.Error("%s plugin uninstallation failed", pluginName)
+	logger.Log.Error(err.Error())
+}
+
 func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	var platformLinks *platformSpecificUrl
 	if strings.Contains(runtime.GOARCH, "64") {
