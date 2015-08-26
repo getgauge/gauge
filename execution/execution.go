@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
@@ -43,7 +44,6 @@ type simpleExecution struct {
 	pluginHandler        *plugin.PluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	writer               execLogger.ExecutionLogger
 }
 
 type execution interface {
@@ -59,15 +59,15 @@ func newExecution(manifest *manifest.Manifest, specifications []*parser.Specific
 	if info.inParallel {
 		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: info.numberOfStreams, writer: writer}
 	}
-	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, writer: writer}
+	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler}
 }
 
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
 	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage, e.writer)
+	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
 	if initResult.GetFailed() {
-		e.writer.Warning("Suite data store didn't get initialized")
+		logger.Log.Warning("Suite data store didn't get initialized")
 	}
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
@@ -82,7 +82,7 @@ func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) 
 
 func (e *simpleExecution) executeHook(message *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
 	e.pluginHandler.NotifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner, message, e.writer)
+	executionResult := executeAndGetStatus(e.runner, message)
 	e.addExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -121,7 +121,7 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		exe.suiteResult.SetFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, exe.writer, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()))
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()))
 			protoSpecResult := executor.execute()
 			exe.suiteResult.AddSpecResult(protoSpecResult)
 		}
@@ -153,13 +153,13 @@ func (exe *simpleExecution) finish() {
 
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
-	if err := e.runner.Kill(e.writer); err != nil {
-		e.writer.Error("Failed to kill Runner. %s\n", err.Error())
+	if err := e.runner.Kill(); err != nil {
+		logger.Log.Error("Failed to kill Runner: %s", err.Error())
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, writer execLogger.ExecutionLogger, tableRows indexRange) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, writer, tableRows)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows)
 	return specExecutor
 }

@@ -74,7 +74,7 @@ func main() {
 		validGaugeProject = false
 	}
 	env.LoadEnv(true)
-	logger.Initialize(*verbosity, *logLevel)
+	logger.Initialize(*verbosity, *logLevel, *simpleConsoleOutput)
 	if *gaugeVersion {
 		version.PrintVersion()
 	} else if *daemonize {

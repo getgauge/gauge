@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/version"
@@ -114,7 +115,7 @@ func GetRunnerInfo(language string) (*Runner, error) {
 	return runnerInfo, nil
 }
 
-func (testRunner *TestRunner) Kill(writer execLogger.ExecutionLogger) error {
+func (testRunner *TestRunner) Kill() error {
 	if testRunner.isStillRunning() {
 		defer testRunner.Connection.Close()
 		testRunner.sendProcessKillMessage()
@@ -137,7 +138,7 @@ func (testRunner *TestRunner) Kill(writer execLogger.ExecutionLogger) error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			writer.Warning("Killing runner with PID:%d forcefully\n", testRunner.Cmd.Process.Pid)
+			logger.Log.Warning("Killing runner with PID:%d forcefully", testRunner.Cmd.Process.Pid)
 			return testRunner.killRunner()
 		}
 	}
