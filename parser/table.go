@@ -188,6 +188,7 @@ func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
 
 func convertCsvToTable(csvContents string) (*Table, error) {
 	r := csv.NewReader(strings.NewReader(csvContents))
+	r.Comment = '#'
 	lines, err := r.ReadAll()
 	if err != nil {
 		return nil, err
