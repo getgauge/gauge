@@ -73,7 +73,6 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	c.Assert(column3[0].CellType, Equals, Static)
 	c.Assert(column3[1].Value, Equals, "")
 	c.Assert(column3[1].CellType, Equals, Static)
-
 }
 
 func (s *MySuite) TestShouldAddRows(c *C) {
@@ -104,7 +103,6 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	c.Assert(column3[0].CellType, Equals, Static)
 	c.Assert(column3[1].Value, Equals, "")
 	c.Assert(column3[1].CellType, Equals, Static)
-
 }
 
 func (s *MySuite) TestCoulmnNameExists(c *C) {
@@ -117,7 +115,6 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 	c.Assert(table.headerExists("one"), Equals, true)
 	c.Assert(table.headerExists("two"), Equals, true)
 	c.Assert(table.headerExists("four"), Equals, false)
-
 }
 
 func (s *MySuite) TestGetInvalidColumn(c *C) {
@@ -169,4 +166,18 @@ func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
 	c.Assert(len(thirdRow), Equals, 2)
 	c.Assert(thirdRow[0].Value, Equals, "789")
 	c.Assert(thirdRow[1].Value, Equals, "")
+}
+
+func (s *MySuite) TestIgnoreCommentLines(c *C) {
+	csvContents := "one,two,three\nfoo,bar,baz\n#john,jim,jan"
+	table, err := convertCsvToTable(csvContents)
+
+	if err != nil {
+		c.Fail()
+	}
+
+	c.Assert(table.GetRowCount(), Equals, 1)
+	c.Assert(table.Rows()[0][0], Equals, "foo")
+	c.Assert(table.Rows()[0][1], Equals, "bar")
+	c.Assert(table.Rows()[0][2], Equals, "baz")
 }
