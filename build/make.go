@@ -157,7 +157,7 @@ func runCommand(command string, arg ...string) (string, error) {
 
 func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
 	if getGOOS() == windows {
-		if certFilePath != "" && certFilePath != "" {
+		if certFilePath != "" && certFilePwd != "" {
 			log.Printf("Signing: %s", exeFilePath)
 			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
 		} else {
