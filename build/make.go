@@ -367,7 +367,7 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	os.RemoveAll(distroDir)
-	signExecutable(packageName, *certFile, *certFilePwd)
+	signExecutable(packageName+".exe", *certFile, *certFilePwd)
 }
 
 func createDarwinPackage() {
