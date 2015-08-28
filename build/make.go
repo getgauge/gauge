@@ -357,6 +357,7 @@ func createWindowsDistro() {
 func createWindowsInstaller() {
 	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
+	installerFileName := filepath.Join(filepath.Dir(distroDir), packageName)
 	if err != nil {
 		panic(err)
 	}
@@ -364,10 +365,10 @@ func createWindowsInstaller() {
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", version.CurrentGaugeVersion.String()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
-		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
+		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	os.RemoveAll(distroDir)
-	signExecutable(packageName+".exe", *certFile, *certFilePwd)
+	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
 }
 
 func createDarwinPackage() {
