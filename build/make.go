@@ -227,9 +227,9 @@ func copyGaugeFiles(installPath string) {
 }
 
 func addInstallScripts(files map[string]string) map[string]string {
-	if (getOS() == darwin || getOS() == linux) && (*distro) {
+	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
-	} else if getOS() == windows {
+	} else if getGOOS() == windows {
 		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
 	}
 	return files
@@ -339,13 +339,12 @@ func createGaugeDistributables(forAllPlatforms bool) {
 	} else {
 		createDistro()
 	}
-
 }
 
 type distroFunc func()
 
 func createDistro() {
-	osDistroMap[getOS()]()
+	osDistroMap[getGOOS()]()
 }
 
 func createWindowsDistro() {
@@ -355,7 +354,7 @@ func createWindowsDistro() {
 }
 
 func createWindowsInstaller() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
 	installerFileName := filepath.Join(filepath.Dir(distroDir), packageName)
 	if err != nil {
@@ -375,12 +374,12 @@ func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeFiles(distroDir)
 	runProcess(packagesBuild, "-v", darwinPackageProject)
-	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch(), pkg)))
+	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix(), pkg)))
 	os.RemoveAll(distroDir)
 }
 
 func createLinuxPackage() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix())
 	distroDir := filepath.Join(deploy, packageName)
 	copyGaugeFiles(distroDir)
 	createZipFromUtil(deploy, packageName)
@@ -497,19 +496,17 @@ func getGOOS() string {
 	return goOS
 }
 
-func getArch() string {
-	arch := os.Getenv(GOARCH)
-	if arch == X86 {
+func getPackageArchSuffix() string {
+	if strings.HasSuffix(*binDir, "386") {
+		return "x86"
+	}
+
+	if strings.HasSuffix(*binDir, "amd64") {
+		return "x86_64"
+	}
+
+	if arch := getGOARCH(); arch == X86 {
 		return "x86"
 	}
 	return "x86_64"
-}
-
-func getOS() string {
-	os := os.Getenv(GOOS)
-	if os == "" {
-		return runtime.GOOS
-
-	}
-	return os
 }
