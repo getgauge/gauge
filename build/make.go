@@ -155,14 +155,27 @@ func runCommand(command string, arg ...string) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s", bytes)), err
 }
 
+func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
+	if getGOOS() == windows {
+		if certFilePath != "" && certFilePath != "" {
+			log.Printf("Signing: %s", exeFilePath)
+			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
+		} else {
+			log.Printf("No certificate file passed. Executable won't be signed.")
+		}
+	}
+}
+
 func compileGauge() {
-	runProcess("go", "build", "-o", getGaugeExecutablePath(gauge))
+	executablePath := getGaugeExecutablePath(gauge)
+	runProcess("go", "build", "-o", executablePath)
 	compileGaugeScreenshot()
 }
 
 func compileGaugeScreenshot() {
 	getGaugeScreenshot()
-	runProcess("go", "build", "-o", getGaugeExecutablePath(gaugeScreenshot), gaugeScreenshotLocation)
+	executablePath := getGaugeExecutablePath(gaugeScreenshot)
+	runProcess("go", "build", "-o", executablePath, gaugeScreenshotLocation)
 }
 
 func getGaugeScreenshot() {
@@ -178,7 +191,6 @@ func runTests(coverage bool) {
 	} else {
 		runProcess("go", "test", "./...", "-v")
 	}
-
 }
 
 // key will be the source file and value will be the target
@@ -259,6 +271,8 @@ var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
+var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
+var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
 
 type targetOpts struct {
 	lookForChanges bool
@@ -339,6 +353,7 @@ func createWindowsDistro() {
 		createWindowsInstaller()
 	}
 }
+
 func createWindowsInstaller() {
 	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getOS(), getArch())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
@@ -352,6 +367,7 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", filepath.Join(filepath.Dir(distroDir), packageName)),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	os.RemoveAll(distroDir)
+	signExecutable(packageName, *certFile, *certFilePwd)
 }
 
 func createDarwinPackage() {
