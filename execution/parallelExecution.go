@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
@@ -43,7 +42,7 @@ type parallelSpecExecution struct {
 	runner                   *runner.TestRunner
 	aggregateResult          *result.SuiteResult
 	numberOfExecutionStreams int
-	writer                   execLogger.ExecutionLogger
+	logger                   *logger.GaugeLogger
 }
 
 type streamExecError struct {
@@ -81,9 +80,9 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	specCollections := filter.DistributeSpecs(e.specifications, e.numberOfExecutionStreams)
 	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, execLogger.NewParallelExecutionConsoleWriter(i+1))
+		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, logger.NewParallelLogger(i+1))
 	}
-	e.writer.Info("Executing in %s parallel streams.", strconv.Itoa(len(specCollections)))
+	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(len(specCollections)))
 	suiteResults := make([]*result.SuiteResult, 0)
 	for _, _ = range specCollections {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
@@ -98,20 +97,20 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, writer execLogger.ExecutionLogger) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {
 	var err error
-	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, writer, make(chan bool))
+	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
-		e.writer.Error("Failed: " + err.Error())
-		e.writer.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
+		e.logger.Error("Failed: " + err.Error())
+		e.logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
 		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, writer)
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, log)
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, writer execLogger.ExecutionLogger) {
-	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, writer)
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger *logger.GaugeLogger) {
+	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, logger)
 	result := execution.start()
 	runner.Kill()
 	suiteResults <- result

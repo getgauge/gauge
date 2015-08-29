@@ -24,6 +24,7 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -34,11 +35,21 @@ const (
 	apiLogFileName   = "api.log"
 )
 
-var Log = logging.MustGetLogger("gauge")
-var ApiLog = logging.MustGetLogger("gauge-api")
+type GaugeLogger struct {
+	*logging.Logger
+}
+
+func (p GaugeLogger) Write(b []byte) (int, error) {
+	p.Info(string(b))
+	return len(b), nil
+}
+
+var Log = GaugeLogger{logging.MustGetLogger("gauge")}
+var ApiLog = GaugeLogger{logging.MustGetLogger("gauge-api")}
 
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
+var level logging.Level
 
 var coloredFormat = logging.MustStringFormatter(
 	"%{color}[%{level:.8s}] %{message}%{color:reset}",
@@ -49,7 +60,7 @@ var uncoloredFormat = logging.MustStringFormatter(
 )
 
 func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {
-	level := loggingLevel(verbose, logLevel)
+	level = loggingLevel(verbose, logLevel)
 	initGaugeLogger(level, simpleConsoleOutput)
 	initApiLogger(level, simpleConsoleOutput)
 }
@@ -97,6 +108,16 @@ func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
 	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
+func NewParallelLogger(n int) *GaugeLogger {
+	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
+	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] [%{level:.8s}] %{message}"))
+	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
+	stdOutLoggerLeveled.SetLevel(level, "")
+	parallelLogger.SetBackend(stdOutLoggerLeveled)
+	return parallelLogger
+}
+
 func createFileLogger(name string, size int) logging.Backend {
 	if !filepath.IsAbs(name) {
 		name = getLogFile(name)
@@ -142,7 +163,6 @@ func loggingLevel(verbose bool, logLevel string) logging.Level {
 		}
 	}
 	return logging.INFO
-
 }
 
 func HandleWarningMessages(warnings []string) {

@@ -6,7 +6,6 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
@@ -36,7 +35,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	runner := startApi()
 	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	pluginHandler := plugin.StartPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, execLogger.Current())
+	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log)
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, specsSkipped)

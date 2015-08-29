@@ -261,7 +261,7 @@ func (specInfoGatherer *SpecInfoGatherer) getStepsFromRunner(killChannel chan bo
 	if err != nil {
 		execLogger.CriticalError(err)
 	}
-	testRunner, connErr := runner.StartRunnerAndMakeConnection(manifest, execLogger.Current(), killChannel)
+	testRunner, connErr := runner.StartRunnerAndMakeConnection(manifest, &logger.Log, killChannel)
 	if connErr == nil {
 		steps = append(steps, requestForSteps(testRunner)...)
 		logger.ApiLog.Debug("Steps got from runner: %v", steps)
