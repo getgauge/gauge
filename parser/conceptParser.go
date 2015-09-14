@@ -55,6 +55,14 @@ func (parser *ConceptParser) Parse(text string) ([]*Step, *ParseDetailResult) {
 	return parser.createConcepts(tokens)
 }
 
+func (parser *ConceptParser) ParseFile(file string) ([]*Step, *ParseDetailResult) {
+	fileText, fileReadErr := common.ReadFileContents(file)
+	if fileReadErr != nil {
+		return nil, &ParseDetailResult{Error: &ParseError{Message: fmt.Sprintf("failed to read concept file %s", file)}}
+	}
+	return parser.Parse(fileText)
+}
+
 func (parser *ConceptParser) resetState() {
 	parser.currentState = initial
 	parser.currentConcept = nil
@@ -214,11 +222,7 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *Par
 }
 
 func AddConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *ParseError {
-	fileText, fileReadErr := common.ReadFileContents(conceptFile)
-	if fileReadErr != nil {
-		return &ParseError{Message: fmt.Sprintf("failed to read concept file %s", conceptFile)}
-	}
-	concepts, parseResults := new(ConceptParser).Parse(fileText)
+	concepts, parseResults := new(ConceptParser).ParseFile(conceptFile)
 	if parseResults != nil && parseResults.Warnings != nil {
 		for _, warning := range parseResults.Warnings {
 			logger.Log.Warning(warning.String())

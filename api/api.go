@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
@@ -63,12 +64,27 @@ func StartAPIService(port int, startChannels *runner.StartChannels) {
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-	runner, err := specInfoGatherer.MakeListOfAvailableSteps(startChannels.KillChan)
+	runner, err := connectToRunner(startChannels.KillChan)
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
 	}
+	specInfoGatherer.MakeListOfAvailableSteps(runner)
 	startChannels.RunnerChan <- runner
+}
+
+func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
+	manifest, err := manifest.ProjectManifest()
+	if err != nil {
+		return nil, err
+	}
+
+	runner, connErr := runner.StartRunnerAndMakeConnection(manifest, &logger.Log, killChannel)
+	if connErr != nil {
+		return nil, connErr
+	}
+
+	return runner, nil
 }
 
 func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
@@ -193,7 +209,7 @@ func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *gauge
 }
 
 func (handler *gaugeApiMessageHandler) getAllSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.AvailableSpecs)
+	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.GetAvailableSpecs())
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
 }
 
