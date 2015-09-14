@@ -41,10 +41,6 @@ type SpecInfoGatherer struct {
 }
 
 func (s *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) {
-	s.specsCache = make(map[string][]*parser.Specification, 0)
-	s.conceptsCache = make(map[string][]*parser.Concept, 0)
-	s.stepsCache = make(map[string]*parser.StepValue, 0)
-
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	s.initConceptsCache()
 	s.initSpecsCache()
@@ -54,6 +50,7 @@ func (s *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) {
 }
 
 func (s *SpecInfoGatherer) initSpecsCache() {
+	s.specsCache = make(map[string][]*parser.Specification, 0)
 	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
 	parsedSpecs := s.getParsedSpecs(specFiles)
 
@@ -64,6 +61,7 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 }
 
 func (s *SpecInfoGatherer) initConceptsCache() {
+	s.conceptsCache = make(map[string][]*parser.Concept, 0)
 	parsedConcepts := s.getParsedConcepts()
 
 	logger.ApiLog.Debug("Initializing concepts cache with %d concepts", len(parsedConcepts))
@@ -73,6 +71,7 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 }
 
 func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
+	s.stepsCache = make(map[string]*parser.StepValue, 0)
 	stepsFromSpecs := s.getStepsFromCachedSpecs()
 	stepsFromConcepts := s.getStepsFromCachedConcepts()
 	implementedSteps := s.getImplementedSteps(runner)
