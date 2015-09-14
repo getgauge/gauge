@@ -33,6 +33,18 @@ func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	c.Assert(stepArg.Name, Equals, "file:foo")
 }
 
+func (s *MySuite) TestParsingFileAsSpecialParamWithWindowsPathAsValue(c *C) {
+	resolver := newSpecialTypeResolver()
+	resolver.predefinedResolvers["file"] = func(value string) (*StepArg, error) {
+		return &StepArg{Value: "hello", ArgType: SpecialString}, nil
+	}
+
+	stepArg, _ := resolver.resolve("file:C:\\Users\\abc")
+	c.Assert(stepArg.Value, Equals, "hello")
+	c.Assert(stepArg.ArgType, Equals, SpecialString)
+	c.Assert(stepArg.Name, Equals, "file:C:\\Users\\abc")
+}
+
 func (s *MySuite) TestParsingInvalidSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
 

@@ -141,7 +141,7 @@ func initializePredefinedResolvers() map[string]resolverFn {
 
 func (resolver *specialTypeResolver) resolve(arg string) (*StepArg, error) {
 	//	fmt.Println(arg)
-	regEx := regexp.MustCompile("(.*):(.*)")
+	regEx := regexp.MustCompile("(.*?):(.*)")
 	match := regEx.FindAllStringSubmatch(arg, -1)
 	specialType := strings.TrimSpace(match[0][1])
 	value := strings.TrimSpace(match[0][2])
