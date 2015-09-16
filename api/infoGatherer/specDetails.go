@@ -28,11 +28,13 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	fsnotify "gopkg.in/fsnotify.v1"
+	"io/ioutil"
 	"path/filepath"
 	"sync"
 )
 
 type SpecInfoGatherer struct {
+	waitGroup         sync.WaitGroup
 	mutex             sync.Mutex
 	conceptDictionary *parser.ConceptDictionary
 	specsCache        map[string][]*parser.Specification
@@ -41,36 +43,46 @@ type SpecInfoGatherer struct {
 }
 
 func (s *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) {
+	go s.watchForFileChanges()
+	s.waitGroup.Wait()
+
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
+	s.waitGroup.Add(3)
 	s.initConceptsCache()
 	s.initSpecsCache()
 	s.initStepsCache(runner)
-
-	go s.watchForFileChanges()
 }
 
 func (s *SpecInfoGatherer) initSpecsCache() {
+	defer s.waitGroup.Done()
+
 	s.specsCache = make(map[string][]*parser.Specification, 0)
 	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
 	parsedSpecs := s.getParsedSpecs(specFiles)
 
-	logger.ApiLog.Debug("Initializing specs cache with %d specs", len(parsedSpecs))
+	logger.ApiLog.Info("Initializing specs cache with %d specs", len(parsedSpecs))
 	for _, spec := range parsedSpecs {
+		logger.ApiLog.Debug("Adding specs from %s", spec.FileName)
 		s.addToSpecsCache(spec.FileName, spec)
 	}
 }
 
 func (s *SpecInfoGatherer) initConceptsCache() {
+	defer s.waitGroup.Done()
+
 	s.conceptsCache = make(map[string][]*parser.Concept, 0)
 	parsedConcepts := s.getParsedConcepts()
 
-	logger.ApiLog.Debug("Initializing concepts cache with %d concepts", len(parsedConcepts))
+	logger.ApiLog.Info("Initializing concepts cache with %d concepts", len(parsedConcepts))
 	for _, concept := range parsedConcepts {
+		logger.ApiLog.Debug("Adding concepts from %s", concept.FileName)
 		s.addToConceptsCache(concept.FileName, concept)
 	}
 }
 
 func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
+	defer s.waitGroup.Done()
+
 	s.stepsCache = make(map[string]*parser.StepValue, 0)
 	stepsFromSpecs := s.getStepsFromCachedSpecs()
 	stepsFromConcepts := s.getStepsFromCachedConcepts()
@@ -79,7 +91,7 @@ func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
 	allSteps := append(stepsFromSpecs, stepsFromConcepts...)
 	allSteps = append(allSteps, implementedSteps...)
 
-	logger.ApiLog.Debug("Initializing steps cache with %d steps", len(allSteps))
+	logger.ApiLog.Info("Initializing steps cache with %d steps", len(allSteps))
 	s.addToStepsCache(allSteps)
 }
 
@@ -201,6 +213,9 @@ func (s *SpecInfoGatherer) getImplementedSteps(runner *runner.TestRunner) []*par
 }
 
 func (s *SpecInfoGatherer) onSpecFileModify(file string) {
+	s.waitGroup.Add(1)
+	defer s.waitGroup.Done()
+
 	logger.ApiLog.Info("Spec file added / modified: %s", file)
 	parsedSpec := s.getParsedSpecs([]string{file})[0]
 	s.addToSpecsCache(file, parsedSpec)
@@ -210,6 +225,9 @@ func (s *SpecInfoGatherer) onSpecFileModify(file string) {
 }
 
 func (s *SpecInfoGatherer) onConceptFileModify(file string) {
+	s.waitGroup.Add(1)
+	defer s.waitGroup.Done()
+
 	logger.ApiLog.Info("Concept file added / modified: %s", file)
 	conceptParser := new(parser.ConceptParser)
 	concepts, parseResults := conceptParser.ParseFile(file)
@@ -227,6 +245,9 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 }
 
 func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
+	s.waitGroup.Add(1)
+	defer s.waitGroup.Done()
+
 	logger.ApiLog.Info("Spec file removed: %s", file)
 	s.mutex.Lock()
 	delete(s.specsCache, file)
@@ -234,6 +255,9 @@ func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
 }
 
 func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
+	s.waitGroup.Add(1)
+	defer s.waitGroup.Done()
+
 	logger.ApiLog.Info("Concept file removed: %s", file)
 	s.mutex.Lock()
 	delete(s.conceptsCache, file)
@@ -255,6 +279,8 @@ func (s *SpecInfoGatherer) handleParseFailures(parseResults []*parser.ParseResul
 }
 
 func (s *SpecInfoGatherer) watchForFileChanges() {
+	s.waitGroup.Add(1)
+
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.ApiLog.Error("Error creating fileWatcher: %s", err)
@@ -282,6 +308,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	for _, dir := range allDirsToWatch {
 		s.addDirToFileWatcher(watcher, dir)
 	}
+	s.waitGroup.Done()
 	<-done
 }
 
@@ -291,6 +318,8 @@ func (s *SpecInfoGatherer) addDirToFileWatcher(watcher *fsnotify.Watcher, dir st
 		logger.ApiLog.Error("Unable to add directory %v to file watcher: %s", dir, err)
 	} else {
 		logger.ApiLog.Info("Watching directory: %s", dir)
+		files, _ := ioutil.ReadDir(dir)
+		logger.ApiLog.Debug("Found %d files", len(files))
 	}
 }
 
@@ -300,12 +329,14 @@ func (s *SpecInfoGatherer) removeWatcherOn(watcher *fsnotify.Watcher, path strin
 }
 
 func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
+	s.waitGroup.Wait()
+
 	file, err := filepath.Abs(event.Name)
 	if err != nil {
 		logger.ApiLog.Error("Failed to get abs file path for %s: %s", event.Name, err)
 		return
 	}
-	if filepath.Ext(file) == ".spec" || filepath.Ext(file) == ".cpt" || filepath.Ext(file) == ".md" {
+	if util.IsSpec(file) || util.IsConcept(file) {
 		switch event.Op {
 		case fsnotify.Create:
 			s.onFileAdd(watcher, file)
@@ -349,6 +380,8 @@ func (s *SpecInfoGatherer) onFileRename(watcher *fsnotify.Watcher, file string) 
 }
 
 func (s *SpecInfoGatherer) GetAvailableSpecs() []*parser.Specification {
+	s.waitGroup.Wait()
+
 	allSpecs := make([]*parser.Specification, 0)
 	s.mutex.Lock()
 	for _, specs := range s.specsCache {
@@ -359,6 +392,8 @@ func (s *SpecInfoGatherer) GetAvailableSpecs() []*parser.Specification {
 }
 
 func (s *SpecInfoGatherer) GetAvailableSteps() []*parser.StepValue {
+	s.waitGroup.Wait()
+
 	steps := make([]*parser.StepValue, 0)
 	s.mutex.Lock()
 	for _, stepValue := range s.stepsCache {
@@ -369,6 +404,8 @@ func (s *SpecInfoGatherer) GetAvailableSteps() []*parser.StepValue {
 }
 
 func (s *SpecInfoGatherer) GetConceptInfos() []*gauge_messages.ConceptInfo {
+	s.waitGroup.Wait()
+
 	conceptInfos := make([]*gauge_messages.ConceptInfo, 0)
 	s.mutex.Lock()
 	for _, conceptList := range s.conceptsCache {

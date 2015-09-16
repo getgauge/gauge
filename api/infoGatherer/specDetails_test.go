@@ -95,11 +95,11 @@ func (s *MySuite) TestGetParsedStepValues(c *C) {
 	c.Assert(stepValues[2].StepValue, Equals, "Step with a {}")
 }
 
-
 func (s *MySuite) TestInitSpecsCache(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initSpecsCache()
 
@@ -112,6 +112,7 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 	_, err = util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initConceptsCache()
 
