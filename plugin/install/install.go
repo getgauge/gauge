@@ -96,6 +96,7 @@ func InstallPlugin(pluginName, version string) installResult {
 	if !result.Success {
 		return result
 	}
+	defer removeTempDir(common.GetTempDir())
 	return installPluginWithDescription(installDescription, version)
 }
 
@@ -142,6 +143,13 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		installError(err.Error())
 	}
 	return installSuccess("")
+}
+
+func removeTempDir(path string){
+	err := common.RemoveDir(path)
+	if err != nil {
+		logger.ApiLog.Warning("Failed to remove directory %s. Remove it manually. %s", path, err.Error())
+	}
 }
 
 func runInstallCommands(installCommands platformSpecificCommand, workingDir string) error {
