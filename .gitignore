@@ -28,3 +28,4 @@ deploy
 .idea
 _workspace/
 count.out
+gauge.iml
