@@ -145,7 +145,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	return installSuccess("")
 }
 
-func removeTempDir(path string){
+func removeTempDir(path string) {
 	err := common.RemoveDir(path)
 	if err != nil {
 		logger.ApiLog.Warning("Failed to remove directory %s. Remove it manually. %s", path, err.Error())

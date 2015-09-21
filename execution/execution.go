@@ -45,6 +45,7 @@ type simpleExecution struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
 	logger               *logger.GaugeLogger
+	errMaps              *validationErrMaps
 }
 
 type execution interface {
@@ -53,14 +54,24 @@ type execution interface {
 }
 
 type executionInfo struct {
-	currentSpec parser.Specification
+	manifest        *manifest.Manifest
+	specifications  []*parser.Specification
+	runner          *runner.TestRunner
+	pluginHandler   *plugin.PluginHandler
+	parallelRunInfo *parallelInfo
+	execLogger      *logger.GaugeLogger
+	errMaps         *validationErrMaps
 }
 
-func newExecution(manifest *manifest.Manifest, specifications []*parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, info *parallelInfo, execLogger *logger.GaugeLogger) execution {
-	if info.inParallel {
-		return &parallelSpecExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, numberOfExecutionStreams: info.numberOfStreams, logger: execLogger}
+func newExecution(executionInfo *executionInfo) execution {
+	if executionInfo.parallelRunInfo.inParallel {
+		return &parallelSpecExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+			runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
+			numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
+			logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
 	}
-	return &simpleExecution{manifest: manifest, specifications: specifications, runner: runner, pluginHandler: pluginHandler, logger: execLogger}
+	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
 }
 
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
@@ -122,7 +133,10 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		exe.suiteResult.SetFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger)
+			if _, ok := exe.errMaps.specErrs[specificationToExecute]; ok {
+				continue
+			}
+			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger, exe.errMaps)
 			protoSpecResult := executor.execute()
 			exe.suiteResult.AddSpecResult(protoSpecResult)
 		}
@@ -159,8 +173,8 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger *logger.GaugeLogger) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger *logger.GaugeLogger, errMaps *validationErrMaps) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, logger)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, logger, errMaps)
 	return specExecutor
 }

@@ -43,11 +43,43 @@ It has these top-level messages:
 package gauge_messages
 
 import proto "github.com/golang/protobuf/proto"
+import fmt "fmt"
 import math "math"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
+var _ = fmt.Errorf
 var _ = math.Inf
+
+type StepValidateResponse_ErrorType int32
+
+const (
+	StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND StepValidateResponse_ErrorType = 0
+)
+
+var StepValidateResponse_ErrorType_name = map[int32]string{
+	0: "STEP_IMPLEMENTATION_NOT_FOUND",
+}
+var StepValidateResponse_ErrorType_value = map[string]int32{
+	"STEP_IMPLEMENTATION_NOT_FOUND": 0,
+}
+
+func (x StepValidateResponse_ErrorType) Enum() *StepValidateResponse_ErrorType {
+	p := new(StepValidateResponse_ErrorType)
+	*p = x
+	return p
+}
+func (x StepValidateResponse_ErrorType) String() string {
+	return proto.EnumName(StepValidateResponse_ErrorType_name, int32(x))
+}
+func (x *StepValidateResponse_ErrorType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(StepValidateResponse_ErrorType_value, data, "StepValidateResponse_ErrorType")
+	if err != nil {
+		return err
+	}
+	*x = StepValidateResponse_ErrorType(value)
+	return nil
+}
 
 type Message_MessageType int32
 
@@ -545,9 +577,10 @@ func (m *StepValidateRequest) GetNumberOfParameters() int32 {
 // / i.e. an implementation exists for given Step text.
 // / Returns an error message if it is an error response.
 type StepValidateResponse struct {
-	IsValid          *bool   `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
-	ErrorMessage     *string `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	IsValid          *bool                           `protobuf:"varint,1,req,name=isValid" json:"isValid,omitempty"`
+	ErrorMessage     *string                         `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
+	ErrorType        *StepValidateResponse_ErrorType `protobuf:"varint,3,opt,name=errorType,enum=gauge.messages.StepValidateResponse_ErrorType" json:"errorType,omitempty"`
+	XXX_unrecognized []byte                          `json:"-"`
 }
 
 func (m *StepValidateResponse) Reset()         { *m = StepValidateResponse{} }
@@ -566,6 +599,13 @@ func (m *StepValidateResponse) GetErrorMessage() string {
 		return *m.ErrorMessage
 	}
 	return ""
+}
+
+func (m *StepValidateResponse) GetErrorType() StepValidateResponse_ErrorType {
+	if m != nil && m.ErrorType != nil {
+		return *m.ErrorType
+	}
+	return StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 }
 
 // / Result of the Suite Execution.
@@ -1058,5 +1098,6 @@ func (m *Message) GetUnsupportedMessageResponse() *UnsupportedMessageResponse {
 }
 
 func init() {
+	proto.RegisterEnum("gauge.messages.StepValidateResponse_ErrorType", StepValidateResponse_ErrorType_name, StepValidateResponse_ErrorType_value)
 	proto.RegisterEnum("gauge.messages.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
 }

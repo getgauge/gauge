@@ -22,7 +22,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	parser.HandleParseResult(conceptParseResult)
 	specsToExecute, specsSkipped := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {
-		printExecutionStatus(nil, 0)
+		printExecutionStatus(nil, 0, &validationErrMaps{})
 	}
 	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: NumberOfExecutionStreams}
 	if !parallelInfo.isValid() {
@@ -33,12 +33,12 @@ func ExecuteSpecs(inParallel bool, args []string) {
 		logger.Log.Critical(err.Error())
 	}
 	runner := startApi()
-	validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
+	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	pluginHandler := plugin.StartPlugins(manifest)
-	execution := newExecution(manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log)
+	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
 	execution.finish()
-	exitCode := printExecutionStatus(result, specsSkipped)
+	exitCode := printExecutionStatus(result, specsSkipped, errMap)
 	os.Exit(exitCode)
 }
 
@@ -55,17 +55,44 @@ func startApi() *runner.TestRunner {
 	return nil
 }
 
-func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) {
+type validationErrMaps struct {
+	specErrs     map[*parser.Specification][]*stepValidationError
+	scenarioErrs map[*parser.Scenario][]*stepValidationError
+}
+
+func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) *validationErrMaps {
 	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
 	validationErrors := validator.validate()
+	errMap := &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError)}
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
-		runner.Kill()
-		os.Exit(1)
+		getInvalidTests(errMap, validationErrors)
+	}
+	return errMap
+}
+
+func getInvalidTests(errMap *validationErrMaps, validationErrors validationErrors) {
+	for spec, errors := range validationErrors {
+		errSteps := make(map[int]*stepValidationError)
+		for _, err := range errors {
+			errSteps[err.step.LineNo] = err
+		}
+		for _, context := range spec.Contexts {
+			if err, ok := errSteps[context.LineNo]; ok {
+				errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
+			}
+		}
+		for _, scenario := range spec.Scenarios {
+			for _, step := range scenario.Steps {
+				if err, ok := errSteps[step.LineNo]; ok {
+					errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
+				}
+			}
+		}
 	}
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int) int {
+func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int, errMap *validationErrMaps) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
@@ -86,6 +113,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 		exitCode = 1
 	}
 
+	pendingScenarios := len(errMap.scenarioErrs)
+	pendingSpecs := len(errMap.specErrs)
+
 	for _, specResult := range suiteResult.SpecResults {
 		scenarioExecCount += specResult.ScenarioCount
 		scenarioFailedCount += specResult.ScenarioFailedCount
@@ -97,8 +127,8 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 		specsSkippedCount += (unhandledErr).(streamExecError).numberOfSpecsSkipped()
 	}
 
-	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, specsSkippedCount)
-	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed", scenarioExecCount, scenarioPassedCount, scenarioFailedCount)
+	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped, %d pending", specsExecCount, specsPassedCount, specsFailedCount, specsSkippedCount, pendingSpecs)
+	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d pending", scenarioExecCount, scenarioPassedCount, scenarioFailedCount, pendingScenarios)
 	logger.Log.Info("Total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
@@ -107,12 +137,12 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 	return exitCode
 }
 
-func printValidationFailures(validationErrors executionValidationErrors) {
-	logger.Log.Warning("Validation failed. The following steps have errors")
+func printValidationFailures(validationErrors validationErrors) {
+	logger.Log.Critical("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			logger.Log.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
+			logger.Log.Critical("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }

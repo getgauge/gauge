@@ -39,28 +39,29 @@ type specValidator struct {
 	runner               *runner.TestRunner
 	conceptsDictionary   *parser.ConceptDictionary
 	stepValidationErrors []*stepValidationError
-	stepValidationCache  map[string]bool
+	stepValidationCache  map[string]*stepValidationError
 }
 
 type stepValidationError struct {
-	step     *parser.Step
-	message  string
-	fileName string
+	step      *parser.Step
+	message   string
+	fileName  string
+	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
 func (e *stepValidationError) Error() string {
 	return e.message
 }
 
-type executionValidationErrors map[*parser.Specification][]*stepValidationError
+type validationErrors map[*parser.Specification][]*stepValidationError
 
 func newValidator(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptsDictionary *parser.ConceptDictionary) *validator {
 	return &validator{manifest: manifest, specsToExecute: specsToExecute, runner: runner, conceptsDictionary: conceptsDictionary}
 }
 
-func (self *validator) validate() executionValidationErrors {
-	validationStatus := make(executionValidationErrors)
-	specValidator := &specValidator{runner: self.runner, conceptsDictionary: self.conceptsDictionary, stepValidationCache: make(map[string]bool)}
+func (self *validator) validate() validationErrors {
+	validationStatus := make(validationErrors)
+	specValidator := &specValidator{runner: self.runner, conceptsDictionary: self.conceptsDictionary, stepValidationCache: make(map[string]*stepValidationError)}
 	for _, spec := range self.specsToExecute {
 		specValidator.specification = spec
 		validationErrors := specValidator.validate()
@@ -87,27 +88,38 @@ func (self *specValidator) Step(step *parser.Step) {
 				self.Step(conceptStep)
 			}
 		}
-	} else if _, ok := self.stepValidationCache[step.Value]; !ok {
-		self.stepValidationCache[step.Value] = true
-		self.validateStep(step)
+	} else {
+		value, ok := self.stepValidationCache[step.Value]
+		if !ok {
+			err := self.validateStep(step)
+			if err != nil {
+				self.stepValidationErrors = append(self.stepValidationErrors, err)
+			}
+			self.stepValidationCache[step.Value] = err
+		} else if value != nil {
+			self.stepValidationErrors = append(self.stepValidationErrors,
+				&stepValidationError{step: step, fileName: self.specification.FileName, errorType: value.errorType})
+		}
 	}
 }
 
-func (self *specValidator) validateStep(step *parser.Step) {
+var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
+
+func (self *specValidator) validateStep(step *parser.Step) *stepValidationError {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
 	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: err.Error(), fileName: self.specification.FileName})
-		return
+		return &stepValidationError{step: step, message: err.Error(), fileName: self.specification.FileName}
 	}
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: validateResponse.GetErrorMessage(), fileName: self.specification.FileName})
+			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType}
 		}
+		return nil
 	} else {
-		self.stepValidationErrors = append(self.stepValidationErrors, &stepValidationError{step: step, message: "Invalid response from runner for Validation request", fileName: self.specification.FileName})
+		return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: &invalidResponse}
 	}
 }
 

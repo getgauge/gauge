@@ -43,6 +43,7 @@ type specExecutor struct {
 	specResult           *result.SpecResult
 	currentTableRow      int
 	logger               *logger.GaugeLogger
+	errMap               *validationErrMaps
 }
 
 type indexRange struct {
@@ -50,12 +51,13 @@ type indexRange struct {
 	end   int
 }
 
-func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger *logger.GaugeLogger) {
+func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger *logger.GaugeLogger, errMap *validationErrMaps) {
 	specExec.specification = specificationToExecute
 	specExec.runner = runner
 	specExec.pluginHandler = pluginHandler
 	specExec.dataTableIndex = tableRows
 	specExec.logger = logger
+	specExec.errMap = errMap
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -159,6 +161,9 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.Sc
 func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
 	scenarioResults := make([]*result.ScenarioResult, 0)
 	for _, scenario := range specExecutor.specification.Scenarios {
+		if _, ok := specExecutor.errMap.scenarioErrs[scenario]; ok {
+			continue
+		}
 		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
 	}
 	return scenarioResults

@@ -43,6 +43,7 @@ type parallelSpecExecution struct {
 	aggregateResult          *result.SuiteResult
 	numberOfExecutionStreams int
 	logger                   *logger.GaugeLogger
+	errMaps                  *validationErrMaps
 }
 
 type streamExecError struct {
@@ -110,7 +111,7 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecC
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger *logger.GaugeLogger) {
-	execution := newExecution(e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, logger)
+	execution := newExecution(&executionInfo{e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, logger, e.errMaps})
 	result := execution.start()
 	runner.Kill()
 	suiteResults <- result
