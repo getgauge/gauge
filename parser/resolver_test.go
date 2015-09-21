@@ -19,6 +19,7 @@ package parser
 
 import (
 	. "gopkg.in/check.v1"
+	"github.com/getgauge/gauge/util"
 )
 
 func (s *MySuite) TestParsingFileSpecialType(c *C) {
@@ -39,10 +40,14 @@ func (s *MySuite) TestParsingFileAsSpecialParamWithWindowsPathAsValue(c *C) {
 		return &StepArg{Value: "hello", ArgType: SpecialString}, nil
 	}
 
-	stepArg, _ := resolver.resolve("file:C:\\Users\\abc")
+	stepArg, _ := resolver.resolve(`file:C:\Users\abc`)
 	c.Assert(stepArg.Value, Equals, "hello")
 	c.Assert(stepArg.ArgType, Equals, SpecialString)
-	c.Assert(stepArg.Name, Equals, "file:C:\\Users\\abc")
+	if util.IsWindows() {
+		c.Assert(stepArg.Name, Equals, `file:C:\\Users\\abc`)
+	} else {
+		c.Assert(stepArg.Name, Equals, `file:C:\Users\abc`)
+	}
 }
 
 func (s *MySuite) TestParsingInvalidSpecialType(c *C) {

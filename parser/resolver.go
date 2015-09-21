@@ -140,6 +140,9 @@ func initializePredefinedResolvers() map[string]resolverFn {
 }
 
 func (resolver *specialTypeResolver) resolve(arg string) (*StepArg, error) {
+	if util.IsWindows(){
+		arg = GetUnescapedString(arg)
+	}
 	regEx := regexp.MustCompile("(.*?):(.*)")
 	match := regEx.FindAllStringSubmatch(arg, -1)
 	specialType := strings.TrimSpace(match[0][1])
