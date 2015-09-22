@@ -98,7 +98,7 @@ func (self *specValidator) Step(step *parser.Step) {
 			self.stepValidationCache[step.Value] = err
 		} else if value != nil {
 			self.stepValidationErrors = append(self.stepValidationErrors,
-				&stepValidationError{step: step, fileName: self.specification.FileName, errorType: value.errorType})
+				&stepValidationError{step: step, fileName: self.specification.FileName, errorType: value.errorType, message: value.message})
 		}
 	}
 }
@@ -115,11 +115,11 @@ func (self *specValidator) validateStep(step *parser.Step) *stepValidationError 
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType}
+			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType, message: *validateResponse.ErrorMessage}
 		}
 		return nil
 	} else {
-		return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: &invalidResponse}
+		return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: &invalidResponse, message: "Invalid response from runner for Validation request"}
 	}
 }
 

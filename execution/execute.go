@@ -144,11 +144,11 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 }
 
 func printValidationFailures(validationErrors validationErrors) {
-	logger.Log.Critical("Validation failed. The following steps have errors")
+	logger.Log.Warning("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			logger.Log.Critical("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
+			logger.Log.Warning("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }
