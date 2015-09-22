@@ -18,8 +18,8 @@
 package parser
 
 import (
-	. "gopkg.in/check.v1"
 	"github.com/getgauge/gauge/util"
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestParsingFileSpecialType(c *C) {

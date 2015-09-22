@@ -140,7 +140,7 @@ func initializePredefinedResolvers() map[string]resolverFn {
 }
 
 func (resolver *specialTypeResolver) resolve(arg string) (*StepArg, error) {
-	if util.IsWindows(){
+	if util.IsWindows() {
 		arg = GetUnescapedString(arg)
 	}
 	regEx := regexp.MustCompile("(.*?):(.*)")

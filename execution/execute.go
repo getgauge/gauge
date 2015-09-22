@@ -62,30 +62,36 @@ type validationErrMaps struct {
 
 func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) *validationErrMaps {
 	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
+	//TODO: validator.validate() should return validationErrMaps so that it has scenario/spec info with error(Which is currently done by fillErrors())
 	validationErrors := validator.validate()
 	errMap := &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError)}
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
-		getInvalidTests(errMap, validationErrors)
+		fillErrors(errMap, validationErrors)
 	}
 	return errMap
 }
 
-func getInvalidTests(errMap *validationErrMaps, validationErrors validationErrors) {
+func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 	for spec, errors := range validationErrors {
 		errSteps := make(map[int]*stepValidationError)
 		for _, err := range errors {
 			errSteps[err.step.LineNo] = err
 		}
-		for _, context := range spec.Contexts {
-			if err, ok := errSteps[context.LineNo]; ok {
-				errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
-			}
-		}
 		for _, scenario := range spec.Scenarios {
 			for _, step := range scenario.Steps {
 				if err, ok := errSteps[step.LineNo]; ok {
 					errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
+				}
+			}
+		}
+		for _, context := range spec.Contexts {
+			if err, ok := errSteps[context.LineNo]; ok {
+				errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
+				for _, scenario := range spec.Scenarios {
+					if _, ok := errMap.scenarioErrs[scenario]; !ok {
+						errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
+					}
 				}
 			}
 		}
