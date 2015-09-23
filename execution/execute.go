@@ -105,8 +105,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 		logger.Log.Info("No specifications found.")
 		os.Exit(0)
 	}
-
-	specsExecCount := len(suiteResult.SpecResults)
+	pendingScenarios := len(errMap.scenarioErrs)
+	pendingSpecs := len(errMap.specErrs)
+	specsExecCount := len(suiteResult.SpecResults) - pendingSpecs
 	specsFailedCount := suiteResult.SpecsFailedCount
 	specsPassedCount := specsExecCount - specsFailedCount
 
@@ -118,15 +119,10 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	if suiteResult.IsFailed {
 		exitCode = 1
 	}
-
-	pendingScenarios := len(errMap.scenarioErrs)
-	pendingSpecs := len(errMap.specErrs)
-
 	for _, specResult := range suiteResult.SpecResults {
-		scenarioExecCount += specResult.ScenarioCount
+		scenarioExecCount += specResult.ScenarioCount - pendingScenarios
 		scenarioFailedCount += specResult.ScenarioFailedCount
 	}
-
 	scenarioPassedCount = scenarioExecCount - scenarioFailedCount
 
 	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, pendingSpecs)

@@ -86,21 +86,6 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (specExecutor *specExecutor) getSkippedSpecResult() *result.SpecResult {
-	scenarioResults := make([]*result.ScenarioResult, 0)
-	for _, scenario := range specExecutor.specification.Scenarios {
-		scenarioResults = append(scenarioResults, specExecutor.getSkippedScenarioResult(scenario))
-	}
-	specExecutor.specResult.AddScenarioResults(scenarioResults)
-	return specExecutor.specResult
-}
-
-func (s *specExecutor) getSkippedScenarioResult(scenario *parser.Scenario) *result.ScenarioResult {
-	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
-	s.addAllItemsForScenarioExecution(scenario, scenarioResult)
-	return nil
-}
-
 func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.Heading.Value),
 		FileName: proto.String(specExecutor.specification.FileName),
@@ -109,22 +94,12 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specExecutor.specResult = parser.NewSpecResult(specExecutor.specification)
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
 	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
-	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
-		specExecutor.specResult.Skipped = true
-		specExecutor.specResult.ScenarioSkippedCount = len(specExecutor.specification.Scenarios)
-		return specExecutor.specResult
-	}
-
 	specExecutor.logger.Info("Executing specification: %s", specInfo.GetName())
-
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
-		for _, step := range specExecutor.specification.Contexts {
-			specExecutor.logger.Debug("Executing Spec: %s", formatter.FormatStep(step))
-		}
 		dataTableRowCount := specExecutor.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
 			scenarioResult := specExecutor.executeScenarios()
@@ -139,21 +114,10 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		result.AddPostHook(specExecutor.specResult, afterSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	}
-	specExecutor.removeExecutionResultFromContext(specExecutor.specResult.ProtoSpec.Items)
 	specExecutor.specResult.Skipped = false
 	return specExecutor.specResult
 }
 
-func (specExecutor *specExecutor) removeExecutionResultFromContext(items []*gauge_messages.ProtoItem) {
-	for _, item := range items {
-		if item.GetItemType() == gauge_messages.ProtoItem_Step {
-			item.Step.StepExecutionResult = nil
-		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
-			item.Concept.ConceptStep.StepExecutionResult = nil
-			specExecutor.removeExecutionResultFromContext(item.Concept.Steps)
-		}
-	}
-}
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
 	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
@@ -192,9 +156,6 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.Sc
 func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
 	scenarioResults := make([]*result.ScenarioResult, 0)
 	for _, scenario := range specExecutor.specification.Scenarios {
-		if _, ok := specExecutor.errMap.scenarioErrs[scenario]; ok {
-			continue
-		}
 		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
 	}
 	return scenarioResults
@@ -202,10 +163,12 @@ func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
 
 func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result.ScenarioResult {
 	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.Value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
-	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
-
 	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	if _, ok := executor.errMap.scenarioErrs[scenario]; ok {
+		return scenarioResult
+	}
+	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)

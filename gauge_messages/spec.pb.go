@@ -667,7 +667,7 @@ func (m *ProtoTableRow) GetCells() []string {
 // / A proto object representing Step Execution result
 type ProtoStepExecutionResult struct {
 	// / The actual result of the execution
-	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,req,name=executionResult" json:"executionResult,omitempty"`
+	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,opt,name=executionResult" json:"executionResult,omitempty"`
 	// / Contains a 'before' hook failure message. This happens when the `before_step` hook has an error.
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	// / Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
