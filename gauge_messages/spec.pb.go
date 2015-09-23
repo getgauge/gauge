@@ -672,6 +672,8 @@ type ProtoStepExecutionResult struct {
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure" json:"preHookFailure,omitempty"`
 	// / Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
 	PostHookFailure  *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure" json:"postHookFailure,omitempty"`
+	Skipped          *bool             `protobuf:"varint,4,req,name=skipped" json:"skipped,omitempty"`
+	SkippedReason    *string           `protobuf:"bytes,5,opt,name=skippedReason" json:"skippedReason,omitempty"`
 	XXX_unrecognized []byte            `json:"-"`
 }
 
@@ -698,6 +700,20 @@ func (m *ProtoStepExecutionResult) GetPostHookFailure() *ProtoHookFailure {
 		return m.PostHookFailure
 	}
 	return nil
+}
+
+func (m *ProtoStepExecutionResult) GetSkipped() bool {
+	if m != nil && m.Skipped != nil {
+		return *m.Skipped
+	}
+	return false
+}
+
+func (m *ProtoStepExecutionResult) GetSkippedReason() string {
+	if m != nil && m.SkippedReason != nil {
+		return *m.SkippedReason
+	}
+	return ""
 }
 
 // / A proto object representing the result of an execution
@@ -832,8 +848,9 @@ type ProtoSuiteResult struct {
 	// / Project name
 	ProjectName *string `protobuf:"bytes,10,req,name=projectName" json:"projectName,omitempty"`
 	// / Timestamp of when execution started
-	Timestamp        *string `protobuf:"bytes,11,req,name=timestamp" json:"timestamp,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Timestamp         *string `protobuf:"bytes,11,req,name=timestamp" json:"timestamp,omitempty"`
+	SpecsSkippedCount *int32  `protobuf:"varint,12,req,name=specsSkippedCount" json:"specsSkippedCount,omitempty"`
+	XXX_unrecognized  []byte  `json:"-"`
 }
 
 func (m *ProtoSuiteResult) Reset()         { *m = ProtoSuiteResult{} }
@@ -917,6 +934,13 @@ func (m *ProtoSuiteResult) GetTimestamp() string {
 	return ""
 }
 
+func (m *ProtoSuiteResult) GetSpecsSkippedCount() int32 {
+	if m != nil && m.SpecsSkippedCount != nil {
+		return *m.SpecsSkippedCount
+	}
+	return 0
+}
+
 // / A proto object representing the result of Spec execution.
 type ProtoSpecResult struct {
 	// / Represents the corresponding Specification
@@ -930,8 +954,10 @@ type ProtoSpecResult struct {
 	// / Holds the row numbers, which caused the execution to fail.
 	FailedDataTableRows []int32 `protobuf:"varint,5,rep,name=failedDataTableRows" json:"failedDataTableRows,omitempty"`
 	// / Holds the time taken for executing the spec.
-	ExecutionTime    *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ExecutionTime        *int64 `protobuf:"varint,6,opt,name=executionTime" json:"executionTime,omitempty"`
+	Skipped              *bool  `protobuf:"varint,7,req,name=skipped" json:"skipped,omitempty"`
+	ScenarioSkippedCount *int32 `protobuf:"varint,9,req,name=scenarioSkippedCount" json:"scenarioSkippedCount,omitempty"`
+	XXX_unrecognized     []byte `json:"-"`
 }
 
 func (m *ProtoSpecResult) Reset()         { *m = ProtoSpecResult{} }
@@ -976,6 +1002,20 @@ func (m *ProtoSpecResult) GetFailedDataTableRows() []int32 {
 func (m *ProtoSpecResult) GetExecutionTime() int64 {
 	if m != nil && m.ExecutionTime != nil {
 		return *m.ExecutionTime
+	}
+	return 0
+}
+
+func (m *ProtoSpecResult) GetSkipped() bool {
+	if m != nil && m.Skipped != nil {
+		return *m.Skipped
+	}
+	return false
+}
+
+func (m *ProtoSpecResult) GetScenarioSkippedCount() int32 {
+	if m != nil && m.ScenarioSkippedCount != nil {
+		return *m.ScenarioSkippedCount
 	}
 	return 0
 }

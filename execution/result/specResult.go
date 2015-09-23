@@ -23,26 +23,29 @@ import (
 )
 
 type SuiteResult struct {
-	SpecResults      []*SpecResult
-	PreSuite         *(gauge_messages.ProtoHookFailure)
-	PostSuite        *(gauge_messages.ProtoHookFailure)
-	IsFailed         bool
-	SpecsFailedCount int
-	ExecutionTime    int64 //in milliseconds
-	UnhandledErrors  []error
-	Environment      string
-	Tags             string
-	ProjectName      string
-	Timestamp        string
+	SpecResults       []*SpecResult
+	PreSuite          *(gauge_messages.ProtoHookFailure)
+	PostSuite         *(gauge_messages.ProtoHookFailure)
+	IsFailed          bool
+	SpecsFailedCount  int
+	ExecutionTime     int64 //in milliseconds
+	UnhandledErrors   []error
+	Environment       string
+	Tags              string
+	ProjectName       string
+	Timestamp         string
+	SpecsSkippedCount int
 }
 
 type SpecResult struct {
-	ProtoSpec           *gauge_messages.ProtoSpec
-	ScenarioFailedCount int
-	ScenarioCount       int
-	IsFailed            bool
-	FailedDataTableRows []int32
-	ExecutionTime       int64
+	ProtoSpec            *gauge_messages.ProtoSpec
+	ScenarioFailedCount  int
+	ScenarioCount        int
+	IsFailed             bool
+	FailedDataTableRows  []int32
+	ExecutionTime        int64
+	Skipped              bool
+	ScenarioSkippedCount int
 }
 
 type ScenarioResult struct {

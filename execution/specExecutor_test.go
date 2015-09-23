@@ -110,6 +110,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
+	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -146,10 +147,11 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 
 	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
-	parser := new(parser.SpecParser)
-	spec, _ := parser.Parse(specText, conceptDictionary)
+	specParser := new(parser.SpecParser)
+	spec, _ := specParser.Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
+	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -200,13 +202,14 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
 	conceptDictionary.Add(concepts, "file.cpt")
-	parser := new(parser.SpecParser)
-	spec, _ := parser.Parse(specText, conceptDictionary)
+	specParser := new(parser.SpecParser)
+	spec, _ := specParser.Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
 
 	// For first row
 	specExecutor.currentTableRow = 0
+	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 

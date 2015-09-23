@@ -196,17 +196,18 @@ func addExecutionResult(protoItem *gauge_messages.ProtoItem, protoStepExecutionR
 
 func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
-		PreHookFailure:   suiteResult.PreSuite,
-		PostHookFailure:  suiteResult.PostSuite,
-		Failed:           proto.Bool(suiteResult.IsFailed),
-		SpecsFailedCount: proto.Int32(int32(suiteResult.SpecsFailedCount)),
-		ExecutionTime:    proto.Int64(suiteResult.ExecutionTime),
-		SpecResults:      convertToProtoSpecResult(suiteResult.SpecResults),
-		SuccessRate:      proto.Float32(getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount)),
-		Environment:      proto.String(suiteResult.Environment),
-		Tags:             proto.String(suiteResult.Tags),
-		ProjectName:      proto.String(suiteResult.ProjectName),
-		Timestamp:        proto.String(suiteResult.Timestamp),
+		PreHookFailure:    suiteResult.PreSuite,
+		PostHookFailure:   suiteResult.PostSuite,
+		Failed:            proto.Bool(suiteResult.IsFailed),
+		SpecsFailedCount:  proto.Int32(int32(suiteResult.SpecsFailedCount)),
+		ExecutionTime:     proto.Int64(suiteResult.ExecutionTime),
+		SpecResults:       convertToProtoSpecResult(suiteResult.SpecResults),
+		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount)),
+		Environment:       proto.String(suiteResult.Environment),
+		Tags:              proto.String(suiteResult.Tags),
+		ProjectName:       proto.String(suiteResult.ProjectName),
+		Timestamp:         proto.String(suiteResult.Timestamp),
+		SpecsSkippedCount: proto.Int32(int32(suiteResult.SpecsSkippedCount)),
 	}
 	return protoSuiteResult
 }
@@ -222,12 +223,14 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 	protoSpecResults := make([]*gauge_messages.ProtoSpecResult, 0)
 	for _, specResult := range specResults {
 		protoSpecResult := &gauge_messages.ProtoSpecResult{
-			ProtoSpec:           specResult.ProtoSpec,
-			ScenarioCount:       proto.Int32(int32(specResult.ScenarioCount)),
-			ScenarioFailedCount: proto.Int32(int32(specResult.ScenarioFailedCount)),
-			Failed:              proto.Bool(specResult.IsFailed),
-			FailedDataTableRows: specResult.FailedDataTableRows,
-			ExecutionTime:       proto.Int64(specResult.ExecutionTime),
+			ProtoSpec:            specResult.ProtoSpec,
+			ScenarioCount:        proto.Int32(int32(specResult.ScenarioCount)),
+			ScenarioFailedCount:  proto.Int32(int32(specResult.ScenarioFailedCount)),
+			Failed:               proto.Bool(specResult.IsFailed),
+			FailedDataTableRows:  specResult.FailedDataTableRows,
+			ExecutionTime:        proto.Int64(specResult.ExecutionTime),
+			Skipped:              proto.Bool(specResult.Skipped),
+			ScenarioSkippedCount: proto.Int32(int32(specResult.ScenarioSkippedCount)),
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}

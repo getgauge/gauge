@@ -20,9 +20,9 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	env.LoadEnv(false)
 	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
 	parser.HandleParseResult(conceptParseResult)
-	specsToExecute, specsSkipped := filter.GetSpecsToExecute(conceptsDictionary, args)
+	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {
-		printExecutionStatus(nil, 0, &validationErrMaps{})
+		printExecutionStatus(nil, &validationErrMaps{})
 	}
 	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: NumberOfExecutionStreams}
 	if !parallelInfo.isValid() {
@@ -38,7 +38,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
 	execution.finish()
-	exitCode := printExecutionStatus(result, specsSkipped, errMap)
+	exitCode := printExecutionStatus(result, errMap)
 	os.Exit(exitCode)
 }
 
@@ -58,13 +58,14 @@ func startApi() *runner.TestRunner {
 type validationErrMaps struct {
 	specErrs     map[*parser.Specification][]*stepValidationError
 	scenarioErrs map[*parser.Scenario][]*stepValidationError
+	stepErrs     map[*parser.Step]*stepValidationError
 }
 
 func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) *validationErrMaps {
 	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
 	//TODO: validator.validate() should return validationErrMaps so that it has scenario/spec info with error(Which is currently done by fillErrors())
 	validationErrors := validator.validate()
-	errMap := &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError)}
+	errMap := &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
 		fillErrors(errMap, validationErrors)
@@ -74,19 +75,18 @@ func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specifi
 
 func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 	for spec, errors := range validationErrors {
-		errSteps := make(map[int]*stepValidationError)
 		for _, err := range errors {
-			errSteps[err.step.LineNo] = err
+			errMap.stepErrs[err.step] = err
 		}
 		for _, scenario := range spec.Scenarios {
 			for _, step := range scenario.Steps {
-				if err, ok := errSteps[step.LineNo]; ok {
+				if err, ok := errMap.stepErrs[step]; ok {
 					errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
 				}
 			}
 		}
 		for _, context := range spec.Contexts {
-			if err, ok := errSteps[context.LineNo]; ok {
+			if err, ok := errMap.stepErrs[context]; ok {
 				errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
 				for _, scenario := range spec.Scenarios {
 					if _, ok := errMap.scenarioErrs[scenario]; !ok {
@@ -98,7 +98,7 @@ func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 	}
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int, errMap *validationErrMaps) int {
+func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErrMaps) int {
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
@@ -129,12 +129,8 @@ func printExecutionStatus(suiteResult *result.SuiteResult, specsSkippedCount int
 
 	scenarioPassedCount = scenarioExecCount - scenarioFailedCount
 
-	for _, unhandledErr := range suiteResult.UnhandledErrors {
-		specsSkippedCount += (unhandledErr).(streamExecError).numberOfSpecsSkipped()
-	}
-
-	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped, %d pending", specsExecCount, specsPassedCount, specsFailedCount, specsSkippedCount, pendingSpecs)
-	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d pending", scenarioExecCount, scenarioPassedCount, scenarioFailedCount, pendingScenarios)
+	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, pendingSpecs)
+	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d skipped", scenarioExecCount, scenarioPassedCount, scenarioFailedCount, pendingScenarios)
 	logger.Log.Info("Total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {

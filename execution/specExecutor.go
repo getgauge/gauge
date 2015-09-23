@@ -86,17 +86,36 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
+func (specExecutor *specExecutor) getSkippedSpecResult() *result.SpecResult {
+	scenarioResults := make([]*result.ScenarioResult, 0)
+	for _, scenario := range specExecutor.specification.Scenarios {
+		scenarioResults = append(scenarioResults, specExecutor.getSkippedScenarioResult(scenario))
+	}
+	specExecutor.specResult.AddScenarioResults(scenarioResults)
+	return specExecutor.specResult
+}
+
+func (s *specExecutor) getSkippedScenarioResult(scenario *parser.Scenario) *result.ScenarioResult {
+	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
+	s.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	return nil
+}
+
 func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.Heading.Value),
 		FileName: proto.String(specExecutor.specification.FileName),
 		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.Tags)}
 	specExecutor.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
-
-	specExecutor.logger.Info("Executing specification: %s", specInfo.GetName())
-
 	specExecutor.specResult = parser.NewSpecResult(specExecutor.specification)
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
 	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
+	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
+		specExecutor.specResult.Skipped = true
+		specExecutor.specResult.ScenarioSkippedCount = len(specExecutor.specification.Scenarios)
+		return specExecutor.specResult
+	}
+
+	specExecutor.logger.Info("Executing specification: %s", specInfo.GetName())
 
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
@@ -120,9 +139,21 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		result.AddPostHook(specExecutor.specResult, afterSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	}
+	specExecutor.removeExecutionResultFromContext(specExecutor.specResult.ProtoSpec.Items)
+	specExecutor.specResult.Skipped = false
 	return specExecutor.specResult
 }
 
+func (specExecutor *specExecutor) removeExecutionResultFromContext(items []*gauge_messages.ProtoItem) {
+	for _, item := range items {
+		if item.GetItemType() == gauge_messages.ProtoItem_Step {
+			item.Step.StepExecutionResult = nil
+		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
+			item.Concept.ConceptStep.StepExecutionResult = nil
+			specExecutor.removeExecutionResultFromContext(item.Concept.Steps)
+		}
+	}
+}
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
 	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
@@ -262,7 +293,17 @@ func (executor *specExecutor) resolveToProtoStepItem(step *parser.Step) *gauge_m
 	paramResolver := new(parser.ParamResolver)
 	parameters := paramResolver.GetResolvedParams(step, nil, executor.dataTableLookup())
 	updateProtoStepParameters(protoStepItem.Step, parameters)
+	executor.setSkipInfo(protoStepItem.Step, step)
 	return protoStepItem
+}
+
+func (executor *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *parser.Step) {
+	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
+	protoStep.StepExecutionResult.Skipped = proto.Bool(false)
+	if _, ok := executor.errMap.stepErrs[step]; ok {
+		protoStep.StepExecutionResult.Skipped = proto.Bool(true)
+		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implemenatation not found")
+	}
 }
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
@@ -271,7 +312,8 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept parser.Step) *ga
 
 	parser.PopulateConceptDynamicParams(&concept, executor.dataTableLookup())
 	protoConceptItem := parser.ConvertToProtoItem(&concept)
-
+	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
+	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 	for stepIndex, step := range concept.ConceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
@@ -280,6 +322,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept parser.Step) *ga
 		} else {
 			stepParameters := paramResolver.GetResolvedParams(step, &concept, executor.dataTableLookup())
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
+			executor.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
 	}
 	return protoConceptItem
@@ -357,6 +400,7 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 	}
 	protoConcept.ConceptExecutionResult = &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(false), ExecutionTime: proto.Int64(conceptExecutionTime)}}
 	protoConcept.ConceptStep.StepExecutionResult = protoConcept.ConceptExecutionResult
+	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 }
 
 func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger *logger.GaugeLogger) {
@@ -396,7 +440,8 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		protoStepExecResult.PostHookFailure = result.GetProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
-
+	protoStepExecResult.Skipped = protoStep.StepExecutionResult.Skipped
+	protoStepExecResult.SkippedReason = protoStep.StepExecutionResult.SkippedReason
 	protoStep.StepExecutionResult = protoStepExecResult
 	return protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
 }
