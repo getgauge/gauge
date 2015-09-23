@@ -134,9 +134,6 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		exe.suiteResult.SetFailure()
 	} else {
 		for _, specificationToExecute := range exe.specifications {
-			if _, ok := exe.errMaps.specErrs[specificationToExecute]; ok {
-				continue
-			}
 			executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger, exe.errMaps)
 			protoSpecResult := executor.execute()
 			exe.suiteResult.AddSpecResult(protoSpecResult)

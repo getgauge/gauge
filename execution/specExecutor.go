@@ -86,6 +86,21 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
+func (specExecutor *specExecutor) getSkippedSpecResult() *result.SpecResult {
+	scenarioResults := make([]*result.ScenarioResult, 0)
+	for _, scenario := range specExecutor.specification.Scenarios {
+		scenarioResults = append(scenarioResults, specExecutor.getSkippedScenarioResult(scenario))
+	}
+	specExecutor.specResult.AddScenarioResults(scenarioResults)
+	return specExecutor.specResult
+}
+
+func (s *specExecutor) getSkippedScenarioResult(scenario *parser.Scenario) *result.ScenarioResult {
+	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
+	s.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	return scenarioResult
+}
+
 func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.Heading.Value),
 		FileName: proto.String(specExecutor.specification.FileName),
@@ -94,6 +109,9 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	specExecutor.specResult = parser.NewSpecResult(specExecutor.specification)
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
 	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
+	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
+		return specExecutor.getSkippedSpecResult()
+	}
 	specExecutor.logger.Info("Executing specification: %s", specInfo.GetName())
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
