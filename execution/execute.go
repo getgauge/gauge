@@ -1,7 +1,6 @@
 package execution
 
 import (
-	"fmt"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
@@ -99,7 +98,6 @@ func fillScenarioErrors(scenario *parser.Scenario, errMap *validationErrMaps, st
 }
 
 func fillSpecErrors(spec *parser.Specification, errMap *validationErrMaps, steps []*parser.Step) {
-	fmt.Println(errMap.scenarioErrs)
 	for _, context := range steps {
 		if context.IsConcept {
 			fillSpecErrors(spec, errMap, context.ConceptSteps)
@@ -113,7 +111,6 @@ func fillSpecErrors(spec *parser.Specification, errMap *validationErrMaps, steps
 			}
 		}
 	}
-	fmt.Println(errMap.scenarioErrs)
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErrMaps) int {
