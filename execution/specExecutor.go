@@ -134,7 +134,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		result.AddPostHook(specExecutor.specResult, afterSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	}
-	specExecutor.specResult.Skipped = false
+	specExecutor.specResult.Skipped = specExecutor.specResult.ScenarioSkippedCount > 0
 	return specExecutor.specResult
 }
 
@@ -186,6 +186,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
 	if _, ok := executor.errMap.scenarioErrs[scenario]; ok {
+		executor.specResult.ScenarioSkippedCount += 1
 		return scenarioResult
 	}
 	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
