@@ -131,13 +131,14 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	scenarioPassedCount := 0
 
 	exitCode := 0
-	if suiteResult.IsFailed {
+	if suiteResult.IsFailed || suiteResult.SpecsSkippedCount > 0 {
 		exitCode = 1
 	}
 	for _, specResult := range suiteResult.SpecResults {
-		scenarioExecCount += specResult.ScenarioCount - pendingScenarios
+		scenarioExecCount += specResult.ScenarioCount
 		scenarioFailedCount += specResult.ScenarioFailedCount
 	}
+	scenarioExecCount -= pendingScenarios
 	scenarioPassedCount = scenarioExecCount - scenarioFailedCount
 
 	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, pendingSpecs)
@@ -151,11 +152,11 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 }
 
 func printValidationFailures(validationErrors validationErrors) {
-	logger.Log.Warning("Validation failed. The following steps have errors")
+	logger.Log.Error("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			logger.Log.Warning("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
+			logger.Log.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }

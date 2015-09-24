@@ -202,7 +202,7 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		SpecsFailedCount:  proto.Int32(int32(suiteResult.SpecsFailedCount)),
 		ExecutionTime:     proto.Int64(suiteResult.ExecutionTime),
 		SpecResults:       convertToProtoSpecResult(suiteResult.SpecResults),
-		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount)),
+		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount)),
 		Environment:       proto.String(suiteResult.Environment),
 		Tags:              proto.String(suiteResult.Tags),
 		ProjectName:       proto.String(suiteResult.ProjectName),

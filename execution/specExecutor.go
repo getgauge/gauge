@@ -92,6 +92,8 @@ func (specExecutor *specExecutor) getSkippedSpecResult() *result.SpecResult {
 		scenarioResults = append(scenarioResults, specExecutor.getSkippedScenarioResult(scenario))
 	}
 	specExecutor.specResult.AddScenarioResults(scenarioResults)
+	specExecutor.specResult.Skipped = true
+	specExecutor.specResult.ScenarioSkippedCount += len(scenarioResults)
 	return specExecutor.specResult
 }
 
