@@ -294,7 +294,6 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept parser.Step) *ga
 	parser.PopulateConceptDynamicParams(&concept, executor.dataTableLookup())
 	protoConceptItem := parser.ConvertToProtoItem(&concept)
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
-	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 	for stepIndex, step := range concept.ConceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
@@ -306,6 +305,7 @@ func (executor *specExecutor) resolveToProtoConceptItem(concept parser.Step) *ga
 			executor.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
 	}
+	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 	return protoConceptItem
 }
 
@@ -361,7 +361,7 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 			stepExecResult := step.GetConcept().GetConceptExecutionResult().GetExecutionResult()
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult()}
+				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: proto.Bool(false)}
 				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
@@ -371,7 +371,7 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if stepExecResult.GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult}
+				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: proto.Bool(false)}
 				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult

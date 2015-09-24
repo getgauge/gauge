@@ -1,6 +1,7 @@
 package execution
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
@@ -79,23 +80,40 @@ func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 			errMap.stepErrs[err.step] = err
 		}
 		for _, scenario := range spec.Scenarios {
-			for _, step := range scenario.Steps {
-				if err, ok := errMap.stepErrs[step]; ok {
+			fillScenarioErrors(scenario, errMap, scenario.Steps)
+		}
+		fillSpecErrors(spec, errMap, spec.Contexts)
+
+	}
+}
+
+func fillScenarioErrors(scenario *parser.Scenario, errMap *validationErrMaps, steps []*parser.Step) {
+	for _, step := range steps {
+		if step.IsConcept {
+			fillScenarioErrors(scenario, errMap, step.ConceptSteps)
+		}
+		if err, ok := errMap.stepErrs[step]; ok {
+			errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
+		}
+	}
+}
+
+func fillSpecErrors(spec *parser.Specification, errMap *validationErrMaps, steps []*parser.Step) {
+	fmt.Println(errMap.scenarioErrs)
+	for _, context := range steps {
+		if context.IsConcept {
+			fillSpecErrors(spec, errMap, context.ConceptSteps)
+		}
+		if err, ok := errMap.stepErrs[context]; ok {
+			errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
+			for _, scenario := range spec.Scenarios {
+				if _, ok := errMap.scenarioErrs[scenario]; !ok {
 					errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
 				}
 			}
 		}
-		for _, context := range spec.Contexts {
-			if err, ok := errMap.stepErrs[context]; ok {
-				errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
-				for _, scenario := range spec.Scenarios {
-					if _, ok := errMap.scenarioErrs[scenario]; !ok {
-						errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
-					}
-				}
-			}
-		}
 	}
+	fmt.Println(errMap.scenarioErrs)
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErrMaps) int {

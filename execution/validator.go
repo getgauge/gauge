@@ -84,9 +84,7 @@ func (self *specValidator) validate() []*stepValidationError {
 func (self *specValidator) Step(step *parser.Step) {
 	if step.IsConcept {
 		for _, conceptStep := range step.ConceptSteps {
-			if _, ok := self.stepValidationCache[conceptStep.Value]; !ok {
-				self.Step(conceptStep)
-			}
+			self.Step(conceptStep)
 		}
 	} else {
 		value, ok := self.stepValidationCache[step.Value]
