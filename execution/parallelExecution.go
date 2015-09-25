@@ -32,9 +32,16 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"sync"
 )
 
+var Strategy string
+
+const EAGER string = "eager"
+const LAZY string = "lazy"
+
 type parallelSpecExecution struct {
+	wg						 sync.WaitGroup
 	manifest                 *manifest.Manifest
 	specifications           []*parser.Specification
 	pluginHandler            *plugin.PluginHandler
@@ -77,16 +84,18 @@ func (self *parallelInfo) isValid() bool {
 }
 
 func (e *parallelSpecExecution) start() *result.SuiteResult {
-	startTime := time.Now()
-	specCollections := filter.DistributeSpecs(e.specifications, e.numberOfExecutionStreams)
-	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
-	for i, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, logger.NewParallelLogger(i+1))
-	}
-	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(len(specCollections)))
 	suiteResults := make([]*result.SuiteResult, 0)
-	for _, _ = range specCollections {
-		suiteResults = append(suiteResults, <-suiteResultChannel)
+	streams := e.numberOfExecutionStreams
+	if streams > len(e.specifications) {
+		streams = len(e.specifications)
+	}
+	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(streams))
+
+	startTime := time.Now()
+	if Strategy == EAGER {
+		suiteResults = e.eagerExecution(streams)
+	} else {
+		suiteResults = e.lazyExecution(streams)
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
@@ -96,6 +105,92 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	e.aggregateResult.Tags = ExecuteTags
 	e.aggregateResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
+}
+
+func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.SuiteResult {
+	specCollections := filter.DistributeSpecs(e.specifications, distributions)
+	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
+	for i, specCollection := range specCollections {
+		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, logger.NewParallelLogger(i+1))
+	}
+	suiteResults := make([]*result.SuiteResult, 0)
+	for _, _ = range specCollections {
+		suiteResults = append(suiteResults, <-suiteResultChannel)
+	}
+	return suiteResults
+}
+
+type specList struct {
+	mutex       sync.Mutex
+	specs 		[]*parser.Specification
+}
+
+func (s *specList) isEmpty() bool {
+	s.mutex.Lock()
+	if (len(s.specs) == 0) {
+		s.mutex.Unlock()
+		return true
+	}
+	s.mutex.Unlock()
+	return false
+}
+
+func (s *specList) getSpec() *parser.Specification {
+	s.mutex.Lock()
+	var spec *parser.Specification
+	spec = s.specs[:1][0]
+	s.specs = s.specs[1:]
+	s.mutex.Unlock()
+	return spec
+}
+
+func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
+	allSpecs := &specList{}
+	for _, spec := range e.specifications {
+		allSpecs.specs = append(allSpecs.specs, spec)
+	}
+
+	runners := make([]*runner.TestRunner, 0)
+	parallelLoggers := make([]*logger.GaugeLogger, 0)
+	for i := 0; i < totalStreams; i++ {
+		parallelLoggers = append(parallelLoggers, logger.NewParallelLogger(i+1))
+		runner := e.startRunner(parallelLoggers[i])
+		if runner == nil {
+			continue
+		}
+		runners = append(runners, runner)
+	}
+	suiteResultChannel := make(chan *result.SuiteResult, len(e.specifications))
+
+	e.wg.Add(totalStreams)
+	for i:=0; i<totalStreams; i++ {
+		defer runners[i].Kill()
+		go e.startStream(allSpecs, parallelLoggers[i], runners[i], suiteResultChannel)
+	}
+	e.wg.Wait()
+	suiteResults := make([]*result.SuiteResult, 0)
+	for i:=0 ;i<totalStreams;i++ {
+		suiteResults = append(suiteResults, <-suiteResultChannel)
+	}
+
+	close(suiteResultChannel)
+	return suiteResults
+}
+
+func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, testRunner *runner.TestRunner, suiteResultChannel chan *result.SuiteResult ){
+	execute := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, &parallelInfo{inParallel: false}, log, e.errMaps})
+	e.aggregateResult = execute.executeStream(specs)
+	suiteResultChannel <- e.aggregateResult
+	e.wg.Done()
+}
+
+func (e *parallelSpecExecution) startRunner(log *logger.GaugeLogger) *runner.TestRunner {
+	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
+	if err != nil {
+		e.logger.Error("Failed to start runner. " + err.Error())
+		return nil
+	}
+	return testRunner
 }
 
 func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {

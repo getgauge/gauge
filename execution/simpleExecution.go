@@ -74,16 +74,22 @@ func newExecution(executionInfo *executionInfo) execution {
 		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
 }
 
+func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
+	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
+}
+
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
-	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
-		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
-	if initResult.GetFailed() {
-		e.logger.Warning("Suite data store didn't get initialized")
-	}
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	return e.executeHook(message)
+}
+
+func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult){
+	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
+		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
+	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
+	return initResult
 }
 
 func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) {
@@ -127,6 +133,7 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.Environment = env.CurrentEnv
 	exe.suiteResult.Tags = ExecuteTags
+	exe.initializeSuiteDataStore()
 	beforeSuiteHookExecResult := exe.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
 		result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
@@ -177,4 +184,40 @@ func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRun
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, logger, errMaps)
 	return specExecutor
+}
+
+func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
+	startTime := time.Now()
+	exe.suiteResult = result.NewSuiteResult()
+	exe.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
+	exe.suiteResult.Environment = env.CurrentEnv
+	exe.suiteResult.Tags = ExecuteTags
+//	initSuiteDatastoreResult := exe.initializeSuiteDataStore()
+//	if !initSuiteDatastoreResult.GetFailed() {
+		beforeSuiteHookExecResult := exe.startExecution()
+		if beforeSuiteHookExecResult.GetFailed() {
+			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
+			exe.suiteResult.SetFailure()
+		} else {
+			for ; !specs.isEmpty(); {
+				specificationToExecute := specs.getSpec()
+				if _, ok := exe.errMaps.specErrs[specificationToExecute]; ok {
+					continue
+				}
+				executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger, exe.errMaps)
+				protoSpecResult := executor.execute()
+				exe.suiteResult.AddSpecResult(protoSpecResult)
+			}
+		}
+		afterSuiteHookExecResult := exe.endExecution()
+		if afterSuiteHookExecResult.GetFailed() {
+			result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
+			exe.suiteResult.SetFailure()
+		}
+//	} else {
+//		exe.logger.Error("Failed to initialize suite datastore. Err: %s", initSuiteDatastoreResult.GetErrorMessage())
+//	}
+	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
+	return exe.suiteResult
 }

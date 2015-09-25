@@ -61,16 +61,19 @@ func (specExec *specExecutor) initialize(specificationToExecute *parser.Specific
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
+		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message, e.specResult)
+}
+
+func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		e.logger.Warning("Spec data store didn't get initialized")
+		e.logger.Critical("Spec data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
-		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, e.specResult)
+	return initResult
 }
 
 func (e *specExecutor) executeAfterSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -104,7 +107,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		setSpecFailure(specExecutor.currentExecutionInfo)
 	} else {
 		for _, step := range specExecutor.specification.Contexts {
-			specExecutor.logger.Debug("Executing Spec: %s", formatter.FormatStep(step))
+			specExecutor.logger.Debug("Executing context step: %s", formatter.FormatStep(step))
 		}
 		dataTableRowCount := specExecutor.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
@@ -140,16 +143,19 @@ func getTagValue(tags *parser.Tags) []string {
 }
 
 func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
+		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
+	return executor.executeHook(message, scenarioResult)
+}
+
+func (executor *specExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		executor.logger.Warning("Scenario data store didn't get initialized")
+		executor.logger.Critical("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
-		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	return executor.executeHook(message, scenarioResult)
+	return initResult
 }
 
 func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
@@ -439,7 +445,7 @@ func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) str
 func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	response, err := conn.GetResponseForGaugeMessage(message, runner.Connection)
 	if err != nil {
-		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
+		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error()), StackTrace: proto.String("")}
 	}
 
 	if response.GetMessageType() == gauge_messages.Message_ExecutionStatusResponse {
