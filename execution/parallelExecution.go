@@ -96,12 +96,18 @@ func isLazy() bool {
 	}
 }
 
-func (e *parallelSpecExecution) start() *result.SuiteResult {
-	suiteResults := make([]*result.SuiteResult, 0)
+func (e *parallelSpecExecution) getNumberOfStreams() int {
 	streams := e.numberOfExecutionStreams
 	if streams > len(e.specifications) {
 		streams = len(e.specifications)
 	}
+	return streams
+}
+
+func (e *parallelSpecExecution) start() *result.SuiteResult {
+	suiteResults := make([]*result.SuiteResult, 0)
+	streams := e.getNumberOfStreams()
+
 	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(streams))
 
 	startTime := time.Now()

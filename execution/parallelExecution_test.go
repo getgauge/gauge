@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 	"testing"
+	"fmt"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -55,22 +56,27 @@ func (s *MySuite) TestDistributionOfSpecs(c *C) {
 
 func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
 	specs := createSpecsList(6)
-	specCollections := filter.DistributeSpecs(specs, 10)
+	e := parallelSpecExecution{numberOfExecutionStreams: 10, specifications: specs}
+	specCollections := filter.DistributeSpecs(specs, e.getNumberOfStreams())
 	c.Assert(len(specCollections), Equals, 6)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
 
-	specCollections = filter.DistributeSpecs(specs, 17)
+	e.numberOfExecutionStreams = 17
+	specCollections = filter.DistributeSpecs(specs, e.getNumberOfStreams())
 	c.Assert(len(specCollections), Equals, 6)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
 
-	specCollections = filter.DistributeSpecs(createSpecsList(0), 17)
+	e.numberOfExecutionStreams = 17
+	specs = createSpecsList(0)
+	e.specifications = specs
+	specCollections = filter.DistributeSpecs(specs, e.getNumberOfStreams())
 	c.Assert(len(specCollections), Equals, 0)
 }
 
 func createSpecsList(number int) []*parser.Specification {
 	specs := make([]*parser.Specification, 0)
 	for i := 0; i < number; i++ {
-		specs = append(specs, &parser.Specification{})
+		specs = append(specs, &parser.Specification{FileName: fmt.Sprint("spec", i)})
 	}
 	return specs
 }
@@ -130,3 +136,15 @@ func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 	c.Assert(aggregatedRes.PreSuite, Equals, suiteRes2.PreSuite)
 	c.Assert(aggregatedRes.PostSuite, Equals, suiteRes3.PostSuite)
 }
+
+func (s *MySuite) TestFunctionsOfTypeSpecList(c *C) {
+	mySpecs := &specList{specs: createSpecsList(4)}
+	c.Assert(mySpecs.getSpec().FileName, Equals, "spec0")
+	c.Assert(mySpecs.getSpec().FileName, Equals, "spec1")
+	c.Assert(mySpecs.isEmpty(), Equals, false)
+	c.Assert(len(mySpecs.specs), Equals, 2)
+	c.Assert(mySpecs.getSpec().FileName, Equals, "spec2")
+	c.Assert(mySpecs.getSpec().FileName, Equals, "spec3")
+	c.Assert(mySpecs.isEmpty(), Equals, true)
+}
+
