@@ -120,77 +120,36 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 	return suiteResults
 }
 
-type specList struct {
-	mutex       sync.Mutex
-	specs 		[]*parser.Specification
-}
-
-func (s *specList) isEmpty() bool {
-	s.mutex.Lock()
-	if (len(s.specs) == 0) {
-		s.mutex.Unlock()
-		return true
-	}
-	s.mutex.Unlock()
-	return false
-}
-
-func (s *specList) getSpec() *parser.Specification {
-	s.mutex.Lock()
-	var spec *parser.Specification
-	spec = s.specs[:1][0]
-	s.specs = s.specs[1:]
-	s.mutex.Unlock()
-	return spec
-}
-
 func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
 	allSpecs := &specList{}
 	for _, spec := range e.specifications {
 		allSpecs.specs = append(allSpecs.specs, spec)
 	}
-
-	runners := make([]*runner.TestRunner, 0)
-	parallelLoggers := make([]*logger.GaugeLogger, 0)
-	for i := 0; i < totalStreams; i++ {
-		parallelLoggers = append(parallelLoggers, logger.NewParallelLogger(i+1))
-		runner := e.startRunner(parallelLoggers[i])
-		if runner == nil {
-			continue
-		}
-		runners = append(runners, runner)
-	}
 	suiteResultChannel := make(chan *result.SuiteResult, len(e.specifications))
-
 	e.wg.Add(totalStreams)
 	for i:=0; i<totalStreams; i++ {
-		defer runners[i].Kill()
-		go e.startStream(allSpecs, parallelLoggers[i], runners[i], suiteResultChannel)
+		go e.startStream(allSpecs, logger.NewParallelLogger(i + 1), suiteResultChannel)
 	}
 	e.wg.Wait()
 	suiteResults := make([]*result.SuiteResult, 0)
 	for i:=0 ;i<totalStreams;i++ {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
-
 	close(suiteResultChannel)
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, testRunner *runner.TestRunner, suiteResultChannel chan *result.SuiteResult ){
-	execute := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, &parallelInfo{inParallel: false}, log, e.errMaps})
-	e.aggregateResult = execute.executeStream(specs)
-	suiteResultChannel <- e.aggregateResult
-	e.wg.Done()
-}
-
-func (e *parallelSpecExecution) startRunner(log *logger.GaugeLogger) *runner.TestRunner {
+func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult ){
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
-		e.logger.Error("Failed to start runner. " + err.Error())
-		return nil
+		log.Error("Failed to start runner. Reason: ", err.Error())
+		e.wg.Done()
+		return
 	}
-	return testRunner
+	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, &parallelInfo{inParallel: false}, log, e.errMaps})
+	e.aggregateResult = simpleExecution.executeStream(specs)
+	suiteResultChannel <- e.aggregateResult
+	e.wg.Done()
 }
 
 func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {
@@ -239,4 +198,28 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteRes
 		}
 	}
 	return aggregateResult
+}
+
+type specList struct {
+	mutex       sync.Mutex
+	specs 		[]*parser.Specification
+}
+
+func (s *specList) isEmpty() bool {
+	s.mutex.Lock()
+	if (len(s.specs) == 0) {
+		s.mutex.Unlock()
+		return true
+	}
+	s.mutex.Unlock()
+	return false
+}
+
+func (s *specList) getSpec() *parser.Specification {
+	s.mutex.Lock()
+	var spec *parser.Specification
+	spec = s.specs[:1][0]
+	s.specs = s.specs[1:]
+	s.mutex.Unlock()
+	return spec
 }
