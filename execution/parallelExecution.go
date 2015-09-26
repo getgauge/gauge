@@ -85,8 +85,8 @@ func (self *parallelInfo) isValid() bool {
 }
 
 func isLazy() bool {
-	if strings.ToLower(Strategy) != LAZY{
-		if strings.ToLower(Strategy) != EAGER{
+	if strings.ToLower(Strategy) != LAZY {
+		if strings.ToLower(Strategy) != EAGER {
 			logger.Log.Warning("Invalid input(%s) to strategy flag. Using default strategy.", Strategy)
 			return false
 		}
@@ -107,7 +107,6 @@ func (e *parallelSpecExecution) getNumberOfStreams() int {
 func (e *parallelSpecExecution) start() *result.SuiteResult {
 	suiteResults := make([]*result.SuiteResult, 0)
 	streams := e.getNumberOfStreams()
-
 	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(streams))
 
 	startTime := time.Now()
@@ -163,7 +162,7 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 	}
 	e.wg.Wait()
 	suiteResults := make([]*result.SuiteResult, 0)
-	for i:=0 ;i<totalStreams;i++ {
+	for i:=0 ;i<totalStreams; i++ {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
 	close(suiteResultChannel)
@@ -177,7 +176,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLo
 		e.wg.Done()
 		return
 	}
-	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, &parallelInfo{inParallel: false}, log, e.errMaps})
+	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, log, e.errMaps})
 	e.aggregateResult = simpleExecution.executeStream(specs)
 	suiteResultChannel <- e.aggregateResult
 	e.wg.Done()

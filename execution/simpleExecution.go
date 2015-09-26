@@ -193,8 +193,8 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.Environment = env.CurrentEnv
 	exe.suiteResult.Tags = ExecuteTags
-	initSuiteDatastoreResult := exe.initializeSuiteDataStore()
-	if !initSuiteDatastoreResult.GetFailed() {
+	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
+	if !initSuiteDataStoreResult.GetFailed() {
 		beforeSuiteHookExecResult := exe.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
 			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
@@ -216,7 +216,7 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 			exe.suiteResult.SetFailure()
 		}
 	} else {
-		exe.logger.Error("Failed to initialize suite datastore. Err: %s", initSuiteDatastoreResult.GetErrorMessage())
+		exe.logger.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 	}
 	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return exe.suiteResult
