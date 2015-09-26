@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"time"
 	"sync"
+	"strings"
 )
 
 var Strategy string
@@ -77,10 +78,22 @@ type parallelInfo struct {
 
 func (self *parallelInfo) isValid() bool {
 	if self.numberOfStreams < 1 {
-		logger.Log.Error("Invalid input(%s) to --n flag", strconv.Itoa(self.numberOfStreams))
+		logger.Log.Error("Invalid input(%s) to --n flag.", strconv.Itoa(self.numberOfStreams))
 		return false
 	}
 	return true
+}
+
+func isLazy() bool {
+	if strings.ToLower(Strategy) != LAZY{
+		if strings.ToLower(Strategy) != EAGER{
+			logger.Log.Warning("Invalid input(%s) to strategy flag. Using default strategy.", Strategy)
+			return false
+		}
+		return false
+	} else {
+		return true
+	}
 }
 
 func (e *parallelSpecExecution) start() *result.SuiteResult {
@@ -92,10 +105,10 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(streams))
 
 	startTime := time.Now()
-	if Strategy == EAGER {
-		suiteResults = e.eagerExecution(streams)
-	} else {
+	if isLazy() {
 		suiteResults = e.lazyExecution(streams)
+	} else {
+		suiteResults = e.eagerExecution(streams)
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
@@ -118,6 +131,18 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
 	return suiteResults
+}
+
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {
+	var err error
+	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
+	if err != nil {
+		e.logger.Error("Failed: " + err.Error())
+		e.logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
+		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		return
+	}
+	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, log)
 }
 
 func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
@@ -150,18 +175,6 @@ func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLo
 	e.aggregateResult = simpleExecution.executeStream(specs)
 	suiteResultChannel <- e.aggregateResult
 	e.wg.Done()
-}
-
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {
-	var err error
-	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
-	if err != nil {
-		e.logger.Error("Failed: " + err.Error())
-		e.logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
-		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
-		return
-	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, log)
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger *logger.GaugeLogger) {
