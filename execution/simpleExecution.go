@@ -218,9 +218,6 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 }
 
 func (exe *simpleExecution) executeSpec(specificationToExecute *parser.Specification) {
-	if _, ok := exe.errMaps.specErrs[specificationToExecute]; ok {
-		return
-	}
 	executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger, exe.errMaps)
 	protoSpecResult := executor.execute()
 	exe.suiteResult.AddSpecResult(protoSpecResult)

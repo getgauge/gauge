@@ -336,8 +336,10 @@ type ProtoScenario struct {
 	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
 	Tags []string `protobuf:"bytes,7,rep,name=tags" json:"tags,omitempty"`
 	// / Holds the time taken for executing this scenario.
-	ExecutionTime    *int64 `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
-	XXX_unrecognized []byte `json:"-"`
+	ExecutionTime    *int64   `protobuf:"varint,8,opt,name=executionTime" json:"executionTime,omitempty"`
+	Skipped          *bool    `protobuf:"varint,9,req,name=skipped" json:"skipped,omitempty"`
+	SkipErrors       []string `protobuf:"bytes,10,rep,name=skipErrors" json:"skipErrors,omitempty"`
+	XXX_unrecognized []byte   `json:"-"`
 }
 
 func (m *ProtoScenario) Reset()         { *m = ProtoScenario{} }
@@ -398,6 +400,20 @@ func (m *ProtoScenario) GetExecutionTime() int64 {
 		return *m.ExecutionTime
 	}
 	return 0
+}
+
+func (m *ProtoScenario) GetSkipped() bool {
+	if m != nil && m.Skipped != nil {
+		return *m.Skipped
+	}
+	return false
+}
+
+func (m *ProtoScenario) GetSkipErrors() []string {
+	if m != nil {
+		return m.SkipErrors
+	}
+	return nil
 }
 
 // / A proto object representing a TableDrivenScenario
