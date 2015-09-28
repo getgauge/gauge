@@ -61,16 +61,19 @@ func (specExec *specExecutor) initialize(specificationToExecute *parser.Specific
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
+		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message, e.specResult)
+}
+
+func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		e.logger.Warning("Spec data store didn't get initialized")
+		e.logger.Error("Spec data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
-		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, e.specResult)
+	return initResult
 }
 
 func (e *specExecutor) executeAfterSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -155,16 +158,19 @@ func getTagValue(tags *parser.Tags) []string {
 }
 
 func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
+		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
+	return executor.executeHook(message, scenarioResult)
+}
+
+func (executor *specExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		executor.logger.Warning("Scenario data store didn't get initialized")
+		executor.logger.Critical("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
-		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	return executor.executeHook(message, scenarioResult)
+	return initResult
 }
 
 func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
@@ -176,6 +182,9 @@ func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.Sc
 func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
 	scenarioResults := make([]*result.ScenarioResult, 0)
 	for _, scenario := range specExecutor.specification.Scenarios {
+		if _, ok := specExecutor.errMap.scenarioErrs[scenario]; ok {
+			continue
+		}
 		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
 	}
 	return scenarioResults
@@ -183,13 +192,10 @@ func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
 
 func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result.ScenarioResult {
 	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.Value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
+	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
+
 	scenarioResult := &result.ScenarioResult{parser.NewProtoScenario(scenario)}
 	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
-	if _, ok := executor.errMap.scenarioErrs[scenario]; ok {
-		executor.specResult.ScenarioSkippedCount += 1
-		return scenarioResult
-	}
-	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)

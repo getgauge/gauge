@@ -62,7 +62,8 @@ var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in pa
 var numberOfExecutionStreams = flag.Int([]string{"n"}, util.NumberOfCores(), "Specify number of parallel execution streams")
 var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "run specs in Alphabetical Order. Eg: gauge -s specs")
+var strategy = flag.String([]string{"-strategy"}, "eager", "Set the parallelization strategy for execution. This is used along with -p flag. Ex: gauge -p --strategy=\"eager\" ")
+var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
 
 func main() {
 	flag.Parse()
@@ -156,4 +157,5 @@ func initPackageFlags() {
 	filter.DoNotRandomize = *doNotRandomize
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
+	execution.Strategy = *strategy
 }

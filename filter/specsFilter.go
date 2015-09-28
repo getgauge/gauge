@@ -61,9 +61,6 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 }
 
 func DistributeSpecs(specifications []*parser.Specification, distributions int) []*SpecCollection {
-	if distributions > len(specifications) {
-		distributions = len(specifications)
-	}
 	specCollections := make([]*SpecCollection, distributions)
 	for i := 0; i < len(specifications); i++ {
 		mod := i % distributions
