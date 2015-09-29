@@ -85,7 +85,7 @@ func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult
 	return e.executeHook(message)
 }
 
-func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult){
+func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
 	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
@@ -203,7 +203,7 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
 			exe.suiteResult.SetFailure()
 		} else {
-			for ; !specs.isEmpty(); {
+			for !specs.isEmpty() {
 				exe.executeSpec(specs.getSpec())
 			}
 		}

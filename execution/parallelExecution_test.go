@@ -18,13 +18,13 @@
 package execution
 
 import (
+	"fmt"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 	"testing"
-	"fmt"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -147,4 +147,3 @@ func (s *MySuite) TestFunctionsOfTypeSpecList(c *C) {
 	c.Assert(mySpecs.getSpec().FileName, Equals, "spec3")
 	c.Assert(mySpecs.isEmpty(), Equals, true)
 }
-

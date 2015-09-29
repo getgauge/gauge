@@ -31,9 +31,9 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"path/filepath"
 	"strconv"
-	"time"
-	"sync"
 	"strings"
+	"sync"
+	"time"
 )
 
 var Strategy string
@@ -42,7 +42,7 @@ const EAGER string = "eager"
 const LAZY string = "lazy"
 
 type parallelSpecExecution struct {
-	wg						 sync.WaitGroup
+	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
 	specifications           []*parser.Specification
 	pluginHandler            *plugin.PluginHandler
@@ -157,19 +157,19 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 	}
 	suiteResultChannel := make(chan *result.SuiteResult, len(e.specifications))
 	e.wg.Add(totalStreams)
-	for i:=0; i<totalStreams; i++ {
-		go e.startStream(allSpecs, logger.NewParallelLogger(i + 1), suiteResultChannel)
+	for i := 0; i < totalStreams; i++ {
+		go e.startStream(allSpecs, logger.NewParallelLogger(i+1), suiteResultChannel)
 	}
 	e.wg.Wait()
 	suiteResults := make([]*result.SuiteResult, 0)
-	for i:=0 ;i<totalStreams; i++ {
+	for i := 0; i < totalStreams; i++ {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
 	close(suiteResultChannel)
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult ){
+func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
 		log.Error("Failed to start runner. Reason: ", err.Error())
@@ -219,13 +219,13 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteRes
 }
 
 type specList struct {
-	mutex       sync.Mutex
-	specs 		[]*parser.Specification
+	mutex sync.Mutex
+	specs []*parser.Specification
 }
 
 func (s *specList) isEmpty() bool {
 	s.mutex.Lock()
-	if (len(s.specs) == 0) {
+	if len(s.specs) == 0 {
 		s.mutex.Unlock()
 		return true
 	}
