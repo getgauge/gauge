@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
+	"strings"
 )
 
 type validator struct {
@@ -113,12 +114,18 @@ func (self *specValidator) validateStep(step *parser.Step) *stepValidationError 
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
-			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType, message: *validateResponse.ErrorMessage}
+			message := getMessage(validateResponse.ErrorType.String())
+			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType, message: message}
 		}
 		return nil
 	} else {
 		return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: &invalidResponse, message: "Invalid response from runner for Validation request"}
 	}
+}
+
+func getMessage(message string) string {
+	lower := strings.ToLower(strings.Replace(message, "_", " ", -1))
+	return strings.ToUpper(lower[:1]) + lower[1:]
 }
 
 func (self *specValidator) ContextStep(step *parser.Step) {

@@ -88,8 +88,8 @@ func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
 	stepsFromConcepts := s.getStepsFromCachedConcepts()
 	implementedSteps := s.getImplementedSteps(runner)
 
-	allSteps := append(stepsFromSpecs, stepsFromConcepts...)
-	allSteps = append(allSteps, implementedSteps...)
+	allSteps := append(implementedSteps, stepsFromConcepts...)
+	allSteps = append(allSteps, stepsFromSpecs...)
 
 	logger.ApiLog.Info("Initializing steps cache with %d steps", len(allSteps))
 	s.addToStepsCache(allSteps)

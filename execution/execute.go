@@ -129,11 +129,6 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	scenarioExecCount := 0
 	scenarioFailedCount := 0
 	scenarioPassedCount := 0
-
-	exitCode := 0
-	if suiteResult.IsFailed || suiteResult.SpecsSkippedCount > 0 {
-		exitCode = 1
-	}
 	for _, specResult := range suiteResult.SpecResults {
 		scenarioExecCount += specResult.ScenarioCount
 		scenarioFailedCount += specResult.ScenarioFailedCount
@@ -147,6 +142,10 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())
+	}
+	exitCode := 0
+	if suiteResult.IsFailed || (pendingSpecs+pendingScenarios) > 0 {
+		exitCode = 1
 	}
 	return exitCode
 }
