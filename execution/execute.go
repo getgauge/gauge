@@ -18,16 +18,7 @@ var NumberOfExecutionStreams int
 
 func ExecuteSpecs(inParallel bool, args []string) {
 	env.LoadEnv(false)
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
-	parser.HandleParseResult(conceptParseResult)
-	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
-	if len(specsToExecute) == 0 {
-		printExecutionStatus(nil, &validationErrMaps{})
-	}
-	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: NumberOfExecutionStreams}
-	if !parallelInfo.isValid() {
-		os.Exit(1)
-	}
+	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Log.Critical(err.Error())
@@ -35,11 +26,42 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	pluginHandler := plugin.StartPlugins(manifest)
+	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: NumberOfExecutionStreams}
+	if !parallelInfo.isValid() {
+		os.Exit(1)
+	}
 	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
 	os.Exit(exitCode)
+}
+
+func CheckSpecs(args []string) {
+	env.LoadEnv(false)
+	specsToExecute, conceptsDictionary := parseSpecs(args)
+	manifest, err := manifest.ProjectManifest()
+	if err != nil {
+		logger.Log.Critical(err.Error())
+	}
+	runner := startApi()
+	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
+	runner.Kill()
+	if len(errMap.stepErrs) > 0 {
+		os.Exit(1)
+	}
+	logger.Log.Info("No error found.")
+	os.Exit(0)
+}
+
+func parseSpecs(args []string) ([]*parser.Specification, *parser.ConceptDictionary) {
+	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
+	parser.HandleParseResult(conceptParseResult)
+	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
+	if len(specsToExecute) == 0 {
+		printExecutionStatus(nil, &validationErrMaps{})
+	}
+	return specsToExecute, conceptsDictionary
 }
 
 func startApi() *runner.TestRunner {

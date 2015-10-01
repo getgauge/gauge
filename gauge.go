@@ -64,6 +64,7 @@ var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of s
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 var strategy = flag.String([]string{"-strategy"}, "eager", "Set the parallelization strategy for execution. This is used along with -p flag. Ex: gauge -p --strategy=\"eager\" ")
 var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
+var check = flag.Bool([]string{"-check"}, false, "Checks for parse and validation errors. Eg: gauge --check specs")
 
 func main() {
 	flag.Parse()
@@ -104,24 +105,22 @@ func main() {
 		install.UpdatePlugin(*update)
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
+	} else if !validGaugeProject {
+		logger.Log.Error(err.Error())
+		os.Exit(1)
 	} else if *refactorSteps != "" {
-		if validGaugeProject {
-			startChan := api.StartAPI()
-			refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
-		} else {
-			logger.Log.Error(err.Error())
-		}
+		startChan := api.StartAPI()
+		refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
+	} else if *check {
+		execution.CheckSpecs(flag.Args())
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
-		} else if validGaugeProject {
+		} else {
 			if *distribute != -1 {
 				*doNotRandomize = true
 			}
 			execution.ExecuteSpecs(*parallel, flag.Args())
-		} else {
-			logger.Log.Error("Could not set project root: %s", err.Error())
-			os.Exit(1)
 		}
 	}
 }
