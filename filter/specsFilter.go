@@ -57,7 +57,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*parser.Specification, 0)
 	}
-	return DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1].Specs
+	return DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1].Specs
 }
 
 func DistributeSpecs(specifications []*parser.Specification, distributions int) []*SpecCollection {
