@@ -34,6 +34,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"errors"
 )
 
 var Strategy string
@@ -172,7 +173,8 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
-		log.Error("Failed to start runner. Reason: ", err.Error())
+		log.Error("Failed to start runner. Reason: %s", err.Error())
+		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{errors.New(fmt.Sprintf("Failed to start runner. %s", err.Error()))}}
 		e.wg.Done()
 		return
 	}
