@@ -245,7 +245,11 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*PluginHandler, []st
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
-			SetEnvForPlugin(executionScope, pd, manifest, envProperties)
+			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
+				continue
+			}
 
 			pluginCmd, err := StartPlugin(pd, executionScope, false)
 			if err != nil {

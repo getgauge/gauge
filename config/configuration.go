@@ -109,7 +109,7 @@ func setCurrentProjectEnvVariable() error {
 func convertToTime(value string, defaultValue time.Duration, name string) time.Duration {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		apiLog.Warning("Incorrect value for %s in property file.Cannot convert %s to time", name, value)
+		apiLog.Warning("Incorrect value for %s in property file. Cannot convert %s to time", name, value)
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
@@ -118,6 +118,7 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 var getFromConfig = func(propertyName string) string {
 	config, err := common.GetGaugeConfiguration()
 	if err != nil {
+		apiLog.Warning("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
 		return ""
 	}
 	return config[propertyName]
