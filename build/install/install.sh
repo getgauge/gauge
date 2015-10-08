@@ -16,20 +16,39 @@
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
 #!/bin/bash
-if [ -z "$prefix" ];
-then
-	prefix=/usr/local
-  echo "creating $prefix if it doesn't exist"
-  [ -d $prefix ] || mkdir $prefix
-  echo "Copying files to $prefix"
-  sudo /bin/sh -c "cp -rf bin share $prefix"
+
+set -e
+
+install_gauge() {
+	path_prefix=$1
+    echo "creating $prefix if it doesn't exist"
+    [ -d $prefix ] || mkdir $prefix
+    echo "Copying files to $prefix"
+    cp -rf bin share $prefix
+    
+    # ensure gauge is on path
+    if ! type "gauge" > /dev/null; then
+        export GAUGE_ROOT=$prefix
+        
+        echo "=========================================="
+        echo "Please add $prefix/bin to your PATH env variable."
+        echo "=========================================="
+    else
+        echo "$prefix is in path: $PATH"
+    fi
+    echo "Gauge core successfully installed."
+}
+
+install_plugin() {
+    echo "Installing plugin - $1..."
+    $prefix/bin/gauge --install $1
+}
+
+if [ -z "$1" ]; then
+    prefix=/usr/local
 else
-  echo "creating $prefix if it doesn't exist"
-  [ -d $prefix ] || mkdir $prefix
-  echo "Copying files to $prefix"
-  cp -rf bin share $prefix
+    prefix=$1
 fi
 
-echo "Done installing Gauge to $prefix"
-echo "Installing plugin - html-report. This may take a few minutes"
-$prefix/bin/gauge --install html-report
+install_gauge $prefix
+install_plugin html-report
