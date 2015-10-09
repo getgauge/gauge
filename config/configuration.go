@@ -27,13 +27,11 @@ import (
 
 const (
 	gaugeRepositoryUrl      = "gauge_repository_url"
-	apiRefreshInterval      = "api_refresh_interval"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
 
-	defaultApiRefreshInterval      = time.Second * 3
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
 	defaultPluginKillTimeout       = time.Second * 4
@@ -44,12 +42,6 @@ const (
 
 var apiLog = logging.MustGetLogger("gauge-api")
 var ProjectRoot string
-
-// The interval time in milliseconds in which gauge refreshes api cache
-func ApiRefreshInterval() time.Duration {
-	intervalString := getFromConfig(apiRefreshInterval)
-	return convertToTime(intervalString, defaultApiRefreshInterval, apiRefreshInterval)
-}
 
 // Timeout in milliseconds for making a connection to the language runner
 func RunnerConnectionTimeout() time.Duration {
