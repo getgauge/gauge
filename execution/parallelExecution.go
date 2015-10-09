@@ -82,19 +82,19 @@ func (self *parallelInfo) isValid() bool {
 		logger.Log.Error("Invalid input(%s) to --n flag.", strconv.Itoa(self.numberOfStreams))
 		return false
 	}
+	currentStrategy := strings.ToLower(Strategy)
+	if currentStrategy != LAZY  && currentStrategy != EAGER {
+		logger.Log.Error("Invalid input(%s) to --strategy flag.", Strategy)
+		return false
+	}
 	return true
 }
 
 func isLazy() bool {
-	if strings.ToLower(Strategy) != LAZY {
-		if strings.ToLower(Strategy) != EAGER {
-			logger.Log.Warning("Invalid input(%s) to strategy flag. Using default strategy.", Strategy)
-			return false
-		}
-		return false
-	} else {
+	if strings.ToLower(Strategy) == LAZY {
 		return true
 	}
+	return false
 }
 
 func (e *parallelSpecExecution) getNumberOfStreams() int {
