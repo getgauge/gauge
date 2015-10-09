@@ -105,14 +105,19 @@ func main() {
 		install.UpdatePlugin(*update)
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
-	} else if !validGaugeProject {
-		logger.Log.Error(err.Error())
-		os.Exit(1)
 	} else if *refactorSteps != "" {
-		startChan := api.StartAPI()
-		refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
+		if validGaugeProject {
+			startChan := api.StartAPI()
+			refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
+		} else {
+			logger.Log.Error(err.Error())
+		}
 	} else if *check {
-		execution.CheckSpecs(flag.Args())
+		if validGaugeProject {
+			execution.CheckSpecs(flag.Args())
+		} else {
+			logger.Log.Error(err.Error())
+		}
 	} else {
 		if len(flag.Args()) == 0 {
 			printUsage()
