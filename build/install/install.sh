@@ -20,23 +20,35 @@
 set -e
 
 install_gauge() {
-	path_prefix=$1
-    echo "creating $prefix if it doesn't exist"
+    path_prefix=$1
+    echo "Installing gauge at $prefix"
+    echo "Creating $prefix if it doesn't exist"
     [ -d $prefix ] || mkdir $prefix
+
+    # check for write permissions
+    if [ ! -w "$prefix" -a "$prefix" = "/usr/local" ]; then
+        echo
+        echo "Installation failed..."
+        echo "You do not have write permissions for $prefix"
+        echo "Please run this script as sudo or pass a custom location where you want to install Gauge."
+        echo "Example: ./install.sh /home/gauge/Documents/gauge_install_dir"
+        echo
+        exit 1
+    fi
+
+    # do the installation
     echo "Copying files to $prefix"
     cp -rf bin share $prefix
-    
+
     # ensure gauge is on path
-    if ! type "gauge" > /dev/null; then
-        export GAUGE_ROOT=$prefix
-        
-        echo "=========================================="
-        echo "Please add $prefix/bin to your PATH env variable."
-        echo "=========================================="
-    else
-        echo "$prefix is in path: $PATH"
+    if [ -z "$(which gauge)" ]; then
+        echo "Adding gauge to system path..."
+        echo "PATH=$PATH:$prefix/bin" >> ~/.profile
+        echo "export GAUGE_ROOT=$prefix"  >> ~/.profile
+        source ~/.profile
     fi
     echo "Gauge core successfully installed."
+    echo
 }
 
 install_plugin() {
@@ -52,3 +64,9 @@ fi
 
 install_gauge $prefix
 install_plugin html-report
+
+echo
+echo
+echo "Please logout and login again to reload your env variables."
+echo "Alternatively, run the command 'source ~/.profile'."
+echo
