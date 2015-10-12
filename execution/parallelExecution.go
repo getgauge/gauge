@@ -91,30 +91,27 @@ func (self *parallelInfo) isValid() bool {
 }
 
 func isLazy() bool {
-	if strings.ToLower(Strategy) == LAZY {
-		return true
-	}
-	return false
+	return strings.ToLower(Strategy) == LAZY
 }
 
 func (e *parallelSpecExecution) getNumberOfStreams() int {
-	streams := e.numberOfExecutionStreams
-	if streams > len(e.specifications) {
-		streams = len(e.specifications)
+	nStreams := e.numberOfExecutionStreams
+	if nStreams > len(e.specifications) {
+		nStreams = len(e.specifications)
 	}
-	return streams
+	return nStreams
 }
 
 func (e *parallelSpecExecution) start() *result.SuiteResult {
 	suiteResults := make([]*result.SuiteResult, 0)
-	streams := e.getNumberOfStreams()
-	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(streams))
+	nStreams := e.getNumberOfStreams()
+	e.logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
 	startTime := time.Now()
 	if isLazy() {
-		suiteResults = e.lazyExecution(streams)
+		suiteResults = e.lazyExecution(nStreams)
 	} else {
-		suiteResults = e.eagerExecution(streams)
+		suiteResults = e.eagerExecution(nStreams)
 	}
 
 	e.aggregateResult = e.aggregateResults(suiteResults)
@@ -171,17 +168,16 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 }
 
 func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult) {
+	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
 		log.Error("Failed to start runner. Reason: %s", err.Error())
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{errors.New(fmt.Sprintf("Failed to start runner. %s", err.Error()))}}
-		e.wg.Done()
 		return
 	}
 	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, log, e.errMaps})
 	e.aggregateResult = simpleExecution.executeStream(specs)
 	suiteResultChannel <- e.aggregateResult
-	e.wg.Done()
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger *logger.GaugeLogger) {
