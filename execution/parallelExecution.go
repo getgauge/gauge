@@ -18,6 +18,7 @@
 package execution
 
 import (
+	"errors"
 	"fmt"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -34,7 +35,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"errors"
 )
 
 var Strategy string
@@ -83,7 +83,7 @@ func (self *parallelInfo) isValid() bool {
 		return false
 	}
 	currentStrategy := strings.ToLower(Strategy)
-	if currentStrategy != LAZY  && currentStrategy != EAGER {
+	if currentStrategy != LAZY && currentStrategy != EAGER {
 		logger.Log.Error("Invalid input(%s) to --strategy flag.", Strategy)
 		return false
 	}

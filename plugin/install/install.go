@@ -371,24 +371,64 @@ func InstallAllPlugins() {
 }
 
 func UpdatePlugin(plugin string) {
-	downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
+	err := downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
+	if err != nil {
+		logger.Log.Error(err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
+func UpdatePlugins() {
+	allPluginsWithVersion := GetPluginsInfo()
+	failedPlugin := make([]string, 0)
+	for _, pluginInfo := range allPluginsWithVersion {
+		logger.Log.Info("Updating plugin '%s'", pluginInfo.Name)
+		err := downloadAndInstall(pluginInfo.Name, "", fmt.Sprintf("Successfully updated plugin => %s", pluginInfo.Name))
+		if err != nil {
+			logger.Log.Error(err.Error())
+			failedPlugin = append(failedPlugin, pluginInfo.Name)
+		}
+		fmt.Println()
+	}
+	if len(failedPlugin) > 0 {
+		logger.Log.Error("Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
+		os.Exit(1)
+	}
+	logger.Log.Info("Successfully updated all the plugins.")
+	os.Exit(0)
+}
+
+func GetPluginsInfo() map[string]common.Plugin {
+	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		logger.Log.Info("No plugins found")
+		logger.Log.Info("Plugins can be installed with `gauge --install {plugin-name}`")
+		os.Exit(0)
+	}
+	return allPluginsWithVersion
 }
 
 func DownloadAndInstallPlugin(plugin, version string) {
-	downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
+	err := downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
+	if err != nil {
+		logger.Log.Error(err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
 
-func downloadAndInstall(plugin, version string, successMessage string) {
+func downloadAndInstall(plugin, version string, successMessage string) error {
 	result := InstallPlugin(plugin, version)
 	if !result.Success {
-		logger.Log.Error("%s : %s\n", plugin, result.getMessage())
-		os.Exit(1)
+		return errors.New(fmt.Sprintf("%s : %s\n", plugin, result.getMessage()))
 	}
 	if result.Warning != "" {
 		logger.Log.Warning(result.Warning)
-		os.Exit(0)
+		return nil
 	}
 	logger.Log.Info(successMessage)
+	return nil
 }
 
 func InstallPluginZip(zipFile string, pluginName string) {
