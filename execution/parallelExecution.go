@@ -127,7 +127,7 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 	specCollections := filter.DistributeSpecs(e.specifications, distributions)
 	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, nil, logger.NewParallelLogger(i+1))
+		go e.startSpecsExecution(specCollection, suiteResultChannel, logger.NewParallelLogger(i+1))
 	}
 	suiteResults := make([]*result.SuiteResult, 0)
 	for _, _ = range specCollections {
@@ -136,9 +136,8 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, testRunner *runner.TestRunner, log *logger.GaugeLogger) {
-	var err error
-	testRunner, err = runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, log *logger.GaugeLogger) {
+	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
 		e.logger.Error("Failed: " + err.Error())
 		e.logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
