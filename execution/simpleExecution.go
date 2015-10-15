@@ -142,6 +142,7 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		if beforeSuiteHookExecResult.GetFailed() {
 			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
 			exe.suiteResult.SetFailure()
+			printStatus(beforeSuiteHookExecResult, exe.logger)
 		} else {
 			for _, specificationToExecute := range exe.specifications {
 				exe.executeSpec(specificationToExecute)
@@ -151,6 +152,7 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		if afterSuiteHookExecResult.GetFailed() {
 			result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
 			exe.suiteResult.SetFailure()
+			printStatus(afterSuiteHookExecResult, exe.logger)
 		}
 	}
 	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)

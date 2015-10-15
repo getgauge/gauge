@@ -122,6 +122,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
+		printStatus(beforeSpecHookStatus, specExecutor.logger)
 	} else {
 		dataTableRowCount := specExecutor.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
@@ -136,6 +137,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if afterSpecHookStatus.GetFailed() {
 		result.AddPostHook(specExecutor.specResult, afterSpecHookStatus)
 		setSpecFailure(specExecutor.currentExecutionInfo)
+		printStatus(afterSpecHookStatus, specExecutor.logger)
 	}
 	specExecutor.specResult.Skipped = specExecutor.specResult.ScenarioSkippedCount > 0
 	return specExecutor.specResult
@@ -201,6 +203,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
 		setScenarioFailure(executor.currentExecutionInfo)
+		printStatus(beforeHookExecutionStatus, executor.logger)
 	} else {
 		executor.executeContextItems(scenarioResult)
 		if !scenarioResult.GetFailure() {
@@ -211,6 +214,10 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 	afterHookExecutionStatus := executor.executeAfterScenarioHook(scenarioResult)
 	result.AddPostHook(scenarioResult, afterHookExecutionStatus)
 	scenarioResult.UpdateExecutionTime()
+	if afterHookExecutionStatus.GetFailed() {
+		setScenarioFailure(executor.currentExecutionInfo)
+		printStatus(afterHookExecutionStatus, executor.logger)
+	}
 	return scenarioResult
 }
 
