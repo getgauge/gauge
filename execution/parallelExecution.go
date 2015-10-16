@@ -175,8 +175,8 @@ func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLo
 		return
 	}
 	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, log, e.errMaps})
-	e.aggregateResult = simpleExecution.executeStream(specs)
-	suiteResultChannel <- e.aggregateResult
+	result := simpleExecution.executeStream(specs)
+	suiteResultChannel <- result
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger *logger.GaugeLogger) {
@@ -195,6 +195,7 @@ func (e *parallelSpecExecution) finish() {
 
 func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
 	aggregateResult := &result.SuiteResult{IsFailed: false, SpecResults: make([]*result.SpecResult, 0)}
+	aggregateResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	for _, result := range suiteResults {
 		aggregateResult.ExecutionTime += result.ExecutionTime
 		aggregateResult.SpecsFailedCount += result.SpecsFailedCount

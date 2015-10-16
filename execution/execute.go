@@ -142,31 +142,31 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 		logger.Log.Info("No specifications found.")
 		os.Exit(0)
 	}
-	pendingScenarios := len(errMap.scenarioErrs)
-	pendingSpecs := len(errMap.specErrs)
-	specsExecCount := len(suiteResult.SpecResults) - pendingSpecs
-	specsFailedCount := suiteResult.SpecsFailedCount
-	specsPassedCount := specsExecCount - specsFailedCount
+	nSkippedScenarios := len(errMap.scenarioErrs)
+	nSkippedSpecs := len(errMap.specErrs)
+	nExecutedSpecs := len(suiteResult.SpecResults) - nSkippedSpecs
+	nFailedSpecs := suiteResult.SpecsFailedCount
+	nPassedSpecs := nExecutedSpecs - nFailedSpecs
 
-	scenarioExecCount := 0
-	scenarioFailedCount := 0
-	scenarioPassedCount := 0
+	nExecutedScenarios := 0
+	nFailedScenarios := 0
+	nPassedScenarios := 0
 	for _, specResult := range suiteResult.SpecResults {
-		scenarioExecCount += specResult.ScenarioCount
-		scenarioFailedCount += specResult.ScenarioFailedCount
+		nExecutedScenarios += specResult.ScenarioCount
+		nFailedScenarios += specResult.ScenarioFailedCount
 	}
-	scenarioExecCount -= pendingScenarios
-	scenarioPassedCount = scenarioExecCount - scenarioFailedCount
+	nExecutedScenarios -= nSkippedScenarios
+	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", specsExecCount, specsPassedCount, specsFailedCount, pendingSpecs)
-	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d skipped", scenarioExecCount, scenarioPassedCount, scenarioFailedCount, pendingScenarios)
+	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Log.Info("Total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())
 	}
 	exitCode := 0
-	if suiteResult.IsFailed || (pendingSpecs+pendingScenarios) > 0 {
+	if suiteResult.IsFailed || (nSkippedSpecs+nSkippedScenarios) > 0 {
 		exitCode = 1
 	}
 	return exitCode

@@ -87,8 +87,12 @@ func verifySpecCollectionsForSize(c *C, size int, specCollections ...*filter.Spe
 	}
 }
 
+func getValidationErrorMap() *validationErrMaps {
+	return &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+}
+
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
-	e := parallelSpecExecution{}
+	e := parallelSpecExecution{errMaps: getValidationErrorMap()}
 	suiteRes1 := &result.SuiteResult{ExecutionTime: 1, SpecsFailedCount: 1, IsFailed: true, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
 	suiteRes2 := &result.SuiteResult{ExecutionTime: 3, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
 	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
@@ -100,10 +104,13 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	c.Assert(aggregatedRes.SpecsFailedCount, Equals, 1)
 	c.Assert(aggregatedRes.IsFailed, Equals, true)
 	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)
+	c.Assert(aggregatedRes.SpecsSkippedCount, Equals, 0)
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
-	e := parallelSpecExecution{}
+	errMap := getValidationErrorMap()
+	errMap.specErrs[&parser.Specification{}] = make([]*stepValidationError, 0)
+	e := parallelSpecExecution{errMaps: errMap}
 	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
 	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
 	suiteRes3 := &result.SuiteResult{IsFailed: false}
@@ -122,10 +129,11 @@ func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 		"Reason : Runner failed to start.")
 	err := (aggregatedRes.UnhandledErrors[0]).(streamExecError)
 	c.Assert(len(err.specsSkipped), Equals, 2)
+	c.Assert(aggregatedRes.SpecsSkippedCount, Equals, 1)
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
-	e := parallelSpecExecution{}
+	e := parallelSpecExecution{errMaps: getValidationErrorMap()}
 	suiteRes1 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
 	suiteRes2 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
 	suiteRes3 := &result.SuiteResult{PostSuite: &gauge_messages.ProtoHookFailure{}}

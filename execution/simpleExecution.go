@@ -133,7 +133,6 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.Environment = env.CurrentEnv
 	exe.suiteResult.Tags = ExecuteTags
-	exe.suiteResult.SpecsSkippedCount = len(exe.errMaps.specErrs)
 	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		exe.logger.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
@@ -195,7 +194,6 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
 	exe.suiteResult.Environment = env.CurrentEnv
 	exe.suiteResult.Tags = ExecuteTags
-	exe.suiteResult.SpecsSkippedCount = len(exe.errMaps.specErrs)
 	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		exe.logger.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
