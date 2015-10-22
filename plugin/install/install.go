@@ -380,9 +380,8 @@ func UpdatePlugin(plugin string) {
 }
 
 func UpdatePlugins() {
-	allPluginsWithVersion := GetPluginsInfo()
 	failedPlugin := make([]string, 0)
-	for _, pluginInfo := range allPluginsWithVersion {
+	for _, pluginInfo := range GetPluginsInfo() {
 		logger.Log.Info("Updating plugin '%s'", pluginInfo.Name)
 		err := downloadAndInstall(pluginInfo.Name, "", fmt.Sprintf("Successfully updated plugin => %s", pluginInfo.Name))
 		if err != nil {
@@ -399,7 +398,7 @@ func UpdatePlugins() {
 	os.Exit(0)
 }
 
-func GetPluginsInfo() map[string]common.Plugin {
+func GetPluginsInfo() []common.Plugin {
 	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		logger.Log.Info("No plugins found")
