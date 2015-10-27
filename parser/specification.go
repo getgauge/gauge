@@ -160,10 +160,14 @@ func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {
 	for i, arg := range step.Args {
 		for _, conceptArg := range args {
 			if arg.String() == conceptArg.String() {
-				step.Args[i] = &StepArg{Value: conceptArg.Value, ArgType: Dynamic}
+				step.Args[i] = &StepArg{Value: replaceParamChar(conceptArg.Value), ArgType: Dynamic}
 			}
 		}
 	}
+}
+
+func replaceParamChar(text string) string {
+	return strings.Replace(strings.Replace(text, "<", "{", -1), ">", "}", -1)
 }
 
 func CreateStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *Step {

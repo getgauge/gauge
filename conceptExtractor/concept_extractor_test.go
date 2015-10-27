@@ -69,6 +69,16 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParameters(c *C) {
 	c.Assert(conceptText, Equals, "* concept with \"arg\" <hello again>")
 }
 
+func (s *MySuite) TestExtractConceptWithDynamicAndStaticParametersWithParamChar(c *C) {
+	STEP := "step that takes a table \"arg <hello>\" and <hello again> "
+	name := "concept with \"arg <hello>\" <hello again>"
+	conceptName := &gauge_messages.Step{Name: &name}
+	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n")
+
+	c.Assert(concept, Equals, "# concept with <arg {hello}> <hello again>\n* step that takes a table <arg {hello}> and <hello again>\n")
+	c.Assert(conceptText, Equals, "* concept with \"arg <hello>\" <hello again>")
+}
+
 func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
 	STEP := "step that takes a table"
 	name := "concept with <table1>"
