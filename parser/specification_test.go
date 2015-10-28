@@ -974,3 +974,31 @@ func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 	c.Assert(len(parseResults.Warnings), Equals, 1)
 	c.Assert(parseResults.Warnings[0].Message, Equals, "Could not resolve special param type <unknown:foo>. Treating it as dynamic param.")
 }
+
+func (s *MySuite) TestReplaceArgsWithDynamicForSpecialParam(c *C) {
+	arg1 := &StepArg{Name: "table:first/first.csv", ArgType: SpecialString, Value: "text from file"}
+	arg2 := &StepArg{Name: "file:second/second.txt", ArgType: SpecialTable, Value: "text from file"}
+
+	stepArgs := []*StepArg{arg1, arg2}
+	step := &Step{Value: "step with {} and {}", Args: stepArgs}
+
+	step.ReplaceArgsWithDynamic(stepArgs)
+	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
+	c.Assert(step.Args[0].Value, Equals, "first/first.csv")
+	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
+	c.Assert(step.Args[1].Value, Equals, "second/second.txt")
+}
+
+func (s *MySuite) TestReplaceArgs(c *C) {
+	arg1 := &StepArg{Name: "first", ArgType: Static, Value: "text from file"}
+	arg2 := &StepArg{Name: "second", ArgType: Static, Value: "text from file"}
+
+	stepArgs := []*StepArg{arg1, arg2}
+	step := &Step{Value: "step with {} and {}", Args: stepArgs}
+
+	step.ReplaceArgsWithDynamic(stepArgs)
+	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
+	c.Assert(step.Args[0].Value, Equals, "text from file")
+	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
+	c.Assert(step.Args[1].Value, Equals, "text from file")
+}

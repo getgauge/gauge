@@ -160,6 +160,11 @@ func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {
 	for i, arg := range step.Args {
 		for _, conceptArg := range args {
 			if arg.String() == conceptArg.String() {
+				if conceptArg.ArgType == SpecialString || conceptArg.ArgType == SpecialTable {
+					reg := regexp.MustCompile(".*:")
+					step.Args[i] = &StepArg{Value: reg.ReplaceAllString(conceptArg.Name, ""), ArgType: Dynamic}
+					continue
+				}
 				step.Args[i] = &StepArg{Value: replaceParamChar(conceptArg.Value), ArgType: Dynamic}
 			}
 		}
