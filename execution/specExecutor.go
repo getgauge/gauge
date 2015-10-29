@@ -20,6 +20,9 @@ package execution
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
+
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
@@ -29,8 +32,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
-	"strconv"
-	"strings"
 )
 
 type specExecutor struct {
@@ -117,7 +118,8 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
 		return specExecutor.getSkippedSpecResult()
 	}
-	specExecutor.logger.Info("Executing specification: %s", specInfo.GetName())
+	specExecutor.logger.Info("%s", specInfo.GetName())
+	specExecutor.logger.Info("%s", strings.Repeat("=", len(specInfo.GetName())))
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
@@ -198,7 +200,8 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		executor.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
-	executor.logger.Info("Executing scenario: %s", scenario.Heading.Value)
+	executor.logger.Info("%s", scenario.Heading.Value)
+	executor.logger.Info("%s", strings.Repeat("-", len(scenario.Heading.Value)))
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
@@ -370,7 +373,6 @@ func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoSte
 }
 
 func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
-	executor.logger.Info("Executing Concept: %s", formatter.FormatConcept(protoConcept))
 	for _, step := range protoConcept.Steps {
 		failure := executor.executeItem(step)
 		executor.setExecutionResultForConcept(protoConcept)

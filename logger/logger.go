@@ -18,14 +18,15 @@
 package logger
 
 import (
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/op/go-logging"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/op/go-logging"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (
@@ -52,11 +53,11 @@ var apiLogFile = filepath.Join(logs, apiLogFileName)
 var level logging.Level
 
 var coloredFormat = logging.MustStringFormatter(
-	"%{color}[%{level:.8s}] %{message}%{color:reset}",
+	"%{color}%{message}%{color:reset}",
 )
 
 var uncoloredFormat = logging.MustStringFormatter(
-	"%{time:15:04:05.000} [%{level:.8s}] %{message}",
+	"%{time:15:04:05.000} %{message}",
 )
 
 func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {
@@ -111,7 +112,7 @@ func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
 func NewParallelLogger(n int) *GaugeLogger {
 	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] [%{level:.8s}] %{message}"))
+	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
 	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
 	stdOutLoggerLeveled.SetLevel(level, "")
 	parallelLogger.SetBackend(stdOutLoggerLeveled)

@@ -103,7 +103,7 @@ func InitializeProject(templateName string) {
 }
 
 func showMessage(action, filename string) {
-	logger.Log.Info(" %s  %s\n", action, filename)
+	logger.Log.Info(" %s  %s", action, filename)
 }
 
 func createProjectTemplate(language string) error {
