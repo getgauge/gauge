@@ -217,11 +217,13 @@ func (s *SpecInfoGatherer) onSpecFileModify(file string) {
 	defer s.waitGroup.Done()
 
 	logger.ApiLog.Info("Spec file added / modified: %s", file)
-	parsedSpec := s.getParsedSpecs([]string{file})[0]
-	s.addToSpecsCache(file, parsedSpec)
-
-	stepsFromSpec := s.getStepsFromSpec(parsedSpec)
-	s.addToStepsCache(stepsFromSpec)
+	parsedSpecs := s.getParsedSpecs([]string{file})
+	if len(parsedSpecs) != 0 {
+		parsedSpec := parsedSpecs[0]
+		s.addToSpecsCache(file, parsedSpec)
+		stepsFromSpec := s.getStepsFromSpec(parsedSpec)
+		s.addToStepsCache(stepsFromSpec)
+	}
 }
 
 func (s *SpecInfoGatherer) onConceptFileModify(file string) {
