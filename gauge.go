@@ -126,9 +126,6 @@ func main() {
 			printUsage()
 		}
 		if validGaugeProject {
-			if *distribute != -1 {
-				*doNotRandomize = true
-			}
 			execution.ExecuteSpecs(*parallel, flag.Args())
 		} else {
 			logger.Log.Error(err.Error())
