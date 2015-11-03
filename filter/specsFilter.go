@@ -18,6 +18,7 @@
 package filter
 
 import (
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"math/rand"
 	"sort"
@@ -53,7 +54,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 	if groupFilter.group == -1 {
 		return specs
 	}
-
+	logger.Log.Info("Using the -g flag will make the distribution strategy 'eager'. The --strategy setting will be overridden.")
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*parser.Specification, 0)
 	}

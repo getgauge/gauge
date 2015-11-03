@@ -165,4 +165,7 @@ func initPackageFlags() {
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	execution.Strategy = *strategy
+	if *distribute != -1 {
+		execution.Strategy = execution.EAGER
+	}
 }
