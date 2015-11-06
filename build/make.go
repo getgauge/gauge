@@ -21,7 +21,6 @@ import (
 	"archive/zip"
 	"flag"
 	"fmt"
-	"github.com/getgauge/gauge/version"
 	"io"
 	"log"
 	"os"
@@ -30,6 +29,9 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/version"
 )
 
 const (
@@ -57,78 +59,6 @@ var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pk
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
 
 var deployDir = filepath.Join(deploy, gauge)
-
-func isExecMode(mode os.FileMode) bool {
-	return (mode & 0111) != 0
-}
-
-func mirrorFile(src, dst string) error {
-	sfi, err := os.Stat(src)
-	if err != nil {
-		return err
-	}
-	if sfi.Mode()&os.ModeType != 0 {
-		log.Fatalf("mirrorFile can't deal with non-regular file %s", src)
-	}
-	dfi, err := os.Stat(dst)
-	if err == nil &&
-		isExecMode(sfi.Mode()) == isExecMode(dfi.Mode()) &&
-		(dfi.Mode()&os.ModeType == 0) &&
-		dfi.Size() == sfi.Size() &&
-		dfi.ModTime().Unix() == sfi.ModTime().Unix() {
-		// Seems to not be modified.
-		return nil
-	}
-
-	dstDir := filepath.Dir(dst)
-	if err := os.MkdirAll(dstDir, newDirPermissions); err != nil {
-		return err
-	}
-
-	df, err := os.Create(dst)
-	if err != nil {
-		return err
-	}
-	sf, err := os.Open(src)
-	if err != nil {
-		return err
-	}
-	defer sf.Close()
-
-	n, err := io.Copy(df, sf)
-	if err == nil && n != sfi.Size() {
-		err = fmt.Errorf("copied wrong size for %s -> %s: copied %d; want %d", src, dst, n, sfi.Size())
-	}
-	cerr := df.Close()
-	if err == nil {
-		err = cerr
-	}
-	if err == nil {
-		err = os.Chmod(dst, sfi.Mode())
-	}
-	if err == nil {
-		err = os.Chtimes(dst, sfi.ModTime(), sfi.ModTime())
-	}
-	return err
-}
-
-func mirrorDir(src, dst string) error {
-	log.Printf("Copying '%s' -> '%s'\n", src, dst)
-	err := filepath.Walk(src, func(path string, fi os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if fi.IsDir() {
-			return nil
-		}
-		suffix, err := filepath.Rel(src, path)
-		if err != nil {
-			return fmt.Errorf("Failed to find Rel(%q, %q): %v", src, path, err)
-		}
-		return mirrorFile(path, filepath.Join(dst, suffix))
-	})
-	return err
-}
 
 func set(envName, envValue string) {
 	log.Printf("%s = %s\n", envName, envValue)
@@ -204,9 +134,9 @@ func installFiles(files map[string]string, installDir string) {
 			panic(err)
 		}
 		if stat.IsDir() {
-			err = mirrorDir(src, installDst)
+			err = common.MirrorDir(src, installDst)
 		} else {
-			err = mirrorFile(src, filepath.Join(installDst, base))
+			err = common.MirrorFile(src, filepath.Join(installDst, base))
 		}
 		if err != nil {
 			panic(err)
@@ -249,7 +179,7 @@ func moveBinaryToDirectory(target, destDir string) error {
 	if err := os.MkdirAll(destDir, newDirPermissions); err != nil {
 		return err
 	}
-	if err := mirrorFile(srcFile, destFile); err != nil {
+	if err := common.MirrorFile(srcFile, destFile); err != nil {
 		return err
 	}
 	return os.Remove(srcFile)
@@ -324,7 +254,7 @@ func crossCompileGauge() {
 func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeFiles(deployDir)
-	if err := mirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
+	if err := common.MirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
 }
