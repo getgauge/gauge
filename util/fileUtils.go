@@ -1,10 +1,13 @@
 package util
 
 import (
-	"github.com/getgauge/common"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
 )
 
 func init() {
@@ -31,7 +34,7 @@ func IsValidSpecExtension(path string) bool {
 	return AcceptedExtensions[filepath.Ext(path)]
 }
 
-// Finds the concept files in specified directory
+// FindConceptFilesIn Finds the concept files in specified directory
 func FindConceptFilesIn(dir string) []string {
 	return findFilesIn(dir, IsValidConceptExtension)
 }
@@ -92,4 +95,18 @@ func GetSpecFiles(specSource string) []string {
 		specFiles = append(specFiles, specFile)
 	}
 	return specFiles
+}
+
+func SaveFile(fileName string, content string, backup bool) {
+	err := common.SaveFile(fileName, content, backup)
+	if err != nil {
+		logger.Log.Error("Failed to refactor '%s': %s\n", fileName, err)
+	}
+}
+
+func GetPathToFile(path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(config.ProjectRoot, path)
 }
