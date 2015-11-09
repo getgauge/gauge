@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	"os"
 	"path"
@@ -96,7 +97,7 @@ func InstallPlugin(pluginName, version string) installResult {
 	if !result.Success {
 		return result
 	}
-	defer removeTempDir(common.GetTempDir())
+	defer util.RemoveTempDir()
 	return installPluginWithDescription(installDescription, version)
 }
 
@@ -143,13 +144,6 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		installError(err.Error())
 	}
 	return installSuccess("")
-}
-
-func removeTempDir(path string) {
-	err := common.RemoveDir(path)
-	if err != nil {
-		logger.ApiLog.Warning("Failed to remove directory %s. Remove it manually. %s", path, err.Error())
-	}
 }
 
 func runInstallCommands(installCommands platformSpecificCommand, workingDir string) error {

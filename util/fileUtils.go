@@ -110,3 +110,14 @@ func GetPathToFile(path string) string {
 	}
 	return filepath.Join(config.ProjectRoot, path)
 }
+
+func RemoveDir(dir string) {
+	err := common.RemoveDir(dir)
+	if err != nil {
+		logger.ApiLog.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+	}
+}
+
+func RemoveTempDir() {
+	RemoveDir(common.GetTempDir())
+}
