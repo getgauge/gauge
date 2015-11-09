@@ -10,7 +10,6 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
 	"os"
 	"path"
 	"path/filepath"
