@@ -114,7 +114,7 @@ func addArgsFromTable(concept *parser.Step, conceptName *string, args []string) 
 func getContentWithDataTable(content string) (string, error) {
 	spec, result := new(parser.SpecParser).Parse(content, &parser.ConceptDictionary{})
 	if !result.Ok {
-		return "", errors.New(fmt.Sprintf("Spec Parse failure: %s", result.ParseError))
+		return "", fmt.Errorf("Spec Parse failure: %s", result.ParseError)
 	}
 	newSpec := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING"}}
 	if spec.DataTable.IsInitialized() {

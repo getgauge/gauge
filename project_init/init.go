@@ -46,7 +46,7 @@ func createProjectTemplate(language string) error {
 		logger.Log.Info("Installing plugin => %s ... \n\n", language)
 
 		if result := install.InstallPlugin(language, ""); !result.Success {
-			return errors.New(fmt.Sprintf("Failed to install plugin %s . %s \n", language, result.Error.Error()))
+			return fmt.Errorf("Failed to install plugin %s . %s \n", language, result.Error.Error())
 		}
 	}
 	// Create the project manifest
@@ -102,34 +102,35 @@ func createProjectTemplate(language string) error {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
 	}
-	defaultJson, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvFileName))
+	defaultJSON, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvFileName))
 	if err != nil {
 		return err
 	}
-	defaultJsonDest := path.Join(defaultEnv, common.DefaultEnvFileName)
-	showMessage("create", defaultJsonDest)
-	err = common.CopyFile(defaultJson, defaultJsonDest)
+	defaultJSONDest := path.Join(defaultEnv, common.DefaultEnvFileName)
+	showMessage("create", defaultJSONDest)
+	err = common.CopyFile(defaultJSON, defaultJSONDest)
 	if err != nil {
-		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJsonDest, err.Error()))
+		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJSONDest, err.Error()))
 	}
 
 	return runner.ExecuteInitHookForRunner(language)
 }
 
+// SetWorkingDir sets the current working directory to specified location
 func SetWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+		logger.Log.Critical("Unable to set working directory : %s\n", err.Error())
 	}
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+			logger.Log.Critical("Unable to set working directory : %s\n", err.Error())
 		}
 	}
 	err = os.Chdir(targetDir)
 	_, err = os.Getwd()
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Unable to set working directory : %s\n", err)))
+		logger.Log.Critical("Unable to set working directory : %s\n", err.Error())
 	}
 }

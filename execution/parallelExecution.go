@@ -18,7 +18,6 @@
 package execution
 
 import (
-	"errors"
 	"fmt"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -171,7 +170,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, log *logger.GaugeLo
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
 		log.Error("Failed to start runner. Reason: %s", err.Error())
-		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{errors.New(fmt.Sprintf("Failed to start runner. %s", err.Error()))}}
+		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
 	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, log, e.errMaps})

@@ -18,7 +18,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -59,7 +58,7 @@ func StartAPIService(port int, startChannels *runner.StartChannels) {
 	}
 	if port == 0 {
 		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
-			startChannels.ErrorChan <- errors.New(fmt.Sprintf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error()))
+			startChannels.ErrorChan <- fmt.Errorf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error())
 			return
 		}
 	}
@@ -105,13 +104,13 @@ func RunInBackground(apiPort string) {
 		port, err = strconv.Atoi(apiPort)
 		os.Setenv(common.ApiPortEnvVariableName, apiPort)
 		if err != nil {
-			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to parse the port number :", apiPort, "\n", err.Error())))
+			execLogger.CriticalError(fmt.Errorf("Failed to parse the port number :", apiPort, "\n", err.Error()))
 		}
 	} else {
 		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
 		if err != nil {
-			execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to start API Service. %s \n", err.Error())))
+			execLogger.CriticalError(fmt.Errorf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
 	var wg sync.WaitGroup

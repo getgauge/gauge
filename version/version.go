@@ -18,7 +18,6 @@
 package version
 
 import (
-	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"os"
@@ -56,7 +55,7 @@ func PrintVersion() {
 func ParseVersion(versionText string) (*Version, error) {
 	splits := strings.Split(versionText, ".")
 	if len(splits) != 3 {
-		return nil, errors.New("Incorrect Version format. Version should be in the form 1.5.7")
+		return nil, fmt.Errorf("Incorrect Version format. Version should be in the form 1.5.7")
 	}
 	Major, err := strconv.Atoi(splits[0])
 	if err != nil {
@@ -75,7 +74,7 @@ func ParseVersion(versionText string) (*Version, error) {
 }
 
 func VersionError(level, text string, err error) error {
-	return errors.New(fmt.Sprintf("Error parsing %s Version %s to integer. %s", level, text, err.Error()))
+	return fmt.Errorf("Error parsing %s Version %s to integer. %s", level, text, err.Error())
 }
 
 func (Version *Version) IsBetween(lower *Version, greater *Version) bool {

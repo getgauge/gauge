@@ -45,7 +45,7 @@ func readResponse(conn net.Conn) ([]byte, error) {
 		n, err := conn.Read(data)
 		if err != nil {
 			conn.Close()
-			return nil, errors.New(fmt.Sprintf("Connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error()))
+			return nil, fmt.Errorf("Connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error())
 		}
 
 		buffer.Write(data[0:n])
@@ -100,7 +100,7 @@ func GetResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) 
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 	if message.GetMessageType() == gauge_messages.Message_UnsupportedMessageResponse {
-		return errors.New(fmt.Sprintf("Unsupported Message response received. Message not supported. %s", message.GetUnsupportedMessageResponse().GetMessage()))
+		return fmt.Errorf("Unsupported Message response received. Message not supported. %s", message.GetUnsupportedMessageResponse().GetMessage())
 	}
 	return nil
 }
@@ -135,9 +135,9 @@ func GetPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 	if port := os.Getenv(portEnvVariable); port != "" {
 		gport, err := strconv.Atoi(port)
 		if err != nil {
-			return 0, errors.New(fmt.Sprintf("%s is not a valid port", port))
+			return 0, fmt.Errorf("%s is not a valid port", port)
 		}
 		return gport, nil
 	}
-	return 0, errors.New(fmt.Sprintf("%s Environment variable not set", portEnvVariable))
+	return 0, fmt.Errorf("%s Environment variable not set", portEnvVariable)
 }

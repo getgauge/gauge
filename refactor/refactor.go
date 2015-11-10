@@ -263,7 +263,7 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(runner *runner.TestRunner
 		return "", nil, &parser.Warning{Message: fmt.Sprintf("Step implementation not found: %s", agent.oldStep.LineText)}
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
-		return "", errors.New(fmt.Sprintf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '"))), nil
+		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
 	}
 	return responseMessage.GetStepNameResponse().GetStepName()[0], nil, nil
 }

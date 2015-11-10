@@ -18,7 +18,6 @@
 package execution
 
 import (
-	"errors"
 	"fmt"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -165,7 +164,7 @@ func getDataTableRows(rowCount int) indexRange {
 	}
 	indexes, err := getDataTableRowsRange(TableRows, rowCount)
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Table rows validation failed. %s\n", err.Error())))
+		execLogger.CriticalError(fmt.Errorf("Table rows validation failed. %s\n", err.Error()))
 	}
 	return indexes
 }

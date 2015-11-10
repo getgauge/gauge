@@ -19,7 +19,6 @@ package plugin
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -128,7 +127,7 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 
 func getPluginJsonPath(pluginName, version string) (string, error) {
 	if !IsPluginInstalled(pluginName, version) {
-		return "", errors.New(fmt.Sprintf("Plugin %s %s is not installed", pluginName, version))
+		return "", fmt.Errorf("Plugin %s %s is not installed", pluginName, version)
 	}
 
 	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
@@ -153,7 +152,7 @@ func GetPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
 	}
 	var pd pluginDescriptor
 	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
-		return nil, errors.New(fmt.Sprintf("%s: %s", pluginJson, err.Error()))
+		return nil, fmt.Errorf("%s: %s", pluginJson, err.Error())
 	}
 	pd.pluginPath = filepath.Dir(pluginJson)
 
@@ -174,7 +173,7 @@ func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 		break
 	}
 	if len(command) == 0 {
-		return nil, errors.New(fmt.Sprintf("Platform specific command not specified: %s.", runtime.GOOS))
+		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)
 	}
 
 	pluginLogger := &pluginLogger{pluginName: pd.Name}
@@ -327,7 +326,7 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	}
 	err = conn.Write(plugin.connection, messageBytes)
 	if err != nil {
-		return errors.New(fmt.Sprintf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error()))
+		return fmt.Errorf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error())
 	}
 	return nil
 }

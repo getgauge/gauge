@@ -181,7 +181,7 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 	}
 	versionedPluginDir := path.Join(pluginsDir, installDesc.Name, versionInstallDesc.Version)
 	if common.DirExists(versionedPluginDir) {
-		return errors.New(fmt.Sprintf("Plugin %s %s already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir))
+		return fmt.Errorf("Plugin %s %s already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir)
 	}
 	return common.MirrorDir(pluginContents, versionedPluginDir)
 }
@@ -229,12 +229,12 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 		break
 	}
 	if downloadLink == "" {
-		return "", errors.New(fmt.Sprintf("Platform not supported for %s. Download URL not specified.", runtime.GOOS))
+		return "", fmt.Errorf("Platform not supported for %s. Download URL not specified.", runtime.GOOS)
 	}
 	logger.Log.Info("Downloading Plugin... => %s", downloadLink)
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("Could not download File %s: %s", downloadLink, err.Error()))
+		return "", fmt.Errorf("Could not download File %s: %s", downloadLink, err.Error())
 	}
 	return downloadedFile, err
 }
@@ -298,8 +298,7 @@ func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersi
 			return &versionInstallDesc, nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Compatible version to %s not found", currentVersion))
-
+	return nil, fmt.Errorf("Compatible version to %s not found", currentVersion)
 }
 
 func (installDescription *installDescription) sortVersionInstallDescriptions() {
@@ -309,7 +308,7 @@ func (installDescription *installDescription) sortVersionInstallDescriptions() {
 func installPluginFromZip(zipFile string, language string) error {
 	unzippedPluginDir, err := common.UnzipArchive(zipFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed to unzip plugin-zip file %s.", err))
+		return fmt.Errorf("Failed to unzip plugin-zip file %s.", err.Error())
 	}
 	logger.Log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 
@@ -343,7 +342,7 @@ func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginId string,
 	}
 	versionedPluginDir := path.Join(pluginsDir, pluginId, version)
 	if common.DirExists(versionedPluginDir) {
-		return errors.New(fmt.Sprintf("Plugin %s %s already installed at %s", pluginId, version, versionedPluginDir))
+		return fmt.Errorf("Plugin %s %s already installed at %s", pluginId, version, versionedPluginDir)
 	}
 	return common.MirrorDir(unzippedPluginDir, versionedPluginDir)
 }
@@ -359,7 +358,7 @@ func installPluginFromDir(unzippedPluginDir string) error {
 func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory.")))
+		execLogger.CriticalError(fmt.Errorf("manifest.json not found : --install-all requires manifest.json in working directory."))
 	}
 	installPluginsFromManifest(manifest)
 }
@@ -414,7 +413,7 @@ func DownloadAndInstallPlugin(plugin, version string) {
 func downloadAndInstall(plugin, version string, successMessage string) error {
 	result := InstallPlugin(plugin, version)
 	if !result.Success {
-		return errors.New(fmt.Sprintf("%s : %s\n", plugin, result.getMessage()))
+		return fmt.Errorf("%s : %s\n", plugin, result.getMessage())
 	}
 	if result.Warning != "" {
 		logger.Log.Warning(result.Warning)
@@ -516,7 +515,7 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 		execLogger.CriticalError(err)
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error())))
+		execLogger.CriticalError(fmt.Errorf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
 	} else {
 		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}

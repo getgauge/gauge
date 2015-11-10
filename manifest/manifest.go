@@ -19,7 +19,6 @@ package manifest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -46,7 +45,7 @@ func ProjectManifest() (*Manifest, error) {
 		if err := dec.Decode(&m); err == io.EOF {
 			break
 		} else if err != nil {
-			return nil, errors.New(fmt.Sprintf("Failed to read Manifest. %s\n", err.Error()))
+			return nil, fmt.Errorf("Failed to read Manifest. %s\n", err.Error())
 		}
 	}
 

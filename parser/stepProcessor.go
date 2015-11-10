@@ -19,7 +19,6 @@ package parser
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -139,7 +138,7 @@ func processStepText(text string) (string, []string, error) {
 		} else if currentState, inParamBoundary = acceptStaticParam(element, currentState); inParamBoundary {
 			continue
 		} else if _, isReservedChar := reservedChars[element]; currentState == inDefault && isReservedChar {
-			return "", nil, errors.New(fmt.Sprintf("'%c' is a reserved character and should be escaped", element))
+			return "", nil, fmt.Errorf("'%c' is a reserved character and should be escaped", element)
 		}
 
 		curBuffer(currentState).WriteRune(element)
@@ -147,9 +146,9 @@ func processStepText(text string) (string, []string, error) {
 
 	// If it is a valid step, the state should be default when the control reaches here
 	if currentState == inQuotes {
-		return "", nil, errors.New(fmt.Sprintf("String not terminated"))
+		return "", nil, fmt.Errorf("String not terminated")
 	} else if isInState(currentState, inDynamicParam) {
-		return "", nil, errors.New(fmt.Sprintf("Dynamic parameter not terminated"))
+		return "", nil, fmt.Errorf("Dynamic parameter not terminated")
 	}
 
 	return strings.TrimSpace(stepValue.String()), args, nil

@@ -19,15 +19,7 @@ package runner
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/version"
 	"net"
 	"os"
 	"os/exec"
@@ -36,6 +28,14 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/version"
 )
 
 type TestRunner struct {
@@ -84,8 +84,8 @@ func ExecuteInitHookForRunner(language string) error {
 		break
 	}
 
-	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
-	runnerDir := filepath.Dir(languageJsonFilePath)
+	languageJSONFilePath, err := common.GetLanguageJSONFilePath(language)
+	runnerDir := filepath.Dir(languageJSONFilePath)
 	cmd, err := common.ExecuteCommand(command, runnerDir, os.Stdout, os.Stderr)
 
 	if err != nil {
@@ -97,12 +97,12 @@ func ExecuteInitHookForRunner(language string) error {
 
 func GetRunnerInfo(language string) (*Runner, error) {
 	runnerInfo := new(Runner)
-	languageJsonFilePath, err := common.GetLanguageJSONFilePath(language)
+	languageJSONFilePath, err := common.GetLanguageJSONFilePath(language)
 	if err != nil {
 		return nil, err
 	}
 
-	contents, err := common.ReadFileContents(languageJsonFilePath)
+	contents, err := common.ReadFileContents(languageJSONFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func startRunner(manifest *manifest.Manifest, port string, log *logger.GaugeLogg
 	}
 	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
-		return nil, errors.New(fmt.Sprintf("Compatible runner version to %s not found. To update plugin, run `gauge --update {pluginName}`.", version.CurrentGaugeVersion))
+		return nil, fmt.Errorf("Compatible runner version to %s not found. To update plugin, run `gauge --update {pluginName}`.", version.CurrentGaugeVersion)
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())
@@ -191,11 +191,11 @@ func startRunner(manifest *manifest.Manifest, port string, log *logger.GaugeLogg
 }
 
 func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, error) {
-	languageJsonFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
+	languageJSONFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return "", err
 	}
-	contents, err := common.ReadFileContents(languageJsonFilePath)
+	contents, err := common.ReadFileContents(languageJSONFilePath)
 	if err != nil {
 		return "", err
 	}
@@ -203,7 +203,7 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	if err != nil {
 		return "", err
 	}
-	return filepath.Dir(languageJsonFilePath), nil
+	return filepath.Dir(languageJSONFilePath), nil
 }
 
 func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, log *logger.GaugeLogger) {
@@ -211,7 +211,7 @@ func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, log *logger.Ga
 		err := cmd.Wait()
 		if err != nil {
 			log.Debug("Runner exited with error: %s", err)
-			errChannel <- errors.New(fmt.Sprintf("Runner exited with error: %s\n", err.Error()))
+			errChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 	}()
 }

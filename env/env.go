@@ -1,7 +1,6 @@
 package env
 
 import (
-	"errors"
 	"fmt"
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
@@ -49,7 +48,7 @@ func loadEnvironment(env string) error {
 
 	dirToRead := path.Join(envDir, env)
 	if !common.DirExists(dirToRead) {
-		return errors.New(fmt.Sprintf("%s is an invalid environment", env))
+		return fmt.Errorf("%s is an invalid environment", env)
 	}
 
 	isProperties := func(fileName string) bool {
@@ -60,13 +59,13 @@ func loadEnvironment(env string) error {
 		if isProperties(path) {
 			p, e := properties.Load(path)
 			if e != nil {
-				return errors.New(fmt.Sprintf("Failed to parse: %s. %s", path, e.Error()))
+				return fmt.Errorf("Failed to parse: %s. %s", path, e.Error())
 			}
 
 			for k, v := range p {
 				err := common.SetEnvVariable(k, v)
 				if err != nil {
-					return errors.New(fmt.Sprintf("%s: %s", path, err.Error()))
+					return fmt.Errorf("%s: %s", path, err.Error())
 				}
 			}
 		}

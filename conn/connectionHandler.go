@@ -19,7 +19,6 @@ package conn
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/golang/protobuf/proto"
 	"net"
@@ -70,7 +69,7 @@ func (connectionHandler *GaugeConnectionHandler) AcceptConnection(connectionTime
 		}
 		return conn, nil
 	case <-time.After(connectionTimeOut):
-		return nil, errors.New(fmt.Sprintf("Timed out connecting to %v", connectionHandler.tcpListener.Addr()))
+		return nil, fmt.Errorf("Timed out connecting to %v", connectionHandler.tcpListener.Addr())
 	}
 }
 
