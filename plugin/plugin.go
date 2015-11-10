@@ -114,7 +114,7 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 
 	if pluginVersion != "" {
-		pluginJson := path.Join(thisPluginDir, pluginVersion, common.PluginJsonFile)
+		pluginJson := path.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
 		if common.FileExists(pluginJson) {
 			return true
 		} else {
@@ -134,7 +134,7 @@ func getPluginJsonPath(pluginName, version string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pluginInstallDir, common.PluginJsonFile), nil
+	return filepath.Join(pluginInstallDir, common.PluginJSONFile), nil
 }
 
 func GetPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, error) {
@@ -318,7 +318,7 @@ func (handler *PluginHandler) GracefullyKillPlugins() {
 }
 
 func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
-	messageId := common.GetUniqueId()
+	messageId := common.GetUniqueID()
 	message.MessageId = &messageId
 	messageBytes, err := proto.Marshal(message)
 	if err != nil {

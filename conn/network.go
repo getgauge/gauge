@@ -65,7 +65,7 @@ func Write(conn net.Conn, messageBytes []byte) error {
 }
 
 func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
-	messageId := common.GetUniqueId()
+	messageId := common.GetUniqueID()
 	message.MessageId = &messageId
 
 	data, err := proto.Marshal(message)
@@ -76,7 +76,7 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 }
 
 func GetResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) (*gauge_messages.Message, error) {
-	messageId := common.GetUniqueId()
+	messageId := common.GetUniqueID()
 	message.MessageId = &messageId
 
 	data, err := proto.Marshal(message)

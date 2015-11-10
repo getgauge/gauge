@@ -57,8 +57,8 @@ func StartAPIService(port int, startChannels *runner.StartChannels) {
 		return
 	}
 	if port == 0 {
-		if err := common.SetEnvVariable(common.ApiPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
-			startChannels.ErrorChan <- fmt.Errorf("Failed to set Env variable %s. %s", common.ApiPortEnvVariableName, err.Error())
+		if err := common.SetEnvVariable(common.APIPortEnvVariableName, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())); err != nil {
+			startChannels.ErrorChan <- fmt.Errorf("Failed to set Env variable %s. %s", common.APIPortEnvVariableName, err.Error())
 			return
 		}
 	}
@@ -102,13 +102,13 @@ func RunInBackground(apiPort string) {
 	var err error
 	if apiPort != "" {
 		port, err = strconv.Atoi(apiPort)
-		os.Setenv(common.ApiPortEnvVariableName, apiPort)
+		os.Setenv(common.APIPortEnvVariableName, apiPort)
 		if err != nil {
 			execLogger.CriticalError(fmt.Errorf("Failed to parse the port number :", apiPort, "\n", err.Error()))
 		}
 	} else {
 		env.LoadEnv(false)
-		port, err = conn.GetPortFromEnvironmentVariable(common.ApiPortEnvVariableName)
+		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
 			execLogger.CriticalError(fmt.Errorf("Failed to start API Service. %s \n", err.Error()))
 		}
@@ -255,7 +255,7 @@ func (handler *gaugeApiMessageHandler) getErrorResponse(message *gauge_messages.
 }
 
 func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *gauge_messages.APIMessage {
-	id := common.GetUniqueId()
+	id := common.GetUniqueID()
 	errorResponse := &gauge_messages.ErrorResponse{Error: proto.String(err.Error())}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
 }

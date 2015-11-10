@@ -153,7 +153,7 @@ func (testRunner *TestRunner) isStillRunning() bool {
 }
 
 func (testRunner *TestRunner) sendProcessKillMessage() {
-	id := common.GetUniqueId()
+	id := common.GetUniqueID()
 	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
