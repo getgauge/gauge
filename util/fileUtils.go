@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"fmt"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
@@ -55,7 +57,7 @@ func IsSpec(path string) bool {
 }
 
 func FindAllNestedDirs(dir string) []string {
-	nestedDirs := make([]string, 0)
+	var nestedDirs []string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err == nil && info.IsDir() && !(path == dir) {
 			nestedDirs = append(nestedDirs, path)
@@ -87,7 +89,7 @@ func CreateDirIn(dir string, dirName string) (string, error) {
 }
 
 func GetSpecFiles(specSource string) []string {
-	specFiles := make([]string, 0)
+	var specFiles []string
 	if common.DirExists(specSource) {
 		specFiles = append(specFiles, FindSpecFilesIn(specSource)...)
 	} else if common.FileExists(specSource) && IsValidSpecExtension(specSource) {
@@ -111,13 +113,33 @@ func GetPathToFile(path string) string {
 	return filepath.Join(config.ProjectRoot, path)
 }
 
-func RemoveDir(dir string) {
-	err := common.RemoveDir(dir)
+func Remove(dir string) {
+	err := common.Remove(dir)
 	if err != nil {
-		logger.ApiLog.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+		logger.Log.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
 	}
 }
 
 func RemoveTempDir() {
-	RemoveDir(common.GetTempDir())
+	Remove(common.GetTempDir())
+}
+
+// DownloadAndUnzip downloads the zip file from given download link and unzips it.
+// Returns the unzipped file path.
+func DownloadAndUnzip(downloadLink string) (string, error) {
+	logger.Log.Info("Downloading => %s", downloadLink)
+	downloadedFile, err := common.DownloadToTempDir(downloadLink)
+	if err != nil {
+		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
+	}
+	logger.Log.Info("Downloaded to %s", downloadedFile)
+
+	logger.Log.Info("Unzipping => %s", downloadedFile)
+	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
+	if err != nil {
+		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
+	}
+	logger.Log.Info("Unzipped to => %s\n", unzippedPluginDir)
+
+	return unzippedPluginDir, nil
 }

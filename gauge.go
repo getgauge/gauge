@@ -28,7 +28,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/project_init"
+	"github.com/getgauge/gauge/projectInit"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
@@ -69,7 +69,7 @@ var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the insta
 
 func main() {
 	flag.Parse()
-	project_init.SetWorkingDir(*workingDir)
+	projectInit.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
@@ -93,7 +93,7 @@ func main() {
 			logger.Log.Error(err.Error())
 		}
 	} else if *initialize != "" {
-		project_init.InitializeProject(*initialize)
+		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
 		install.InstallPluginZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {

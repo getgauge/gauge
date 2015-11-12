@@ -134,7 +134,7 @@ func installFiles(files map[string]string, installDir string) {
 			panic(err)
 		}
 		if stat.IsDir() {
-			err = common.MirrorDir(src, installDst)
+			_, err = common.MirrorDir(src, installDst)
 		} else {
 			err = common.MirrorFile(src, filepath.Join(installDst, base))
 		}
@@ -254,7 +254,7 @@ func crossCompileGauge() {
 func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeFiles(deployDir)
-	if err := common.MirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
+	if _, err := common.MirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
 }

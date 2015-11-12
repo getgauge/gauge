@@ -127,17 +127,18 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	}
 
 	logger.Log.Info("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
-	pluginZip, err := downloadPluginZip(versionInstallDescription.DownloadUrls)
+	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
 	if err != nil {
-		return installError(fmt.Sprintf("Could not download plugin zip: %s.", err))
+		return installError(fmt.Sprintf("Could not get download link: %s", err.Error()))
 	}
-	unzippedPluginDir, err := common.UnzipArchive(pluginZip)
+
+	unzippedPluginDir, err := util.DownloadAndUnzip(downloadLink)
 	if err != nil {
-		return installError(fmt.Sprintf("Failed to Unzip plugin-zip file %s.", err))
+		return installError(err.Error())
 	}
-	logger.Log.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
+
 	if err := runInstallCommands(versionInstallDescription.Install, unzippedPluginDir); err != nil {
-		return installError(fmt.Sprintf("Failed to Run install command. %s.", err))
+		return installError(fmt.Sprintf("Failed to Run install command. %s.", err.Error()))
 	}
 	err = copyPluginFilesToGauge(installDesc, versionInstallDescription, unzippedPluginDir)
 	if err != nil {
@@ -183,7 +184,8 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 	if common.DirExists(versionedPluginDir) {
 		return fmt.Errorf("Plugin %s %s already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir)
 	}
-	return common.MirrorDir(pluginContents, versionedPluginDir)
+	_, err = common.MirrorDir(pluginContents, versionedPluginDir)
+	return err
 }
 
 func UninstallPlugin(pluginName string) {
@@ -208,7 +210,7 @@ func handleUninstallFailure(err error, pluginName string) {
 	logger.Log.Error(err.Error())
 }
 
-func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
+func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 	var platformLinks *platformSpecificUrl
 	if strings.Contains(runtime.GOARCH, "64") {
 		platformLinks = &downloadUrls.X64
@@ -231,12 +233,7 @@ func downloadPluginZip(downloadUrls downloadUrls) (string, error) {
 	if downloadLink == "" {
 		return "", fmt.Errorf("Platform not supported for %s. Download URL not specified.", runtime.GOOS)
 	}
-	logger.Log.Info("Downloading Plugin... => %s", downloadLink)
-	downloadedFile, err := common.DownloadToTempDir(downloadLink)
-	if err != nil {
-		return "", fmt.Errorf("Could not download File %s: %s", downloadLink, err.Error())
-	}
-	return downloadedFile, err
+	return downloadLink, nil
 }
 
 func getInstallDescription(plugin string) (*installDescription, installResult) {
@@ -344,7 +341,8 @@ func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginId string,
 	if common.DirExists(versionedPluginDir) {
 		return fmt.Errorf("Plugin %s %s already installed at %s", pluginId, version, versionedPluginDir)
 	}
-	return common.MirrorDir(unzippedPluginDir, versionedPluginDir)
+	_, err = common.MirrorDir(unzippedPluginDir, versionedPluginDir)
+	return err
 }
 
 func installPluginFromDir(unzippedPluginDir string) error {

@@ -1,37 +1,103 @@
-package project_init
+package projectInit
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/runner"
 	"os"
 	"path"
 	"path/filepath"
+
+	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/plugin/install"
+	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 )
 
 const (
 	specsDirName      = "specs"
 	skelFileName      = "hello_world.spec"
 	envDefaultDirName = "default"
+	metadataFileName  = "metadata.json"
 )
 
 var defaultPlugins = []string{"html-report"}
 
-func InitializeProject(language string) {
+type templateMetadata struct {
+	Name           string
+	Description    string
+	Version        string
+	PostInstallCmd string
+}
+
+func initializeTemplate(templateName string) error {
+	defer util.RemoveTempDir()
+
+	unzippedTemplate, err := util.DownloadAndUnzip(getTemplateURL(templateName))
+	if err != nil {
+		return err
+	}
+
+	wd := config.ProjectRoot
+
+	logger.Log.Info("Copying Gauge template %s to current directory ...", templateName)
+	filesAdded, err := common.MirrorDir(filepath.Join(unzippedTemplate, templateName), wd)
+	if err != nil {
+		return fmt.Errorf("Failed to copy Gauge template: %s", err.Error())
+	}
+
+	metadataFile := filepath.Join(wd, metadataFileName)
+	metadataContents, err := common.ReadFileContents(metadataFile)
+	if err != nil {
+		return fmt.Errorf("Failed to read file contents of %s: %s", metadataFile, err.Error())
+	}
+
+	metadata := &templateMetadata{}
+	err = json.Unmarshal([]byte(metadataContents), metadata)
+	if err != nil {
+		return err
+	}
+
+	if metadata.PostInstallCmd != "" {
+		cmd, err := common.ExecuteCommand([]string{metadata.PostInstallCmd}, wd, os.Stdout, os.Stderr)
+		cmd.Wait()
+		if err != nil {
+			for _, file := range filesAdded {
+				pathSegments := strings.Split(file, string(filepath.Separator))
+				util.Remove(filepath.Join(wd, pathSegments[0]))
+			}
+			return fmt.Errorf("Failed to run post install commands: %s", err.Error())
+		}
+	}
+
+	util.Remove(metadataFile)
+	return nil
+}
+
+func getTemplateURL(templateName string) string {
+	//	filepath.Join(config.GaugeRepositoryUrl(), "templates", templateName, ".zip")
+	return "https://github.com/getgauge/gauge-repository/raw/template/templates/java.zip"
+}
+
+// InitializeProject initializes a Gauge project with specified template
+func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to find working directory. %s\n", err.Error())))
+		logger.Log.Critical("Failed to find working directory. %s\n", err.Error())
 	}
 	config.ProjectRoot = wd
-	err = createProjectTemplate(language)
+	if templateName == "java" {
+		err = initializeTemplate(templateName)
+	} else {
+		err = createProjectTemplate(templateName)
+	}
 	if err != nil {
-		execLogger.CriticalError(errors.New(fmt.Sprintf("Failed to initialize. %s\n", err.Error())))
+		logger.Log.Critical("Failed to initialize. %s\n", err.Error())
+		return
 	}
 	logger.Log.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
