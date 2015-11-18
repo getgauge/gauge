@@ -55,6 +55,12 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
 [contributing]:http://github.com/getgauge/gauge/wiki/Contributing
 
+## Add your Badge!
+Copy the text below and add it to the README.md of your project using Gauge.
+```
+[![Gauge Badge](https://cdn.rawgit.com/getgauge/getgauge.github.io/master/Gauge_Badge.svg)](http://getgauge.io)
+```
+
 ## License
 
 ![GNU Public License version 3.0](http://www.gnu.org/graphics/gplv3-127x51.png)
