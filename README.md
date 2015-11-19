@@ -58,7 +58,7 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
 ```
-[![Gauge Badge](https://cdn.rawgit.com/getgauge/getgauge.github.io/master/Gauge_Badge.svg)](http://getgauge.io)
+[![Gauge Badge](http://getgauge.io/Gauge_Badge.svg)](http://getgauge.io)
 ```
 
 ## License
