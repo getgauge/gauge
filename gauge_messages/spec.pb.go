@@ -165,6 +165,39 @@ func (x *Parameter_ParameterType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+type ProtoExecutionResult_ErrorType int32
+
+const (
+	ProtoExecutionResult_ASSERTION    ProtoExecutionResult_ErrorType = 1
+	ProtoExecutionResult_VERIFICATION ProtoExecutionResult_ErrorType = 2
+)
+
+var ProtoExecutionResult_ErrorType_name = map[int32]string{
+	1: "ASSERTION",
+	2: "VERIFICATION",
+}
+var ProtoExecutionResult_ErrorType_value = map[string]int32{
+	"ASSERTION":    1,
+	"VERIFICATION": 2,
+}
+
+func (x ProtoExecutionResult_ErrorType) Enum() *ProtoExecutionResult_ErrorType {
+	p := new(ProtoExecutionResult_ErrorType)
+	*p = x
+	return p
+}
+func (x ProtoExecutionResult_ErrorType) String() string {
+	return proto.EnumName(ProtoExecutionResult_ErrorType_name, int32(x))
+}
+func (x *ProtoExecutionResult_ErrorType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ProtoExecutionResult_ErrorType_value, data, "ProtoExecutionResult_ErrorType")
+	if err != nil {
+		return err
+	}
+	*x = ProtoExecutionResult_ErrorType(value)
+	return nil
+}
+
 // / A proto object representing a Specification
 // / A specification can contain Scenarios or Steps, besides Comments
 type ProtoSpec struct {
@@ -747,13 +780,17 @@ type ProtoExecutionResult struct {
 	// / Holds the time taken for executing this scenario.
 	ExecutionTime *int64 `protobuf:"varint,6,req,name=executionTime" json:"executionTime,omitempty"`
 	// / Additional information at exec time to be available on reports
-	Message          []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
-	XXX_unrecognized []byte   `json:"-"`
+	Message []string `protobuf:"bytes,7,rep,name=message" json:"message,omitempty"`
+	// / Type of the Error. Valid values: ASSERTION, VERIFICATION. Default: ASSERTION
+	ErrorType        *ProtoExecutionResult_ErrorType `protobuf:"varint,8,opt,name=errorType,enum=gauge.messages.ProtoExecutionResult_ErrorType,def=1" json:"errorType,omitempty"`
+	XXX_unrecognized []byte                          `json:"-"`
 }
 
 func (m *ProtoExecutionResult) Reset()         { *m = ProtoExecutionResult{} }
 func (m *ProtoExecutionResult) String() string { return proto.CompactTextString(m) }
 func (*ProtoExecutionResult) ProtoMessage()    {}
+
+const Default_ProtoExecutionResult_ErrorType ProtoExecutionResult_ErrorType = ProtoExecutionResult_ASSERTION
 
 func (m *ProtoExecutionResult) GetFailed() bool {
 	if m != nil && m.Failed != nil {
@@ -802,6 +839,13 @@ func (m *ProtoExecutionResult) GetMessage() []string {
 		return m.Message
 	}
 	return nil
+}
+
+func (m *ProtoExecutionResult) GetErrorType() ProtoExecutionResult_ErrorType {
+	if m != nil && m.ErrorType != nil {
+		return *m.ErrorType
+	}
+	return Default_ProtoExecutionResult_ErrorType
 }
 
 // / A proto object representing a pre-hook failure.
@@ -1076,4 +1120,5 @@ func init() {
 	proto.RegisterEnum("gauge.messages.ProtoItem_ItemType", ProtoItem_ItemType_name, ProtoItem_ItemType_value)
 	proto.RegisterEnum("gauge.messages.Fragment_FragmentType", Fragment_FragmentType_name, Fragment_FragmentType_value)
 	proto.RegisterEnum("gauge.messages.Parameter_ParameterType", Parameter_ParameterType_name, Parameter_ParameterType_value)
+	proto.RegisterEnum("gauge.messages.ProtoExecutionResult_ErrorType", ProtoExecutionResult_ErrorType_name, ProtoExecutionResult_ErrorType_value)
 }
