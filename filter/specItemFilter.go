@@ -19,14 +19,15 @@ package filter
 
 import (
 	"errors"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
-	"golang.org/x/tools/go/exact"
-	"golang.org/x/tools/go/types"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
+	"golang.org/x/tools/go/exact"
+	"golang.org/x/tools/go/types"
 )
 
 var currentTagExp string
@@ -69,7 +70,7 @@ func (filter *ScenarioFilterBasedOnTags) Filter(item parser.Item) bool {
 		}
 		return !filter.filterTags(append(tags.Values, filter.specTags...))
 	}
-	return true
+	return false
 }
 
 func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
