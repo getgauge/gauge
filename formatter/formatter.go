@@ -43,11 +43,11 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 }
 
 func FormatSpecHeading(specHeading string) string {
-	return FormatHeading(specHeading, "=", 0)
+	return fmt.Sprintf("\n# %s", specHeading)
 }
 
 func FormatScenarioHeading(scenarioHeading string) string {
-	return fmt.Sprintf(FormatHeading(scenarioHeading, "-", 1))
+	return fmt.Sprintf("  ## %s", scenarioHeading)
 }
 
 func FormatStep(step *parser.Step) string {
