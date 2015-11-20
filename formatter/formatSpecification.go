@@ -27,7 +27,7 @@ type formatter struct {
 }
 
 func (formatter *formatter) SpecHeading(specHeading *parser.Heading) {
-	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "="))
+	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "=", 0))
 }
 
 func (formatter *formatter) SpecTags(tags *parser.Tags) {
@@ -50,7 +50,7 @@ func (formatter *formatter) Scenario(scenario *parser.Scenario) {
 }
 
 func (formatter *formatter) ScenarioHeading(scenarioHeading *parser.Heading) {
-	formatter.buffer.WriteString(FormatHeading(scenarioHeading.Value, "-"))
+	formatter.buffer.WriteString(FormatHeading(scenarioHeading.Value, "-", 0))
 }
 
 func (formatter *formatter) ScenarioTags(scenarioTags *parser.Tags) {
