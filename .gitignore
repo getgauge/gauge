@@ -29,3 +29,9 @@ deploy
 _workspace/
 count.out
 gauge.iml
+
+/Gemfile
+/env/default/
+/manifest.json
+/specs/
+/step_implementations/
