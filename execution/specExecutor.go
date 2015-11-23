@@ -118,7 +118,8 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
 		return specExecutor.getSkippedSpecResult()
 	}
-	specExecutor.logger.Info("%s", formatter.FormatSpecHeading(specInfo.GetName()))
+	specExecutor.logger.Info("%s", specInfo.GetName())
+	specExecutor.logger.Info("%s", strings.Repeat("=", len(specInfo.GetName())))
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)

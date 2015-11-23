@@ -19,14 +19,13 @@ package execLogger
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/wsxiaoys/terminal"
+	"os"
+	"strings"
 )
 
 type ExecutionLogger interface {
