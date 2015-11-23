@@ -20,14 +20,6 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/version"
-	"github.com/golang/protobuf/proto"
 	"net"
 	"os/exec"
 	"path"
@@ -37,6 +29,15 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/version"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -176,8 +177,7 @@ func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)
 	}
 
-	pluginLogger := &pluginLogger{pluginName: pd.Name}
-	cmd, err := common.ExecuteCommand(command, pd.pluginPath, pluginLogger, pluginLogger)
+	cmd, err := common.ExecuteCommand(command, pd.pluginPath, logger.Log, logger.Log)
 
 	if err != nil {
 		return nil, err

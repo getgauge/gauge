@@ -19,6 +19,10 @@ package main
 
 import (
 	"fmt"
+
+	"os"
+	"time"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -26,15 +30,13 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
+
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
-	"os"
-	"time"
 )
 
 // Command line flags
@@ -155,7 +157,6 @@ func initPackageFlags() {
 	if util.IsWindows() {
 		*simpleConsoleOutput = true
 	}
-	execLogger.SimpleConsoleOutput = *simpleConsoleOutput
 	env.ProjectEnv = *currentEnv
 	execution.ExecuteTags = *executeTags
 	execution.TableRows = *tableRows

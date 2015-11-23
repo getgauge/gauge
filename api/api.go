@@ -19,6 +19,12 @@ package api
 
 import (
 	"fmt"
+	"net"
+	"os"
+	"path"
+	"strconv"
+	"sync"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/conceptExtractor"
@@ -28,17 +34,11 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
-	"net"
-	"os"
-	"path"
-	"strconv"
-	"sync"
 )
 
 func StartAPI() *runner.StartChannels {
@@ -104,13 +104,13 @@ func RunInBackground(apiPort string) {
 		port, err = strconv.Atoi(apiPort)
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 		if err != nil {
-			execLogger.CriticalError(fmt.Errorf("Failed to parse the port number :", apiPort, "\n", err.Error()))
+			logger.Log.Critical(fmt.Errorf("Failed to parse the port number :", apiPort, "\n", err.Error()).Error())
 		}
 	} else {
 		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			execLogger.CriticalError(fmt.Errorf("Failed to start API Service. %s \n", err.Error()))
+			logger.Log.Critical(fmt.Errorf("Failed to start API Service. %s \n", err.Error()).Error())
 		}
 	}
 	var wg sync.WaitGroup

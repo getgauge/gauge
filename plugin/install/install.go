@@ -21,21 +21,21 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
-	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/version"
 	"os"
 	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/version"
 )
 
 const (
@@ -356,7 +356,8 @@ func installPluginFromDir(unzippedPluginDir string) error {
 func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		execLogger.CriticalError(fmt.Errorf("manifest.json not found : --install-all requires manifest.json in working directory."))
+
+		logger.Log.Critical(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory."))
 	}
 	installPluginsFromManifest(manifest)
 }
@@ -430,7 +431,6 @@ func InstallPluginZip(zipFile string, pluginName string) {
 }
 
 func installPluginsFromManifest(manifest *manifest.Manifest) {
-	writer := execLogger.Current()
 	pluginsMap := make(map[string]bool, 0)
 	pluginsMap[manifest.Language] = true
 	for _, plugin := range manifest.Plugins {
@@ -439,15 +439,15 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 
 	for pluginName, isRunner := range pluginsMap {
 		if !isCompatiblePluginInstalled(pluginName, "", isRunner) {
-			writer.Info("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
+			logger.Log.Info("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
 			installResult := InstallPlugin(pluginName, "")
 			if installResult.Success {
-				writer.Info("Successfully installed the plugin %s.", pluginName)
+				logger.Log.Info("Successfully installed the plugin %s.", pluginName)
 			} else {
-				writer.Error("Failed to install the %s plugin.", pluginName)
+				logger.Log.Error("Failed to install the %s plugin.", pluginName)
 			}
 		} else {
-			writer.Info("Plugin %s is already installed.", pluginName)
+			logger.Log.Info("Plugin %s is already installed.", pluginName)
 		}
 	}
 }
@@ -510,10 +510,10 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 	}
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		execLogger.CriticalError(err)
+		logger.Log.Critical(err.Error())
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		execLogger.CriticalError(fmt.Errorf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
+		logger.Log.Critical(fmt.Errorf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()).Error())
 	} else {
 		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}

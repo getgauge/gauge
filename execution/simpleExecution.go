@@ -18,19 +18,19 @@
 package execution
 
 import (
-	"fmt"
+	"path/filepath"
+	"time"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/logger/execLogger"
+
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
-	"path/filepath"
-	"time"
 )
 
 var ExecuteTags = ""
@@ -164,7 +164,7 @@ func getDataTableRows(rowCount int) indexRange {
 	}
 	indexes, err := getDataTableRowsRange(TableRows, rowCount)
 	if err != nil {
-		execLogger.CriticalError(fmt.Errorf("Table rows validation failed. %s\n", err.Error()))
+		logger.Log.Critical("Table rows validation failed. %s\n", err.Error())
 	}
 	return indexes
 }
