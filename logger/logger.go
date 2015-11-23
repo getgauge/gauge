@@ -41,10 +41,7 @@ type GaugeLogger struct {
 }
 
 func (p GaugeLogger) Write(b []byte) (int, error) {
-	s := string(b)
-	if len(strings.Trim(s, "\n")) > 0 {
-		p.Debug("    log: %s", string(b))
-	}
+	p.Info(string(b))
 	return len(b), nil
 }
 
@@ -60,7 +57,7 @@ var coloredFormat = logging.MustStringFormatter(
 )
 
 var uncoloredFormat = logging.MustStringFormatter(
-	"%{message}",
+	"%{time:15:04:05.000} %{message}",
 )
 
 func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {

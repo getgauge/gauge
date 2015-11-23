@@ -200,7 +200,8 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		executor.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
-	executor.logger.Info(formatter.FormatScenarioHeading(scenario.Heading.Value))
+	executor.logger.Info("%s", scenario.Heading.Value)
+	executor.logger.Info("%s", strings.Repeat("-", len(scenario.Heading.Value)))
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
@@ -422,7 +423,7 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger *l
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
-	executor.logger.Debug("  %s", formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest)))
+	executor.logger.Debug("Executing Step: %s", formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest)))
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 

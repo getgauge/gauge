@@ -43,11 +43,11 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 }
 
 func FormatSpecHeading(specHeading string) string {
-	return FormatHeading(specHeading, "=", 0)
+	return FormatHeading(specHeading, "=")
 }
 
 func FormatScenarioHeading(scenarioHeading string) string {
-	return fmt.Sprintf(FormatHeading(scenarioHeading, "-", 1))
+	return fmt.Sprintf("%s", FormatHeading(scenarioHeading, "-"))
 }
 
 func FormatStep(step *parser.Step) string {
@@ -93,11 +93,10 @@ func FormatConcept(protoConcept *gauge_messages.ProtoConcept) string {
 	return conceptText + "\n"
 }
 
-func FormatHeading(heading, headingChar string, indents int) string {
+func FormatHeading(heading, headingChar string) string {
 	trimmedHeading := strings.TrimSpace(heading)
 	length := len(trimmedHeading)
-	i := getRepeatedChars("  ", indents)
-	return fmt.Sprintf("%s%s\n%s%s\n", i, trimmedHeading, i, getRepeatedChars(headingChar, length))
+	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 
 func FormatTable(table *parser.Table) string {
