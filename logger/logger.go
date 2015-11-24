@@ -40,8 +40,8 @@ type GaugeLogger struct {
 	*logging.Logger
 }
 
-func (p GaugeLogger) Write(b []byte) (int, error) {
-	p.Info(string(b))
+func (g GaugeLogger) Write(b []byte) (int, error) {
+	g.Info("        > %s", string(b))
 	return len(b), nil
 }
 
