@@ -90,11 +90,12 @@ func InitializeProject(templateName string) {
 		logger.Log.Critical("Failed to find working directory. %s\n", err.Error())
 	}
 	config.ProjectRoot = wd
-	if templateName == "java" {
-		err = initializeTemplate(templateName)
-	} else {
-		err = createProjectTemplate(templateName)
-	}
+	//	if templateName == "java" {
+	//		err = initializeTemplate(templateName)
+	//	} else {
+	//		err = createProjectTemplate(templateName)
+	//	}
+	err = createProjectTemplate(templateName)
 	if err != nil {
 		logger.Log.Critical("Failed to initialize. %s\n", err.Error())
 		return
