@@ -219,6 +219,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		setScenarioFailure(executor.currentExecutionInfo)
 		printStatus(afterHookExecutionStatus, executor.logger)
 	}
+	logger.Log.PrintResult(scenarioResult.GetFailure())
 	return scenarioResult
 }
 

@@ -1,6 +1,9 @@
 package execution
 
 import (
+	"os"
+	"time"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
@@ -10,8 +13,6 @@ import (
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
-	"os"
-	"time"
 )
 
 var NumberOfExecutionStreams int
@@ -158,9 +159,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Log.Info("Specifications: \t%d executed, %d passed, %d failed, %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Log.Info("Scenarios: \t%d executed, %d passed, %d failed, %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Log.Info("Total time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Log.Info("\nSpecifications:\n\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Log.Info("Scenarios:\n\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Log.Info("\nTotal time taken: %s\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())

@@ -26,5 +26,13 @@ func (g *GaugeLogger) Scenario(msg string) {
 }
 
 func (g *GaugeLogger) Step(msg string) {
-	g.Debug("     %s", msg)
+	g.Debug("    %s", msg)
+}
+
+func (g *GaugeLogger) PrintResult(failed bool) {
+	if !failed {
+		g.Info("\t\t...[PASS]")
+	} else {
+		g.Info("\t\t...[FAIL]")
+	}
 }
