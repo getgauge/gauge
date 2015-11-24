@@ -104,13 +104,13 @@ func RunInBackground(apiPort string) {
 		port, err = strconv.Atoi(apiPort)
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 		if err != nil {
-			logger.Log.Critical(fmt.Errorf("Failed to parse the port number :", apiPort, "\n", err.Error()).Error())
+			logger.Log.Critical(fmt.Sprintf("Failed to parse the port number :", apiPort, "\n", err.Error()))
 		}
 	} else {
 		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			logger.Log.Critical(fmt.Errorf("Failed to start API Service. %s \n", err.Error()).Error())
+			logger.Log.Critical(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
 	var wg sync.WaitGroup

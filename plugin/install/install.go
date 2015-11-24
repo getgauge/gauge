@@ -513,7 +513,7 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 		logger.Log.Critical(err.Error())
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		logger.Log.Critical(fmt.Errorf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()).Error())
+		logger.Log.Critical(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
 	} else {
 		logger.Log.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}
