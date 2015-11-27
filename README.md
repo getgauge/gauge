@@ -68,7 +68,7 @@ Gauge is released under [GNU Public License version 3.0](http://www.gnu.org/lice
 
 ## Contributing
 
-Please read the [guide](contributing.md) on contributing to Gauge.
+Please read the [guide](CONTRIBUTING.md) on contributing to Gauge.
 
 ## Copyright
 
