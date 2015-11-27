@@ -35,12 +35,11 @@ type templateMetadata struct {
 }
 
 func initializeTemplate(templateName string) error {
-	defer util.RemoveTempDir()
-
 	unzippedTemplate, err := util.DownloadAndUnzip(getTemplateURL(templateName))
 	if err != nil {
 		return err
 	}
+	defer util.Remove(unzippedTemplate)
 
 	wd := config.ProjectRoot
 
@@ -63,7 +62,8 @@ func initializeTemplate(templateName string) error {
 	}
 
 	if metadata.PostInstallCmd != "" {
-		cmd, err := common.ExecuteCommand([]string{metadata.PostInstallCmd}, wd, os.Stdout, os.Stderr)
+		command := strings.Split(metadata.PostInstallCmd, " ")
+		cmd, err := common.ExecuteSystemCommand(command, wd, os.Stdout, os.Stderr)
 		cmd.Wait()
 		if err != nil {
 			for _, file := range filesAdded {
@@ -80,7 +80,7 @@ func initializeTemplate(templateName string) error {
 
 func getTemplateURL(templateName string) string {
 	//	filepath.Join(config.GaugeRepositoryUrl(), "templates", templateName, ".zip")
-	return "https://github.com/getgauge/gauge-repository/raw/template/templates/java.zip"
+	return "https://github.com/getgauge/gauge-repository/raw/template/templates/" + templateName + ".zip"
 }
 
 // InitializeProject initializes a Gauge project with specified template
@@ -90,12 +90,15 @@ func InitializeProject(templateName string) {
 		logger.Log.Critical("Failed to find working directory. %s\n", err.Error())
 	}
 	config.ProjectRoot = wd
-	//	if templateName == "java" {
-	//		err = initializeTemplate(templateName)
-	//	} else {
-	//		err = createProjectTemplate(templateName)
-	//	}
-	err = createProjectTemplate(templateName)
+
+	exists, _ := common.UrlExists(getTemplateURL(templateName))
+
+	if exists {
+		err = initializeTemplate(templateName)
+	} else {
+		err = createProjectTemplate(templateName)
+	}
+
 	if err != nil {
 		logger.Log.Critical("Failed to initialize. %s\n", err.Error())
 		return
