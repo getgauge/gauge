@@ -142,7 +142,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
-		logger.Log.Info("No specifications found.")
+		logger.Print("No specifications found.")
 		os.Exit(0)
 	}
 	nSkippedScenarios := len(errMap.scenarioErrs)
@@ -161,9 +161,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Log.Info("\nSpecifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Log.Info("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Log.Info("\nTotal time taken: %s\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Summary("Specifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Summary("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Summary("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
 		logger.Log.Error(unhandledErr.Error())

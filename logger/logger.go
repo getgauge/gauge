@@ -43,7 +43,7 @@ type GaugeLogger struct {
 func (g GaugeLogger) Write(b []byte) (int, error) {
 	str := strings.Trim(string(b), "\n ")
 	if len(str) > 0 {
-		g.Debug("\t%s", str)
+		Print("\t%s", str)
 	}
 	return len(b), nil
 
@@ -66,7 +66,7 @@ var uncoloredFormat = logging.MustStringFormatter(
 
 func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {
 	level = loggingLevel(verbose, logLevel)
-	initGaugeLogger(level, simpleConsoleOutput)
+	initFileLogger(level, simpleConsoleOutput)
 	initApiLogger(level, simpleConsoleOutput)
 }
 
@@ -77,8 +77,28 @@ func getLogFormatter(logger logging.Backend, supportsColoredFormat bool, simpleC
 	return logging.NewBackendFormatter(logger, uncoloredFormat)
 }
 
-func initGaugeLogger(level logging.Level, simpleConsoleOutput bool) {
-	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+// func initGaugeLogger(level logging.Level, simpleConsoleOutput bool) {
+// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+// 	logsDir := os.Getenv(LOGS_DIRECTORY)
+// 	var gaugeFileLogger logging.Backend
+// 	if logsDir == "" {
+// 		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
+// 	} else {
+// 		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
+// 	}
+// 	stdOutFormatter := getLogFormatter(stdOutLogger, true, simpleConsoleOutput)
+// 	fileFormatter := getLogFormatter(gaugeFileLogger, false, simpleConsoleOutput)
+
+// 	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
+// 	stdOutLoggerLeveled.SetLevel(level, "")
+
+// 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
+// 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
+
+// 	logging.SetBackend(fileLoggerLeveled, stdOutLoggerLeveled)
+// }
+
+func initFileLogger(level logging.Level, simpleConsoleOutput bool) {
 	logsDir := os.Getenv(LOGS_DIRECTORY)
 	var gaugeFileLogger logging.Backend
 	if logsDir == "" {
@@ -86,16 +106,12 @@ func initGaugeLogger(level logging.Level, simpleConsoleOutput bool) {
 	} else {
 		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
 	}
-	stdOutFormatter := getLogFormatter(stdOutLogger, true, simpleConsoleOutput)
 	fileFormatter := getLogFormatter(gaugeFileLogger, false, simpleConsoleOutput)
-
-	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	stdOutLoggerLeveled.SetLevel(level, "")
 
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
 
-	logging.SetBackend(fileLoggerLeveled, stdOutLoggerLeveled)
+	logging.SetBackend(fileLoggerLeveled)
 }
 
 func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
