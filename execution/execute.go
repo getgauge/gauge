@@ -33,6 +33,8 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	}
 	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
+	// TODO: Remove this logger line below when plugins call tell the difference between their status messages and user-generated sysouts
+	logger.Log.Debug("\n")
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
 	os.Exit(exitCode)
@@ -159,8 +161,8 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Log.Info("\nSpecifications:\n\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Log.Info("Scenarios:\n\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Log.Info("\nSpecifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Log.Info("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Log.Info("\nTotal time taken: %s\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {

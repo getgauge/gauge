@@ -219,7 +219,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		setScenarioFailure(executor.currentExecutionInfo)
 		printStatus(afterHookExecutionStatus, executor.logger)
 	}
-	logger.Log.PrintResult(scenarioResult.GetFailure())
+	logger.Log.PrintScenarioResult(scenarioResult.GetFailure())
 	return scenarioResult
 }
 
@@ -425,6 +425,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 	executor.logger.Step(strings.TrimSpace(formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))))
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
+	stepFailed := false
 
 	beforeHookStatus := executor.executeBeforeStepHook()
 	if beforeHookStatus.GetFailed() {
@@ -432,12 +433,14 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		protoStepExecResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true)}
 		setStepFailure(executor.currentExecutionInfo, executor.logger)
 		printStatus(beforeHookStatus, executor.logger)
+		stepFailed = true
 	} else {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(executor.currentExecutionInfo, executor.logger)
 			printStatus(stepExecutionStatus, executor.logger)
+			stepFailed = true
 		}
 		protoStepExecResult.ExecutionResult = stepExecutionStatus
 	}
@@ -448,7 +451,9 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		printStatus(afterStepHookStatus, executor.logger)
 		protoStepExecResult.PostHookFailure = result.GetProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
+		stepFailed = true
 	}
+	executor.logger.PrintStepResult(stepFailed)
 	protoStepExecResult.Skipped = protoStep.StepExecutionResult.Skipped
 	protoStepExecResult.SkippedReason = protoStep.StepExecutionResult.SkippedReason
 	protoStep.StepExecutionResult = protoStepExecResult

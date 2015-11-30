@@ -17,6 +17,8 @@
 
 package logger
 
+import "github.com/op/go-logging"
+
 func (g *GaugeLogger) Specification(msg string) {
 	g.Info("# %s", msg)
 }
@@ -29,10 +31,20 @@ func (g *GaugeLogger) Step(msg string) {
 	g.Debug("    %s", msg)
 }
 
-func (g *GaugeLogger) PrintResult(failed bool) {
+func (g *GaugeLogger) PrintScenarioResult(failed bool) {
+	if level == logging.INFO {
+		if !failed {
+			g.Info("  ...[PASS]")
+		} else {
+			g.Info("  ...[FAIL]")
+		}
+	}
+}
+
+func (g *GaugeLogger) PrintStepResult(failed bool) {
 	if !failed {
-		g.Info("\t\t...[PASS]")
+		g.Debug("      ...[PASS]")
 	} else {
-		g.Info("\t\t...[FAIL]")
+		g.Debug("      ...[FAIL]")
 	}
 }

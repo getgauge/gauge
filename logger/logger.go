@@ -41,8 +41,12 @@ type GaugeLogger struct {
 }
 
 func (g GaugeLogger) Write(b []byte) (int, error) {
-	g.Debug("        > %s", string(b))
+	str := strings.Trim(string(b), "\n ")
+	if len(str) > 0 {
+		g.Debug("\t%s", str)
+	}
 	return len(b), nil
+
 }
 
 var Log = GaugeLogger{logging.MustGetLogger("gauge")}
