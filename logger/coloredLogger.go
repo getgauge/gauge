@@ -6,7 +6,7 @@ import (
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/gosuri/uilive"
 	"github.com/op/go-logging"
-	"time"
+	"strings"
 )
 
 type coloredLogger struct {
@@ -47,9 +47,11 @@ func (cLogger *coloredLogger) Spec(heading string) {
 func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	Log.Info(msg)
+	cLogger.writer.Start()
 	if level == logging.INFO {
 		cLogger.start(indent(msg, scenarioIndentation))
 	} else {
+
 		fmt.Println(indent(msg, scenarioIndentation))
 		fmt.Println()
 	}
@@ -60,6 +62,7 @@ func (cLogger *coloredLogger) ScenarioEnd(scenarioHeading string, failed bool) {
 	if level == logging.INFO {
 		cLogger.end(indent(msg, scenarioIndentation), failed)
 	}
+	cLogger.writer.Stop()
 }
 
 func (cLogger *coloredLogger) StepStart(stepText string) {
@@ -79,24 +82,26 @@ func (cLogger *coloredLogger) Table(table string) {
 }
 
 func (cLogger *coloredLogger) start(text string) {
-	cLogger.writer.Start()
 	ct.Foreground(ct.Cyan, true)
-	fmt.Fprintln(cLogger.writer, text)
+	fragments := strings.Split(text, "\n")
+	for i := 0; i < len(fragments); i++ {
+		fmt.Fprintln(cLogger.writer, fragments[i])
+	}
 	cLogger.writer.Flush()
 	ct.ResetColor()
 }
 
 func (cLogger *coloredLogger) end(text string, failed bool) {
-	time.Sleep(time.Millisecond * 200)
 	if failed {
 		ct.Foreground(ct.Red, true)
 	} else {
 		ct.Foreground(ct.Green, true)
 	}
+	fragments := strings.Split(text, "\n")
+	for i := 0; i < len(fragments); i++ {
+		fmt.Fprintln(cLogger.writer, fragments[i])
+	}
 	cLogger.writer.Flush()
-	fmt.Fprintln(cLogger.writer, text)
-
-	cLogger.writer.Stop()
 	ct.ResetColor()
 	fmt.Println()
 }
