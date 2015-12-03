@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
@@ -36,6 +37,28 @@ const (
 	apiLogFileName   = "api.log"
 )
 
+type MyLogger interface {
+	Spec(string)
+	ScenarioStart(string)
+	ScenarioEnd(string, bool)
+	StepStart(string)
+	StepEnd(string, bool)
+	Table(string)
+	Info(msg string, args ...interface{})
+	Debug(msg string, args ...interface{})
+	ConsoleWrite(msg string, args ...interface{})
+	writeSysoutBuffer(string)
+}
+
+var currentLogger MyLogger
+
+func Current() MyLogger {
+	if currentLogger == nil {
+		currentLogger = newColoredConsoleWriter()
+	}
+	return currentLogger
+}
+
 type GaugeLogger struct {
 	*logging.Logger
 }
@@ -43,10 +66,10 @@ type GaugeLogger struct {
 func (g GaugeLogger) Write(b []byte) (int, error) {
 	str := strings.Trim(string(b), "\n ")
 	if len(str) > 0 {
-		Print("\t%s", str)
+		Current().Debug("\t%s", str)
+		Current().writeSysoutBuffer(fmt.Sprintf("\t%s", str))
 	}
 	return len(b), nil
-
 }
 
 var Log = GaugeLogger{logging.MustGetLogger("gauge")}
