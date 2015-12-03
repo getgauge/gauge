@@ -424,11 +424,11 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger *l
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
-	logger.Current().StepStart(formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest)))
+	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
+	logger.Current().StepStart(stepText)
 
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
-	stepFailed := false
 
 	beforeHookStatus := executor.executeBeforeStepHook()
 	if beforeHookStatus.GetFailed() {
@@ -436,14 +436,12 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		protoStepExecResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true)}
 		setStepFailure(executor.currentExecutionInfo, executor.logger)
 		printStatus(beforeHookStatus, executor.logger)
-		stepFailed = true
 	} else {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(executor.currentExecutionInfo, executor.logger)
 			printStatus(stepExecutionStatus, executor.logger)
-			stepFailed = true
 		}
 		protoStepExecResult.ExecutionResult = stepExecutionStatus
 	}
@@ -454,15 +452,14 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		printStatus(afterStepHookStatus, executor.logger)
 		protoStepExecResult.PostHookFailure = result.GetProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
-		stepFailed = true
 	}
 	protoStepExecResult.Skipped = protoStep.StepExecutionResult.Skipped
 	protoStepExecResult.SkippedReason = protoStep.StepExecutionResult.SkippedReason
 	protoStep.StepExecutionResult = protoStepExecResult
 
-	logger.Current().StepEnd(formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest)), stepFailed)
-
-	return protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
+	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
+	logger.Current().StepEnd(stepText, stepFailed)
+	return stepFailed
 }
 
 func addExecutionTimes(stepExecResult *gauge_messages.ProtoStepExecutionResult, execResults ...*gauge_messages.ProtoExecutionResult) {

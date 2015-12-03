@@ -6,7 +6,6 @@ import (
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/gosuri/uilive"
 	"github.com/op/go-logging"
-	"time"
 )
 
 type coloredLogger struct {
@@ -49,7 +48,6 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	if level == logging.DEBUG {
 		cLogger.ConsoleWrite(indent(msg, scenarioIndentation))
 		fmt.Println()
-		time.Sleep(time.Second)
 	} else {
 		cLogger.writer.Start()
 		ct.Foreground(ct.Cyan, true)
