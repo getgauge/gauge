@@ -9,16 +9,16 @@ import (
 )
 
 type coloredLogger struct {
-	writer *uilive.Writer
-	myText string
+	writer      *uilive.Writer
+	currentText string
 }
 
 func newColoredConsoleWriter() *coloredLogger {
-	return &coloredLogger{writer: uilive.New(), myText: ""}
+	return &coloredLogger{writer: uilive.New(), currentText: ""}
 }
 
 func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
-	cLogger.myText += text
+	cLogger.currentText += text
 }
 
 func (cLogger *coloredLogger) Info(msg string, args ...interface{}) {
@@ -53,28 +53,22 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	Log.Info(msg)
-	cLogger.writer.Start()
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		ct.Foreground(ct.Cyan, false)
+		cLogger.writer.Start()
+		ct.Foreground(ct.Yellow, false)
 
 		fmt.Fprintln(cLogger.writer, indentedText)
-		cLogger.myText = indentedText
-		time.Sleep(time.Millisecond * 100)
-		cLogger.writer.Flush()
+		cLogger.currentText = indentedText
+		time.Sleep(time.Millisecond * 10)
 
 		ct.ResetColor()
 	} else {
-		ct.Foreground(ct.Cyan, false)
-
-		cLogger.myText += indentedText
-		fmt.Fprintln(cLogger.writer, cLogger.myText)
-		time.Sleep(time.Millisecond * 100)
-		cLogger.writer.Flush()
-
+		cLogger.writer.Start()
+		ct.Foreground(ct.Cyan, true)
+		cLogger.ConsoleWrite(indentedText)
 		ct.ResetColor()
-		cLogger.myText += "\n"
 	}
 }
 
@@ -86,28 +80,30 @@ func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 			ct.Foreground(ct.Green, true)
 		}
 
-		fmt.Fprintln(cLogger.writer, cLogger.myText)
-		time.Sleep(time.Millisecond * 100)
-		cLogger.writer.Flush()
+		fmt.Fprintln(cLogger.writer, cLogger.currentText)
+		time.Sleep(time.Millisecond * 10)
 
-		cLogger.myText += ""
 		ct.ResetColor()
 	} else {
-		cLogger.myText = ""
+		cLogger.writer.Stop()
+		cLogger.currentText = ""
 	}
-	fmt.Println()
-	cLogger.writer.Stop()
+	if level == logging.INFO {
+		cLogger.writer.Flush()
+		cLogger.writer.Stop()
+	}
+	cLogger.writer = uilive.New()
+	cLogger.currentText = ""
 }
 
 func (cLogger *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		ct.Foreground(ct.Cyan, true)
+		ct.Foreground(ct.Yellow, true)
 
-		cLogger.myText += indent(stepText, stepIndentation)
-		fmt.Fprintln(cLogger.writer, cLogger.myText)
-		time.Sleep(time.Millisecond * 100)
-		cLogger.writer.Flush()
+		cLogger.currentText = indent(stepText, stepIndentation)
+		fmt.Fprintln(cLogger.writer, cLogger.currentText)
+		time.Sleep(time.Millisecond * 10)
 
 		ct.ResetColor()
 	}
@@ -121,13 +117,12 @@ func (cLogger *coloredLogger) StepEnd(failed bool) {
 			ct.Foreground(ct.Green, true)
 		}
 
-		fmt.Fprintln(cLogger.writer, cLogger.myText)
-		time.Sleep(time.Millisecond * 100)
-		cLogger.writer.Flush()
+		fmt.Fprintln(cLogger.writer, cLogger.currentText)
+		time.Sleep(time.Millisecond * 10)
 
-		cLogger.myText += "\n"
 		ct.ResetColor()
-		//		fmt.Println()
-		//		cLogger.myText = ""
+		cLogger.writer.Flush()
+		fmt.Println()
+		cLogger.currentText = ""
 	}
 }
