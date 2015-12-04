@@ -3,6 +3,10 @@
 	"GoVersion": "go1.4",
 	"Deps": [
 		{
+			"ImportPath": "github.com/daviddengcn/go-colortext",
+			"Rev": "3b18c8575a432453d41fdafb340099fff5bba2f7"
+		},
+		{
 			"ImportPath": "github.com/dmotylev/goproperties",
 			"Rev": "7cbffbaada472bc302cbaca51c1d5ed2682eb509"
 		},
@@ -19,12 +23,12 @@
 			"Rev": "7f07925444bb51fa4cf9dfe6f7661876f8852275"
 		},
 		{
-			"ImportPath": "github.com/op/go-logging",
-			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
+			"ImportPath": "github.com/gosuri/uilive",
+			"Rev": "eb9a944a94f38ebcfa43d48bed49e47050c1aa73"
 		},
 		{
-			"ImportPath": "github.com/wsxiaoys/terminal",
-			"Rev": "9dcaf1d63119a8ac00eef82270eaef08b6aa2328"
+			"ImportPath": "github.com/op/go-logging",
+			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
 		},
 		{
 			"ImportPath": "golang.org/x/tools/go/ast/astutil",
