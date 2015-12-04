@@ -37,10 +37,10 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	Log.Info(msg)
+	cLogger.writer.Start()
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		cLogger.writer.Start()
 		ct.Foreground(ct.Yellow, false)
 
 		fmt.Fprintln(cLogger.writer, indentedText)
@@ -49,7 +49,6 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 
 		ct.ResetColor()
 	} else {
-		cLogger.writer.Start()
 		ct.Foreground(ct.Cyan, true)
 		ConsoleWrite(indentedText)
 		ct.ResetColor()
@@ -66,16 +65,10 @@ func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 
 		fmt.Fprintln(cLogger.writer, cLogger.currentText)
 		time.Sleep(time.Millisecond * 10)
-
 		ct.ResetColor()
-	} else {
-		cLogger.writer.Stop()
-		cLogger.currentText = ""
-	}
-	if level == logging.INFO {
 		cLogger.writer.Flush()
-		cLogger.writer.Stop()
 	}
+	cLogger.writer.Stop()
 	cLogger.writer = uilive.New()
 	cLogger.currentText = ""
 }
