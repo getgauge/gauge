@@ -118,7 +118,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
 		return specExecutor.getSkippedSpecResult()
 	}
-	logger.Current().Spec(specInfo.GetName())
+	logger.Current().SpecStart(specInfo.GetName())
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
@@ -141,6 +141,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		printStatus(afterSpecHookStatus, specExecutor.logger)
 	}
 	specExecutor.specResult.Skipped = specExecutor.specResult.ScenarioSkippedCount > 0
+	logger.Current().SpecEnd()
 	return specExecutor.specResult
 }
 
@@ -220,7 +221,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		setScenarioFailure(executor.currentExecutionInfo)
 		printStatus(afterHookExecutionStatus, executor.logger)
 	}
-	logger.Current().ScenarioEnd(scenario.Heading.Value, scenarioResult.GetFailure())
+	logger.Current().ScenarioEnd(scenarioResult.GetFailure())
 
 	return scenarioResult
 }
@@ -458,7 +459,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 	protoStep.StepExecutionResult = protoStepExecResult
 
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
-	logger.Current().StepEnd(stepText, stepFailed)
+	logger.Current().StepEnd(stepFailed)
 	return stepFailed
 }
 

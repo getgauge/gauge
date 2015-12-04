@@ -18,12 +18,12 @@
 package logger
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"fmt"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
@@ -38,12 +38,12 @@ const (
 )
 
 type MyLogger interface {
-	Spec(string)
+	SpecStart(string)
+	SpecEnd()
 	ScenarioStart(string)
-	ScenarioEnd(string, bool)
+	ScenarioEnd(bool)
 	StepStart(string)
-	StepEnd(string, bool)
-	Table(string)
+	StepEnd(bool)
 	Info(msg string, args ...interface{})
 	Debug(msg string, args ...interface{})
 	ConsoleWrite(msg string, args ...interface{})
@@ -99,27 +99,6 @@ func getLogFormatter(logger logging.Backend, supportsColoredFormat bool, simpleC
 	}
 	return logging.NewBackendFormatter(logger, uncoloredFormat)
 }
-
-// func initGaugeLogger(level logging.Level, simpleConsoleOutput bool) {
-// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-// 	logsDir := os.Getenv(LOGS_DIRECTORY)
-// 	var gaugeFileLogger logging.Backend
-// 	if logsDir == "" {
-// 		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
-// 	} else {
-// 		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
-// 	}
-// 	stdOutFormatter := getLogFormatter(stdOutLogger, true, simpleConsoleOutput)
-// 	fileFormatter := getLogFormatter(gaugeFileLogger, false, simpleConsoleOutput)
-
-// 	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-// 	stdOutLoggerLeveled.SetLevel(level, "")
-
-// 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
-// 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
-
-// 	logging.SetBackend(fileLoggerLeveled, stdOutLoggerLeveled)
-// }
 
 func initFileLogger(level logging.Level, simpleConsoleOutput bool) {
 	logsDir := os.Getenv(LOGS_DIRECTORY)
