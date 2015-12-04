@@ -54,7 +54,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 	if groupFilter.group == -1 {
 		return specs
 	}
-	logger.Log.Info("Using the -g flag will make the distribution strategy 'eager'. The --strategy setting will be overridden.")
+	logger.Info("Using the -g flag will make the distribution strategy 'eager'. The --strategy setting will be overridden.")
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*parser.Specification, 0)
 	}

@@ -22,7 +22,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Log.Critical(err.Error())
+		logger.Critical(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -34,7 +34,7 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
 	// TODO: Remove this logger line below when plugins call tell the difference between their status messages and user-generated sysouts
-	logger.Log.Debug("\n")
+	logger.Debug("\n")
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
 	os.Exit(exitCode)
@@ -45,7 +45,7 @@ func CheckSpecs(args []string) {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Log.Critical(err.Error())
+		logger.Critical(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -53,7 +53,7 @@ func CheckSpecs(args []string) {
 	if len(errMap.stepErrs) > 0 {
 		os.Exit(1)
 	}
-	logger.Log.Info("No error found.")
+	logger.Info("No error found.")
 	os.Exit(0)
 }
 
@@ -74,7 +74,7 @@ func startApi() *runner.TestRunner {
 	case runner := <-startChan.RunnerChan:
 		return runner
 	case err := <-startChan.ErrorChan:
-		logger.Log.Critical("Failed to start gauge API: %s", err.Error())
+		logger.Critical("Failed to start gauge API: %s", err.Error())
 		os.Exit(1)
 	}
 	return nil
@@ -142,7 +142,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	// Print out all the errors that happened during the execution
 	// helps to view all the errors in one view
 	if suiteResult == nil {
-		logger.Current().Info("No specifications found.")
+		logger.Info("No specifications found.")
 		os.Exit(0)
 	}
 	nSkippedScenarios := len(errMap.scenarioErrs)
@@ -161,12 +161,12 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Current().Info("Specifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Current().Info("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Current().Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Info("Specifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Info("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
-		logger.Log.Error(unhandledErr.Error())
+		logger.Error(unhandledErr.Error())
 	}
 	exitCode := 0
 	if suiteResult.IsFailed || (nSkippedSpecs+nSkippedScenarios) > 0 {
@@ -176,11 +176,11 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 }
 
 func printValidationFailures(validationErrors validationErrors) {
-	logger.Log.Error("Validation failed. The following steps have errors")
+	logger.Error("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			logger.Log.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
+			logger.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }

@@ -44,9 +44,6 @@ type MyLogger interface {
 	ScenarioEnd(bool)
 	StepStart(string)
 	StepEnd(bool)
-	Info(msg string, args ...interface{})
-	Debug(msg string, args ...interface{})
-	ConsoleWrite(msg string, args ...interface{})
 	writeSysoutBuffer(string)
 }
 
@@ -61,6 +58,37 @@ func Current() MyLogger {
 
 type GaugeLogger struct {
 	*logging.Logger
+}
+
+func Info(msg string, args ...interface{}) {
+	Log.Info(msg, args...)
+	ConsoleWrite(msg, args...)
+}
+
+func Error(msg string, args ...interface{}) {
+	Log.Error(msg, args...)
+	ConsoleWrite(msg, args...)
+}
+
+func Warning(msg string, args ...interface{}) {
+	Log.Warning(msg, args...)
+	ConsoleWrite(msg, args...)
+}
+
+func Critical(msg string, args ...interface{}) {
+	Log.Critical(msg, args...)
+	ConsoleWrite(msg, args...)
+}
+
+func Debug(msg string, args ...interface{}) {
+	Log.Debug(msg, args...)
+	if level == logging.DEBUG {
+		ConsoleWrite(msg, args...)
+	}
+}
+
+func ConsoleWrite(msg string, args ...interface{}) {
+	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 func (g GaugeLogger) Write(b []byte) (int, error) {

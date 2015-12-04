@@ -78,12 +78,12 @@ type parallelInfo struct {
 
 func (self *parallelInfo) isValid() bool {
 	if self.numberOfStreams < 1 {
-		logger.Log.Error("Invalid input(%s) to --n flag.", strconv.Itoa(self.numberOfStreams))
+		logger.Error("Invalid input(%s) to --n flag.", strconv.Itoa(self.numberOfStreams))
 		return false
 	}
 	currentStrategy := strings.ToLower(Strategy)
 	if currentStrategy != LAZY && currentStrategy != EAGER {
-		logger.Log.Error("Invalid input(%s) to --strategy flag.", Strategy)
+		logger.Error("Invalid input(%s) to --strategy flag.", Strategy)
 		return false
 	}
 	return true

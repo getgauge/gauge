@@ -214,7 +214,7 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *Par
 				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 			return nil, &ParseResult{ParseError: err, FileName: conceptFile}
 		}
 	}
@@ -225,7 +225,7 @@ func AddConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *Pars
 	concepts, parseResults := new(ConceptParser).ParseFile(conceptFile)
 	if parseResults != nil && parseResults.Warnings != nil {
 		for _, warning := range parseResults.Warnings {
-			logger.Log.Warning(warning.String())
+			logger.Warning(warning.String())
 		}
 	}
 	if parseResults != nil && parseResults.Error != nil {

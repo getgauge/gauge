@@ -86,13 +86,13 @@ func main() {
 		if validGaugeProject {
 			api.RunInBackground(*apiPort)
 		} else {
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	} else if *specFilesToFormat != "" {
 		if validGaugeProject {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else {
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	} else if *initialize != "" {
 		projectInit.InitializeProject(*initialize)
@@ -115,13 +115,13 @@ func main() {
 			startChan := api.StartAPI()
 			refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
 		} else {
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	} else if *check {
 		if validGaugeProject {
 			execution.CheckSpecs(flag.Args())
 		} else {
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	} else {
 		if len(flag.Args()) == 0 {
@@ -130,7 +130,7 @@ func main() {
 		if validGaugeProject {
 			execution.ExecuteSpecs(*parallel, flag.Args())
 		} else {
-			logger.Log.Error(err.Error())
+			logger.Error(err.Error())
 		}
 	}
 }

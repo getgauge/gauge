@@ -21,22 +21,6 @@ func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
 	cLogger.currentText += text
 }
 
-func (cLogger *coloredLogger) Info(msg string, args ...interface{}) {
-	Log.Info(msg, args...)
-	cLogger.ConsoleWrite(msg, args...)
-}
-
-func (cLogger *coloredLogger) Debug(msg string, args ...interface{}) {
-	Log.Info(msg, args...)
-	if level == logging.DEBUG {
-		cLogger.ConsoleWrite(msg, args...)
-	}
-}
-
-func (cLogger *coloredLogger) ConsoleWrite(msg string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(msg, args...))
-}
-
 func (cLogger *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
@@ -67,7 +51,7 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	} else {
 		cLogger.writer.Start()
 		ct.Foreground(ct.Cyan, true)
-		cLogger.ConsoleWrite(indentedText)
+		ConsoleWrite(indentedText)
 		ct.ResetColor()
 	}
 }

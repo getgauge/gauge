@@ -201,7 +201,7 @@ func validateTagExpression(tagExpression string) {
 	filter.replaceSpecialChar()
 	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
 	if err != nil {
-		logger.Log.Critical(err.Error())
+		logger.Critical(err.Error())
 		os.Exit(1)
 	}
 }

@@ -89,10 +89,10 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 		select {
 		case done := <-exited:
 			if done {
-				logger.Log.Debug("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
+				logger.Debug("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginConnectionTimeout()):
-			logger.Log.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
+			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
 			return plugin.pluginCmd.Process.Kill()
 		}
 	}
@@ -292,7 +292,7 @@ func (handler *PluginHandler) NotifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
-			logger.Log.Error("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+			logger.Error("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 			handler.killPlugin(id)
 		}
 	}
@@ -300,10 +300,10 @@ func (handler *PluginHandler) NotifyPlugins(message *gauge_messages.Message) {
 
 func (handler *PluginHandler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
-	logger.Log.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		logger.Log.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		logger.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginId)
 }

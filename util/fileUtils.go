@@ -102,7 +102,7 @@ func GetSpecFiles(specSource string) []string {
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		logger.Log.Error("Failed to refactor '%s': %s\n", fileName, err)
+		logger.Error("Failed to refactor '%s': %s\n", fileName, err)
 	}
 }
 
@@ -116,7 +116,7 @@ func GetPathToFile(path string) string {
 func Remove(dir string) {
 	err := common.Remove(dir)
 	if err != nil {
-		logger.Log.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+		logger.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
 	}
 }
 
@@ -127,19 +127,19 @@ func RemoveTempDir() {
 // DownloadAndUnzip downloads the zip file from given download link and unzips it.
 // Returns the unzipped file path.
 func DownloadAndUnzip(downloadLink string) (string, error) {
-	logger.Log.Info("Downloading => %s", downloadLink)
+	logger.Debug("Downloading => %s", downloadLink)
 	downloadedFile, err := common.DownloadToTempDir(downloadLink)
 	if err != nil {
 		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
 	}
-	logger.Log.Info("Downloaded to %s", downloadedFile)
+	logger.Info("Downloaded to %s", downloadedFile)
 	defer Remove(downloadedFile)
 
 	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
 	if err != nil {
 		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
 	}
-	logger.Log.Info("Unzipped to => %s\n", unzippedPluginDir)
+	logger.Debug("Unzipped to => %s\n", unzippedPluginDir)
 
 	return unzippedPluginDir, nil
 }

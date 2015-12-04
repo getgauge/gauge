@@ -322,15 +322,15 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	if !refactoringResult.Success {
 		exitCode = 1
 		for _, err := range refactoringResult.Errors {
-			logger.Log.Error("%s \n", err)
+			logger.Error("%s \n", err)
 		}
 	}
 	for _, warning := range refactoringResult.warnings {
-		logger.Log.Warning("%s \n", warning)
+		logger.Warning("%s \n", warning)
 	}
-	logger.Log.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
-	logger.Log.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
-	logger.Log.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	logger.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	logger.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	logger.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
 	os.Exit(exitCode)
 }
 

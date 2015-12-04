@@ -115,12 +115,12 @@ func HandleParseResult(results ...*ParseResult) {
 	var failed = false
 	for _, result := range results {
 		if !result.Ok {
-			logger.Log.Critical(result.Error())
+			logger.Critical(result.Error())
 			failed = true
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Log.Warning("%s : %v", result.FileName, warning)
+				logger.Warning("%s : %v", result.FileName, warning)
 			}
 		}
 	}

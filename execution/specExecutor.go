@@ -508,13 +508,13 @@ func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Mess
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Log.Critical(errMsg)
+			logger.Critical(errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	} else {
 		errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-		logger.Log.Critical(errMsg)
+		logger.Critical(errMsg)
 		return errorResult(errMsg)
 	}
 }
