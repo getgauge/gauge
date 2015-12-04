@@ -33,8 +33,6 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	}
 	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
 	result := execution.start()
-	// TODO: Remove this logger line below when plugins call tell the difference between their status messages and user-generated sysouts
-	logger.Debug("\n")
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
 	os.Exit(exitCode)

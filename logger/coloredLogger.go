@@ -5,6 +5,7 @@ import (
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/gosuri/uilive"
 	"github.com/op/go-logging"
+	"strings"
 	"time"
 )
 
@@ -96,6 +97,10 @@ func (cLogger *coloredLogger) StepEnd(failed bool) {
 
 		fmt.Fprintln(cLogger.writer, cLogger.currentText)
 		time.Sleep(time.Millisecond * 10)
+		nLines := strings.Count(cLogger.currentText, "\n")
+		for i := 0; i < nLines; i++ {
+			fmt.Println()
+		}
 
 		ct.ResetColor()
 		cLogger.writer.Flush()
