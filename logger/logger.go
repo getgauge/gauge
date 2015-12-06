@@ -94,7 +94,6 @@ func ConsoleWrite(msg string, args ...interface{}) {
 func (g GaugeLogger) Write(b []byte) (int, error) {
 	str := strings.Trim(string(b), "\n ")
 	if len(str) > 0 {
-		//		Current().Debug("\t%s", str)
 		Current().writeSysoutBuffer(fmt.Sprintf("\t%s", str))
 	}
 	return len(b), nil

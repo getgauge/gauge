@@ -6,33 +6,37 @@ import (
 	"github.com/gosuri/uilive"
 	"github.com/op/go-logging"
 	"strings"
-	"time"
 )
 
 type coloredLogger struct {
-	writer      *uilive.Writer
-	currentText string
+	writer        *uilive.Writer
+	currentText   string
+	sysoutBuffer  string
+	linesToGoDown int
 }
 
 func newColoredConsoleWriter() *coloredLogger {
-	return &coloredLogger{writer: uilive.New(), currentText: ""}
+	return &coloredLogger{writer: uilive.New()}
 }
 
 func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
-	cLogger.currentText += text
+	if level == logging.DEBUG {
+		text = strings.Replace(text, "\n", "\n\t", -1)
+		cLogger.sysoutBuffer += text + "\n"
+		cLogger.writeln(cLogger.currentText+cLogger.sysoutBuffer, ct.None, false)
+	}
 }
 
 func (cLogger *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
-	ct.Foreground(ct.None, true)
-	fmt.Println(msg)
+	ct.Foreground(ct.Cyan, true)
+	ConsoleWrite(msg)
 	fmt.Println()
 	ct.ResetColor()
 }
 
 func (coloredLogger *coloredLogger) SpecEnd() {
-	fmt.Println()
 }
 
 func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
@@ -42,15 +46,10 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		ct.Foreground(ct.Yellow, false)
-
-		fmt.Fprintln(cLogger.writer, indentedText)
-		cLogger.currentText = indentedText
-		time.Sleep(time.Millisecond * 10)
-
-		ct.ResetColor()
+		cLogger.currentText = indentedText + "\n"
+		cLogger.writeln(cLogger.currentText, ct.None, false)
 	} else {
-		ct.Foreground(ct.Cyan, true)
+		ct.Foreground(ct.Yellow, true)
 		ConsoleWrite(indentedText)
 		ct.ResetColor()
 	}
@@ -59,52 +58,64 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
 		if failed {
-			ct.Foreground(ct.Red, true)
+			cLogger.write(cLogger.currentText, ct.Red, true)
 		} else {
-			ct.Foreground(ct.Green, true)
+			cLogger.write(cLogger.currentText, ct.Green, true)
 		}
-
-		fmt.Fprintln(cLogger.writer, cLogger.currentText)
-		time.Sleep(time.Millisecond * 10)
-		ct.ResetColor()
 		cLogger.writer.Flush()
 	}
 	cLogger.writer.Stop()
+	cLogger.resetColoredLogger()
+}
+
+func (cLogger *coloredLogger) resetColoredLogger() {
 	cLogger.writer = uilive.New()
 	cLogger.currentText = ""
+	cLogger.sysoutBuffer = ""
+	cLogger.linesToGoDown = 0
 }
 
 func (cLogger *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		ct.Foreground(ct.Yellow, true)
-
-		cLogger.currentText = indent(stepText, stepIndentation)
-		fmt.Fprintln(cLogger.writer, cLogger.currentText)
-		time.Sleep(time.Millisecond * 10)
-
-		ct.ResetColor()
+		for i := 0; i < cLogger.linesToGoDown; i++ {
+			fmt.Println()
+		}
+		cLogger.currentText = indent(stepText, stepIndentation) + "\n"
+		cLogger.writeln(cLogger.currentText, ct.None, false)
 	}
 }
 
 func (cLogger *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		if failed {
-			ct.Foreground(ct.Red, true)
+			cLogger.write(cLogger.currentText, ct.Red, false)
 		} else {
-			ct.Foreground(ct.Green, true)
+			cLogger.write(cLogger.currentText, ct.Green, false)
 		}
-
-		fmt.Fprintln(cLogger.writer, cLogger.currentText)
-		time.Sleep(time.Millisecond * 10)
-		nLines := strings.Count(cLogger.currentText, "\n")
-		for i := 0; i < nLines; i++ {
+		count := strings.Count(cLogger.currentText, "\n")
+		for i := 0; i < count; i++ {
 			fmt.Println()
 		}
+		if len(cLogger.sysoutBuffer) != 0 {
+			cLogger.write(cLogger.sysoutBuffer, ct.None, false)
+		}
 
-		ct.ResetColor()
-		cLogger.writer.Flush()
-		fmt.Println()
-		cLogger.currentText = ""
+		cLogger.linesToGoDown = strings.Count(cLogger.sysoutBuffer, "\n")
+		cLogger.sysoutBuffer = ""
+	} else {
+		cLogger.sysoutBuffer = ""
+		cLogger.linesToGoDown = 0
 	}
+}
+
+func (cLogger *coloredLogger) writeln(text string, color ct.Color, isBright bool) {
+	cLogger.write(text+"\n", color, isBright)
+}
+
+func (cLogger *coloredLogger) write(text string, color ct.Color, isBright bool) {
+	ct.Foreground(color, isBright)
+	fmt.Fprint(cLogger.writer, text)
+	cLogger.writer.Flush()
+	ct.ResetColor()
 }
