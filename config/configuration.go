@@ -27,6 +27,7 @@ import (
 
 const (
 	gaugeRepositoryUrl      = "gauge_repository_url"
+	gaugeUpdateUrl          = "gauge_update_url"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
@@ -76,6 +77,10 @@ func RunnerRequestTimeout() time.Duration {
 
 func GaugeRepositoryUrl() string {
 	return getFromConfig(gaugeRepositoryUrl)
+}
+
+func GaugeUpdateUrl() string {
+	return getFromConfig(gaugeUpdateUrl)
 }
 
 func SetProjectRoot(args []string) error {

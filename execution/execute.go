@@ -12,12 +12,15 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/runner"
 )
 
 var NumberOfExecutionStreams int
 
-func ExecuteSpecs(inParallel bool, args []string) {
+func ExecuteSpecs(inParallel bool, args []string) int {
+	i := &install.UpdateFacade{}
+	i.BufferUpdateDetails()
 	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
@@ -35,7 +38,8 @@ func ExecuteSpecs(inParallel bool, args []string) {
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
-	os.Exit(exitCode)
+	i.PrintUpdateBuffer()
+	return exitCode
 }
 
 func CheckSpecs(args []string) {

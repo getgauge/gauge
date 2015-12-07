@@ -67,6 +67,7 @@ var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory f
 var strategy = flag.String([]string{"-strategy"}, "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`. Ex: gauge -p --strategy=\"eager\"")
 var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
 var check = flag.Bool([]string{"-check"}, false, "Checks for parse and validation errors. Eg: gauge --check specs")
+var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
 
 func main() {
@@ -108,6 +109,8 @@ func main() {
 		install.UpdatePlugin(*update)
 	} else if *updateAll {
 		install.UpdatePlugins()
+	} else if *checkUpdates {
+		install.PrintUpdateInfoWithDetails()
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
 	} else if *refactorSteps != "" {
@@ -128,7 +131,8 @@ func main() {
 			printUsage()
 		}
 		if validGaugeProject {
-			execution.ExecuteSpecs(*parallel, flag.Args())
+			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
+			os.Exit(exitCode)
 		} else {
 			logger.Error(err.Error())
 		}
