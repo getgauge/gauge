@@ -73,7 +73,7 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
 		fmt.Println()
-		cLogger.writeToConsole(cLogger.sysoutBuffer.String(), ct.Red, true)
+		cLogger.writeToConsole(cLogger.sysoutBuffer.String(), ct.Red, false)
 		fmt.Println()
 	}
 	cLogger.resetColoredLogger()
@@ -105,7 +105,7 @@ func (cLogger *coloredLogger) StepEnd(failed bool) {
 		cLogger.resetColoredLogger()
 	} else {
 		if failed {
-			cLogger.writeToConsole(getFailureSymbol(), ct.Red, true)
+			cLogger.writeToConsole(getFailureSymbol(), ct.Red, false)
 		} else {
 			cLogger.writeToConsole(getSuccessSymbol(), ct.Green, false)
 		}

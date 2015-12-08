@@ -25,8 +25,8 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/version"
 	"net/http"
-	"sync"
 	"strings"
+	"sync"
 )
 
 type UpdateFacade struct {
