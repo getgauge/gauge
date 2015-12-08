@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"runtime"
 )
 
 const (
@@ -45,9 +46,11 @@ type MyLogger interface {
 	StepStart(string)
 	StepEnd(bool)
 	writeSysoutBuffer(string)
+	Error(string, ...interface{})
 }
 
 var currentLogger MyLogger
+var isWindows bool
 
 func Current() MyLogger {
 	if currentLogger == nil {
@@ -118,6 +121,9 @@ func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {
 	level = loggingLevel(verbose, logLevel)
 	initFileLogger(level, simpleConsoleOutput)
 	initApiLogger(level, simpleConsoleOutput)
+	if runtime.GOOS == "windows" {
+		isWindows = true
+	}
 }
 
 func getLogFormatter(logger logging.Backend, supportsColoredFormat bool, simpleConsoleOutput bool) logging.Backend {

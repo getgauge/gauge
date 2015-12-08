@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+const (
+	success     = "✔ "
+	failure     = "✘ "
+	successChar = "P"
+	failureChar = "F"
+)
+
 type coloredLogger struct {
 	writer       *uilive.Writer
 	currentText  bytes.Buffer
@@ -24,6 +31,15 @@ func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
 		text = strings.Replace(text, "\n", "\n\t", -1)
 		cLogger.sysoutBuffer.WriteString(text + "\n")
 		cLogger.writeln(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.None, false)
+	}
+}
+
+func (cLogger *coloredLogger) Error(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	Log.Error(msg, args)
+	cLogger.sysoutBuffer.WriteString(msg + "\n")
+	if level == logging.DEBUG {
+		cLogger.writeln(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Red, false)
 	}
 }
 
@@ -45,9 +61,8 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		cLogger.writer.Start()
-		cLogger.currentText.WriteString(indentedText + "\n")
-		cLogger.writeln(cLogger.currentText.String(), ct.None, false)
+		cLogger.currentText.WriteString(indentedText + spaces(4))
+		cLogger.writeToConsole(cLogger.currentText.String(), ct.None, false)
 	} else {
 		ct.Foreground(ct.Yellow, true)
 		ConsoleWrite(indentedText)
@@ -57,13 +72,9 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 
 func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
-		if failed {
-			cLogger.write(cLogger.currentText.String(), ct.Red, true)
-		} else {
-			cLogger.write(cLogger.currentText.String(), ct.Green, true)
-		}
-		cLogger.writer.Flush()
-		cLogger.writer.Stop()
+		fmt.Println()
+		cLogger.writeToConsole(cLogger.sysoutBuffer.String(), ct.Red, true)
+		fmt.Println()
 	}
 	cLogger.resetColoredLogger()
 }
@@ -93,7 +104,11 @@ func (cLogger *coloredLogger) StepEnd(failed bool) {
 		cLogger.writer.Stop()
 		cLogger.resetColoredLogger()
 	} else {
-		cLogger.sysoutBuffer.Reset()
+		if failed {
+			cLogger.writeToConsole(getFailureSymbol(), ct.Red, true)
+		} else {
+			cLogger.writeToConsole(getSuccessSymbol(), ct.Green, false)
+		}
 	}
 }
 
@@ -106,4 +121,24 @@ func (cLogger *coloredLogger) write(text string, color ct.Color, isBright bool) 
 	fmt.Fprint(cLogger.writer, text)
 	cLogger.writer.Flush()
 	ct.ResetColor()
+}
+
+func (cLogger *coloredLogger) writeToConsole(text string, color ct.Color, isBright bool) {
+	ct.Foreground(color, isBright)
+	fmt.Print(text)
+	ct.ResetColor()
+}
+
+func getFailureSymbol() string {
+	if isWindows {
+		return spaces(1) + failureChar
+	}
+	return spaces(1) + failure
+}
+
+func getSuccessSymbol() string {
+	if isWindows {
+		return spaces(1) + successChar
+	}
+	return spaces(1) + success
 }
