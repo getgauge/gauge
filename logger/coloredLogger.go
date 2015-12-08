@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"bytes"
 	"fmt"
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/gosuri/uilive"
@@ -9,10 +10,9 @@ import (
 )
 
 type coloredLogger struct {
-	writer        *uilive.Writer
-	currentText   string
-	sysoutBuffer  string
-	linesToGoDown int
+	writer       *uilive.Writer
+	currentText  bytes.Buffer
+	sysoutBuffer bytes.Buffer
 }
 
 func newColoredConsoleWriter() *coloredLogger {
@@ -22,8 +22,8 @@ func newColoredConsoleWriter() *coloredLogger {
 func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
 	if level == logging.DEBUG {
 		text = strings.Replace(text, "\n", "\n\t", -1)
-		cLogger.sysoutBuffer += text + "\n"
-		cLogger.writeln(cLogger.currentText+cLogger.sysoutBuffer, ct.None, false)
+		cLogger.sysoutBuffer.WriteString(text + "\n")
+		cLogger.writeln(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.None, false)
 	}
 }
 
@@ -42,12 +42,12 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	Log.Info(msg)
-	cLogger.writer.Start()
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		cLogger.currentText = indentedText + "\n"
-		cLogger.writeln(cLogger.currentText, ct.None, false)
+		cLogger.writer.Start()
+		cLogger.currentText.WriteString(indentedText + "\n")
+		cLogger.writeln(cLogger.currentText.String(), ct.None, false)
 	} else {
 		ct.Foreground(ct.Yellow, true)
 		ConsoleWrite(indentedText)
@@ -58,54 +58,42 @@ func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
 func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
 		if failed {
-			cLogger.write(cLogger.currentText, ct.Red, true)
+			cLogger.write(cLogger.currentText.String(), ct.Red, true)
 		} else {
-			cLogger.write(cLogger.currentText, ct.Green, true)
+			cLogger.write(cLogger.currentText.String(), ct.Green, true)
 		}
 		cLogger.writer.Flush()
+		cLogger.writer.Stop()
 	}
-	cLogger.writer.Stop()
 	cLogger.resetColoredLogger()
 }
 
 func (cLogger *coloredLogger) resetColoredLogger() {
 	cLogger.writer = uilive.New()
-	cLogger.currentText = ""
-	cLogger.sysoutBuffer = ""
-	cLogger.linesToGoDown = 0
+	cLogger.currentText.Reset()
+	cLogger.sysoutBuffer.Reset()
 }
 
 func (cLogger *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		for i := 0; i < cLogger.linesToGoDown; i++ {
-			fmt.Println()
-		}
-		cLogger.currentText = indent(stepText, stepIndentation) + "\n"
-		cLogger.writeln(cLogger.currentText, ct.None, false)
+		cLogger.writer.Start()
+		cLogger.currentText.WriteString(indent(stepText, stepIndentation) + "\n")
+		cLogger.writeln(cLogger.currentText.String(), ct.None, false)
 	}
 }
 
 func (cLogger *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		if failed {
-			cLogger.write(cLogger.currentText, ct.Red, false)
+			cLogger.write(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Red, false)
 		} else {
-			cLogger.write(cLogger.currentText, ct.Green, false)
+			cLogger.write(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Green, false)
 		}
-		count := strings.Count(cLogger.currentText, "\n")
-		for i := 0; i < count; i++ {
-			fmt.Println()
-		}
-		if len(cLogger.sysoutBuffer) != 0 {
-			cLogger.write(cLogger.sysoutBuffer, ct.None, false)
-		}
-
-		cLogger.linesToGoDown = strings.Count(cLogger.sysoutBuffer, "\n")
-		cLogger.sysoutBuffer = ""
+		cLogger.writer.Stop()
+		cLogger.resetColoredLogger()
 	} else {
-		cLogger.sysoutBuffer = ""
-		cLogger.linesToGoDown = 0
+		cLogger.sysoutBuffer.Reset()
 	}
 }
 
