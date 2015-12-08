@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/version"
 	"net/http"
 	"sync"
+	"strings"
 )
 
 type UpdateFacade struct {
@@ -102,7 +103,11 @@ func checkGaugeUpdate() []UpdateInfo {
 }
 
 func getVersion(tagName string) string {
-	return tagName[1:]
+	name := strings.TrimSpace(tagName)
+	if strings.HasPrefix(name, "v") {
+		return name[1:]
+	}
+	return name
 }
 
 type UpdateInfo struct {

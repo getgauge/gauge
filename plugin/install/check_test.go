@@ -28,6 +28,9 @@ func (s *MySuite) TestGetVersion(c *C) {
 	c.Assert(getVersion("v0.2.2"), Equals, "0.2.2")
 	c.Assert(getVersion("v0.2.1"), Equals, "0.2.1")
 	c.Assert(getVersion("v0.0.2"), Equals, "0.0.2")
+	c.Assert(getVersion("   v0.2.1    "), Equals, "0.2.1")
+	c.Assert(getVersion("0.0.2"), Equals, "0.0.2")
+	c.Assert(getVersion("0.1.2"), Equals, "0.1.2")
 }
 
 func (s *MySuite) TestCheckGaugeUpdateWhenThereIsAnUpdate(c *C) {
