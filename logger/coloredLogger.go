@@ -86,6 +86,7 @@ func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
+	fmt.Println()
 	ct.Foreground(ct.Cyan, true)
 	ConsoleWrite(msg)
 	fmt.Println()
