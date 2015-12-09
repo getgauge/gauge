@@ -453,6 +453,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		protoStepExecResult.PostHookFailure = result.GetProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
+	protoStepExecResult.ExecutionResult.Message = afterStepHookStatus.Message
 	protoStepExecResult.Skipped = protoStep.StepExecutionResult.Skipped
 	protoStepExecResult.SkippedReason = protoStep.StepExecutionResult.SkippedReason
 	protoStep.StepExecutionResult = protoStepExecResult
