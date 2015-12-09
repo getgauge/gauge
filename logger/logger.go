@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -38,29 +37,29 @@ const (
 	apiLogFileName   = "api.log"
 )
 
-type MyLogger interface {
+type GaugeLogger interface {
 	SpecStart(string)
 	SpecEnd()
 	ScenarioStart(string)
 	ScenarioEnd(bool)
 	StepStart(string)
 	StepEnd(bool)
-	writeSysoutBuffer(string)
 	Error(string, ...interface{})
+	Critical(string, ...interface{})
+	Info(string, ...interface{})
+	Warning(string, ...interface{})
+	Debug(string, ...interface{})
+	Write([]byte) (int, error)
 }
 
-var currentLogger MyLogger
+var currentLogger GaugeLogger
 var isWindows bool
 
-func Current() MyLogger {
+func Current() GaugeLogger {
 	if currentLogger == nil {
 		currentLogger = newColoredConsoleWriter()
 	}
 	return currentLogger
-}
-
-type GaugeLogger struct {
-	*logging.Logger
 }
 
 func Info(msg string, args ...interface{}) {
@@ -94,16 +93,12 @@ func ConsoleWrite(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
-func (g GaugeLogger) Write(b []byte) (int, error) {
-	str := strings.Trim(string(b), "\n ")
-	if len(str) > 0 {
-		Current().writeSysoutBuffer(fmt.Sprintf("\t%s", str))
-	}
-	return len(b), nil
+type FileLogger struct {
+	*logging.Logger
 }
 
-var Log = GaugeLogger{logging.MustGetLogger("gauge")}
-var ApiLog = GaugeLogger{logging.MustGetLogger("gauge-api")}
+var Log = FileLogger{logging.MustGetLogger("gauge")}
+var ApiLog = FileLogger{logging.MustGetLogger("gauge-api")}
 
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
@@ -164,13 +159,15 @@ func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
 	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
-func NewParallelLogger(n int) *GaugeLogger {
-	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
-	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
-	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	stdOutLoggerLeveled.SetLevel(level, "")
-	parallelLogger.SetBackend(stdOutLoggerLeveled)
+func NewParallelLogger(n int) GaugeLogger {
+	parallelLogger := Current()
+	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
+	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
+	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
+	//	stdOutLoggerLeveled.SetLevel(level, "")
+	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
+
 	return parallelLogger
 }
 

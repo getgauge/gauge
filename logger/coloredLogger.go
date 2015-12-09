@@ -18,7 +18,7 @@ const (
 
 type coloredLogger struct {
 	writer       *uilive.Writer
-	currentText  bytes.Buffer
+	headingText  bytes.Buffer
 	sysoutBuffer bytes.Buffer
 }
 
@@ -26,24 +26,64 @@ func newColoredConsoleWriter() *coloredLogger {
 	return &coloredLogger{writer: uilive.New()}
 }
 
-func (cLogger *coloredLogger) writeSysoutBuffer(text string) {
+func (cl *coloredLogger) Write(b []byte) (int, error) {
 	if level == logging.DEBUG {
+		text := strings.Trim(string(b), "\n ")
 		text = strings.Replace(text, "\n", "\n\t", -1)
-		cLogger.sysoutBuffer.WriteString(text + "\n")
-		cLogger.writeln(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.None, false)
+		if len(text) > 0 {
+			cl.sysoutBuffer.WriteString(fmt.Sprintf("\t%s\n", text))
+			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+		}
 	}
+	return len(b), nil
 }
 
-func (cLogger *coloredLogger) Error(text string, args ...interface{}) {
+func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Error(msg, args)
-	cLogger.sysoutBuffer.WriteString(msg + "\n")
+	cl.sysoutBuffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cLogger.writeln(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Red, false)
+		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
 	}
 }
 
-func (cLogger *coloredLogger) SpecStart(heading string) {
+func (cl *coloredLogger) Critical(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	Log.Critical(msg, args)
+	cl.sysoutBuffer.WriteString(msg + "\n")
+	if level == logging.DEBUG {
+		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
+	}
+}
+
+func (cl *coloredLogger) Warning(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	Log.Warning(msg, args)
+	cl.sysoutBuffer.WriteString(msg + "\n")
+	if level == logging.DEBUG {
+		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Yellow, false)
+	}
+}
+
+func (cl *coloredLogger) Info(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	Log.Info(msg, args)
+	cl.sysoutBuffer.WriteString(msg + "\n")
+	if level == logging.DEBUG {
+		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+	}
+}
+
+func (cl *coloredLogger) Debug(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	Log.Debug(msg, args)
+	cl.sysoutBuffer.WriteString(msg + "\n")
+	if level == logging.DEBUG {
+		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+	}
+}
+
+func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
 	ct.Foreground(ct.Cyan, true)
@@ -55,75 +95,74 @@ func (cLogger *coloredLogger) SpecStart(heading string) {
 func (coloredLogger *coloredLogger) SpecEnd() {
 }
 
-func (cLogger *coloredLogger) ScenarioStart(scenarioHeading string) {
+func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	Log.Info(msg)
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
-		cLogger.currentText.WriteString(indentedText + spaces(4))
-		cLogger.writeToConsole(cLogger.currentText.String(), ct.None, false)
+		cl.headingText.WriteString(indentedText + spaces(4))
+		cl.writeToConsole(cl.headingText.String(), ct.None, false)
 	} else {
-		ct.Foreground(ct.Yellow, true)
+		ct.Foreground(ct.Yellow, false)
 		ConsoleWrite(indentedText)
 		ct.ResetColor()
 	}
 }
 
-func (cLogger *coloredLogger) ScenarioEnd(failed bool) {
+func (cl *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
 		fmt.Println()
-		cLogger.writeToConsole(cLogger.sysoutBuffer.String(), ct.Red, false)
-		fmt.Println()
+		cl.writeToConsole(cl.sysoutBuffer.String(), ct.Red, false)
 	}
-	cLogger.resetColoredLogger()
+	cl.resetColoredLogger()
 }
 
-func (cLogger *coloredLogger) resetColoredLogger() {
-	cLogger.writer = uilive.New()
-	cLogger.currentText.Reset()
-	cLogger.sysoutBuffer.Reset()
+func (cl *coloredLogger) resetColoredLogger() {
+	cl.writer = uilive.New()
+	cl.headingText.Reset()
+	cl.sysoutBuffer.Reset()
 }
 
-func (cLogger *coloredLogger) StepStart(stepText string) {
+func (cl *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		cLogger.writer.Start()
-		cLogger.currentText.WriteString(indent(stepText, stepIndentation) + "\n")
-		cLogger.writeln(cLogger.currentText.String(), ct.None, false)
+		cl.writer.Start()
+		cl.headingText.WriteString(indent(stepText, stepIndentation) + "\n")
+		cl.write(cl.headingText.String(), ct.None, false)
 	}
 }
 
-func (cLogger *coloredLogger) StepEnd(failed bool) {
+func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		if failed {
-			cLogger.write(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Red, false)
+			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
 		} else {
-			cLogger.write(cLogger.currentText.String()+cLogger.sysoutBuffer.String(), ct.Green, false)
+			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Green, false)
 		}
-		cLogger.writer.Stop()
-		cLogger.resetColoredLogger()
+		cl.writer.Stop()
+		cl.resetColoredLogger()
 	} else {
 		if failed {
-			cLogger.writeToConsole(getFailureSymbol(), ct.Red, false)
+			cl.writeToConsole(getFailureSymbol(), ct.Red, false)
 		} else {
-			cLogger.writeToConsole(getSuccessSymbol(), ct.Green, false)
+			cl.writeToConsole(getSuccessSymbol(), ct.Green, false)
 		}
 	}
 }
 
-func (cLogger *coloredLogger) writeln(text string, color ct.Color, isBright bool) {
-	cLogger.write(text+"\n", color, isBright)
+func (cl *coloredLogger) writeln(text string, color ct.Color, isBright bool) {
+	cl.write(text+"\n", color, isBright)
 }
 
-func (cLogger *coloredLogger) write(text string, color ct.Color, isBright bool) {
+func (cl *coloredLogger) write(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
-	fmt.Fprint(cLogger.writer, text)
-	cLogger.writer.Flush()
+	fmt.Fprint(cl.writer, text)
+	cl.writer.Flush()
 	ct.ResetColor()
 }
 
-func (cLogger *coloredLogger) writeToConsole(text string, color ct.Color, isBright bool) {
+func (cl *coloredLogger) writeToConsole(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
 	fmt.Print(text)
 	ct.ResetColor()

@@ -78,7 +78,7 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 		return nil, err
 	}
 
-	runner, connErr := runner.StartRunnerAndMakeConnection(manifest, &logger.Log, killChannel)
+	runner, connErr := runner.StartRunnerAndMakeConnection(manifest, logger.Current(), killChannel)
 	if connErr != nil {
 		return nil, connErr
 	}

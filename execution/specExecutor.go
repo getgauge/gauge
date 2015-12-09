@@ -43,7 +43,7 @@ type specExecutor struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	currentTableRow      int
-	logger               *logger.GaugeLogger
+	logger               logger.GaugeLogger
 	errMap               *validationErrMaps
 }
 
@@ -52,7 +52,7 @@ type indexRange struct {
 	end   int
 }
 
-func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger *logger.GaugeLogger, errMap *validationErrMaps) {
+func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.GaugeLogger, errMap *validationErrMaps) {
 	specExec.specification = specificationToExecute
 	specExec.runner = runner
 	specExec.pluginHandler = pluginHandler
@@ -118,7 +118,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
 		return specExecutor.getSkippedSpecResult()
 	}
-	logger.Current().SpecStart(specInfo.GetName())
+	specExecutor.logger.SpecStart(specInfo.GetName())
 	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
@@ -141,7 +141,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 		printStatus(afterSpecHookStatus, specExecutor.logger)
 	}
 	specExecutor.specResult.Skipped = specExecutor.specResult.ScenarioSkippedCount > 0
-	logger.Current().SpecEnd()
+	specExecutor.logger.SpecEnd()
 	return specExecutor.specResult
 }
 
@@ -200,7 +200,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		executor.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
-	logger.Current().ScenarioStart(scenario.Heading.Value)
+	executor.logger.ScenarioStart(scenario.Heading.Value)
 
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
@@ -221,7 +221,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		setScenarioFailure(executor.currentExecutionInfo)
 		printStatus(afterHookExecutionStatus, executor.logger)
 	}
-	logger.Current().ScenarioEnd(scenarioResult.GetFailure())
+	executor.logger.ScenarioEnd(scenarioResult.GetFailure())
 
 	return scenarioResult
 }
@@ -415,19 +415,17 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 }
 
-func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger1 *logger.GaugeLogger) {
-	//	logger1.Error("Error Message: %s", executionResult.GetErrorMessage())
-	logger.Current().Error("Error Message: %s", executionResult.GetErrorMessage())
+func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger logger.GaugeLogger) {
+	logger.Error("Error Message: %s", executionResult.GetErrorMessage())
 	stacktrace := executionResult.GetStackTrace()
 	stacktrace = strings.Replace(stacktrace, "\n", "\n\t", -1)
-	//	logger1.Error("Stacktrace: %s", stacktrace)
-	logger.Current().Error("Stacktrace: %s", stacktrace)
+	logger.Error("Stacktrace: %s", stacktrace)
 }
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := executor.createStepRequest(protoStep)
 	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
-	logger.Current().StepStart(stepText)
+	executor.logger.StepStart(stepText)
 
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
 	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
@@ -460,7 +458,7 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 	protoStep.StepExecutionResult = protoStepExecResult
 
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
-	logger.Current().StepEnd(stepFailed)
+	executor.logger.StepEnd(stepFailed)
 	return stepFailed
 }
 
@@ -533,10 +531,9 @@ func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentScenario.IsFailed = proto.Bool(true)
 }
 
-func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, logger1 *logger.GaugeLogger) {
+func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, logger logger.GaugeLogger) {
 	setScenarioFailure(executionInfo)
-	//	logger.Error("Failed step: %s", executionInfo.CurrentStep.Step.GetActualStepText())
-	logger.Current().Error("Failed step: %s", executionInfo.CurrentStep.Step.GetActualStepText())
+	logger.Error("Failed step: %s", executionInfo.CurrentStep.Step.GetActualStepText())
 	executionInfo.CurrentStep.IsFailed = proto.Bool(true)
 }
 

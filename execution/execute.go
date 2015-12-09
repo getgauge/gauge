@@ -34,7 +34,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, &logger.Log, errMap})
+	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, logger.Current(), errMap})
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
