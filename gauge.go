@@ -80,7 +80,7 @@ func main() {
 		validGaugeProject = false
 	}
 	env.LoadEnv(true)
-	logger.Initialize(*verbosity, *logLevel, *simpleConsoleOutput)
+	logger.Initialize(*verbosity, *logLevel)
 	if *gaugeVersion {
 		version.PrintVersion()
 	} else if *daemonize {
@@ -161,6 +161,7 @@ func initPackageFlags() {
 	if util.IsWindows() {
 		*simpleConsoleOutput = true
 	}
+	logger.SimpleConsoleOutput = *simpleConsoleOutput
 	env.ProjectEnv = *currentEnv
 	execution.ExecuteTags = *executeTags
 	execution.TableRows = *tableRows

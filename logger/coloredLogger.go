@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package logger
 
 import (
@@ -9,17 +26,10 @@ import (
 	"strings"
 )
 
-const (
-	success     = "✔ "
-	failure     = "✘ "
-	successChar = "P"
-	failureChar = "F"
-)
-
 type coloredLogger struct {
-	writer       *uilive.Writer
-	headingText  bytes.Buffer
-	sysoutBuffer bytes.Buffer
+	writer      *uilive.Writer
+	headingText bytes.Buffer
+	buffer      bytes.Buffer
 }
 
 func newColoredConsoleWriter() *coloredLogger {
@@ -31,8 +41,8 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 		text := strings.Trim(string(b), "\n ")
 		text = strings.Replace(text, "\n", "\n\t", -1)
 		if len(text) > 0 {
-			cl.sysoutBuffer.WriteString(fmt.Sprintf("\t%s\n", text))
-			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+			cl.buffer.WriteString(fmt.Sprintf("\t%s\n", text))
+			cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
 		}
 	}
 	return len(b), nil
@@ -41,45 +51,45 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Error(msg, args)
-	cl.sysoutBuffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
+		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
 	}
 }
 
 func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Critical(msg, args)
-	cl.sysoutBuffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
+		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
 	}
 }
 
 func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Warning(msg, args)
-	cl.sysoutBuffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Yellow, false)
+		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Yellow, false)
 	}
 }
 
 func (cl *coloredLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Info(msg, args)
-	cl.sysoutBuffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
 	}
 }
 
 func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Debug(msg, args)
-	cl.sysoutBuffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.None, false)
+		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
 	}
 }
 
@@ -114,7 +124,7 @@ func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
 func (cl *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO {
 		fmt.Println()
-		cl.writeToConsole(cl.sysoutBuffer.String(), ct.Red, false)
+		cl.writeToConsole(cl.buffer.String(), ct.Red, false)
 	}
 	cl.resetColoredLogger()
 }
@@ -122,7 +132,7 @@ func (cl *coloredLogger) ScenarioEnd(failed bool) {
 func (cl *coloredLogger) resetColoredLogger() {
 	cl.writer = uilive.New()
 	cl.headingText.Reset()
-	cl.sysoutBuffer.Reset()
+	cl.buffer.Reset()
 }
 
 func (cl *coloredLogger) StepStart(stepText string) {
@@ -137,9 +147,9 @@ func (cl *coloredLogger) StepStart(stepText string) {
 func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		if failed {
-			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Red, false)
+			cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.write(cl.headingText.String()+cl.sysoutBuffer.String(), ct.Green, false)
+			cl.write(cl.headingText.String()+cl.buffer.String(), ct.Green, false)
 		}
 		cl.writer.Stop()
 		cl.resetColoredLogger()
@@ -167,18 +177,4 @@ func (cl *coloredLogger) writeToConsole(text string, color ct.Color, isBright bo
 	ct.Foreground(color, isBright)
 	fmt.Print(text)
 	ct.ResetColor()
-}
-
-func getFailureSymbol() string {
-	if isWindows {
-		return spaces(1) + failureChar
-	}
-	return spaces(1) + failure
-}
-
-func getSuccessSymbol() string {
-	if isWindows {
-		return spaces(1) + successChar
-	}
-	return spaces(1) + success
 }

@@ -37,6 +37,8 @@ const (
 	apiLogFileName   = "api.log"
 )
 
+var SimpleConsoleOutput bool
+
 type GaugeLogger interface {
 	SpecStart(string)
 	SpecEnd()
@@ -57,7 +59,11 @@ var isWindows bool
 
 func Current() GaugeLogger {
 	if currentLogger == nil {
-		currentLogger = newColoredConsoleWriter()
+		if SimpleConsoleOutput {
+			currentLogger = newSimpleConsoleWriter()
+		} else {
+			currentLogger = newColoredConsoleWriter()
+		}
 	}
 	return currentLogger
 }
@@ -112,10 +118,10 @@ var uncoloredFormat = logging.MustStringFormatter(
 	"%{time:15:04:05.000} %{message}",
 )
 
-func Initialize(verbose bool, logLevel string, simpleConsoleOutput bool) {
+func Initialize(verbose bool, logLevel string) {
 	level = loggingLevel(verbose, logLevel)
-	initFileLogger(level, simpleConsoleOutput)
-	initApiLogger(level, simpleConsoleOutput)
+	initFileLogger(level, SimpleConsoleOutput)
+	initApiLogger(level, SimpleConsoleOutput)
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}

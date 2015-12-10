@@ -26,6 +26,10 @@ const (
 	scenarioIndentation = 2
 	stepIndentation     = 4
 	sysoutIndentation   = 8
+	success             = "✔ "
+	failure             = "✘ "
+	successChar         = "P"
+	failureChar         = "F"
 )
 
 func formatScenario(msg string) string {
@@ -50,4 +54,18 @@ func spaces(numOfSpaces int) string {
 		text += " "
 	}
 	return text
+}
+
+func getFailureSymbol() string {
+	if isWindows {
+		return spaces(1) + failureChar
+	}
+	return spaces(1) + failure
+}
+
+func getSuccessSymbol() string {
+	if isWindows {
+		return spaces(1) + successChar
+	}
+	return spaces(1) + success
 }
