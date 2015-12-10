@@ -20,9 +20,10 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	"github.com/gosuri/uilive"
-	"github.com/op/go-logging"
 	"strings"
+
+	"github.com/apoorvam/uilive"
+	"github.com/op/go-logging"
 )
 
 type simpleLogger struct {

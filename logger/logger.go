@@ -21,13 +21,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"runtime"
 )
 
 const (

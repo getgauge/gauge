@@ -20,10 +20,11 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	ct "github.com/daviddengcn/go-colortext"
-	"github.com/gosuri/uilive"
-	"github.com/op/go-logging"
 	"strings"
+
+	"github.com/apoorvam/uilive"
+	ct "github.com/daviddengcn/go-colortext"
+	"github.com/op/go-logging"
 )
 
 type coloredLogger struct {
