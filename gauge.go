@@ -50,7 +50,7 @@ var installPlugin = flag.String([]string{"-install"}, "", "Downloads and install
 var uninstallPlugin = flag.String([]string{"-uninstall"}, "", "Uninstalls a plugin. Eg: gauge --uninstall java")
 var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
 var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
-var installVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
+var pluginVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install")
 var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
 var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
 var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
@@ -100,9 +100,9 @@ func main() {
 	} else if *installZip != "" && *installPlugin != "" {
 		install.InstallPluginZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {
-		install.DownloadAndInstallPlugin(*installPlugin, *installVersion)
+		install.DownloadAndInstallPlugin(*installPlugin, *pluginVersion)
 	} else if *uninstallPlugin != "" {
-		install.UninstallPlugin(*uninstallPlugin)
+		install.UninstallPlugin(*uninstallPlugin, *pluginVersion)
 	} else if *installAll {
 		install.InstallAllPlugins()
 	} else if *update != "" {

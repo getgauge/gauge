@@ -188,20 +188,24 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 	return err
 }
 
-func UninstallPlugin(pluginName string) {
+func UninstallPlugin(pluginName string, version string) {
 	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
-	if err != nil {
-		handleUninstallFailure(err, pluginName)
+	pluginInfo := pluginName
+	if version != "" {
+		pluginInfo = fmt.Sprintf("%s(%s)", pluginName, version)
 	}
-	pluginInstallationDir := path.Join(pluginsDir, pluginName)
+	if err != nil {
+		handleUninstallFailure(err, pluginInfo)
+	}
+	pluginInstallationDir := path.Join(pluginsDir, pluginName, version)
 	if common.DirExists(pluginInstallationDir) {
 		if err = os.RemoveAll(pluginInstallationDir); err != nil {
-			handleUninstallFailure(err, pluginName)
+			handleUninstallFailure(err, pluginInfo)
 		} else {
-			logger.Info("%s plugin uninstalled successfully", pluginName)
+			logger.Info("%s plugin uninstalled successfully", pluginInfo)
 		}
 	} else {
-		logger.Info("%s plugin is not installed", pluginName)
+		logger.Info("%s plugin is not installed", pluginInfo)
 	}
 }
 
