@@ -366,15 +366,6 @@ func InstallAllPlugins() {
 	installPluginsFromManifest(manifest)
 }
 
-func UpdatePlugin(plugin string) {
-	err := downloadAndInstall(plugin, "", fmt.Sprintf("Successfully updated plugin => %s", plugin))
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
-	}
-	os.Exit(0)
-}
-
 func UpdatePlugins() {
 	failedPlugin := make([]string, 0)
 	for _, pluginInfo := range GetPluginsInfo() {
@@ -404,8 +395,8 @@ func GetPluginsInfo() []common.Plugin {
 	return allPluginsWithVersion
 }
 
-func DownloadAndInstallPlugin(plugin, version string) {
-	err := downloadAndInstall(plugin, version, fmt.Sprintf("Successfully installed plugin => %s", plugin))
+func DownloadAndInstallPlugin(plugin, version, messageFormat string) {
+	err := downloadAndInstall(plugin, version, fmt.Sprintf(messageFormat, plugin))
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
