@@ -48,7 +48,7 @@ func loadEnvironment(env string) error {
 
 	dirToRead := path.Join(envDir, env)
 	if !common.DirExists(dirToRead) {
-		return fmt.Errorf("%s is an invalid environment", env)
+		return fmt.Errorf("%s environment does not exist", env)
 	}
 
 	isProperties := func(fileName string) bool {
