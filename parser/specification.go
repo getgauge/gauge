@@ -93,6 +93,11 @@ type Step struct {
 	PreComments    []*Comment
 }
 
+type TearDown struct {
+	LineNo int
+	Value  string
+}
+
 type StepValue struct {
 	Args                   []string
 	StepValue              string
@@ -210,14 +215,15 @@ func createStepArgsFromProtoArguments(parameters []*gauge_messages.Parameter) []
 }
 
 type Specification struct {
-	Heading   *Heading
-	Scenarios []*Scenario
-	Comments  []*Comment
-	DataTable DataTable
-	Contexts  []*Step
-	FileName  string
-	Tags      *Tags
-	Items     []Item
+	Heading       *Heading
+	Scenarios     []*Scenario
+	Comments      []*Comment
+	DataTable     DataTable
+	Contexts      []*Step
+	FileName      string
+	Tags          *Tags
+	Items         []Item
+	TearDownSteps []*Step
 }
 
 type Item interface {
@@ -357,7 +363,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	contextConverter := converterFn(func(token *Token, state *int) bool {
-		return token.Kind == StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope)
+		return token.Kind == StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope) && !isInState(*state, tearDownScope)
 	}, func(token *Token, spec *Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := spec.createStep(token)
 		if parseDetails != nil && parseDetails.Error != nil {
@@ -366,6 +372,32 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		spec.addContext(stepToAdd)
 		retainStates(state, specScope)
 		addStates(state, contextScope)
+		if parseDetails.Warnings != nil {
+			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
+		}
+		return ParseResult{Ok: true, Warnings: parseDetails.Warnings}
+	})
+
+	tearDownConverter := converterFn(func(token *Token, state *int) bool {
+		return token.Kind == TearDownKind
+	}, func(token *Token, spec *Specification, state *int) ParseResult {
+		retainStates(state, specScope)
+		addStates(state, tearDownScope)
+		spec.addItem(&TearDown{LineNo: token.LineNo, Value: token.Value})
+		return ParseResult{Ok: true}
+	})
+
+	tearDownStepConverter := converterFn(func(token *Token, state *int) bool {
+		return token.Kind == StepKind && isInState(*state, tearDownScope)
+	}, func(token *Token, spec *Specification, state *int) ParseResult {
+		stepToAdd, parseDetails := spec.createStep(token)
+		if parseDetails != nil && parseDetails.Error != nil {
+			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
+		}
+		spec.TearDownSteps = append(spec.TearDownSteps, stepToAdd)
+		spec.addItem(stepToAdd)
+		retainStates(state, tearDownScope)
+
 		if parseDetails.Warnings != nil {
 			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -381,7 +413,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		} else {
 			spec.addComment(comment)
 		}
-		retainStates(state, specScope, scenarioScope)
+		retainStates(state, specScope, scenarioScope, tearDownScope)
 		addStates(state, commentScope)
 		return ParseResult{Ok: true}
 	})
@@ -485,7 +517,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 	})
 
 	converter := []func(*Token, *int, *Specification) ParseResult{
-		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter, keywordConverter,
+		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter, keywordConverter, tearDownConverter, tearDownStepConverter,
 	}
 
 	return converter
@@ -948,6 +980,10 @@ func (comment *Comment) Kind() TokenKind {
 	return CommentKind
 }
 
+func (t *TearDown) Kind() TokenKind {
+	return TearDownKind
+}
+
 func (tags *Tags) Kind() TokenKind {
 	return TagKind
 }
@@ -961,6 +997,9 @@ func (specification *Specification) GetSpecItems() []Item {
 	for _, item := range specification.Items {
 		if item.Kind() != ScenarioKind {
 			specItems = append(specItems, item)
+		}
+		if item.Kind() == TearDownKind {
+			return specItems
 		}
 	}
 	return specItems

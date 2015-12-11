@@ -194,6 +194,10 @@ func (scenarioResult *ScenarioResult) AddContexts(contextProtoItems []*gauge_mes
 	scenarioResult.ProtoScenario.Contexts = append(scenarioResult.ProtoScenario.Contexts, contextProtoItems...)
 }
 
+func (scenarioResult *ScenarioResult) AddTearDownSteps(tearDownProtoItems []*gauge_messages.ProtoItem) {
+	scenarioResult.ProtoScenario.TearDownSteps = append(scenarioResult.ProtoScenario.TearDownSteps, tearDownProtoItems...)
+}
+
 func (scenarioResult *ScenarioResult) UpdateExecutionTime() {
 	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetContexts())
 	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetScenarioItems())

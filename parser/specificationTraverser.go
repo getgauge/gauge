@@ -27,6 +27,7 @@ type SpecTraverser interface {
 	ScenarioHeading(*Heading)
 	ScenarioTags(*Tags)
 	Step(*Step)
+	TearDown(*TearDown)
 	Comment(*Comment)
 }
 
@@ -52,6 +53,8 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 			traverser.DataTable(item.(*Table))
 		case TagKind:
 			traverser.SpecTags(item.(*Tags))
+		case TearDownKind:
+			traverser.TearDown(item.(*TearDown))
 		case DataTableKind:
 			if !item.(*DataTable).IsExternal {
 				traverser.DataTable(&item.(*DataTable).Table)

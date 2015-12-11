@@ -132,6 +132,9 @@ func (self *specValidator) ContextStep(step *parser.Step) {
 	self.Step(step)
 }
 
+func (self *specValidator) TearDown(step *parser.TearDown) {
+}
+
 func (self *specValidator) SpecHeading(heading *parser.Heading) {
 	self.stepValidationErrors = make([]*stepValidationError, 0)
 }

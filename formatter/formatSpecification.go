@@ -46,6 +46,10 @@ func (formatter *formatter) ContextStep(step *parser.Step) {
 	formatter.Step(step)
 }
 
+func (formatter *formatter) TearDown(t *parser.TearDown) {
+	formatter.buffer.WriteString(t.Value + "\n")
+}
+
 func (formatter *formatter) Scenario(scenario *parser.Scenario) {
 }
 

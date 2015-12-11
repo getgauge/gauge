@@ -24,7 +24,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "7f07925444bb51fa4cf9dfe6f7661876f8852275"
+			"Rev": "68415e7123da32b07eab49c96d2c4d6158360e9b"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-runewidth",

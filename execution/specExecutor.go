@@ -212,6 +212,7 @@ func (executor *specExecutor) executeScenario(scenario *parser.Scenario) *result
 		if !scenarioResult.GetFailure() {
 			executor.executeScenarioItems(scenarioResult)
 		}
+		executor.executeTearDownItems(scenarioResult)
 	}
 
 	afterHookExecutionStatus := executor.executeAfterScenarioHook(scenarioResult)
@@ -237,22 +238,28 @@ func (executor *specExecutor) setSkipInfoInResult(result *result.ScenarioResult,
 }
 
 func (executor *specExecutor) addAllItemsForScenarioExecution(scenario *parser.Scenario, scenarioResult *result.ScenarioResult) {
-	scenarioResult.AddContexts(executor.getContextItemsForScenarioExecution(executor.specification))
+	scenarioResult.AddContexts(executor.getContextItemsForScenarioExecution(executor.specification.Contexts))
+	scenarioResult.AddTearDownSteps(executor.getContextItemsForScenarioExecution(executor.specification.TearDownSteps))
 	scenarioResult.AddItems(executor.resolveItems(scenario.Items))
 }
 
-func (executor *specExecutor) getContextItemsForScenarioExecution(specification *parser.Specification) []*gauge_messages.ProtoItem {
-	contextSteps := specification.Contexts
-	items := make([]parser.Item, len(contextSteps))
-	for i, context := range contextSteps {
+func (executor *specExecutor) getContextItemsForScenarioExecution(steps []*parser.Step) []*gauge_messages.ProtoItem {
+	items := make([]parser.Item, len(steps))
+	for i, context := range steps {
 		items[i] = context
 	}
-	contextProtoItems := executor.resolveItems(items)
-	return contextProtoItems
+	return executor.resolveItems(items)
 }
 
 func (executor *specExecutor) executeContextItems(scenarioResult *result.ScenarioResult) {
 	failure := executor.executeItems(scenarioResult.ProtoScenario.GetContexts())
+	if failure {
+		scenarioResult.SetFailure()
+	}
+}
+
+func (executor *specExecutor) executeTearDownItems(scenarioResult *result.ScenarioResult) {
+	failure := executor.executeItems(scenarioResult.ProtoScenario.TearDownSteps)
 	if failure {
 		scenarioResult.SetFailure()
 	}
@@ -268,7 +275,9 @@ func (executor *specExecutor) executeScenarioItems(scenarioResult *result.Scenar
 func (executor *specExecutor) resolveItems(items []parser.Item) []*gauge_messages.ProtoItem {
 	protoItems := make([]*gauge_messages.ProtoItem, 0)
 	for _, item := range items {
-		protoItems = append(protoItems, executor.resolveToProtoItem(item))
+		if item.Kind() != parser.TearDownKind {
+			protoItems = append(protoItems, executor.resolveToProtoItem(item))
+		}
 	}
 	return protoItems
 }

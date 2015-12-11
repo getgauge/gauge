@@ -72,6 +72,7 @@ const (
 	tableDataScope = 1 << iota
 	stepScope      = 1 << iota
 	contextScope   = 1 << iota
+	tearDownScope  = 1 << iota
 	conceptScope   = 1 << iota
 	keywordScope   = 1 << iota
 )
@@ -87,6 +88,7 @@ const (
 	HeadingKind
 	TableKind
 	DataTableKind
+	TearDownKind
 )
 
 func (parser *SpecParser) initialize() {
@@ -99,6 +101,7 @@ func (parser *SpecParser) initialize() {
 	parser.processors[TableHeader] = processTable
 	parser.processors[TableRow] = processTable
 	parser.processors[DataTableKind] = processDataTable
+	parser.processors[TearDownKind] = processTearDown
 }
 
 func (parser *SpecParser) Parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
@@ -139,6 +142,8 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError
 			newToken = &Token{Kind: kind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine)}
 		} else if value, found := parser.isDataTable(trimmedLine); found {
 			newToken = &Token{Kind: DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
+		} else if parser.isTearDown(trimmedLine) {
+			newToken = &Token{Kind: TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
 		} else {
 			newToken = &Token{Kind: CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
@@ -204,6 +209,10 @@ func (parser *SpecParser) isTableRow(text string) bool {
 	return text[0] == '|' && text[len(text)-1] == '|'
 }
 
+func (parser *SpecParser) isTearDown(text string) bool {
+	return isUnderline(text, rune('_'))
+}
+
 func (parser *SpecParser) isSpecUnderline(text string) bool {
 	return isUnderline(text, rune('='))
 
@@ -236,6 +245,13 @@ func (parser *SpecParser) accept(token *Token) *ParseError {
 func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(token.Value) < 1 {
 		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Spec heading should have at least one character"}, true
+	}
+	return nil, false
+}
+
+func processTearDown(parser *SpecParser, token *Token) (*ParseError, bool) {
+	if len(token.Value) < 3 {
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Teardown should have at least three character"}, true
 	}
 	return nil, false
 }
