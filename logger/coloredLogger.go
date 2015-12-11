@@ -147,10 +147,11 @@ func (cl *coloredLogger) StepStart(stepText string) {
 
 func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
+		heading := strings.Trim(cl.headingText.String(), "\n")
 		if failed {
-			cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
+			cl.write(heading+"\t ...[FAIL]\n"+cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.write(cl.headingText.String()+cl.buffer.String(), ct.Green, false)
+			cl.write(heading+"\t ...[PASS]\n"+cl.buffer.String(), ct.Green, false)
 		}
 		cl.writer.Stop()
 		cl.resetColoredLogger()

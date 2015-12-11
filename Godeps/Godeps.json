@@ -3,6 +3,10 @@
 	"GoVersion": "go1.4",
 	"Deps": [
 		{
+			"ImportPath": "github.com/apoorvam/uilive",
+			"Rev": "29d637caa569e25ff551fa501b1197a26effce8b"
+		},
+		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",
 			"Rev": "3b18c8575a432453d41fdafb340099fff5bba2f7"
 		},
@@ -23,8 +27,13 @@
 			"Rev": "7f07925444bb51fa4cf9dfe6f7661876f8852275"
 		},
 		{
-			"ImportPath": "github.com/gosuri/uilive",
-			"Rev": "eb9a944a94f38ebcfa43d48bed49e47050c1aa73"
+			"ImportPath": "github.com/mattn/go-runewidth",
+			"Comment": "travisish-38-gd96d1bd",
+			"Rev": "d96d1bd051f2bd9e7e43d602782b37b93b1b5666"
+		},
+		{
+			"ImportPath": "github.com/nsf/termbox-go",
+			"Rev": "ca2931516914070bb7f934c83e408689cea8dfb7"
 		},
 		{
 			"ImportPath": "github.com/op/go-logging",
