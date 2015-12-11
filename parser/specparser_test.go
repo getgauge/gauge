@@ -510,6 +510,35 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 }
 
+func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("A spec heading").
+		text("Hello, i am a comment").
+		scenarioHeading("First flow").
+		step("another").
+		text("_____").
+		step("step1").
+		step("step2").String()
+
+	tokens, err := parser.GenerateTokens(specText)
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 7)
+
+	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[1].Kind, Equals, CommentKind)
+
+	c.Assert(tokens[2].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[3].Kind, Equals, StepKind)
+	c.Assert(tokens[3].Value, Equals, "another")
+	c.Assert(tokens[4].Kind, Equals, TearDownKind)
+
+	c.Assert(tokens[5].Kind, Equals, StepKind)
+	c.Assert(tokens[5].Value, Equals, "step1")
+	c.Assert(tokens[6].Kind, Equals, StepKind)
+	c.Assert(tokens[6].Value, Equals, "step2")
+
+}
+
 func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	parser := new(SpecParser)
 	conceptDictionary := new(ConceptDictionary)

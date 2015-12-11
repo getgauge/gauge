@@ -109,6 +109,7 @@ func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 			fillScenarioErrors(scenario, errMap, scenario.Steps)
 		}
 		fillSpecErrors(spec, errMap, spec.Contexts)
+		fillSpecErrors(spec, errMap, spec.TearDownSteps)
 
 	}
 }

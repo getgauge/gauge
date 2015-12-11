@@ -396,7 +396,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		}
 		spec.TearDownSteps = append(spec.TearDownSteps, stepToAdd)
 		spec.addItem(stepToAdd)
-		retainStates(state, tearDownScope)
+		retainStates(state, specScope, tearDownScope)
 
 		if parseDetails.Warnings != nil {
 			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
@@ -453,6 +453,9 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.latestContext()
 			addInlineTableHeader(latestContext, token)
+		} else if isInState(*state, tearDownScope) {
+			latestTeardown := spec.latestTeardown()
+			addInlineTableHeader(latestTeardown, token)
 		} else if !isInState(*state, scenarioScope) {
 			if !spec.DataTable.Table.IsInitialized() {
 				dataTable := &Table{}
@@ -469,7 +472,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			spec.latestScenario().addComment(&Comment{token.LineText, token.LineNo})
 			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{value, token.LineNo}}}
 		}
-		retainStates(state, specScope, scenarioScope, stepScope, contextScope)
+		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope)
 		addStates(state, tableScope)
 		return ParseResult{Ok: true}
 	})
@@ -495,12 +498,15 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.latestContext()
 			result = addInlineTableRow(latestContext, token, new(ArgLookup).fromDataTable(&spec.DataTable.Table))
+		} else if isInState(*state, tearDownScope) {
+			latestTeardown := spec.latestTeardown()
+			result = addInlineTableRow(latestTeardown, token, new(ArgLookup).fromDataTable(&spec.DataTable.Table))
 		} else {
 			//todo validate datatable rows also
 			spec.DataTable.Table.addRowValues(token.Args)
 			result = ParseResult{Ok: true}
 		}
-		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tableScope)
+		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope)
 		return result
 	})
 
@@ -565,6 +571,9 @@ func (specification *Specification) processConceptStepsFrom(conceptDictionary *C
 		for _, step := range scenario.Steps {
 			specification.processConceptStep(step, conceptDictionary)
 		}
+	}
+	for _, step := range specification.TearDownSteps {
+		specification.processConceptStep(step, conceptDictionary)
 	}
 }
 
@@ -638,6 +647,10 @@ func (specification *Specification) latestScenario() *Scenario {
 
 func (specification *Specification) latestContext() *Step {
 	return specification.Contexts[len(specification.Contexts)-1]
+}
+
+func (specification *Specification) latestTeardown() *Step {
+	return specification.TearDownSteps[len(specification.TearDownSteps)-1]
 }
 
 func (specParser *SpecParser) validateSpec(specification *Specification) *ParseError {

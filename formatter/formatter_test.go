@@ -102,6 +102,42 @@ tags: tag3, tag4
 
 }
 
+func (s *MySuite) TestFormatSpecificationWithTeardownSteps(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 4},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 5, LineText: "Example step"},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading1", LineNo: 6},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 7},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step"},
+		&parser.Token{Kind: parser.TearDownKind, Value: "____", LineNo: 9},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step1", LineNo: 10, LineText: "Example step1"},
+		&parser.Token{Kind: parser.StepKind, Value: "Example step2", LineNo: 11, LineText: "Example step2"},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+tags: tag1, tag2
+Scenario Heading
+----------------
+tags: tag3, tag4
+* Example step
+Scenario Heading1
+-----------------
+tags: tag3, tag4
+* Example step
+____
+* Example step1
+* Example step2
+`)
+
+}
+
 func (s *MySuite) TestFormatStep(c *C) {
 	step := &parser.Step{Value: "my step with {}, {}, {} and {}", Args: []*parser.StepArg{&parser.StepArg{Value: "static \"foo\"", ArgType: parser.Static},
 		&parser.StepArg{Value: "dynamic \"foo\"", ArgType: parser.Dynamic},

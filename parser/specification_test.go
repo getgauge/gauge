@@ -1002,3 +1002,25 @@ func (s *MySuite) TestReplaceArgs(c *C) {
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
 	c.Assert(step.Args[1].Value, Equals, "text from file")
 }
+
+func (s *MySuite) TestTearDownSteps(c *C) {
+	tokens := []*Token{
+		&Token{Kind: SpecKind, Value: "Spec Heading", LineNo: 1},
+		&Token{Kind: CommentKind, Value: "A comment with some text and **bold** characters", LineNo: 2},
+		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		&Token{Kind: CommentKind, Value: "Another comment", LineNo: 4},
+		&Token{Kind: StepKind, Value: "Example step", LineNo: 5},
+		&Token{Kind: CommentKind, Value: "Third comment", LineNo: 6},
+		&Token{Kind: TearDownKind, Value: "____", LineNo: 7},
+		&Token{Kind: StepKind, Value: "Example step1", LineNo: 8},
+		&Token{Kind: CommentKind, Value: "Fourth comment", LineNo: 9},
+		&Token{Kind: StepKind, Value: "Example step2", LineNo: 10},
+	}
+
+	spec, _ := new(SpecParser).CreateSpecification(tokens, new(ConceptDictionary))
+	c.Assert(len(spec.TearDownSteps), Equals, 2)
+	c.Assert(spec.TearDownSteps[0].Value, Equals, "Example step1")
+	c.Assert(spec.TearDownSteps[0].LineNo, Equals, 8)
+	c.Assert(spec.TearDownSteps[1].Value, Equals, "Example step2")
+	c.Assert(spec.TearDownSteps[1].LineNo, Equals, 10)
+}
