@@ -42,7 +42,7 @@ func (sl *simpleLogger) Write(b []byte) (int, error) {
 		text = strings.Replace(text, "\n", "\n\t", -1)
 		if len(text) > 0 {
 			sl.buffer.WriteString(fmt.Sprintf("\t%s\n", text))
-			sl.write(sl.headingText.String() + sl.buffer.String())
+			sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 		}
 	}
 	return len(b), nil
@@ -53,7 +53,7 @@ func (sl *simpleLogger) Error(text string, args ...interface{}) {
 	Log.Error(msg, args)
 	sl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		sl.write(sl.headingText.String() + sl.buffer.String())
+		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 	}
 }
 
@@ -62,7 +62,7 @@ func (sl *simpleLogger) Critical(text string, args ...interface{}) {
 	Log.Critical(msg, args)
 	sl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		sl.write(sl.headingText.String() + sl.buffer.String())
+		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 	}
 }
 
@@ -71,7 +71,7 @@ func (sl *simpleLogger) Warning(text string, args ...interface{}) {
 	Log.Warning(msg, args)
 	sl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		sl.write(sl.headingText.String() + sl.buffer.String())
+		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 	}
 }
 
@@ -80,7 +80,7 @@ func (sl *simpleLogger) Info(text string, args ...interface{}) {
 	Log.Info(msg, args)
 	sl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		sl.write(sl.headingText.String() + sl.buffer.String())
+		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 	}
 }
 
@@ -89,7 +89,7 @@ func (sl *simpleLogger) Debug(text string, args ...interface{}) {
 	Log.Debug(msg, args)
 	sl.buffer.WriteString(msg + "\n")
 	if level == logging.DEBUG {
-		sl.write(sl.headingText.String() + sl.buffer.String())
+		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
 	}
 }
 
@@ -136,7 +136,7 @@ func (sl *simpleLogger) StepStart(stepText string) {
 	if level == logging.DEBUG {
 		sl.writer.Start()
 		sl.headingText.WriteString(indent(stepText, stepIndentation) + "\n")
-		sl.write(sl.headingText.String())
+		sl.writeToWriter(sl.headingText.String())
 	}
 }
 
@@ -144,9 +144,9 @@ func (sl *simpleLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		heading := strings.Trim(sl.headingText.String(), "\n")
 		if failed {
-			sl.write(heading + "\t ...[FAIL]\n" + sl.buffer.String())
+			sl.writeToWriter(heading + "\t ...[FAIL]\n" + sl.buffer.String())
 		} else {
-			sl.write(heading + "\t ...[PASS]\n" + sl.buffer.String())
+			sl.writeToWriter(heading + "\t ...[PASS]\n" + sl.buffer.String())
 		}
 		sl.writer.Stop()
 		sl.resetsimpleLogger()
@@ -159,11 +159,14 @@ func (sl *simpleLogger) StepEnd(failed bool) {
 	}
 }
 
-func (sl *simpleLogger) writeln(text string) {
-	sl.write(text + "\n")
+func (sl *simpleLogger) ConceptStart(conceptHeading string) {
+	Log.Debug(conceptHeading)
+	if level == logging.DEBUG {
+		fmt.Println(indent(conceptHeading, stepIndentation))
+	}
 }
 
-func (sl *simpleLogger) write(text string) {
+func (sl *simpleLogger) writeToWriter(text string) {
 	fmt.Fprint(sl.writer, text)
 	sl.writer.Flush()
 }

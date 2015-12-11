@@ -46,6 +46,7 @@ type GaugeLogger interface {
 	ScenarioEnd(bool)
 	StepStart(string)
 	StepEnd(bool)
+	ConceptStart(string)
 	Error(string, ...interface{})
 	Critical(string, ...interface{})
 	Info(string, ...interface{})

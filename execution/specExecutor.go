@@ -375,6 +375,7 @@ func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoSte
 }
 
 func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
+	executor.logger.ConceptStart(formatter.FormatConcept(protoConcept))
 	for _, step := range protoConcept.Steps {
 		failure := executor.executeItem(step)
 		executor.setExecutionResultForConcept(protoConcept)

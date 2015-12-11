@@ -27,6 +27,8 @@ import (
 	"github.com/op/go-logging"
 )
 
+const newline = "\n"
+
 type coloredLogger struct {
 	writer      *uilive.Writer
 	headingText bytes.Buffer
@@ -40,7 +42,7 @@ func newColoredConsoleWriter() *coloredLogger {
 func (cl *coloredLogger) Write(b []byte) (int, error) {
 	if level == logging.DEBUG {
 		text := strings.Trim(string(b), "\n ")
-		text = strings.Replace(text, "\n", "\n\t", -1)
+		text = strings.Replace(text, newline, "\n\t", -1)
 		if len(text) > 0 {
 			cl.buffer.WriteString(fmt.Sprintf("\t%s\n", text))
 			cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
@@ -52,7 +54,7 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Error(msg, args)
-	cl.buffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
 		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
 	}
@@ -61,7 +63,7 @@ func (cl *coloredLogger) Error(text string, args ...interface{}) {
 func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Critical(msg, args)
-	cl.buffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
 		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
 	}
@@ -70,7 +72,7 @@ func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Warning(msg, args)
-	cl.buffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
 		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Yellow, false)
 	}
@@ -79,7 +81,7 @@ func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 func (cl *coloredLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Info(msg, args)
-	cl.buffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
 		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
 	}
@@ -88,7 +90,7 @@ func (cl *coloredLogger) Info(text string, args ...interface{}) {
 func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Debug(msg, args)
-	cl.buffer.WriteString(msg + "\n")
+	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
 		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
 	}
@@ -97,11 +99,7 @@ func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
-	fmt.Println()
-	ct.Foreground(ct.Cyan, true)
-	ConsoleWrite(msg)
-	fmt.Println()
-	ct.ResetColor()
+	cl.writeToConsole(newline+msg+newline+newline, ct.Cyan, true)
 }
 
 func (coloredLogger *coloredLogger) SpecEnd() {
@@ -140,18 +138,18 @@ func (cl *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
 		cl.writer.Start()
-		cl.headingText.WriteString(indent(stepText, stepIndentation) + "\n")
+		cl.headingText.WriteString(indent(stepText, stepIndentation) + newline)
 		cl.write(cl.headingText.String(), ct.None, false)
 	}
 }
 
 func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
-		heading := strings.Trim(cl.headingText.String(), "\n")
+		heading := strings.Trim(cl.headingText.String(), newline)
 		if failed {
-			cl.write(heading+"\t ...[FAIL]\n"+cl.buffer.String(), ct.Red, false)
+			cl.write(heading+"\t ...[FAIL]"+newline+cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.write(heading+"\t ...[PASS]\n"+cl.buffer.String(), ct.Green, false)
+			cl.write(heading+"\t ...[PASS]"+newline+cl.buffer.String(), ct.Green, false)
 		}
 		cl.writer.Stop()
 		cl.resetColoredLogger()
@@ -164,8 +162,15 @@ func (cl *coloredLogger) StepEnd(failed bool) {
 	}
 }
 
+func (cl *coloredLogger) ConceptStart(conceptHeading string) {
+	Log.Debug(conceptHeading)
+	if level == logging.DEBUG {
+		cl.writeToConsole(indent(conceptHeading, stepIndentation)+newline, ct.Magenta, false)
+	}
+}
+
 func (cl *coloredLogger) writeln(text string, color ct.Color, isBright bool) {
-	cl.write(text+"\n", color, isBright)
+	cl.write(text+newline, color, isBright)
 }
 
 func (cl *coloredLogger) write(text string, color ct.Color, isBright bool) {
