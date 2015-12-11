@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/mattn/go-isatty"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
@@ -55,7 +55,7 @@ type GaugeLogger interface {
 }
 
 var currentLogger GaugeLogger
-var isWindows bool
+var isNotTerminal bool
 
 func Current() GaugeLogger {
 	if currentLogger == nil {
@@ -122,8 +122,8 @@ func Initialize(verbose bool, logLevel string) {
 	level = loggingLevel(verbose, logLevel)
 	initFileLogger(level, SimpleConsoleOutput)
 	initApiLogger(level, SimpleConsoleOutput)
-	if runtime.GOOS == "windows" {
-		isWindows = true
+	if !isatty.IsTerminal(os.Stdout.Fd()) {
+		isNotTerminal = true
 	}
 }
 
