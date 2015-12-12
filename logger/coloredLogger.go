@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/apoorvam/uilive"
+	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/op/go-logging"
 )
@@ -30,13 +30,13 @@ import (
 const newline = "\n"
 
 type coloredLogger struct {
-	writer      *uilive.Writer
+	writer      *goterminal.Writer
 	headingText bytes.Buffer
 	buffer      bytes.Buffer
 }
 
 func newColoredConsoleWriter() *coloredLogger {
-	return &coloredLogger{writer: uilive.New()}
+	return &coloredLogger{writer: goterminal.New()}
 }
 
 func (cl *coloredLogger) Write(b []byte) (int, error) {
@@ -44,8 +44,9 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 		text := strings.Trim(string(b), "\n ")
 		text = strings.Replace(text, newline, "\n\t", -1)
 		if len(text) > 0 {
-			cl.buffer.WriteString(fmt.Sprintf("\t%s\n", text))
-			cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
+			msg := fmt.Sprintf("\t%s\n", text)
+			cl.buffer.WriteString(msg)
+			cl.print(msg, ct.None, false)
 		}
 	}
 	return len(b), nil
@@ -56,7 +57,7 @@ func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	Log.Error(msg, args)
 	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
+		cl.print(msg+newline, ct.Red, false)
 	}
 }
 
@@ -65,7 +66,7 @@ func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 	Log.Critical(msg, args)
 	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Red, false)
+		cl.print(msg+newline, ct.Red, false)
 	}
 }
 
@@ -74,7 +75,7 @@ func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 	Log.Warning(msg, args)
 	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.buffer.String(), ct.Yellow, false)
+		cl.print(msg+newline, ct.Yellow, false)
 	}
 }
 
@@ -83,7 +84,7 @@ func (cl *coloredLogger) Info(text string, args ...interface{}) {
 	Log.Info(msg, args)
 	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
+		cl.print(msg+newline, ct.None, false)
 	}
 }
 
@@ -92,7 +93,7 @@ func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 	Log.Debug(msg, args)
 	cl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		cl.write(cl.headingText.String()+cl.buffer.String(), ct.None, false)
+		cl.print(msg+newline, ct.None, false)
 	}
 }
 
@@ -125,34 +126,28 @@ func (cl *coloredLogger) ScenarioEnd(failed bool) {
 		fmt.Println()
 		cl.writeToConsole(cl.buffer.String(), ct.Red, false)
 	}
-	cl.resetColoredLogger()
-}
-
-func (cl *coloredLogger) resetColoredLogger() {
-	cl.writer = uilive.New()
-	cl.headingText.Reset()
-	cl.buffer.Reset()
 }
 
 func (cl *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		cl.writer.Start()
 		cl.headingText.WriteString(indent(stepText, stepIndentation) + newline)
-		cl.write(cl.headingText.String(), ct.None, false)
+		cl.print(cl.headingText.String(), ct.None, false)
 	}
 }
 
 func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
+		cl.writer.Clear()
 		heading := strings.Trim(cl.headingText.String(), newline)
 		if failed {
-			cl.write(heading+"\t ...[FAIL]"+newline+cl.buffer.String(), ct.Red, false)
+			cl.print(heading+"\t ...[FAIL]"+newline, ct.Red, false)
+			cl.print(cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.write(heading+"\t ...[PASS]"+newline+cl.buffer.String(), ct.Green, false)
+			cl.print(heading+"\t ...[PASS]"+newline, ct.Green, false)
+			cl.print(cl.buffer.String(), ct.None, false)
 		}
-		cl.writer.Stop()
-		cl.resetColoredLogger()
+		cl.Reset()
 	} else {
 		if failed {
 			cl.writeToConsole(getFailureSymbol(), ct.Red, false)
@@ -162,6 +157,12 @@ func (cl *coloredLogger) StepEnd(failed bool) {
 	}
 }
 
+func (cl *coloredLogger) Reset() {
+	cl.writer.Reset()
+	cl.buffer.Reset()
+	cl.headingText.Reset()
+}
+
 func (cl *coloredLogger) ConceptStart(conceptHeading string) {
 	Log.Debug(conceptHeading)
 	if level == logging.DEBUG {
@@ -169,14 +170,10 @@ func (cl *coloredLogger) ConceptStart(conceptHeading string) {
 	}
 }
 
-func (cl *coloredLogger) writeln(text string, color ct.Color, isBright bool) {
-	cl.write(text+newline, color, isBright)
-}
-
-func (cl *coloredLogger) write(text string, color ct.Color, isBright bool) {
+func (cl *coloredLogger) print(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
 	fmt.Fprint(cl.writer, text)
-	cl.writer.Flush()
+	cl.writer.Print()
 	ct.ResetColor()
 }
 

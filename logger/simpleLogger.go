@@ -22,18 +22,18 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/apoorvam/uilive"
+	"github.com/apoorvam/goterminal"
 	"github.com/op/go-logging"
 )
 
 type simpleLogger struct {
-	writer      *uilive.Writer
+	writer      *goterminal.Writer
 	headingText bytes.Buffer
 	buffer      bytes.Buffer
 }
 
 func newSimpleConsoleWriter() *simpleLogger {
-	return &simpleLogger{writer: uilive.New()}
+	return &simpleLogger{writer: goterminal.New()}
 }
 
 func (sl *simpleLogger) Write(b []byte) (int, error) {
@@ -41,8 +41,10 @@ func (sl *simpleLogger) Write(b []byte) (int, error) {
 		text := strings.Trim(string(b), "\n ")
 		text = strings.Replace(text, "\n", "\n\t", -1)
 		if len(text) > 0 {
-			sl.buffer.WriteString(fmt.Sprintf("\t%s\n", text))
-			sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+			msg := fmt.Sprintf("\t%s\n", text)
+			sl.buffer.WriteString(msg)
+			fmt.Fprint(sl.writer, msg)
+			sl.writer.Print()
 		}
 	}
 	return len(b), nil
@@ -51,45 +53,50 @@ func (sl *simpleLogger) Write(b []byte) (int, error) {
 func (sl *simpleLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Error(msg, args)
-	sl.buffer.WriteString(msg + "\n")
+	sl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+		fmt.Fprint(sl.writer, msg+newline)
+		sl.writer.Print()
 	}
 }
 
 func (sl *simpleLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Critical(msg, args)
-	sl.buffer.WriteString(msg + "\n")
+	sl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+		fmt.Fprint(sl.writer, msg+newline)
+		sl.writer.Print()
 	}
 }
 
 func (sl *simpleLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Warning(msg, args)
-	sl.buffer.WriteString(msg + "\n")
+	sl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+		fmt.Fprint(sl.writer, msg+newline)
+		sl.writer.Print()
 	}
 }
 
 func (sl *simpleLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Info(msg, args)
-	sl.buffer.WriteString(msg + "\n")
+	sl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+		fmt.Fprint(sl.writer, msg+newline)
+		sl.writer.Print()
 	}
 }
 
 func (sl *simpleLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Debug(msg, args)
-	sl.buffer.WriteString(msg + "\n")
+	sl.buffer.WriteString(msg + newline)
 	if level == logging.DEBUG {
-		sl.writeToWriter(sl.headingText.String() + sl.buffer.String())
+		fmt.Fprint(sl.writer, msg+newline)
+		sl.writer.Print()
 	}
 }
 
@@ -122,34 +129,29 @@ func (sl *simpleLogger) ScenarioEnd(failed bool) {
 		fmt.Println()
 		fmt.Print(sl.buffer.String())
 	}
-	sl.resetsimpleLogger()
-}
-
-func (sl *simpleLogger) resetsimpleLogger() {
-	sl.writer = uilive.New()
-	sl.headingText.Reset()
-	sl.buffer.Reset()
 }
 
 func (sl *simpleLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		sl.writer.Start()
-		sl.headingText.WriteString(indent(stepText, stepIndentation) + "\n")
-		sl.writeToWriter(sl.headingText.String())
+		sl.headingText.WriteString(indent(stepText, stepIndentation) + newline)
+		fmt.Fprint(sl.writer, sl.headingText.String())
+		sl.writer.Print()
 	}
 }
 
 func (sl *simpleLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
-		heading := strings.Trim(sl.headingText.String(), "\n")
+		sl.writer.Clear()
+		heading := strings.Trim(sl.headingText.String(), newline)
 		if failed {
-			sl.writeToWriter(heading + "\t ...[FAIL]\n" + sl.buffer.String())
+			fmt.Fprint(sl.writer, heading+"\t ...[FAIL]\n"+sl.buffer.String())
+			sl.writer.Print()
 		} else {
-			sl.writeToWriter(heading + "\t ...[PASS]\n" + sl.buffer.String())
+			fmt.Fprint(sl.writer, heading+"\t ...[PASS]\n"+sl.buffer.String())
+			sl.writer.Print()
 		}
-		sl.writer.Stop()
-		sl.resetsimpleLogger()
+		sl.Reset()
 	} else {
 		if failed {
 			fmt.Print(getFailureSymbol())
@@ -159,14 +161,15 @@ func (sl *simpleLogger) StepEnd(failed bool) {
 	}
 }
 
+func (sl *simpleLogger) Reset() {
+	sl.writer.Reset()
+	sl.headingText.Reset()
+	sl.buffer.Reset()
+}
+
 func (sl *simpleLogger) ConceptStart(conceptHeading string) {
 	Log.Debug(conceptHeading)
 	if level == logging.DEBUG {
 		fmt.Println(indent(conceptHeading, stepIndentation))
 	}
-}
-
-func (sl *simpleLogger) writeToWriter(text string) {
-	fmt.Fprint(sl.writer, text)
-	sl.writer.Flush()
 }
