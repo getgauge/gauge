@@ -83,10 +83,11 @@ func (sl *simpleLogger) Debug(text string, args ...interface{}) {
 func (sl *simpleLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
-	fmt.Println(newline + msg + newline)
+	fmt.Println(msg + newline)
 }
 
 func (simpleLogger *simpleLogger) SpecEnd() {
+	fmt.Println()
 }
 
 func (sl *simpleLogger) ScenarioStart(scenarioHeading string) {

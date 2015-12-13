@@ -86,10 +86,11 @@ func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
-	cl.writeToConsole(newline+msg+newline+newline, ct.Cyan, true)
+	cl.writeToConsole(msg+newline+newline, ct.Cyan, true)
 }
 
 func (coloredLogger *coloredLogger) SpecEnd() {
+	fmt.Println()
 }
 
 func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
