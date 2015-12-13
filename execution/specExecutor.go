@@ -428,7 +428,6 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger logger.GaugeLogger) {
 	logger.Error("Error Message: %s", executionResult.GetErrorMessage())
 	stacktrace := executionResult.GetStackTrace()
-	stacktrace = strings.Replace(stacktrace, "\n", "\n\t", -1)
 	logger.Error("Stacktrace: %s", stacktrace)
 }
 

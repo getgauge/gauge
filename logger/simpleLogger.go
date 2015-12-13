@@ -37,12 +37,12 @@ func newSimpleConsoleWriter() *simpleLogger {
 }
 
 func (sl *simpleLogger) Write(b []byte) (int, error) {
-	if level == logging.DEBUG {
-		text := strings.Trim(string(b), "\n ")
-		text = strings.Replace(text, "\n", "\n\t", -1)
-		if len(text) > 0 {
-			msg := fmt.Sprintf("\t%s\n", text)
-			sl.buffer.WriteString(msg)
+	text := strings.Trim(string(b), "\n ")
+	text = strings.Replace(text, newline, newline+spaces(sysoutIndentation), -1)
+	if len(text) > 0 {
+		msg := spaces(sysoutIndentation) + text + newline
+		sl.buffer.WriteString(msg)
+		if level == logging.DEBUG {
 			fmt.Fprint(sl.writer, msg)
 			sl.writer.Print()
 		}
@@ -52,60 +52,38 @@ func (sl *simpleLogger) Write(b []byte) (int, error) {
 
 func (sl *simpleLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Error(msg, args)
-	sl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		fmt.Fprint(sl.writer, msg+newline)
-		sl.writer.Print()
-	}
+	Log.Error(msg)
+	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Critical(msg, args)
-	sl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		fmt.Fprint(sl.writer, msg+newline)
-		sl.writer.Print()
-	}
+	Log.Critical(msg)
+	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Warning(msg, args)
-	sl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		fmt.Fprint(sl.writer, msg+newline)
-		sl.writer.Print()
-	}
+	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Info(msg, args)
-	sl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		fmt.Fprint(sl.writer, msg+newline)
-		sl.writer.Print()
-	}
+	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	Log.Debug(msg, args)
-	sl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		fmt.Fprint(sl.writer, msg+newline)
-		sl.writer.Print()
-	}
+	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	Log.Info(msg)
-	fmt.Println()
-	ConsoleWrite(msg)
-	fmt.Println()
+	fmt.Println(newline + msg + newline)
 }
 
 func (simpleLogger *simpleLogger) SpecEnd() {
@@ -120,13 +98,13 @@ func (sl *simpleLogger) ScenarioStart(scenarioHeading string) {
 		sl.headingText.WriteString(indentedText + spaces(4))
 		fmt.Print(sl.headingText.String())
 	} else {
-		ConsoleWrite(indentedText)
+		fmt.Println(indentedText)
 	}
 }
 
 func (sl *simpleLogger) ScenarioEnd(failed bool) {
-	if level == logging.INFO {
-		fmt.Println()
+	fmt.Println()
+	if level == logging.INFO && failed {
 		fmt.Print(sl.buffer.String())
 	}
 }
@@ -134,8 +112,8 @@ func (sl *simpleLogger) ScenarioEnd(failed bool) {
 func (sl *simpleLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		sl.headingText.WriteString(indent(stepText, stepIndentation) + newline)
-		fmt.Fprint(sl.writer, sl.headingText.String())
+		sl.headingText.WriteString(indent(stepText, stepIndentation))
+		fmt.Fprintln(sl.writer, sl.headingText.String())
 		sl.writer.Print()
 	}
 }
@@ -143,26 +121,26 @@ func (sl *simpleLogger) StepStart(stepText string) {
 func (sl *simpleLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		sl.writer.Clear()
-		heading := strings.Trim(sl.headingText.String(), newline)
 		if failed {
-			fmt.Fprint(sl.writer, heading+"\t ...[FAIL]\n"+sl.buffer.String())
+			fmt.Fprint(sl.writer, sl.headingText.String()+"\t ...[FAIL]\n"+sl.buffer.String())
 			sl.writer.Print()
 		} else {
-			fmt.Fprint(sl.writer, heading+"\t ...[PASS]\n"+sl.buffer.String())
+			fmt.Fprint(sl.writer, sl.headingText.String()+"\t ...[PASS]\n"+sl.buffer.String())
 			sl.writer.Print()
 		}
+		sl.writer.Reset()
 		sl.Reset()
 	} else {
 		if failed {
 			fmt.Print(getFailureSymbol())
 		} else {
 			fmt.Print(getSuccessSymbol())
+			sl.Reset()
 		}
 	}
 }
 
 func (sl *simpleLogger) Reset() {
-	sl.writer.Reset()
 	sl.headingText.Reset()
 	sl.buffer.Reset()
 }

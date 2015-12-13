@@ -40,13 +40,14 @@ func newColoredConsoleWriter() *coloredLogger {
 }
 
 func (cl *coloredLogger) Write(b []byte) (int, error) {
-	if level == logging.DEBUG {
-		text := strings.Trim(string(b), "\n ")
-		text = strings.Replace(text, newline, "\n\t", -1)
-		if len(text) > 0 {
-			msg := fmt.Sprintf("\t%s\n", text)
-			cl.buffer.WriteString(msg)
-			cl.print(msg, ct.None, false)
+	text := strings.Trim(string(b), "\n ")
+	text = strings.Replace(text, newline, newline+spaces(sysoutIndentation), -1)
+	if len(text) > 0 {
+		msg := spaces(sysoutIndentation) + text + newline
+		cl.buffer.WriteString(msg)
+		if level == logging.DEBUG {
+			fmt.Fprint(cl.writer, msg)
+			cl.writer.Print()
 		}
 	}
 	return len(b), nil
@@ -54,47 +55,32 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 
 func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Error(msg, args)
-	cl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		cl.print(msg+newline, ct.Red, false)
-	}
+	Log.Error(msg)
+	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Critical(msg, args)
-	cl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		cl.print(msg+newline, ct.Red, false)
-	}
+	Log.Critical(msg)
+	cl.Write([]byte(msg))
 }
 
 func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Warning(msg, args)
-	cl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		cl.print(msg+newline, ct.Yellow, false)
-	}
+	Log.Warning(msg)
+	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Info(msg, args)
-	cl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		cl.print(msg+newline, ct.None, false)
-	}
+	Log.Info(msg)
+	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Debug(msg, args)
-	cl.buffer.WriteString(msg + newline)
-	if level == logging.DEBUG {
-		cl.print(msg+newline, ct.None, false)
-	}
+	Log.Debug(msg)
+	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) SpecStart(heading string) {
@@ -122,8 +108,8 @@ func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
 }
 
 func (cl *coloredLogger) ScenarioEnd(failed bool) {
-	if level == logging.INFO {
-		fmt.Println()
+	fmt.Println()
+	if level == logging.INFO && failed {
 		cl.writeToConsole(cl.buffer.String(), ct.Red, false)
 	}
 }
@@ -131,34 +117,34 @@ func (cl *coloredLogger) ScenarioEnd(failed bool) {
 func (cl *coloredLogger) StepStart(stepText string) {
 	Log.Debug(stepText)
 	if level == logging.DEBUG {
-		cl.headingText.WriteString(indent(stepText, stepIndentation) + newline)
-		cl.print(cl.headingText.String(), ct.None, false)
+		cl.headingText.WriteString(indent(stepText, stepIndentation))
+		cl.print(cl.headingText.String()+newline, ct.None, false)
 	}
 }
 
 func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		cl.writer.Clear()
-		heading := strings.Trim(cl.headingText.String(), newline)
 		if failed {
-			cl.print(heading+"\t ...[FAIL]"+newline, ct.Red, false)
+			cl.print(cl.headingText.String()+"\t ...[FAIL]\n", ct.Red, false)
 			cl.print(cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.print(heading+"\t ...[PASS]"+newline, ct.Green, false)
+			cl.print(cl.headingText.String()+"\t ...[PASS]\n", ct.Green, false)
 			cl.print(cl.buffer.String(), ct.None, false)
 		}
+		cl.writer.Reset()
 		cl.Reset()
 	} else {
 		if failed {
 			cl.writeToConsole(getFailureSymbol(), ct.Red, false)
 		} else {
 			cl.writeToConsole(getSuccessSymbol(), ct.Green, false)
+			cl.Reset()
 		}
 	}
 }
 
 func (cl *coloredLogger) Reset() {
-	cl.writer.Reset()
 	cl.buffer.Reset()
 	cl.headingText.Reset()
 }
