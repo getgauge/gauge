@@ -55,37 +55,37 @@ func (cl *coloredLogger) Write(b []byte) (int, error) {
 
 func (cl *coloredLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Error(msg)
+	GaugeLog.Error(msg)
 	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Critical(msg)
+	GaugeLog.Critical(msg)
 	cl.Write([]byte(msg))
 }
 
 func (cl *coloredLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Warning(msg)
+	GaugeLog.Warning(msg)
 	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Info(msg)
+	GaugeLog.Info(msg)
 	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Debug(msg)
+	GaugeLog.Debug(msg)
 	fmt.Fprint(cl, msg)
 }
 
 func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
-	Log.Info(msg)
+	GaugeLog.Info(msg)
 	cl.writeToConsole(msg+newline+newline, ct.Cyan, true)
 }
 
@@ -95,7 +95,7 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 
 func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
-	Log.Info(msg)
+	GaugeLog.Info(msg)
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
@@ -116,7 +116,7 @@ func (cl *coloredLogger) ScenarioEnd(failed bool) {
 }
 
 func (cl *coloredLogger) StepStart(stepText string) {
-	Log.Debug(stepText)
+	GaugeLog.Debug(stepText)
 	if level == logging.DEBUG {
 		cl.headingText.WriteString(indent(stepText, stepIndentation))
 		cl.print(cl.headingText.String()+newline, ct.None, false)
@@ -151,7 +151,7 @@ func (cl *coloredLogger) Reset() {
 }
 
 func (cl *coloredLogger) ConceptStart(conceptHeading string) {
-	Log.Debug(conceptHeading)
+	GaugeLog.Debug(conceptHeading)
 	if level == logging.DEBUG {
 		cl.writeToConsole(indent(conceptHeading, stepIndentation)+newline, ct.Magenta, false)
 	}

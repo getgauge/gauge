@@ -162,7 +162,7 @@ func (testRunner *TestRunner) sendProcessKillMessage() {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest.Manifest, port string, log logger.GaugeLogger, killChannel chan bool) (*TestRunner, error) {
+func startRunner(manifest *manifest.Manifest, port string, log logger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
 	var r Runner
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -206,7 +206,7 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	return filepath.Dir(languageJSONFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, log logger.GaugeLogger) {
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, log logger.ExecutionLogger) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
@@ -256,7 +256,7 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func StartRunnerAndMakeConnection(manifest *manifest.Manifest, log logger.GaugeLogger, killChannel chan bool) (*TestRunner, error) {
+func StartRunnerAndMakeConnection(manifest *manifest.Manifest, log logger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0

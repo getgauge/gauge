@@ -39,7 +39,7 @@ const (
 
 var SimpleConsoleOutput bool
 
-type GaugeLogger interface {
+type ExecutionLogger interface {
 	SpecStart(string)
 	SpecEnd()
 	ScenarioStart(string)
@@ -55,10 +55,10 @@ type GaugeLogger interface {
 	Write([]byte) (int, error)
 }
 
-var currentLogger GaugeLogger
+var currentLogger ExecutionLogger
 var isNotTerminal bool
 
-func Current() GaugeLogger {
+func Current() ExecutionLogger {
 	if currentLogger == nil {
 		if SimpleConsoleOutput {
 			currentLogger = newSimpleConsoleWriter()
@@ -70,27 +70,27 @@ func Current() GaugeLogger {
 }
 
 func Info(msg string, args ...interface{}) {
-	Log.Info(msg, args...)
+	GaugeLog.Info(msg, args...)
 	ConsoleWrite(msg, args...)
 }
 
 func Error(msg string, args ...interface{}) {
-	Log.Error(msg, args...)
+	GaugeLog.Error(msg, args...)
 	ConsoleWrite(msg, args...)
 }
 
 func Warning(msg string, args ...interface{}) {
-	Log.Warning(msg, args...)
+	GaugeLog.Warning(msg, args...)
 	ConsoleWrite(msg, args...)
 }
 
 func Critical(msg string, args ...interface{}) {
-	Log.Critical(msg, args...)
+	GaugeLog.Critical(msg, args...)
 	ConsoleWrite(msg, args...)
 }
 
 func Debug(msg string, args ...interface{}) {
-	Log.Debug(msg, args...)
+	GaugeLog.Debug(msg, args...)
 	if level == logging.DEBUG {
 		ConsoleWrite(msg, args...)
 	}
@@ -104,7 +104,7 @@ type FileLogger struct {
 	*logging.Logger
 }
 
-var Log = FileLogger{logging.MustGetLogger("gauge")}
+var GaugeLog = FileLogger{logging.MustGetLogger("gauge")}
 var ApiLog = FileLogger{logging.MustGetLogger("gauge-api")}
 
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
@@ -166,7 +166,7 @@ func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
 	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
-func NewParallelLogger(n int) GaugeLogger {
+func NewParallelLogger(n int) ExecutionLogger {
 	parallelLogger := Current()
 	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
 	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
@@ -227,6 +227,6 @@ func loggingLevel(verbose bool, logLevel string) logging.Level {
 
 func HandleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
-		Log.Warning(warning)
+		GaugeLog.Warning(warning)
 	}
 }

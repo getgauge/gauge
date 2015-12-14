@@ -43,7 +43,7 @@ type specExecutor struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	currentTableRow      int
-	logger               logger.GaugeLogger
+	logger               logger.ExecutionLogger
 	errMap               *validationErrMaps
 }
 
@@ -52,7 +52,7 @@ type indexRange struct {
 	end   int
 }
 
-func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.GaugeLogger, errMap *validationErrMaps) {
+func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.ExecutionLogger, errMap *validationErrMaps) {
 	specExec.specification = specificationToExecute
 	specExec.runner = runner
 	specExec.pluginHandler = pluginHandler
@@ -425,7 +425,7 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 }
 
-func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger logger.GaugeLogger) {
+func printStatus(executionResult *gauge_messages.ProtoExecutionResult, logger logger.ExecutionLogger) {
 	logger.Error("Error Message: %s", executionResult.GetErrorMessage())
 	stacktrace := executionResult.GetStackTrace()
 	logger.Error("Stacktrace: %s", stacktrace)
@@ -541,7 +541,7 @@ func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentScenario.IsFailed = proto.Bool(true)
 }
 
-func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, logger logger.GaugeLogger) {
+func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, logger logger.ExecutionLogger) {
 	setScenarioFailure(executionInfo)
 	logger.Error("Failed step: %s", executionInfo.CurrentStep.Step.GetActualStepText())
 	executionInfo.CurrentStep.IsFailed = proto.Bool(true)

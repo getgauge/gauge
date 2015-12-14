@@ -50,7 +50,7 @@ type parallelSpecExecution struct {
 	runner                   *runner.TestRunner
 	aggregateResult          *result.SuiteResult
 	numberOfExecutionStreams int
-	logger                   logger.GaugeLogger
+	logger                   logger.ExecutionLogger
 	errMaps                  *validationErrMaps
 }
 
@@ -135,7 +135,7 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, log logger.GaugeLogger) {
+func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, log logger.ExecutionLogger) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
 		e.logger.Error("Failed: " + err.Error())
@@ -165,7 +165,7 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startStream(specs *specList, log logger.GaugeLogger, suiteResultChannel chan *result.SuiteResult) {
+func (e *parallelSpecExecution) startStream(specs *specList, log logger.ExecutionLogger, suiteResultChannel chan *result.SuiteResult) {
 	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, log, make(chan bool))
 	if err != nil {
@@ -178,7 +178,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, log logger.GaugeLog
 	suiteResultChannel <- result
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger logger.GaugeLogger) {
+func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, logger logger.ExecutionLogger) {
 	execution := newExecution(&executionInfo{e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, logger, e.errMaps})
 	result := execution.start()
 	runner.Kill()

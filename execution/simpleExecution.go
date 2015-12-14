@@ -43,7 +43,7 @@ type simpleExecution struct {
 	pluginHandler        *plugin.PluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	logger               logger.GaugeLogger
+	logger               logger.ExecutionLogger
 	errMaps              *validationErrMaps
 }
 
@@ -58,7 +58,7 @@ type executionInfo struct {
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.PluginHandler
 	parallelRunInfo *parallelInfo
-	execLogger      logger.GaugeLogger
+	execLogger      logger.ExecutionLogger
 	errMaps         *validationErrMaps
 }
 
@@ -181,7 +181,7 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.GaugeLogger, errMaps *validationErrMaps) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.ExecutionLogger, errMaps *validationErrMaps) *specExecutor {
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, logger, errMaps)
 	return specExecutor

@@ -52,37 +52,37 @@ func (sl *simpleLogger) Write(b []byte) (int, error) {
 
 func (sl *simpleLogger) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Error(msg)
+	GaugeLog.Error(msg)
 	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Critical(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Critical(msg)
+	GaugeLog.Critical(msg)
 	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Warning(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Warning(msg, args)
+	GaugeLog.Warning(msg, args)
 	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Info(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Info(msg, args)
+	GaugeLog.Info(msg, args)
 	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) Debug(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
-	Log.Debug(msg, args)
+	GaugeLog.Debug(msg, args)
 	fmt.Fprint(sl, msg)
 }
 
 func (sl *simpleLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
-	Log.Info(msg)
+	GaugeLog.Info(msg)
 	fmt.Println(msg + newline)
 }
 
@@ -92,7 +92,7 @@ func (simpleLogger *simpleLogger) SpecEnd() {
 
 func (sl *simpleLogger) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
-	Log.Info(msg)
+	GaugeLog.Info(msg)
 
 	indentedText := indent(msg, scenarioIndentation)
 	if level == logging.INFO {
@@ -111,7 +111,7 @@ func (sl *simpleLogger) ScenarioEnd(failed bool) {
 }
 
 func (sl *simpleLogger) StepStart(stepText string) {
-	Log.Debug(stepText)
+	GaugeLog.Debug(stepText)
 	if level == logging.DEBUG {
 		sl.headingText.WriteString(indent(stepText, stepIndentation))
 		fmt.Fprintln(sl.writer, sl.headingText.String())
@@ -147,7 +147,7 @@ func (sl *simpleLogger) Reset() {
 }
 
 func (sl *simpleLogger) ConceptStart(conceptHeading string) {
-	Log.Debug(conceptHeading)
+	GaugeLog.Debug(conceptHeading)
 	if level == logging.DEBUG {
 		fmt.Println(indent(conceptHeading, stepIndentation))
 	}
