@@ -392,7 +392,9 @@ func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoC
 			return true
 		}
 	}
-	return protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
+	conceptFailed := protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
+	executor.logger.ConceptEnd(conceptFailed)
+	return conceptFailed
 }
 
 func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_messages.ProtoConcept) {

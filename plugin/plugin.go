@@ -326,7 +326,7 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	}
 	err = conn.Write(plugin.connection, messageBytes)
 	if err != nil {
-		return fmt.Errorf("[Warning] Failed to send message to plugin: %d  %s", plugin.descriptor.Id, err.Error())
+		return fmt.Errorf("[Warning] Failed to send message to plugin: %s  %s", plugin.descriptor.Id, err.Error())
 	}
 	return nil
 }

@@ -102,3 +102,24 @@ func (s *MySuite) TestWrite(c *C) {
 	c.Assert(b.String(), Equals, formattedStacktrace)
 	c.Assert(cl.buffer.String(), Equals, formattedStacktrace)
 }
+
+func (s *MySuite) TestConceptStartAndEnd(c *C) {
+	Initialize(true, "Debug")
+	b := &bytes.Buffer{}
+	cl := newColoredConsoleWriter()
+	cl.writer.Out = b
+	cl.indentation = noIndentation
+
+	cl.ConceptStart("my concept")
+	cl.indentation = stepIndentation
+
+	cl.ConceptStart("my concept1")
+	cl.indentation = stepIndentation + stepIndentation
+
+	cl.ConceptEnd(true)
+	cl.indentation = stepIndentation
+
+	cl.ConceptEnd(true)
+	cl.indentation = noIndentation
+
+}

@@ -25,7 +25,7 @@ import (
 const (
 	noIndentation       = 0
 	scenarioIndentation = 2
-	stepIndentation     = 2
+	stepIndentation     = 4
 	sysoutIndentation   = 2
 	success             = "✔ "
 	failure             = "✘ "

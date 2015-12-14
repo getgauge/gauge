@@ -97,7 +97,7 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 }
 
 func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
-	cl.indentation += scenarioIndentation
+	cl.indentation = scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	GaugeLog.Info(msg)
 
@@ -158,10 +158,15 @@ func (cl *coloredLogger) Reset() {
 }
 
 func (cl *coloredLogger) ConceptStart(conceptHeading string) {
+	cl.indentation += stepIndentation
 	GaugeLog.Debug(conceptHeading)
 	if level == logging.DEBUG {
-		cl.writeToConsole(indent(conceptHeading, stepIndentation)+newline, ct.Magenta, false)
+		cl.writeToConsole(indent(conceptHeading, cl.indentation)+newline, ct.Magenta, false)
 	}
+}
+
+func (cl *coloredLogger) ConceptEnd(failed bool) {
+	cl.indentation -= stepIndentation
 }
 
 func (cl *coloredLogger) print(text string, color ct.Color, isBright bool) {

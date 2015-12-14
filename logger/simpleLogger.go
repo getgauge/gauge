@@ -94,7 +94,7 @@ func (simpleLogger *simpleLogger) SpecEnd() {
 }
 
 func (sl *simpleLogger) ScenarioStart(scenarioHeading string) {
-	sl.indentation += scenarioIndentation
+	sl.indentation = scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	GaugeLog.Info(msg)
 
@@ -154,8 +154,13 @@ func (sl *simpleLogger) Reset() {
 }
 
 func (sl *simpleLogger) ConceptStart(conceptHeading string) {
+	sl.indentation += stepIndentation
 	GaugeLog.Debug(conceptHeading)
 	if level == logging.DEBUG {
-		fmt.Println(indent(conceptHeading, stepIndentation))
+		fmt.Println(indent(conceptHeading, sl.indentation))
 	}
+}
+
+func (sl *simpleLogger) ConceptEnd(failed bool) {
+	sl.indentation -= stepIndentation
 }
