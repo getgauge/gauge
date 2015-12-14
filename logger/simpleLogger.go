@@ -161,6 +161,13 @@ func (sl *simpleLogger) ConceptStart(conceptHeading string) {
 	}
 }
 
+func (sl *simpleLogger) DataTable(table string) {
+	GaugeLog.Debug(table)
+	if level == logging.DEBUG {
+		fmt.Println(table)
+	}
+}
+
 func (sl *simpleLogger) ConceptEnd(failed bool) {
 	sl.indentation -= stepIndentation
 }

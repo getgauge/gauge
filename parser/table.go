@@ -87,7 +87,7 @@ func (table *Table) headerExists(header string) bool {
 	return ok
 }
 
-func (table *Table) addHeaders(columnNames []string) {
+func (table *Table) AddHeaders(columnNames []string) {
 	table.headerIndexMap = make(map[string]int)
 	table.Headers = make([]string, len(columnNames))
 	table.columns = make([][]TableCell, len(columnNames))
@@ -99,7 +99,7 @@ func (table *Table) addHeaders(columnNames []string) {
 	}
 }
 
-func (table *Table) addRowValues(rowValues []string) {
+func (table *Table) AddRowValues(rowValues []string) {
 	tableCells := table.createTableCells(rowValues)
 	table.addRows(tableCells)
 }
@@ -179,9 +179,9 @@ func getDefaultTableCell() TableCell {
 
 func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
 	table := &Table{}
-	table.addHeaders(protoTable.GetHeaders().GetCells())
+	table.AddHeaders(protoTable.GetHeaders().GetCells())
 	for _, row := range protoTable.GetRows() {
-		table.addRowValues(row.GetCells())
+		table.AddRowValues(row.GetCells())
 	}
 	return table
 }
@@ -196,9 +196,9 @@ func convertCsvToTable(csvContents string) (*Table, error) {
 	table := new(Table)
 	for i, line := range lines {
 		if i == 0 {
-			table.addHeaders(line)
+			table.AddHeaders(line)
 		} else {
-			table.addRowValues(line)
+			table.AddRowValues(line)
 		}
 	}
 	return table, nil

@@ -538,9 +538,9 @@ func (s *MySuite) TestGetLookupCopy(c *C) {
 
 func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable := new(Table)
-	dataTable.addHeaders([]string{"id", "name"})
-	dataTable.addRowValues([]string{"1", "admin"})
-	dataTable.addRowValues([]string{"2", "root"})
+	dataTable.AddHeaders([]string{"id", "name"})
+	dataTable.AddRowValues([]string{"1", "admin"})
+	dataTable.AddRowValues([]string{"2", "root"})
 
 	emptyLookup := new(ArgLookup).FromDataTableRow(new(Table), 0)
 	lookup1 := new(ArgLookup).FromDataTableRow(dataTable, 0)
@@ -791,8 +791,8 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	argTable := new(Table)
 	headers := []string{"header1", "header2"}
 	row1 := []string{"row1", "row2"}
-	argTable.addHeaders(headers)
-	argTable.addRowValues(row1)
+	argTable.AddHeaders(headers)
+	argTable.AddRowValues(row1)
 	arg3 := &StepArg{ArgType: SpecialString, Value: "text from file", Name: "file:foo.txt"}
 	arg4 := &StepArg{Table: *argTable, ArgType: TableArg}
 	stepArgs := []*StepArg{arg1, arg2, arg3, arg4}

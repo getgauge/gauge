@@ -169,6 +169,13 @@ func (cl *coloredLogger) ConceptEnd(failed bool) {
 	cl.indentation -= stepIndentation
 }
 
+func (cl *coloredLogger) DataTable(table string) {
+	GaugeLog.Debug(table)
+	if level == logging.DEBUG {
+		cl.writeToConsole(table+newline, ct.Yellow, false)
+	}
+}
+
 func (cl *coloredLogger) print(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
 	fmt.Fprint(cl.writer, text)

@@ -26,7 +26,7 @@ func (s *MySuite) TestIsInitalized(c *C) {
 	c.Assert(table.IsInitialized(), Equals, false)
 	c.Assert(table.GetRowCount(), Equals, 0)
 
-	table.addHeaders([]string{"one", "two", "three"})
+	table.AddHeaders([]string{"one", "two", "three"})
 
 	c.Assert(table.IsInitialized(), Equals, true)
 }
@@ -34,7 +34,7 @@ func (s *MySuite) TestIsInitalized(c *C) {
 func (s *MySuite) TestShouldAddHeaders(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
+	table.AddHeaders([]string{"one", "two", "three"})
 
 	c.Assert(len(table.Headers), Equals, 3)
 	c.Assert(table.headerIndexMap["one"], Equals, 0)
@@ -48,9 +48,9 @@ func (s *MySuite) TestShouldAddHeaders(c *C) {
 func (s *MySuite) TestShouldAddRowValues(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
-	table.addRowValues([]string{"foo", "bar", "baz"})
-	table.addRowValues([]string{"john", "jim"})
+	table.AddHeaders([]string{"one", "two", "three"})
+	table.AddRowValues([]string{"foo", "bar", "baz"})
+	table.AddRowValues([]string{"john", "jim"})
 
 	c.Assert(table.GetRowCount(), Equals, 2)
 	column1 := table.Get("one")
@@ -78,7 +78,7 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 func (s *MySuite) TestShouldAddRows(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
+	table.AddHeaders([]string{"one", "two", "three"})
 	table.addRows([]TableCell{TableCell{"foo", Static}, TableCell{"bar", Static}, TableCell{"baz", Static}})
 	table.addRows([]TableCell{TableCell{"john", Static}, TableCell{"jim", Static}})
 
@@ -108,9 +108,9 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 func (s *MySuite) TestCoulmnNameExists(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
-	table.addRowValues([]string{"foo", "bar", "baz"})
-	table.addRowValues([]string{"john", "jim", "jack"})
+	table.AddHeaders([]string{"one", "two", "three"})
+	table.AddRowValues([]string{"foo", "bar", "baz"})
+	table.AddRowValues([]string{"john", "jim", "jack"})
 
 	c.Assert(table.headerExists("one"), Equals, true)
 	c.Assert(table.headerExists("two"), Equals, true)
@@ -120,9 +120,9 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 func (s *MySuite) TestGetInvalidColumn(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
-	table.addRowValues([]string{"foo", "bar", "baz"})
-	table.addRowValues([]string{"john", "jim", "jack"})
+	table.AddHeaders([]string{"one", "two", "three"})
+	table.AddRowValues([]string{"foo", "bar", "baz"})
+	table.AddRowValues([]string{"john", "jim", "jack"})
 
 	c.Assert(func() { table.Get("four") }, Panics, "Table column four not found")
 }
@@ -130,9 +130,9 @@ func (s *MySuite) TestGetInvalidColumn(c *C) {
 func (s *MySuite) TestGetRows(c *C) {
 	var table Table
 
-	table.addHeaders([]string{"one", "two", "three"})
-	table.addRowValues([]string{"foo", "bar", "baz"})
-	table.addRowValues([]string{"john", "jim", "jack"})
+	table.AddHeaders([]string{"one", "two", "three"})
+	table.AddRowValues([]string{"foo", "bar", "baz"})
+	table.AddRowValues([]string{"john", "jim", "jack"})
 
 	rows := table.Rows()
 	c.Assert(len(rows), Equals, 2)
@@ -149,7 +149,7 @@ func (s *MySuite) TestGetRows(c *C) {
 
 func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
 	var table Table
-	table.addHeaders([]string{"id", "name"})
+	table.AddHeaders([]string{"id", "name"})
 
 	firstRow := table.toHeaderSizeRow([]TableCell{TableCell{"123", Static}, TableCell{"foo", Static}})
 	secondRow := table.toHeaderSizeRow([]TableCell{TableCell{"jim", Static}, TableCell{"jack", Static}})

@@ -460,7 +460,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			if !spec.DataTable.Table.IsInitialized() {
 				dataTable := &Table{}
 				dataTable.LineNo = token.LineNo
-				dataTable.addHeaders(token.Args)
+				dataTable.AddHeaders(token.Args)
 				spec.addDataTable(dataTable)
 			} else {
 				value := "Multiple data table present, ignoring table"
@@ -503,7 +503,7 @@ func (specParser *SpecParser) initializeConverters() []func(*Token, *int, *Speci
 			result = addInlineTableRow(latestTeardown, token, new(ArgLookup).fromDataTable(&spec.DataTable.Table))
 		} else {
 			//todo validate datatable rows also
-			spec.DataTable.Table.addRowValues(token.Args)
+			spec.DataTable.Table.AddRowValues(token.Args)
 			result = ParseResult{Ok: true}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope)
@@ -697,7 +697,7 @@ func (step *Step) addArgs(args ...*StepArg) {
 
 func (step *Step) addInlineTableHeaders(headers []string) {
 	tableArg := &StepArg{ArgType: TableArg}
-	tableArg.Table.addHeaders(headers)
+	tableArg.Table.AddHeaders(headers)
 	step.addArgs(tableArg)
 }
 

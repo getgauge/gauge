@@ -48,6 +48,7 @@ type ExecutionLogger interface {
 	StepEnd(bool)
 	ConceptStart(string)
 	ConceptEnd(bool)
+	DataTable(string)
 	Error(string, ...interface{})
 	Critical(string, ...interface{})
 	Info(string, ...interface{})

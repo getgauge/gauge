@@ -148,6 +148,10 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 func (specExecutor *specExecutor) executeTableDrivenScenarios() {
 	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
 	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
+		var dataTable parser.Table
+		dataTable.AddHeaders(specExecutor.specification.DataTable.Table.Headers)
+		dataTable.AddRowValues(specExecutor.specification.DataTable.Table.Rows()[specExecutor.currentTableRow])
+		specExecutor.logger.DataTable(formatter.FormatTable(&dataTable))
 		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
 	}
 	specExecutor.specResult.AddTableDrivenScenarioResult(dataTableScenarioExecutionResult)
