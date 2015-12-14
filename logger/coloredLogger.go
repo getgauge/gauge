@@ -33,6 +33,7 @@ type coloredLogger struct {
 	writer      *goterminal.Writer
 	headingText bytes.Buffer
 	buffer      bytes.Buffer
+	indentation int
 }
 
 func newColoredConsoleWriter() *coloredLogger {
@@ -40,16 +41,18 @@ func newColoredConsoleWriter() *coloredLogger {
 }
 
 func (cl *coloredLogger) Write(b []byte) (int, error) {
+	cl.indentation += sysoutIndentation
 	text := strings.Trim(string(b), "\n ")
-	text = strings.Replace(text, newline, newline+spaces(sysoutIndentation), -1)
+	text = strings.Replace(text, newline, newline+spaces(cl.indentation), -1)
 	if len(text) > 0 {
-		msg := spaces(sysoutIndentation) + text + newline
+		msg := spaces(cl.indentation) + text + newline
 		cl.buffer.WriteString(msg)
 		if level == logging.DEBUG {
 			fmt.Fprint(cl.writer, msg)
 			cl.writer.Print()
 		}
 	}
+	cl.indentation -= sysoutIndentation
 	return len(b), nil
 }
 
@@ -94,10 +97,11 @@ func (coloredLogger *coloredLogger) SpecEnd() {
 }
 
 func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
+	cl.indentation += scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	GaugeLog.Info(msg)
 
-	indentedText := indent(msg, scenarioIndentation)
+	indentedText := indent(msg, cl.indentation)
 	if level == logging.INFO {
 		cl.headingText.WriteString(indentedText + spaces(4))
 		cl.writeToConsole(cl.headingText.String(), ct.None, false)
@@ -113,12 +117,14 @@ func (cl *coloredLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO && failed {
 		cl.writeToConsole(cl.buffer.String(), ct.Red, false)
 	}
+	cl.indentation -= scenarioIndentation
 }
 
 func (cl *coloredLogger) StepStart(stepText string) {
+	cl.indentation += stepIndentation
 	GaugeLog.Debug(stepText)
 	if level == logging.DEBUG {
-		cl.headingText.WriteString(indent(stepText, stepIndentation))
+		cl.headingText.WriteString(indent(stepText, cl.indentation))
 		cl.print(cl.headingText.String()+newline, ct.None, false)
 	}
 }
@@ -143,6 +149,7 @@ func (cl *coloredLogger) StepEnd(failed bool) {
 			cl.Reset()
 		}
 	}
+	cl.indentation -= stepIndentation
 }
 
 func (cl *coloredLogger) Reset() {

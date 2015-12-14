@@ -23,9 +23,10 @@ import (
 )
 
 const (
+	noIndentation       = 0
 	scenarioIndentation = 2
-	stepIndentation     = 4
-	sysoutIndentation   = 6
+	stepIndentation     = 2
+	sysoutIndentation   = 2
 	success             = "✔ "
 	failure             = "✘ "
 	successChar         = "P"

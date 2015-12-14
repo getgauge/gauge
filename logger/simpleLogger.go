@@ -30,6 +30,7 @@ type simpleLogger struct {
 	writer      *goterminal.Writer
 	headingText bytes.Buffer
 	buffer      bytes.Buffer
+	indentation int
 }
 
 func newSimpleConsoleWriter() *simpleLogger {
@@ -37,16 +38,18 @@ func newSimpleConsoleWriter() *simpleLogger {
 }
 
 func (sl *simpleLogger) Write(b []byte) (int, error) {
+	sl.indentation += sysoutIndentation
 	text := strings.Trim(string(b), "\n ")
-	text = strings.Replace(text, newline, newline+spaces(sysoutIndentation), -1)
+	text = strings.Replace(text, newline, newline+spaces(sl.indentation), -1)
 	if len(text) > 0 {
-		msg := spaces(sysoutIndentation) + text + newline
+		msg := spaces(sl.indentation) + text + newline
 		sl.buffer.WriteString(msg)
 		if level == logging.DEBUG {
 			fmt.Fprint(sl.writer, msg)
 			sl.writer.Print()
 		}
 	}
+	sl.indentation -= sysoutIndentation
 	return len(b), nil
 }
 
@@ -91,10 +94,11 @@ func (simpleLogger *simpleLogger) SpecEnd() {
 }
 
 func (sl *simpleLogger) ScenarioStart(scenarioHeading string) {
+	sl.indentation += scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	GaugeLog.Info(msg)
 
-	indentedText := indent(msg, scenarioIndentation)
+	indentedText := indent(msg, sl.indentation)
 	if level == logging.INFO {
 		sl.headingText.WriteString(indentedText + spaces(4))
 		fmt.Print(sl.headingText.String())
@@ -108,12 +112,14 @@ func (sl *simpleLogger) ScenarioEnd(failed bool) {
 	if level == logging.INFO && failed {
 		fmt.Print(sl.buffer.String())
 	}
+	sl.indentation -= scenarioIndentation
 }
 
 func (sl *simpleLogger) StepStart(stepText string) {
+	sl.indentation += stepIndentation
 	GaugeLog.Debug(stepText)
 	if level == logging.DEBUG {
-		sl.headingText.WriteString(indent(stepText, stepIndentation))
+		sl.headingText.WriteString(indent(stepText, sl.indentation))
 		fmt.Fprintln(sl.writer, sl.headingText.String())
 		sl.writer.Print()
 	}
@@ -139,6 +145,7 @@ func (sl *simpleLogger) StepEnd(failed bool) {
 			sl.Reset()
 		}
 	}
+	sl.indentation -= stepIndentation
 }
 
 func (sl *simpleLogger) Reset() {

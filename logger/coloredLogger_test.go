@@ -20,8 +20,9 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	. "gopkg.in/check.v1"
 	"runtime"
+
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestStepStartAndStepEndInColoredLogger(c *C) {
@@ -31,17 +32,18 @@ func (s *MySuite) TestStepStartAndStepEndInColoredLogger(c *C) {
 	cl.writer.Out = b
 
 	cl.StepStart("* Say hello to all")
-	c.Assert(b.String(), Equals, "    * Say hello to all\n")
+	c.Assert(b.String(), Equals, spaces(stepIndentation)+"* Say hello to all\n")
 
 	cl.StepEnd(true)
 	if runtime.GOOS == "windows" {
-		c.Assert(b.String(), Equals, "    * Say hello to all\n"+"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
+		c.Assert(b.String(), Equals, spaces(stepIndentation)+"* Say hello to all\n"+"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
-			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r    * Say hello to all\t ...[FAIL]\n")
+			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r"+spaces(stepIndentation)+
+			"* Say hello to all\t ...[FAIL]\n")
 	} else {
-		c.Assert(b.String(), Equals, "    * Say hello to all\n\x1b[0A\x1b[2K\r    * Say hello to all\t ...[FAIL]\n")
+		c.Assert(b.String(), Equals, spaces(stepIndentation)+"* Say hello to all\n\x1b[0A\x1b[2K\r"+spaces(stepIndentation)+"* Say hello to all\t ...[FAIL]\n")
 	}
 }
 
@@ -53,17 +55,19 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 
 	cl.ScenarioStart("First Scenario")
 	cl.StepStart("* Say hello to all")
-	c.Assert(b.String(), Equals, spaces(stepIndentation)+"* Say hello to all\n")
+	twoLevelIndentation := spaces(scenarioIndentation) + spaces(stepIndentation)
+	c.Assert(b.String(), Equals, twoLevelIndentation+"* Say hello to all\n")
 
 	cl.StepEnd(false)
 	if runtime.GOOS == "windows" {
-		c.Assert(b.String(), Equals, "    * Say hello to all\n"+"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
+		c.Assert(b.String(), Equals, twoLevelIndentation+"* Say hello to all\n"+"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
-			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r    * Say hello to all\t ...[PASS]\n")
+			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r"+
+			twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	} else {
-		c.Assert(b.String(), Equals, "    * Say hello to all\n\x1b[0A\x1b[2K\r    * Say hello to all\t ...[PASS]\n")
+		c.Assert(b.String(), Equals, twoLevelIndentation+"* Say hello to all\n\x1b[0A\x1b[2K\r"+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	}
 	cl.ScenarioEnd(false)
 	c.Assert(cl.headingText.String(), Equals, "")
