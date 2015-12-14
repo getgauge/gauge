@@ -3,8 +3,8 @@
 	"GoVersion": "go1.4",
 	"Deps": [
 		{
-			"ImportPath": "github.com/apoorvam/uilive",
-			"Rev": "29d637caa569e25ff551fa501b1197a26effce8b"
+			"ImportPath": "github.com/apoorvam/goterminal",
+			"Rev": "c0d1b8ad80c572e04ee482bbfa812cd005a7174c"
 		},
 		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",
@@ -30,10 +30,6 @@
 			"ImportPath": "github.com/mattn/go-runewidth",
 			"Comment": "travisish-38-gd96d1bd",
 			"Rev": "d96d1bd051f2bd9e7e43d602782b37b93b1b5666"
-		},
-		{
-			"ImportPath": "github.com/nsf/termbox-go",
-			"Rev": "ca2931516914070bb7f934c83e408689cea8dfb7"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-isatty",
