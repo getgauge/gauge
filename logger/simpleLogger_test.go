@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	. "gopkg.in/check.v1"
-	"runtime"
 )
 
 func (s *MySuite) TestStepStartAndStepEnd_SimpleLogger(c *C) {
@@ -39,7 +38,7 @@ func (s *MySuite) TestStepStartAndStepEnd_SimpleLogger(c *C) {
 
 	sl.StepEnd(true)
 
-	if runtime.GOOS == "windows" {
+	if isWindows {
 		c.Assert(b.String(), Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput))+spaces(stepIndentation)+"* Say hello to all\t ...[FAIL]\n")
 	} else {
 		c.Assert(b.String(), Equals, cursorUpUnix+eraseLineUnix+spaces(stepIndentation)+"* Say hello to all\t ...[FAIL]\n")

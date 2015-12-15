@@ -20,7 +20,6 @@ package logger
 import (
 	"bytes"
 	"fmt"
-	"runtime"
 	"strings"
 
 	. "gopkg.in/check.v1"
@@ -49,7 +48,7 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
 
 	cl.StepEnd(true)
 
-	if runtime.GOOS == "windows" {
+	if isWindows {
 		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(stepIndentation) + "* Say hello to all\t ...[FAIL]\n"
 		c.Assert(b.String(), Equals, expectedStepEndOutput)
 	} else {
@@ -75,7 +74,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 
 	cl.StepEnd(false)
 
-	if runtime.GOOS == "windows" {
+	if isWindows {
 		c.Assert(b.String(), Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput))+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	} else {
 		c.Assert(b.String(), Equals, cursorUpUnix+eraseLineUnix+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")

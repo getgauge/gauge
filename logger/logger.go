@@ -25,10 +25,10 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/mattn/go-isatty"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
+	"runtime"
 )
 
 const (
@@ -61,7 +61,7 @@ type ExecutionLogger interface {
 }
 
 var currentLogger ExecutionLogger
-var isTerminal bool
+var isWindows bool
 
 func Current() ExecutionLogger {
 	if currentLogger == nil {
@@ -128,8 +128,8 @@ func Initialize(verbose bool, logLevel string) {
 	level = loggingLevel(verbose, logLevel)
 	initFileLogger(level, SimpleConsoleOutput)
 	initApiLogger(level, SimpleConsoleOutput)
-	if isatty.IsTerminal(os.Stdout.Fd()) {
-		isTerminal = true
+	if runtime.GOOS == "windows" {
+		isWindows = true
 	}
 }
 

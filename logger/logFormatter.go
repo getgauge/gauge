@@ -58,14 +58,14 @@ func spaces(numOfSpaces int) string {
 }
 
 func getFailureSymbol() string {
-	if !isTerminal {
+	if !isWindows {
 		return spaces(1) + failureChar
 	}
 	return spaces(1) + failure
 }
 
 func getSuccessSymbol() string {
-	if !isTerminal {
+	if !isWindows {
 		return spaces(1) + successChar
 	}
 	return spaces(1) + success
