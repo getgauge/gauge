@@ -59,11 +59,13 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInDebugMode(c *C) {
 
 	sl.StepEnd(false)
 	if runtime.GOOS == "windows" {
-		c.Assert(b.String(), Equals, "    * Say hello to all\n"+"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
+		c.Assert(b.String(), Equals, twoLevelIndentation+"* Say hello to all\n"+
+			"\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
 			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
-			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r    * Say hello to all\t ...[PASS]\n")
+			"\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A\x1b[2K\r\x1b[0A"+
+			"\x1b[2K\r"+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	} else {
 		c.Assert(b.String(), Equals, twoLevelIndentation+"* Say hello to all\n\x1b[0A\x1b[2K\r"+
 			twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
