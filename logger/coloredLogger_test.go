@@ -50,7 +50,7 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
 	cl.StepEnd(true)
 
 	if runtime.GOOS == "windows" {
-		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(cl.indentation) + "* Say hello to all\t ...[FAIL]\n"
+		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(stepIndentation) + "* Say hello to all\t ...[FAIL]\n"
 		c.Assert(b.String(), Equals, expectedStepEndOutput)
 	} else {
 		expectedStepEndOutput := cursorUpUnix + eraseLineUnix + spaces(stepIndentation) + "* Say hello to all\t ...[FAIL]\n"
