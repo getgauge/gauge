@@ -28,6 +28,7 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"io"
 )
 
 const (
@@ -49,16 +50,18 @@ type ExecutionLogger interface {
 	ConceptStart(string)
 	ConceptEnd(bool)
 	DataTable(string)
+
 	Error(string, ...interface{})
 	Critical(string, ...interface{})
 	Info(string, ...interface{})
 	Warning(string, ...interface{})
 	Debug(string, ...interface{})
-	Write([]byte) (int, error)
+
+	io.Writer
 }
 
 var currentLogger ExecutionLogger
-var isNotTerminal bool
+var isTerminal bool
 
 func Current() ExecutionLogger {
 	if currentLogger == nil {
@@ -125,8 +128,8 @@ func Initialize(verbose bool, logLevel string) {
 	level = loggingLevel(verbose, logLevel)
 	initFileLogger(level, SimpleConsoleOutput)
 	initApiLogger(level, SimpleConsoleOutput)
-	if !isatty.IsTerminal(os.Stdout.Fd()) {
-		isNotTerminal = true
+	if isatty.IsTerminal(os.Stdout.Fd()) {
+		isTerminal = true
 	}
 }
 

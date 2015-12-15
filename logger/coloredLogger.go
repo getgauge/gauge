@@ -92,7 +92,7 @@ func (cl *coloredLogger) SpecStart(heading string) {
 	cl.writeToConsole(msg+newline+newline, ct.Cyan, true)
 }
 
-func (coloredLogger *coloredLogger) SpecEnd() {
+func (cl *coloredLogger) SpecEnd() {
 	fmt.Println()
 }
 
