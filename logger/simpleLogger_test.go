@@ -21,11 +21,12 @@ import (
 	"bytes"
 	"strings"
 
+	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestStepStartAndStepEnd_SimpleLogger(c *C) {
-	Initialize(true, "Debug")
+	level = logging.DEBUG
 	b := &bytes.Buffer{}
 	sl := newSimpleConsoleWriter()
 	sl.writer.Out = b

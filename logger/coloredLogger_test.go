@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
 )
 
@@ -34,7 +35,7 @@ var (
 )
 
 func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
-	Initialize(true, "Debug")
+	level = logging.DEBUG
 	cl := newColoredConsoleWriter()
 	b := &bytes.Buffer{}
 	cl.writer.Out = b
@@ -58,7 +59,7 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
 }
 
 func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
-	Initialize(true, "Debug")
+	level = logging.DEBUG
 	cl := newColoredConsoleWriter()
 	b := &bytes.Buffer{}
 	cl.writer.Out = b
@@ -86,7 +87,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 }
 
 func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
-	Initialize(true, "Debug")
+	level = logging.DEBUG
 	b := &bytes.Buffer{}
 	cl := newColoredConsoleWriter()
 	cl.writer.Out = b
@@ -114,7 +115,7 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 }
 
 func (s *MySuite) TestConceptStartAndEnd(c *C) {
-	Initialize(true, "Debug")
+	level = logging.DEBUG
 	b := &bytes.Buffer{}
 	cl := newColoredConsoleWriter()
 	cl.writer.Out = b

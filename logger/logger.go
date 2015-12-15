@@ -39,6 +39,9 @@ const (
 )
 
 var SimpleConsoleOutput bool
+var level logging.Level
+var currentLogger ExecutionLogger
+var isWindows bool
 
 type ExecutionLogger interface {
 	SpecStart(string)
@@ -59,9 +62,6 @@ type ExecutionLogger interface {
 
 	io.Writer
 }
-
-var currentLogger ExecutionLogger
-var isWindows bool
 
 func Current() ExecutionLogger {
 	if currentLogger == nil {
@@ -111,52 +111,35 @@ type FileLogger struct {
 
 var GaugeLog = FileLogger{logging.MustGetLogger("gauge")}
 var ApiLog = FileLogger{logging.MustGetLogger("gauge-api")}
-
+var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
-var level logging.Level
-
-var coloredFormat = logging.MustStringFormatter(
-	"%{color}%{message}%{color:reset}",
-)
-
-var uncoloredFormat = logging.MustStringFormatter(
-	"%{time:15:04:05.000} %{message}",
-)
 
 func Initialize(verbose bool, logLevel string) {
 	level = loggingLevel(verbose, logLevel)
-	initFileLogger(level, SimpleConsoleOutput)
-	initApiLogger(level, SimpleConsoleOutput)
+	initGaugeFileLogger()
+	initApiFileLogger()
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}
 }
 
-func getLogFormatter(logger logging.Backend, supportsColoredFormat bool, simpleConsoleOutput bool) logging.Backend {
-	if supportsColoredFormat && !simpleConsoleOutput {
-		return logging.NewBackendFormatter(logger, coloredFormat)
-	}
-	return logging.NewBackendFormatter(logger, uncoloredFormat)
-}
-
-func initFileLogger(level logging.Level, simpleConsoleOutput bool) {
-	logsDir := os.Getenv(LOGS_DIRECTORY)
+func initGaugeFileLogger() {
+	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
 	var gaugeFileLogger logging.Backend
-	if logsDir == "" {
+	if logsDir == "" || err != nil {
 		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
 	} else {
 		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
 	}
-	fileFormatter := getLogFormatter(gaugeFileLogger, false, simpleConsoleOutput)
-
+	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
 
-	logging.SetBackend(fileLoggerLeveled)
+	GaugeLog.SetBackend(fileLoggerLeveled)
 }
 
-func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
+func initApiFileLogger() {
 	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
 	var apiFileLogger logging.Backend
 	if logsDir == "" || err != nil {
@@ -164,10 +147,10 @@ func initApiLogger(level logging.Level, simpleConsoleOutput bool) {
 	} else {
 		apiFileLogger = createFileLogger(filepath.Join(logsDir, apiLogFileName), 10)
 	}
-
-	fileFormatter := getLogFormatter(apiFileLogger, false, simpleConsoleOutput)
+	fileFormatter := logging.NewBackendFormatter(apiFileLogger, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
-	fileLoggerLeveled.SetLevel(level, "")
+	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
+
 	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
