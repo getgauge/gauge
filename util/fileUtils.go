@@ -132,7 +132,7 @@ func DownloadAndUnzip(downloadLink string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
 	}
-	logger.Info("Downloaded to %s", downloadedFile)
+	logger.Debug("Downloaded to %s", downloadedFile)
 	defer Remove(downloadedFile)
 
 	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
