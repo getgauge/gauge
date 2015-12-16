@@ -89,7 +89,7 @@ func (cl *coloredLogger) Debug(text string, args ...interface{}) {
 func (cl *coloredLogger) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	GaugeLog.Info(msg)
-	cl.writeToConsole(msg+newline+newline, ct.Cyan, true)
+	cl.printToConsole(msg+newline+newline, ct.Cyan, true)
 }
 
 func (cl *coloredLogger) SpecEnd() {
@@ -104,18 +104,16 @@ func (cl *coloredLogger) ScenarioStart(scenarioHeading string) {
 	indentedText := indent(msg, cl.indentation)
 	if level == logging.INFO {
 		cl.headingText.WriteString(indentedText + spaces(4))
-		cl.writeToConsole(cl.headingText.String(), ct.None, false)
+		cl.printToConsole(cl.headingText.String(), ct.None, false)
 	} else {
-		ct.Foreground(ct.Yellow, false)
-		ConsoleWrite(indentedText)
-		ct.ResetColor()
+		cl.printToConsole(indentedText+newline, ct.Yellow, false)
 	}
 }
 
 func (cl *coloredLogger) ScenarioEnd(failed bool) {
 	fmt.Println()
 	if level == logging.INFO && failed {
-		cl.writeToConsole(cl.buffer.String(), ct.Red, false)
+		cl.printToConsole(cl.buffer.String(), ct.Red, false)
 	}
 	cl.indentation -= scenarioIndentation
 }
@@ -125,7 +123,7 @@ func (cl *coloredLogger) StepStart(stepText string) {
 	GaugeLog.Debug(stepText)
 	if level == logging.DEBUG {
 		cl.headingText.WriteString(indent(stepText, cl.indentation))
-		cl.print(cl.headingText.String()+newline, ct.None, false)
+		cl.printViaWriter(cl.headingText.String()+newline, ct.None, false)
 	}
 }
 
@@ -133,19 +131,19 @@ func (cl *coloredLogger) StepEnd(failed bool) {
 	if level == logging.DEBUG {
 		cl.writer.Clear()
 		if failed {
-			cl.print(cl.headingText.String()+"\t ...[FAIL]\n", ct.Red, false)
-			cl.print(cl.buffer.String(), ct.Red, false)
+			cl.printViaWriter(cl.headingText.String()+"\t ...[FAIL]\n", ct.Red, false)
+			cl.printViaWriter(cl.buffer.String(), ct.Red, false)
 		} else {
-			cl.print(cl.headingText.String()+"\t ...[PASS]\n", ct.Green, false)
-			cl.print(cl.buffer.String(), ct.None, false)
+			cl.printViaWriter(cl.headingText.String()+"\t ...[PASS]\n", ct.Green, false)
+			cl.printViaWriter(cl.buffer.String(), ct.None, false)
 		}
 		cl.writer.Reset()
 		cl.Reset()
 	} else {
 		if failed {
-			cl.writeToConsole(getFailureSymbol(), ct.Red, false)
+			cl.printToConsole(getFailureSymbol(), ct.Red, false)
 		} else {
-			cl.writeToConsole(getSuccessSymbol(), ct.Green, false)
+			cl.printToConsole(getSuccessSymbol(), ct.Green, false)
 			cl.Reset()
 		}
 	}
@@ -161,7 +159,7 @@ func (cl *coloredLogger) ConceptStart(conceptHeading string) {
 	cl.indentation += stepIndentation
 	GaugeLog.Debug(conceptHeading)
 	if level == logging.DEBUG {
-		cl.writeToConsole(indent(conceptHeading, cl.indentation)+newline, ct.Magenta, false)
+		cl.printToConsole(indent(conceptHeading, cl.indentation)+newline, ct.Magenta, false)
 	}
 }
 
@@ -172,18 +170,18 @@ func (cl *coloredLogger) ConceptEnd(failed bool) {
 func (cl *coloredLogger) DataTable(table string) {
 	GaugeLog.Debug(table)
 	if level == logging.DEBUG {
-		cl.writeToConsole(table+newline, ct.Yellow, false)
+		cl.printToConsole(table+newline, ct.Yellow, false)
 	}
 }
 
-func (cl *coloredLogger) print(text string, color ct.Color, isBright bool) {
+func (cl *coloredLogger) printViaWriter(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
 	fmt.Fprint(cl.writer, text)
 	cl.writer.Print()
 	ct.ResetColor()
 }
 
-func (cl *coloredLogger) writeToConsole(text string, color ct.Color, isBright bool) {
+func (cl *coloredLogger) printToConsole(text string, color ct.Color, isBright bool) {
 	ct.Foreground(color, isBright)
 	fmt.Print(text)
 	ct.ResetColor()

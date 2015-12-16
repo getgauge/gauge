@@ -76,33 +76,29 @@ func Current() ExecutionLogger {
 
 func Info(msg string, args ...interface{}) {
 	GaugeLog.Info(msg, args...)
-	ConsoleWrite(msg, args...)
+	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 func Error(msg string, args ...interface{}) {
 	GaugeLog.Error(msg, args...)
-	ConsoleWrite(msg, args...)
+	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 func Warning(msg string, args ...interface{}) {
 	GaugeLog.Warning(msg, args...)
-	ConsoleWrite(msg, args...)
+	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 func Critical(msg string, args ...interface{}) {
 	GaugeLog.Critical(msg, args...)
-	ConsoleWrite(msg, args...)
+	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 func Debug(msg string, args ...interface{}) {
 	GaugeLog.Debug(msg, args...)
 	if level == logging.DEBUG {
-		ConsoleWrite(msg, args...)
+		fmt.Println(fmt.Sprintf(msg, args...))
 	}
-}
-
-func ConsoleWrite(msg string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 type FileLogger struct {
