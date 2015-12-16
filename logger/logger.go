@@ -23,12 +23,13 @@ import (
 	"path/filepath"
 	"strings"
 
+	"io"
+	"runtime"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"io"
-	"runtime"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	apiLogFileName   = "api.log"
 )
 
+// SimpleConsoleOutput represents if coloring should be removed from the Console output
 var SimpleConsoleOutput bool
 var level logging.Level
 var currentLogger ExecutionLogger
@@ -57,7 +59,6 @@ type ExecutionLogger interface {
 	Error(string, ...interface{})
 	Critical(string, ...interface{})
 	Info(string, ...interface{})
-	Warning(string, ...interface{})
 	Debug(string, ...interface{})
 
 	io.Writer
@@ -74,6 +75,7 @@ func Current() ExecutionLogger {
 	return currentLogger
 }
 
+// Info logs message to File logger and prints the log message to Console
 func Info(msg string, args ...interface{}) {
 	GaugeLog.Info(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))

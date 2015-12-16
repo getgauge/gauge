@@ -65,6 +65,9 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 	cl.writer.Out = b
 
 	cl.ScenarioStart("First Scenario")
+	c.Assert(b.String(), Equals, spaces(scenarioIndentation)+"## First Scenario\n")
+	b.Reset()
+
 	input := "* Say hello to all"
 	cl.StepStart(input)
 
