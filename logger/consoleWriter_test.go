@@ -34,20 +34,20 @@ var (
 	cursorLeftWindows = "\x1b[0A"
 )
 
-func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
+func (s *MySuite) TestStepStartAndStepEnd(c *C) {
 	level = logging.DEBUG
-	cl := newColoredConsoleWriter()
+	cw := newConsoleWriter(true)
 	b := &bytes.Buffer{}
-	cl.writer.Out = b
+	cw.writer.Out = b
 
 	input := "* Say hello to all"
-	cl.StepStart(input)
+	cw.StepStart(input)
 
-	expectedStepStartOutput := spaces(cl.indentation) + "* Say hello to all\n"
+	expectedStepStartOutput := spaces(cw.indentation) + "* Say hello to all\n"
 	c.Assert(b.String(), Equals, expectedStepStartOutput)
 	b.Reset()
 
-	cl.StepEnd(true)
+	cw.StepEnd(true)
 
 	if isWindows {
 		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(stepIndentation) + "* Say hello to all\t ...[FAIL]\n"
@@ -60,40 +60,40 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredLogger(c *C) {
 
 func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 	level = logging.DEBUG
-	cl := newColoredConsoleWriter()
+	cw := newConsoleWriter(true)
 	b := &bytes.Buffer{}
-	cl.writer.Out = b
+	cw.writer.Out = b
 
-	cl.ScenarioStart("First Scenario")
+	cw.ScenarioStart("First Scenario")
 	c.Assert(b.String(), Equals, spaces(scenarioIndentation)+"## First Scenario\n")
 	b.Reset()
 
 	input := "* Say hello to all"
-	cl.StepStart(input)
+	cw.StepStart(input)
 
 	twoLevelIndentation := spaces(scenarioIndentation) + spaces(stepIndentation)
 	expectedStepStartOutput := twoLevelIndentation + input + newline
 	c.Assert(b.String(), Equals, expectedStepStartOutput)
 	b.Reset()
 
-	cl.StepEnd(false)
+	cw.StepEnd(false)
 
 	if isWindows {
 		c.Assert(b.String(), Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput))+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	} else {
 		c.Assert(b.String(), Equals, cursorUpUnix+eraseLineUnix+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	}
-	cl.ScenarioEnd(false)
-	c.Assert(cl.headingText.String(), Equals, "")
-	c.Assert(cl.buffer.String(), Equals, "")
+	cw.ScenarioEnd(false)
+	c.Assert(cw.headingText.String(), Equals, "")
+	c.Assert(cw.buffer.String(), Equals, "")
 
 }
 
 func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 	level = logging.DEBUG
 	b := &bytes.Buffer{}
-	cl := newColoredConsoleWriter()
-	cl.writer.Out = b
+	cw := newConsoleWriter(true)
+	cw.writer.Out = b
 	stacktrace := "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
 		"sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
 		"com.thoughtworks.gauge.execution.HookExecutionStage.execute(HookExecutionStage.java:42)\n" +
@@ -103,7 +103,7 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 		"com.thoughtworks.gauge.GaugeRuntime.main(GaugeRuntime.java:37)\n" +
 		"]          "
 
-	fmt.Fprint(cl, stacktrace)
+	fmt.Fprint(cw, stacktrace)
 
 	formattedStacktrace := spaces(sysoutIndentation) + "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
 		spaces(sysoutIndentation) + "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
@@ -114,26 +114,26 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 		spaces(sysoutIndentation) + "com.thoughtworks.gauge.GaugeRuntime.main(GaugeRuntime.java:37)\n" +
 		spaces(sysoutIndentation) + "]\n"
 	c.Assert(b.String(), Equals, formattedStacktrace)
-	c.Assert(cl.buffer.String(), Equals, formattedStacktrace)
+	c.Assert(cw.buffer.String(), Equals, formattedStacktrace)
 }
 
 func (s *MySuite) TestConceptStartAndEnd(c *C) {
 	level = logging.DEBUG
 	b := &bytes.Buffer{}
-	cl := newColoredConsoleWriter()
-	cl.writer.Out = b
-	cl.indentation = noIndentation
+	cw := newConsoleWriter(true)
+	cw.writer.Out = b
+	cw.indentation = noIndentation
 
-	cl.ConceptStart("my concept")
-	cl.indentation = stepIndentation
+	cw.ConceptStart("my concept")
+	cw.indentation = stepIndentation
 
-	cl.ConceptStart("my concept1")
-	cl.indentation = stepIndentation + stepIndentation
+	cw.ConceptStart("my concept1")
+	cw.indentation = stepIndentation + stepIndentation
 
-	cl.ConceptEnd(true)
-	cl.indentation = stepIndentation
+	cw.ConceptEnd(true)
+	cw.indentation = stepIndentation
 
-	cl.ConceptEnd(true)
-	cl.indentation = noIndentation
+	cw.ConceptEnd(true)
+	cw.indentation = noIndentation
 
 }

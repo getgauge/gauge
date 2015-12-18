@@ -66,11 +66,7 @@ type ExecutionLogger interface {
 
 func Current() ExecutionLogger {
 	if currentLogger == nil {
-		if SimpleConsoleOutput {
-			currentLogger = newSimpleConsoleWriter()
-		} else {
-			currentLogger = newColoredConsoleWriter()
-		}
+		currentLogger = newConsoleWriter(!SimpleConsoleOutput)
 	}
 	return currentLogger
 }
