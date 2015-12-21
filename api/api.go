@@ -37,6 +37,7 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
+	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
 )
@@ -78,7 +79,7 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 		return nil, err
 	}
 
-	runner, connErr := runner.StartRunnerAndMakeConnection(manifest, logger.Current(), killChannel)
+	runner, connErr := runner.StartRunnerAndMakeConnection(manifest, reporter.Current(), killChannel)
 	if connErr != nil {
 		return nil, connErr
 	}

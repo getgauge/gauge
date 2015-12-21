@@ -15,11 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package logger
+package reporter
 
 import (
 	"fmt"
 	"strings"
+
+	"github.com/getgauge/gauge/util"
 )
 
 const (
@@ -58,14 +60,14 @@ func spaces(numOfSpaces int) string {
 }
 
 func getFailureSymbol() string {
-	if isWindows {
+	if util.IsWindows() {
 		return spaces(1) + failureChar
 	}
 	return spaces(1) + failure
 }
 
 func getSuccessSymbol() string {
-	if isWindows {
+	if util.IsWindows() {
 		return spaces(1) + successChar
 	}
 	return spaces(1) + success

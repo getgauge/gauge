@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/reporter"
 
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
@@ -43,7 +44,7 @@ type simpleExecution struct {
 	pluginHandler        *plugin.PluginHandler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	logger               logger.ExecutionLogger
+	consoleReporter      reporter.Reporter
 	errMaps              *validationErrMaps
 }
 
@@ -58,7 +59,7 @@ type executionInfo struct {
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.PluginHandler
 	parallelRunInfo *parallelInfo
-	execLogger      logger.ExecutionLogger
+	consoleReporter reporter.Reporter
 	errMaps         *validationErrMaps
 }
 
@@ -67,15 +68,15 @@ func newExecution(executionInfo *executionInfo) execution {
 		return &parallelSpecExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
 			runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
 			numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
-			logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
+			consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 	}
 	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, logger: executionInfo.execLogger, errMaps: executionInfo.errMaps}
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
@@ -135,13 +136,13 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 	exe.suiteResult.SpecsSkippedCount = len(exe.errMaps.specErrs)
 	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		exe.logger.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		exe.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 	} else {
 		beforeSuiteHookExecResult := exe.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
 			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
 			exe.suiteResult.SetFailure()
-			printStatus(beforeSuiteHookExecResult, exe.logger)
+			printStatus(beforeSuiteHookExecResult, exe.consoleReporter)
 		} else {
 			for _, specificationToExecute := range exe.specifications {
 				exe.executeSpec(specificationToExecute)
@@ -151,7 +152,7 @@ func (exe *simpleExecution) start() *result.SuiteResult {
 		if afterSuiteHookExecResult.GetFailed() {
 			result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
 			exe.suiteResult.SetFailure()
-			printStatus(afterSuiteHookExecResult, exe.logger)
+			printStatus(afterSuiteHookExecResult, exe.consoleReporter)
 		}
 	}
 	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
@@ -177,13 +178,13 @@ func (exe *simpleExecution) finish() {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.Kill(); err != nil {
-		e.logger.Error("Failed to kill Runner: %s", err.Error())
+		e.consoleReporter.Error("Failed to kill Runner: %s", err.Error())
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, logger logger.ExecutionLogger, errMaps *validationErrMaps) *specExecutor {
+func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
 	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, logger, errMaps)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
 	return specExecutor
 }
 
@@ -196,7 +197,7 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 	exe.suiteResult.Tags = ExecuteTags
 	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		exe.logger.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		exe.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 	} else {
 		beforeSuiteHookExecResult := exe.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
@@ -218,7 +219,7 @@ func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 }
 
 func (exe *simpleExecution) executeSpec(specificationToExecute *parser.Specification) {
-	executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.logger, exe.errMaps)
+	executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.consoleReporter, exe.errMaps)
 	protoSpecResult := executor.execute()
 	exe.suiteResult.AddSpecResult(protoSpecResult)
 }

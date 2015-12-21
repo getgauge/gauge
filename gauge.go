@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/reporter"
 
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
@@ -80,7 +81,7 @@ func main() {
 		validGaugeProject = false
 	}
 	env.LoadEnv(true)
-	logger.Initialize(*verbosity, *logLevel)
+	logger.Initialize(*logLevel)
 	if *gaugeVersion {
 		version.PrintVersion()
 	} else if *daemonize {
@@ -161,7 +162,8 @@ func initPackageFlags() {
 	if util.IsWindows() {
 		*simpleConsoleOutput = true
 	}
-	logger.SimpleConsoleOutput = *simpleConsoleOutput
+	reporter.SimpleConsoleOutput = *simpleConsoleOutput
+	reporter.Verbose = *verbosity
 	env.ProjectEnv = *currentEnv
 	execution.ExecuteTags = *executeTags
 	execution.TableRows = *tableRows

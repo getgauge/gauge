@@ -15,14 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package logger
+package reporter
 
 import (
 	"bytes"
 	"fmt"
 	"strings"
 
-	"github.com/op/go-logging"
+	"github.com/getgauge/gauge/util"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -35,8 +36,8 @@ var (
 )
 
 func (s *MySuite) TestStepStartAndStepEnd(c *C) {
-	level = logging.DEBUG
-	cw := newConsoleWriter(true)
+	Verbose = true
+	cw := newConsole(true)
 	b := &bytes.Buffer{}
 	cw.writer.Out = b
 
@@ -49,7 +50,7 @@ func (s *MySuite) TestStepStartAndStepEnd(c *C) {
 
 	cw.StepEnd(true)
 
-	if isWindows {
+	if util.IsWindows() {
 		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(stepIndentation) + "* Say hello to all\t ...[FAIL]\n"
 		c.Assert(b.String(), Equals, expectedStepEndOutput)
 	} else {
@@ -59,8 +60,8 @@ func (s *MySuite) TestStepStartAndStepEnd(c *C) {
 }
 
 func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
-	level = logging.DEBUG
-	cw := newConsoleWriter(true)
+	Verbose = true
+	cw := newConsole(true)
 	b := &bytes.Buffer{}
 	cw.writer.Out = b
 
@@ -78,7 +79,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 
 	cw.StepEnd(false)
 
-	if isWindows {
+	if util.IsWindows() {
 		c.Assert(b.String(), Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput))+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	} else {
 		c.Assert(b.String(), Equals, cursorUpUnix+eraseLineUnix+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
@@ -90,9 +91,9 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 }
 
 func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
-	level = logging.DEBUG
+	Verbose = true
 	b := &bytes.Buffer{}
-	cw := newConsoleWriter(true)
+	cw := newConsole(true)
 	cw.writer.Out = b
 	stacktrace := "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
 		"sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
@@ -118,9 +119,9 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 }
 
 func (s *MySuite) TestConceptStartAndEnd(c *C) {
-	level = logging.DEBUG
+	Verbose = true
 	b := &bytes.Buffer{}
-	cw := newConsoleWriter(true)
+	cw := newConsole(true)
 	cw.writer.Out = b
 	cw.indentation = noIndentation
 

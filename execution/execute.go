@@ -13,6 +13,7 @@ import (
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/install"
+	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 )
 
@@ -34,7 +35,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, logger.Current(), errMap})
+	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, reporter.Current(), errMap})
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)

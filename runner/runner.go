@@ -35,6 +35,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -162,7 +163,7 @@ func (testRunner *TestRunner) sendProcessKillMessage() {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest.Manifest, port string, log logger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
+func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*TestRunner, error) {
 	var r Runner
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -174,7 +175,7 @@ func startRunner(manifest *manifest.Manifest, port string, log logger.ExecutionL
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())
-	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, log, log, env)
+	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, reporter, reporter, env)
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +187,7 @@ func startRunner(manifest *manifest.Manifest, port string, log logger.ExecutionL
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	waitAndGetErrorMessage(errChannel, cmd, log)
+	waitAndGetErrorMessage(errChannel, cmd, reporter)
 	return &TestRunner{Cmd: cmd, ErrorChannel: errChannel}, nil
 }
 
@@ -206,11 +207,11 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	return filepath.Dir(languageJSONFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, log logger.ExecutionLogger) {
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, reporter reporter.Reporter) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			log.Debug("Runner exited with error: %s", err)
+			reporter.Debug("Runner exited with error: %s", err)
 			errChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 	}()
@@ -256,7 +257,7 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func StartRunnerAndMakeConnection(manifest *manifest.Manifest, log logger.ExecutionLogger, killChannel chan bool) (*TestRunner, error) {
+func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (*TestRunner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -265,7 +266,7 @@ func StartRunnerAndMakeConnection(manifest *manifest.Manifest, log logger.Execut
 	if connHandlerErr != nil {
 		return nil, connHandlerErr
 	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), log, killChannel)
+	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), reporter, killChannel)
 	if err != nil {
 		return nil, err
 	}
@@ -273,10 +274,10 @@ func StartRunnerAndMakeConnection(manifest *manifest.Manifest, log logger.Execut
 	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.ErrorChannel)
 	testRunner.Connection = runnerConnection
 	if connectionError != nil {
-		log.Debug("Runner connection error: %s", connectionError)
+		reporter.Debug("Runner connection error: %s", connectionError)
 		err := testRunner.killRunner()
 		if err != nil {
-			log.Debug("Error while killing runner: %s", err)
+			reporter.Debug("Error while killing runner: %s", err)
 		}
 		return nil, connectionError
 	}

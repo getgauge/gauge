@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"io"
 	"runtime"
 
 	"github.com/getgauge/common"
@@ -39,37 +38,8 @@ const (
 	apiLogFileName   = "api.log"
 )
 
-// SimpleConsoleOutput represents if coloring should be removed from the Console output
-var SimpleConsoleOutput bool
 var level logging.Level
-var currentLogger ExecutionLogger
 var isWindows bool
-
-type ExecutionLogger interface {
-	SpecStart(string)
-	SpecEnd()
-	ScenarioStart(string)
-	ScenarioEnd(bool)
-	StepStart(string)
-	StepEnd(bool)
-	ConceptStart(string)
-	ConceptEnd(bool)
-	DataTable(string)
-
-	Error(string, ...interface{})
-	Critical(string, ...interface{})
-	Info(string, ...interface{})
-	Debug(string, ...interface{})
-
-	io.Writer
-}
-
-func Current() ExecutionLogger {
-	if currentLogger == nil {
-		currentLogger = newConsoleWriter(!SimpleConsoleOutput)
-	}
-	return currentLogger
-}
 
 // Info logs message to File logger and prints the log message to Console
 func Info(msg string, args ...interface{}) {
@@ -109,8 +79,8 @@ var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
 
-func Initialize(verbose bool, logLevel string) {
-	level = loggingLevel(verbose, logLevel)
+func Initialize(logLevel string) {
+	level = loggingLevel(logLevel)
 	initGaugeFileLogger()
 	initApiFileLogger()
 	if runtime.GOOS == "windows" {
@@ -148,18 +118,6 @@ func initApiFileLogger() {
 	ApiLog.SetBackend(fileLoggerLeveled)
 }
 
-func NewParallelLogger(n int) ExecutionLogger {
-	parallelLogger := Current()
-	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
-	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
-	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	//	stdOutLoggerLeveled.SetLevel(level, "")
-	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
-
-	return parallelLogger
-}
-
 func createFileLogger(name string, size int) logging.Backend {
 	if !filepath.IsAbs(name) {
 		name = getLogFile(name)
@@ -184,10 +142,7 @@ func getLogFile(fileName string) string {
 	}
 }
 
-func loggingLevel(verbose bool, logLevel string) logging.Level {
-	if verbose {
-		return logging.DEBUG
-	}
+func loggingLevel(logLevel string) logging.Level {
 	if logLevel != "" {
 		switch strings.ToLower(logLevel) {
 		case "debug":
