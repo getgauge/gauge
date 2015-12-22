@@ -7,10 +7,6 @@
 			"Rev": "c0d1b8ad80c572e04ee482bbfa812cd005a7174c"
 		},
 		{
-			"ImportPath": "github.com/mattn/go-isatty",
-			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
-		},
-		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",
 			"Rev": "3b18c8575a432453d41fdafb340099fff5bba2f7"
 		},
@@ -31,8 +27,16 @@
 			"Rev": "68415e7123da32b07eab49c96d2c4d6158360e9b"
 		},
 		{
+			"ImportPath": "github.com/mattn/go-isatty",
+			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
+		},
+		{
 			"ImportPath": "github.com/op/go-logging",
 			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
+		},
+		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
 		},
 		{
 			"ImportPath": "golang.org/x/tools/go/ast/astutil",
