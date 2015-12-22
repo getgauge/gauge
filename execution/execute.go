@@ -26,7 +26,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Critical(err.Error())
+		logger.Fatal(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -48,7 +48,7 @@ func CheckSpecs(args []string) {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Critical(err.Error())
+		logger.Fatal(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -65,7 +65,8 @@ func parseSpecs(args []string) ([]*parser.Specification, *parser.ConceptDictiona
 	parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {
-		printExecutionStatus(nil, &validationErrMaps{})
+		logger.Info("No specifications found.")
+		os.Exit(0)
 	}
 	return specsToExecute, conceptsDictionary
 }
@@ -77,8 +78,7 @@ func startApi() *runner.TestRunner {
 	case runner := <-startChan.RunnerChan:
 		return runner
 	case err := <-startChan.ErrorChan:
-		logger.Critical("Failed to start gauge API: %s", err.Error())
-		os.Exit(1)
+		logger.Fatal("Failed to start gauge API: %s", err.Error())
 	}
 	return nil
 }
@@ -143,12 +143,6 @@ func fillSpecErrors(spec *parser.Specification, errMap *validationErrMaps, steps
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErrMaps) int {
-	// Print out all the errors that happened during the execution
-	// helps to view all the errors in one view
-	if suiteResult == nil {
-		logger.Info("No specifications found.")
-		os.Exit(0)
-	}
 	nSkippedScenarios := len(errMap.scenarioErrs)
 	nSkippedSpecs := len(errMap.specErrs)
 	nExecutedSpecs := len(suiteResult.SpecResults) - nSkippedSpecs

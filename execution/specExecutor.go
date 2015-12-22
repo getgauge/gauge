@@ -131,7 +131,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 			scenarioResult := specExecutor.executeScenarios()
 			specExecutor.specResult.AddScenarioResults(scenarioResult)
 		} else {
-			specExecutor.executeTableDrivenScenarios()
+			specExecutor.executeTableDrivenSpec()
 		}
 	}
 
@@ -146,7 +146,7 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	return specExecutor.specResult
 }
 
-func (specExecutor *specExecutor) executeTableDrivenScenarios() {
+func (specExecutor *specExecutor) executeTableDrivenSpec() {
 	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
 	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
 		var dataTable parser.Table
@@ -177,7 +177,7 @@ func (executor *specExecutor) initScenarioDataStore() *gauge_messages.ProtoExecu
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		executor.consoleReporter.Critical("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
+		executor.consoleReporter.Error("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
 	return initResult
 }
@@ -524,13 +524,13 @@ func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Mess
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Critical(errMsg)
+			logger.Error(errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	} else {
 		errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-		logger.Critical(errMsg)
+		logger.Error(errMsg)
 		return errorResult(errMsg)
 	}
 }

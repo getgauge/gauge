@@ -54,7 +54,7 @@ func StartAPIService(port int, startChannels *runner.StartChannels) {
 	apiHandler := &gaugeApiMessageHandler{specInfoGatherer: specInfoGatherer}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
-		startChannels.ErrorChan <- err
+		startChannels.ErrorChan <- fmt.Errorf("Connection error. %s", err.Error())
 		return
 	}
 	if port == 0 {
@@ -94,7 +94,8 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	select {
 	case runner := <-startChan.RunnerChan:
 		runner.Kill()
-	case <-startChan.ErrorChan:
+	case err := <-startChan.ErrorChan:
+		logger.Fatal(err.Error())
 	}
 }
 
@@ -103,15 +104,15 @@ func RunInBackground(apiPort string) {
 	var err error
 	if apiPort != "" {
 		port, err = strconv.Atoi(apiPort)
-		os.Setenv(common.APIPortEnvVariableName, apiPort)
 		if err != nil {
-			logger.Critical(fmt.Sprintf("Failed to parse the port number :", apiPort, "\n", err.Error()))
+			logger.Fatal(fmt.Sprintf("Invalid port number: %s", apiPort))
 		}
+		os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
 		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			logger.Critical(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
+			logger.Fatal(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
 	var wg sync.WaitGroup

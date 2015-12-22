@@ -18,11 +18,12 @@
 package parser
 
 import (
+	"os"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
-	"os"
-	"strings"
 )
 
 func ParseSpecFiles(specFiles []string, conceptDictionary *ConceptDictionary) ([]*Specification, []*ParseResult) {
@@ -115,7 +116,7 @@ func HandleParseResult(results ...*ParseResult) {
 	var failed = false
 	for _, result := range results {
 		if !result.Ok {
-			logger.Critical(result.Error())
+			logger.Error(result.Error())
 			failed = true
 		}
 		if result.Warnings != nil {

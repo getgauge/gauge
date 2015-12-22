@@ -57,9 +57,9 @@ func Warning(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
-func Critical(msg string, args ...interface{}) {
-	GaugeLog.Critical(msg, args...)
+func Fatal(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
+	GaugeLog.Fatalf(msg, args...)
 }
 
 func Debug(msg string, args ...interface{}) {

@@ -2,13 +2,14 @@ package env
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"path/filepath"
+
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
-	"os"
-	"path"
-	"path/filepath"
 )
 
 const (
@@ -24,8 +25,7 @@ func LoadEnv(shouldSkip bool) {
 	err := loadEnvironment(envDefaultDirName)
 	if err != nil {
 		if !shouldSkip {
-			logger.Critical("Failed to load the default environment. %s\n", err.Error())
-			os.Exit(1)
+			logger.Fatal("Failed to load the default environment. %s\n", err.Error())
 		}
 	}
 
@@ -33,8 +33,7 @@ func LoadEnv(shouldSkip bool) {
 		err := loadEnvironment(ProjectEnv)
 		if err != nil {
 			if !shouldSkip {
-				logger.Critical("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
-				os.Exit(1)
+				logger.Fatal("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
 			}
 		}
 		CurrentEnv = ProjectEnv

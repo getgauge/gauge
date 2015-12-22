@@ -360,8 +360,7 @@ func installPluginFromDir(unzippedPluginDir string) error {
 func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-
-		logger.Critical(fmt.Sprintf("manifest.json not found : --install-all requires manifest.json in working directory."))
+		logger.Fatal(err.Error())
 	}
 	installPluginsFromManifest(manifest)
 }
@@ -505,10 +504,10 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 	}
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Critical(err.Error())
+		logger.Fatal(err.Error())
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		logger.Critical(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
+		logger.Fatal(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
 	} else {
 		logger.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}

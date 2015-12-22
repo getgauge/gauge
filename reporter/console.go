@@ -34,6 +34,9 @@ var Verbose bool
 
 const newline = "\n"
 
+// Reporter reports the progress of spec execution. It reports
+// 1. Which spec / scenarion / step (if verbose) is currently executing.
+// 2. Status (pass/fail) of the spec / scenario / step (if verbose) once its executed.
 type Reporter interface {
 	SpecStart(string)
 	SpecEnd()
@@ -46,7 +49,6 @@ type Reporter interface {
 	DataTable(string)
 
 	Error(string, ...interface{})
-	Critical(string, ...interface{})
 	Info(string, ...interface{})
 	Debug(string, ...interface{})
 
@@ -106,12 +108,6 @@ func (c *console) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	logger.GaugeLog.Error(msg)
 	fmt.Fprint(c, msg)
-}
-
-func (c *console) Critical(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args)
-	logger.GaugeLog.Critical(msg)
-	c.Write([]byte(msg))
 }
 
 func (c *console) Info(text string, args ...interface{}) {
