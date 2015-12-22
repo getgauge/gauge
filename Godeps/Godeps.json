@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/getgauge/gauge",
-	"GoVersion": "go1.4",
+	"GoVersion": "go1.5.1",
 	"Deps": [
 		{
 			"ImportPath": "github.com/apoorvam/goterminal",
@@ -27,15 +27,6 @@
 			"Rev": "68415e7123da32b07eab49c96d2c4d6158360e9b"
 		},
 		{
-			"ImportPath": "github.com/mattn/go-runewidth",
-			"Comment": "travisish-38-gd96d1bd",
-			"Rev": "d96d1bd051f2bd9e7e43d602782b37b93b1b5666"
-		},
-		{
-			"ImportPath": "github.com/mattn/go-isatty",
-			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
-		},
-		{
 			"ImportPath": "github.com/op/go-logging",
 			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
 		},
@@ -50,10 +41,6 @@
 		{
 			"ImportPath": "golang.org/x/tools/go/types",
 			"Rev": "2ef5a0d23bc4e07573bb094b97e96c9cd9844fca"
-		},
-		{
-			"ImportPath": "gopkg.in/check.v1",
-			"Rev": "64131543e7896d5bcc6bd5a76287eb75ea96c673"
 		},
 		{
 			"ImportPath": "gopkg.in/fsnotify.v1",
