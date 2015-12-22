@@ -7,6 +7,10 @@
 			"Rev": "c0d1b8ad80c572e04ee482bbfa812cd005a7174c"
 		},
 		{
+			"ImportPath": "github.com/mattn/go-isatty",
+			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
+		},
+		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",
 			"Rev": "3b18c8575a432453d41fdafb340099fff5bba2f7"
 		},
