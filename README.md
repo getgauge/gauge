@@ -11,7 +11,7 @@ Gauge champions the idea of **living/executable documentation**.
 Some of its key features include:
 
 * A rich markup based on [markdown](https://en.wikipedia.org/wiki/Markdown)
-* Support for writing test code in any programming language. See [Test Code](http://getgauge.io/documentation/user/current/test_code/README.html) for currently supported languages.
+* Support for writing test code in any programming language. See [Test Code](http://getgauge.io/documentation/user/current/test_code/index.html) for currently supported languages.
 * A modular architecture with [plugin](http://getgauge.io/documentation/user/current/plugins/README.html) support.
 * Consistency across language implementations.
 
