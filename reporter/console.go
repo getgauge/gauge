@@ -67,17 +67,18 @@ func Current() Reporter {
 }
 
 type console struct {
-	writer      *goterminal.Writer
-	headingText bytes.Buffer
-	buffer      bytes.Buffer
-	indentation int
-	isColored   bool
+	writer               *goterminal.Writer
+	headingBuffer        bytes.Buffer
+	pluginMessagesBuffer bytes.Buffer
+	indentation          int
+	isColored            bool
 }
 
 func newConsole(isColored bool) *console {
 	return &console{writer: goterminal.New(), isColored: isColored}
 }
 
+// NewParallelConsole returns the instance of parallel console reporter
 func NewParallelConsole(n int) Reporter {
 	parallelLogger := Current()
 	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
@@ -90,22 +91,6 @@ func NewParallelConsole(n int) Reporter {
 	return parallelLogger
 }
 
-func (c *console) Write(b []byte) (int, error) {
-	c.indentation += sysoutIndentation
-	text := strings.Trim(string(b), "\n ")
-	text = strings.Replace(text, newline, newline+spaces(c.indentation), -1)
-	if len(text) > 0 {
-		msg := spaces(c.indentation) + text + newline
-		c.buffer.WriteString(msg)
-		if Verbose {
-			fmt.Fprint(c.writer, msg)
-			c.writer.Print()
-		}
-	}
-	c.indentation -= sysoutIndentation
-	return len(b), nil
-}
-
 func (c *console) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	logger.GaugeLog.Error(msg)
@@ -115,12 +100,12 @@ func (c *console) Error(text string, args ...interface{}) {
 func (c *console) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	logger.GaugeLog.Info(msg)
-	c.printViaWriter(msg+newline+newline, ct.Cyan)
+	c.displayMessage(msg+newline+newline, ct.Cyan)
 	c.writer.Reset()
 }
 
 func (c *console) SpecEnd() {
-	c.printViaWriter("", ct.None)
+	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
 }
 
@@ -131,20 +116,19 @@ func (c *console) ScenarioStart(scenarioHeading string) {
 
 	indentedText := indent(msg, c.indentation)
 	if !Verbose {
-		c.headingText.WriteString(indentedText + spaces(4))
-		c.printViaWriter(c.headingText.String(), ct.None)
+		c.headingBuffer.WriteString(indentedText + spaces(4))
+		c.displayMessage(c.headingBuffer.String(), ct.None)
 	} else {
-		c.printViaWriter(indentedText+newline, ct.Yellow)
+		c.displayMessage(indentedText+newline, ct.Yellow)
 	}
 	c.writer.Reset()
 }
 
 func (c *console) ScenarioEnd(failed bool) {
-	c.printViaWriter("", ct.None)
 	if !Verbose {
-		c.printViaWriter(newline, ct.None)
+		c.displayMessage(newline, ct.None)
 		if failed {
-			c.printViaWriter(c.buffer.String(), ct.Red)
+			c.displayMessage(c.pluginMessagesBuffer.String(), ct.Red)
 		}
 	}
 	c.writer.Reset()
@@ -155,8 +139,8 @@ func (c *console) StepStart(stepText string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
-		c.headingText.WriteString(indent(stepText, c.indentation))
-		c.printViaWriter(c.headingText.String()+newline, ct.None)
+		c.headingBuffer.WriteString(indent(stepText, c.indentation))
+		c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 	}
 }
 
@@ -164,34 +148,29 @@ func (c *console) StepEnd(failed bool) {
 	if Verbose {
 		c.writer.Clear()
 		if failed {
-			c.printViaWriter(c.headingText.String()+"\t ...[FAIL]\n", ct.Red)
+			c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
 		} else {
-			c.printViaWriter(c.headingText.String()+"\t ...[PASS]\n", ct.Green)
+			c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
 		}
-		c.printViaWriter(c.buffer.String(), ct.None)
-		c.Reset()
+		c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
+		c.resetBuffers()
 	} else {
 		if failed {
-			c.printViaWriter(getFailureSymbol(), ct.Red)
+			c.displayMessage(getFailureSymbol(), ct.Red)
 		} else {
-			c.printViaWriter(getSuccessSymbol(), ct.Green)
-			c.Reset()
+			c.displayMessage(getSuccessSymbol(), ct.Green)
+			c.resetBuffers()
 		}
 	}
 	c.writer.Reset()
 	c.indentation -= stepIndentation
 }
 
-func (c *console) Reset() {
-	c.headingText.Reset()
-	c.buffer.Reset()
-}
-
 func (c *console) ConceptStart(conceptHeading string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
-		c.printViaWriter(indent(conceptHeading, c.indentation)+newline, ct.Magenta)
+		c.displayMessage(indent(conceptHeading, c.indentation)+newline, ct.Magenta)
 		c.writer.Reset()
 	}
 }
@@ -203,16 +182,45 @@ func (c *console) ConceptEnd(failed bool) {
 func (c *console) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
 	if Verbose {
-		c.printViaWriter(table+newline, ct.Yellow)
+		c.displayMessage(table+newline, ct.Yellow)
 		c.writer.Reset()
 	}
 }
 
-func (c *console) printViaWriter(text string, color ct.Color) {
+// Write writes the bytes to console via goterminal's writer.
+// This is called when any sysouts are to be printed on console.
+func (c *console) Write(b []byte) (int, error) {
+	c.indentation += sysoutIndentation
+	text := c.formatText(string(b))
+	if len(text) > 0 {
+		c.pluginMessagesBuffer.WriteString(text)
+		if Verbose {
+			c.displayMessage(text, ct.None)
+		}
+	}
+	c.indentation -= sysoutIndentation
+	return len(b), nil
+}
+
+func (c *console) formatText(text string) string {
+	formattedText := strings.Trim(text, "\n ")
+	formattedText = strings.Replace(formattedText, newline, newline+spaces(c.indentation), -1)
+	if len(formattedText) > 0 {
+		formattedText = spaces(c.indentation) + formattedText + newline
+	}
+	return formattedText
+}
+
+func (c *console) displayMessage(msg string, color ct.Color) {
 	if c.isColored {
 		ct.Foreground(color, false)
 		defer ct.ResetColor()
 	}
-	fmt.Fprint(c.writer, text)
+	fmt.Fprint(c.writer, msg)
 	c.writer.Print()
+}
+
+func (c *console) resetBuffers() {
+	c.headingBuffer.Reset()
+	c.pluginMessagesBuffer.Reset()
 }

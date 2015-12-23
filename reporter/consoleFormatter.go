@@ -29,22 +29,22 @@ const (
 	scenarioIndentation = 2
 	stepIndentation     = 4
 	sysoutIndentation   = 2
-	success             = "✔ "
-	failure             = "✘ "
+	successSymbol       = "✔"
+	failureSymbol       = "✘"
 	successChar         = "P"
 	failureChar         = "F"
 )
 
-func formatScenario(msg string) string {
-	return fmt.Sprintf("## %s", msg)
+func formatScenario(scenarioHeading string) string {
+	return fmt.Sprintf("## %s", scenarioHeading)
 }
 
-func formatStep(msg string) string {
-	return fmt.Sprintf("%s", msg)
+func formatStep(stepText string) string {
+	return fmt.Sprintf("%s", stepText)
 }
 
-func formatSpec(msg string) string {
-	return fmt.Sprintf("# %s", msg)
+func formatSpec(specHeading string) string {
+	return fmt.Sprintf("# %s", specHeading)
 }
 
 func indent(text string, indentation int) string {
@@ -52,23 +52,19 @@ func indent(text string, indentation int) string {
 }
 
 func spaces(numOfSpaces int) string {
-	text := ""
-	for i := 0; i < numOfSpaces; i++ {
-		text += " "
-	}
-	return text
+	return strings.Repeat(" ", numOfSpaces)
 }
 
 func getFailureSymbol() string {
 	if util.IsWindows() {
 		return spaces(1) + failureChar
 	}
-	return spaces(1) + failure
+	return spaces(1) + failureSymbol
 }
 
 func getSuccessSymbol() string {
 	if util.IsWindows() {
 		return spaces(1) + successChar
 	}
-	return spaces(1) + success
+	return spaces(1) + successSymbol
 }
