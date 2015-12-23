@@ -106,7 +106,7 @@ func (e *parallelSpecExecution) getNumberOfStreams() int {
 func (e *parallelSpecExecution) start() *result.SuiteResult {
 	suiteResults := make([]*result.SuiteResult, 0)
 	nStreams := e.getNumberOfStreams()
-	e.consoleReporter.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
+	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
 	startTime := time.Now()
 	if isLazy() {
@@ -140,8 +140,8 @@ func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.Suit
 func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		e.consoleReporter.Error("Failed: " + err.Error())
-		e.consoleReporter.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
+		logger.Error("Failed: " + err.Error())
+		logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
 		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
@@ -171,7 +171,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, reporter reporter.R
 	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		reporter.Error("Failed to start runner. Reason: %s", err.Error())
+		logger.Error("Failed to start runner. Reason: %s", err.Error())
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}

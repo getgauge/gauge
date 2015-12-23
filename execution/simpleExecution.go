@@ -126,37 +126,37 @@ func (e *simpleExecution) killPlugins() {
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (exe *simpleExecution) start() *result.SuiteResult {
+func (e *simpleExecution) start() *result.SuiteResult {
 	startTime := time.Now()
-	exe.suiteResult = result.NewSuiteResult()
-	exe.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
-	exe.suiteResult.Environment = env.CurrentEnv
-	exe.suiteResult.Tags = ExecuteTags
-	exe.suiteResult.SpecsSkippedCount = len(exe.errMaps.specErrs)
-	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
+	e.suiteResult = result.NewSuiteResult()
+	e.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	e.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
+	e.suiteResult.Environment = env.CurrentEnv
+	e.suiteResult.Tags = ExecuteTags
+	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
+	initSuiteDataStoreResult := e.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		exe.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 	} else {
-		beforeSuiteHookExecResult := exe.startExecution()
+		beforeSuiteHookExecResult := e.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
-			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
-			exe.suiteResult.SetFailure()
-			printStatus(beforeSuiteHookExecResult, exe.consoleReporter)
+			result.AddPreHook(e.suiteResult, beforeSuiteHookExecResult)
+			e.suiteResult.SetFailure()
+			printStatus(beforeSuiteHookExecResult, e.consoleReporter)
 		} else {
-			for _, specificationToExecute := range exe.specifications {
-				exe.executeSpec(specificationToExecute)
+			for _, specificationToExecute := range e.specifications {
+				e.executeSpec(specificationToExecute)
 			}
 		}
-		afterSuiteHookExecResult := exe.endExecution()
+		afterSuiteHookExecResult := e.endExecution()
 		if afterSuiteHookExecResult.GetFailed() {
-			result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
-			exe.suiteResult.SetFailure()
-			printStatus(afterSuiteHookExecResult, exe.consoleReporter)
+			result.AddPostHook(e.suiteResult, afterSuiteHookExecResult)
+			e.suiteResult.SetFailure()
+			printStatus(afterSuiteHookExecResult, e.consoleReporter)
 		}
 	}
-	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
-	return exe.suiteResult
+	e.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
+	return e.suiteResult
 }
 
 func getDataTableRows(rowCount int) indexRange {
@@ -170,9 +170,9 @@ func getDataTableRows(rowCount int) indexRange {
 	return indexes
 }
 
-func (exe *simpleExecution) finish() {
-	exe.notifyExecutionResult()
-	exe.stopAllPlugins()
+func (e *simpleExecution) finish() {
+	e.notifyExecutionResult()
+	e.stopAllPlugins()
 }
 
 func (e *simpleExecution) stopAllPlugins() {
@@ -188,38 +188,38 @@ func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRun
 	return specExecutor
 }
 
-func (exe *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
+func (e *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 	startTime := time.Now()
-	exe.suiteResult = result.NewSuiteResult()
-	exe.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	exe.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
-	exe.suiteResult.Environment = env.CurrentEnv
-	exe.suiteResult.Tags = ExecuteTags
-	initSuiteDataStoreResult := exe.initializeSuiteDataStore()
+	e.suiteResult = result.NewSuiteResult()
+	e.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	e.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
+	e.suiteResult.Environment = env.CurrentEnv
+	e.suiteResult.Tags = ExecuteTags
+	initSuiteDataStoreResult := e.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		exe.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 	} else {
-		beforeSuiteHookExecResult := exe.startExecution()
+		beforeSuiteHookExecResult := e.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
-			result.AddPreHook(exe.suiteResult, beforeSuiteHookExecResult)
-			exe.suiteResult.SetFailure()
+			result.AddPreHook(e.suiteResult, beforeSuiteHookExecResult)
+			e.suiteResult.SetFailure()
 		} else {
 			for !specs.isEmpty() {
-				exe.executeSpec(specs.getSpec())
+				e.executeSpec(specs.getSpec())
 			}
 		}
-		afterSuiteHookExecResult := exe.endExecution()
+		afterSuiteHookExecResult := e.endExecution()
 		if afterSuiteHookExecResult.GetFailed() {
-			result.AddPostHook(exe.suiteResult, afterSuiteHookExecResult)
-			exe.suiteResult.SetFailure()
+			result.AddPostHook(e.suiteResult, afterSuiteHookExecResult)
+			e.suiteResult.SetFailure()
 		}
 	}
-	exe.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
-	return exe.suiteResult
+	e.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
+	return e.suiteResult
 }
 
-func (exe *simpleExecution) executeSpec(specificationToExecute *parser.Specification) {
-	executor := newSpecExecutor(specificationToExecute, exe.runner, exe.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), exe.consoleReporter, exe.errMaps)
+func (e *simpleExecution) executeSpec(specificationToExecute *parser.Specification) {
+	executor := newSpecExecutor(specificationToExecute, e.runner, e.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
 	protoSpecResult := executor.execute()
-	exe.suiteResult.AddSpecResult(protoSpecResult)
+	e.suiteResult.AddSpecResult(protoSpecResult)
 }

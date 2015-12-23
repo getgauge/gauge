@@ -187,7 +187,7 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	waitAndGetErrorMessage(errChannel, cmd, reporter)
+	waitAndGetErrorMessage(errChannel, cmd)
 	return &TestRunner{Cmd: cmd, ErrorChannel: errChannel}, nil
 }
 
@@ -207,11 +207,11 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	return filepath.Dir(languageJSONFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd, reporter reporter.Reporter) {
+func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd) {
 	go func() {
 		err := cmd.Wait()
 		if err != nil {
-			reporter.Debug("Runner exited with error: %s", err)
+			logger.Debug("Runner exited with error: %s", err)
 			errChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 	}()
@@ -274,10 +274,10 @@ func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter
 	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.ErrorChannel)
 	testRunner.Connection = runnerConnection
 	if connectionError != nil {
-		reporter.Debug("Runner connection error: %s", connectionError)
+		logger.Debug("Runner connection error: %s", connectionError)
 		err := testRunner.killRunner()
 		if err != nil {
-			reporter.Debug("Error while killing runner: %s", err)
+			logger.Debug("Error while killing runner: %s", err)
 		}
 		return nil, connectionError
 	}

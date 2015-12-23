@@ -30,6 +30,8 @@ import (
 
 // SimpleConsoleOutput represents if coloring should be removed from the Console output
 var SimpleConsoleOutput bool
+
+// Verbose represents level of console Reporting. If true its at step level, else at scenario level.
 var Verbose bool
 
 const newline = "\n"
@@ -49,31 +51,19 @@ type Reporter interface {
 	DataTable(string)
 
 	Error(string, ...interface{})
-	Info(string, ...interface{})
-	Debug(string, ...interface{})
 
 	io.Writer
 }
 
 var currentReporter Reporter
 
+// Current returns an instance of Reporter.
+// It returns the current instance of Reporter, if present. Else, it returns a new Reporter.
 func Current() Reporter {
 	if currentReporter == nil {
 		currentReporter = newConsole(!SimpleConsoleOutput)
 	}
 	return currentReporter
-}
-
-func NewParallelConsole(n int) Reporter {
-	parallelLogger := Current()
-	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
-	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
-	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	//	stdOutLoggerLeveled.SetLevel(level, "")
-	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
-
-	return parallelLogger
 }
 
 type console struct {
@@ -86,6 +76,18 @@ type console struct {
 
 func newConsole(isColored bool) *console {
 	return &console{writer: goterminal.New(), isColored: isColored}
+}
+
+func NewParallelConsole(n int) Reporter {
+	parallelLogger := Current()
+	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
+	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
+	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
+	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
+	//	stdOutLoggerLeveled.SetLevel(level, "")
+	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
+
+	return parallelLogger
 }
 
 func (c *console) Write(b []byte) (int, error) {
@@ -107,18 +109,6 @@ func (c *console) Write(b []byte) (int, error) {
 func (c *console) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	logger.GaugeLog.Error(msg)
-	fmt.Fprint(c, msg)
-}
-
-func (c *console) Info(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args)
-	logger.GaugeLog.Info(msg)
-	fmt.Fprint(c, msg)
-}
-
-func (c *console) Debug(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args)
-	logger.GaugeLog.Debug(msg)
 	fmt.Fprint(c, msg)
 }
 
