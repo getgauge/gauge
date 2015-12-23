@@ -19,14 +19,14 @@ Some of its key features include:
 
 Certain features of Gauge makes it stand unique amongst others. 
 
-*	Consistent Cross Platform/Language Support
+* Consistent Cross Platform/Language Support
 * Business Language Tests : Supports the concept of executable documentation
-*	Open Source, so it could be shared freely and improved by others as well
-*	Simple, Flexible and Rich Syntax
-*	Helps you create Maintainable and Understandable test suites
-*	Extensible through [Plugins](http://getgauge.io/documentation/user/current/plugins/README.html) and Hackable
-*	Supports External Data Sources
-*	IDE Support
+* Open Source, so it could be shared freely and improved by others as well
+* Simple, Flexible and Rich Syntax
+* Helps you create Maintainable and Understandable test suites
+* Extensible through [Plugins](http://getgauge.io/documentation/user/current/plugins/README.html) and Hackable
+* Supports External Data Sources
+* IDE Support
 
 ## Get started quickly
 
@@ -57,6 +57,7 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
+
 ```
 [![Gauge Badge](http://getgauge.io/Gauge_Badge.svg)](http://getgauge.io)
 ```
