@@ -48,7 +48,9 @@ func formatSpec(specHeading string) string {
 }
 
 func indent(text string, indentation int) string {
-	return spaces(indentation) + strings.TrimSpace(text)
+	formattedText := strings.Trim(text, "\n ")
+	formattedText = strings.Replace(formattedText, newline, newline+spaces(indentation), -1)
+	return spaces(indentation) + strings.TrimSpace(formattedText)
 }
 
 func spaces(numOfSpaces int) string {

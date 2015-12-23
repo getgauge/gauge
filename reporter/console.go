@@ -21,7 +21,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
@@ -191,8 +190,9 @@ func (c *console) DataTable(table string) {
 // This is called when any sysouts are to be printed on console.
 func (c *console) Write(b []byte) (int, error) {
 	c.indentation += sysoutIndentation
-	text := c.formatText(string(b))
+	text := indent(string(b), c.indentation)
 	if len(text) > 0 {
+		text += newline
 		c.pluginMessagesBuffer.WriteString(text)
 		if Verbose {
 			c.displayMessage(text, ct.None)
@@ -200,15 +200,6 @@ func (c *console) Write(b []byte) (int, error) {
 	}
 	c.indentation -= sysoutIndentation
 	return len(b), nil
-}
-
-func (c *console) formatText(text string) string {
-	formattedText := strings.Trim(text, "\n ")
-	formattedText = strings.Replace(formattedText, newline, newline+spaces(c.indentation), -1)
-	if len(formattedText) > 0 {
-		formattedText = spaces(c.indentation) + formattedText + newline
-	}
-	return formattedText
 }
 
 func (c *console) displayMessage(msg string, color ct.Color) {
