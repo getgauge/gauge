@@ -85,8 +85,8 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 		c.Assert(b.String(), Equals, cursorUpUnix+eraseLineUnix+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	}
 	cw.ScenarioEnd(false)
-	c.Assert(cw.headingText.String(), Equals, "")
-	c.Assert(cw.buffer.String(), Equals, "")
+	c.Assert(cw.headingBuffer.String(), Equals, "")
+	c.Assert(cw.pluginMessagesBuffer.String(), Equals, "")
 
 }
 
@@ -115,7 +115,7 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 		spaces(sysoutIndentation) + "com.thoughtworks.gauge.GaugeRuntime.main(GaugeRuntime.java:37)\n" +
 		spaces(sysoutIndentation) + "]\n"
 	c.Assert(b.String(), Equals, formattedStacktrace)
-	c.Assert(cw.buffer.String(), Equals, formattedStacktrace)
+	c.Assert(cw.pluginMessagesBuffer.String(), Equals, formattedStacktrace)
 }
 
 func (s *MySuite) TestConceptStartAndEnd(c *C) {

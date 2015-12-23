@@ -29,13 +29,6 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetNumberOfSpaces(c *C) {
-	c.Assert(spaces(5), Equals, "     ")
-	c.Assert(spaces(0), Equals, "")
-	c.Assert(spaces(1), Equals, " ")
-	c.Assert(spaces(-1), Equals, "")
-}
-
 func (s *MySuite) TestIndent(c *C) {
 	c.Assert(indent("foo bar", 2), Equals, "  foo bar")
 	c.Assert(indent("foo bar\n", 2), Equals, "  foo bar")
