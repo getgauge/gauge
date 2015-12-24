@@ -38,12 +38,6 @@ func newColoredConsole(out io.Writer) *coloredConsole {
 	return &coloredConsole{writer: goterminal.New(out)}
 }
 
-func (c *coloredConsole) Error(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args)
-	logger.GaugeLog.Error(msg)
-	fmt.Fprint(c, msg)
-}
-
 func (c *coloredConsole) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	logger.GaugeLog.Info(msg)
@@ -132,6 +126,12 @@ func (c *coloredConsole) DataTable(table string) {
 		c.displayMessage(table+newline, ct.Yellow)
 		c.writer.Reset()
 	}
+}
+
+func (c *coloredConsole) Error(text string, args ...interface{}) {
+	msg := fmt.Sprintf(text, args)
+	logger.GaugeLog.Error(msg)
+	fmt.Fprint(c, msg)
 }
 
 // Write writes the bytes to console via goterminal's writer.

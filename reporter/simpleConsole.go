@@ -20,6 +20,8 @@ package reporter
 import (
 	"fmt"
 	"io"
+
+	"github.com/getgauge/gauge/logger"
 )
 
 type simpleConsole struct {
@@ -32,6 +34,7 @@ func newSimpleConsole(out io.Writer) *simpleConsole {
 }
 
 func (sc *simpleConsole) SpecStart(heading string) {
+	logger.GaugeLog.Info(heading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formatSpec(heading), newline))
 }
 
@@ -41,6 +44,7 @@ func (sc *simpleConsole) SpecEnd() {
 
 func (sc *simpleConsole) ScenarioStart(heading string) {
 	sc.indentation += scenarioIndentation
+	logger.GaugeLog.Info(heading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formatScenario(heading), sc.indentation), newline))
 }
 
@@ -50,6 +54,7 @@ func (sc *simpleConsole) ScenarioEnd(failed bool) {
 
 func (sc *simpleConsole) StepStart(stepText string) {
 	sc.indentation += stepIndentation
+	logger.GaugeLog.Debug(stepText)
 	if Verbose {
 		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(stepText, sc.indentation), newline))
 	}
@@ -61,6 +66,7 @@ func (sc *simpleConsole) StepEnd(failed bool) {
 
 func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 	sc.indentation += stepIndentation
+	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
 		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(conceptHeading, sc.indentation), newline))
 	}
@@ -71,13 +77,16 @@ func (sc *simpleConsole) ConceptEnd(failed bool) {
 }
 
 func (sc *simpleConsole) DataTable(table string) {
+	logger.GaugeLog.Debug(table)
 	if Verbose {
 		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(table, sc.indentation), newline))
 	}
 }
 
 func (sc *simpleConsole) Error(err string, args ...interface{}) {
-	errorString := indent(fmt.Sprintf(err, args...), sc.indentation+sysoutIndentation)
+	errorMessage := fmt.Sprintf(err, args...)
+	logger.GaugeLog.Error(errorMessage)
+	errorString := indent(errorMessage, sc.indentation+sysoutIndentation)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", errorString, newline))
 }
 
