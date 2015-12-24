@@ -47,7 +47,7 @@ func (c *coloredConsole) Error(text string, args ...interface{}) {
 func (c *coloredConsole) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	logger.GaugeLog.Info(msg)
-	c.displayMessage(msg+newline+newline, ct.Cyan)
+	c.displayMessage(msg+newline, ct.Cyan)
 	c.writer.Reset()
 }
 
