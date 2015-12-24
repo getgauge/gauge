@@ -159,9 +159,6 @@ func newStepName() string {
 }
 
 func initPackageFlags() {
-	if util.IsWindows() {
-		*simpleConsoleOutput = true
-	}
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
 	env.ProjectEnv = *currentEnv
