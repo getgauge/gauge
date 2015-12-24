@@ -159,8 +159,8 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
 
-	logger.Info("Specifications:\t%d executed    %d passed    %d failed    %d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Info("Scenarios:\t%d executed    %d passed    %d failed    %d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Info("Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
