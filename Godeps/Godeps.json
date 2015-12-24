@@ -4,7 +4,7 @@
 	"Deps": [
 		{
 			"ImportPath": "github.com/apoorvam/goterminal",
-			"Rev": "c0d1b8ad80c572e04ee482bbfa812cd005a7174c"
+			"Rev": "8296d2e2355aa8ffe576d38bafc9420ec220dbbc"
 		},
 		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",

@@ -20,6 +20,7 @@ package reporter
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/getgauge/gauge/util"
@@ -37,7 +38,7 @@ var (
 
 func (s *MySuite) TestStepStartAndStepEnd(c *C) {
 	Verbose = true
-	cw := newConsole(true)
+	cw := newColoredConsole(os.Stdout)
 	b := &bytes.Buffer{}
 	cw.writer.Out = b
 
@@ -61,7 +62,7 @@ func (s *MySuite) TestStepStartAndStepEnd(c *C) {
 
 func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 	Verbose = true
-	cw := newConsole(true)
+	cw := newColoredConsole(os.Stdout)
 	b := &bytes.Buffer{}
 	cw.writer.Out = b
 
@@ -93,7 +94,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEndInColoredDebugMode(c *C) {
 func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 	Verbose = true
 	b := &bytes.Buffer{}
-	cw := newConsole(true)
+	cw := newColoredConsole(os.Stdout)
 	cw.writer.Out = b
 	stacktrace := "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
 		"sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
@@ -121,7 +122,7 @@ func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
 func (s *MySuite) TestConceptStartAndEnd(c *C) {
 	Verbose = true
 	b := &bytes.Buffer{}
-	cw := newConsole(true)
+	cw := newColoredConsole(os.Stdout)
 	cw.writer.Out = b
 	cw.indentation = noIndentation
 

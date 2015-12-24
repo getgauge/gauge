@@ -39,10 +39,6 @@ func formatScenario(scenarioHeading string) string {
 	return fmt.Sprintf("## %s", scenarioHeading)
 }
 
-func formatStep(stepText string) string {
-	return fmt.Sprintf("%s", stepText)
-}
-
 func formatSpec(specHeading string) string {
 	return fmt.Sprintf("# %s", specHeading)
 }

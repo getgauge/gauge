@@ -27,88 +27,36 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
-// SimpleConsoleOutput represents if coloring should be removed from the Console output
-var SimpleConsoleOutput bool
-
-// Verbose represents level of console Reporting. If true its at step level, else at scenario level.
-var Verbose bool
-
-const newline = "\n"
-
-// Reporter reports the progress of spec execution. It reports
-// 1. Which spec / scenarion / step (if verbose) is currently executing.
-// 2. Status (pass/fail) of the spec / scenario / step (if verbose) once its executed.
-type Reporter interface {
-	SpecStart(string)
-	SpecEnd()
-	ScenarioStart(string)
-	ScenarioEnd(bool)
-	StepStart(string)
-	StepEnd(bool)
-	ConceptStart(string)
-	ConceptEnd(bool)
-	DataTable(string)
-
-	Error(string, ...interface{})
-
-	io.Writer
-}
-
-var currentReporter Reporter
-
-// Current returns an instance of Reporter.
-// It returns the current instance of Reporter, if present. Else, it returns a new Reporter.
-func Current() Reporter {
-	if currentReporter == nil {
-		currentReporter = newConsole(!SimpleConsoleOutput)
-	}
-	return currentReporter
-}
-
-type console struct {
+type coloredConsole struct {
 	writer               *goterminal.Writer
 	headingBuffer        bytes.Buffer
 	pluginMessagesBuffer bytes.Buffer
 	indentation          int
-	isColored            bool
 }
 
-func newConsole(isColored bool) *console {
-	return &console{writer: goterminal.New(), isColored: isColored}
+func newColoredConsole(out io.Writer) *coloredConsole {
+	return &coloredConsole{writer: goterminal.New(out)}
 }
 
-// NewParallelConsole returns the instance of parallel console reporter
-func NewParallelConsole(n int) Reporter {
-	parallelLogger := Current()
-	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
-	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
-	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	//	stdOutLoggerLeveled.SetLevel(level, "")
-	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
-
-	return parallelLogger
-}
-
-func (c *console) Error(text string, args ...interface{}) {
+func (c *coloredConsole) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args)
 	logger.GaugeLog.Error(msg)
 	fmt.Fprint(c, msg)
 }
 
-func (c *console) SpecStart(heading string) {
+func (c *coloredConsole) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	logger.GaugeLog.Info(msg)
 	c.displayMessage(msg+newline+newline, ct.Cyan)
 	c.writer.Reset()
 }
 
-func (c *console) SpecEnd() {
+func (c *coloredConsole) SpecEnd() {
 	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
 }
 
-func (c *console) ScenarioStart(scenarioHeading string) {
+func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
 	c.indentation = scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	logger.GaugeLog.Info(msg)
@@ -123,7 +71,7 @@ func (c *console) ScenarioStart(scenarioHeading string) {
 	c.writer.Reset()
 }
 
-func (c *console) ScenarioEnd(failed bool) {
+func (c *coloredConsole) ScenarioEnd(failed bool) {
 	if !Verbose {
 		c.displayMessage(newline, ct.None)
 		if failed {
@@ -134,7 +82,7 @@ func (c *console) ScenarioEnd(failed bool) {
 	c.indentation -= scenarioIndentation
 }
 
-func (c *console) StepStart(stepText string) {
+func (c *coloredConsole) StepStart(stepText string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
@@ -143,7 +91,7 @@ func (c *console) StepStart(stepText string) {
 	}
 }
 
-func (c *console) StepEnd(failed bool) {
+func (c *coloredConsole) StepEnd(failed bool) {
 	if Verbose {
 		c.writer.Clear()
 		if failed {
@@ -165,7 +113,7 @@ func (c *console) StepEnd(failed bool) {
 	c.indentation -= stepIndentation
 }
 
-func (c *console) ConceptStart(conceptHeading string) {
+func (c *coloredConsole) ConceptStart(conceptHeading string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
@@ -174,11 +122,11 @@ func (c *console) ConceptStart(conceptHeading string) {
 	}
 }
 
-func (c *console) ConceptEnd(failed bool) {
+func (c *coloredConsole) ConceptEnd(failed bool) {
 	c.indentation -= stepIndentation
 }
 
-func (c *console) DataTable(table string) {
+func (c *coloredConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
 	if Verbose {
 		c.displayMessage(table+newline, ct.Yellow)
@@ -188,7 +136,7 @@ func (c *console) DataTable(table string) {
 
 // Write writes the bytes to console via goterminal's writer.
 // This is called when any sysouts are to be printed on console.
-func (c *console) Write(b []byte) (int, error) {
+func (c *coloredConsole) Write(b []byte) (int, error) {
 	c.indentation += sysoutIndentation
 	text := indent(string(b), c.indentation)
 	if len(text) > 0 {
@@ -202,16 +150,14 @@ func (c *console) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (c *console) displayMessage(msg string, color ct.Color) {
-	if c.isColored {
-		ct.Foreground(color, false)
-		defer ct.ResetColor()
-	}
+func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
+	ct.Foreground(color, false)
+	defer ct.ResetColor()
 	fmt.Fprint(c.writer, msg)
 	c.writer.Print()
 }
 
-func (c *console) resetBuffers() {
+func (c *coloredConsole) resetBuffers() {
 	c.headingBuffer.Reset()
 	c.pluginMessagesBuffer.Reset()
 }
