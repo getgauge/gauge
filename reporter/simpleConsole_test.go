@@ -163,10 +163,10 @@ func (s *MySuite) TestDataTable(c *C) {
 |-------|-----------------------------|
 |Gauge  |Test automation with ease    |`
 
-	want := `  |Product|Description                  |
-  |-------|-----------------------------|
-  |Gauge  |Test automation with ease    |
-`
+	want := `
+|Product|Description                  |
+|-------|-----------------------------|
+|Gauge  |Test automation with ease    |`
 
 	sc.DataTable(table)
 

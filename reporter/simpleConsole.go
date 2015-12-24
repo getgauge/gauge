@@ -78,9 +78,7 @@ func (sc *simpleConsole) ConceptEnd(failed bool) {
 
 func (sc *simpleConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
-	if Verbose {
-		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(table, sc.indentation), newline))
-	}
+	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", newline, table))
 }
 
 func (sc *simpleConsole) Error(err string, args ...interface{}) {

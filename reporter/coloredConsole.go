@@ -122,10 +122,8 @@ func (c *coloredConsole) ConceptEnd(failed bool) {
 
 func (c *coloredConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
-	if Verbose {
-		c.displayMessage(table+newline, ct.Yellow)
-		c.writer.Reset()
-	}
+	c.displayMessage(newline+table, ct.Yellow)
+	c.writer.Reset()
 }
 
 func (c *coloredConsole) Error(text string, args ...interface{}) {
