@@ -18,6 +18,7 @@
 package reporter
 
 import (
+	"fmt"
 	"io"
 	"os"
 )
@@ -51,8 +52,7 @@ type Reporter interface {
 
 var currentReporter Reporter
 
-// Current returns an instance of Reporter.
-// It returns the current instance of Reporter, if present. Else, it returns a new Reporter.
+// Current returns the current instance of Reporter, if present. Else, it returns a new Reporter.
 func Current() Reporter {
 	if currentReporter == nil {
 		if SimpleConsoleOutput {
@@ -64,15 +64,16 @@ func Current() Reporter {
 	return currentReporter
 }
 
+type parallelReportWriter struct {
+	nRunner int
+}
+
+func (p *parallelReportWriter) Write(b []byte) (int, error) {
+	return fmt.Printf("[runner: %d] %s", p.nRunner, string(b))
+}
+
 // NewParallelConsole returns the instance of parallel console reporter
 func NewParallelConsole(n int) Reporter {
-	parallelLogger := Current()
-	//	parallelLogger := &GaugeLogger{logging.MustGetLogger("gauge")}
-	// 	stdOutLogger := logging.NewLogBackend(os.Stdout, "", 0)
-	//	stdOutFormatter := logging.NewBackendFormatter(stdOutLogger, logging.MustStringFormatter("[runner:"+strconv.Itoa(n)+"] %{message}"))
-	//	stdOutLoggerLeveled := logging.AddModuleLevel(stdOutFormatter)
-	//	stdOutLoggerLeveled.SetLevel(level, "")
-	//  parallelLogger.SetBackend(stdOutLoggerLeveled)
-
-	return parallelLogger
+	writer := &parallelReportWriter{nRunner: n}
+	return newSimpleConsole(writer)
 }
