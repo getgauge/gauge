@@ -189,10 +189,9 @@ func (s *MySuite) TestWrite(c *C) {
 	Verbose = true
 	input := "hello, gauge"
 
-	n, err := sc.Write([]byte(input))
+	_, err := sc.Write([]byte(input))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(n, Equals, len(input+newline)+sc.indentation+sysoutIndentation)
 	c.Assert(dw.output, Equals, fmt.Sprintf("%s%s\n", spaces(sc.indentation+sysoutIndentation), input))
 }
 
