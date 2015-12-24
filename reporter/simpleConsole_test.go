@@ -198,7 +198,6 @@ func (s *MySuite) TestWrite(c *C) {
 
 func (s *MySuite) TestSpecReporting(c *C) {
 	dw, sc := setup()
-	//	sc.indentation = 6
 	Verbose = true
 
 	sc.SpecStart("Specification heading")
