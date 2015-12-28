@@ -36,32 +36,32 @@ func newDummyWriter() *dummyWriter {
 	return &dummyWriter{}
 }
 
-func setup() (*dummyWriter, *simpleConsole) {
+func setupSimpleConsole() (*dummyWriter, *simpleConsole) {
 	dw := newDummyWriter()
 	sc := newSimpleConsole(dw)
 	return dw, sc
 }
 
-func (s *MySuite) TestSpecStart(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestSpecStart_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.SpecStart("Specification heading")
 	c.Assert(dw.output, Equals, "# Specification heading\n")
 }
 
-func (s *MySuite) TestSpecEnd(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestSpecEnd_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.SpecEnd()
 	c.Assert(dw.output, Equals, "\n")
 }
 
-func (s *MySuite) TestScenarioStart(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestScenarioStart_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.ScenarioStart("First Scenario")
 	c.Assert(dw.output, Equals, "  ## First Scenario\n")
 }
 
-func (s *MySuite) TestScenarioEnd(c *C) {
-	_, sc := setup()
+func (s *MySuite) TestScenarioEnd_SimpleConsole(c *C) {
+	_, sc := setupSimpleConsole()
 	sc.indentation = 2
 
 	sc.ScenarioEnd(true)
@@ -69,8 +69,8 @@ func (s *MySuite) TestScenarioEnd(c *C) {
 	c.Assert(sc.indentation, Equals, 0)
 }
 
-func (s *MySuite) TestStepStartInVerboseMode(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestStepStartInVerboseMode_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 
@@ -79,8 +79,8 @@ func (s *MySuite) TestStepStartInVerboseMode(c *C) {
 	c.Assert(dw.output, Equals, "      * Say hello to gauge\n")
 }
 
-func (s *MySuite) TestStepStartInNonVerboseMode(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestStepStartInNonVerboseMode_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = false
 
@@ -89,8 +89,8 @@ func (s *MySuite) TestStepStartInNonVerboseMode(c *C) {
 	c.Assert(dw.output, Equals, "")
 }
 
-func (s *MySuite) TestStepEnd(c *C) {
-	_, sc := setup()
+func (s *MySuite) TestStepEnd_SimpleConsole(c *C) {
+	_, sc := setupSimpleConsole()
 	sc.indentation = 6
 
 	sc.StepEnd(true)
@@ -98,8 +98,8 @@ func (s *MySuite) TestStepEnd(c *C) {
 	c.Assert(sc.indentation, Equals, 2)
 }
 
-func (s *MySuite) TestSingleConceptStartInVerboseMode(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestSingleConceptStartInVerboseMode_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 
@@ -108,8 +108,8 @@ func (s *MySuite) TestSingleConceptStartInVerboseMode(c *C) {
 	c.Assert(dw.output, Equals, fmt.Sprintf("%s* my first concept\n", spaces(6)))
 }
 
-func (s *MySuite) TestNestedConceptStartInVerboseMode_case1(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestNestedConceptStartInVerboseMode_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 
@@ -121,7 +121,7 @@ func (s *MySuite) TestNestedConceptStartInVerboseMode_case1(c *C) {
 }
 
 func (s *MySuite) TestNestedConceptStartInVerboseMode_case2(c *C) {
-	dw, sc := setup()
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 
@@ -133,7 +133,7 @@ func (s *MySuite) TestNestedConceptStartInVerboseMode_case2(c *C) {
 }
 
 func (s *MySuite) TestNestedConceptStartInVerboseMode_case3(c *C) {
-	dw, sc := setup()
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 
@@ -145,8 +145,8 @@ func (s *MySuite) TestNestedConceptStartInVerboseMode_case3(c *C) {
 	c.Assert(dw.output, Equals, fmt.Sprintf("%s* do foo bar\n", spaces(14)))
 }
 
-func (s *MySuite) TestConceptEnd(c *C) {
-	_, sc := setup()
+func (s *MySuite) TestConceptEnd_SimpleConsole(c *C) {
+	_, sc := setupSimpleConsole()
 	sc.indentation = 6
 	Verbose = true
 
@@ -155,8 +155,8 @@ func (s *MySuite) TestConceptEnd(c *C) {
 	c.Assert(sc.indentation, Equals, 2)
 }
 
-func (s *MySuite) TestDataTable(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestDataTable_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 2
 	Verbose = true
 	table := `|Product|Description                  |
@@ -173,8 +173,8 @@ func (s *MySuite) TestDataTable(c *C) {
 	c.Assert(dw.output, Equals, want)
 }
 
-func (s *MySuite) TestError(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestError_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 6
 	Verbose = true
 
@@ -183,8 +183,8 @@ func (s *MySuite) TestError(c *C) {
 	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(sc.indentation+sysoutIndentation)))
 }
 
-func (s *MySuite) TestWrite(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestWrite_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	sc.indentation = 6
 	Verbose = true
 	input := "hello, gauge"
@@ -195,8 +195,8 @@ func (s *MySuite) TestWrite(c *C) {
 	c.Assert(dw.output, Equals, fmt.Sprintf("%s%s\n", spaces(sc.indentation+sysoutIndentation), input))
 }
 
-func (s *MySuite) TestSpecReporting(c *C) {
-	dw, sc := setup()
+func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
 	Verbose = true
 
 	sc.SpecStart("Specification heading")

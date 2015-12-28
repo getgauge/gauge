@@ -51,7 +51,7 @@ func (c *coloredConsole) SpecEnd() {
 }
 
 func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
-	c.indentation = scenarioIndentation
+	c.indentation += scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	logger.GaugeLog.Info(msg)
 
@@ -127,7 +127,7 @@ func (c *coloredConsole) DataTable(table string) {
 }
 
 func (c *coloredConsole) Error(text string, args ...interface{}) {
-	msg := fmt.Sprintf(text, args)
+	msg := fmt.Sprintf(text, args...)
 	logger.GaugeLog.Error(msg)
 	fmt.Fprint(c, msg)
 }

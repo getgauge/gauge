@@ -34,8 +34,9 @@ func newSimpleConsole(out io.Writer) *simpleConsole {
 }
 
 func (sc *simpleConsole) SpecStart(heading string) {
-	logger.GaugeLog.Info(heading)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formatSpec(heading), newline))
+	formattedHeading := formatSpec(heading)
+	logger.GaugeLog.Info(formattedHeading)
+	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
 }
 
 func (sc *simpleConsole) SpecEnd() {
@@ -44,8 +45,9 @@ func (sc *simpleConsole) SpecEnd() {
 
 func (sc *simpleConsole) ScenarioStart(heading string) {
 	sc.indentation += scenarioIndentation
-	logger.GaugeLog.Info(heading)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formatScenario(heading), sc.indentation), newline))
+	formattedHeading := formatScenario(heading)
+	logger.GaugeLog.Info(formattedHeading)
+	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formattedHeading, sc.indentation), newline))
 }
 
 func (sc *simpleConsole) ScenarioEnd(failed bool) {
