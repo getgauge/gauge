@@ -19,19 +19,13 @@ package reporter
 
 import (
 	"fmt"
-	"strings"
-
-	"github.com/getgauge/gauge/util"
 
 	. "gopkg.in/check.v1"
 )
 
 var (
-	eraseLineUnix = "\x1b[2K\r"
-	cursorUpUnix  = "\x1b[0A"
-
-	eraseCharWindows  = "\x1b[2K\r"
-	cursorLeftWindows = "\x1b[0A"
+	eraseLine = "\x1b[2K\r"
+	cursorUp  = "\x1b[0A"
 )
 
 func setupColoredConsole() (*dummyWriter, *coloredConsole) {
@@ -107,11 +101,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 
 	cc.StepEnd(false)
 
-	if util.IsWindows() {
-		c.Assert(dw.output, Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput))+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
-	} else {
-		c.Assert(dw.output, Equals, cursorUpUnix+eraseLineUnix+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
-	}
+	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
 	cc.ScenarioEnd(false)
 	c.Assert(cc.headingBuffer.String(), Equals, "")
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "")
@@ -136,11 +126,7 @@ func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
 
 	cc.StepEnd(true)
 
-	if util.IsWindows() {
-		c.Assert(dw.output, Equals, strings.Repeat(cursorLeftWindows+eraseCharWindows, len(indent("* say hello", cc.indentation+stepIndentation)))+"      * say hello\t ...[FAIL]\n")
-	} else {
-		c.Assert(dw.output, Equals, cursorUpUnix+eraseLineUnix+"      * say hello\t ...[FAIL]\n")
-	}
+	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      * say hello\t ...[FAIL]\n")
 }
 
 func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
@@ -181,13 +167,8 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 
 	cc.StepEnd(true)
 
-	if util.IsWindows() {
-		expectedStepEndOutput := strings.Repeat(cursorLeftWindows+eraseCharWindows, len(expectedStepStartOutput)) + spaces(6) + "* Say hello to all\t ...[FAIL]\n"
-		c.Assert(dw.output, Equals, expectedStepEndOutput)
-	} else {
-		expectedStepEndOutput := cursorUpUnix + eraseLineUnix + spaces(6) + "* Say hello to all\t ...[FAIL]\n"
-		c.Assert(dw.output, Equals, expectedStepEndOutput)
-	}
+	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n"
+	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
 func (s *MySuite) TestConceptStartAndEnd_ColoredConsole(c *C) {
