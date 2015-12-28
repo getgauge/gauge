@@ -92,7 +92,7 @@ func (sc *simpleConsole) Error(err string, args ...interface{}) {
 
 func (sc *simpleConsole) Write(b []byte) (int, error) {
 	if Verbose {
-		formattedString := fmt.Sprintf("%s%s", indent(string(b), sc.indentation+sysoutIndentation), newline)
+		formattedString := fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), string(b))
 		fmt.Fprint(sc.writer, formattedString)
 		return len(b), nil
 	}

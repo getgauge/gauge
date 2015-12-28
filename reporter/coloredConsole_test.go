@@ -80,7 +80,7 @@ func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 
 	cc.ScenarioEnd(true)
 
-	c.Assert(dw.output, Equals, "\n      fail reason: blah\n")
+	c.Assert(dw.output, Equals, "\n      fail reason: blah")
 }
 
 func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
@@ -192,29 +192,6 @@ func (s *MySuite) TestConceptStartAndEnd_ColoredConsole(c *C) {
 	c.Assert(cc.indentation, Equals, 4)
 }
 
-func (s *MySuite) TestStacktraceConsoleFormat(c *C) {
-	dw, cc := setupColoredConsole()
-	Verbose = true
-
-	stacktrace := "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
-		"sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
-		"com.thoughtworks.gauge.execution.HookExecutionStage.execute(HookExecutionStage.java:42)\n" +
-		"com.thoughtworks.gauge.execution.ExecutionPipeline.start(ExecutionPipeline.java:31)\n" +
-		"com.thoughtworks.gauge.processor.ExecuteStepProcessor.process(ExecuteStepProcessor.java:37)\n" +
-		"]          "
-
-	fmt.Fprint(cc, stacktrace)
-
-	formattedStacktrace := spaces(sysoutIndentation) + "Stacktrace: [StepImplementation.fail(StepImplementation.java:21)\n" +
-		spaces(sysoutIndentation) + "sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)\n" +
-		spaces(sysoutIndentation) + "com.thoughtworks.gauge.execution.HookExecutionStage.execute(HookExecutionStage.java:42)\n" +
-		spaces(sysoutIndentation) + "com.thoughtworks.gauge.execution.ExecutionPipeline.start(ExecutionPipeline.java:31)\n" +
-		spaces(sysoutIndentation) + "com.thoughtworks.gauge.processor.ExecuteStepProcessor.process(ExecuteStepProcessor.java:37)\n" +
-		spaces(sysoutIndentation) + "]\n"
-	c.Assert(dw.output, Equals, formattedStacktrace)
-	c.Assert(cc.pluginMessagesBuffer.String(), Equals, formattedStacktrace)
-}
-
 func (s *MySuite) TestDataTable_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	cc.indentation = 2
@@ -240,5 +217,5 @@ func (s *MySuite) TestError_ColoredConsole(c *C) {
 
 	cc.Error("Failed %s", "network error")
 
-	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(cc.indentation+sysoutIndentation)))
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error", spaces(cc.indentation+sysoutIndentation)))
 }

@@ -136,13 +136,10 @@ func (c *coloredConsole) Error(text string, args ...interface{}) {
 // This is called when any sysouts are to be printed on console.
 func (c *coloredConsole) Write(b []byte) (int, error) {
 	c.indentation += sysoutIndentation
-	text := indent(string(b), c.indentation)
-	if len(text) > 0 {
-		text += newline
-		c.pluginMessagesBuffer.WriteString(text)
-		if Verbose {
-			c.displayMessage(text, ct.None)
-		}
+	text := spaces(c.indentation) + string(b)
+	c.pluginMessagesBuffer.WriteString(text)
+	if Verbose {
+		c.displayMessage(text, ct.None)
 	}
 	c.indentation -= sysoutIndentation
 	return len(b), nil

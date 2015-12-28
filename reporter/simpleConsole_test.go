@@ -192,7 +192,7 @@ func (s *MySuite) TestWrite_SimpleConsole(c *C) {
 	_, err := sc.Write([]byte(input))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(dw.output, Equals, fmt.Sprintf("%s%s\n", spaces(sc.indentation+sysoutIndentation), input))
+	c.Assert(dw.output, Equals, fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), input))
 }
 
 func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
@@ -211,7 +211,6 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
   ## My First scenario
       * do foo bar
         doing foo bar
-
 `
 
 	c.Assert(dw.output, Equals, want)
