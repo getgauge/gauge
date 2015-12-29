@@ -178,6 +178,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, reporter reporter.R
 	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, reporter, e.errMaps})
 	result := simpleExecution.executeStream(specs)
 	suiteResultChannel <- result
+	testRunner.Kill()
 }
 
 func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
