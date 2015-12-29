@@ -94,7 +94,6 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 	if Verbose {
 		formattedString := fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), string(b))
 		fmt.Fprint(sc.writer, formattedString)
-		return len(b), nil
 	}
-	return 0, nil
+	return len(b), nil
 }
