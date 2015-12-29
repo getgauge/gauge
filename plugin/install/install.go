@@ -190,12 +190,12 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 
 func UninstallPlugin(pluginName string, version string) {
 	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
+	if err != nil {
+		handleUninstallFailure(err, pluginName)
+	}
 	pluginInfo := pluginName
 	if version != "" {
 		pluginInfo = fmt.Sprintf("%s(%s)", pluginName, version)
-	}
-	if err != nil {
-		handleUninstallFailure(err, pluginInfo)
 	}
 	pluginInstallationDir := path.Join(pluginsDir, pluginName, version)
 	if common.DirExists(pluginInstallationDir) {
@@ -211,7 +211,7 @@ func UninstallPlugin(pluginName string, version string) {
 
 func handleUninstallFailure(err error, pluginName string) {
 	logger.Error("%s plugin uninstallation failed", pluginName)
-	logger.Error(err.Error())
+	logger.Fatal(err.Error())
 }
 
 func getDownloadLink(downloadUrls downloadUrls) (string, error) {
