@@ -418,7 +418,7 @@ func downloadAndInstall(plugin, version string, successMessage string) error {
 
 func InstallPluginZip(zipFile string, pluginName string) {
 	if err := installPluginFromZip(zipFile, pluginName); err != nil {
-		logger.Warning("Failed to install plugin. Invalid zip file : %s\n", err)
+		logger.Fatal("Failed to install plugin. %s\n", err)
 	} else {
 		logger.Info("Successfully installed plugin from file.")
 	}
