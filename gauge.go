@@ -159,6 +159,9 @@ func newStepName() string {
 }
 
 func initPackageFlags() {
+	if *parallel {
+		*simpleConsoleOutput = true
+	}
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
 	env.ProjectEnv = *currentEnv
