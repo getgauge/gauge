@@ -17,7 +17,7 @@ Some of its key features include:
 
 ## Why Gauge?
 
-Certain features of Gauge makes it stand unique amongst others. 
+Certain features of Gauge makes it stand unique amongst others.
 
 * Consistent Cross Platform/Language Support
 * Business Language Tests : Supports the concept of executable documentation
@@ -55,6 +55,10 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
 [contributing]:http://github.com/getgauge/gauge/wiki/Contributing
 
+## Nightly builds
+
+ [ ![Download Nightly](https://api.bintray.com/packages/gauge/builds/gauge/images/download.svg) ](https://bintray.com/gauge/builds/gauge/_latestVersion)
+
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
 
@@ -74,4 +78,3 @@ Please read the [guide](CONTRIBUTING.md) on contributing to Gauge.
 ## Copyright
 
 Copyright 2015 ThoughtWorks, Inc.
-
