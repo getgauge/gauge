@@ -36,6 +36,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -116,14 +117,15 @@ func GetRunnerInfo(language string) (*Runner, error) {
 }
 
 func (testRunner *TestRunner) Kill() error {
-	if testRunner.isStillRunning() {
+	runnerProcessID := testRunner.Cmd.Process.Pid
+	if util.IsProcessRunning(runnerProcessID) {
 		defer testRunner.Connection.Close()
 		testRunner.sendProcessKillMessage()
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if testRunner.isStillRunning() {
+				if util.IsProcessRunning(runnerProcessID) {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -147,10 +149,6 @@ func (testRunner *TestRunner) Kill() error {
 
 func (testRunner *TestRunner) killRunner() error {
 	return testRunner.Cmd.Process.Kill()
-}
-
-func (testRunner *TestRunner) isStillRunning() bool {
-	return !(testRunner == nil) && !(testRunner.Cmd == nil) && (testRunner.Cmd.ProcessState == nil || !testRunner.Cmd.ProcessState.Exited())
 }
 
 func (testRunner *TestRunner) sendProcessKillMessage() {

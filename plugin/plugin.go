@@ -37,6 +37,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 )
@@ -73,12 +74,13 @@ type plugin struct {
 
 func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	if plugin.isStillRunning() {
+	pluginPID := plugin.pluginCmd.Process.Pid
+	if util.IsProcessRunning(pluginPID) {
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if plugin.isStillRunning() {
+				if util.IsProcessRunning(pluginPID) {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -98,10 +100,6 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 		}
 	}
 	return nil
-}
-
-func (plugin *plugin) isStillRunning() bool {
-	return plugin.pluginCmd.ProcessState == nil || !plugin.pluginCmd.ProcessState.Exited()
 }
 
 func IsPluginInstalled(pluginName, pluginVersion string) bool {

@@ -1,6 +1,7 @@
 package util
 
 import (
+	"os"
 	"runtime"
 	"strings"
 )
@@ -24,4 +25,9 @@ func NumberOfCores() int {
 
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+func IsProcessRunning(processID int) bool {
+	_, err := os.FindProcess(processID)
+	return err != nil
 }
