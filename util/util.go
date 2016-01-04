@@ -29,5 +29,5 @@ func IsWindows() bool {
 
 func IsProcessRunning(processID int) bool {
 	_, err := os.FindProcess(processID)
-	return err != nil
+	return err == nil
 }
