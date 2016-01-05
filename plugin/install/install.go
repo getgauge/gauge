@@ -514,16 +514,7 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return err
 	}
 	if plugin.IsPluginAdded(manifest, pd) {
-		logger.Info("Plugin " + pd.Name + " is already added.")
-		return nil
-	}
-
-	action := setupScope
-	if err := plugin.SetEnvForPlugin(action, pd, manifest, pluginArgs); err != nil {
-		return err
-	}
-	if _, err := plugin.StartPlugin(pd, action, true); err != nil {
-		return err
+		return fmt.Errorf("Plugin %s is already added.", pd.Name)
 	}
 	manifest.Plugins = append(manifest.Plugins, pd.Id)
 	return manifest.Save()

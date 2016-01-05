@@ -69,13 +69,16 @@ type Handler struct {
 }
 
 type plugin struct {
+	mutex      *sync.Mutex
 	connection net.Conn
 	pluginCmd  *exec.Cmd
 	descriptor *pluginDescriptor
 }
 
 func (p *plugin) IsProcessRunning() bool {
+	p.mutex.Lock()
 	ps := p.pluginCmd.ProcessState
+	p.mutex.Unlock()
 	return ps == nil || !ps.Exited()
 }
 
@@ -168,7 +171,7 @@ func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
 	return &pd, nil
 }
 
-func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, error) {
+func StartPlugin(pd *pluginDescriptor, action string) (*plugin, error) {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -190,15 +193,15 @@ func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 	if err != nil {
 		return nil, err
 	}
-
-	if wait {
-		return cmd, cmd.Wait()
-	}
+	var mutex = &sync.Mutex{}
 	go func() {
-		cmd.Wait()
+		pState, _ := cmd.Process.Wait()
+		mutex.Lock()
+		cmd.ProcessState = pState
+		mutex.Unlock()
 	}()
-
-	return cmd, nil
+	plugin := &plugin{pluginCmd: cmd, descriptor: pd, mutex: mutex}
+	return plugin, nil
 }
 
 func SetEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
@@ -257,7 +260,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 				continue
 			}
 
-			pluginCmd, err := StartPlugin(pd, executionScope, false)
+			plugin, err := StartPlugin(pd, executionScope)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
@@ -265,10 +268,11 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 			pluginConnection, err := gaugeConnectionHandler.AcceptConnection(config.PluginConnectionTimeout(), make(chan error))
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
-				pluginCmd.Process.Kill()
+				plugin.pluginCmd.Process.Kill()
 				continue
 			}
-			handler.addPlugin(pluginId, &plugin{connection: pluginConnection, pluginCmd: pluginCmd, descriptor: pd})
+			plugin.connection = pluginConnection
+			handler.addPlugin(pluginId, plugin)
 		}
 
 	}

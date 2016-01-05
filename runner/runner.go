@@ -37,9 +37,11 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
+	"sync"
 )
 
 type TestRunner struct {
+	mutex        *sync.Mutex
 	Cmd          *exec.Cmd
 	Connection   net.Conn
 	ErrorChannel chan error
@@ -115,7 +117,9 @@ func GetRunnerInfo(language string) (*Runner, error) {
 	return runnerInfo, nil
 }
 func (testRunner *TestRunner) IsProcessRunning() bool {
+	testRunner.mutex.Lock()
 	ps := testRunner.Cmd.ProcessState
+	testRunner.mutex.Unlock()
 	return ps == nil || !ps.Exited()
 }
 
@@ -179,8 +183,9 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	waitAndGetErrorMessage(errChannel, cmd)
-	return &TestRunner{Cmd: cmd, ErrorChannel: errChannel}, nil
+	testRunner := &TestRunner{Cmd: cmd, ErrorChannel: errChannel, mutex: &sync.Mutex{}}
+	testRunner.waitAndGetErrorMessage()
+	return testRunner, nil
 }
 
 func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, error) {
@@ -199,12 +204,15 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	return filepath.Dir(languageJSONFilePath), nil
 }
 
-func waitAndGetErrorMessage(errChannel chan error, cmd *exec.Cmd) {
+func (t *TestRunner) waitAndGetErrorMessage() {
 	go func() {
-		err := cmd.Wait()
+		pState, err := t.Cmd.Process.Wait()
+		t.mutex.Lock()
+		t.Cmd.ProcessState = pState
+		t.mutex.Unlock()
 		if err != nil {
 			logger.Debug("Runner exited with error: %s", err)
-			errChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
+			t.ErrorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 	}()
 }
