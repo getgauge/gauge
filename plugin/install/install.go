@@ -367,7 +367,7 @@ func InstallAllPlugins() {
 
 func UpdatePlugins() {
 	failedPlugin := make([]string, 0)
-	for _, pluginInfo := range GetPluginsInfo() {
+	for _, pluginInfo := range plugin.GetPluginsInfo() {
 		logger.Info("Updating plugin '%s'", pluginInfo.Name)
 		err := downloadAndInstall(pluginInfo.Name, "", fmt.Sprintf("Successfully updated plugin => %s", pluginInfo.Name))
 		if err != nil {
@@ -382,16 +382,6 @@ func UpdatePlugins() {
 	}
 	logger.Info("Successfully updated all the plugins.")
 	os.Exit(0)
-}
-
-func GetPluginsInfo() []common.Plugin {
-	allPluginsWithVersion, err := common.GetAllInstalledPluginsWithVersion()
-	if err != nil {
-		logger.Info("No plugins found")
-		logger.Info("Plugins can be installed with `gauge --install {plugin-name}`")
-		os.Exit(0)
-	}
-	return allPluginsWithVersion
 }
 
 func DownloadAndInstallPlugin(plugin, version, messageFormat string) {
@@ -463,7 +453,7 @@ func isCompatiblePluginInstalled(pluginName string, pluginVersion string, isRunn
 }
 
 func IsCompatibleLanguagePluginInstalled(name string) bool {
-	jsonFilePath, err := common.GetLanguageJSONFilePath(name)
+	jsonFilePath, err := plugin.GetLanguageJSONFilePath(name)
 	if err != nil {
 		return false
 	}

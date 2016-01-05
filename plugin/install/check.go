@@ -20,13 +20,14 @@ package install
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/version"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/version"
 )
 
 type UpdateFacade struct {
@@ -118,7 +119,7 @@ type UpdateInfo struct {
 
 func checkPluginUpdates() []UpdateInfo {
 	pluginsToUpdate := make([]UpdateInfo, 0)
-	plugins, err := common.GetAllInstalledPluginsWithVersion()
+	plugins, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		return pluginsToUpdate
 	}

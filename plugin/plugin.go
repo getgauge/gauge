@@ -20,11 +20,14 @@ package plugin
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
+	"os"
 	"os/exec"
 	"path"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -125,12 +128,12 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 }
 
-func getPluginJsonPath(pluginName, version string) (string, error) {
-	if !IsPluginInstalled(pluginName, version) {
-		return "", fmt.Errorf("Plugin %s %s is not installed", pluginName, version)
+func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
+	if !IsPluginInstalled(pluginName, pluginVersion) {
+		return "", fmt.Errorf("Plugin %s %s is not installed", pluginName, pluginVersion)
 	}
 
-	pluginInstallDir, err := common.GetPluginInstallDir(pluginName, "")
+	pluginInstallDir, err := GetPluginInstallDir(pluginName, "")
 	if err != nil {
 		return "", err
 	}
@@ -334,4 +337,143 @@ func StartPlugins(manifest *manifest.Manifest) *PluginHandler {
 	PluginHandler, warnings := startPluginsForExecution(manifest)
 	logger.HandleWarningMessages(warnings)
 	return PluginHandler
+}
+
+func GetLatestInstalledPluginVersionPath(pluginDir string) (string, error) {
+	LatestVersion, err := getPluginLatestVersion(pluginDir)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(pluginDir, LatestVersion.String()), nil
+}
+
+func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
+	files, err := ioutil.ReadDir(pluginDir)
+	if err != nil {
+		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
+	}
+	availableVersions := make([]*version.Version, 0)
+
+	for _, file := range files {
+		if file.IsDir() {
+			version, err := version.ParseVersion(file.Name())
+			if err == nil {
+				availableVersions = append(availableVersions, version)
+			}
+		}
+	}
+	pluginName := filepath.Base(pluginDir)
+
+	if len(availableVersions) < 1 {
+		return nil, fmt.Errorf("No valid versions of plugin %s found in %s", pluginName, pluginDir)
+	}
+	LatestVersion := version.GetLatestVersion(availableVersions)
+	return LatestVersion, nil
+}
+
+func GetLatestInstalledPluginVersion(pluginDir string) (*version.Version, error) {
+	LatestVersion, err := getPluginLatestVersion(pluginDir)
+	if err != nil {
+		return &version.Version{}, err
+	}
+	return LatestVersion, nil
+}
+
+type PluginInfo struct {
+	Name    string
+	Version version.Version
+}
+
+func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
+	pluginInstallPrefixes, err := common.GetPluginInstallPrefixes()
+	if err != nil {
+		return nil, err
+	}
+	allPlugins := make(map[string]PluginInfo, 0)
+	for _, prefix := range pluginInstallPrefixes {
+		files, err := ioutil.ReadDir(prefix)
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			pluginDir, err := os.Stat(filepath.Join(prefix, file.Name()))
+			if err != nil {
+				continue
+			}
+			if pluginDir.IsDir() {
+				latestVersion, err := GetLatestInstalledPluginVersion(filepath.Join(prefix, file.Name()))
+				if err != nil {
+					continue
+				}
+				pluginAdded, repeated := allPlugins[file.Name()]
+				if repeated {
+					var availableVersions []*version.Version
+					availableVersions = append(availableVersions, &pluginAdded.Version, latestVersion)
+					latest := version.GetLatestVersion(availableVersions)
+					if latest == latestVersion {
+						allPlugins[file.Name()] = PluginInfo{Name: file.Name(), Version: *latestVersion}
+					}
+				} else {
+					allPlugins[file.Name()] = PluginInfo{Name: file.Name(), Version: *latestVersion}
+				}
+			}
+		}
+	}
+	return sortPlugins(allPlugins), nil
+}
+
+type ByPluginName []PluginInfo
+
+func (a ByPluginName) Len() int      { return len(a) }
+func (a ByPluginName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a ByPluginName) Less(i, j int) bool {
+	return a[i].Name < a[j].Name
+}
+func sortPlugins(allPlugins map[string]PluginInfo) []PluginInfo {
+	var installedPlugins []PluginInfo
+	for _, plugin := range allPlugins {
+		installedPlugins = append(installedPlugins, plugin)
+	}
+	sort.Sort(ByPluginName(installedPlugins))
+	return installedPlugins
+}
+
+func GetPluginsInfo() []PluginInfo {
+	allPluginsWithVersion, err := GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		logger.Info("No plugins found")
+		logger.Info("Plugins can be installed with `gauge --install {plugin-name}`")
+		os.Exit(0)
+	}
+	return allPluginsWithVersion
+}
+
+func GetPluginInstallDir(pluginName, version string) (string, error) {
+	allPluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
+	if err != nil {
+		return "", err
+	}
+	pluginDir := path.Join(allPluginsInstallDir, pluginName)
+	if version != "" {
+		pluginDir = filepath.Join(pluginDir, version)
+	} else {
+		pluginDir, err = GetLatestInstalledPluginVersionPath(pluginDir)
+		if err != nil {
+			return "", err
+		}
+	}
+	return pluginDir, nil
+}
+
+func GetLanguageJSONFilePath(language string) (string, error) {
+	languageInstallDir, err := GetPluginInstallDir(language, "")
+	if err != nil {
+		return "", err
+	}
+	languageJSON := filepath.Join(languageInstallDir, fmt.Sprintf("%s.json", language))
+	if !common.FileExists(languageJSON) {
+		return "", fmt.Errorf("Failed to find the implementation for: %s. %s does not exist.", language, languageJSON)
+	}
+
+	return languageJSON, nil
 }

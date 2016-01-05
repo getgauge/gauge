@@ -18,10 +18,7 @@
 package main
 
 import (
-	"fmt"
-
 	"os"
-	"time"
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
@@ -30,13 +27,13 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/print"
 	"github.com/getgauge/gauge/reporter"
 
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/version"
 	flag "github.com/getgauge/mflag"
 )
 
@@ -83,7 +80,7 @@ func main() {
 	env.LoadEnv(true)
 	logger.Initialize(*logLevel)
 	if *gaugeVersion {
-		version.PrintVersion()
+		print.Version()
 	} else if *daemonize {
 		if validGaugeProject {
 			api.RunInBackground(*apiPort)
@@ -129,7 +126,7 @@ func main() {
 		}
 	} else {
 		if len(flag.Args()) == 0 {
-			printUsage()
+			print.Usage()
 		}
 		if validGaugeProject {
 			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
@@ -140,20 +137,9 @@ func main() {
 	}
 }
 
-func printUsage() {
-	fmt.Printf("gauge -version %s\n", version.CurrentGaugeVersion.String())
-	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
-	fmt.Println("Usage:")
-	fmt.Println("\tgauge specs/")
-	fmt.Println("\tgauge specs/spec_name.spec")
-	fmt.Println("\nOptions:")
-	flag.PrintDefaults()
-	os.Exit(2)
-}
-
 func newStepName() string {
 	if len(flag.Args()) != 1 {
-		printUsage()
+		print.Usage()
 	}
 	return flag.Args()[0]
 }

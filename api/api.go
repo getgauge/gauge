@@ -36,6 +36,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
@@ -236,7 +237,7 @@ func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *ga
 func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	libPathRequest := message.GetLibPathRequest()
 	language := libPathRequest.GetLanguage()
-	languageInstallDir, err := common.GetPluginInstallDir(language, "")
+	languageInstallDir, err := plugin.GetPluginInstallDir(language, "")
 	if err != nil {
 		return handler.getErrorMessage(err)
 	}

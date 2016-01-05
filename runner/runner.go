@@ -35,6 +35,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
@@ -86,7 +87,7 @@ func ExecuteInitHookForRunner(language string) error {
 		break
 	}
 
-	languageJSONFilePath, err := common.GetLanguageJSONFilePath(language)
+	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
 	runnerDir := filepath.Dir(languageJSONFilePath)
 	cmd, err := common.ExecuteCommand(command, runnerDir, os.Stdout, os.Stderr)
 
@@ -99,7 +100,7 @@ func ExecuteInitHookForRunner(language string) error {
 
 func GetRunnerInfo(language string) (*Runner, error) {
 	runnerInfo := new(Runner)
-	languageJSONFilePath, err := common.GetLanguageJSONFilePath(language)
+	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +191,7 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 }
 
 func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, error) {
-	languageJSONFilePath, err := common.GetLanguageJSONFilePath(manifest.Language)
+	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return "", err
 	}
