@@ -40,7 +40,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/reporter"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 )
@@ -75,15 +74,21 @@ type plugin struct {
 	descriptor *pluginDescriptor
 }
 
-func (plugin *plugin) kill(wg *sync.WaitGroup) error {
+func (p *plugin) IsProcessRunning() bool {
+	ps := p.pluginCmd.ProcessState
+	return ps == nil || !ps.Exited()
+}
+
+func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	pluginPID := plugin.pluginCmd.Process.Pid
-	if util.IsProcessRunning(pluginPID) {
+	if p.IsProcessRunning() {
+		defer p.connection.Close()
+		conn.SendProcessKillMessage(p.connection)
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if util.IsProcessRunning(pluginPID) {
+				if p.IsProcessRunning() {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -91,15 +96,18 @@ func (plugin *plugin) kill(wg *sync.WaitGroup) error {
 				}
 			}
 		}()
-
 		select {
 		case done := <-exited:
 			if done {
-				logger.Debug("Plugin [%s] with pid [%d] has exited", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid)
+				logger.Debug("Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginConnectionTimeout()):
-			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", plugin.descriptor.Name, plugin.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
-			return plugin.pluginCmd.Process.Kill()
+			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
+			err := p.pluginCmd.Process.Kill()
+			if err != nil {
+				logger.Warning("Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
+			}
+			return err
 		}
 	}
 	return nil

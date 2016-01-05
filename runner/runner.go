@@ -32,12 +32,10 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -116,17 +114,20 @@ func GetRunnerInfo(language string) (*Runner, error) {
 	}
 	return runnerInfo, nil
 }
+func (testRunner *TestRunner) IsProcessRunning() bool {
+	ps := testRunner.Cmd.ProcessState
+	return ps == nil || !ps.Exited()
+}
 
 func (testRunner *TestRunner) Kill() error {
-	runnerProcessID := testRunner.Cmd.Process.Pid
-	if util.IsProcessRunning(runnerProcessID) {
+	if testRunner.IsProcessRunning() {
 		defer testRunner.Connection.Close()
-		testRunner.sendProcessKillMessage()
+		conn.SendProcessKillMessage(testRunner.Connection)
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if util.IsProcessRunning(runnerProcessID) {
+				if testRunner.IsProcessRunning() {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -150,14 +151,6 @@ func (testRunner *TestRunner) Kill() error {
 
 func (testRunner *TestRunner) killRunner() error {
 	return testRunner.Cmd.Process.Kill()
-}
-
-func (testRunner *TestRunner) sendProcessKillMessage() {
-	id := common.GetUniqueID()
-	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
-
-	conn.WriteGaugeMessage(message, testRunner.Connection)
 }
 
 // Looks for a runner configuration inside the runner directory

@@ -141,3 +141,12 @@ func GetPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 	}
 	return 0, fmt.Errorf("%s Environment variable not set", portEnvVariable)
 }
+
+// SendProcessKillMessage sends a KillProcessRequest message through the connection.
+func SendProcessKillMessage(connection net.Conn) {
+	id := common.GetUniqueID()
+	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
+
+	WriteGaugeMessage(message, connection)
+}
