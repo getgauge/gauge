@@ -20,30 +20,38 @@ package reporter
 import (
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/getgauge/gauge/logger"
 )
 
 type simpleConsole struct {
+	mu          *sync.Mutex
 	indentation int
 	writer      io.Writer
 }
 
 func newSimpleConsole(out io.Writer) *simpleConsole {
-	return &simpleConsole{writer: out}
+	return &simpleConsole{mu: &sync.Mutex{}, writer: out}
 }
 
 func (sc *simpleConsole) SpecStart(heading string) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	formattedHeading := formatSpec(heading)
 	logger.GaugeLog.Info(formattedHeading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
 }
 
 func (sc *simpleConsole) SpecEnd() {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	fmt.Fprintln(sc.writer)
 }
 
 func (sc *simpleConsole) ScenarioStart(heading string) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation += scenarioIndentation
 	formattedHeading := formatScenario(heading)
 	logger.GaugeLog.Info(formattedHeading)
@@ -51,10 +59,14 @@ func (sc *simpleConsole) ScenarioStart(heading string) {
 }
 
 func (sc *simpleConsole) ScenarioEnd(failed bool) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation -= scenarioIndentation
 }
 
 func (sc *simpleConsole) StepStart(stepText string) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
@@ -63,10 +75,14 @@ func (sc *simpleConsole) StepStart(stepText string) {
 }
 
 func (sc *simpleConsole) StepEnd(failed bool) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation -= stepIndentation
 }
 
 func (sc *simpleConsole) ConceptStart(conceptHeading string) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
@@ -75,15 +91,21 @@ func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 }
 
 func (sc *simpleConsole) ConceptEnd(failed bool) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	sc.indentation -= stepIndentation
 }
 
 func (sc *simpleConsole) DataTable(table string) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	logger.GaugeLog.Debug(table)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", newline, table))
 }
 
 func (sc *simpleConsole) Error(err string, args ...interface{}) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	errorMessage := fmt.Sprintf(err, args...)
 	logger.GaugeLog.Error(errorMessage)
 	errorString := indent(errorMessage, sc.indentation+sysoutIndentation)
@@ -91,6 +113,8 @@ func (sc *simpleConsole) Error(err string, args ...interface{}) {
 }
 
 func (sc *simpleConsole) Write(b []byte) (int, error) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
 	if Verbose {
 		formattedString := fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), string(b))
 		fmt.Fprint(sc.writer, formattedString)
