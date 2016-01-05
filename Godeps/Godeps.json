@@ -16,7 +16,7 @@
 		},
 		{
 			"ImportPath": "github.com/getgauge/common",
-			"Rev": "9be75ca57589439b3e339053565b9c1a8c20a4f3"
+			"Rev": "0e44470265c3b6347f002073b8e7cf2cc8f5be36"
 		},
 		{
 			"ImportPath": "github.com/getgauge/mflag",
