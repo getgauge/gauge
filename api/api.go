@@ -237,7 +237,7 @@ func (handler *gaugeApiMessageHandler) getAllConceptsRequestResponse(message *ga
 func (handler *gaugeApiMessageHandler) getLanguagePluginLibPath(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	libPathRequest := message.GetLibPathRequest()
 	language := libPathRequest.GetLanguage()
-	languageInstallDir, err := plugin.GetPluginInstallDir(language, "")
+	languageInstallDir, err := plugin.GetInstallDir(language, "")
 	if err != nil {
 		return handler.getErrorMessage(err)
 	}

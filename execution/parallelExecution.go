@@ -47,7 +47,7 @@ type parallelSpecExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
 	specifications           []*parser.Specification
-	pluginHandler            *plugin.PluginHandler
+	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *runner.TestRunner
 	aggregateResult          *result.SuiteResult

@@ -65,7 +65,7 @@ type pluginDescriptor struct {
 	pluginPath          string
 }
 
-type PluginHandler struct {
+type Handler struct {
 	pluginsMap map[string]*plugin
 }
 
@@ -117,47 +117,45 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 
 	if pluginVersion != "" {
-		pluginJson := path.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
-		if common.FileExists(pluginJson) {
+		pluginJSON := path.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
+		if common.FileExists(pluginJSON) {
 			return true
-		} else {
-			return false
 		}
-	} else {
-		return true
+		return false
 	}
+	return true
 }
 
-func getPluginJsonPath(pluginName, pluginVersion string) (string, error) {
+func getPluginJSONPath(pluginName, pluginVersion string) (string, error) {
 	if !IsPluginInstalled(pluginName, pluginVersion) {
 		return "", fmt.Errorf("Plugin %s %s is not installed", pluginName, pluginVersion)
 	}
 
-	pluginInstallDir, err := GetPluginInstallDir(pluginName, "")
+	pluginInstallDir, err := GetInstallDir(pluginName, "")
 	if err != nil {
 		return "", err
 	}
 	return filepath.Join(pluginInstallDir, common.PluginJSONFile), nil
 }
 
-func GetPluginDescriptor(pluginId, pluginVersion string) (*pluginDescriptor, error) {
-	pluginJson, err := getPluginJsonPath(pluginId, pluginVersion)
+func GetPluginDescriptor(pluginID, pluginVersion string) (*pluginDescriptor, error) {
+	pluginJSON, err := getPluginJSONPath(pluginID, pluginVersion)
 	if err != nil {
 		return nil, err
 	}
-	return GetPluginDescriptorFromJson(pluginJson)
+	return GetPluginDescriptorFromJSON(pluginJSON)
 }
 
-func GetPluginDescriptorFromJson(pluginJson string) (*pluginDescriptor, error) {
-	pluginJsonContents, err := common.ReadFileContents(pluginJson)
+func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
+	pluginJSONContents, err := common.ReadFileContents(pluginJSON)
 	if err != nil {
 		return nil, err
 	}
 	var pd pluginDescriptor
-	if err = json.Unmarshal([]byte(pluginJsonContents), &pd); err != nil {
-		return nil, fmt.Errorf("%s: %s", pluginJson, err.Error())
+	if err = json.Unmarshal([]byte(pluginJSONContents), &pd); err != nil {
+		return nil, fmt.Errorf("%s: %s", pluginJSON, err.Error())
 	}
-	pd.pluginPath = filepath.Dir(pluginJson)
+	pd.pluginPath = filepath.Dir(pluginJSON)
 
 	return &pd, nil
 }
@@ -187,11 +185,10 @@ func StartPlugin(pd *pluginDescriptor, action string, wait bool) (*exec.Cmd, err
 
 	if wait {
 		return cmd, cmd.Wait()
-	} else {
-		go func() {
-			cmd.Wait()
-		}()
 	}
+	go func() {
+		cmd.Wait()
+	}()
 
 	return cmd, nil
 }
@@ -223,9 +220,9 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (*PluginHandler, []string) {
+func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) {
 	warnings := make([]string, 0)
-	handler := &PluginHandler{}
+	handler := &Handler{}
 	envProperties := make(map[string]string)
 
 	for _, pluginId := range manifest.Plugins {
@@ -279,18 +276,18 @@ func isExecutionScopePlugin(pd *pluginDescriptor) bool {
 	return false
 }
 
-func (handler *PluginHandler) addPlugin(pluginId string, pluginToAdd *plugin) {
+func (handler *Handler) addPlugin(pluginId string, pluginToAdd *plugin) {
 	if handler.pluginsMap == nil {
 		handler.pluginsMap = make(map[string]*plugin)
 	}
 	handler.pluginsMap[pluginId] = pluginToAdd
 }
 
-func (handler *PluginHandler) removePlugin(pluginId string) {
+func (handler *Handler) removePlugin(pluginId string) {
 	delete(handler.pluginsMap, pluginId)
 }
 
-func (handler *PluginHandler) NotifyPlugins(message *gauge_messages.Message) {
+func (handler *Handler) NotifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
@@ -300,7 +297,7 @@ func (handler *PluginHandler) NotifyPlugins(message *gauge_messages.Message) {
 	}
 }
 
-func (handler *PluginHandler) killPlugin(pluginId string) {
+func (handler *Handler) killPlugin(pluginId string) {
 	plugin := handler.pluginsMap[pluginId]
 	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
@@ -310,7 +307,7 @@ func (handler *PluginHandler) killPlugin(pluginId string) {
 	handler.removePlugin(pluginId)
 }
 
-func (handler *PluginHandler) GracefullyKillPlugins() {
+func (handler *Handler) GracefullyKillPlugins() {
 	var wg sync.WaitGroup
 	for _, plugin := range handler.pluginsMap {
 		wg.Add(1)
@@ -333,18 +330,10 @@ func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func StartPlugins(manifest *manifest.Manifest) *PluginHandler {
-	PluginHandler, warnings := startPluginsForExecution(manifest)
+func StartPlugins(manifest *manifest.Manifest) *Handler {
+	pluginHandler, warnings := startPluginsForExecution(manifest)
 	logger.HandleWarningMessages(warnings)
-	return PluginHandler
-}
-
-func GetLatestInstalledPluginVersionPath(pluginDir string) (string, error) {
-	LatestVersion, err := getPluginLatestVersion(pluginDir)
-	if err != nil {
-		return "", err
-	}
-	return filepath.Join(pluginDir, LatestVersion.String()), nil
+	return pluginHandler
 }
 
 func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
@@ -374,9 +363,17 @@ func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
 func GetLatestInstalledPluginVersion(pluginDir string) (*version.Version, error) {
 	LatestVersion, err := getPluginLatestVersion(pluginDir)
 	if err != nil {
-		return &version.Version{}, err
+		return nil, err
 	}
 	return LatestVersion, nil
+}
+
+func GetLatestInstalledPluginVersionPath(pluginDir string) (string, error) {
+	LatestVersion, err := getPluginLatestVersion(pluginDir)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(pluginDir, LatestVersion.String()), nil
 }
 
 type PluginInfo struct {
@@ -448,7 +445,7 @@ func GetPluginsInfo() []PluginInfo {
 	return allPluginsWithVersion
 }
 
-func GetPluginInstallDir(pluginName, version string) (string, error) {
+func GetInstallDir(pluginName, version string) (string, error) {
 	allPluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
 		return "", err
@@ -466,7 +463,7 @@ func GetPluginInstallDir(pluginName, version string) (string, error) {
 }
 
 func GetLanguageJSONFilePath(language string) (string, error) {
-	languageInstallDir, err := GetPluginInstallDir(language, "")
+	languageInstallDir, err := GetInstallDir(language, "")
 	if err != nil {
 		return "", err
 	}

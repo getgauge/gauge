@@ -18,7 +18,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"time"
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
@@ -27,8 +29,9 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/print"
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/version"
 
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
@@ -80,7 +83,7 @@ func main() {
 	env.LoadEnv(true)
 	logger.Initialize(*logLevel)
 	if *gaugeVersion {
-		print.Version()
+		printVersion()
 	} else if *daemonize {
 		if validGaugeProject {
 			api.RunInBackground(*apiPort)
@@ -126,7 +129,7 @@ func main() {
 		}
 	} else {
 		if len(flag.Args()) == 0 {
-			print.Usage()
+			printUsage()
 		}
 		if validGaugeProject {
 			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
@@ -137,9 +140,34 @@ func main() {
 	}
 }
 
+func printVersion() {
+	fmt.Printf("Gauge version: %s\n\n", version.CurrentGaugeVersion.String())
+	fmt.Println("Plugins\n-------")
+	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		fmt.Println("No plugins found")
+		fmt.Println("Plugins can be installed with `gauge --install {plugin-name}`")
+		os.Exit(0)
+	}
+	for _, pluginInfo := range allPluginsWithVersion {
+		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
+	}
+}
+
+func printUsage() {
+	fmt.Printf("gauge -version %s\n", version.CurrentGaugeVersion.String())
+	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
+	fmt.Println("Usage:")
+	fmt.Println("\tgauge specs/")
+	fmt.Println("\tgauge specs/spec_name.spec")
+	fmt.Println("\nOptions:")
+	flag.PrintDefaults()
+	os.Exit(2)
+}
+
 func newStepName() string {
 	if len(flag.Args()) != 1 {
-		print.Usage()
+		printUsage()
 	}
 	return flag.Args()[0]
 }

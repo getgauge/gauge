@@ -40,7 +40,7 @@ type specExecutor struct {
 	dataTableIndex       indexRange
 	runner               *runner.TestRunner
 	conceptDictionary    *parser.ConceptDictionary
-	pluginHandler        *plugin.PluginHandler
+	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	currentTableRow      int
@@ -53,7 +53,7 @@ type indexRange struct {
 	end   int
 }
 
-func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.PluginHandler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
+func (specExec *specExecutor) initialize(specificationToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
 	specExec.specification = specificationToExecute
 	specExec.runner = runner
 	specExec.pluginHandler = pluginHandler

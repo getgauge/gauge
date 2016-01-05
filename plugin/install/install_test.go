@@ -18,10 +18,11 @@
 package install
 
 import (
-	"github.com/getgauge/gauge/version"
-	. "gopkg.in/check.v1"
 	"path/filepath"
 	"testing"
+
+	"github.com/getgauge/gauge/version"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -135,7 +136,7 @@ func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
 
 func (s *MySuite) TestInstallPlugin(c *C) {
 	err := installPluginFromDir("version")
-	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", pluginJson)+" doesn't exist.")
+	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", pluginJSON)+" doesn't exist.")
 }
 
 func (s *MySuite) TestInstallRunnerFromDir(c *C) {
