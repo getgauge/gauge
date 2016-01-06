@@ -20,6 +20,10 @@ package refactor
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -30,9 +34,6 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 type rephraseRefactorer struct {
@@ -208,7 +209,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.
 	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
 	var runnerError error
 	if !refactorResponse.GetSuccess() {
-		logger.ApiLog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
+		logger.APILog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
 	return refactorResponse.GetFilesChanged(), runnerError

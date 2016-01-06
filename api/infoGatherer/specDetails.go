@@ -18,6 +18,10 @@
 package infoGatherer
 
 import (
+	"io/ioutil"
+	"path/filepath"
+	"sync"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -28,9 +32,6 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	fsnotify "gopkg.in/fsnotify.v1"
-	"io/ioutil"
-	"path/filepath"
-	"sync"
 )
 
 type SpecInfoGatherer struct {
@@ -60,9 +61,9 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
 	parsedSpecs := s.getParsedSpecs(specFiles)
 
-	logger.ApiLog.Info("Initializing specs cache with %d specs", len(parsedSpecs))
+	logger.APILog.Info("Initializing specs cache with %d specs", len(parsedSpecs))
 	for _, spec := range parsedSpecs {
-		logger.ApiLog.Debug("Adding specs from %s", spec.FileName)
+		logger.APILog.Debug("Adding specs from %s", spec.FileName)
 		s.addToSpecsCache(spec.FileName, spec)
 	}
 }
@@ -73,9 +74,9 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 	s.conceptsCache = make(map[string][]*parser.Concept, 0)
 	parsedConcepts := s.getParsedConcepts()
 
-	logger.ApiLog.Info("Initializing concepts cache with %d concepts", len(parsedConcepts))
+	logger.APILog.Info("Initializing concepts cache with %d concepts", len(parsedConcepts))
 	for _, concept := range parsedConcepts {
-		logger.ApiLog.Debug("Adding concepts from %s", concept.FileName)
+		logger.APILog.Debug("Adding concepts from %s", concept.FileName)
 		s.addToConceptsCache(concept.FileName, concept)
 	}
 }
@@ -91,7 +92,7 @@ func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
 	allSteps := append(implementedSteps, stepsFromConcepts...)
 	allSteps = append(allSteps, stepsFromSpecs...)
 
-	logger.ApiLog.Info("Initializing steps cache with %d steps", len(allSteps))
+	logger.APILog.Info("Initializing steps cache with %d steps", len(allSteps))
 	s.addToStepsCache(allSteps)
 }
 
@@ -144,7 +145,7 @@ func (s *SpecInfoGatherer) getParsedStepValues(steps []string) []*parser.StepVal
 	for _, step := range steps {
 		stepValue, err := parser.ExtractStepValueAndParams(step, false)
 		if err != nil {
-			logger.ApiLog.Error("Failed to extract stepvalue for step - %s : %s", step, err)
+			logger.APILog.Error("Failed to extract stepvalue for step - %s : %s", step, err)
 			continue
 		}
 		stepValues = append(stepValues, stepValue)
@@ -204,7 +205,7 @@ func (s *SpecInfoGatherer) getImplementedSteps(runner *runner.TestRunner) []*par
 	stepValues := make([]*parser.StepValue, 0)
 	message, err := conn.GetResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		logger.ApiLog.Error("Error response from runner on getStepNamesRequest: %s", err)
+		logger.APILog.Error("Error response from runner on getStepNamesRequest: %s", err)
 		return stepValues
 	}
 
@@ -216,7 +217,7 @@ func (s *SpecInfoGatherer) onSpecFileModify(file string) {
 	s.waitGroup.Add(1)
 	defer s.waitGroup.Done()
 
-	logger.ApiLog.Info("Spec file added / modified: %s", file)
+	logger.APILog.Info("Spec file added / modified: %s", file)
 	parsedSpecs := s.getParsedSpecs([]string{file})
 	if len(parsedSpecs) != 0 {
 		parsedSpec := parsedSpecs[0]
@@ -230,11 +231,11 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 	s.waitGroup.Add(1)
 	defer s.waitGroup.Done()
 
-	logger.ApiLog.Info("Concept file added / modified: %s", file)
+	logger.APILog.Info("Concept file added / modified: %s", file)
 	conceptParser := new(parser.ConceptParser)
 	concepts, parseResults := conceptParser.ParseFile(file)
 	if parseResults != nil && parseResults.Error != nil {
-		logger.ApiLog.Error("Error parsing concepts: ", parseResults.Error)
+		logger.APILog.Error("Error parsing concepts: ", parseResults.Error)
 		return
 	}
 
@@ -250,7 +251,7 @@ func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
 	s.waitGroup.Add(1)
 	defer s.waitGroup.Done()
 
-	logger.ApiLog.Info("Spec file removed: %s", file)
+	logger.APILog.Info("Spec file removed: %s", file)
 	s.mutex.Lock()
 	delete(s.specsCache, file)
 	s.mutex.Unlock()
@@ -260,7 +261,7 @@ func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
 	s.waitGroup.Add(1)
 	defer s.waitGroup.Done()
 
-	logger.ApiLog.Info("Concept file removed: %s", file)
+	logger.APILog.Info("Concept file removed: %s", file)
 	s.mutex.Lock()
 	delete(s.conceptsCache, file)
 	s.mutex.Unlock()
@@ -275,7 +276,7 @@ func (s *SpecInfoGatherer) createConceptsDictionary() {
 func (s *SpecInfoGatherer) handleParseFailures(parseResults []*parser.ParseResult) {
 	for _, result := range parseResults {
 		if !result.Ok {
-			logger.ApiLog.Error("Spec Parse failure: %s", result.Error())
+			logger.APILog.Error("Spec Parse failure: %s", result.Error())
 		}
 	}
 }
@@ -285,7 +286,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.ApiLog.Error("Error creating fileWatcher: %s", err)
+		logger.APILog.Error("Error creating fileWatcher: %s", err)
 	}
 	defer watcher.Close()
 
@@ -296,7 +297,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 			case event := <-watcher.Events:
 				s.handleEvent(event, watcher)
 			case err := <-watcher.Errors:
-				logger.ApiLog.Error("Error event while watching specs", err)
+				logger.APILog.Error("Error event while watching specs", err)
 			}
 		}
 	}()
@@ -317,16 +318,16 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 func (s *SpecInfoGatherer) addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
 	err := watcher.Add(dir)
 	if err != nil {
-		logger.ApiLog.Error("Unable to add directory %v to file watcher: %s", dir, err)
+		logger.APILog.Error("Unable to add directory %v to file watcher: %s", dir, err)
 	} else {
-		logger.ApiLog.Info("Watching directory: %s", dir)
+		logger.APILog.Info("Watching directory: %s", dir)
 		files, _ := ioutil.ReadDir(dir)
-		logger.ApiLog.Debug("Found %d files", len(files))
+		logger.APILog.Debug("Found %d files", len(files))
 	}
 }
 
 func (s *SpecInfoGatherer) removeWatcherOn(watcher *fsnotify.Watcher, path string) {
-	logger.ApiLog.Info("Removing watcher on : %s", path)
+	logger.APILog.Info("Removing watcher on : %s", path)
 	watcher.Remove(path)
 }
 
@@ -335,7 +336,7 @@ func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.W
 
 	file, err := filepath.Abs(event.Name)
 	if err != nil {
-		logger.ApiLog.Error("Failed to get abs file path for %s: %s", event.Name, err)
+		logger.APILog.Error("Failed to get abs file path for %s: %s", event.Name, err)
 		return
 	}
 	if util.IsSpec(file) || util.IsConcept(file) {

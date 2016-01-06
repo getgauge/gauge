@@ -18,11 +18,12 @@
 package config
 
 import (
-	"github.com/getgauge/common"
-	"github.com/op/go-logging"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/getgauge/common"
+	"github.com/op/go-logging"
 )
 
 const (
@@ -41,7 +42,7 @@ const (
 	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
-var apiLog = logging.MustGetLogger("gauge-api")
+var APILog = logging.MustGetLogger("gauge-api")
 var ProjectRoot string
 
 // Timeout in milliseconds for making a connection to the language runner
@@ -106,7 +107,7 @@ func setCurrentProjectEnvVariable() error {
 func convertToTime(value string, defaultValue time.Duration, name string) time.Duration {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		apiLog.Warning("Incorrect value for %s in property file. Cannot convert %s to time", name, value)
+		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to time", name, value)
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
@@ -115,7 +116,7 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 var getFromConfig = func(propertyName string) string {
 	config, err := common.GetGaugeConfiguration()
 	if err != nil {
-		apiLog.Warning("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
+		APILog.Warning("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
 		return ""
 	}
 	return config[propertyName]

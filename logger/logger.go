@@ -32,7 +32,7 @@ import (
 )
 
 const (
-	LOGS_DIRECTORY   = "logs_directory"
+	logsDirectory    = "logs_directory"
 	logs             = "logs"
 	gaugeLogFileName = "gauge.log"
 	apiLogFileName   = "api.log"
@@ -41,27 +41,31 @@ const (
 var level logging.Level
 var isWindows bool
 
-// Info logs message to File logger and prints the log message to Console
+// Info logs INFO messages
 func Info(msg string, args ...interface{}) {
 	GaugeLog.Info(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
+// Error logs ERROR messages
 func Error(msg string, args ...interface{}) {
 	GaugeLog.Error(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
+// Warning logs WARNING messages
 func Warning(msg string, args ...interface{}) {
 	GaugeLog.Warning(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
+// Fatal logs CRITICAL messages and exits
 func Fatal(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 	GaugeLog.Fatalf(msg, args...)
 }
 
+// Debug logs DEBUG messages
 func Debug(msg string, args ...interface{}) {
 	GaugeLog.Debug(msg, args...)
 	if level == logging.DEBUG {
@@ -69,27 +73,28 @@ func Debug(msg string, args ...interface{}) {
 	}
 }
 
-type FileLogger struct {
-	*logging.Logger
-}
+// GaugeLog is for logging messages related to spec execution lifecycle
+var GaugeLog = logging.MustGetLogger("gauge")
 
-var GaugeLog = FileLogger{logging.MustGetLogger("gauge")}
-var ApiLog = FileLogger{logging.MustGetLogger("gauge-api")}
+// APILog is for logging API related messages
+var APILog = logging.MustGetLogger("gauge-api")
+
 var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
 var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
 var apiLogFile = filepath.Join(logs, apiLogFileName)
 
+// Initialize initializes the logger object
 func Initialize(logLevel string) {
 	level = loggingLevel(logLevel)
 	initGaugeFileLogger()
-	initApiFileLogger()
+	initAPIFileLogger()
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}
 }
 
 func initGaugeFileLogger() {
-	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
+	logsDir, err := filepath.Abs(os.Getenv(logsDirectory))
 	var gaugeFileLogger logging.Backend
 	if logsDir == "" || err != nil {
 		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
@@ -103,8 +108,8 @@ func initGaugeFileLogger() {
 	GaugeLog.SetBackend(fileLoggerLeveled)
 }
 
-func initApiFileLogger() {
-	logsDir, err := filepath.Abs(os.Getenv(LOGS_DIRECTORY))
+func initAPIFileLogger() {
+	logsDir, err := filepath.Abs(os.Getenv(logsDirectory))
 	var apiFileLogger logging.Backend
 	if logsDir == "" || err != nil {
 		apiFileLogger = createFileLogger(apiLogFile, 10)
@@ -115,7 +120,7 @@ func initApiFileLogger() {
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
 
-	ApiLog.SetBackend(fileLoggerLeveled)
+	APILog.SetBackend(fileLoggerLeveled)
 }
 
 func createFileLogger(name string, size int) logging.Backend {
@@ -133,13 +138,12 @@ func createFileLogger(name string, size int) logging.Backend {
 func getLogFile(fileName string) string {
 	if config.ProjectRoot != "" {
 		return filepath.Join(config.ProjectRoot, fileName)
-	} else {
-		gaugeHome, err := common.GetGaugeHomeDirectory()
-		if err != nil {
-			return fileName
-		}
-		return filepath.Join(gaugeHome, fileName)
 	}
+	gaugeHome, err := common.GetGaugeHomeDirectory()
+	if err != nil {
+		return fileName
+	}
+	return filepath.Join(gaugeHome, fileName)
 }
 
 func loggingLevel(logLevel string) logging.Level {
@@ -162,6 +166,7 @@ func loggingLevel(logLevel string) logging.Level {
 	return logging.INFO
 }
 
+// HandleWarningMessages logs multiple messages in WARNING mode
 func HandleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
 		GaugeLog.Warning(warning)

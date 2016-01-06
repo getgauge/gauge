@@ -19,12 +19,13 @@ package parser
 
 import (
 	"fmt"
+	"path/filepath"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
-	"path/filepath"
-	"strings"
 )
 
 type ConceptDictionary struct {
@@ -211,7 +212,7 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool) (*ConceptDictionary, *Par
 	for _, conceptFile := range conceptFiles {
 		if err := AddConcepts(conceptFile, conceptsDictionary); err != nil {
 			if shouldIgnoreErrors {
-				logger.ApiLog.Error("Concept parse failure: %s %s", conceptFile, err)
+				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
 			logger.Error(err.Error())
