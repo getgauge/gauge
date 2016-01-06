@@ -2,6 +2,7 @@ package execution
 
 import (
 	"os"
+	"strings"
 	"time"
 
 	"github.com/getgauge/gauge/api"
@@ -65,7 +66,7 @@ func parseSpecs(args []string) ([]*parser.Specification, *parser.ConceptDictiona
 	parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {
-		logger.Info("No specifications found.")
+		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
 		os.Exit(0)
 	}
 	return specsToExecute, conceptsDictionary
