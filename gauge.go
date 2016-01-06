@@ -84,18 +84,6 @@ func main() {
 	logger.Initialize(*logLevel)
 	if *gaugeVersion {
 		printVersion()
-	} else if *daemonize {
-		if validGaugeProject {
-			api.RunInBackground(*apiPort)
-		} else {
-			logger.Error(err.Error())
-		}
-	} else if *specFilesToFormat != "" {
-		if validGaugeProject {
-			formatter.FormatSpecFilesIn(*specFilesToFormat)
-		} else {
-			logger.Error(err.Error())
-		}
 	} else if *initialize != "" {
 		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
@@ -114,29 +102,30 @@ func main() {
 		install.PrintUpdateInfoWithDetails()
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
-	} else if *refactorSteps != "" {
-		if validGaugeProject {
+	} else if flag.NFlag() == 0 && len(flag.Args()) == 0 {
+		printUsage()
+		os.Exit(0)
+	} else if validGaugeProject {
+		if *refactorSteps != "" {
 			startChan := api.StartAPI()
-			refactor.RefactorSteps(*refactorSteps, newStepName(), startChan)
-		} else {
-			logger.Error(err.Error())
-		}
-	} else if *check {
-		if validGaugeProject {
+			if len(flag.Args()) != 1 {
+				logger.Error("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
+				os.Exit(1)
+			}
+			refactor.RefactorSteps(*refactorSteps, flag.Args()[0], startChan)
+		} else if *daemonize {
+			api.RunInBackground(*apiPort)
+		} else if *specFilesToFormat != "" {
+			formatter.FormatSpecFilesIn(*specFilesToFormat)
+		} else if *check {
 			execution.CheckSpecs(flag.Args())
 		} else {
-			logger.Error(err.Error())
-		}
-	} else {
-		if len(flag.Args()) == 0 {
-			printUsage()
-		}
-		if validGaugeProject {
 			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
 			os.Exit(exitCode)
-		} else {
-			logger.Error(err.Error())
 		}
+	} else {
+		logger.Error(err.Error())
+		os.Exit(1)
 	}
 }
 
@@ -162,14 +151,6 @@ func printUsage() {
 	fmt.Println("\tgauge specs/spec_name.spec")
 	fmt.Println("\nOptions:")
 	flag.PrintDefaults()
-	os.Exit(2)
-}
-
-func newStepName() string {
-	if len(flag.Args()) != 1 {
-		printUsage()
-	}
-	return flag.Args()[0]
 }
 
 func initPackageFlags() {

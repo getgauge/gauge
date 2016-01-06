@@ -20,16 +20,17 @@ package formatter
 import (
 	"bytes"
 	"fmt"
+	"sort"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
-	"sort"
-	"strings"
 )
 
 const (
-	TABLE_LEFT_SPACING = 5
+	tableLeftSpacing = 5
 )
 
 func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
@@ -108,15 +109,15 @@ func FormatTable(table *parser.Table) string {
 	}
 
 	var tableStringBuffer bytes.Buffer
-	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
+	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
 	for i, header := range table.Headers {
 		width := columnToWidthMap[i]
 		tableStringBuffer.WriteString(fmt.Sprintf("%s|", addPaddingToCell(header, width)))
 	}
 
 	tableStringBuffer.WriteString("\n")
-	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
-	for i, _ := range table.Headers {
+	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
+	for i := range table.Headers {
 		width := columnToWidthMap[i]
 		cell := getRepeatedChars("-", width)
 		tableStringBuffer.WriteString(fmt.Sprintf("%s|", addPaddingToCell(cell, width)))
@@ -124,7 +125,7 @@ func FormatTable(table *parser.Table) string {
 
 	tableStringBuffer.WriteString("\n")
 	for _, row := range table.Rows() {
-		tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", TABLE_LEFT_SPACING)))
+		tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
 		for i, cell := range row {
 			width := columnToWidthMap[i]
 			tableStringBuffer.WriteString(fmt.Sprintf("%s|", addPaddingToCell(cell, width)))
@@ -200,7 +201,7 @@ func FormatSpecification(specification *parser.Specification) string {
 }
 
 func sortConcepts(conceptDictionary *parser.ConceptDictionary, conceptMap map[string]string) []*parser.Concept {
-	concepts := make([]*parser.Concept, 0)
+	var concepts []*parser.Concept
 	for _, concept := range conceptDictionary.ConceptsMap {
 		conceptMap[concept.FileName] = ""
 		concepts = append(concepts, concept)
