@@ -157,10 +157,6 @@ func loggingLevel(logLevel string) logging.Level {
 			return logging.WARNING
 		case "error":
 			return logging.ERROR
-		case "critical":
-			return logging.CRITICAL
-		case "notice":
-			return logging.NOTICE
 		}
 	}
 	return logging.INFO
