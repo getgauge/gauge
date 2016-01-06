@@ -140,3 +140,11 @@ func (s *MySuite) TestVersionIsBetweenTwoVersions(c *C) {
 	middleVersion, _ = ParseVersion("0.0.2")
 	c.Assert(middleVersion.IsBetween(lowerVersion, higherVersion), Equals, true)
 }
+
+func (s *MySuite) TestGetLatestVersion(c *C) {
+	highestVersion := &Version{2, 2, 2}
+	versions := []*Version{&Version{0, 0, 1}, &Version{1, 2, 2}, highestVersion, &Version{0, 0, 2}, &Version{0, 2, 2}, &Version{0, 0, 3}, &Version{0, 2, 1}, &Version{0, 1, 2}}
+	latestVersion := GetLatestVersion(versions)
+
+	c.Assert(latestVersion, DeepEquals, highestVersion)
+}

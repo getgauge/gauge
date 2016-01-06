@@ -18,6 +18,8 @@
 package plugin
 
 import (
+	"fmt"
+	"path/filepath"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -50,4 +52,73 @@ func (s *MySuite) TestSortingOfPluginInfos(c *C) {
 	for i := range expected {
 		c.Assert(expected[i], Equals, actual[i])
 	}
+}
+
+func (s *MySuite) TestGetPluginLatestVersion(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
+
+	latestVersion, err := getPluginLatestVersion(path)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(latestVersion.Major, Equals, 1)
+	c.Assert(latestVersion.Minor, Equals, 2)
+	c.Assert(latestVersion.Patch, Equals, 0)
+}
+
+func (s *MySuite) TestGetPluginLatestVersionIfNoPluginsFound(c *C) {
+	testData := "_testdata"
+	path, _ := filepath.Abs(testData)
+
+	_, err := getPluginLatestVersion(path)
+
+	c.Assert(err.Error(), Equals, fmt.Sprintf("No valid versions of plugin %s found in %s", testData, path))
+}
+
+func (s *MySuite) TestGetLatestInstalledPluginVersionPath(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
+
+	vPath, err := GetLatestInstalledPluginVersionPath(path)
+
+	c.Assert(err, Equals, nil)
+	c.Assert(vPath, Equals, filepath.Join(path, "1.2.0"))
+}
+
+func (s *MySuite) TestGetLatestInstalledPluginVersionPathIfNoPluginsFound(c *C) {
+	testData := "_testdata"
+	path, _ := filepath.Abs(testData)
+
+	vPath, err := GetLatestInstalledPluginVersionPath(path)
+
+	c.Assert(err.Error(), Equals, fmt.Sprintf("No valid versions of plugin %s found in %s", testData, path))
+	c.Assert(vPath, Equals, "")
+}
+
+func (s *MySuite) TestGetPluginDescriptorFromJSON(c *C) {
+	testData := "_testdata"
+	path, _ := filepath.Abs(testData)
+
+	pd, err := GetPluginDescriptorFromJSON(filepath.Join(path, "_test.json"))
+
+	c.Assert(err, Equals, nil)
+	c.Assert(pd.Id, Equals, "html-report")
+	c.Assert(pd.Version, Equals, "1.1.0")
+	c.Assert(pd.Name, Equals, "Html Report")
+	c.Assert(pd.Description, Equals, "Html reporting plugin")
+	c.Assert(pd.pluginPath, Equals, path)
+	c.Assert(pd.GaugeVersionSupport.Minimum, Equals, "0.2.0")
+	c.Assert(pd.GaugeVersionSupport.Maximum, Equals, "0.4.0")
+	c.Assert(pd.Scope, DeepEquals, []string{"Execution"})
+	htmlCommand := []string{"bin/html-report"}
+	c.Assert(pd.Command.Windows, DeepEquals, htmlCommand)
+	c.Assert(pd.Command.Darwin, DeepEquals, htmlCommand)
+	c.Assert(pd.Command.Linux, DeepEquals, htmlCommand)
+}
+
+func (s *MySuite) TestGetPluginDescriptorFromNonExistingJSON(c *C) {
+	testData := "_testdata"
+	path, _ := filepath.Abs(testData)
+	JSONPath := filepath.Join(path, "_test1.json")
+	_, err := GetPluginDescriptorFromJSON(JSONPath)
+
+	c.Assert(err, DeepEquals, fmt.Errorf("File %s doesn't exist.", JSONPath))
 }

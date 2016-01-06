@@ -1,0 +1,16 @@
+{
+    "id" : "html-report",
+    "version" : "1.1.0",
+    "name" : "Html Report",
+    "description" : "Html reporting plugin",
+    "command" : {
+        "windows" : ["bin/html-report"],
+        "linux" : ["bin/html-report"],
+        "darwin" : ["bin/html-report"]
+    },
+    "scope" : ["Execution"],
+    "gaugeVersionSupport": {
+        "minimum": "0.2.0",
+        "maximum": "0.4.0"
+    }
+}

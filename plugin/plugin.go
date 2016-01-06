@@ -368,24 +368,16 @@ func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
 	if len(availableVersions) < 1 {
 		return nil, fmt.Errorf("No valid versions of plugin %s found in %s", pluginName, pluginDir)
 	}
-	LatestVersion := version.GetLatestVersion(availableVersions)
-	return LatestVersion, nil
-}
-
-func GetLatestInstalledPluginVersion(pluginDir string) (*version.Version, error) {
-	LatestVersion, err := getPluginLatestVersion(pluginDir)
-	if err != nil {
-		return nil, err
-	}
-	return LatestVersion, nil
+	latestVersion := version.GetLatestVersion(availableVersions)
+	return latestVersion, nil
 }
 
 func GetLatestInstalledPluginVersionPath(pluginDir string) (string, error) {
-	LatestVersion, err := getPluginLatestVersion(pluginDir)
+	latestVersion, err := getPluginLatestVersion(pluginDir)
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(pluginDir, LatestVersion.String()), nil
+	return filepath.Join(pluginDir, latestVersion.String()), nil
 }
 
 type PluginInfo struct {
@@ -410,7 +402,7 @@ func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
 				continue
 			}
 			if pluginDir.IsDir() {
-				latestVersion, err := GetLatestInstalledPluginVersion(filepath.Join(prefix, file.Name()))
+				latestVersion, err := getPluginLatestVersion(filepath.Join(prefix, file.Name()))
 				if err != nil {
 					continue
 				}
