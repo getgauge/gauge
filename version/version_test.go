@@ -148,3 +148,41 @@ func (s *MySuite) TestGetLatestVersion(c *C) {
 
 	c.Assert(latestVersion, DeepEquals, highestVersion)
 }
+
+func (s *MySuite) TestCheckVersionCompatibilitySuccess(c *C) {
+	versionSupported := &VersionSupport{"0.6.5", "1.8.5"}
+	gaugeVersion := &Version{0, 6, 7}
+	c.Assert(CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
+
+	versionSupported = &VersionSupport{"0.0.1", "0.0.1"}
+	gaugeVersion = &Version{0, 0, 1}
+	c.Assert(CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
+
+	versionSupported = &VersionSupport{Minimum: "0.0.1"}
+	gaugeVersion = &Version{1, 5, 2}
+	c.Assert(CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
+
+	versionSupported = &VersionSupport{Minimum: "0.5.1"}
+	gaugeVersion = &Version{0, 5, 1}
+	c.Assert(CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
+
+}
+
+func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
+	versionsSupported := &VersionSupport{"0.6.5", "1.8.5"}
+	gaugeVersion := &Version{1, 9, 9}
+	c.Assert(CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
+
+	versionsSupported = &VersionSupport{"0.0.1", "0.0.1"}
+	gaugeVersion = &Version{0, 0, 2}
+	c.Assert(CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
+
+	versionsSupported = &VersionSupport{Minimum: "1.3.1"}
+	gaugeVersion = &Version{1, 3, 0}
+	c.Assert(CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
+
+	versionsSupported = &VersionSupport{Minimum: "0.5.1"}
+	gaugeVersion = &Version{0, 0, 9}
+	c.Assert(CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
+
+}

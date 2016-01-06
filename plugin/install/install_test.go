@@ -44,44 +44,6 @@ func (s *MySuite) TestFindVersionFailing(c *C) {
 	c.Assert(err, NotNil)
 }
 
-func (s *MySuite) TestCheckVersionCompatibilitySuccess(c *C) {
-	versionSupported := &version.VersionSupport{"0.6.5", "1.8.5"}
-	gaugeVersion := &version.Version{0, 6, 7}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
-
-	versionSupported = &version.VersionSupport{"0.0.1", "0.0.1"}
-	gaugeVersion = &version.Version{0, 0, 1}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
-
-	versionSupported = &version.VersionSupport{Minimum: "0.0.1"}
-	gaugeVersion = &version.Version{1, 5, 2}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
-
-	versionSupported = &version.VersionSupport{Minimum: "0.5.1"}
-	gaugeVersion = &version.Version{0, 5, 1}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionSupported), Equals, nil)
-
-}
-
-func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
-	versionsSupported := &version.VersionSupport{"0.6.5", "1.8.5"}
-	gaugeVersion := &version.Version{1, 9, 9}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
-
-	versionsSupported = &version.VersionSupport{"0.0.1", "0.0.1"}
-	gaugeVersion = &version.Version{0, 0, 2}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
-
-	versionsSupported = &version.VersionSupport{Minimum: "1.3.1"}
-	gaugeVersion = &version.Version{1, 3, 0}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
-
-	versionsSupported = &version.VersionSupport{Minimum: "0.5.1"}
-	gaugeVersion = &version.Version{0, 0, 9}
-	c.Assert(version.CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
-
-}
-
 func (s *MySuite) TestSortingVersionInstallDescriptionsInDecreasingVersionOrder(c *C) {
 	installDescription := createInstallDescriptionWithVersions("5.8.8", "1.7.8", "4.8.9", "0.7.6", "3.5.6")
 	installDescription.sortVersionInstallDescriptions()
