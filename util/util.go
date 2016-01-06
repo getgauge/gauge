@@ -1,22 +1,12 @@
 package util
 
 import (
+	"fmt"
 	"runtime"
-	"strings"
-)
 
-func AddPrefixToEachLine(text string, template string) string {
-	lines := strings.Split(text, "\n")
-	prefixedLines := make([]string, 0)
-	for i, line := range lines {
-		if (i == len(lines)-1) && line == "" {
-			prefixedLines = append(prefixedLines, line)
-		} else {
-			prefixedLines = append(prefixedLines, template+line)
-		}
-	}
-	return strings.Join(prefixedLines, "\n")
-}
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/logger"
+)
 
 func NumberOfCores() int {
 	return runtime.NumCPU()
@@ -24,4 +14,24 @@ func NumberOfCores() int {
 
 func IsWindows() bool {
 	return runtime.GOOS == "windows"
+}
+
+// DownloadAndUnzip downloads the zip file from given download link and unzips it.
+// Returns the unzipped file path.
+func DownloadAndUnzip(downloadLink string) (string, error) {
+	logger.Debug("Downloading => %s", downloadLink)
+	downloadedFile, err := common.DownloadToTempDir(downloadLink)
+	if err != nil {
+		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
+	}
+	logger.Debug("Downloaded to %s", downloadedFile)
+	defer Remove(downloadedFile)
+
+	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
+	if err != nil {
+		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
+	}
+	logger.Debug("Unzipped to => %s\n", unzippedPluginDir)
+
+	return unzippedPluginDir, nil
 }

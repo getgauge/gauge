@@ -5,8 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"fmt"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
@@ -19,19 +17,19 @@ func init() {
 
 var AcceptedExtensions = make(map[string]bool)
 
-// Finds all the files in the directory of a given extension
+// findFilesIn Finds all the files in the directory of a given extension
 func findFilesIn(dirRoot string, isValidFile func(path string) bool) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
 	files := common.FindFilesInDir(absRoot, isValidFile)
 	return files
 }
 
-// Finds spec files in the given directory
+// FindSpecFilesIn Finds spec files in the given directory
 func FindSpecFilesIn(dir string) []string {
 	return findFilesIn(dir, IsValidSpecExtension)
 }
 
-// Checks if the path has a spec file extension
+// IsValidSpecExtension Checks if the path has a spec file extension
 func IsValidSpecExtension(path string) bool {
 	return AcceptedExtensions[filepath.Ext(path)]
 }
@@ -41,17 +39,17 @@ func FindConceptFilesIn(dir string) []string {
 	return findFilesIn(dir, IsValidConceptExtension)
 }
 
-// Checks if the path has a concept file extension
+// IsValidConceptExtension Checks if the path has a concept file extension
 func IsValidConceptExtension(path string) bool {
 	return filepath.Ext(path) == ".cpt"
 }
 
-// Returns true if concept file
+// IsConcept Returns true if concept file
 func IsConcept(path string) bool {
 	return IsValidConceptExtension(path)
 }
 
-// Returns true if spec file file
+// IsSpec Returns true if spec file file
 func IsSpec(path string) bool {
 	return IsValidSpecExtension(path)
 }
@@ -102,7 +100,7 @@ func GetSpecFiles(specSource string) []string {
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		logger.Error("Failed to refactor '%s': %s\n", fileName, err)
+		logger.Error("Failed to refactor '%s': %s\n", fileName, err.Error())
 	}
 }
 
@@ -122,24 +120,4 @@ func Remove(dir string) {
 
 func RemoveTempDir() {
 	Remove(common.GetTempDir())
-}
-
-// DownloadAndUnzip downloads the zip file from given download link and unzips it.
-// Returns the unzipped file path.
-func DownloadAndUnzip(downloadLink string) (string, error) {
-	logger.Debug("Downloading => %s", downloadLink)
-	downloadedFile, err := common.DownloadToTempDir(downloadLink)
-	if err != nil {
-		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
-	}
-	logger.Debug("Downloaded to %s", downloadedFile)
-	defer Remove(downloadedFile)
-
-	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
-	if err != nil {
-		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
-	}
-	logger.Debug("Unzipped to => %s\n", unzippedPluginDir)
-
-	return unzippedPluginDir, nil
 }
