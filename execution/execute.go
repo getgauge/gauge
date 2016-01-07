@@ -20,9 +20,10 @@ import (
 )
 
 var NumberOfExecutionStreams int
+var checkUpdatesDuringExecution = false
 
 func ExecuteSpecs(inParallel bool, args []string) int {
-	if config.CheckUpdates() {
+	if checkUpdatesDuringExecution && config.CheckUpdates() {
 		i := &install.UpdateFacade{}
 		i.BufferUpdateDetails()
 		defer i.PrintUpdateBuffer()
