@@ -18,9 +18,10 @@
 package config
 
 import (
-	. "gopkg.in/check.v1"
 	"os"
 	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -37,6 +38,14 @@ func stub2GetFromConfig(propertyName string) string {
 	return "10000"
 }
 
+func stub3GetFromConfig(propertyName string) string {
+	return "false"
+}
+
+func stub4GetFromConfig(propertyName string) string {
+	return "true	"
+}
+
 func (s *MySuite) TestRunnerRequestTimeout(c *C) {
 	getFromConfig = stubGetFromConfig
 	c.Assert(RunnerRequestTimeout(), Equals, defaultRunnerRequestTimeout)
@@ -46,4 +55,18 @@ func (s *MySuite) TestRunnerRequestTimeout(c *C) {
 
 	os.Setenv(runnerRequestTimeout, "1000")
 	c.Assert(RunnerRequestTimeout().Seconds(), Equals, float64(1))
+}
+
+func (s *MySuite) TestAllowUpdates(c *C) {
+	getFromConfig = stubGetFromConfig
+	c.Assert(AllowUpdates(), Equals, true)
+
+	getFromConfig = stub2GetFromConfig
+	c.Assert(AllowUpdates(), Equals, true)
+
+	getFromConfig = stub3GetFromConfig
+	c.Assert(AllowUpdates(), Equals, false)
+
+	getFromConfig = stub4GetFromConfig
+	c.Assert(AllowUpdates(), Equals, true)
 }

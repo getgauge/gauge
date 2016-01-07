@@ -20,6 +20,7 @@ package config
 import (
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/getgauge/common"
@@ -33,6 +34,7 @@ const (
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
+	allowUpdates            = "allow_updates"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -61,6 +63,20 @@ func PluginConnectionTimeout() time.Duration {
 func PluginKillTimeout() time.Duration {
 	intervalString := getFromConfig(pluginKillTimeOut)
 	return convertToTime(intervalString, defaultPluginKillTimeout, pluginKillTimeOut)
+}
+
+func AllowUpdates() bool {
+	allow := getFromConfig(allowUpdates)
+	return convertToBool(allow, allowUpdates, true)
+}
+
+func convertToBool(value string, property string, defaultValue bool) bool {
+	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
+	if err != nil {
+		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		return defaultValue
+	}
+	return boolValue
 }
 
 func RefactorTimeout() time.Duration {

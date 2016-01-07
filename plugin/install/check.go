@@ -87,7 +87,7 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 }
 
 func checkGaugeUpdate() []UpdateInfo {
-	updateInfos := make([]UpdateInfo, 0)
+	var updateInfos []UpdateInfo
 	tagName, err := getLatestTagName(config.GaugeUpdateUrl())
 	if err != nil {
 		return updateInfos
@@ -118,7 +118,7 @@ type UpdateInfo struct {
 }
 
 func checkPluginUpdates() []UpdateInfo {
-	pluginsToUpdate := make([]UpdateInfo, 0)
+	var pluginsToUpdate []UpdateInfo
 	plugins, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		return pluginsToUpdate
@@ -134,7 +134,7 @@ func checkPluginUpdates() []UpdateInfo {
 }
 
 func createPluginUpdateDetail(currentVersion string, latestVersionDetails installDescription) []UpdateInfo {
-	updateInfo := make([]UpdateInfo, 0)
+	var updateInfo []UpdateInfo
 	v, _ := version.ParseVersion(currentVersion)
 	v1, _ := version.ParseVersion(latestVersionDetails.Versions[0].Version)
 	if v.IsLesserThan(v1) {
@@ -155,8 +155,8 @@ var getLatestTagName = func(url string) (string, error) {
 	defer res.Body.Close()
 	dec := json.NewDecoder(res.Body)
 	var data struct {
-		Tag_name string
+		TagName string
 	}
 	dec.Decode(&data)
-	return data.Tag_name, nil
+	return data.TagName, nil
 }

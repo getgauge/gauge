@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
@@ -21,8 +22,12 @@ import (
 var NumberOfExecutionStreams int
 
 func ExecuteSpecs(inParallel bool, args []string) int {
-	i := &install.UpdateFacade{}
-	i.BufferUpdateDetails()
+	if config.AllowUpdates() {
+		i := &install.UpdateFacade{}
+		i.BufferUpdateDetails()
+		defer i.PrintUpdateBuffer()
+	}
+
 	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
@@ -40,7 +45,6 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
-	i.PrintUpdateBuffer()
 	return exitCode
 }
 
