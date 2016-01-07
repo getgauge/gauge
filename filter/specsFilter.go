@@ -18,11 +18,12 @@
 package filter
 
 import (
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
 	"math/rand"
 	"sort"
 	"time"
+
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 )
 
 type specsFilter interface {
@@ -58,7 +59,11 @@ func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*pa
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*parser.Specification, 0)
 	}
-	return DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1].Specs
+	group := DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1]
+	if group == nil {
+		return make([]*parser.Specification, 0)
+	}
+	return group.Specs
 }
 
 func DistributeSpecs(specifications []*parser.Specification, distributions int) []*SpecCollection {

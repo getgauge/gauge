@@ -96,6 +96,16 @@ func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
 	c.Assert(specsToExecute3[1].Heading, Equals, specsToExecute1[1].Heading)
 }
 
+func (s *MySuite) TestToRunNonExistingSpecificSetOfSpecs(c *C) {
+	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
+	var specs []*parser.Specification
+	specs = append(specs, spec1)
+	value := 3
+	groupFilter := &specsGroupFilter{value, value}
+	specsToExecute := groupFilter.filter(specs)
+	c.Assert(len(specsToExecute), Equals, 0)
+}
+
 func (s *MySuite) TestToRunSpecificSetOfSpecsGivesEmptySpecsIfDistributableNumberIsNotValid(c *C) {
 	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
 	var specs []*parser.Specification
