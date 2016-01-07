@@ -54,7 +54,7 @@ for i in `ls`; do
 
   echo "Putting $i in $PACKAGE's download list"
   URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM/$i"
-  RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
+  RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
   if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
     echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
     exit 1
