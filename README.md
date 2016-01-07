@@ -2,7 +2,7 @@
 
 # Welcome to Gauge
 
-[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://snap-ci.com/getgauge/gauge/branch/master/build_image)](https://snap-ci.com/getgauge/gauge/branch/master)
+[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://snap-ci.com/getgauge/gauge/branch/master/build_image)](https://snap-ci.com/getgauge/gauge/branch/master)  [ ![Download Nightly](https://api.bintray.com/packages/gauge/Gauge/Nightly/images/download.svg) ](https://bintray.com/gauge/Gauge/Nightly/_latestVersion)
 
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
@@ -54,10 +54,6 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 [setup]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
 [contributing]:http://github.com/getgauge/gauge/wiki/Contributing
-
-## Nightly builds
-
- [ ![Download Nightly](https://api.bintray.com/packages/gauge/builds/gauge/images/download.svg) ](https://bintray.com/gauge/builds/gauge/_latestVersion)
 
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
