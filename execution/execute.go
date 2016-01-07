@@ -49,7 +49,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	return exitCode
 }
 
-func CheckSpecs(args []string) {
+func ParseAndValidateSpecs(args []string) {
 	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
