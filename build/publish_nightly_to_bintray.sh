@@ -44,10 +44,20 @@ for i in `ls`; do
   PLATFORM=$(echo $i | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
   URL="https://api.bintray.com/content/gauge/$PACKAGE/Nightly/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM/$i?publish=1&override=1"
   echo "Uploading to : $URL"
+
   RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
   if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
     echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
     exit 1
   fi
   echo "HTTP response code: $RESPONSE_CODE"
+
+  echo "Putting $i in $PACKAGE's download list"
+  URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM/$i"
+  RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
+  if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
+    echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
+    exit 1
+  fi
+  echo "HTTP response code: $RESPONSE_CODE\n"
 done;
