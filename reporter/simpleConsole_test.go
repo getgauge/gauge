@@ -180,10 +180,10 @@ func (s *MySuite) TestError_SimpleConsole(c *C) {
 
 	sc.Error("Failed %s", "network error")
 
-	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(sc.indentation+sysoutIndentation)))
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(sc.indentation+errorIndentation)))
 }
 
-func (s *MySuite) TestWrite_SimpleConsole(c *C) {
+func (s *MySuite) TestWrite_VerboseSimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
 	sc.indentation = 6
 	Verbose = true
@@ -192,7 +192,19 @@ func (s *MySuite) TestWrite_SimpleConsole(c *C) {
 	_, err := sc.Write([]byte(input))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(dw.output, Equals, fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), input))
+	c.Assert(dw.output, Equals, input)
+}
+
+func (s *MySuite) TestWrite_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 6
+	Verbose = false
+	input := "hello, gauge"
+
+	_, err := sc.Write([]byte(input))
+
+	c.Assert(err, Equals, nil)
+	c.Assert(dw.output, Equals, input)
 }
 
 func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
@@ -210,7 +222,7 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	want := `# Specification heading
   ## My First scenario
       * do foo bar
-        doing foo bar
+doing foo bar
 `
 
 	c.Assert(dw.output, Equals, want)

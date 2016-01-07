@@ -108,16 +108,14 @@ func (sc *simpleConsole) Error(err string, args ...interface{}) {
 	defer sc.mu.Unlock()
 	errorMessage := fmt.Sprintf(err, args...)
 	logger.GaugeLog.Error(errorMessage)
-	errorString := indent(errorMessage, sc.indentation+sysoutIndentation)
+	errorString := indent(errorMessage, sc.indentation+errorIndentation)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", errorString, newline))
 }
 
 func (sc *simpleConsole) Write(b []byte) (int, error) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	if Verbose {
-		formattedString := fmt.Sprintf("%s%s", spaces(sc.indentation+sysoutIndentation), string(b))
-		fmt.Fprint(sc.writer, formattedString)
-	}
+	formattedString := string(b)
+	fmt.Fprint(sc.writer, formattedString)
 	return len(b), nil
 }

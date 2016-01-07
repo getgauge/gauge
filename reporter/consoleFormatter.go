@@ -28,7 +28,7 @@ const (
 	noIndentation       = 0
 	scenarioIndentation = 2
 	stepIndentation     = 4
-	sysoutIndentation   = 2
+	errorIndentation    = 2
 	successSymbol       = "✔"
 	failureSymbol       = "✘"
 	successChar         = "P"
