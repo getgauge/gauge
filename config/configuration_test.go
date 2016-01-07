@@ -59,14 +59,14 @@ func (s *MySuite) TestRunnerRequestTimeout(c *C) {
 
 func (s *MySuite) TestAllowUpdates(c *C) {
 	getFromConfig = stubGetFromConfig
-	c.Assert(AllowUpdates(), Equals, true)
+	c.Assert(CheckUpdates(), Equals, true)
 
 	getFromConfig = stub2GetFromConfig
-	c.Assert(AllowUpdates(), Equals, true)
+	c.Assert(CheckUpdates(), Equals, true)
 
 	getFromConfig = stub3GetFromConfig
-	c.Assert(AllowUpdates(), Equals, false)
+	c.Assert(CheckUpdates(), Equals, false)
 
 	getFromConfig = stub4GetFromConfig
-	c.Assert(AllowUpdates(), Equals, true)
+	c.Assert(CheckUpdates(), Equals, true)
 }

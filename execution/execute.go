@@ -22,7 +22,7 @@ import (
 var NumberOfExecutionStreams int
 
 func ExecuteSpecs(inParallel bool, args []string) int {
-	if config.AllowUpdates() {
+	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}
 		i.BufferUpdateDetails()
 		defer i.PrintUpdateBuffer()
