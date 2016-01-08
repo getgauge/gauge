@@ -27,9 +27,18 @@ fi
 
 echo "Publishing package : $PACKAGE"
 
+function getPlatformFromFileName () {
+    if [ "$NOPLATFORM" == "1" ]; then
+        echo ""
+    else
+        PLATFORM=$(echo $1 | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
+        echo "$PLATFORM/"
+    fi
+}
+
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
 
-VERSION=$(ls $PACKAGE_FILE_PREFIX-* | head -1 | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
+VERSION=$(ls $PACKAGE_FILE_PREFIX-* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
 
 if [ -z "$VERSION" ]; then
   echo "Could not determine $PACKAGE version"
@@ -45,8 +54,9 @@ for f in $PACKAGE_FILE_PREFIX*;
 done
 
 for i in `ls`; do
-  PLATFORM=$(echo $i | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
-  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM/$i?publish=1&override=1"
+  PLATFORM=$( getPlatformFromFileName $i )
+  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM$i?publish=1&override=1"
+
   echo "Uploading to : $URL"
 
   RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
@@ -62,9 +72,10 @@ sleep 10s;
 echo "Done sleeping\n"
 
 for i in `ls`; do
-  PLATFORM=$(echo $i | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
+  PLATFORM=$( getPlatformFromFileName $i )
+  URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM$i"
+
   echo "Putting $i in $PACKAGE's download list"
-  URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM/$i"
   RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
   if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
     echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
