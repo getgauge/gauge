@@ -51,13 +51,20 @@ for i in `ls`; do
     exit 1
   fi
   echo "HTTP response code: $RESPONSE_CODE"
+done;
 
+echo "\nSleeping for 10 seconds. Have a coffee..."
+sleep 10s;
+echo "Done sleeping\n"
+
+for i in `ls`; do
+  PLATFORM=$(echo $i | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
   echo "Putting $i in $PACKAGE's download list"
   URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM/$i"
-  RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
+  RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
   if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
     echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
     exit 1
   fi
-  echo "HTTP response code: $RESPONSE_CODE\n"
-done;
+  echo "HTTP response code: $RESPONSE_CODE"
+done
