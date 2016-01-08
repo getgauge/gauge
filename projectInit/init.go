@@ -79,8 +79,7 @@ func initializeTemplate(templateName string) error {
 }
 
 func getTemplateURL(templateName string) string {
-	//	filepath.Join(config.GaugeRepositoryUrl(), "templates", templateName, ".zip")
-	return "https://github.com/getgauge/gauge-repository/raw/template/templates/" + templateName + ".zip"
+	return config.GaugeTemplatesUrl() + "/" + templateName + ".zip"
 }
 
 // InitializeProject initializes a Gauge project with specified template
