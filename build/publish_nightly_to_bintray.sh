@@ -67,8 +67,8 @@ for i in `ls`; do
   echo "HTTP response code: $RESPONSE_CODE"
 done;
 
-echo "\nSleeping for 10 seconds. Have a coffee..."
-sleep 10s;
+echo "\nSleeping for 30 seconds. Have a coffee..."
+sleep 30s;
 echo "Done sleeping\n"
 
 for i in `ls`; do
