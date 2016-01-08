@@ -19,8 +19,7 @@ if [ -z "$BINTRAY_PACKAGE" ]; then
 fi
 
 for i in `ls *.zip`; do
-  LANG=$(echo $i | cut -d '.' -f 1 | cut -d '_' -f 1);
-  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/latest/$LANG/$i?publish=1&override=1"
+  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/latest/$i?publish=1&override=1"
   echo "Uploading to : $URL"
 
   RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
