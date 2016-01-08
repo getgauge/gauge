@@ -127,11 +127,10 @@ func (c *coloredConsole) DataTable(table string) {
 }
 
 func (c *coloredConsole) Error(text string, args ...interface{}) {
-	c.indentation += errorIndentation
 	msg := fmt.Sprintf(text, args...)
-	msg = fmt.Sprintf("%s%s", spaces(c.indentation), msg)
 	logger.GaugeLog.Error(msg)
-	fmt.Fprint(c, msg)
+	msg = indent(msg, c.indentation+errorIndentation)
+	c.displayMessage(newline+msg, ct.Red)
 }
 
 // Write writes the bytes to console via goterminal's writer.

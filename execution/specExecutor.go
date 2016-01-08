@@ -434,8 +434,7 @@ func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_m
 
 func printStatus(executionResult *gauge_messages.ProtoExecutionResult, reporter reporter.Reporter) {
 	reporter.Error("Error Message: %s", executionResult.GetErrorMessage())
-	stacktrace := executionResult.GetStackTrace()
-	reporter.Error("Stacktrace: %s", stacktrace)
+	reporter.Error("Stacktrace: \n%s", executionResult.GetStackTrace())
 }
 
 func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
@@ -457,7 +456,6 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(executor.currentExecutionInfo, executor.consoleReporter)
-			printStatus(stepExecutionStatus, executor.consoleReporter)
 		}
 		protoStepExecResult.ExecutionResult = stepExecutionStatus
 	}
@@ -476,6 +474,12 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
 	executor.consoleReporter.StepEnd(stepFailed)
+	if stepFailed {
+		result := protoStep.GetStepExecutionResult().GetExecutionResult()
+		executor.consoleReporter.Error("Failed Step: %s", executor.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
+		executor.consoleReporter.Error("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
+		executor.consoleReporter.Error("Stacktrace: \n%s", result.GetStackTrace())
+	}
 	return stepFailed
 }
 
@@ -550,7 +554,6 @@ func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 
 func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, reporter reporter.Reporter) {
 	setScenarioFailure(executionInfo)
-	reporter.Error("Failed step: %s", executionInfo.CurrentStep.Step.GetActualStepText())
 	executionInfo.CurrentStep.IsFailed = proto.Bool(true)
 }
 

@@ -112,7 +112,7 @@ func (s *MySuite) TestStepStart_Verbose(c *C) {
 	Verbose = true
 	cc.indentation = 2
 
-	cc.StepStart("* say hello ")
+	cc.StepStart("* say hello")
 
 	c.Assert(dw.output, Equals, "      * say hello\n")
 }
@@ -212,12 +212,13 @@ func (s *MySuite) TestDataTable_ColoredConsole(c *C) {
 
 func (s *MySuite) TestError_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
-	cc.indentation = 6
+	initialIndentation := 6
+	cc.indentation = initialIndentation
 	Verbose = true
 
 	cc.Error("Failed %s", "network error")
 
-	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error", spaces(cc.indentation)))
+	c.Assert(dw.output, Equals, fmt.Sprintf("\n%sFailed network error", spaces(initialIndentation+errorIndentation)))
 }
 
 func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
