@@ -70,6 +70,7 @@ var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alph
 var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for validation and parse errors. Eg: gauge --validate specs")
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
 var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
+var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
 
 func main() {
 	flag.Parse()
@@ -102,6 +103,8 @@ func main() {
 		install.PrintUpdateInfoWithDetails()
 	} else if *addPlugin != "" {
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
+	} else if *listTemplates {
+		projectInit.ListTemplates()
 	} else if flag.NFlag() == 0 && len(flag.Args()) == 0 {
 		printUsage()
 		os.Exit(0)

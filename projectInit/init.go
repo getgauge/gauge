@@ -6,6 +6,8 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
+	"sort"
 
 	"strings"
 
@@ -102,6 +104,45 @@ func InitializeProject(templateName string) {
 		logger.Fatal("Failed to initialize. %s", err.Error())
 	}
 	logger.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
+}
+
+// ListTemplates lists all the Gauge templates available in GaugeTemplatesURL
+func ListTemplates() {
+	templatesURL := config.GaugeTemplatesUrl()
+	_, err := common.UrlExists(templatesURL)
+	if err != nil {
+		fmt.Println("Failed to access Gauge templates URL: %s", err.Error())
+		os.Exit(1)
+	}
+	tempDir := common.GetTempDir()
+	defer util.Remove(tempDir)
+	templatesPage, err := common.Download(templatesURL, tempDir)
+	if err != nil {
+		fmt.Println("Failed to fetch list of templates: %s", err.Error())
+		os.Exit(1)
+	}
+
+	templatePageContents, err := common.ReadFileContents(templatesPage)
+	if err != nil {
+		fmt.Println("Failed to read contents of file %s: %s", templatesPage, err.Error())
+		os.Exit(1)
+	}
+	templates := getTemplateNames(templatePageContents)
+	for _, template := range templates {
+		fmt.Println(template)
+	}
+	fmt.Println("\nRun `gauge --init <template_name>` to initialize a Gauge project with template.")
+}
+
+func getTemplateNames(text string) []string {
+	templateRegex, _ := regexp.Compile(`rel="nofollow">([a-z_0-9]*).zip</a></pre>`)
+	submatches := templateRegex.FindAllStringSubmatch(text, -1)
+	var matches []string
+	for _, match := range submatches {
+		matches = append(matches, match[1])
+	}
+	sort.Strings(matches)
+	return matches
 }
 
 func showMessage(action, filename string) {
