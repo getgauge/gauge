@@ -79,8 +79,7 @@ func initializeTemplate(templateName string) error {
 }
 
 func getTemplateURL(templateName string) string {
-	langauge := strings.Split(templateName, "_")[0]
-	return config.GaugeTemplatesUrl() + "/" + langauge + "/" + templateName + ".zip"
+	return config.GaugeTemplatesUrl() + "/" + templateName + ".zip"
 }
 
 // InitializeProject initializes a Gauge project with specified template
