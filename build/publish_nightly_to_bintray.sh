@@ -21,6 +21,10 @@ if [ -z "$BINTRAY_API_KEY" ]; then
   exit 1
 fi
 
+if [ -z "$BINTRAY_PACKAGE" ]; then
+    BINTRAY_PACKAGE="Nightly"
+fi
+
 echo "Publishing package : $PACKAGE"
 
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
@@ -42,7 +46,7 @@ done
 
 for i in `ls`; do
   PLATFORM=$(echo $i | sed "s/$PACKAGE_FILE_PREFIX-//" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 1);
-  URL="https://api.bintray.com/content/gauge/$PACKAGE/Nightly/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM/$i?publish=1&override=1"
+  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM/$i?publish=1&override=1"
   echo "Uploading to : $URL"
 
   RESPONSE_CODE=$(curl -T $i -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -I -s -w "%{http_code}" -o /dev/null);
