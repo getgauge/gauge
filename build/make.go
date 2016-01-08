@@ -148,7 +148,7 @@ func copyGaugeFiles(installPath string) {
 	files := make(map[string]string)
 	files[getGaugeExecutablePath(gauge)] = bin
 	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
-	files[filepath.Join("skel", "hello_world.spec")] = filepath.Join("share", gauge, "skel")
+	files[filepath.Join("skel", "example.spec")] = filepath.Join("share", gauge, "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", gauge, "skel", "env")
 	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", gauge)
 	files[filepath.Join("notice.md")] = filepath.Join("share", gauge)

@@ -20,7 +20,7 @@ import (
 
 const (
 	specsDirName      = "specs"
-	skelFileName      = "hello_world.spec"
+	skelFileName      = "example.spec"
 	envDefaultDirName = "default"
 	metadataFileName  = "metadata.json"
 )
