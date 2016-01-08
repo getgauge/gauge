@@ -36,7 +36,11 @@ function getPlatformFromFileName () {
     fi
 }
 
-PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
+if [ "$PACKAGE_LOWERCASE" == "0" ]; then
+    PACKAGE_FILE_PREFIX=$PACKAGE
+else
+    PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
+fi
 
 VERSION=$(ls $PACKAGE_FILE_PREFIX-* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
 
