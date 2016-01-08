@@ -20,6 +20,7 @@ package reporter
 import (
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	"github.com/getgauge/gauge/logger"
@@ -70,7 +71,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	sc.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
-		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(stepText, sc.indentation), newline))
+		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(stepText), sc.indentation), newline))
 	}
 }
 

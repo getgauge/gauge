@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
@@ -80,7 +81,7 @@ func (c *coloredConsole) StepStart(stepText string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
-		c.headingBuffer.WriteString(indent(stepText, c.indentation))
+		c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
 		c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 	}
 }
