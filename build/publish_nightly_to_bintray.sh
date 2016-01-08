@@ -42,11 +42,16 @@ for f in `ls`; do
     mv "$f" "`echo $f | tr '[:upper:]' '[:lower:]'`"
 done
 
-VERSION=$(ls $PACKAGE_FILE_PREFIX-* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
+VERSION=$(ls $PACKAGE_FILE_PREFIX* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
 
-if [ -z "$VERSION" ]; then
-  echo "Could not determine $PACKAGE version"
-  exit 1
+if [ "$NOVERSION" == "1" ]; then
+    VERSION="latest"
+    echo "Not checking for package version"
+else
+    if [ -z "$VERSION" ]; then
+        echo "Could not determine $PACKAGE version"
+        exit 1
+    fi
 fi
 
 echo "Version to be uploaded: $VERSION"
