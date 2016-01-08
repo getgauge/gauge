@@ -10,7 +10,7 @@ if [ -z "$BINTRAY_API_KEY" ]; then
   exit 1
 fi
 
-if [-z "$PACKAGE"]; then
+if [ -z "$PACKAGE" ]; then
     PACKAGE="Templates"
 fi
 
