@@ -111,27 +111,27 @@ func ListTemplates() {
 	templatesURL := config.GaugeTemplatesUrl()
 	_, err := common.UrlExists(templatesURL)
 	if err != nil {
-		fmt.Println("Failed to access Gauge templates URL: %s", err.Error())
+		fmt.Printf("Gauge templates URL is not reachable: %s\n", err.Error())
 		os.Exit(1)
 	}
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
 	templatesPage, err := common.Download(templatesURL, tempDir)
 	if err != nil {
-		fmt.Println("Failed to fetch list of templates: %s", err.Error())
+		fmt.Printf("Error occurred while downloading templates list: %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	templatePageContents, err := common.ReadFileContents(templatesPage)
 	if err != nil {
-		fmt.Println("Failed to read contents of file %s: %s", templatesPage, err.Error())
+		fmt.Printf("Failed to read contents of file %s: %s\n", templatesPage, err.Error())
 		os.Exit(1)
 	}
 	templates := getTemplateNames(templatePageContents)
 	for _, template := range templates {
 		fmt.Println(template)
 	}
-	fmt.Println("\nRun `gauge --init <template_name>` to initialize a Gauge project with template.")
+	fmt.Println("\nRun `gauge --init <template_name>` to create a new Gauge project.")
 }
 
 func getTemplateNames(text string) []string {
