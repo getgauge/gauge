@@ -142,6 +142,11 @@ func getTemplateNames(text string) []string {
 		matches = append(matches, match[1])
 	}
 	sort.Strings(matches)
+
+	// add other templates
+	matches = append(matches, "csharp")
+	matches = append(matches, "ruby")
+
 	return matches
 }
 
