@@ -43,7 +43,7 @@ import (
 // Command line flags
 var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
 var gaugeVersion = flag.Bool([]string{"v", "-version", "version"}, false, "Print the current version and exit. Eg: gauge --version")
-var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable verbose logging for debugging")
+var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable step level reporting on console, default being scenario level. Eg: gauge --verbose specs")
 var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
 var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
 var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
