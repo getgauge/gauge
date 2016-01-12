@@ -47,6 +47,9 @@ VERSION=$(ls $PACKAGE_FILE_PREFIX* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PAC
 if [ "$NOVERSION" == "1" ]; then
     VERSION="latest"
     echo "Not checking for package version"
+    for f in $PACKAGE_FILE_PREFIX*;
+      do mv "$f" "`echo $f | sed s/$PACKAGE_FILE_PREFIX/$PACKAGE_FILE_PREFIX-$VERSION/`";
+    done
 else
     if [ -z "$VERSION" ]; then
         echo "Could not determine $PACKAGE version"
