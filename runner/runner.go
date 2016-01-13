@@ -29,6 +29,8 @@ import (
 	"strings"
 	"time"
 
+	"sync"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -37,7 +39,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
-	"sync"
 )
 
 type TestRunner struct {
@@ -167,7 +168,7 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	}
 	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
-		return nil, fmt.Errorf("Compatible runner version to %s not found. To update plugin, run `gauge --update {pluginName}`.", version.CurrentGaugeVersion)
+		return nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ())
