@@ -1,4 +1,3 @@
-repoName=$1
 go get -v -u github.com/aktau/github-release
 
 if [ -z "$GITHUB_TOKEN" ]; then
