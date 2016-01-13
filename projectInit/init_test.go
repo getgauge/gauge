@@ -49,8 +49,10 @@ function navi(e){
 </html>
 `
 	names := getTemplateNames(input)
-	c.Assert(names[0], Equals, "java")
-	c.Assert(names[1], Equals, "java_maven")
-	c.Assert(names[2], Equals, "java_maven_selenium")
-	c.Assert(names[3], Equals, "maven_123")
+	c.Assert(names[0], Equals, "csharp")
+	c.Assert(names[1], Equals, "java")
+	c.Assert(names[2], Equals, "java_maven")
+	c.Assert(names[3], Equals, "java_maven_selenium")
+	c.Assert(names[4], Equals, "maven_123")
+	c.Assert(names[5], Equals, "ruby")
 }
