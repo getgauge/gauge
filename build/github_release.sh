@@ -1,8 +1,6 @@
 repoName=$1
 go get -v -u github.com/aktau/github-release
 
-cd deploy
-
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "GITHUB_TOKEN is not set"
   exit 1
