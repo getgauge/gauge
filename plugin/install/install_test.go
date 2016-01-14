@@ -92,8 +92,8 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 }
 
 func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
-	err := installPluginFromZip("test_resources/notPresent.zip", "ruby")
-	c.Assert(err.Error(), Equals, "Failed to unzip plugin-zip file ZipFile test_resources/notPresent.zip does not exist.")
+	err := installRunnerFromDir("test_resources/notPresent.zip", "ruby")
+	c.Assert(err.Error(), Equals, "File test_resources/notPresent.zip/ruby.json doesn't exist.")
 }
 
 func (s *MySuite) TestInstallPlugin(c *C) {

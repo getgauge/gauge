@@ -241,12 +241,19 @@ func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 }
 
 func getInstallDescription(plugin string) (*installDescription, installResult) {
-	installJSON, result := getPluginInstallJSON(plugin)
+	versionInstallDescriptionJSONFile := plugin + "-install.json"
+	versionInstallDescriptionJSONUrl, result := constructPluginInstallJsonUrl(plugin)
 	if !result.Success {
-		return nil, result
+		return nil, installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.Error))
+	}
+	tempDir := common.GetTempDir()
+	defer common.Remove(tempDir)
+	downloadedFile, downloadErr := common.Download(versionInstallDescriptionJSONUrl, tempDir)
+	if downloadErr != nil {
+		return nil, installError(fmt.Sprintf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
 	}
 
-	return getInstallDescriptionFromJSON(installJSON)
+	return getInstallDescriptionFromJSON(downloadedFile)
 }
 
 func getInstallDescriptionFromJSON(installJSON string) (*installDescription, installResult) {
@@ -259,19 +266,6 @@ func getInstallDescriptionFromJSON(installJSON string) (*installDescription, ins
 		return nil, installError(err.Error())
 	}
 	return installDescription, installSuccess("")
-}
-
-func getPluginInstallJSON(plugin string) (string, installResult) {
-	versionInstallDescriptionJSONFile := plugin + "-install.json"
-	versionInstallDescriptionJSONUrl, result := constructPluginInstallJsonUrl(plugin)
-	if !result.Success {
-		return "", installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.Error))
-	}
-	downloadedFile, downloadErr := common.DownloadToTempDir(versionInstallDescriptionJSONUrl)
-	if downloadErr != nil {
-		return "", installError(fmt.Sprintf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
-	}
-	return downloadedFile, installSuccess("")
 }
 
 func constructPluginInstallJsonUrl(plugin string) (string, installResult) {
@@ -303,21 +297,38 @@ func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersi
 }
 
 func (installDescription *installDescription) sortVersionInstallDescriptions() {
-	sort.Sort(ByDecreasingVersion(installDescription.Versions))
+	sort.Sort(byDecreasingVersion(installDescription.Versions))
 }
 
-func installPluginFromZip(zipFile string, language string) error {
-	unzippedPluginDir, err := common.UnzipArchive(zipFile)
+func InstallPluginZip(zipFile string, pluginName string) {
+	tempDir := common.GetTempDir()
+	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
+	defer common.Remove(tempDir)
 	if err != nil {
-		return fmt.Errorf("Failed to unzip plugin-zip file %s.", err.Error())
+		common.Remove(tempDir)
+		logger.Fatal("Failed to install plugin. %s\n", err.Error())
 	}
 	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 
 	hasPluginJSON := common.FileExists(filepath.Join(unzippedPluginDir, pluginJSON))
 	if hasPluginJSON {
-		return installPluginFromDir(unzippedPluginDir)
+		err = installPluginFromDir(unzippedPluginDir)
+	} else {
+		err = installRunnerFromDir(unzippedPluginDir, pluginName)
 	}
-	return installRunnerFromDir(unzippedPluginDir, language)
+	if err != nil {
+		common.Remove(tempDir)
+		logger.Fatal("Failed to install plugin. %s\n", err.Error())
+	}
+	logger.Info("Successfully installed plugin from file.")
+}
+
+func installPluginFromDir(unzippedPluginDir string) error {
+	pd, err := plugin.GetPluginDescriptorFromJSON(filepath.Join(unzippedPluginDir, pluginJSON))
+	if err != nil {
+		return err
+	}
+	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
 
 func installRunnerFromDir(unzippedPluginDir string, language string) error {
@@ -346,14 +357,6 @@ func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string,
 	}
 	_, err = common.MirrorDir(unzippedPluginDir, versionedPluginDir)
 	return err
-}
-
-func installPluginFromDir(unzippedPluginDir string) error {
-	pd, err := plugin.GetPluginDescriptorFromJSON(filepath.Join(unzippedPluginDir, pluginJSON))
-	if err != nil {
-		return err
-	}
-	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
 }
 
 func InstallAllPlugins() {
@@ -386,8 +389,7 @@ func UpdatePlugins() {
 func DownloadAndInstallPlugin(plugin, version, messageFormat string) {
 	err := downloadAndInstall(plugin, version, fmt.Sprintf(messageFormat, plugin))
 	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
+		logger.Fatal(err.Error())
 	}
 	os.Exit(0)
 }
@@ -403,14 +405,6 @@ func downloadAndInstall(plugin, version string, successMessage string) error {
 	}
 	logger.Info(successMessage)
 	return nil
-}
-
-func InstallPluginZip(zipFile string, pluginName string) {
-	if err := installPluginFromZip(zipFile, pluginName); err != nil {
-		logger.Fatal("Failed to install plugin. %s\n", err.Error())
-	} else {
-		logger.Info("Successfully installed plugin from file.")
-	}
 }
 
 func installPluginsFromManifest(manifest *manifest.Manifest) {
@@ -467,11 +461,11 @@ func IsCompatibleLanguagePluginInstalled(name string) bool {
 	return (version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport) == nil)
 }
 
-type ByDecreasingVersion []versionInstallDescription
+type byDecreasingVersion []versionInstallDescription
 
-func (a ByDecreasingVersion) Len() int      { return len(a) }
-func (a ByDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByDecreasingVersion) Less(i, j int) bool {
+func (a byDecreasingVersion) Len() int      { return len(a) }
+func (a byDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byDecreasingVersion) Less(i, j int) bool {
 	version1, _ := version.ParseVersion(a[i].Version)
 	version2, _ := version.ParseVersion(a[j].Version)
 	return version1.IsGreaterThan(version2)

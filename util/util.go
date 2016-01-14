@@ -20,14 +20,15 @@ func IsWindows() bool {
 // Returns the unzipped file path.
 func DownloadAndUnzip(downloadLink string) (string, error) {
 	logger.Debug("Downloading => %s", downloadLink)
-	downloadedFile, err := common.DownloadToTempDir(downloadLink)
+	tempDir := common.GetTempDir()
+	defer common.Remove(tempDir)
+	downloadedFile, err := common.Download(downloadLink, tempDir)
 	if err != nil {
 		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
 	}
 	logger.Debug("Downloaded to %s", downloadedFile)
-	defer Remove(downloadedFile)
 
-	unzippedPluginDir, err := common.UnzipArchive(downloadedFile)
+	unzippedPluginDir, err := common.UnzipArchive(downloadedFile, tempDir)
 	if err != nil {
 		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
 	}

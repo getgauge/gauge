@@ -95,9 +95,8 @@ func CompareVersions(first *Version, second *Version, compareFunc func(int, int)
 		} else if IsEqual(first.Minor, second.Minor) {
 			if compareFunc(first.Patch, second.Patch) {
 				return true
-			} else {
-				return false
 			}
+			return false
 		}
 	}
 	return false
@@ -119,16 +118,16 @@ func (Version *Version) String() string {
 	return fmt.Sprintf("%d.%d.%d", Version.Major, Version.Minor, Version.Patch)
 }
 
-type ByDecreasingVersion []*Version
+type byDecreasingVersion []*Version
 
-func (a ByDecreasingVersion) Len() int      { return len(a) }
-func (a ByDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByDecreasingVersion) Less(i, j int) bool {
+func (a byDecreasingVersion) Len() int      { return len(a) }
+func (a byDecreasingVersion) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byDecreasingVersion) Less(i, j int) bool {
 	return a[i].IsGreaterThan(a[j])
 }
 
 func GetLatestVersion(versions []*Version) *Version {
-	sort.Sort(ByDecreasingVersion(versions))
+	sort.Sort(byDecreasingVersion(versions))
 	return versions[0]
 }
 
@@ -144,9 +143,8 @@ func CheckCompatibility(currentVersion *Version, versionSupport *VersionSupport)
 		}
 		if currentVersion.IsBetween(minSupportVersion, maxSupportVersion) {
 			return nil
-		} else {
-			return fmt.Errorf("Version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion)
 		}
+		return fmt.Errorf("Version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion)
 	}
 
 	if minSupportVersion.IsLesserThanEqualTo(currentVersion) {
