@@ -18,10 +18,8 @@ func IsWindows() bool {
 
 // DownloadAndUnzip downloads the zip file from given download link and unzips it.
 // Returns the unzipped file path.
-func DownloadAndUnzip(downloadLink string) (string, error) {
+func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
 	logger.Debug("Downloading => %s", downloadLink)
-	tempDir := common.GetTempDir()
-	defer common.Remove(tempDir)
 	downloadedFile, err := common.Download(downloadLink, tempDir)
 	if err != nil {
 		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())

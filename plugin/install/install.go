@@ -132,7 +132,9 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		return installError(fmt.Sprintf("Could not get download link: %s", err.Error()))
 	}
 
-	unzippedPluginDir, err := util.DownloadAndUnzip(downloadLink)
+	tempDir := common.GetTempDir()
+	defer common.Remove(tempDir)
+	unzippedPluginDir, err := util.DownloadAndUnzip(downloadLink, tempDir)
 	if err != nil {
 		return installError(err.Error())
 	}

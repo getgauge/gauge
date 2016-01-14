@@ -37,11 +37,12 @@ type templateMetadata struct {
 }
 
 func initializeTemplate(templateName string) error {
-	unzippedTemplate, err := util.DownloadAndUnzip(getTemplateURL(templateName))
+	tempDir := common.GetTempDir()
+	defer util.Remove(tempDir)
+	unzippedTemplate, err := util.DownloadAndUnzip(getTemplateURL(templateName), tempDir)
 	if err != nil {
 		return err
 	}
-	defer util.Remove(unzippedTemplate)
 
 	wd := config.ProjectRoot
 
