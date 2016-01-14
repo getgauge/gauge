@@ -20,7 +20,6 @@
 set -e
 
 install_gauge() {
-    path_prefix=$1
     echo "Installing gauge at $prefix"
     echo "Creating $prefix if it doesn't exist"
     [ -d $prefix ] || mkdir $prefix
