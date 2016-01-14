@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"fmt"
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
 )
@@ -93,7 +94,7 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 
 func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
 	err := installRunnerFromDir("test_resources/notPresent.zip", "ruby")
-	c.Assert(err.Error(), Equals, "File test_resources/notPresent.zip/ruby.json doesn't exist.")
+	c.Assert(err.Error(), Equals, fmt.Sprintf("File %s doesn't exist.", filepath.Join("test_resources", "notPresent.zip", "ruby.json")))
 }
 
 func (s *MySuite) TestInstallPlugin(c *C) {
