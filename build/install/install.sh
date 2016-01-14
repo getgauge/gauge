@@ -30,7 +30,7 @@ install_gauge() {
         echo "Installation failed..."
         echo "You do not have write permissions for $prefix"
         echo "Please run this script as sudo or pass a custom location where you want to install Gauge."
-        echo "Example: ./install.sh /home/gauge/Documents/gauge_install_dir"
+        echo "Example: ./install.sh /home/gauge/local/gauge_install_dir"
         echo
         exit 1
     fi
