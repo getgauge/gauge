@@ -64,8 +64,3 @@ fi
 install_gauge $prefix
 install_plugin html-report
 
-echo
-echo
-echo "Please logout and login again to reload your env variables."
-echo "Alternatively, run the command 'source ~/.profile'."
-echo
