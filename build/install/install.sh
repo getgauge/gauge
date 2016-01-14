@@ -39,11 +39,19 @@ install_gauge() {
     echo "Copying files to $prefix"
     cp -rf bin share $prefix
 
-    # ensure gauge is on path
+    # ensure gauge is on PATH
     if [ -z "$(which gauge)" ]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
+        updated_profile=1
+    fi
+    # ensure GAUGE_ROOT is set
+    if [ -z "$GAUGE_ROOT" ]; then
+        echo "Adding GAUGE_ROOT to environment..."
         echo "export GAUGE_ROOT=$prefix"  >> ~/.profile
+        updated_profile=1
+    fi
+    if [ $updated_profile ] ; then
         source ~/.profile
     fi
     echo "Gauge core successfully installed."
