@@ -19,9 +19,10 @@ package filter
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -391,6 +392,37 @@ func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
 	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 1")
 	c.Assert(specs[0].Scenarios[1].Heading.Value, Equals, "Scenario Heading 2")
 	c.Assert(specs[0].Scenarios[2].Heading.Value, Equals, "Scenario Heading 3")
+}
+
+func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
+	myTags := []string{"tag1", "tag12"}
+	tokens := []*parser.Token{
+		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
+		&parser.Token{Kind: parser.TagKind, Args: myTags, LineNo: 2},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag1"}, LineNo: 2},
+		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
+		&parser.Token{Kind: parser.TagKind, Args: []string{"tag12"}, LineNo: 2},
+	}
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	c.Assert(result.Ok, Equals, true)
+
+	var specs []*parser.Specification
+	specs = append(specs, spec)
+	c.Assert(len(specs), Equals, 1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 3)
+	specs = filterSpecsByTags(specs, "tag1 & tag12")
+	c.Assert(len(specs[0].Scenarios), Equals, 1)
+	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 1")
+}
+
+func (s *MySuite) TestFilterTags(c *C) {
+	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
+	evaluateTrue := tagFilter.filterTags(specTags)
+	c.Assert(evaluateTrue, Equals, true)
 }
 
 func (s *MySuite) TestToFilterSpecsByTags(c *C) {

@@ -20,6 +20,7 @@ package filter
 import (
 	"errors"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -81,6 +82,7 @@ func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 	value, _ := filter.formatAndEvaluateExpression(tagsMap, filter.isTagPresent)
 	return value
 }
+
 func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
 	filter.tagExpression = strings.Replace(strings.Replace(strings.Replace(strings.Replace(filter.tagExpression, " ", "", -1), ",", "&", -1), "&&", "&", -1), "||", "|", -1)
 }
@@ -88,10 +90,23 @@ func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
 func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
 	_, tags := filter.getOperatorsAndOperands()
 	expToBeEvaluated := filter.tagExpression
+	sort.Sort(ByLength(tags))
 	for _, tag := range tags {
 		expToBeEvaluated = strings.Replace(expToBeEvaluated, strings.TrimSpace(tag), strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag))), -1)
 	}
 	return filter.evaluateExp(filter.handleNegation(expToBeEvaluated))
+}
+
+type ByLength []string
+
+func (s ByLength) Len() int {
+	return len(s)
+}
+func (s ByLength) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+func (s ByLength) Less(i, j int) bool {
+	return len(s[i]) > len(s[j])
 }
 
 func (filter *ScenarioFilterBasedOnTags) handleNegation(tagExpression string) string {
