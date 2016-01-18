@@ -69,6 +69,25 @@ else
     prefix=$1
 fi
 
+display_usage() { 
+	echo "On Linux, this script takes an optional install path." 
+	echo -e "\nUsage:\n$0 [path] \n" 
+	} 
+
+# if more than one arguments supplied, display usage 
+if [ $# -gt 1 ] 
+then 
+    display_usage
+    exit 1
+fi  
+
+# check whether user has supplied -h or --help . If yes display usage 
+if [[ ( $@ == "--help") || $@ == "-h" ]] 
+then 
+    display_usage
+    exit 0
+fi 
+
 install_gauge $prefix
 install_plugin html-report
 
