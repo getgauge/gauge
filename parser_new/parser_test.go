@@ -17,49 +17,42 @@
 
 package parse
 
-import (
-	"reflect"
-	"testing"
-
-	"github.com/getgauge/gauge/gauge"
-)
-
-type conceptParseTest struct {
-	name    string
-	text    string
-	concept gauge.Concept
-}
-
-var conceptParseTests = []conceptParseTest{
-	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n",
-		gauge.Concept{
-			FileName: "simple concept",
-			LineNo:   0,
-			Heading:  "This is a concept heading",
-			Steps: []gauge.Step{
-				{LineNo: 0, ActualText: "This is the first step"},
-				{LineNo: 0, ActualText: "This is the second step"},
-			},
-		},
-	},
-	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step",
-		gauge.Concept{
-			FileName: "simple underline concept",
-			LineNo:   0,
-			Heading:  "This is a concept heading",
-			Steps: []gauge.Step{
-				{LineNo: 0, ActualText: "This is the first step"},
-				{LineNo: 0, ActualText: "This is the second step"},
-			},
-		},
-	},
-}
-
-func TestConceptParsing(t *testing.T) {
-	for _, test := range conceptParseTests {
-		cpt := ParseConcept(test.name, test.text)
-		if !reflect.DeepEqual(cpt, test.concept) {
-			t.Errorf("%s: \ngot\n\t%+v\nexpected\n\t%v", test.name, cpt, test.concept)
-		}
-	}
-}
+// type conceptParseTest struct {
+// 	name    string
+// 	text    string
+// 	concept gauge.Concept
+// }
+//
+// var conceptParseTests = []conceptParseTest{
+// 	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n",
+// 		gauge.Concept{
+// 			FileName: "simple concept",
+// 			LineNo:   0,
+// 			Heading:  "This is a concept heading",
+// 			Steps: []gauge.Step{
+// 				{LineNo: 0, ActualText: "This is the first step"},
+// 				{LineNo: 0, ActualText: "This is the second step"},
+// 			},
+// 		},
+// 	},
+// 	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step",
+// 		gauge.Concept{
+// 			FileName: "simple underline concept",
+// 			LineNo:   0,
+// 			Heading:  "This is a concept heading",
+// 			Steps: []gauge.Step{
+// 				{LineNo: 0, ActualText: "This is the first step"},
+// 				{LineNo: 0, ActualText: "This is the second step"},
+// 			},
+// 		},
+// 	},
+// }
+//
+// func TestConceptParsing(t *testing.T) {
+// 	for _, test := range conceptParseTests {
+// 		cpt := ParseConcept(test.name, test.text)
+// 		if !reflect.DeepEqual(cpt, test.concept) {
+// 			t.Errorf("%s: \ngot\n\t%+v\nexpected\n\t%v", test.name, cpt, test.concept)
+// 		}
+// 	}
+// }

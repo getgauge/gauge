@@ -17,83 +17,83 @@
 
 package parse
 
-import (
-	"strings"
-
-	"github.com/getgauge/gauge/gauge"
-)
-
-type parser struct {
-	name string
-	text string
-	// Parsing only
-	lex       *lexer
-	token     [3]item // three-token lookahead for parser.
-	peekCount int
-}
-
-func (p *parser) next() item {
-	if p.peekCount > 0 {
-		p.peekCount--
-	} else {
-		p.token[0] = p.lex.nextItem()
-	}
-	return p.token[p.peekCount]
-}
-
-func (p *parser) peek() item {
-	if p.peekCount > 0 {
-		return p.token[p.peekCount-1]
-	}
-	p.peekCount = 1
-	p.token[0] = p.lex.nextItem()
-	return p.token[0]
-}
-
-func New(name, text string) *parser {
-	return &parser{
-		name: name,
-		text: text,
-		lex:  NewLexer(name, text),
-	}
-}
-
-func ParseConcept(filename, text string) gauge.Concept {
-	p := New(filename, text)
-	cptHeading := p.parseConceptHeading()
-	steps := p.parseSteps()
-
-	return gauge.Concept{
-		FileName: filename,
-		LineNo:   0,
-		Heading:  cptHeading,
-		Steps:    steps,
-	}
-}
-
-func (p *parser) parseConceptHeading() string {
-	token := p.next()
-	var heading string
-	switch {
-	case token.typ == itemH1Hash:
-		heading = strings.TrimSpace(p.next().val)
-	default:
-		heading = strings.TrimSpace(token.val)
-	}
-	p.next()
-	return heading
-}
-
-func (p *parser) parseSteps() []gauge.Step {
-	steps := make([]gauge.Step, 0)
-	for p.peek().typ != itemEOF {
-		token := p.next()
-		if token.typ == itemAsterisk {
-			steps = append(steps, gauge.Step{
-				LineNo:     0,
-				ActualText: strings.TrimSpace(p.next().val),
-			})
-		}
-	}
-	return steps
-}
+// import (
+// 	"strings"
+//
+// 	"github.com/getgauge/gauge/gauge"
+// )
+//
+// type parser struct {
+// 	name string
+// 	text string
+// 	// Parsing only
+// 	lex       *lexer
+// 	token     [3]item // three-token lookahead for parser.
+// 	peekCount int
+// }
+//
+// func (p *parser) next() item {
+// 	if p.peekCount > 0 {
+// 		p.peekCount--
+// 	} else {
+// 		p.token[0] = p.lex.nextItem()
+// 	}
+// 	return p.token[p.peekCount]
+// }
+//
+// func (p *parser) peek() item {
+// 	if p.peekCount > 0 {
+// 		return p.token[p.peekCount-1]
+// 	}
+// 	p.peekCount = 1
+// 	p.token[0] = p.lex.nextItem()
+// 	return p.token[0]
+// }
+//
+// func New(name, text string) *parser {
+// 	return &parser{
+// 		name: name,
+// 		text: text,
+// 		lex:  NewLexer(name, text),
+// 	}
+// }
+//
+// func ParseConcept(filename, text string) gauge.Concept {
+// 	p := New(filename, text)
+// 	cptHeading := p.parseConceptHeading()
+// 	steps := p.parseSteps()
+//
+// 	return gauge.Concept{
+// 		FileName: filename,
+// 		LineNo:   0,
+// 		Heading:  cptHeading,
+// 		Steps:    steps,
+// 	}
+// }
+//
+// func (p *parser) parseConceptHeading() string {
+// 	token := p.next()
+// 	var heading string
+// 	switch {
+// 	case token.typ == itemH1Hash:
+// 		heading = strings.TrimSpace(p.next().val)
+// 	default:
+// 		heading = strings.TrimSpace(token.val)
+// 	}
+// 	p.next()
+// 	return heading
+// }
+//
+// func (p *parser) parseSteps() []gauge.Step1 {
+// 	steps := make([]gauge.Step1, 0)
+// 	for p.peek().typ != itemEOF {
+// 		token := p.next()
+// 		if token.typ == itemAsterisk {
+// 			steps = append(steps, gauge.Step1{
+// 				LineNo:     0,
+// 				ActualText: strings.TrimSpace(p.next().val),
+// 			})
+// 		}
+// 	}
+// 	return steps
+// }

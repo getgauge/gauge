@@ -19,10 +19,11 @@ package parser
 
 import (
 	"fmt"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 	"regexp"
 	"strings"
+
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/golang/protobuf/proto"
 )
 
 type Scenario struct {

@@ -39,7 +39,6 @@ type specExecutor struct {
 	specification        *parser.Specification
 	dataTableIndex       indexRange
 	runner               *runner.TestRunner
-	conceptDictionary    *parser.ConceptDictionary
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
