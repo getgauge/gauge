@@ -18,9 +18,10 @@
 package formatter
 
 import (
+	"testing"
+
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -50,7 +51,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 Scenario Heading
 ----------------
 * Example step
-* Step with inline table 
+* Step with inline table`+" "+`
      |id |name|
      |---|----|
      |<1>|foo |
@@ -59,10 +60,12 @@ Scenario Heading
 }
 
 func (s *MySuite) TestFormatConcepts(c *C) {
-	dictionary := new(parser.ConceptDictionary)
+	dictionary := parser.NewConceptDictionary()
 	step1 := &parser.Step{Value: "sdsf", LineText: "sdsf", IsConcept: true, LineNo: 1, PreComments: []*parser.Comment{&parser.Comment{Value: "COMMENT", LineNo: 1}}}
 	step2 := &parser.Step{Value: "dsfdsfdsf", LineText: "dsfdsfdsf", IsConcept: true, LineNo: 2, Items: []parser.Item{&parser.Step{Value: "sfd", LineText: "sfd", IsConcept: false}, &parser.Step{Value: "sdfsdf" + "T", LineText: "sdfsdf" + "T", IsConcept: false}}}
-	dictionary.Add([]*parser.Step{step1, step2}, "file.cpt")
+
+	dictionary.ConceptsMap[step1.Value] = &parser.Concept{ConceptStep: step1, FileName: "file.cpt"}
+	dictionary.ConceptsMap[step2.Value] = &parser.Concept{ConceptStep: step2, FileName: "file.cpt"}
 
 	formatted := FormatConcepts(dictionary)
 	c.Assert(formatted["file.cpt"], Equals, `COMMENT

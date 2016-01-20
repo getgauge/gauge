@@ -1,0 +1,5 @@
+# create user <bar> <far>
+* assign role <bar> <far>
+
+# assign role <baz> <boo>
+* add admin rights <baz>

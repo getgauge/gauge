@@ -1,0 +1,7 @@
+# create user <user-id> <user-name> and <user-phone>
+* assign id <user-id> and name <user-name>
+* assign phone <user-phone>
+
+# assign id <userid> and name <username>
+* add id <userid>
+* add name <username>

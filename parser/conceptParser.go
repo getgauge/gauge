@@ -31,7 +31,6 @@ import (
 type ConceptDictionary struct {
 	ConceptsMap     map[string]*Concept
 	constructionMap map[string][]*Step
-	referenceMap    map[*Step][]*Step
 }
 
 type Concept struct {
@@ -232,25 +231,6 @@ func AddConcepts(conceptFile string, conceptDictionary *ConceptDictionary) *Pars
 	if parseResults != nil && parseResults.Error != nil {
 		return parseResults.Error
 	}
-	return conceptDictionary.Add(concepts, conceptFile)
-}
-
-func NewConceptDictionary() *ConceptDictionary {
-	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept, 0)}
-}
-
-func (conceptDictionary *ConceptDictionary) isConcept(step *Step) bool {
-	_, ok := conceptDictionary.ConceptsMap[step.Value]
-	return ok
-
-}
-func (conceptDictionary *ConceptDictionary) Add(concepts []*Step, conceptFile string) *ParseError {
-	if conceptDictionary.ConceptsMap == nil {
-		conceptDictionary.ConceptsMap = make(map[string]*Concept)
-	}
-	if conceptDictionary.constructionMap == nil {
-		conceptDictionary.constructionMap = make(map[string][]*Step)
-	}
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
 			return &ParseError{Message: "Duplicate concept definition found", LineNo: conceptStep.LineNo, LineText: conceptStep.LineText}
@@ -260,6 +240,16 @@ func (conceptDictionary *ConceptDictionary) Add(concepts []*Step, conceptFile st
 	}
 	conceptDictionary.updateLookupForNestedConcepts()
 	return conceptDictionary.validateConcepts()
+}
+
+func NewConceptDictionary() *ConceptDictionary {
+	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept, 0), constructionMap: make(map[string][]*Step, 0)}
+}
+
+func (conceptDictionary *ConceptDictionary) isConcept(step *Step) bool {
+	_, ok := conceptDictionary.ConceptsMap[step.Value]
+	return ok
+
 }
 
 func (conceptDictionary *ConceptDictionary) search(stepValue string) *Concept {

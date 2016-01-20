@@ -18,6 +18,8 @@
 package parser
 
 import (
+	"path/filepath"
+
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
@@ -563,58 +565,57 @@ func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 	tokens := []*Token{
 		&Token{Kind: SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: StepKind, Value: "concept step", LineNo: 3},
+		&Token{Kind: StepKind, Value: "test concept step 1", LineNo: 3},
 	}
 
-	conceptDictionary := new(ConceptDictionary)
-	firstStep := &Step{Value: "step 1"}
-	secondStep := &Step{Value: "step 2"}
-	conceptStep := &Step{Value: "concept step", IsConcept: true, ConceptSteps: []*Step{firstStep, secondStep}}
-	conceptDictionary.Add([]*Step{conceptStep}, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios[0].Steps), Equals, 1)
 	specConceptStep := spec.Scenarios[0].Steps[0]
 	c.Assert(specConceptStep.IsConcept, Equals, true)
-	c.Assert(specConceptStep.ConceptSteps[0], Equals, firstStep)
-	c.Assert(specConceptStep.ConceptSteps[1], Equals, secondStep)
+	assertStepEqual(c, &Step{LineNo: 2, Value: "step 1", LineText: "step 1"}, specConceptStep.ConceptSteps[0])
 }
 
 func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	tokens := []*Token{
 		&Token{Kind: SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: StepKind, Value: "create user {static}", Args: []string{"foo"}, LineNo: 3},
-		&Token{Kind: StepKind, Value: "create user {static}", Args: []string{"bar"}, LineNo: 4},
+		&Token{Kind: StepKind, Value: "assign id {static} and name {static}", Args: []string{"foo", "foo1"}, LineNo: 3},
+		&Token{Kind: StepKind, Value: "assign id {static} and name {static}", Args: []string{"bar", "bar1"}, LineNo: 4},
 	}
 
-	concepts, _ := new(ConceptParser).Parse("#create user <username> \n * enter user <username> \n *select \"finish\"")
-	conceptsDictionary := new(ConceptDictionary)
-	conceptsDictionary.Add(concepts, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
+	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios[0].Steps), Equals, 2)
 
 	firstConceptStep := spec.Scenarios[0].Steps[0]
 	c.Assert(firstConceptStep.IsConcept, Equals, true)
-	c.Assert(firstConceptStep.ConceptSteps[0].Value, Equals, "enter user {}")
-	c.Assert(firstConceptStep.ConceptSteps[0].Args[0].Value, Equals, "username")
-	c.Assert(firstConceptStep.ConceptSteps[1].Value, Equals, "select {}")
-	c.Assert(firstConceptStep.ConceptSteps[1].Args[0].Value, Equals, "finish")
-	c.Assert(len(firstConceptStep.Lookup.paramValue), Equals, 1)
-	c.Assert(firstConceptStep.getArg("username").Value, Equals, "foo")
+	c.Assert(firstConceptStep.ConceptSteps[0].Value, Equals, "add id {}")
+	c.Assert(firstConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(firstConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(firstConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(len(firstConceptStep.Lookup.paramValue), Equals, 2)
+	c.Assert(firstConceptStep.getArg("username").Value, Equals, "foo1")
+	c.Assert(firstConceptStep.getArg("userid").Value, Equals, "foo")
 
 	secondConceptStep := spec.Scenarios[0].Steps[1]
 	c.Assert(secondConceptStep.IsConcept, Equals, true)
-	c.Assert(secondConceptStep.ConceptSteps[0].Value, Equals, "enter user {}")
-	c.Assert(secondConceptStep.ConceptSteps[0].Args[0].Value, Equals, "username")
-	c.Assert(secondConceptStep.ConceptSteps[1].Value, Equals, "select {}")
-	c.Assert(secondConceptStep.ConceptSteps[1].Args[0].Value, Equals, "finish")
-	c.Assert(len(secondConceptStep.Lookup.paramValue), Equals, 1)
-	c.Assert(secondConceptStep.getArg("username").Value, Equals, "bar")
+	c.Assert(secondConceptStep.ConceptSteps[0].Value, Equals, "add id {}")
+	c.Assert(secondConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(secondConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(secondConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(len(secondConceptStep.Lookup.paramValue), Equals, 2)
+	c.Assert(secondConceptStep.getArg("username").Value, Equals, "bar1")
+	c.Assert(secondConceptStep.getArg("userid").Value, Equals, "bar")
 
 }
 
@@ -624,14 +625,13 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 		&Token{Kind: TableHeader, Args: []string{"id", "description"}, LineNo: 2},
 		&Token{Kind: TableRow, Args: []string{"123", "Admin fellow"}, LineNo: 3},
 		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: StepKind, Value: "create user {dynamic} and {dynamic}", Args: []string{"id", "description"}, LineNo: 5},
-		&Token{Kind: StepKind, Value: "create user {static} and {static}", Args: []string{"456", "Regular fellow"}, LineNo: 6},
+		&Token{Kind: StepKind, Value: "assign id {dynamic} and name {dynamic}", Args: []string{"id", "description"}, LineNo: 5},
 	}
 
-	concepts, _ := new(ConceptParser).Parse("#create user <user-id> and <user-description> \n * enter user <user-id> and <user-description> \n *select \"finish\"")
-	conceptsDictionary := new(ConceptDictionary)
-	conceptsDictionary.Add(concepts, "file.cpt")
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
+	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Items), Equals, 2)
@@ -640,77 +640,50 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 
 	scenarioItems := (spec.Items[1]).(*Scenario).Items
 	c.Assert(scenarioItems[0], Equals, spec.Scenarios[0].Steps[0])
-	c.Assert(scenarioItems[1], DeepEquals, spec.Scenarios[0].Steps[1])
 
-	c.Assert(len(spec.Scenarios[0].Steps), Equals, 2)
+	c.Assert(len(spec.Scenarios[0].Steps), Equals, 1)
 
 	firstConcept := spec.Scenarios[0].Steps[0]
 	c.Assert(firstConcept.IsConcept, Equals, true)
-	c.Assert(firstConcept.ConceptSteps[0].Value, Equals, "enter user {} and {}")
+	c.Assert(firstConcept.ConceptSteps[0].Value, Equals, "add id {}")
 	c.Assert(firstConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
-	c.Assert(firstConcept.ConceptSteps[0].Args[0].Value, Equals, "user-id")
-	c.Assert(firstConcept.ConceptSteps[0].Args[0].Name, Equals, "user-id")
-	c.Assert(firstConcept.ConceptSteps[0].Args[1].ArgType, Equals, Dynamic)
-	c.Assert(firstConcept.ConceptSteps[0].Args[1].Value, Equals, "user-description")
-	c.Assert(firstConcept.ConceptSteps[0].Args[1].Name, Equals, "user-description")
-	c.Assert(firstConcept.ConceptSteps[1].Value, Equals, "select {}")
-	c.Assert(firstConcept.ConceptSteps[1].Args[0].Value, Equals, "finish")
-	c.Assert(firstConcept.ConceptSteps[1].Args[0].ArgType, Equals, Static)
+	c.Assert(firstConcept.ConceptSteps[0].Args[0].Value, Equals, "userid")
+	c.Assert(firstConcept.ConceptSteps[1].Value, Equals, "add name {}")
+	c.Assert(firstConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
+	c.Assert(firstConcept.ConceptSteps[1].Args[0].ArgType, Equals, Dynamic)
 
 	c.Assert(len(firstConcept.Lookup.paramValue), Equals, 2)
-	arg1 := firstConcept.Lookup.getArg("user-id")
+	arg1 := firstConcept.Lookup.getArg("userid")
 	c.Assert(arg1.Value, Equals, "id")
 	c.Assert(arg1.ArgType, Equals, Dynamic)
 
-	arg2 := firstConcept.Lookup.getArg("user-description")
+	arg2 := firstConcept.Lookup.getArg("username")
 	c.Assert(arg2.Value, Equals, "description")
 	c.Assert(arg2.ArgType, Equals, Dynamic)
-
-	secondConcept := spec.Scenarios[0].Steps[1]
-	c.Assert(secondConcept.IsConcept, Equals, true)
-	c.Assert(secondConcept.ConceptSteps[0].Value, Equals, "enter user {} and {}")
-	c.Assert(secondConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
-	c.Assert(secondConcept.ConceptSteps[0].Args[0].Value, Equals, "user-id")
-	c.Assert(secondConcept.ConceptSteps[0].Args[0].Name, Equals, "user-id")
-	c.Assert(secondConcept.ConceptSteps[0].Args[1].ArgType, Equals, Dynamic)
-	c.Assert(secondConcept.ConceptSteps[0].Args[1].Value, Equals, "user-description")
-	c.Assert(secondConcept.ConceptSteps[0].Args[1].Name, Equals, "user-description")
-	c.Assert(secondConcept.ConceptSteps[1].Value, Equals, "select {}")
-	c.Assert(secondConcept.ConceptSteps[1].Args[0].Value, Equals, "finish")
-	c.Assert(secondConcept.ConceptSteps[1].Args[0].ArgType, Equals, Static)
-
-	c.Assert(len(secondConcept.Lookup.paramValue), Equals, 2)
-	arg1 = secondConcept.Lookup.getArg("user-id")
-	arg2 = secondConcept.Lookup.getArg("user-description")
-	c.Assert(arg1.Value, Equals, "456")
-	c.Assert(arg1.ArgType, Equals, Static)
-	c.Assert(arg2.Value, Equals, "Regular fellow")
-	c.Assert(arg2.ArgType, Equals, Static)
-
 }
 
 func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: StepKind, Value: "create users", LineNo: 3},
+		&Token{Kind: StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 3},
 		&Token{Kind: TableHeader, Args: []string{"id", "description"}, LineNo: 4},
 		&Token{Kind: TableRow, Args: []string{"123", "Admin"}, LineNo: 5},
 		&Token{Kind: TableRow, Args: []string{"456", "normal fellow"}, LineNo: 6},
 	}
 
-	concepts, _ := new(ConceptParser).Parse("#create users <table> \n * enter details from <table> \n *select \"finish\"")
-	conceptsDictionary := new(ConceptDictionary)
-	conceptsDictionary.Add(concepts, "file.cpt")
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
+	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
 	steps := spec.Scenarios[0].Steps
 	c.Assert(len(steps), Equals, 1)
 	c.Assert(steps[0].IsConcept, Equals, true)
-	c.Assert(steps[0].Value, Equals, "create users {}")
-	c.Assert(len(steps[0].Args), Equals, 1)
-	c.Assert(steps[0].Args[0].ArgType, Equals, TableArg)
+	c.Assert(steps[0].Value, Equals, "assign id {} and name {}")
+	c.Assert(len(steps[0].Args), Equals, 2)
+	c.Assert(steps[0].Args[1].ArgType, Equals, TableArg)
 	c.Assert(len(steps[0].ConceptSteps), Equals, 2)
 }
 
@@ -721,28 +694,24 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 		&Token{Kind: TableRow, Args: []string{"123", "Admin"}, LineNo: 3},
 		&Token{Kind: TableRow, Args: []string{"456", "normal fellow"}, LineNo: 4},
 		&Token{Kind: ScenarioKind, Value: "Scenario Heading", LineNo: 5},
-		&Token{Kind: StepKind, Value: "create users", LineNo: 6},
+		&Token{Kind: StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 6},
 		&Token{Kind: TableHeader, Args: []string{"user-id", "description", "name"}, LineNo: 7},
 		&Token{Kind: TableRow, Args: []string{"<id>", "<description>", "root"}, LineNo: 8},
-		&Token{Kind: StepKind, Value: "create users", LineNo: 9},
-		&Token{Kind: TableHeader, Args: []string{"user-id", "description", "name"}, LineNo: 10},
-		&Token{Kind: TableRow, Args: []string{"1", "normal", "wheel"}, LineNo: 11},
 	}
 
-	concepts, _ := new(ConceptParser).Parse("#create users <id> \n * enter details from <id> \n *select \"finish\"")
-	conceptsDictionary := new(ConceptDictionary)
-	conceptsDictionary.Add(concepts, "file.cpt")
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptsDictionary)
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
+	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 	c.Assert(result.Ok, Equals, true)
 
 	steps := spec.Scenarios[0].Steps
-	c.Assert(len(steps), Equals, 2)
+	c.Assert(len(steps), Equals, 1)
 	c.Assert(steps[0].IsConcept, Equals, true)
-	c.Assert(steps[1].IsConcept, Equals, true)
-	c.Assert(steps[0].Value, Equals, "create users {}")
-	c.Assert(len(steps[0].Args), Equals, 1)
-	c.Assert(steps[0].Args[0].ArgType, Equals, TableArg)
-	table := steps[0].Args[0].Table
+	c.Assert(steps[0].Value, Equals, "assign id {} and name {}")
+	c.Assert(len(steps[0].Args), Equals, 2)
+	c.Assert(steps[0].Args[1].ArgType, Equals, TableArg)
+	table := steps[0].Args[1].Table
 	c.Assert(table.Get("user-id")[0].Value, Equals, "id")
 	c.Assert(table.Get("user-id")[0].CellType, Equals, Dynamic)
 	c.Assert(table.Get("description")[0].Value, Equals, "description")
@@ -880,43 +849,43 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 }
 
 func (s *MySuite) TestCreateConceptStep(c *C) {
-	conceptText := SpecBuilder().
-		specHeading("concept with <foo>").
-		step("nested concept with <foo>").
-		specHeading("nested concept with <baz>").
-		step("nested concept step wiht <baz>").String()
-	concepts, _ := new(ConceptParser).Parse(conceptText)
+	dictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "param_nested_concept.cpt"))
+	AddConcepts(path, dictionary)
 
-	dictionary := new(ConceptDictionary)
-	dictionary.Add(concepts, "file.cpt")
-
-	argsInStep := []*StepArg{&StepArg{Name: "arg1", Value: "value", ArgType: Static}}
+	argsInStep := []*StepArg{&StepArg{Name: "bar", Value: "first name", ArgType: Static}, &StepArg{Name: "far", Value: "last name", ArgType: Static}}
 	originalStep := &Step{
 		LineNo:         12,
-		Value:          "concept with {}",
-		LineText:       "concept with \"value\"",
+		Value:          "create user {} {}",
+		LineText:       "create user \"first name\" \"last name\"",
 		Args:           argsInStep,
-		IsConcept:      true,
+		IsConcept:      false,
 		HasInlineTable: false}
-	new(Specification).createConceptStep(dictionary.search("concept with {}").ConceptStep, originalStep)
+
+	new(Specification).createConceptStep(dictionary.search("create user {} {}").ConceptStep, originalStep)
+
 	c.Assert(originalStep.IsConcept, Equals, true)
 	c.Assert(len(originalStep.ConceptSteps), Equals, 1)
-	c.Assert(originalStep.Args[0].Value, Equals, "value")
-
-	c.Assert(originalStep.Lookup.getArg("foo").Value, Equals, "value")
+	c.Assert(originalStep.Args[0].Value, Equals, "first name")
+	c.Assert(originalStep.Lookup.getArg("bar").Value, Equals, "first name")
+	c.Assert(originalStep.Args[1].Value, Equals, "last name")
+	c.Assert(originalStep.Lookup.getArg("far").Value, Equals, "last name")
 
 	nestedConcept := originalStep.ConceptSteps[0]
 	c.Assert(nestedConcept.IsConcept, Equals, true)
 	c.Assert(len(nestedConcept.ConceptSteps), Equals, 1)
 
 	c.Assert(nestedConcept.Args[0].ArgType, Equals, Dynamic)
-	c.Assert(nestedConcept.Args[0].Value, Equals, "foo")
+	c.Assert(nestedConcept.Args[0].Name, Equals, "bar")
+
+	c.Assert(nestedConcept.Args[1].ArgType, Equals, Dynamic)
+	c.Assert(nestedConcept.Args[1].Name, Equals, "far")
 
 	c.Assert(nestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Dynamic)
-	c.Assert(nestedConcept.ConceptSteps[0].Args[0].Value, Equals, "baz")
+	c.Assert(nestedConcept.ConceptSteps[0].Args[0].Name, Equals, "baz")
 
 	c.Assert(nestedConcept.Lookup.getArg("baz").ArgType, Equals, Dynamic)
-	c.Assert(nestedConcept.Lookup.getArg("baz").Value, Equals, "foo")
+	c.Assert(nestedConcept.Lookup.getArg("baz").Value, Equals, "bar")
 }
 
 func (s *MySuite) TestRenameStep(c *C) {

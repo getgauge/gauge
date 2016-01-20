@@ -91,6 +91,7 @@ func arrayContains(array []string, toFind string) bool {
 	return false
 }
 
+//remove this
 func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 	for index, anItem := range scenarios {
 		if reflect.DeepEqual(scenario, anItem) {

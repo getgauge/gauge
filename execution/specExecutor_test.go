@@ -19,6 +19,8 @@ package execution
 
 import (
 	"fmt"
+	"path/filepath"
+
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
@@ -93,20 +95,15 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 }
 
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
-	conceptDictionary := new(parser.ConceptDictionary)
+	conceptDictionary := parser.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
+	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
+	parser.AddConcepts(path, conceptDictionary)
 
-	conceptText := SpecBuilder().
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name <user-name>").
-		step("assign phone <user-phone>").String()
-
-	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
-	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
@@ -114,12 +111,18 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
-
-	firstStep := protoConcept.GetSteps()[0].GetStep()
-	params := getParameters(firstStep.GetFragments())
-	c.Assert(2, Equals, len(params))
+	fmt.Println(protoConcept)
+	firstNestedStep := protoConcept.GetSteps()[0].GetConcept().GetSteps()[0].GetStep()
+	params := getParameters(firstNestedStep.GetFragments())
+	c.Assert(1, Equals, len(params))
 	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "456")
+
+	secondNestedStep := protoConcept.GetSteps()[0].GetConcept().GetSteps()[1].GetStep()
+	params = getParameters(secondNestedStep.GetFragments())
+	c.Assert(1, Equals, len(params))
+	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
+	c.Assert(params[0].GetValue(), Equals, "foo")
 
 	secondStep := protoConcept.GetSteps()[1].GetStep()
 	params = getParameters(secondStep.GetFragments())
@@ -130,23 +133,15 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
-	conceptDictionary := new(parser.ConceptDictionary)
+	conceptDictionary := parser.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name <user-name>").
-		step("assign phone <user-phone>").
-		specHeading("assign id <userid> and name <username>").
-		step("add id <userid>").
-		step("add name <username>").String()
-
-	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
-	conceptDictionary.Add(concepts, "file.cpt")
+	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
+	parser.AddConcepts(path, conceptDictionary)
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary)
 
@@ -182,7 +177,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
-	conceptDictionary := new(parser.ConceptDictionary)
+	conceptDictionary := parser.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
@@ -192,16 +187,8 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 		step("create user <id> <name> and <phone>").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name <user-name>").
-		step("assign phone <user-phone>").
-		specHeading("assign id <userid> and name <username>").
-		step("add id <userid>").
-		step("add name <username>").String()
-
-	concepts, _ := new(parser.ConceptParser).Parse(conceptText)
-	conceptDictionary.Add(concepts, "file.cpt")
+	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
+	parser.AddConcepts(path, conceptDictionary)
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary)
 

@@ -18,8 +18,10 @@
 package parser
 
 import (
-	. "gopkg.in/check.v1"
+	"path/filepath"
 	"testing"
+
+	. "gopkg.in/check.v1"
 )
 
 // Hook up gocheck into the "go test" runner.
@@ -541,15 +543,13 @@ func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
 
 func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First flow").
-		step("concept step").
+		step("test concept step 1").
 		step("another step").String()
-	step1 := &Step{Value: "step 1"}
-	step2 := &Step{Value: "step 2"}
-	concept1 := &Step{Value: "concept step", ConceptSteps: []*Step{step1, step2}, IsConcept: true}
-	err := conceptDictionary.Add([]*Step{concept1}, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 	tokens, err := parser.GenerateTokens(specText)
 	c.Assert(err, IsNil)
 	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary)
@@ -558,7 +558,6 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
 	secondStepInSpec := spec.Scenarios[0].Steps[1]
 	c.Assert(firstStepInSpec.ConceptSteps[0].Parent, Equals, firstStepInSpec)
-	c.Assert(firstStepInSpec.ConceptSteps[1].Parent, Equals, firstStepInSpec)
 	c.Assert(firstStepInSpec.Parent, IsNil)
 	c.Assert(secondStepInSpec.Parent, IsNil)
 }

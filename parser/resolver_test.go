@@ -18,6 +18,8 @@
 package parser
 
 import (
+	"path/filepath"
+
 	"github.com/getgauge/gauge/util"
 	. "gopkg.in/check.v1"
 )
@@ -83,8 +85,6 @@ func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
 
 func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
-
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "foo", "888").
@@ -92,14 +92,9 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 		step("create user <id> <name> and <phone>").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name <user-name>").
-		step("assign number <user-phone>").String()
-
-	concepts, _ := new(ConceptParser).Parse(conceptText)
-
-	conceptDictionary.Add(concepts, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept := spec.Scenarios[0].Steps[0]
 
@@ -114,8 +109,6 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
-
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "prateek", "8800").
@@ -124,16 +117,9 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name <user-name>").
-		specHeading("assign id <userid> and name <username>").
-		step("add id <userid>").
-		step("add name <username>").String()
-
-	concepts, _ := new(ConceptParser).Parse(conceptText)
-
-	conceptDictionary.Add(concepts, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
@@ -161,25 +147,15 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
-
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
-		step("create user \"456\" \"foo\" and \"prateek\"").
+		step("create user \"456\" \"foo\" and \"123456\"").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("assign id <userid> and name <username>").
-		step("add id \"some-id\"").
-		step("second nested \"s-value\"").
-		specHeading("create user <user-id> <user-name> and <user-phone>").
-		step("assign id <user-id> and name \"static-name\"").
-		specHeading("second nested <baz>").
-		step("add id <baz>").String()
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 
-	concepts, _ := new(ConceptParser).Parse(conceptText)
-
-	conceptDictionary.Add(concepts, "file.cpt")
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
@@ -188,86 +164,31 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 	c.Assert(concept1.getArg("user-id").Value, Equals, "456")
 	c.Assert(concept1.getArg("user-name").Value, Equals, "foo")
-	c.Assert(concept1.getArg("user-phone").Value, Equals, "prateek")
+	c.Assert(concept1.getArg("user-phone").Value, Equals, "123456")
 
 	nestedConcept := concept1.ConceptSteps[0]
 	c.Assert(nestedConcept.getArg("userid").Value, Equals, "456")
-	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-name")
-
-	c.Assert(nestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, Static)
-	c.Assert(nestedConcept.ConceptSteps[0].Args[0].Value, Equals, "some-id")
-
-	secondLevelNestedConcept := nestedConcept.ConceptSteps[1]
-	c.Assert(secondLevelNestedConcept.getArg("baz").Value, Equals, "s-value")
-	c.Assert(secondLevelNestedConcept.getArg("baz").ArgType, Equals, Static)
+	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-value")
 }
 
 func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
-
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
-		step("Concept").
+		step("create user \"sdf\" \"name\" and \"1234\"").
 		String()
 
-	conceptText := SpecBuilder().
-		specHeading("Concept").
-		step("Heading \"a\"").
-		step("Heading \"b\"").
-		specHeading("Heading <h>").
-		step("Say <h> to <h>").String()
-
-	concepts, _ := new(ConceptParser).Parse(conceptText)
-
-	conceptDictionary.Add(concepts, "file.cpt")
+	conceptDictionary := NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
+	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	nestedConcept := concept1.ConceptSteps[0]
 	nestedConcept1 := concept1.ConceptSteps[1]
 
-	c.Assert(nestedConcept.getArg("h").Value, Equals, "a")
-	c.Assert(nestedConcept1.getArg("h").Value, Equals, "b")
-}
-
-func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParamsIncludingDynamicParams(c *C) {
-	parser := new(SpecParser)
-	conceptDictionary := new(ConceptDictionary)
-
-	specText := SpecBuilder().specHeading("A spec heading").
-		scenarioHeading("First scenario").
-		step("Concept \"abc\"").
-		String()
-
-	conceptText := SpecBuilder().
-		specHeading("Concept <message>").
-		step("Heading \"a\" and \"a\"").
-		step("Heading \"b\" and \"b\"").
-		step("Heading <message> and \"a\"").
-		step("Heading \"c\" and \"a\"").
-		specHeading("Heading <h> and <i>").
-		step("Say <h> to <i>").String()
-
-	concepts, _ := new(ConceptParser).Parse(conceptText)
-
-	conceptDictionary.Add(concepts, "file.cpt")
-	spec, _ := parser.Parse(specText, conceptDictionary)
-	concept1 := spec.Scenarios[0].Steps[0]
-
-	nestedConcept := concept1.ConceptSteps[0]
-	c.Assert(nestedConcept.getArg("h").Value, Equals, "a")
-	c.Assert(nestedConcept.getArg("i").Value, Equals, "a")
-
-	nestedConcept1 := concept1.ConceptSteps[1]
-	c.Assert(nestedConcept1.getArg("h").Value, Equals, "b")
-	c.Assert(nestedConcept1.getArg("i").Value, Equals, "b")
-
-	nestedConcept2 := concept1.ConceptSteps[2]
-	c.Assert(nestedConcept2.getArg("h").Value, Equals, "abc")
-	c.Assert(nestedConcept2.getArg("i").Value, Equals, "a")
-
-	nestedConcept3 := concept1.ConceptSteps[3]
-	c.Assert(nestedConcept3.getArg("h").Value, Equals, "c")
-	c.Assert(nestedConcept3.getArg("i").Value, Equals, "a")
+	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-value")
+	c.Assert(nestedConcept1.getArg("username").Value, Equals, "static-value1")
+	c.Assert(nestedConcept.getArg("userid").Value, Equals, "sdf")
+	c.Assert(nestedConcept1.getArg("userid").Value, Equals, "sdf")
 }

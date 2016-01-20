@@ -18,9 +18,10 @@
 package refactor
 
 import (
+	"testing"
+
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -118,10 +119,12 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsInConceptFiles(c *C) {
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
 	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	dictionary := parser.NewConceptDictionary()
 	step1 := &parser.Step{Value: oldStep + "sdsf", IsConcept: true}
 	step2 := &parser.Step{Value: unchanged, IsConcept: true, Items: []parser.Item{&parser.Step{Value: oldStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
-	dictionary.Add([]*parser.Step{step1, step2}, "file.cpt")
+
+	dictionary.ConceptsMap[step1.Value] = &parser.Concept{ConceptStep: step1, FileName: "file.cpt"}
+	dictionary.ConceptsMap[step2.Value] = &parser.Concept{ConceptStep: step2, FileName: "file.cpt"}
 
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
@@ -164,13 +167,14 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
 	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	dictionary := parser.NewConceptDictionary()
 	step1 := &parser.Step{Value: oldStep + "sdsf", IsConcept: true}
 	step2 := &parser.Step{Value: unchanged, IsConcept: true, Items: []parser.Item{&parser.Step{Value: newStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
 	step3 := &parser.Step{Value: "Concept value", IsConcept: true, Items: []parser.Item{&parser.Step{Value: oldStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
 	fileName := "file.cpt"
-	dictionary.Add([]*parser.Step{step1, step2}, fileName)
-	dictionary.Add([]*parser.Step{step3}, "e"+fileName)
+	dictionary.ConceptsMap[step1.Value] = &parser.Concept{ConceptStep: step1, FileName: fileName}
+	dictionary.ConceptsMap[step2.Value] = &parser.Concept{ConceptStep: step2, FileName: fileName}
+	dictionary.ConceptsMap[step3.Value] = &parser.Concept{ConceptStep: step3, FileName: "e" + fileName}
 
 	_, filesRefactored := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
