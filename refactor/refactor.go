@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/formatter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -37,8 +38,8 @@ import (
 )
 
 type rephraseRefactorer struct {
-	oldStep   *parser.Step
-	newStep   *parser.Step
+	oldStep   *gauge.Step
+	newStep   *gauge.Step
 	isConcept bool
 	startChan *runner.StartChannels
 }
@@ -73,7 +74,7 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	}
 
 	result := &refactoringResult{Success: true, Errors: make([]string, 0), warnings: make([]string, 0)}
-	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &parser.ConceptDictionary{})
+	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &gauge.ConceptDictionary{})
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.Success {
 		return result
@@ -108,7 +109,7 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	}
 }
 
-func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary) *refactoringResult {
+func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 
 	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
@@ -144,8 +145,8 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*parser.Specificat
 	return result
 }
 
-func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*parser.Specification, conceptDictionary *parser.ConceptDictionary) (map[*parser.Specification]bool, map[string]bool) {
-	specsRefactored := make(map[*parser.Specification]bool, 0)
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification]bool, map[string]bool) {
+	specsRefactored := make(map[*gauge.Specification]bool, 0)
 	conceptFilesRefactored := make(map[string]bool, 0)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
@@ -157,8 +158,8 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*parser.Spe
 		conceptFilesRefactored[concept.FileName] = !ok && false || conceptFilesRefactored[concept.FileName]
 		for _, item := range concept.ConceptStep.Items {
 			isRefactored := conceptFilesRefactored[concept.FileName]
-			conceptFilesRefactored[concept.FileName] = item.Kind() == parser.StepKind &&
-				item.(*parser.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
+			conceptFilesRefactored[concept.FileName] = item.Kind() == gauge.StepKind &&
+				item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
 				isRefactored
 		}
 	}
@@ -189,10 +190,10 @@ func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartCh
 	if err != nil {
 		return nil, err
 	}
-	spec := &parser.Specification{}
-	steps := make([]*parser.Step, 0)
+
+	steps := make([]*gauge.Step, 0)
 	for _, stepToken := range stepTokens {
-		step, parseDetails := spec.CreateStepUsingLookup(stepToken, nil)
+		step, parseDetails := parser.CreateStepUsingLookup(stepToken, nil)
 		if parseDetails != nil && parseDetails.Error != nil {
 			return nil, parseDetails.Error
 		}
@@ -235,8 +236,8 @@ func (agent *rephraseRefactorer) createRefactorRequest(runner *runner.TestRunner
 	if err != nil {
 		return nil, err
 	}
-	oldProtoStepValue := parser.ConvertToProtoStepValue(oldStepValue)
-	newProtoStepValue := parser.ConvertToProtoStepValue(newStepValue)
+	oldProtoStepValue := gauge.ConvertToProtoStepValue(oldStepValue)
+	newProtoStepValue := gauge.ConvertToProtoStepValue(newStepValue)
 	return &gauge_messages.Message{MessageType: gauge_messages.Message_RefactorRequest.Enum(), RefactorRequest: &gauge_messages.RefactorRequest{OldStepValue: oldProtoStepValue, NewStepValue: newProtoStepValue, ParamPositions: agent.createParameterPositions(orderMap)}}, nil
 }
 
@@ -277,11 +278,11 @@ func (agent *rephraseRefactorer) createParameterPositions(orderMap map[int]int) 
 	return paramPositions
 }
 
-func (agent *rephraseRefactorer) getStepValueFor(step *parser.Step, stepName string) (*parser.StepValue, error) {
+func (agent *rephraseRefactorer) getStepValueFor(step *gauge.Step, stepName string) (*gauge.StepValue, error) {
 	return parser.ExtractStepValueAndParams(stepName, false)
 }
 
-func writeToConceptAndSpecFiles(specs []*parser.Specification, conceptDictionary *parser.ConceptDictionary, specsRefactored map[*parser.Specification]bool, conceptFilesRefactored map[string]bool) ([]string, []string) {
+func writeToConceptAndSpecFiles(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, specsRefactored map[*gauge.Specification]bool, conceptFilesRefactored map[string]bool) ([]string, []string) {
 	specFiles := make([]string, 0)
 	conceptFiles := make([]string, 0)
 	for _, spec := range specs {

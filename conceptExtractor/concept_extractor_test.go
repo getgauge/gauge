@@ -18,9 +18,10 @@
 package conceptExtractor
 
 import (
+	"testing"
+
 	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }

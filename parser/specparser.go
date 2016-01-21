@@ -21,8 +21,10 @@ import (
 	"bufio"
 	"bytes"
 	"fmt"
-	"github.com/getgauge/common"
 	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge"
 )
 
 type SpecParser struct {
@@ -30,14 +32,12 @@ type SpecParser struct {
 	lineNo            int
 	tokens            []*Token
 	currentState      int
-	processors        map[TokenKind]func(*SpecParser, *Token) (*ParseError, bool)
-	conceptDictionary *ConceptDictionary
+	processors        map[gauge.TokenKind]func(*SpecParser, *Token) (*ParseError, bool)
+	conceptDictionary *gauge.ConceptDictionary
 }
 
-type TokenKind int
-
 type Token struct {
-	Kind     TokenKind
+	Kind     gauge.TokenKind
 	LineNo   int
 	LineText string
 	Args     []string
@@ -77,34 +77,20 @@ const (
 	keywordScope   = 1 << iota
 )
 
-const (
-	SpecKind TokenKind = iota
-	TagKind
-	ScenarioKind
-	CommentKind
-	StepKind
-	TableHeader
-	TableRow
-	HeadingKind
-	TableKind
-	DataTableKind
-	TearDownKind
-)
-
 func (parser *SpecParser) initialize() {
-	parser.processors = make(map[TokenKind]func(*SpecParser, *Token) (*ParseError, bool))
-	parser.processors[SpecKind] = processSpec
-	parser.processors[ScenarioKind] = processScenario
-	parser.processors[CommentKind] = processComment
-	parser.processors[StepKind] = processStep
-	parser.processors[TagKind] = processTag
-	parser.processors[TableHeader] = processTable
-	parser.processors[TableRow] = processTable
-	parser.processors[DataTableKind] = processDataTable
-	parser.processors[TearDownKind] = processTearDown
+	parser.processors = make(map[gauge.TokenKind]func(*SpecParser, *Token) (*ParseError, bool))
+	parser.processors[gauge.SpecKind] = processSpec
+	parser.processors[gauge.ScenarioKind] = processScenario
+	parser.processors[gauge.CommentKind] = processComment
+	parser.processors[gauge.StepKind] = processStep
+	parser.processors[gauge.TagKind] = processTag
+	parser.processors[gauge.TableHeader] = processTable
+	parser.processors[gauge.TableRow] = processTable
+	parser.processors[gauge.DataTableKind] = processDataTable
+	parser.processors[gauge.TearDownKind] = processTearDown
 }
 
-func (parser *SpecParser) Parse(specText string, conceptDictionary *ConceptDictionary) (*Specification, *ParseResult) {
+func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {
 	tokens, parseError := parser.GenerateTokens(specText)
 	if parseError != nil {
 		return nil, &ParseResult{ParseError: parseError, Ok: false}
@@ -120,32 +106,32 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError
 		trimmedLine := strings.TrimSpace(line)
 		var newToken *Token
 		if len(trimmedLine) == 0 {
-			newToken = &Token{Kind: CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
+			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
 		} else if parser.isScenarioHeading(trimmedLine) {
-			newToken = &Token{Kind: ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
+			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
-			newToken = &Token{Kind: SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if parser.isSpecUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.Kind = SpecKind
+			newToken.Kind = gauge.SpecKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isScenarioUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.Kind = ScenarioKind
+			newToken.Kind = gauge.ScenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
-			newToken = &Token{Kind: StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found {
-			newToken = &Token{Kind: TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
+			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
 		} else if parser.isTableRow(trimmedLine) {
-			kind := parser.tokenKindBasedOnCurrentState(tableScope, TableRow, TableHeader)
+			kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
 			newToken = &Token{Kind: kind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine)}
 		} else if value, found := parser.isDataTable(trimmedLine); found {
-			newToken = &Token{Kind: DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
+			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
 		} else if parser.isTearDown(trimmedLine) {
-			newToken = &Token{Kind: TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
+			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
 		} else {
-			newToken = &Token{Kind: CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
 		error := parser.accept(newToken)
 		if error != nil {
@@ -156,7 +142,7 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError
 
 }
 
-func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken TokenKind, alternateToken TokenKind) TokenKind {
+func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
 	if isInState(parser.currentState, state) {
 		return matchingToken
 	} else {
@@ -320,7 +306,7 @@ func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 		} else if element == '|' {
 			trimmedValue := strings.TrimSpace(buffer.String())
 
-			if token.Kind == TableHeader {
+			if token.Kind == gauge.TableHeader {
 				if len(trimmedValue) == 0 {
 					return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table header should not be blank"}, true
 				}

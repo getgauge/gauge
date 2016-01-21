@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/gauge"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -39,7 +41,7 @@ func (s *MySuite) TestParsingSpecHeading(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec Heading")
 }
 
@@ -49,7 +51,7 @@ func (s *MySuite) TestParsingASingleStep(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
-	c.Assert(tokens[0].Kind, Equals, StepKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
 }
 
 func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
@@ -60,9 +62,9 @@ func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec Heading")
-	c.Assert(tokens[1].Kind, Equals, SpecKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[1].Value, Equals, "Another Spec Heading")
 }
 
@@ -84,7 +86,7 @@ func (s *MySuite) TestParsingScenarioHeading(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
-	c.Assert(tokens[1].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.ScenarioKind)
 	c.Assert(tokens[1].Value, Equals, "First scenario")
 }
 
@@ -106,7 +108,7 @@ func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
 
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
-	c.Assert(tokens[0].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.ScenarioKind)
 }
 
 func (s *MySuite) TestParsingComments(c *C) {
@@ -118,10 +120,10 @@ func (s *MySuite) TestParsingComments(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, CommentKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[1].Value, Equals, "Hello i am a comment")
 
-	c.Assert(tokens[2].Kind, Equals, CommentKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[2].Value, Equals, "### A h3 comment")
 }
 
@@ -134,7 +136,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineOneChar(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec heading with underline")
 
 }
@@ -148,7 +150,7 @@ func (s *MySuite) TestParsingSpecHeadingWithUnderlineMultipleChar(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 1)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec heading with underline")
 
 }
@@ -162,10 +164,10 @@ func (s *MySuite) TestParsingCommentWithUnderlineAndInvalidCharacters(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
-	c.Assert(tokens[0].Kind, Equals, CommentKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[0].Value, Equals, "A comment that will be with invalid underline")
 
-	c.Assert(tokens[1].Kind, Equals, CommentKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[1].Value, Equals, "===89s")
 }
 
@@ -178,10 +180,10 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderline(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec heading with underline")
 
-	c.Assert(tokens[1].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.ScenarioKind)
 	c.Assert(tokens[1].Value, Equals, "Scenario heading with underline")
 
 }
@@ -195,10 +197,10 @@ func (s *MySuite) TestParsingScenarioHeadingWithUnderlineMultipleChar(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec heading with underline")
 
-	c.Assert(tokens[1].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.ScenarioKind)
 	c.Assert(tokens[1].Value, Equals, "Scenario heading with underline")
 
 }
@@ -212,16 +214,16 @@ func (s *MySuite) TestParsingHeadingWithUnderlineAndHash(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[0].Value, Equals, "Spec heading with hash")
 
-	c.Assert(tokens[1].Kind, Equals, CommentKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[1].Value, Equals, "=====")
 
-	c.Assert(tokens[2].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.ScenarioKind)
 	c.Assert(tokens[2].Value, Equals, "Scenario heading with hash")
 
-	c.Assert(tokens[3].Kind, Equals, CommentKind)
+	c.Assert(tokens[3].Kind, Equals, gauge.CommentKind)
 	c.Assert(tokens[3].Value, Equals, "----")
 
 }
@@ -235,7 +237,7 @@ func (s *MySuite) TestParseSpecTags(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, TagKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
@@ -252,7 +254,7 @@ func (s *MySuite) TestParseSpecTagsWithSpace(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, TagKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
@@ -268,7 +270,7 @@ func (s *MySuite) TestParseEmptyTags(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, TagKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
@@ -285,7 +287,7 @@ func (s *MySuite) TestParseScenarioTags(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[2].Kind, Equals, TagKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "tag1")
 	c.Assert(tokens[2].Args[1], Equals, "tag2")
@@ -302,7 +304,7 @@ func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 2)
 
-	c.Assert(tokens[0].Kind, Equals, TagKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[0].Args), Equals, 1)
 	c.Assert(tokens[0].Args[0], Equals, "tag1")
 	c.Assert(tokens[0].LineText, Equals, "tags: tag1 ")
@@ -317,22 +319,22 @@ func (s *MySuite) TestParsingSimpleDataTable(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 5)
 
-	c.Assert(tokens[1].Kind, Equals, TableHeader)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "name")
 	c.Assert(tokens[1].Args[1], Equals, "id")
 
-	c.Assert(tokens[2].Kind, Equals, TableRow)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "---")
 	c.Assert(tokens[2].Args[1], Equals, "---")
 
-	c.Assert(tokens[3].Kind, Equals, TableRow)
+	c.Assert(tokens[3].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[3].Args), Equals, 2)
 	c.Assert(tokens[3].Args[0], Equals, "john")
 	c.Assert(tokens[3].Args[1], Equals, "123")
 
-	c.Assert(tokens[4].Kind, Equals, TableRow)
+	c.Assert(tokens[4].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[4].Args), Equals, 2)
 	c.Assert(tokens[4].Args[0], Equals, "james")
 	c.Assert(tokens[4].Args[1], Equals, "007")
@@ -347,27 +349,27 @@ func (s *MySuite) TestParsingMultipleDataTable(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 7)
 
-	c.Assert(tokens[1].Kind, Equals, TableHeader)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "name")
 	c.Assert(tokens[1].Args[1], Equals, "id")
 
-	c.Assert(tokens[2].Kind, Equals, TableRow)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "john")
 	c.Assert(tokens[2].Args[1], Equals, "123")
 
-	c.Assert(tokens[3].Kind, Equals, TableRow)
+	c.Assert(tokens[3].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[3].Args), Equals, 2)
 	c.Assert(tokens[3].Args[0], Equals, "james")
 	c.Assert(tokens[3].Args[1], Equals, "007")
 
-	c.Assert(tokens[5].Kind, Equals, TableHeader)
+	c.Assert(tokens[5].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[5].Args), Equals, 2)
 	c.Assert(tokens[5].Args[0], Equals, "user")
 	c.Assert(tokens[5].Args[1], Equals, "role")
 
-	c.Assert(tokens[6].Kind, Equals, TableRow)
+	c.Assert(tokens[6].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[6].Args), Equals, 2)
 	c.Assert(tokens[6].Args[0], Equals, "root")
 	c.Assert(tokens[6].Args[1], Equals, "admin")
@@ -381,17 +383,17 @@ func (s *MySuite) TestParsingDataTableWithEmptyHeaderSeparatorRow(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 4)
 
-	c.Assert(tokens[1].Kind, Equals, TableHeader)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "name")
 	c.Assert(tokens[1].Args[1], Equals, "id")
 
-	c.Assert(tokens[2].Kind, Equals, TableRow)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "")
 	c.Assert(tokens[2].Args[1], Equals, "")
 
-	c.Assert(tokens[3].Kind, Equals, TableRow)
+	c.Assert(tokens[3].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[3].Args), Equals, 2)
 	c.Assert(tokens[3].Args[0], Equals, "john")
 	c.Assert(tokens[3].Args[1], Equals, "123")
@@ -406,14 +408,14 @@ func (s *MySuite) TestParsingDataTableRowEscapingPipe(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, TableHeader)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[1].Args), Equals, 4)
 	c.Assert(tokens[1].Args[0], Equals, "name")
 	c.Assert(tokens[1].Args[1], Equals, "id")
 	c.Assert(tokens[1].Args[2], Equals, "address")
 	c.Assert(tokens[1].Args[3], Equals, "phone")
 
-	c.Assert(tokens[2].Kind, Equals, TableRow)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[2].Args), Equals, 3)
 	c.Assert(tokens[2].Args[0], Equals, "escape | pipe")
 	c.Assert(tokens[2].Args[1], Equals, "second")
@@ -447,13 +449,13 @@ func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 5)
 
-	c.Assert(tokens[1].Kind, Equals, TableHeader)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(len(tokens[1].Args), Equals, 3)
 	c.Assert(tokens[1].Args[0], Equals, "---")
 	c.Assert(tokens[1].Args[1], Equals, "--")
 	c.Assert(tokens[1].Args[2], Equals, "-")
 
-	c.Assert(tokens[2].Kind, Equals, TableRow)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 	c.Assert(len(tokens[2].Args), Equals, 3)
 	c.Assert(tokens[2].Args[0], Equals, "---")
 	c.Assert(tokens[2].Args[1], Equals, "--")
@@ -483,31 +485,31 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 15)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
-	c.Assert(tokens[1].Kind, Equals, CommentKind)
-	c.Assert(tokens[2].Kind, Equals, CommentKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.CommentKind)
 
-	c.Assert(tokens[3].Kind, Equals, StepKind)
+	c.Assert(tokens[3].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[3].Value, Equals, "Context step with {static} and {special}")
 
-	c.Assert(tokens[4].Kind, Equals, TableHeader)
-	c.Assert(tokens[5].Kind, Equals, TableRow)
-	c.Assert(tokens[6].Kind, Equals, TableRow)
-	c.Assert(tokens[7].Kind, Equals, TagKind)
-	c.Assert(tokens[8].Kind, Equals, ScenarioKind)
-	c.Assert(tokens[9].Kind, Equals, TagKind)
+	c.Assert(tokens[4].Kind, Equals, gauge.TableHeader)
+	c.Assert(tokens[5].Kind, Equals, gauge.TableRow)
+	c.Assert(tokens[6].Kind, Equals, gauge.TableRow)
+	c.Assert(tokens[7].Kind, Equals, gauge.TagKind)
+	c.Assert(tokens[8].Kind, Equals, gauge.ScenarioKind)
+	c.Assert(tokens[9].Kind, Equals, gauge.TagKind)
 
-	c.Assert(tokens[10].Kind, Equals, StepKind)
+	c.Assert(tokens[10].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[10].Value, Equals, "first with {static} and {dynamic}")
 
-	c.Assert(tokens[11].Kind, Equals, CommentKind)
+	c.Assert(tokens[11].Kind, Equals, gauge.CommentKind)
 
-	c.Assert(tokens[12].Kind, Equals, StepKind)
+	c.Assert(tokens[12].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[12].Value, Equals, "{special} and {dynamic} with {static}")
 
-	c.Assert(tokens[13].Kind, Equals, ScenarioKind)
+	c.Assert(tokens[13].Kind, Equals, gauge.ScenarioKind)
 
-	c.Assert(tokens[14].Kind, Equals, StepKind)
+	c.Assert(tokens[14].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[14].Value, Equals, "another")
 
 }
@@ -526,17 +528,17 @@ func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 7)
 
-	c.Assert(tokens[0].Kind, Equals, SpecKind)
-	c.Assert(tokens[1].Kind, Equals, CommentKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
 
-	c.Assert(tokens[2].Kind, Equals, ScenarioKind)
-	c.Assert(tokens[3].Kind, Equals, StepKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.ScenarioKind)
+	c.Assert(tokens[3].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[3].Value, Equals, "another")
-	c.Assert(tokens[4].Kind, Equals, TearDownKind)
+	c.Assert(tokens[4].Kind, Equals, gauge.TearDownKind)
 
-	c.Assert(tokens[5].Kind, Equals, StepKind)
+	c.Assert(tokens[5].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[5].Value, Equals, "step1")
-	c.Assert(tokens[6].Kind, Equals, StepKind)
+	c.Assert(tokens[6].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[6].Value, Equals, "step2")
 
 }
@@ -547,7 +549,7 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 		scenarioHeading("First flow").
 		step("test concept step 1").
 		step("another step").String()
-	conceptDictionary := NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	AddConcepts(path, conceptDictionary)
 	tokens, err := parser.GenerateTokens(specText)
@@ -574,7 +576,7 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
-	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -583,7 +585,7 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
 
-	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -592,7 +594,7 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
 
-	_, parseRes := parser.Parse(specText, new(ConceptDictionary))
+	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseRes.ParseError.Message, Equals, "Table location not specified")
 	c.Assert(parseRes.Ok, Equals, false)
 }

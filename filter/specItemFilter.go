@@ -24,8 +24,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
 	"golang.org/x/tools/go/exact"
 	"golang.org/x/tools/go/types"
 )
@@ -45,8 +45,8 @@ func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
 	return &scenarioIndexFilterToRetain{index, 0}
 }
 
-func (filter *scenarioIndexFilterToRetain) Filter(item parser.Item) bool {
-	if item.Kind() == parser.ScenarioKind {
+func (filter *scenarioIndexFilterToRetain) Filter(item gauge.Item) bool {
+	if item.Kind() == gauge.ScenarioKind {
 		if filter.currentScenarioIndex != filter.indexToNotFilter {
 			filter.currentScenarioIndex++
 			return true
@@ -62,9 +62,9 @@ func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFil
 	return &ScenarioFilterBasedOnTags{specTags, tagExp}
 }
 
-func (filter *ScenarioFilterBasedOnTags) Filter(item parser.Item) bool {
-	if item.Kind() == parser.ScenarioKind {
-		tags := item.(*parser.Scenario).Tags
+func (filter *ScenarioFilterBasedOnTags) Filter(item gauge.Item) bool {
+	if item.Kind() == gauge.ScenarioKind {
+		tags := item.(*gauge.Scenario).Tags
 		if tags == nil {
 			return !filter.filterTags(filter.specTags)
 		}
@@ -184,8 +184,8 @@ func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []
 	return listOfOperators, listOfTags
 }
 
-func filterSpecsItems(specs []*parser.Specification, filter parser.SpecItemFilter) []*parser.Specification {
-	filteredSpecs := make([]*parser.Specification, 0)
+func filterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
+	filteredSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {
 		spec.Filter(filter)
 		if len(spec.Scenarios) != 0 {
@@ -195,8 +195,8 @@ func filterSpecsItems(specs []*parser.Specification, filter parser.SpecItemFilte
 	return filteredSpecs
 }
 
-func filterSpecsByTags(specs []*parser.Specification, tagExpression string) []*parser.Specification {
-	filteredSpecs := make([]*parser.Specification, 0)
+func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) []*gauge.Specification {
+	filteredSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {
 		tagValues := make([]string, 0)
 		if spec.Tags != nil {

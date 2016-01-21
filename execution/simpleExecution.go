@@ -24,12 +24,12 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/reporter"
 
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 )
@@ -40,7 +40,7 @@ var TableRows = ""
 type simpleExecution struct {
 	manifest             *manifest.Manifest
 	runner               *runner.TestRunner
-	specifications       []*parser.Specification
+	specifications       []*gauge.Specification
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
@@ -55,7 +55,7 @@ type execution interface {
 
 type executionInfo struct {
 	manifest        *manifest.Manifest
-	specifications  []*parser.Specification
+	specifications  []*gauge.Specification
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.Handler
 	parallelRunInfo *parallelInfo
@@ -111,7 +111,7 @@ func (e *simpleExecution) addExecTime(execTime int64) {
 
 func (e *simpleExecution) notifyExecutionResult() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: parser.ConvertToProtoSuiteResult(e.suiteResult)}}
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.NotifyPlugins(message)
 }
 
@@ -182,7 +182,7 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func newSpecExecutor(specToExecute *parser.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
+func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
 	return specExecutor
@@ -218,7 +218,7 @@ func (e *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
 	return e.suiteResult
 }
 
-func (e *simpleExecution) executeSpec(specificationToExecute *parser.Specification) {
+func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specification) {
 	executor := newSpecExecutor(specificationToExecute, e.runner, e.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
 	protoSpecResult := executor.execute()
 	e.suiteResult.AddSpecResult(protoSpecResult)

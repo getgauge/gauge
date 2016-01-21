@@ -10,6 +10,7 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
@@ -66,7 +67,7 @@ func ParseAndValidateSpecs(args []string) {
 	os.Exit(0)
 }
 
-func parseSpecs(args []string) ([]*parser.Specification, *parser.ConceptDictionary) {
+func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {
 	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
 	parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
@@ -90,16 +91,16 @@ func startApi() *runner.TestRunner {
 }
 
 type validationErrMaps struct {
-	specErrs     map[*parser.Specification][]*stepValidationError
-	scenarioErrs map[*parser.Scenario][]*stepValidationError
-	stepErrs     map[*parser.Step]*stepValidationError
+	specErrs     map[*gauge.Specification][]*stepValidationError
+	scenarioErrs map[*gauge.Scenario][]*stepValidationError
+	stepErrs     map[*gauge.Step]*stepValidationError
 }
 
-func validateSpecs(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptDictionary *parser.ConceptDictionary) *validationErrMaps {
+func validateSpecs(manifest *manifest.Manifest, specsToExecute []*gauge.Specification, runner *runner.TestRunner, conceptDictionary *gauge.ConceptDictionary) *validationErrMaps {
 	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
 	//TODO: validator.validate() should return validationErrMaps so that it has scenario/spec info with error(Which is currently done by fillErrors())
 	validationErrors := validator.validate()
-	errMap := &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+	errMap := &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
 	if len(validationErrors) > 0 {
 		printValidationFailures(validationErrors)
 		fillErrors(errMap, validationErrors)
@@ -121,7 +122,7 @@ func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 	}
 }
 
-func fillScenarioErrors(scenario *parser.Scenario, errMap *validationErrMaps, steps []*parser.Step) {
+func fillScenarioErrors(scenario *gauge.Scenario, errMap *validationErrMaps, steps []*gauge.Step) {
 	for _, step := range steps {
 		if step.IsConcept {
 			fillScenarioErrors(scenario, errMap, step.ConceptSteps)
@@ -132,7 +133,7 @@ func fillScenarioErrors(scenario *parser.Scenario, errMap *validationErrMaps, st
 	}
 }
 
-func fillSpecErrors(spec *parser.Specification, errMap *validationErrMaps, steps []*parser.Step) {
+func fillSpecErrors(spec *gauge.Specification, errMap *validationErrMaps, steps []*gauge.Step) {
 	for _, context := range steps {
 		if context.IsConcept {
 			fillSpecErrors(spec, errMap, context.ConceptSteps)

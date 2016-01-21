@@ -19,12 +19,13 @@ package execution
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -73,10 +74,10 @@ func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
 	c.Assert(len(specCollections), Equals, 0)
 }
 
-func createSpecsList(number int) []*parser.Specification {
-	specs := make([]*parser.Specification, 0)
+func createSpecsList(number int) []*gauge.Specification {
+	specs := make([]*gauge.Specification, 0)
 	for i := 0; i < number; i++ {
-		specs = append(specs, &parser.Specification{FileName: fmt.Sprint("spec", i)})
+		specs = append(specs, &gauge.Specification{FileName: fmt.Sprint("spec", i)})
 	}
 	return specs
 }
@@ -88,7 +89,7 @@ func verifySpecCollectionsForSize(c *C, size int, specCollections ...*filter.Spe
 }
 
 func getValidationErrorMap() *validationErrMaps {
-	return &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+	return &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
 }
 
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
@@ -109,7 +110,7 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	errMap := getValidationErrorMap()
-	errMap.specErrs[&parser.Specification{}] = make([]*stepValidationError, 0)
+	errMap.specErrs[&gauge.Specification{}] = make([]*stepValidationError, 0)
 	e := parallelSpecExecution{errMaps: errMap}
 	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
 	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}

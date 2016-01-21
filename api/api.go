@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/formatter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -204,7 +205,7 @@ func (handler *gaugeApiMessageHandler) getAllStepsRequestResponse(message *gauge
 	stepValues := handler.specInfoGatherer.GetAvailableSteps()
 	stepValueResponses := make([]*gauge_messages.ProtoStepValue, 0)
 	for _, stepValue := range stepValues {
-		stepValueResponses = append(stepValueResponses, parser.ConvertToProtoStepValue(stepValue))
+		stepValueResponses = append(stepValueResponses, gauge.ConvertToProtoStepValue(stepValue))
 	}
 	getAllStepsResponse := &gauge_messages.GetAllStepsResponse{AllSteps: stepValueResponses}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
@@ -224,7 +225,7 @@ func (handler *gaugeApiMessageHandler) getStepValueRequestResponse(message *gaug
 	if err != nil {
 		return handler.getErrorResponse(message, err)
 	}
-	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: parser.ConvertToProtoStepValue(stepValue)}
+	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: gauge.ConvertToProtoStepValue(stepValue)}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }
@@ -263,10 +264,10 @@ func (handler *gaugeApiMessageHandler) getErrorMessage(err error) *gauge_message
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
 }
 
-func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*parser.Specification) *gauge_messages.GetAllSpecsResponse {
+func (handler *gaugeApiMessageHandler) createGetAllSpecsResponseMessageFor(specs []*gauge.Specification) *gauge_messages.GetAllSpecsResponse {
 	protoSpecs := make([]*gauge_messages.ProtoSpec, 0)
 	for _, spec := range specs {
-		protoSpecs = append(protoSpecs, parser.ConvertToProtoSpec(spec))
+		protoSpecs = append(protoSpecs, gauge.ConvertToProtoSpec(spec))
 	}
 	return &gauge_messages.GetAllSpecsResponse{Specs: protoSpecs}
 }

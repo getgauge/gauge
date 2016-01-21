@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
@@ -34,7 +35,7 @@ const (
 )
 
 func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
-	specs, results := parser.ParseSpecFiles(specFiles, &parser.ConceptDictionary{})
+	specs, results := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
 	for i, spec := range specs {
 		if err := formatAndSave(spec); err != nil {
 			results[i].ParseError = &parser.ParseError{Message: err.Error()}
@@ -51,23 +52,23 @@ func FormatScenarioHeading(scenarioHeading string) string {
 	return fmt.Sprintf("%s", FormatHeading(scenarioHeading, "-"))
 }
 
-func FormatStep(step *parser.Step) string {
+func FormatStep(step *gauge.Step) string {
 	text := step.Value
-	paramCount := strings.Count(text, parser.ParameterPlaceholder)
+	paramCount := strings.Count(text, gauge.ParameterPlaceholder)
 	for i := 0; i < paramCount; i++ {
 		argument := step.Args[i]
 		formattedArg := ""
-		if argument.ArgType == parser.TableArg {
+		if argument.ArgType == gauge.TableArg {
 			formattedTable := FormatTable(&argument.Table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
-		} else if argument.ArgType == parser.Dynamic {
+		} else if argument.ArgType == gauge.Dynamic {
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Value))
-		} else if argument.ArgType == parser.SpecialString || argument.ArgType == parser.SpecialTable {
+		} else if argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable {
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
 		} else {
 			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
-		text = strings.Replace(text, parser.ParameterPlaceholder, formattedArg, 1)
+		text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
@@ -100,7 +101,7 @@ func FormatHeading(heading, headingChar string) string {
 	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
 }
 
-func FormatTable(table *parser.Table) string {
+func FormatTable(table *gauge.Table) string {
 	columnToWidthMap := make(map[int]int)
 	for i, header := range table.Headers {
 		//table.get(header) returns a list of cells in that particular column
@@ -141,7 +142,7 @@ func addPaddingToCell(cellValue string, width int) string {
 	return fmt.Sprintf("%s%s", cellValue, padding)
 }
 
-func findLongestCellWidth(columnCells []parser.TableCell, minValue int) int {
+func findLongestCellWidth(columnCells []gauge.TableCell, minValue int) int {
 	longestLength := minValue
 	for _, cellValue := range columnCells {
 		cellValueLen := len(cellValue.GetValue())
@@ -152,14 +153,14 @@ func findLongestCellWidth(columnCells []parser.TableCell, minValue int) int {
 	return longestLength
 }
 
-func FormatComment(comment *parser.Comment) string {
+func FormatComment(comment *gauge.Comment) string {
 	if comment.Value == "\n" {
 		return comment.Value
 	}
 	return fmt.Sprintf("%s\n", comment.Value)
 }
 
-func FormatTags(tags *parser.Tags) string {
+func FormatTags(tags *gauge.Tags) string {
 	if tags == nil || len(tags.Values) == 0 {
 		return ""
 	}
@@ -175,7 +176,7 @@ func FormatTags(tags *parser.Tags) string {
 	return string(b.Bytes())
 }
 
-func FormatExternalDataTable(dataTable *parser.DataTable) string {
+func FormatExternalDataTable(dataTable *gauge.DataTable) string {
 	if dataTable == nil || len(dataTable.Value) == 0 {
 		return ""
 	}
@@ -185,7 +186,7 @@ func FormatExternalDataTable(dataTable *parser.DataTable) string {
 	return string(b.Bytes())
 }
 
-func formatAndSave(spec *parser.Specification) error {
+func formatAndSave(spec *gauge.Specification) error {
 	formatted := FormatSpecification(spec)
 	if err := common.SaveFile(spec.FileName, formatted, true); err != nil {
 		return err
@@ -193,31 +194,31 @@ func formatAndSave(spec *parser.Specification) error {
 	return nil
 }
 
-func FormatSpecification(specification *parser.Specification) string {
+func FormatSpecification(specification *gauge.Specification) string {
 	var formattedSpec bytes.Buffer
 	formatter := &formatter{buffer: formattedSpec}
 	specification.Traverse(formatter)
 	return string(formatter.buffer.Bytes())
 }
 
-func sortConcepts(conceptDictionary *parser.ConceptDictionary, conceptMap map[string]string) []*parser.Concept {
-	var concepts []*parser.Concept
+func sortConcepts(conceptDictionary *gauge.ConceptDictionary, conceptMap map[string]string) []*gauge.Concept {
+	var concepts []*gauge.Concept
 	for _, concept := range conceptDictionary.ConceptsMap {
 		conceptMap[concept.FileName] = ""
 		concepts = append(concepts, concept)
 	}
-	sort.Sort(parser.ByLineNo(concepts))
+	sort.Sort(gauge.ByLineNo(concepts))
 	return concepts
 }
 
-func formatConceptSteps(conceptMap map[string]string, concept *parser.Concept) {
+func formatConceptSteps(conceptMap map[string]string, concept *gauge.Concept) {
 	conceptMap[concept.FileName] += strings.TrimSpace(strings.Replace(FormatStep(concept.ConceptStep), "*", "#", 1)) + "\n"
 	for i := 1; i < len(concept.ConceptStep.Items); i++ {
 		conceptMap[concept.FileName] += formatItem(concept.ConceptStep.Items[i])
 	}
 }
 
-func FormatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]string {
+func FormatConcepts(conceptDictionary *gauge.ConceptDictionary) map[string]string {
 	conceptMap := make(map[string]string)
 	for _, concept := range sortConcepts(conceptDictionary, conceptMap) {
 		for _, comment := range concept.ConceptStep.PreComments {
@@ -228,22 +229,22 @@ func FormatConcepts(conceptDictionary *parser.ConceptDictionary) map[string]stri
 	return conceptMap
 }
 
-func formatItem(item parser.Item) string {
+func formatItem(item gauge.Item) string {
 	switch item.Kind() {
-	case parser.CommentKind:
-		comment := item.(*parser.Comment)
+	case gauge.CommentKind:
+		comment := item.(*gauge.Comment)
 		if comment.Value == "\n" {
 			return comment.Value
 		}
 		return fmt.Sprintf("%s\n", comment.Value)
-	case parser.StepKind:
-		step := item.(*parser.Step)
+	case gauge.StepKind:
+		step := item.(*gauge.Step)
 		return FormatStep(step)
-	case parser.DataTableKind:
-		dataTable := item.(*parser.DataTable)
+	case gauge.DataTableKind:
+		dataTable := item.(*gauge.DataTable)
 		return FormatTable(&dataTable.Table)
-	case parser.TagKind:
-		tags := item.(*parser.Tags)
+	case gauge.TagKind:
+		tags := item.(*gauge.Tags)
 		return FormatTags(tags)
 	}
 	return ""

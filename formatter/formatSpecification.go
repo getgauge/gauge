@@ -19,52 +19,53 @@ package formatter
 
 import (
 	"bytes"
-	"github.com/getgauge/gauge/parser"
+
+	"github.com/getgauge/gauge/gauge"
 )
 
 type formatter struct {
 	buffer bytes.Buffer
 }
 
-func (formatter *formatter) SpecHeading(specHeading *parser.Heading) {
+func (formatter *formatter) SpecHeading(specHeading *gauge.Heading) {
 	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "="))
 }
 
-func (formatter *formatter) SpecTags(tags *parser.Tags) {
+func (formatter *formatter) SpecTags(tags *gauge.Tags) {
 	formatter.buffer.WriteString(FormatTags(tags))
 }
 
-func (formatter *formatter) DataTable(table *parser.Table) {
+func (formatter *formatter) DataTable(table *gauge.Table) {
 	formatter.buffer.WriteString(FormatTable(table))
 }
 
-func (formatter *formatter) ExternalDataTable(extDataTable *parser.DataTable) {
+func (formatter *formatter) ExternalDataTable(extDataTable *gauge.DataTable) {
 	formatter.buffer.WriteString(FormatExternalDataTable(extDataTable))
 }
 
-func (formatter *formatter) ContextStep(step *parser.Step) {
+func (formatter *formatter) ContextStep(step *gauge.Step) {
 	formatter.Step(step)
 }
 
-func (formatter *formatter) TearDown(t *parser.TearDown) {
+func (formatter *formatter) TearDown(t *gauge.TearDown) {
 	formatter.buffer.WriteString(t.Value + "\n")
 }
 
-func (formatter *formatter) Scenario(scenario *parser.Scenario) {
+func (formatter *formatter) Scenario(scenario *gauge.Scenario) {
 }
 
-func (formatter *formatter) ScenarioHeading(scenarioHeading *parser.Heading) {
+func (formatter *formatter) ScenarioHeading(scenarioHeading *gauge.Heading) {
 	formatter.buffer.WriteString(FormatHeading(scenarioHeading.Value, "-"))
 }
 
-func (formatter *formatter) ScenarioTags(scenarioTags *parser.Tags) {
+func (formatter *formatter) ScenarioTags(scenarioTags *gauge.Tags) {
 	formatter.SpecTags(scenarioTags)
 }
 
-func (formatter *formatter) Step(step *parser.Step) {
+func (formatter *formatter) Step(step *gauge.Step) {
 	formatter.buffer.WriteString(FormatStep(step))
 }
 
-func (formatter *formatter) Comment(comment *parser.Comment) {
+func (formatter *formatter) Comment(comment *gauge.Comment) {
 	formatter.buffer.WriteString(FormatComment(comment))
 }

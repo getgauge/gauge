@@ -17,7 +17,10 @@
 
 package parser
 
-import . "gopkg.in/check.v1"
+import (
+	"github.com/getgauge/gauge/gauge"
+	. "gopkg.in/check.v1"
+)
 
 func (s *MySuite) TestParsingSimpleStep(c *C) {
 	parser := new(SpecParser)
@@ -29,7 +32,7 @@ func (s *MySuite) TestParsingSimpleStep(c *C) {
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
-	c.Assert(stepToken.Kind, Equals, StepKind)
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
 	c.Assert(stepToken.Value, Equals, "sample step")
 }
 
@@ -53,7 +56,7 @@ func (s *MySuite) TestParsingStepWithParams(c *C) {
 	c.Assert(len(tokens), Equals, 3)
 
 	stepToken := tokens[2]
-	c.Assert(stepToken.Kind, Equals, StepKind)
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
 	c.Assert(stepToken.Value, Equals, "enter user {static}")
 	c.Assert(len(stepToken.Args), Equals, 1)
 	c.Assert(stepToken.Args[0], Equals, "john")
@@ -69,13 +72,13 @@ func (s *MySuite) TestParsingStepWithParametersWithQuotes(c *C) {
 	c.Assert(len(tokens), Equals, 4)
 
 	firstStepToken := tokens[2]
-	c.Assert(firstStepToken.Kind, Equals, StepKind)
+	c.Assert(firstStepToken.Kind, Equals, gauge.StepKind)
 	c.Assert(firstStepToken.Value, Equals, "{static} step")
 	c.Assert(len(firstStepToken.Args), Equals, 1)
 	c.Assert(firstStepToken.Args[0], Equals, "param \"in quote\"")
 
 	secondStepToken := tokens[3]
-	c.Assert(secondStepToken.Kind, Equals, StepKind)
+	c.Assert(secondStepToken.Kind, Equals, gauge.StepKind)
 	c.Assert(secondStepToken.Value, Equals, "another * step with {static} and {static}")
 	c.Assert(len(secondStepToken.Args), Equals, 2)
 	c.Assert(secondStepToken.Args[0], Equals, "john 12 *-_{} \\ './;[]")
@@ -158,7 +161,7 @@ func (s *MySuite) TestParsingContext(c *C) {
 
 	c.Assert(err, IsNil)
 	contextToken := tokens[1]
-	c.Assert(contextToken.Kind, Equals, StepKind)
+	c.Assert(contextToken.Kind, Equals, gauge.StepKind)
 	c.Assert(contextToken.Value, Equals, "Context with {static}")
 	c.Assert(contextToken.Args[0], Equals, "param")
 }
@@ -170,7 +173,7 @@ func (s *MySuite) TestParsingThrowsErrorWhenStepIsPresentWithoutStep(c *C) {
 	tokens, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, IsNil)
-	c.Assert(tokens[0].Kind, Equals, StepKind)
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[0].Value, Equals, "step without spec heading")
 
 }
@@ -184,7 +187,7 @@ func (s *MySuite) TestParsingStepWithSimpleSpecialParameter(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[2].Kind, Equals, StepKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[2].Value, Equals, "Step with special parameter {special}")
 	c.Assert(len(tokens[2].Args), Equals, 1)
 	c.Assert(tokens[2].Args[0], Equals, "table:user.csv")
@@ -199,13 +202,13 @@ func (s *MySuite) TestParsingStepWithSpecialParametersWithWhiteSpaces(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(len(tokens), Equals, 3)
 
-	c.Assert(tokens[1].Kind, Equals, StepKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[1].Value, Equals, "Step with {static} and special parameter {special}")
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "first")
 	c.Assert(tokens[1].Args[1], Equals, "table : user.csv")
 
-	c.Assert(tokens[2].Kind, Equals, StepKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[2].Value, Equals, "Another with {dynamic} and {special}")
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "name")

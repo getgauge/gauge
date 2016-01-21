@@ -22,12 +22,12 @@ import (
 	"sort"
 	"time"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
 )
 
 type specsFilter interface {
-	filter([]*parser.Specification) []*parser.Specification
+	filter([]*gauge.Specification) []*gauge.Specification
 }
 
 type tagsFilter struct {
@@ -43,7 +43,7 @@ type specRandomizer struct {
 	dontRandomize bool
 }
 
-func (tagsFilter *tagsFilter) filter(specs []*parser.Specification) []*parser.Specification {
+func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if tagsFilter.tagExp != "" {
 		validateTagExpression(tagsFilter.tagExp)
 		specs = filterSpecsByTags(specs, tagsFilter.tagExp)
@@ -51,27 +51,27 @@ func (tagsFilter *tagsFilter) filter(specs []*parser.Specification) []*parser.Sp
 	return specs
 }
 
-func (groupFilter *specsGroupFilter) filter(specs []*parser.Specification) []*parser.Specification {
+func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if groupFilter.group == -1 {
 		return specs
 	}
 	logger.Info("Using the -g flag will make the distribution strategy 'eager'. The --strategy setting will be overridden.")
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
-		return make([]*parser.Specification, 0)
+		return make([]*gauge.Specification, 0)
 	}
 	group := DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1]
 	if group == nil {
-		return make([]*parser.Specification, 0)
+		return make([]*gauge.Specification, 0)
 	}
 	return group.Specs
 }
 
-func DistributeSpecs(specifications []*parser.Specification, distributions int) []*SpecCollection {
+func DistributeSpecs(specifications []*gauge.Specification, distributions int) []*SpecCollection {
 	specCollections := make([]*SpecCollection, distributions)
 	for i := 0; i < len(specifications); i++ {
 		mod := i % distributions
 		if specCollections[mod] == nil {
-			specCollections[mod] = &SpecCollection{Specs: make([]*parser.Specification, 0)}
+			specCollections[mod] = &SpecCollection{Specs: make([]*gauge.Specification, 0)}
 		}
 		specCollections[mod].Specs = append(specCollections[mod].Specs, specifications[i])
 	}
@@ -79,7 +79,7 @@ func DistributeSpecs(specifications []*parser.Specification, distributions int) 
 }
 
 type SpecCollection struct {
-	Specs []*parser.Specification
+	Specs []*gauge.Specification
 }
 
 func (s *SpecCollection) SpecNames() []string {
@@ -90,15 +90,15 @@ func (s *SpecCollection) SpecNames() []string {
 	return specNames
 }
 
-func (randomizer *specRandomizer) filter(specs []*parser.Specification) []*parser.Specification {
+func (randomizer *specRandomizer) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if !randomizer.dontRandomize {
 		return shuffleSpecs(specs)
 	}
 	return specs
 }
 
-func shuffleSpecs(allSpecs []*parser.Specification) []*parser.Specification {
-	dest := make([]*parser.Specification, len(allSpecs))
+func shuffleSpecs(allSpecs []*gauge.Specification) []*gauge.Specification {
+	dest := make([]*gauge.Specification, len(allSpecs))
 	rand.Seed(int64(time.Now().Nanosecond()))
 	perm := rand.Perm(len(allSpecs))
 	for i, v := range perm {
@@ -107,7 +107,7 @@ func shuffleSpecs(allSpecs []*parser.Specification) []*parser.Specification {
 	return dest
 }
 
-type ByFileName []*parser.Specification
+type ByFileName []*gauge.Specification
 
 func (s ByFileName) Len() int {
 	return len(s)
@@ -121,7 +121,7 @@ func (s ByFileName) Less(i, j int) bool {
 	return s[i].FileName < s[j].FileName
 }
 
-func sortSpecsList(allSpecs []*parser.Specification) []*parser.Specification {
+func sortSpecsList(allSpecs []*gauge.Specification) []*gauge.Specification {
 	sort.Sort(ByFileName(allSpecs))
 	return allSpecs
 }

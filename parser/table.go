@@ -19,166 +19,14 @@ package parser
 
 import (
 	"encoding/csv"
-	"fmt"
-	"github.com/getgauge/gauge/gauge_messages"
 	"strings"
+
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 )
 
-type Table struct {
-	headerIndexMap map[string]int
-	columns        [][]TableCell
-	Headers        []string
-	LineNo         int
-}
-
-type DataTable struct {
-	Table      Table
-	Value      string
-	LineNo     int
-	IsExternal bool
-}
-
-type TableCell struct {
-	Value    string
-	CellType ArgType
-}
-
-func (table *Table) IsInitialized() bool {
-	return table.headerIndexMap != nil
-}
-
-func (cell *TableCell) GetValue() string {
-	value := cell.Value
-	if cell.CellType == Dynamic {
-		value = fmt.Sprintf("<%s>", value)
-	}
-	return value
-}
-
-func (dataTable *DataTable) IsInitialized() bool {
-	return dataTable.Table.headerIndexMap != nil
-}
-
-func (table *Table) String() string {
-	return fmt.Sprintf("%v\n%v", table.Headers, table.columns)
-}
-
-func (table *Table) GetDynamicArgs() []string {
-	args := make([]string, 0)
-	for _, row := range table.columns {
-		for _, column := range row {
-			if column.CellType == Dynamic {
-				args = append(args, column.Value)
-			}
-		}
-	}
-	return args
-}
-
-func (table *Table) Get(header string) []TableCell {
-	if !table.headerExists(header) {
-		panic(fmt.Sprintf("Table column %s not found", header))
-	}
-	return table.columns[table.headerIndexMap[header]]
-}
-
-func (table *Table) headerExists(header string) bool {
-	_, ok := table.headerIndexMap[header]
-	return ok
-}
-
-func (table *Table) AddHeaders(columnNames []string) {
-	table.headerIndexMap = make(map[string]int)
-	table.Headers = make([]string, len(columnNames))
-	table.columns = make([][]TableCell, len(columnNames))
-	for i, column := range columnNames {
-		trimmedHeader := strings.TrimSpace(column)
-		table.Headers[i] = trimmedHeader
-		table.headerIndexMap[trimmedHeader] = i
-		table.columns[i] = make([]TableCell, 0)
-	}
-}
-
-func (table *Table) AddRowValues(rowValues []string) {
-	tableCells := table.createTableCells(rowValues)
-	table.addRows(tableCells)
-}
-
-func (table *Table) createTableCells(rowValues []string) []TableCell {
-	tableCells := make([]TableCell, 0)
-	for _, value := range rowValues {
-		tableCells = append(tableCells, getTableCell(strings.TrimSpace(value)))
-	}
-	return tableCells
-}
-
-func (table *Table) toHeaderSizeRow(rows []TableCell) []TableCell {
-	finalCells := make([]TableCell, 0)
-	for i, _ := range table.Headers {
-		var cell TableCell
-		if len(rows)-1 >= i {
-			cell = rows[i]
-		} else {
-			cell = getDefaultTableCell()
-		}
-		finalCells = append(finalCells, cell)
-	}
-	return finalCells
-}
-
-func (table *Table) addRows(rows []TableCell) {
-	for i, value := range table.toHeaderSizeRow(rows) {
-		table.columns[i] = append(table.columns[i], value)
-	}
-}
-
-func (table *Table) Rows() [][]string {
-	if !table.IsInitialized() {
-		return nil
-	}
-
-	tableRows := make([][]string, 0)
-	if len(table.columns) == 0 {
-		return tableRows
-	}
-	for i := 0; i < len(table.columns[0]); i++ {
-		row := make([]string, 0)
-		for _, header := range table.Headers {
-			tableCell := table.Get(header)[i]
-			value := tableCell.GetValue()
-			row = append(row, value)
-		}
-		tableRows = append(tableRows, row)
-	}
-	return tableRows
-}
-
-func (table *Table) GetRowCount() int {
-	if table.IsInitialized() {
-		return len(table.columns[0])
-	} else {
-		return 0
-	}
-}
-
-func (table *Table) Kind() TokenKind {
-	return TableKind
-}
-
-func (externalTable *DataTable) Kind() TokenKind {
-	return DataTableKind
-}
-
-func getTableCell(value string) TableCell {
-	return TableCell{Value: value, CellType: Static}
-}
-
-func getDefaultTableCell() TableCell {
-	return TableCell{Value: "", CellType: Static}
-}
-
-func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
-	table := &Table{}
+func TableFrom(protoTable *gauge_messages.ProtoTable) *gauge.Table {
+	table := &gauge.Table{}
 	table.AddHeaders(protoTable.GetHeaders().GetCells())
 	for _, row := range protoTable.GetRows() {
 		table.AddRowValues(row.GetCells())
@@ -186,14 +34,14 @@ func TableFrom(protoTable *gauge_messages.ProtoTable) *Table {
 	return table
 }
 
-func convertCsvToTable(csvContents string) (*Table, error) {
+func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 	r := csv.NewReader(strings.NewReader(csvContents))
 	r.Comment = '#'
 	lines, err := r.ReadAll()
 	if err != nil {
 		return nil, err
 	}
-	table := new(Table)
+	table := new(gauge.Table)
 	for i, line := range lines {
 		if i == 0 {
 			table.AddHeaders(line)

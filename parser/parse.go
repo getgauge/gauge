@@ -22,15 +22,16 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
 
-func ParseSpecFiles(specFiles []string, conceptDictionary *ConceptDictionary) ([]*Specification, []*ParseResult) {
+func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
 	parseResultsChan := make(chan *ParseResult, len(specFiles))
-	specsChan := make(chan *Specification, len(specFiles))
+	specsChan := make(chan *gauge.Specification, len(specFiles))
 	parseResults := make([]*ParseResult, 0)
-	specs := make([]*Specification, 0)
+	specs := make([]*gauge.Specification, 0)
 
 	for _, specFile := range specFiles {
 		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
@@ -45,7 +46,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *ConceptDictionary) ([
 	return specs, parseResults
 }
 
-func parseSpec(specFile string, conceptDictionary *ConceptDictionary, specChannel chan *Specification, parseResultChan chan *ParseResult) {
+func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
 		specChannel <- nil
@@ -64,13 +65,13 @@ func parseSpec(specFile string, conceptDictionary *ConceptDictionary, specChanne
 	parseResultChan <- parseResult
 }
 
-func FindSpecs(specSource string, conceptDictionary *ConceptDictionary) ([]*Specification, []*ParseResult) {
+func FindSpecs(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
 	specFiles := util.GetSpecFiles(specSource)
 
 	return ParseSpecFiles(specFiles, conceptDictionary)
 }
 
-func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*StepValue, error) {
+func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*gauge.StepValue, error) {
 	stepValueWithPlaceHolders, args, err := processStepText(stepText)
 	if err != nil {
 		return nil, err
@@ -78,25 +79,25 @@ func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*StepValue
 
 	extractedStepValue, _ := extractStepValueAndParameterTypes(stepValueWithPlaceHolders)
 	if hasInlineTable {
-		extractedStepValue += " " + ParameterPlaceholder
-		args = append(args, string(TableArg))
+		extractedStepValue += " " + gauge.ParameterPlaceholder
+		args = append(args, string(gauge.TableArg))
 	}
 	parameterizedStepValue := getParameterizeStepValue(extractedStepValue, args)
 
-	return &StepValue{args, extractedStepValue, parameterizedStepValue}, nil
+	return &gauge.StepValue{args, extractedStepValue, parameterizedStepValue}, nil
 
 }
 
-func CreateStepValue(step *Step) StepValue {
-	stepValue := StepValue{StepValue: step.Value}
+func CreateStepValue(step *gauge.Step) gauge.StepValue {
+	stepValue := gauge.StepValue{StepValue: step.Value}
 	args := make([]string, 0)
 	for _, arg := range step.Args {
 		switch arg.ArgType {
-		case Static, Dynamic:
+		case gauge.Static, gauge.Dynamic:
 			args = append(args, arg.Value)
-		case TableArg:
+		case gauge.TableArg:
 			args = append(args, "table")
-		case SpecialString, SpecialTable:
+		case gauge.SpecialString, gauge.SpecialTable:
 			args = append(args, arg.Name)
 		}
 	}
@@ -107,7 +108,7 @@ func CreateStepValue(step *Step) StepValue {
 
 func getParameterizeStepValue(stepValue string, params []string) string {
 	for _, param := range params {
-		stepValue = strings.Replace(stepValue, ParameterPlaceholder, "<"+param+">", 1)
+		stepValue = strings.Replace(stepValue, gauge.ParameterPlaceholder, "<"+param+">", 1)
 	}
 	return stepValue
 }

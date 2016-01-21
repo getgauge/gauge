@@ -18,14 +18,14 @@
 package filter
 
 import (
-	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/gauge"
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
-	var specs []*parser.Specification
-	specs = append(specs, &parser.Specification{FileName: "a"}, &parser.Specification{FileName: "b"}, &parser.Specification{FileName: "c"}, &parser.Specification{FileName: "d"},
-		&parser.Specification{FileName: "e"}, &parser.Specification{FileName: "f"}, &parser.Specification{FileName: "g"}, &parser.Specification{FileName: "h"})
+	var specs []*gauge.Specification
+	specs = append(specs, &gauge.Specification{FileName: "a"}, &gauge.Specification{FileName: "b"}, &gauge.Specification{FileName: "c"}, &gauge.Specification{FileName: "d"},
+		&gauge.Specification{FileName: "e"}, &gauge.Specification{FileName: "f"}, &gauge.Specification{FileName: "g"}, &gauge.Specification{FileName: "h"})
 	shuffledSpecs := shuffleSpecs(specs)
 	for i, spec := range shuffledSpecs {
 		if spec.FileName != specs[i].FileName {
@@ -35,14 +35,14 @@ func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
 }
 
 func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
-	var specs []*parser.Specification
-	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
-	spec2 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING2"}}
-	heading3 := &parser.Heading{Value: "SPECHEADING3"}
-	spec3 := &parser.Specification{Heading: heading3}
-	spec4 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING4"}}
-	spec5 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING5"}}
-	spec6 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING6"}}
+	var specs []*gauge.Specification
+	spec1 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING1"}}
+	spec2 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING2"}}
+	heading3 := &gauge.Heading{Value: "SPECHEADING3"}
+	spec3 := &gauge.Specification{Heading: heading3}
+	spec4 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING4"}}
+	spec5 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING5"}}
+	spec6 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING6"}}
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 	specs = append(specs, spec3)
@@ -62,15 +62,15 @@ func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
 }
 
 func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
-	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
-	spec2 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING2"}}
-	spec3 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING3"}}
-	spec4 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING4"}}
-	heading5 := &parser.Heading{Value: "SPECHEADING5"}
-	spec5 := &parser.Specification{Heading: heading5}
-	heading6 := &parser.Heading{Value: "SPECHEADING6"}
-	spec6 := &parser.Specification{Heading: heading6}
-	var specs []*parser.Specification
+	spec1 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING1"}}
+	spec2 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING2"}}
+	spec3 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING3"}}
+	spec4 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING4"}}
+	heading5 := &gauge.Heading{Value: "SPECHEADING5"}
+	spec5 := &gauge.Specification{Heading: heading5}
+	heading6 := &gauge.Heading{Value: "SPECHEADING6"}
+	spec6 := &gauge.Specification{Heading: heading6}
+	var specs []*gauge.Specification
 	specs = append(specs, spec1)
 	specs = append(specs, spec2)
 	specs = append(specs, spec3)
@@ -97,8 +97,8 @@ func (s *MySuite) TestToRunSpecificSetOfSpecsGivesSameSpecsEverytime(c *C) {
 }
 
 func (s *MySuite) TestToRunNonExistingSpecificSetOfSpecs(c *C) {
-	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
-	var specs []*parser.Specification
+	spec1 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING1"}}
+	var specs []*gauge.Specification
 	specs = append(specs, spec1)
 	value := 3
 	groupFilter := &specsGroupFilter{value, value}
@@ -107,8 +107,8 @@ func (s *MySuite) TestToRunNonExistingSpecificSetOfSpecs(c *C) {
 }
 
 func (s *MySuite) TestToRunSpecificSetOfSpecsGivesEmptySpecsIfDistributableNumberIsNotValid(c *C) {
-	spec1 := &parser.Specification{Heading: &parser.Heading{Value: "SPECHEADING1"}}
-	var specs []*parser.Specification
+	spec1 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING1"}}
+	var specs []*gauge.Specification
 	specs = append(specs, spec1)
 
 	value := 1

@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -37,10 +38,10 @@ import (
 type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
 	mutex             sync.Mutex
-	conceptDictionary *parser.ConceptDictionary
-	specsCache        map[string][]*parser.Specification
-	conceptsCache     map[string][]*parser.Concept
-	stepsCache        map[string]*parser.StepValue
+	conceptDictionary *gauge.ConceptDictionary
+	specsCache        map[string][]*gauge.Specification
+	conceptsCache     map[string][]*gauge.Concept
+	stepsCache        map[string]*gauge.StepValue
 }
 
 func (s *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) {
@@ -57,7 +58,7 @@ func (s *SpecInfoGatherer) MakeListOfAvailableSteps(runner *runner.TestRunner) {
 func (s *SpecInfoGatherer) initSpecsCache() {
 	defer s.waitGroup.Done()
 
-	s.specsCache = make(map[string][]*parser.Specification, 0)
+	s.specsCache = make(map[string][]*gauge.Specification, 0)
 	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
 	parsedSpecs := s.getParsedSpecs(specFiles)
 
@@ -71,7 +72,7 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 func (s *SpecInfoGatherer) initConceptsCache() {
 	defer s.waitGroup.Done()
 
-	s.conceptsCache = make(map[string][]*parser.Concept, 0)
+	s.conceptsCache = make(map[string][]*gauge.Concept, 0)
 	parsedConcepts := s.getParsedConcepts()
 
 	logger.APILog.Info("Initializing concepts cache with %d concepts", len(parsedConcepts))
@@ -84,7 +85,7 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
 	defer s.waitGroup.Done()
 
-	s.stepsCache = make(map[string]*parser.StepValue, 0)
+	s.stepsCache = make(map[string]*gauge.StepValue, 0)
 	stepsFromSpecs := s.getStepsFromCachedSpecs()
 	stepsFromConcepts := s.getStepsFromCachedConcepts()
 	implementedSteps := s.getImplementedSteps(runner)
@@ -96,25 +97,25 @@ func (s *SpecInfoGatherer) initStepsCache(runner *runner.TestRunner) {
 	s.addToStepsCache(allSteps)
 }
 
-func (s *SpecInfoGatherer) addToSpecsCache(key string, value *parser.Specification) {
+func (s *SpecInfoGatherer) addToSpecsCache(key string, value *gauge.Specification) {
 	s.mutex.Lock()
 	if s.specsCache[key] == nil {
-		s.specsCache[key] = make([]*parser.Specification, 0)
+		s.specsCache[key] = make([]*gauge.Specification, 0)
 	}
 	s.specsCache[key] = append(s.specsCache[key], value)
 	s.mutex.Unlock()
 }
 
-func (s *SpecInfoGatherer) addToConceptsCache(key string, value *parser.Concept) {
+func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) {
 	s.mutex.Lock()
 	if s.conceptsCache[key] == nil {
-		s.conceptsCache[key] = make([]*parser.Concept, 0)
+		s.conceptsCache[key] = make([]*gauge.Concept, 0)
 	}
 	s.conceptsCache[key] = append(s.conceptsCache[key], value)
 	s.mutex.Unlock()
 }
 
-func (s *SpecInfoGatherer) addToStepsCache(allSteps []*parser.StepValue) {
+func (s *SpecInfoGatherer) addToStepsCache(allSteps []*gauge.StepValue) {
 	s.mutex.Lock()
 	for _, step := range allSteps {
 		if _, ok := s.stepsCache[step.StepValue]; !ok {
@@ -124,24 +125,24 @@ func (s *SpecInfoGatherer) addToStepsCache(allSteps []*parser.StepValue) {
 	s.mutex.Unlock()
 }
 
-func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*parser.Specification {
+func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*gauge.Specification {
 	if s.conceptDictionary == nil {
-		s.conceptDictionary = parser.NewConceptDictionary()
+		s.conceptDictionary = gauge.NewConceptDictionary()
 	}
 	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary)
 	s.handleParseFailures(parseResults)
 	return parsedSpecs
 }
 
-func (s *SpecInfoGatherer) getParsedConcepts() map[string]*parser.Concept {
+func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
 	s.conceptDictionary, result = parser.CreateConceptsDictionary(true)
 	s.handleParseFailures([]*parser.ParseResult{result})
 	return s.conceptDictionary.ConceptsMap
 }
 
-func (s *SpecInfoGatherer) getParsedStepValues(steps []string) []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getParsedStepValues(steps []string) []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	for _, step := range steps {
 		stepValue, err := parser.ExtractStepValueAndParams(step, false)
 		if err != nil {
@@ -153,8 +154,8 @@ func (s *SpecInfoGatherer) getParsedStepValues(steps []string) []*parser.StepVal
 	return stepValues
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	s.mutex.Lock()
 	for _, specList := range s.specsCache {
 		for _, spec := range specList {
@@ -165,8 +166,8 @@ func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*parser.StepValue {
 	return stepValues
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedConcepts() []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getStepsFromCachedConcepts() []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	s.mutex.Lock()
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
@@ -177,8 +178,8 @@ func (s *SpecInfoGatherer) getStepsFromCachedConcepts() []*parser.StepValue {
 	return stepValues
 }
 
-func (s *SpecInfoGatherer) getStepsFromSpec(spec *parser.Specification) []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getStepsFromSpec(spec *gauge.Specification) []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	for _, scenario := range spec.Scenarios {
 		for _, step := range scenario.Steps {
 			if !step.IsConcept {
@@ -190,8 +191,8 @@ func (s *SpecInfoGatherer) getStepsFromSpec(spec *parser.Specification) []*parse
 	return stepValues
 }
 
-func (s *SpecInfoGatherer) getStepsFromConcept(concept *parser.Concept) []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getStepsFromConcept(concept *gauge.Concept) []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	for _, step := range concept.ConceptStep.ConceptSteps {
 		if !step.IsConcept {
 			stepValue := parser.CreateStepValue(step)
@@ -201,8 +202,8 @@ func (s *SpecInfoGatherer) getStepsFromConcept(concept *parser.Concept) []*parse
 	return stepValues
 }
 
-func (s *SpecInfoGatherer) getImplementedSteps(runner *runner.TestRunner) []*parser.StepValue {
-	stepValues := make([]*parser.StepValue, 0)
+func (s *SpecInfoGatherer) getImplementedSteps(runner *runner.TestRunner) []*gauge.StepValue {
+	stepValues := make([]*gauge.StepValue, 0)
 	message, err := conn.GetResponseForMessageWithTimeout(createGetStepNamesRequest(), runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
 		logger.APILog.Error("Error response from runner on getStepNamesRequest: %s", err)
@@ -240,7 +241,7 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 	}
 
 	for _, concept := range concepts {
-		c := parser.Concept{concept, file}
+		c := gauge.Concept{concept, file}
 		s.addToConceptsCache(file, &c)
 		stepsFromConcept := s.getStepsFromConcept(&c)
 		s.addToStepsCache(stepsFromConcept)
@@ -382,10 +383,10 @@ func (s *SpecInfoGatherer) onFileRename(watcher *fsnotify.Watcher, file string) 
 	s.onFileRemove(watcher, file)
 }
 
-func (s *SpecInfoGatherer) GetAvailableSpecs() []*parser.Specification {
+func (s *SpecInfoGatherer) GetAvailableSpecs() []*gauge.Specification {
 	s.waitGroup.Wait()
 
-	allSpecs := make([]*parser.Specification, 0)
+	allSpecs := make([]*gauge.Specification, 0)
 	s.mutex.Lock()
 	for _, specs := range s.specsCache {
 		allSpecs = append(allSpecs, specs...)
@@ -394,10 +395,10 @@ func (s *SpecInfoGatherer) GetAvailableSpecs() []*parser.Specification {
 	return allSpecs
 }
 
-func (s *SpecInfoGatherer) GetAvailableSteps() []*parser.StepValue {
+func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
 	s.waitGroup.Wait()
 
-	steps := make([]*parser.StepValue, 0)
+	steps := make([]*gauge.StepValue, 0)
 	s.mutex.Lock()
 	for _, stepValue := range s.stepsCache {
 		steps = append(steps, stepValue)
@@ -414,7 +415,7 @@ func (s *SpecInfoGatherer) GetConceptInfos() []*gauge_messages.ConceptInfo {
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
 			stepValue := parser.CreateStepValue(concept.ConceptStep)
-			conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: parser.ConvertToProtoStepValue(&stepValue), Filepath: proto.String(concept.FileName), LineNumber: proto.Int(concept.ConceptStep.LineNo)})
+			conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: gauge.ConvertToProtoStepValue(&stepValue), Filepath: proto.String(concept.FileName), LineNumber: proto.Int(concept.ConceptStep.LineNo)})
 		}
 	}
 	s.mutex.Unlock()

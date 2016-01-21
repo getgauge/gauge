@@ -18,33 +18,34 @@
 package execution
 
 import (
+	"strings"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
-	"strings"
 )
 
 type validator struct {
 	manifest           *manifest.Manifest
-	specsToExecute     []*parser.Specification
+	specsToExecute     []*gauge.Specification
 	runner             *runner.TestRunner
-	conceptsDictionary *parser.ConceptDictionary
+	conceptsDictionary *gauge.ConceptDictionary
 }
 
 type specValidator struct {
-	specification        *parser.Specification
+	specification        *gauge.Specification
 	runner               *runner.TestRunner
-	conceptsDictionary   *parser.ConceptDictionary
+	conceptsDictionary   *gauge.ConceptDictionary
 	stepValidationErrors []*stepValidationError
 	stepValidationCache  map[string]*stepValidationError
 }
 
 type stepValidationError struct {
-	step      *parser.Step
+	step      *gauge.Step
 	message   string
 	fileName  string
 	errorType *gauge_messages.StepValidateResponse_ErrorType
@@ -54,9 +55,9 @@ func (e *stepValidationError) Error() string {
 	return e.message
 }
 
-type validationErrors map[*parser.Specification][]*stepValidationError
+type validationErrors map[*gauge.Specification][]*stepValidationError
 
-func newValidator(manifest *manifest.Manifest, specsToExecute []*parser.Specification, runner *runner.TestRunner, conceptsDictionary *parser.ConceptDictionary) *validator {
+func newValidator(manifest *manifest.Manifest, specsToExecute []*gauge.Specification, runner *runner.TestRunner, conceptsDictionary *gauge.ConceptDictionary) *validator {
 	return &validator{manifest: manifest, specsToExecute: specsToExecute, runner: runner, conceptsDictionary: conceptsDictionary}
 }
 
@@ -82,7 +83,7 @@ func (self *specValidator) validate() []*stepValidationError {
 	return self.stepValidationErrors
 }
 
-func (self *specValidator) Step(step *parser.Step) {
+func (self *specValidator) Step(step *gauge.Step) {
 	if step.IsConcept {
 		for _, conceptStep := range step.ConceptSteps {
 			self.Step(conceptStep)
@@ -104,7 +105,7 @@ func (self *specValidator) Step(step *parser.Step) {
 
 var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
 
-func (self *specValidator) validateStep(step *parser.Step) *stepValidationError {
+func (self *specValidator) validateStep(step *gauge.Step) *stepValidationError {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
 	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.Connection, config.RunnerRequestTimeout())
@@ -128,40 +129,38 @@ func getMessage(message string) string {
 	return strings.ToUpper(lower[:1]) + lower[1:]
 }
 
-func (self *specValidator) ContextStep(step *parser.Step) {
+func (self *specValidator) ContextStep(step *gauge.Step) {
 	self.Step(step)
 }
 
-func (self *specValidator) TearDown(step *parser.TearDown) {
+func (self *specValidator) TearDown(step *gauge.TearDown) {
 }
 
-func (self *specValidator) SpecHeading(heading *parser.Heading) {
+func (self *specValidator) SpecHeading(heading *gauge.Heading) {
 	self.stepValidationErrors = make([]*stepValidationError, 0)
 }
 
-func (self *specValidator) SpecTags(tags *parser.Tags) {
+func (self *specValidator) SpecTags(tags *gauge.Tags) {
+}
+
+func (self *specValidator) ScenarioTags(tags *gauge.Tags) {
 
 }
 
-func (self *specValidator) ScenarioTags(tags *parser.Tags) {
+func (self *specValidator) DataTable(dataTable *gauge.Table) {
 
 }
 
-func (self *specValidator) DataTable(dataTable *parser.Table) {
+func (self *specValidator) Scenario(scenario *gauge.Scenario) {
 
 }
 
-func (self *specValidator) Scenario(scenario *parser.Scenario) {
-
+func (self *specValidator) ScenarioHeading(heading *gauge.Heading) {
 }
 
-func (self *specValidator) ScenarioHeading(heading *parser.Heading) {
+func (self *specValidator) Comment(comment *gauge.Comment) {
 }
 
-func (self *specValidator) Comment(comment *parser.Comment) {
-
-}
-
-func (self *specValidator) ExternalDataTable(dataTable *parser.DataTable) {
+func (self *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
 }

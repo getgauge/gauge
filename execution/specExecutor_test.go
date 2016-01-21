@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
@@ -95,7 +96,7 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 }
 
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
-	conceptDictionary := parser.NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
@@ -107,11 +108,10 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
-	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+	specExecutor.errMap = &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
-	fmt.Println(protoConcept)
 	firstNestedStep := protoConcept.GetSteps()[0].GetConcept().GetSteps()[0].GetStep()
 	params := getParameters(firstNestedStep.GetFragments())
 	c.Assert(1, Equals, len(params))
@@ -133,7 +133,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
-	conceptDictionary := parser.NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
@@ -146,7 +146,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	spec, _ := specParser.Parse(specText, conceptDictionary)
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
-	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+	specExecutor.errMap = &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
@@ -177,7 +177,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 }
 
 func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
-	conceptDictionary := parser.NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 
 	specText := SpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
@@ -196,7 +196,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	// For first row
 	specExecutor.currentTableRow = 0
-	specExecutor.errMap = &validationErrMaps{make(map[*parser.Specification][]*stepValidationError), make(map[*parser.Scenario][]*stepValidationError), make(map[*parser.Step]*stepValidationError)}
+	specExecutor.errMap = &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 

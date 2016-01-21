@@ -15,22 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package parser
+package gauge
 
-import (
-	. "gopkg.in/check.v1"
-)
+type SpecTraverser interface {
+	SpecHeading(*Heading)
+	SpecTags(*Tags)
+	DataTable(*Table)
+	ExternalDataTable(*DataTable)
+	ContextStep(*Step)
+	Scenario(*Scenario)
+	ScenarioHeading(*Heading)
+	ScenarioTags(*Tags)
+	Step(*Step)
+	TearDown(*TearDown)
+	Comment(*Comment)
+}
 
-func (s *MySuite) TestIgnoreCommentLines(c *C) {
-	csvContents := "one,two,three\nfoo,bar,baz\n#john,jim,jan"
-	table, err := convertCsvToTable(csvContents)
-
-	if err != nil {
-		c.Fail()
-	}
-
-	c.Assert(table.GetRowCount(), Equals, 1)
-	c.Assert(table.Rows()[0][0], Equals, "foo")
-	c.Assert(table.Rows()[0][1], Equals, "bar")
-	c.Assert(table.Rows()[0][2], Equals, "baz")
+type ScenarioTraverser interface {
+	ScenarioHeading(*Heading)
+	ScenarioTags(*Tags)
+	Step(*Step)
+	Comment(*Comment)
 }

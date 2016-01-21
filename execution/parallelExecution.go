@@ -29,10 +29,10 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
@@ -46,7 +46,7 @@ const LAZY string = "lazy"
 type parallelSpecExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
-	specifications           []*parser.Specification
+	specifications           []*gauge.Specification
 	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *runner.TestRunner
@@ -175,7 +175,7 @@ func (e *parallelSpecExecution) startStream(specs *specList, reporter reporter.R
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
-	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*parser.Specification, 0), testRunner, e.pluginHandler, nil, reporter, e.errMaps})
+	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*gauge.Specification, 0), testRunner, e.pluginHandler, nil, reporter, e.errMaps})
 	result := simpleExecution.executeStream(specs)
 	suiteResultChannel <- result
 	testRunner.Kill()
@@ -190,7 +190,7 @@ func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *fi
 
 func (e *parallelSpecExecution) finish() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: parser.ConvertToProtoSuiteResult(e.aggregateResult)}}
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.aggregateResult)}}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
 }
@@ -220,7 +220,7 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteRes
 
 type specList struct {
 	mutex sync.Mutex
-	specs []*parser.Specification
+	specs []*gauge.Specification
 }
 
 func (s *specList) isEmpty() bool {
@@ -233,9 +233,9 @@ func (s *specList) isEmpty() bool {
 	return false
 }
 
-func (s *specList) getSpec() *parser.Specification {
+func (s *specList) getSpec() *gauge.Specification {
 	s.mutex.Lock()
-	var spec *parser.Specification
+	var spec *gauge.Specification
 	spec = s.specs[:1][0]
 	s.specs = s.specs[1:]
 	s.mutex.Unlock()

@@ -1,6 +1,7 @@
 package filter
 
 import (
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
 )
 
@@ -9,7 +10,7 @@ var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
 
-func GetSpecsToExecute(conceptsDictionary *parser.ConceptDictionary, args []string) ([]*parser.Specification, int) {
+func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, args []string) ([]*gauge.Specification, int) {
 	specsToExecute := specsFromArgs(conceptsDictionary, args)
 	totalSpecs := specsToExecute
 	specsToExecute = applyFilters(specsToExecute, specsFilters())
@@ -20,16 +21,16 @@ func specsFilters() []specsFilter {
 	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}, &specRandomizer{DoNotRandomize}}
 }
 
-func applyFilters(specsToExecute []*parser.Specification, filters []specsFilter) []*parser.Specification {
+func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) []*gauge.Specification {
 	for _, specsFilter := range filters {
 		specsToExecute = specsFilter.filter(specsToExecute)
 	}
 	return specsToExecute
 }
 
-func specsFromArgs(conceptDictionary *parser.ConceptDictionary, args []string) []*parser.Specification {
-	allSpecs := make([]*parser.Specification, 0)
-	specs := make([]*parser.Specification, 0)
+func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, args []string) []*gauge.Specification {
+	allSpecs := make([]*gauge.Specification, 0)
+	specs := make([]*gauge.Specification, 0)
 	var specParseResults []*parser.ParseResult
 	for _, arg := range args {
 		specSource := arg
@@ -44,7 +45,7 @@ func specsFromArgs(conceptDictionary *parser.ConceptDictionary, args []string) [
 	return allSpecs
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *parser.ConceptDictionary) ([]*parser.Specification, []*parser.ParseResult) {
+func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*parser.ParseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := parser.FindSpecs(specName, conceptDictionary)
 	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult

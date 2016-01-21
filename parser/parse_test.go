@@ -18,6 +18,7 @@
 package parser
 
 import (
+	"github.com/getgauge/gauge/gauge"
 	. "gopkg.in/check.v1"
 )
 
@@ -60,7 +61,7 @@ func (s *MySuite) TestAddingTableParamAfterStepValueExtraction(c *C) {
 	args := stepValue.Args
 	c.Assert(err, Equals, nil)
 	c.Assert(len(args), Equals, 1)
-	c.Assert(args[0], Equals, string(TableArg))
+	c.Assert(args[0], Equals, string(gauge.TableArg))
 	c.Assert(stepValue.StepValue, Equals, "a simple step {}")
 	c.Assert(stepValue.ParameterizedStepValue, Equals, "a simple step <table>")
 }
@@ -95,7 +96,7 @@ func (s *MySuite) TestAfterStepValueExtractionForStepWithExistingParam(c *C) {
 }
 
 func (s *MySuite) TestCreateStepValueFromStep(c *C) {
-	step := &Step{Value: "simple step with {} and {}", Args: []*StepArg{staticArg("hello"), dynamicArg("desc")}}
+	step := &gauge.Step{Value: "simple step with {} and {}", Args: []*gauge.StepArg{staticArg("hello"), dynamicArg("desc")}}
 	stepValue := CreateStepValue(step)
 
 	args := stepValue.Args
@@ -107,7 +108,7 @@ func (s *MySuite) TestCreateStepValueFromStep(c *C) {
 }
 
 func (s *MySuite) TestCreateStepValueFromStepWithSpecialParams(c *C) {
-	step := &Step{Value: "a step with {}, {} and {}", Args: []*StepArg{specialTableArg("hello"), specialStringArg("file:user.txt"), tableArgument()}}
+	step := &gauge.Step{Value: "a step with {}, {} and {}", Args: []*gauge.StepArg{specialTableArg("hello"), specialStringArg("file:user.txt"), tableArgument()}}
 	stepValue := CreateStepValue(step)
 
 	args := stepValue.Args
@@ -119,22 +120,22 @@ func (s *MySuite) TestCreateStepValueFromStepWithSpecialParams(c *C) {
 	c.Assert(stepValue.ParameterizedStepValue, Equals, "a step with <hello>, <file:user.txt> and <table>")
 }
 
-func staticArg(val string) *StepArg {
-	return &StepArg{ArgType: Static, Value: val}
+func staticArg(val string) *gauge.StepArg {
+	return &gauge.StepArg{ArgType: gauge.Static, Value: val}
 }
 
-func dynamicArg(val string) *StepArg {
-	return &StepArg{ArgType: Dynamic, Value: val}
+func dynamicArg(val string) *gauge.StepArg {
+	return &gauge.StepArg{ArgType: gauge.Dynamic, Value: val}
 }
 
-func tableArgument() *StepArg {
-	return &StepArg{ArgType: TableArg}
+func tableArgument() *gauge.StepArg {
+	return &gauge.StepArg{ArgType: gauge.TableArg}
 }
 
-func specialTableArg(val string) *StepArg {
-	return &StepArg{ArgType: SpecialTable, Name: val}
+func specialTableArg(val string) *gauge.StepArg {
+	return &gauge.StepArg{ArgType: gauge.SpecialTable, Name: val}
 }
 
-func specialStringArg(val string) *StepArg {
-	return &StepArg{ArgType: SpecialString, Name: val}
+func specialStringArg(val string) *gauge.StepArg {
+	return &gauge.StepArg{ArgType: gauge.SpecialString, Name: val}
 }

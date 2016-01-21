@@ -20,6 +20,7 @@ package refactor
 import (
 	"testing"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 )
@@ -34,14 +35,14 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgs(c *C) {
 	oldStep := "first step"
 	newStep := "second step"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, err := getRefactorAgent(oldStep, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	agent.rephraseInSpecsAndConcepts(&specs, new(parser.ConceptDictionary))
+	specs := append(make([]*gauge.Specification, 0), spec)
+	agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].Scenarios[0].Steps), Equals, 1)
@@ -53,18 +54,18 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneScenario(c *
 	newStep := "second step"
 	unchanged := "unchanged"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 5},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
-		&parser.Token{Kind: parser.StepKind, Value: unchanged, LineNo: 30},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 50},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 5},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
+		&parser.Token{Kind: gauge.StepKind, Value: unchanged, LineNo: 30},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 50},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, err := getRefactorAgent(oldStep, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	agent.rephraseInSpecsAndConcepts(&specs, new(parser.ConceptDictionary))
+	specs := append(make([]*gauge.Specification, 0), spec)
+	agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	c.Assert(err, Equals, nil)
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
@@ -81,21 +82,21 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	oldStep := " first step"
 	newStep := "second step"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	tokens = []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 10},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 20},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 30},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 10},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 20},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 30},
 	}
-	spec1, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
-	specs := append(make([]*parser.Specification, 0), spec)
+	spec1, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	specs := append(make([]*gauge.Specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, err := getRefactorAgent(oldStep, newStep, nil)
-	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, new(parser.ConceptDictionary))
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	for _, isRefactored := range specRefactored {
 		c.Assert(true, Equals, isRefactored)
@@ -113,44 +114,44 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsInConceptFiles(c *C) {
 	newStep := "second step"
 	unchanged := "unchanged"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := parser.NewConceptDictionary()
-	step1 := &parser.Step{Value: oldStep + "sdsf", IsConcept: true}
-	step2 := &parser.Step{Value: unchanged, IsConcept: true, Items: []parser.Item{&parser.Step{Value: oldStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
+	step1 := &gauge.Step{Value: oldStep + "sdsf", IsConcept: true}
+	step2 := &gauge.Step{Value: unchanged, IsConcept: true, Items: []gauge.Item{&gauge.Step{Value: oldStep, IsConcept: false}, &gauge.Step{Value: oldStep + "T", IsConcept: false}}}
 
-	dictionary.ConceptsMap[step1.Value] = &parser.Concept{ConceptStep: step1, FileName: "file.cpt"}
-	dictionary.ConceptsMap[step2.Value] = &parser.Concept{ConceptStep: step2, FileName: "file.cpt"}
+	dictionary.ConceptsMap[step1.Value] = &gauge.Concept{ConceptStep: step1, FileName: "file.cpt"}
+	dictionary.ConceptsMap[step2.Value] = &gauge.Concept{ConceptStep: step2, FileName: "file.cpt"}
 
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
-	c.Assert(dictionary.ConceptsMap[unchanged].ConceptStep.Items[0].(*parser.Step).Value, Equals, newStep)
-	c.Assert(dictionary.ConceptsMap[unchanged].ConceptStep.Items[1].(*parser.Step).Value, Equals, oldStep+"T")
+	c.Assert(dictionary.ConceptsMap[unchanged].ConceptStep.Items[0].(*gauge.Step).Value, Equals, newStep)
+	c.Assert(dictionary.ConceptsMap[unchanged].ConceptStep.Items[1].(*gauge.Step).Value, Equals, oldStep+"T")
 }
 
 func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 	oldStep := " first step"
 	newStep := "second step"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	tokens = []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 10},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading", LineNo: 20},
-		&parser.Token{Kind: parser.StepKind, Value: newStep, LineNo: 30},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 10},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 20},
+		&parser.Token{Kind: gauge.StepKind, Value: newStep, LineNo: 30},
 	}
-	spec1, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
-	specs := append(make([]*parser.Specification, 0), spec)
+	spec1, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	specs := append(make([]*gauge.Specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
-	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, new(parser.ConceptDictionary))
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	c.Assert(true, Equals, specRefactored[specs[0]])
 	c.Assert(false, Equals, specRefactored[specs[1]])
@@ -161,20 +162,20 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 	newStep := "second step"
 	unchanged := "unchanged"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 20},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := parser.NewConceptDictionary()
-	step1 := &parser.Step{Value: oldStep + "sdsf", IsConcept: true}
-	step2 := &parser.Step{Value: unchanged, IsConcept: true, Items: []parser.Item{&parser.Step{Value: newStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
-	step3 := &parser.Step{Value: "Concept value", IsConcept: true, Items: []parser.Item{&parser.Step{Value: oldStep, IsConcept: false}, &parser.Step{Value: oldStep + "T", IsConcept: false}}}
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
+	step1 := &gauge.Step{Value: oldStep + "sdsf", IsConcept: true}
+	step2 := &gauge.Step{Value: unchanged, IsConcept: true, Items: []gauge.Item{&gauge.Step{Value: newStep, IsConcept: false}, &gauge.Step{Value: oldStep + "T", IsConcept: false}}}
+	step3 := &gauge.Step{Value: "Concept value", IsConcept: true, Items: []gauge.Item{&gauge.Step{Value: oldStep, IsConcept: false}, &gauge.Step{Value: oldStep + "T", IsConcept: false}}}
 	fileName := "file.cpt"
-	dictionary.ConceptsMap[step1.Value] = &parser.Concept{ConceptStep: step1, FileName: fileName}
-	dictionary.ConceptsMap[step2.Value] = &parser.Concept{ConceptStep: step2, FileName: fileName}
-	dictionary.ConceptsMap[step3.Value] = &parser.Concept{ConceptStep: step3, FileName: "e" + fileName}
+	dictionary.ConceptsMap[step1.Value] = &gauge.Concept{ConceptStep: step1, FileName: fileName}
+	dictionary.ConceptsMap[step2.Value] = &gauge.Concept{ConceptStep: step2, FileName: fileName}
+	dictionary.ConceptsMap[step3.Value] = &gauge.Concept{ConceptStep: step3, FileName: "e" + fileName}
 
 	_, filesRefactored := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
@@ -187,14 +188,14 @@ func (s *MySuite) TestRenamingWhenNumberOfArgumentsAreSame(c *C) {
 	oldStep1 := "first step <a> and <b>"
 	newStep := "second step <a> and <b>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {}")
 	c.Assert(specs[0].Scenarios[0].Steps[0].Args[0].Value, Equals, "name")
@@ -206,14 +207,14 @@ func (s *MySuite) TestRenamingWhenArgumentsOrderIsChanged(c *C) {
 	oldStep1 := "first step <a> and <b> and <c> and <d>"
 	newStep := "second step <d> and <b> and <c> and <a>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {} and {}")
 	c.Assert(specs[0].Scenarios[0].Steps[0].Args[0].Value, Equals, "id")
@@ -223,8 +224,8 @@ func (s *MySuite) TestRenamingWhenArgumentsOrderIsChanged(c *C) {
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
-	step1 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "a"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}, &parser.StepArg{Name: "d"}}}
-	step2 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "d"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}, &parser.StepArg{Name: "a"}}}
+	step1 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "a"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}, &gauge.StepArg{Name: "d"}}}
+	step2 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "d"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}, &gauge.StepArg{Name: "a"}}}
 
 	agent := &rephraseRefactorer{step1, step2, false, nil}
 	orderMap := agent.createOrderOfArgs()
@@ -235,8 +236,8 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewArgs(c *C) {
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
-	step1 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "a"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}, &parser.StepArg{Name: "d"}}}
-	step2 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "d"}, &parser.StepArg{Name: "e"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}, &parser.StepArg{Name: "a"}}}
+	step1 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "a"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}, &gauge.StepArg{Name: "d"}}}
+	step2 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "d"}, &gauge.StepArg{Name: "e"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}, &gauge.StepArg{Name: "a"}}}
 
 	agent := &rephraseRefactorer{step1, step2, false, nil}
 	orderMap := agent.createOrderOfArgs()
@@ -249,8 +250,8 @@ func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreAdded(c *C) {
 }
 
 func (s *MySuite) TestCreateOrderGivesMapOfOldArgsAndNewWhenArgsAreRemoved(c *C) {
-	step1 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "a"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}, &parser.StepArg{Name: "d"}}}
-	step2 := &parser.Step{Args: []*parser.StepArg{&parser.StepArg{Name: "d"}, &parser.StepArg{Name: "b"}, &parser.StepArg{Name: "c"}}}
+	step1 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "a"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}, &gauge.StepArg{Name: "d"}}}
+	step2 := &gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "d"}, &gauge.StepArg{Name: "b"}, &gauge.StepArg{Name: "c"}}}
 
 	agent := &rephraseRefactorer{step1, step2, false, nil}
 	orderMap := agent.createOrderOfArgs()
@@ -275,14 +276,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtLast(c *C) {
 	oldStep1 := "first step <a> and <b> and <c>"
 	newStep := "second step <a> and <b> and <c> and <d>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {} and {}")
@@ -297,14 +298,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedAtFirst(c *C) {
 	oldStep1 := "first step <a> and <b> and <c>"
 	newStep := "second step <d> and <a> and <b> and <c>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {} and {}")
@@ -319,14 +320,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsAddedInMiddle(c *C) {
 	oldStep1 := "first step <a> and <b> and <c>"
 	newStep := "second step <a> and <d> and <b> and <c>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {} and {}")
@@ -341,14 +342,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromLast(c *C) {
 	oldStep1 := "first step <a> and <b> and <c> and <d>"
 	newStep := "second step <a> and <b> and <c>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {}")
@@ -362,14 +363,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromBegining(c *C) {
 	oldStep1 := "first step <a> and <b> and <c> and <d>"
 	newStep := "second step <b> and <c> and <d>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {}")
@@ -383,14 +384,14 @@ func (s *MySuite) TestRenamingWhenArgumentsIsRemovedFromMiddle(c *C) {
 	oldStep1 := "first step <a> and <b> and <c> and <d>"
 	newStep := "second step <a> and <b> and <d>"
 	tokens := []*parser.Token{
-		&parser.Token{Kind: parser.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: parser.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: parser.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
 	}
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, new(parser.ConceptDictionary))
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
-	specs := append(make([]*parser.Specification, 0), spec)
-	dictionary := new(parser.ConceptDictionary)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
 	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, "second step {} and {} and {}")

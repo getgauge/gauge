@@ -20,31 +20,32 @@ package parser
 import (
 	"path/filepath"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/util"
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestParsingFileSpecialType(c *C) {
 	resolver := newSpecialTypeResolver()
-	resolver.predefinedResolvers["file"] = func(value string) (*StepArg, error) {
-		return &StepArg{Value: "dummy", ArgType: Static}, nil
+	resolver.predefinedResolvers["file"] = func(value string) (*gauge.StepArg, error) {
+		return &gauge.StepArg{Value: "dummy", ArgType: gauge.Static}, nil
 	}
 
 	stepArg, _ := resolver.resolve("file:foo")
 	c.Assert(stepArg.Value, Equals, "dummy")
-	c.Assert(stepArg.ArgType, Equals, Static)
+	c.Assert(stepArg.ArgType, Equals, gauge.Static)
 	c.Assert(stepArg.Name, Equals, "file:foo")
 }
 
 func (s *MySuite) TestParsingFileAsSpecialParamWithWindowsPathAsValue(c *C) {
 	resolver := newSpecialTypeResolver()
-	resolver.predefinedResolvers["file"] = func(value string) (*StepArg, error) {
-		return &StepArg{Value: "hello", ArgType: SpecialString}, nil
+	resolver.predefinedResolvers["file"] = func(value string) (*gauge.StepArg, error) {
+		return &gauge.StepArg{Value: "hello", ArgType: gauge.SpecialString}, nil
 	}
 
 	stepArg, _ := resolver.resolve(`file:C:\Users\abc`)
 	c.Assert(stepArg.Value, Equals, "hello")
-	c.Assert(stepArg.ArgType, Equals, SpecialString)
+	c.Assert(stepArg.ArgType, Equals, gauge.SpecialString)
 	if util.IsWindows() {
 		c.Assert(stepArg.Name, Equals, `file:C:\\Users\\abc`)
 	} else {
@@ -73,7 +74,7 @@ func (s *MySuite) TestConvertCsvToTable(c *C) {
 
 func (s *MySuite) TestConvertEmptyCsvToTable(c *C) {
 	table, _ := convertCsvToTable("")
-	c.Assert(len(table.columns), Equals, 0)
+	c.Assert(len(table.Columns), Equals, 0)
 }
 
 func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
@@ -92,18 +93,18 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 		step("create user <id> <name> and <phone>").
 		String()
 
-	conceptDictionary := NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
 	PopulateConceptDynamicParams(concept, dataTableLookup)
 
-	c.Assert(concept.getArg("user-id").Value, Equals, "123")
-	c.Assert(concept.getArg("user-name").Value, Equals, "foo")
-	c.Assert(concept.getArg("user-phone").Value, Equals, "888")
+	c.Assert(concept.GetArg("user-id").Value, Equals, "123")
+	c.Assert(concept.GetArg("user-name").Value, Equals, "foo")
+	c.Assert(concept.GetArg("user-phone").Value, Equals, "888")
 
 }
 
@@ -117,31 +118,31 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 
-	conceptDictionary := NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
 	PopulateConceptDynamicParams(concept1, dataTableLookup)
 
-	c.Assert(concept1.getArg("user-id").Value, Equals, "123")
-	c.Assert(concept1.getArg("user-name").Value, Equals, "prateek")
-	c.Assert(concept1.getArg("user-phone").Value, Equals, "8800")
+	c.Assert(concept1.GetArg("user-id").Value, Equals, "123")
+	c.Assert(concept1.GetArg("user-name").Value, Equals, "prateek")
+	c.Assert(concept1.GetArg("user-phone").Value, Equals, "8800")
 
 	nestedConcept := concept1.ConceptSteps[0]
-	c.Assert(nestedConcept.getArg("userid").Value, Equals, "123")
-	c.Assert(nestedConcept.getArg("username").Value, Equals, "prateek")
+	c.Assert(nestedConcept.GetArg("userid").Value, Equals, "123")
+	c.Assert(nestedConcept.GetArg("username").Value, Equals, "prateek")
 
 	concept2 := spec.Scenarios[0].Steps[1]
-	c.Assert(concept2.getArg("user-id").Value, Equals, "456")
-	c.Assert(concept2.getArg("user-name").Value, Equals, "foo")
-	c.Assert(concept2.getArg("user-phone").Value, Equals, "9900")
+	c.Assert(concept2.GetArg("user-id").Value, Equals, "456")
+	c.Assert(concept2.GetArg("user-name").Value, Equals, "foo")
+	c.Assert(concept2.GetArg("user-phone").Value, Equals, "9900")
 
 	nestedConcept2 := concept2.ConceptSteps[0]
-	c.Assert(nestedConcept2.getArg("userid").Value, Equals, "456")
-	c.Assert(nestedConcept2.getArg("username").Value, Equals, "foo")
+	c.Assert(nestedConcept2.GetArg("userid").Value, Equals, "456")
+	c.Assert(nestedConcept2.GetArg("username").Value, Equals, "foo")
 
 }
 
@@ -152,23 +153,23 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 		step("create user \"456\" \"foo\" and \"123456\"").
 		String()
 
-	conceptDictionary := NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
 	AddConcepts(path, conceptDictionary)
 
 	spec, _ := parser.Parse(specText, conceptDictionary)
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup := new(ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
 	PopulateConceptDynamicParams(concept1, dataTableLookup)
 
-	c.Assert(concept1.getArg("user-id").Value, Equals, "456")
-	c.Assert(concept1.getArg("user-name").Value, Equals, "foo")
-	c.Assert(concept1.getArg("user-phone").Value, Equals, "123456")
+	c.Assert(concept1.GetArg("user-id").Value, Equals, "456")
+	c.Assert(concept1.GetArg("user-name").Value, Equals, "foo")
+	c.Assert(concept1.GetArg("user-phone").Value, Equals, "123456")
 
 	nestedConcept := concept1.ConceptSteps[0]
-	c.Assert(nestedConcept.getArg("userid").Value, Equals, "456")
-	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-value")
+	c.Assert(nestedConcept.GetArg("userid").Value, Equals, "456")
+	c.Assert(nestedConcept.GetArg("username").Value, Equals, "static-value")
 }
 
 func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
@@ -178,7 +179,7 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 		step("create user \"sdf\" \"name\" and \"1234\"").
 		String()
 
-	conceptDictionary := NewConceptDictionary()
+	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
 	AddConcepts(path, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary)
@@ -187,8 +188,8 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	nestedConcept := concept1.ConceptSteps[0]
 	nestedConcept1 := concept1.ConceptSteps[1]
 
-	c.Assert(nestedConcept.getArg("username").Value, Equals, "static-value")
-	c.Assert(nestedConcept1.getArg("username").Value, Equals, "static-value1")
-	c.Assert(nestedConcept.getArg("userid").Value, Equals, "sdf")
-	c.Assert(nestedConcept1.getArg("userid").Value, Equals, "sdf")
+	c.Assert(nestedConcept.GetArg("username").Value, Equals, "static-value")
+	c.Assert(nestedConcept1.GetArg("username").Value, Equals, "static-value1")
+	c.Assert(nestedConcept.GetArg("userid").Value, Equals, "sdf")
+	c.Assert(nestedConcept1.GetArg("userid").Value, Equals, "sdf")
 }
