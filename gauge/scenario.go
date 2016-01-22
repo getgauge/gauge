@@ -1,0 +1,84 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
+package gauge
+
+type Scenario struct {
+	Heading  *Heading
+	Steps    []*Step
+	Comments []*Comment
+	Tags     *Tags
+	Items    []Item
+}
+
+func (scenario *Scenario) AddHeading(heading *Heading) {
+	heading.HeadingType = ScenarioHeading
+	scenario.Heading = heading
+}
+
+func (scenario *Scenario) AddStep(step *Step) {
+	scenario.Steps = append(scenario.Steps, step)
+	scenario.AddItem(step)
+}
+
+func (scenario *Scenario) AddTags(tags *Tags) {
+	scenario.Tags = tags
+	scenario.AddItem(tags)
+}
+
+func (scenario *Scenario) AddComment(comment *Comment) {
+	scenario.Comments = append(scenario.Comments, comment)
+	scenario.AddItem(comment)
+}
+
+func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
+	isRefactored := false
+	for _, step := range scenario.Steps {
+		isConcept := false
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
+	}
+	return isRefactored
+}
+
+func (scenario *Scenario) AddItem(itemToAdd Item) {
+	if scenario.Items == nil {
+		scenario.Items = make([]Item, 0)
+	}
+	scenario.Items = append(scenario.Items, itemToAdd)
+}
+
+func (scenario *Scenario) LatestStep() *Step {
+	return scenario.Steps[len(scenario.Steps)-1]
+}
+
+func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
+	traverser.ScenarioHeading(scenario.Heading)
+	for _, item := range scenario.Items {
+		switch item.Kind() {
+		case StepKind:
+			traverser.Step(item.(*Step))
+		case CommentKind:
+			traverser.Comment(item.(*Comment))
+		case TagKind:
+			traverser.ScenarioTags(item.(*Tags))
+		}
+	}
+}
+
+func (scenario Scenario) Kind() TokenKind {
+	return ScenarioKind
+}
