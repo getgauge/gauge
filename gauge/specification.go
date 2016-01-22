@@ -17,10 +17,7 @@
 
 package gauge
 
-import (
-	"fmt"
-	"reflect"
-)
+import "reflect"
 
 type HeadingType int
 
@@ -293,13 +290,4 @@ type Tags struct {
 
 func (tags *Tags) Kind() TokenKind {
 	return TagKind
-}
-
-type Warning struct {
-	Message string
-	LineNo  int
-}
-
-func (warning *Warning) String() string {
-	return fmt.Sprintf("line no: %d, %s", warning.LineNo, warning.Message)
 }
