@@ -121,7 +121,7 @@ func main() {
 		} else if *specFilesToFormat != "" {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
-			execution.ParseAndValidateSpecs(flag.Args())
+			execution.Validate(flag.Args())
 		} else {
 			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
 			os.Exit(exitCode)

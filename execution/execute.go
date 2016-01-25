@@ -23,6 +23,21 @@ import (
 var NumberOfExecutionStreams int
 var checkUpdatesDuringExecution = false
 
+type execution interface {
+	start() *result.SuiteResult
+	finish()
+}
+
+type executionInfo struct {
+	manifest        *manifest.Manifest
+	specifications  []*gauge.Specification
+	runner          *runner.TestRunner
+	pluginHandler   *plugin.Handler
+	parallelRunInfo *parallelInfo
+	consoleReporter reporter.Reporter
+	errMaps         *validationErrMaps
+}
+
 func ExecuteSpecs(inParallel bool, args []string) int {
 	if checkUpdatesDuringExecution && config.CheckUpdates() {
 		i := &install.UpdateFacade{}
@@ -50,7 +65,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	return exitCode
 }
 
-func ParseAndValidateSpecs(args []string) {
+func Validate(args []string) {
 	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
@@ -76,6 +91,17 @@ func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary
 		os.Exit(0)
 	}
 	return specsToExecute, conceptsDictionary
+}
+
+func newExecution(executionInfo *executionInfo) execution {
+	if executionInfo.parallelRunInfo.inParallel {
+		return &parallelSpecExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+			runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
+			numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
+			consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
+	}
+	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
 func startApi() *runner.TestRunner {

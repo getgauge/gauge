@@ -48,32 +48,6 @@ type simpleExecution struct {
 	errMaps              *validationErrMaps
 }
 
-type execution interface {
-	start() *result.SuiteResult
-	finish()
-}
-
-type executionInfo struct {
-	manifest        *manifest.Manifest
-	specifications  []*gauge.Specification
-	runner          *runner.TestRunner
-	pluginHandler   *plugin.Handler
-	parallelRunInfo *parallelInfo
-	consoleReporter reporter.Reporter
-	errMaps         *validationErrMaps
-}
-
-func newExecution(executionInfo *executionInfo) execution {
-	if executionInfo.parallelRunInfo.inParallel {
-		return &parallelSpecExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-			runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
-			numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
-			consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
-	}
-	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
-}
-
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
 		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
