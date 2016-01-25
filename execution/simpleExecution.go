@@ -40,7 +40,7 @@ var TableRows = ""
 type simpleExecution struct {
 	manifest             *manifest.Manifest
 	runner               *runner.TestRunner
-	specifications       []*gauge.Specification
+	specStore            *specStore
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
@@ -49,7 +49,7 @@ type simpleExecution struct {
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
-	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
+	return &simpleExecution{manifest: executionInfo.manifest, specStore: executionInfo.specStore,
 		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
@@ -118,8 +118,8 @@ func (e *simpleExecution) start() *result.SuiteResult {
 			e.suiteResult.SetFailure()
 			printStatus(beforeSuiteHookExecResult, e.consoleReporter)
 		} else {
-			for _, specificationToExecute := range e.specifications {
-				e.executeSpec(specificationToExecute)
+			for !e.specStore.isEmpty() {
+				e.executeSpec(e.specStore.getSpec())
 			}
 		}
 		afterSuiteHookExecResult := e.endExecution()
@@ -160,36 +160,6 @@ func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunn
 	specExecutor := new(specExecutor)
 	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
 	return specExecutor
-}
-
-func (e *simpleExecution) executeStream(specs *specList) *result.SuiteResult {
-	startTime := time.Now()
-	e.suiteResult = result.NewSuiteResult()
-	e.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	e.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
-	e.suiteResult.Environment = env.CurrentEnv
-	e.suiteResult.Tags = ExecuteTags
-	initSuiteDataStoreResult := e.initializeSuiteDataStore()
-	if initSuiteDataStoreResult.GetFailed() {
-		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
-	} else {
-		beforeSuiteHookExecResult := e.startExecution()
-		if beforeSuiteHookExecResult.GetFailed() {
-			result.AddPreHook(e.suiteResult, beforeSuiteHookExecResult)
-			e.suiteResult.SetFailure()
-		} else {
-			for !specs.isEmpty() {
-				e.executeSpec(specs.getSpec())
-			}
-		}
-		afterSuiteHookExecResult := e.endExecution()
-		if afterSuiteHookExecResult.GetFailed() {
-			result.AddPostHook(e.suiteResult, afterSuiteHookExecResult)
-			e.suiteResult.SetFailure()
-		}
-	}
-	e.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
-	return e.suiteResult
 }
 
 func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specification) {

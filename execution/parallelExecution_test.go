@@ -57,7 +57,7 @@ func (s *MySuite) TestDistributionOfSpecs(c *C) {
 
 func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
 	specs := createSpecsList(6)
-	e := parallelSpecExecution{numberOfExecutionStreams: 10, specifications: specs}
+	e := parallelExecution{numberOfExecutionStreams: 10, specStore: &specStore{specs: specs}}
 	specCollections := filter.DistributeSpecs(specs, e.getNumberOfStreams())
 	c.Assert(len(specCollections), Equals, 6)
 	verifySpecCollectionsForSize(c, 1, specCollections...)
@@ -69,7 +69,7 @@ func (s *MySuite) TestDistributionOfSpecsWithMoreNumberOfDistributions(c *C) {
 
 	e.numberOfExecutionStreams = 17
 	specs = createSpecsList(0)
-	e.specifications = specs
+	e.specStore = &specStore{specs: specs}
 	specCollections = filter.DistributeSpecs(specs, e.getNumberOfStreams())
 	c.Assert(len(specCollections), Equals, 0)
 }
@@ -93,7 +93,7 @@ func getValidationErrorMap() *validationErrMaps {
 }
 
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
-	e := parallelSpecExecution{errMaps: getValidationErrorMap()}
+	e := parallelExecution{errMaps: getValidationErrorMap()}
 	suiteRes1 := &result.SuiteResult{ExecutionTime: 1, SpecsFailedCount: 1, IsFailed: true, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
 	suiteRes2 := &result.SuiteResult{ExecutionTime: 3, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
 	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
@@ -111,7 +111,7 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	errMap := getValidationErrorMap()
 	errMap.specErrs[&gauge.Specification{}] = make([]*stepValidationError, 0)
-	e := parallelSpecExecution{errMaps: errMap}
+	e := parallelExecution{errMaps: errMap}
 	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
 	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
 	suiteRes3 := &result.SuiteResult{IsFailed: false}
@@ -134,7 +134,7 @@ func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
-	e := parallelSpecExecution{errMaps: getValidationErrorMap()}
+	e := parallelExecution{errMaps: getValidationErrorMap()}
 	suiteRes1 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
 	suiteRes2 := &result.SuiteResult{PreSuite: &gauge_messages.ProtoHookFailure{}}
 	suiteRes3 := &result.SuiteResult{PostSuite: &gauge_messages.ProtoHookFailure{}}
@@ -147,7 +147,7 @@ func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 }
 
 func (s *MySuite) TestFunctionsOfTypeSpecList(c *C) {
-	mySpecs := &specList{specs: createSpecsList(4)}
+	mySpecs := &specStore{specs: createSpecsList(4)}
 	c.Assert(mySpecs.getSpec().FileName, Equals, "spec0")
 	c.Assert(mySpecs.getSpec().FileName, Equals, "spec1")
 	c.Assert(mySpecs.isEmpty(), Equals, false)

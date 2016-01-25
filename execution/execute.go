@@ -30,7 +30,7 @@ type execution interface {
 
 type executionInfo struct {
 	manifest        *manifest.Manifest
-	specifications  []*gauge.Specification
+	specStore       *specStore
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.Handler
 	parallelRunInfo *parallelInfo
@@ -58,7 +58,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	if !parallelInfo.isValid() {
 		os.Exit(1)
 	}
-	execution := newExecution(&executionInfo{manifest, specsToExecute, runner, pluginHandler, parallelInfo, reporter.Current(), errMap})
+	execution := newExecution(&executionInfo{manifest, &specStore{specs: specsToExecute}, runner, pluginHandler, parallelInfo, reporter.Current(), errMap})
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
@@ -95,13 +95,9 @@ func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary
 
 func newExecution(executionInfo *executionInfo) execution {
 	if executionInfo.parallelRunInfo.inParallel {
-		return &parallelSpecExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-			runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
-			numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
-			consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
+		return newParallelExecution(executionInfo)
 	}
-	return &simpleExecution{manifest: executionInfo.manifest, specifications: executionInfo.specifications,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
+	return newSimpleExecution(executionInfo)
 }
 
 func startApi() *runner.TestRunner {

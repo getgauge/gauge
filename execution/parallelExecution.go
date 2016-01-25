@@ -43,10 +43,10 @@ var Strategy string
 const EAGER string = "eager"
 const LAZY string = "lazy"
 
-type parallelSpecExecution struct {
+type parallelExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
-	specifications           []*gauge.Specification
+	specStore                *specStore
 	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *runner.TestRunner
@@ -54,6 +54,13 @@ type parallelSpecExecution struct {
 	numberOfExecutionStreams int
 	consoleReporter          reporter.Reporter
 	errMaps                  *validationErrMaps
+}
+
+func newParallelExecution(executionInfo *executionInfo) *parallelExecution {
+	return &parallelExecution{manifest: executionInfo.manifest, specStore: executionInfo.specStore,
+		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
+		numberOfExecutionStreams: executionInfo.parallelRunInfo.numberOfStreams,
+		consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
 type streamExecError struct {
@@ -78,9 +85,9 @@ type parallelInfo struct {
 	numberOfStreams int
 }
 
-func (self *parallelInfo) isValid() bool {
-	if self.numberOfStreams < 1 {
-		logger.Error("Invalid input(%s) to --n flag.", strconv.Itoa(self.numberOfStreams))
+func (p *parallelInfo) isValid() bool {
+	if p.numberOfStreams < 1 {
+		logger.Error("Invalid input(%s) to --n flag.", strconv.Itoa(p.numberOfStreams))
 		return false
 	}
 	currentStrategy := strings.ToLower(Strategy)
@@ -95,16 +102,17 @@ func isLazy() bool {
 	return strings.ToLower(Strategy) == LAZY
 }
 
-func (e *parallelSpecExecution) getNumberOfStreams() int {
+func (e *parallelExecution) getNumberOfStreams() int {
 	nStreams := e.numberOfExecutionStreams
-	if nStreams > len(e.specifications) {
-		nStreams = len(e.specifications)
+	size := e.specStore.size()
+	if nStreams > size {
+		nStreams = size
 	}
 	return nStreams
 }
 
-func (e *parallelSpecExecution) start() *result.SuiteResult {
-	suiteResults := make([]*result.SuiteResult, 0)
+func (e *parallelExecution) start() *result.SuiteResult {
+	var suiteResults []*result.SuiteResult
 	nStreams := e.getNumberOfStreams()
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
@@ -124,20 +132,20 @@ func (e *parallelSpecExecution) start() *result.SuiteResult {
 	return e.aggregateResult
 }
 
-func (e *parallelSpecExecution) eagerExecution(distributions int) []*result.SuiteResult {
-	specCollections := filter.DistributeSpecs(e.specifications, distributions)
+func (e *parallelExecution) eagerExecution(distributions int) []*result.SuiteResult {
+	specCollections := filter.DistributeSpecs(e.specStore.specs, distributions)
 	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
 	for i, specCollection := range specCollections {
 		go e.startSpecsExecution(specCollection, suiteResultChannel, reporter.NewParallelConsole(i+1))
 	}
-	suiteResults := make([]*result.SuiteResult, 0)
-	for _, _ = range specCollections {
+	var suiteResults []*result.SuiteResult
+	for _ = range specCollections {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
+func (e *parallelExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
 		logger.Error("Failed: " + err.Error())
@@ -148,18 +156,14 @@ func (e *parallelSpecExecution) startSpecsExecution(specCollection *filter.SpecC
 	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, reporter)
 }
 
-func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
-	allSpecs := &specList{}
-	for _, spec := range e.specifications {
-		allSpecs.specs = append(allSpecs.specs, spec)
-	}
-	suiteResultChannel := make(chan *result.SuiteResult, len(e.specifications))
+func (e *parallelExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
+	suiteResultChannel := make(chan *result.SuiteResult, e.specStore.size())
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
-		go e.startStream(allSpecs, reporter.NewParallelConsole(i+1), suiteResultChannel)
+		go e.startStream(e.specStore, reporter.NewParallelConsole(i+1), suiteResultChannel)
 	}
 	e.wg.Wait()
-	suiteResults := make([]*result.SuiteResult, 0)
+	var suiteResults []*result.SuiteResult
 	for i := 0; i < totalStreams; i++ {
 		suiteResults = append(suiteResults, <-suiteResultChannel)
 	}
@@ -167,7 +171,7 @@ func (e *parallelSpecExecution) lazyExecution(totalStreams int) []*result.SuiteR
 	return suiteResults
 }
 
-func (e *parallelSpecExecution) startStream(specs *specList, reporter reporter.Reporter, suiteResultChannel chan *result.SuiteResult) {
+func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.Reporter, suiteResultChannel chan *result.SuiteResult) {
 	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
@@ -175,27 +179,27 @@ func (e *parallelSpecExecution) startStream(specs *specList, reporter reporter.R
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
-	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, make([]*gauge.Specification, 0), testRunner, e.pluginHandler, nil, reporter, e.errMaps})
-	result := simpleExecution.executeStream(specs)
+	simpleExecution := newSimpleExecution(&executionInfo{e.manifest, specStore, testRunner, e.pluginHandler, nil, reporter, e.errMaps})
+	result := simpleExecution.start()
 	suiteResultChannel <- result
 	testRunner.Kill()
 }
 
-func (e *parallelSpecExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
-	execution := newExecution(&executionInfo{e.manifest, specCollection.Specs, runner, e.pluginHandler, &parallelInfo{inParallel: false}, reporter, e.errMaps})
+func (e *parallelExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
+	execution := newExecution(&executionInfo{e.manifest, &specStore{specs: specCollection.Specs}, runner, e.pluginHandler, &parallelInfo{inParallel: false}, reporter, e.errMaps})
 	result := execution.start()
 	runner.Kill()
 	suiteResults <- result
 }
 
-func (e *parallelSpecExecution) finish() {
+func (e *parallelExecution) finish() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.aggregateResult)}}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
+func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
 	aggregateResult := &result.SuiteResult{IsFailed: false, SpecResults: make([]*result.SpecResult, 0)}
 	aggregateResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	for _, result := range suiteResults {
@@ -218,26 +222,29 @@ func (e *parallelSpecExecution) aggregateResults(suiteResults []*result.SuiteRes
 	return aggregateResult
 }
 
-type specList struct {
+type specStore struct {
 	mutex sync.Mutex
 	specs []*gauge.Specification
 }
 
-func (s *specList) isEmpty() bool {
+func (s *specStore) isEmpty() bool {
 	s.mutex.Lock()
-	if len(s.specs) == 0 {
-		s.mutex.Unlock()
-		return true
-	}
-	s.mutex.Unlock()
-	return false
+	defer s.mutex.Unlock()
+	return len(s.specs) == 0
 }
 
-func (s *specList) getSpec() *gauge.Specification {
+func (s *specStore) getSpec() *gauge.Specification {
 	s.mutex.Lock()
 	var spec *gauge.Specification
 	spec = s.specs[:1][0]
 	s.specs = s.specs[1:]
 	s.mutex.Unlock()
 	return spec
+}
+
+func (s *specStore) size() int {
+	s.mutex.Lock()
+	length := len(s.specs)
+	s.mutex.Unlock()
+	return length
 }
