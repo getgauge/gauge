@@ -81,7 +81,7 @@ func main() {
 	if err != nil {
 		validGaugeProject = false
 	}
-	env.LoadEnv(true)
+	env.LoadEnv(*currentEnv)
 	logger.Initialize(*logLevel)
 	if *gaugeVersion {
 		printVersion()
@@ -162,7 +162,6 @@ func initPackageFlags() {
 	}
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
-	env.ProjectEnv = *currentEnv
 	execution.ExecuteTags = *executeTags
 	execution.TableRows = *tableRows
 	execution.NumberOfExecutionStreams = *numberOfExecutionStreams

@@ -30,7 +30,6 @@ import (
 	"github.com/getgauge/gauge/conceptExtractor"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -45,7 +44,6 @@ import (
 )
 
 func StartAPI() *runner.StartChannels {
-	env.LoadEnv(false)
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	go StartAPIService(0, startChan)
 	return startChan
@@ -111,7 +109,6 @@ func RunInBackground(apiPort string) {
 		}
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
-		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
 			logger.Fatalf(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))

@@ -35,21 +35,21 @@ const (
 var defaultProperties map[string]string
 
 var currentEnv = "default"
-var ProjectEnv = "default"
 
 // LoadEnv first loads the default env properties and then the user specified env properties.
 // This way user specified env variable can overwrite default if required
-func LoadEnv(isDefaultEnvRequired bool) {
+func LoadEnv(envName string) {
+	currentEnv = envName
+
 	err := loadDefaultProperties()
 	if err != nil {
-		logger.Fatalf("Failed to load the default property. %s\n", err.Error())
+		logger.Fatalf("Failed to load the default property. %s", err.Error())
 	}
 
-	err = loadEnvDir(ProjectEnv)
+	err = loadEnvDir(currentEnv)
 	if err != nil {
-		logger.Fatalf("Failed to load env %s.\n", err.Error())
+		logger.Fatalf("Failed to load env. %s", err.Error())
 	}
-	currentEnv = ProjectEnv
 }
 
 func loadDefaultProperties() error {

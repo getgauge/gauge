@@ -35,9 +35,8 @@ var _ = Suite(&MySuite{})
 func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "testdata"
-	ProjectEnv = "default"
 
-	LoadEnv(true)
+	LoadEnv("default")
 
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
@@ -48,9 +47,8 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "testdata"
-	ProjectEnv = "foo"
 
-	LoadEnv(true)
+	LoadEnv("foo")
 
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
@@ -119,9 +117,8 @@ func TestFatalErrorIsThrownIfEnvNotFound(t *testing.T) {
 	if os.Getenv("NO_ENV") == "1" {
 		os.Clearenv()
 		config.ProjectRoot = "testdata"
-		ProjectEnv = "bar"
 
-		LoadEnv(true)
+		LoadEnv("bar")
 		return
 	}
 

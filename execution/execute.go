@@ -7,7 +7,6 @@ import (
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
@@ -45,7 +44,6 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 
-	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
@@ -66,7 +64,6 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 }
 
 func Validate(args []string) {
-	env.LoadEnv(false)
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
