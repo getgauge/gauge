@@ -25,7 +25,7 @@ func LoadEnv(shouldSkip bool) {
 	err := loadEnvironment(envDefaultDirName)
 	if err != nil {
 		if !shouldSkip {
-			logger.Fatal("Failed to load the default environment. %s\n", err.Error())
+			logger.Fatalf("Failed to load the default environment. %s\n", err.Error())
 		}
 	}
 
@@ -33,7 +33,7 @@ func LoadEnv(shouldSkip bool) {
 		err := loadEnvironment(ProjectEnv)
 		if err != nil {
 			if !shouldSkip {
-				logger.Fatal("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
+				logger.Fatalf("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
 			}
 		}
 		CurrentEnv = ProjectEnv

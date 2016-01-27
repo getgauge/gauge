@@ -49,7 +49,7 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -70,7 +70,7 @@ func Validate(args []string) {
 	specsToExecute, conceptsDictionary := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
@@ -107,7 +107,7 @@ func startApi() *runner.TestRunner {
 	case runner := <-startChan.RunnerChan:
 		return runner
 	case err := <-startChan.ErrorChan:
-		logger.Fatal("Failed to start gauge API: %s", err.Error())
+		logger.Fatalf("Failed to start gauge API: %s", err.Error())
 	}
 	return nil
 }

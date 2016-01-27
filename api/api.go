@@ -97,7 +97,7 @@ func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
 	case runner := <-startChan.RunnerChan:
 		runner.Kill()
 	case err := <-startChan.ErrorChan:
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 }
 
@@ -107,14 +107,14 @@ func RunInBackground(apiPort string) {
 	if apiPort != "" {
 		port, err = strconv.Atoi(apiPort)
 		if err != nil {
-			logger.Fatal(fmt.Sprintf("Invalid port number: %s", apiPort))
+			logger.Fatalf(fmt.Sprintf("Invalid port number: %s", apiPort))
 		}
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
 		env.LoadEnv(false)
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			logger.Fatal(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
+			logger.Fatalf(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
 	var wg sync.WaitGroup

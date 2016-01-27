@@ -59,8 +59,8 @@ func Warning(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
-// Fatal logs CRITICAL messages and exits
-func Fatal(msg string, args ...interface{}) {
+// Fatalf logs CRITICAL messages and exits
+func Fatalf(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 	GaugeLog.Fatalf(msg, args...)
 }

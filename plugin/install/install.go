@@ -213,7 +213,7 @@ func UninstallPlugin(pluginName string, version string) {
 
 func handleUninstallFailure(err error, pluginName string) {
 	logger.Error("%s plugin uninstallation failed", pluginName)
-	logger.Fatal(err.Error())
+	logger.Fatalf(err.Error())
 }
 
 func getDownloadLink(downloadUrls downloadUrls) (string, error) {
@@ -308,7 +308,7 @@ func InstallPluginZip(zipFile string, pluginName string) {
 	defer common.Remove(tempDir)
 	if err != nil {
 		common.Remove(tempDir)
-		logger.Fatal("Failed to install plugin. %s\n", err.Error())
+		logger.Fatalf("Failed to install plugin. %s\n", err.Error())
 	}
 	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 
@@ -320,7 +320,7 @@ func InstallPluginZip(zipFile string, pluginName string) {
 	}
 	if err != nil {
 		common.Remove(tempDir)
-		logger.Fatal("Failed to install plugin. %s\n", err.Error())
+		logger.Fatalf("Failed to install plugin. %s\n", err.Error())
 	}
 	logger.Info("Successfully installed plugin from file.")
 }
@@ -364,7 +364,7 @@ func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string,
 func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 	installPluginsFromManifest(manifest)
 }
@@ -391,7 +391,7 @@ func UpdatePlugins() {
 func DownloadAndInstallPlugin(plugin, version, messageFormat string) {
 	err := downloadAndInstall(plugin, version, fmt.Sprintf(messageFormat, plugin))
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 	os.Exit(0)
 }
@@ -488,10 +488,10 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 	}
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatal(err.Error())
+		logger.Fatalf(err.Error())
 	}
 	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
-		logger.Fatal(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
+		logger.Fatalf(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
 	} else {
 		logger.Info("Plugin %s was successfully added to the project\n", pluginName)
 	}

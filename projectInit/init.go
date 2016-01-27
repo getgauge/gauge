@@ -89,7 +89,7 @@ func getTemplateURL(templateName string) string {
 func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		logger.Fatal("Failed to find working directory. %s", err.Error())
+		logger.Fatalf("Failed to find working directory. %s", err.Error())
 	}
 	config.ProjectRoot = wd
 
@@ -102,7 +102,7 @@ func InitializeProject(templateName string) {
 	}
 
 	if err != nil {
-		logger.Fatal("Failed to initialize. %s", err.Error())
+		logger.Fatalf("Failed to initialize. %s", err.Error())
 	}
 	logger.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
 }
@@ -234,23 +234,23 @@ func createProjectTemplate(language string) error {
 func SetWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		logger.Fatal("Unable to set working directory : %s", err.Error())
+		logger.Fatalf("Unable to set working directory : %s", err.Error())
 	}
 
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			logger.Fatal("Unable to set working directory : %s", err.Error())
+			logger.Fatalf("Unable to set working directory : %s", err.Error())
 		}
 	}
 
 	err = os.Chdir(targetDir)
 	if err != nil {
-		logger.Fatal("Unable to set working directory : %s", err.Error())
+		logger.Fatalf("Unable to set working directory : %s", err.Error())
 	}
 
 	_, err = os.Getwd()
 	if err != nil {
-		logger.Fatal("Unable to set working directory : %s", err.Error())
+		logger.Fatalf("Unable to set working directory : %s", err.Error())
 	}
 }
