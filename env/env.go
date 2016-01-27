@@ -20,7 +20,6 @@ package env
 import (
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/dmotylev/goproperties"
@@ -33,60 +32,91 @@ const (
 	envDefaultDirName = "default"
 )
 
+var defaultProperties map[string]string
+
 var CurrentEnv = "default"
 var ProjectEnv = "default"
 
-// LoadEnv loads default and user specified env.
-// This way user specified env variable can override default if required
+// LoadEnv first loads the default env properties and then the user specified env properties.
+// This way user specified env variable can overwrite default if required
 func LoadEnv(isDefaultEnvRequired bool) {
-	err := loadEnvironment(envDefaultDirName)
+	err := loadDefaultProperties()
 	if err != nil {
-		if !isDefaultEnvRequired {
-			logger.Fatalf("Failed to load the default environment. %s\n", err.Error())
-		}
+		logger.Fatalf("Failed to load the default property. %s\n", err.Error())
 	}
 
-	if ProjectEnv != envDefaultDirName {
-		err := loadEnvironment(ProjectEnv)
-		if err != nil {
-			if !isDefaultEnvRequired {
-				logger.Fatalf("Failed to load the environment: %s. %s\n", ProjectEnv, err.Error())
-			}
-		}
-		CurrentEnv = ProjectEnv
+	err = loadEnvDir(ProjectEnv)
+	if err != nil {
+		logger.Fatalf("Failed to load env %s.\n", err.Error())
 	}
-
+	CurrentEnv = ProjectEnv
 }
 
-// Loads all the properties files available in the specified env directory
-func loadEnvironment(env string) error {
-	envDir := filepath.Join(config.ProjectRoot, common.EnvDirectoryName)
+func loadDefaultProperties() error {
+	defaultProperties = make(map[string]string)
+	defaultProperties["gauge_reports_dir"] = "reports"
+	defaultProperties["overwrite_reports"] = "true"
+	defaultProperties["screenshot_on_failure"] = "true"
+	defaultProperties["logs_directory"] = "logs"
 
-	dirToRead := path.Join(envDir, env)
-	if !common.DirExists(dirToRead) {
-		return fmt.Errorf("%s environment does not exist", env)
-	}
-
-	isProperties := func(fileName string) bool {
-		return filepath.Ext(fileName) == ".properties"
-	}
-
-	err := filepath.Walk(dirToRead, func(path string, info os.FileInfo, err error) error {
-		if isProperties(path) {
-			p, e := properties.Load(path)
-			if e != nil {
-				return fmt.Errorf("Failed to parse: %s. %s", path, e.Error())
-			}
-
-			for k, v := range p {
-				err := common.SetEnvVariable(k, v)
-				if err != nil {
-					return fmt.Errorf("%s: %s", path, err.Error())
-				}
+	for property, value := range defaultProperties {
+		if !isPropertySet(property) {
+			if err := common.SetEnvVariable(property, value); err != nil {
+				return err
 			}
 		}
-		return nil
-	})
+	}
+	return nil
+}
 
-	return err
+func loadEnvDir(envDir string) error {
+	envDirPath := filepath.Join(config.ProjectRoot, common.EnvDirectoryName, envDir)
+	if !common.DirExists(envDirPath) {
+		return fmt.Errorf("%s environment does not exist", envDir)
+	}
+
+	return filepath.Walk(envDirPath, loadEnvFile)
+}
+
+func loadEnvFile(path string, info os.FileInfo, err error) error {
+	if !isPropertiesFile(path) {
+		return nil
+	}
+
+	properties, err := properties.Load(path)
+	if err != nil {
+		return fmt.Errorf("Failed to parse: %s. %s", path, err.Error())
+	}
+
+	for property, value := range properties {
+		if canOverwriteProperty(property) {
+			err := common.SetEnvVariable(property, value)
+			if err != nil {
+				return fmt.Errorf("%s: %s", path, err.Error())
+			}
+		}
+	}
+
+	return nil
+}
+
+func isPropertiesFile(path string) bool {
+	return filepath.Ext(path) == ".properties"
+}
+
+func canOverwriteProperty(property string) bool {
+	if !isPropertySet(property) {
+		return true
+	}
+
+	defaultVal, ok := defaultProperties[property]
+	if !ok {
+		return true
+	}
+
+	return defaultVal == os.Getenv(property)
+}
+
+func isPropertySet(property string) bool {
+	return len(os.Getenv(property)) > 0
 }

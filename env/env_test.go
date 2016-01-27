@@ -19,6 +19,7 @@ package env
 
 import (
 	"os"
+	"os/exec"
 	"testing"
 
 	"github.com/getgauge/gauge/config"
@@ -32,6 +33,7 @@ type MySuite struct{}
 var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestLoadDefaultEnv(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "testdata"
 	ProjectEnv = "default"
 
@@ -44,6 +46,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 }
 
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "testdata"
 	ProjectEnv = "foo"
 
@@ -53,4 +56,80 @@ func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
 	c.Assert(os.Getenv("logs_directory"), Equals, "foo/logs")
+}
+
+func (s *MySuite) TestEnvPropertyIsSet(c *C) {
+	os.Clearenv()
+	os.Setenv("foo", "bar")
+
+	actual := isPropertySet("foo")
+
+	c.Assert(actual, Equals, true)
+}
+
+func (s *MySuite) TestEnvPropertyIsNotSet(c *C) {
+	os.Clearenv()
+
+	actual := isPropertySet("foo")
+
+	c.Assert(actual, Equals, false)
+}
+
+func (s *MySuite) TestDefaultPropertiesAreLoaded(c *C) {
+	os.Clearenv()
+
+	err := loadDefaultProperties()
+
+	c.Assert(err, Equals, nil)
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+}
+
+func (s *MySuite) TestPropertyCanBeOverwrittenIfNotSet(c *C) {
+	os.Clearenv()
+
+	canOverwrite := canOverwriteProperty("foo")
+
+	c.Assert(canOverwrite, Equals, true)
+}
+
+func (s *MySuite) TestPropertyCanBeOverwrittenIfSetToDefault(c *C) {
+	os.Clearenv()
+	loadDefaultProperties()
+
+	canOverwrite := canOverwriteProperty("gauge_reports_dir")
+
+	c.Assert(canOverwrite, Equals, true)
+}
+
+func (s *MySuite) TestPropertyCantBeOverwrittenIfNotSetToDefault(c *C) {
+	os.Clearenv()
+	loadDefaultProperties()
+	os.Setenv("gauge_reports_dir", "execution_reports")
+
+	canOverwrite := canOverwriteProperty("gauge_reports_dir")
+
+	c.Assert(canOverwrite, Equals, false)
+}
+
+// If env passed by user is not found, Gauge should exit non-zero error code.
+func TestFatalErrorIsThrownIfEnvNotFound(t *testing.T) {
+	if os.Getenv("NO_ENV") == "1" {
+		os.Clearenv()
+		config.ProjectRoot = "testdata"
+		ProjectEnv = "bar"
+
+		LoadEnv(true)
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestFatalErrorIsThrownIfEnvNotFound")
+	cmd.Env = append(os.Environ(), "NO_ENV=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("Expected: Fatal Error\nGot: Error %v ", err)
 }
