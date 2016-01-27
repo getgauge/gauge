@@ -44,6 +44,18 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
 }
 
+func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = ""
+
+	LoadEnv("default")
+
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+}
+
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "testdata"

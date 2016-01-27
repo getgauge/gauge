@@ -69,10 +69,13 @@ func loadDefaultProperties() error {
 	return nil
 }
 
-func loadEnvDir(envDir string) error {
-	envDirPath := filepath.Join(config.ProjectRoot, common.EnvDirectoryName, envDir)
+func loadEnvDir(envName string) error {
+	envDirPath := filepath.Join(config.ProjectRoot, common.EnvDirectoryName, envName)
 	if !common.DirExists(envDirPath) {
-		return fmt.Errorf("%s environment does not exist", envDir)
+		if envName != "default" {
+			return fmt.Errorf("%s environment does not exist", envName)
+		}
+		return nil
 	}
 
 	return filepath.Walk(envDirPath, loadEnvFile)
