@@ -105,7 +105,7 @@ func (e *simpleExecution) start() *result.SuiteResult {
 	e.suiteResult = result.NewSuiteResult()
 	e.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
 	e.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
-	e.suiteResult.Environment = env.CurrentEnv
+	e.suiteResult.Environment = env.CurrentEnv()
 	e.suiteResult.Tags = ExecuteTags
 	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	initSuiteDataStoreResult := e.initializeSuiteDataStore()

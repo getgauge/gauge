@@ -126,7 +126,7 @@ func (e *parallelExecution) start() *result.SuiteResult {
 	e.aggregateResult = e.aggregateResults(suiteResults)
 	e.aggregateResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
 	e.aggregateResult.ProjectName = filepath.Base(config.ProjectRoot)
-	e.aggregateResult.Environment = env.CurrentEnv
+	e.aggregateResult.Environment = env.CurrentEnv()
 	e.aggregateResult.Tags = ExecuteTags
 	e.aggregateResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult

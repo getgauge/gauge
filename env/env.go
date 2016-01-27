@@ -34,7 +34,7 @@ const (
 
 var defaultProperties map[string]string
 
-var CurrentEnv = "default"
+var currentEnv = "default"
 var ProjectEnv = "default"
 
 // LoadEnv first loads the default env properties and then the user specified env properties.
@@ -49,7 +49,7 @@ func LoadEnv(isDefaultEnvRequired bool) {
 	if err != nil {
 		logger.Fatalf("Failed to load env %s.\n", err.Error())
 	}
-	CurrentEnv = ProjectEnv
+	currentEnv = ProjectEnv
 }
 
 func loadDefaultProperties() error {
@@ -119,4 +119,9 @@ func canOverwriteProperty(property string) bool {
 
 func isPropertySet(property string) bool {
 	return len(os.Getenv(property)) > 0
+}
+
+// CurrentEnv returns the value of currentEnv
+func CurrentEnv() string {
+	return currentEnv
 }
