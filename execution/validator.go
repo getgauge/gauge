@@ -18,6 +18,8 @@
 package execution
 
 import (
+	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/getgauge/gauge/config"
@@ -163,4 +165,20 @@ func (self *specValidator) Comment(comment *gauge.Comment) {
 
 func (self *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
+}
+
+func validateTableRowsRange(start string, end string, rowCount int) (int, int, error) {
+	message := "Table rows range validation failed."
+	startRow, err := strconv.Atoi(start)
+	if err != nil {
+		return 0, 0, errors.New(message)
+	}
+	endRow, err := strconv.Atoi(end)
+	if err != nil {
+		return 0, 0, errors.New(message)
+	}
+	if startRow > endRow || endRow > rowCount || startRow < 1 || endRow < 1 {
+		return 0, 0, errors.New(message)
+	}
+	return startRow - 1, endRow - 1, nil
 }

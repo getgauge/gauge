@@ -18,9 +18,50 @@
 package filter
 
 import (
+	"fmt"
+
 	"github.com/getgauge/gauge/gauge"
 	. "gopkg.in/check.v1"
 )
+
+func (s *MySuite) TestDistributionOfSpecs(c *C) {
+	specs := createSpecsList(10)
+	specCollections := DistributeSpecs(specs, 10)
+	c.Assert(len(specCollections), Equals, 10)
+	verifySpecCollectionsForSize(c, 1, specCollections...)
+
+	specCollections = DistributeSpecs(specs, 5)
+	c.Assert(len(specCollections), Equals, 5)
+	verifySpecCollectionsForSize(c, 2, specCollections...)
+
+	specCollections = DistributeSpecs(specs, 4)
+	c.Assert(len(specCollections), Equals, 4)
+	verifySpecCollectionsForSize(c, 3, specCollections[:2]...)
+	verifySpecCollectionsForSize(c, 2, specCollections[2:]...)
+
+	specCollections = DistributeSpecs(specs, 3)
+	c.Assert(len(specCollections), Equals, 3)
+	verifySpecCollectionsForSize(c, 4, specCollections[0])
+	verifySpecCollectionsForSize(c, 3, specCollections[1:]...)
+
+	specs = createSpecsList(0)
+	specCollections = DistributeSpecs(specs, 0)
+	c.Assert(len(specCollections), Equals, 0)
+}
+
+func verifySpecCollectionsForSize(c *C, size int, specCollections ...*SpecCollection) {
+	for _, collection := range specCollections {
+		c.Assert(len(collection.Specs), Equals, size)
+	}
+}
+
+func createSpecsList(number int) []*gauge.Specification {
+	var specs []*gauge.Specification
+	for i := 0; i < number; i++ {
+		specs = append(specs, &gauge.Specification{FileName: fmt.Sprint("spec", i)})
+	}
+	return specs
+}
 
 func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
 	var specs []*gauge.Specification

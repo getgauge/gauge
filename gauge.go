@@ -123,7 +123,7 @@ func main() {
 		} else if *validate {
 			execution.Validate(flag.Args())
 		} else {
-			exitCode := execution.ExecuteSpecs(*parallel, flag.Args())
+			exitCode := execution.ExecuteSpecs(flag.Args())
 			os.Exit(exitCode)
 		}
 	} else {
@@ -165,6 +165,7 @@ func initPackageFlags() {
 	execution.ExecuteTags = *executeTags
 	execution.TableRows = *tableRows
 	execution.NumberOfExecutionStreams = *numberOfExecutionStreams
+	execution.InParallel = *parallel
 	filter.ExecuteTags = *executeTags
 	filter.DoNotRandomize = *doNotRandomize
 	filter.Distribute = *distribute

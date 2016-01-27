@@ -118,8 +118,8 @@ func (e *simpleExecution) start() *result.SuiteResult {
 			e.suiteResult.SetFailure()
 			printStatus(beforeSuiteHookExecResult, e.consoleReporter)
 		} else {
-			for !e.specStore.isEmpty() {
-				e.executeSpec(e.specStore.getSpec())
+			for e.specStore.hasNext() {
+				e.executeSpec(e.specStore.next())
 			}
 		}
 		afterSuiteHookExecResult := e.endExecution()
@@ -154,12 +154,6 @@ func (e *simpleExecution) stopAllPlugins() {
 	if err := e.runner.Kill(); err != nil {
 		e.consoleReporter.Error("Failed to kill Runner: %s", err.Error())
 	}
-}
-
-func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
-	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
-	return specExecutor
 }
 
 func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specification) {

@@ -20,7 +20,6 @@ package execution
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/getgauge/gauge/conn"
@@ -51,6 +50,12 @@ type specExecutor struct {
 type indexRange struct {
 	start int
 	end   int
+}
+
+func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
+	specExecutor := new(specExecutor)
+	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
+	return specExecutor
 }
 
 func (specExec *specExecutor) initialize(specificationToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
@@ -582,20 +587,4 @@ func getDataTableRowsRange(tableRows string, rowCount int) (indexRange, error) {
 		return indexRange{start: 0, end: 0}, err
 	}
 	return indexRange{start: startIndex, end: endIndex}, nil
-}
-
-func validateTableRowsRange(start string, end string, rowCount int) (int, int, error) {
-	message := "Table rows range validation failed."
-	startRow, err := strconv.Atoi(start)
-	if err != nil {
-		return 0, 0, errors.New(message)
-	}
-	endRow, err := strconv.Atoi(end)
-	if err != nil {
-		return 0, 0, errors.New(message)
-	}
-	if startRow > endRow || endRow > rowCount || startRow < 1 || endRow < 1 {
-		return 0, 0, errors.New(message)
-	}
-	return startRow - 1, endRow - 1, nil
 }

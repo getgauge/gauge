@@ -1,8 +1,27 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package execution
 
 import (
 	"os"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/getgauge/gauge/api"
@@ -20,6 +39,7 @@ import (
 )
 
 var NumberOfExecutionStreams int
+var InParallel bool
 var checkUpdatesDuringExecution = false
 
 type execution interface {
@@ -32,12 +52,45 @@ type executionInfo struct {
 	specStore       *specStore
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.Handler
-	parallelRunInfo *parallelInfo
 	consoleReporter reporter.Reporter
 	errMaps         *validationErrMaps
+	inParallel      bool
+	numberOfStreams int
 }
 
-func ExecuteSpecs(inParallel bool, args []string) int {
+func newExecutionInfo(manifest *manifest.Manifest, specStore *specStore, runner *runner.TestRunner, ph *plugin.Handler, reporter reporter.Reporter, errMap *validationErrMaps, isParallel bool) *executionInfo {
+	return &executionInfo{manifest, specStore, runner, ph, reporter, errMap, isParallel, NumberOfExecutionStreams}
+}
+
+type specStore struct {
+	mutex sync.Mutex
+	index int
+	specs []*gauge.Specification
+}
+
+func (s *specStore) hasNext() bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return s.index < len(s.specs)
+}
+
+func (s *specStore) next() *gauge.Specification {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	spec := s.specs[s.index]
+	s.index++
+	return spec
+}
+
+func (s *specStore) size() int {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	length := len(s.specs)
+	return length
+}
+
+func ExecuteSpecs(args []string) int {
+	validateFlags()
 	if checkUpdatesDuringExecution && config.CheckUpdates() {
 		i := &install.UpdateFacade{}
 		i.BufferUpdateDetails()
@@ -52,11 +105,8 @@ func ExecuteSpecs(inParallel bool, args []string) int {
 	runner := startApi()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	pluginHandler := plugin.StartPlugins(manifest)
-	parallelInfo := &parallelInfo{inParallel: inParallel, numberOfStreams: NumberOfExecutionStreams}
-	if !parallelInfo.isValid() {
-		os.Exit(1)
-	}
-	execution := newExecution(&executionInfo{manifest, &specStore{specs: specsToExecute}, runner, pluginHandler, parallelInfo, reporter.Current(), errMap})
+	executionInfo := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, pluginHandler, reporter.Current(), errMap, InParallel)
+	execution := newExecution(executionInfo)
 	result := execution.start()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
@@ -91,7 +141,7 @@ func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary
 }
 
 func newExecution(executionInfo *executionInfo) execution {
-	if executionInfo.parallelRunInfo.inParallel {
+	if executionInfo.inParallel {
 		return newParallelExecution(executionInfo)
 	}
 	return newSimpleExecution(executionInfo)
@@ -206,5 +256,18 @@ func printValidationFailures(validationErrors validationErrors) {
 			s := stepValidationError.step
 			logger.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
+	}
+}
+
+func validateFlags() {
+	if !InParallel {
+		return
+	}
+	if NumberOfExecutionStreams < 1 {
+		logger.Fatalf("Invalid input(%s) to --n flag.", strconv.Itoa(NumberOfExecutionStreams))
+	}
+	currentStrategy := strings.ToLower(Strategy)
+	if currentStrategy != LAZY && currentStrategy != EAGER {
+		logger.Fatalf("Invalid input(%s) to --strategy flag.", Strategy)
 	}
 }
