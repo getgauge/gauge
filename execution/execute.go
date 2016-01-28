@@ -43,7 +43,8 @@ var InParallel bool
 var checkUpdatesDuringExecution = false
 
 type execution interface {
-	start() *result.SuiteResult
+	start()
+	run() *result.SuiteResult
 	finish()
 }
 
@@ -102,12 +103,12 @@ func ExecuteSpecs(args []string) int {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	runner := startApi()
+	runner := startAPI()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	pluginHandler := plugin.StartPlugins(manifest)
-	executionInfo := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, pluginHandler, reporter.Current(), errMap, InParallel)
+	executionInfo := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, nil, reporter.Current(), errMap, InParallel)
 	execution := newExecution(executionInfo)
-	result := execution.start()
+	execution.start()
+	result := execution.run()
 	execution.finish()
 	exitCode := printExecutionStatus(result, errMap)
 	return exitCode
@@ -119,7 +120,7 @@ func Validate(args []string) {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	runner := startApi()
+	runner := startAPI()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
 	runner.Kill()
 	if len(errMap.stepErrs) > 0 {
@@ -147,7 +148,7 @@ func newExecution(executionInfo *executionInfo) execution {
 	return newSimpleExecution(executionInfo)
 }
 
-func startApi() *runner.TestRunner {
+func startAPI() *runner.TestRunner {
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	go api.StartAPIService(0, startChan)
 	select {
@@ -266,8 +267,7 @@ func validateFlags() {
 	if NumberOfExecutionStreams < 1 {
 		logger.Fatalf("Invalid input(%s) to --n flag.", strconv.Itoa(NumberOfExecutionStreams))
 	}
-	currentStrategy := strings.ToLower(Strategy)
-	if currentStrategy != LAZY && currentStrategy != EAGER {
+	if !isValidStrategy(Strategy) {
 		logger.Fatalf("Invalid input(%s) to --strategy flag.", Strategy)
 	}
 }

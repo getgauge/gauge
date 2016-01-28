@@ -59,7 +59,6 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 
 	aggregatedRes := e.aggregateResults(suiteResults)
-	c.Assert(aggregatedRes.ExecutionTime, Equals, int64(9))
 	c.Assert(aggregatedRes.SpecsFailedCount, Equals, 1)
 	c.Assert(aggregatedRes.IsFailed, Equals, true)
 	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)

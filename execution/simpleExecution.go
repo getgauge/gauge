@@ -18,11 +18,8 @@
 package execution
 
 import (
-	"path/filepath"
 	"time"
 
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -46,6 +43,7 @@ type simpleExecution struct {
 	suiteResult          *result.SuiteResult
 	consoleReporter      reporter.Reporter
 	errMaps              *validationErrMaps
+	startTime            time.Time
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
@@ -100,14 +98,13 @@ func (e *simpleExecution) killPlugins() {
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (e *simpleExecution) start() *result.SuiteResult {
-	startTime := time.Now()
-	e.suiteResult = result.NewSuiteResult()
-	e.suiteResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	e.suiteResult.ProjectName = filepath.Base(config.ProjectRoot)
-	e.suiteResult.Environment = env.CurrentEnv()
-	e.suiteResult.Tags = ExecuteTags
-	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
+func (e *simpleExecution) start() {
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
+	e.startTime = time.Now()
+}
+
+func (e *simpleExecution) run() *result.SuiteResult {
+	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	initSuiteDataStoreResult := e.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
@@ -129,7 +126,8 @@ func (e *simpleExecution) start() *result.SuiteResult {
 			printStatus(afterSuiteHookExecResult, e.consoleReporter)
 		}
 	}
-	e.suiteResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
+	e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
+	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	return e.suiteResult
 }
 

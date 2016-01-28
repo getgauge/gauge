@@ -19,14 +19,11 @@ package execution
 
 import (
 	"fmt"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
@@ -40,8 +37,8 @@ import (
 
 var Strategy string
 
-const EAGER string = "eager"
-const LAZY string = "lazy"
+const Eager string = "eager"
+const Lazy string = "lazy"
 
 type parallelExecution struct {
 	wg                       sync.WaitGroup
@@ -54,6 +51,7 @@ type parallelExecution struct {
 	numberOfExecutionStreams int
 	consoleReporter          reporter.Reporter
 	errMaps                  *validationErrMaps
+	startTime                time.Time
 }
 
 func newParallelExecution(executionInfo *executionInfo) *parallelExecution {
@@ -81,7 +79,7 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 }
 
 func isLazy() bool {
-	return strings.ToLower(Strategy) == LAZY
+	return strings.ToLower(Strategy) == Lazy
 }
 
 func (e *parallelExecution) getNumberOfStreams() int {
@@ -93,24 +91,21 @@ func (e *parallelExecution) getNumberOfStreams() int {
 	return nStreams
 }
 
-func (e *parallelExecution) start() *result.SuiteResult {
+func (e *parallelExecution) start() {
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
+	e.startTime = time.Now()
+}
+
+func (e *parallelExecution) run() *result.SuiteResult {
 	var suiteResults []*result.SuiteResult
 	nStreams := e.getNumberOfStreams()
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
-
-	startTime := time.Now()
 	if isLazy() {
 		suiteResults = e.lazyExecution(nStreams)
 	} else {
 		suiteResults = e.eagerExecution(nStreams)
 	}
-
 	e.aggregateResult = e.aggregateResults(suiteResults)
-	e.aggregateResult.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	e.aggregateResult.ProjectName = filepath.Base(config.ProjectRoot)
-	e.aggregateResult.Environment = env.CurrentEnv()
-	e.aggregateResult.Tags = ExecuteTags
-	e.aggregateResult.ExecutionTime = int64(time.Since(startTime) / 1e6)
 	return e.aggregateResult
 }
 
@@ -135,7 +130,7 @@ func (e *parallelExecution) startSpecsExecution(specCollection *filter.SpecColle
 		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specCollection, suiteResults, testRunner, reporter)
+	e.startSpecsExecutionWithRunner(&specStore{specs: specCollection.Specs}, suiteResults, testRunner, reporter)
 }
 
 func (e *parallelExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
@@ -161,18 +156,16 @@ func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
-	simpleExecution := newSimpleExecution(newExecutionInfo(e.manifest, specStore, testRunner, e.pluginHandler, reporter, e.errMaps, false))
-	result := simpleExecution.start()
-	suiteResultChannel <- result
-	testRunner.Kill()
+	e.startSpecsExecutionWithRunner(specStore, suiteResultChannel, testRunner, reporter)
 }
 
-func (e *parallelExecution) startSpecsExecutionWithRunner(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
-	executionInfo := newExecutionInfo(e.manifest, &specStore{specs: specCollection.Specs}, runner, e.pluginHandler, reporter, e.errMaps, false)
-	execution := newExecution(executionInfo)
-	result := execution.start()
+func (e *parallelExecution) startSpecsExecutionWithRunner(specStore *specStore, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
+	executionInfo := newExecutionInfo(e.manifest, specStore, runner, e.pluginHandler, reporter, e.errMaps, false)
+	simpleExecution := newExecution(executionInfo)
+	simpleExecution.start()
+	result := simpleExecution.run()
 	runner.Kill()
-	suiteResults <- result
+	suiteResultsChan <- result
 }
 
 func (e *parallelExecution) finish() {
@@ -183,10 +176,9 @@ func (e *parallelExecution) finish() {
 }
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
-	aggregateResult := &result.SuiteResult{IsFailed: false, SpecResults: make([]*result.SpecResult, 0)}
+	aggregateResult := result.NewSuiteResult(ExecuteTags, e.startTime)
 	aggregateResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	for _, result := range suiteResults {
-		aggregateResult.ExecutionTime += result.ExecutionTime
 		aggregateResult.SpecsFailedCount += result.SpecsFailedCount
 		aggregateResult.SpecResults = append(aggregateResult.SpecResults, result.SpecResults...)
 		if result.IsFailed {
@@ -202,5 +194,11 @@ func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult)
 			aggregateResult.UnhandledErrors = append(aggregateResult.UnhandledErrors, result.UnhandledErrors...)
 		}
 	}
+	aggregateResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
 	return aggregateResult
+}
+
+func isValidStrategy(strategy string) bool {
+	strategy = strings.ToLower(strategy)
+	return strategy == Lazy || strategy == Eager
 }

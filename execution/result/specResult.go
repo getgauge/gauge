@@ -18,6 +18,11 @@
 package result
 
 import (
+	"path/filepath"
+	"time"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
@@ -106,9 +111,13 @@ func (specResult *SpecResult) AddSpecItems(resolvedItems []*gauge_messages.Proto
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, resolvedItems...)
 }
 
-func NewSuiteResult() *SuiteResult {
+func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
+	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	result.ProjectName = filepath.Base(config.ProjectRoot)
+	result.Environment = env.CurrentEnv()
+	result.Tags = tags
 	return result
 }
 
