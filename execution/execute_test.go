@@ -21,11 +21,21 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/getgauge/gauge/gauge"
 
 	. "gopkg.in/check.v1"
 )
+
+type testLogger struct {
+	output string
+}
+
+func (l *testLogger) Write(b []byte) (int, error) {
+	l.output = string(b)
+	return len(b), nil
+}
 
 func (s *MySuite) TestFunctionsOfTypeSpecList(c *C) {
 	mySpecs := &specStore{specs: createSpecsList(4)}
@@ -96,10 +106,13 @@ func (s *MySuite) TestValidateFlagsWithInvalidStrategy(c *C) {
 	}
 	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithInvalidStrategy")
 	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
+	logger := &testLogger{}
+	cmd.Stdout = logger
 	err := cmd.Run()
 	e, ok := err.(*exec.ExitError)
 	c.Assert(ok, Equals, true)
 	c.Assert(e.Success(), Equals, false)
+	c.Assert(strings.TrimSpace(logger.output), Equals, "Invalid input(sdf) to --strategy flag.")
 }
 
 func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
@@ -111,8 +124,11 @@ func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 	}
 	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithInvalidStream")
 	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
+	logger := &testLogger{}
+	cmd.Stdout = logger
 	err := cmd.Run()
 	e, ok := err.(*exec.ExitError)
 	c.Assert(ok, Equals, true)
 	c.Assert(e.Success(), Equals, false)
+	c.Assert(strings.TrimSpace(logger.output), Equals, "Invalid input(-1) to --n flag.")
 }
