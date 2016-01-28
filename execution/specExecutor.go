@@ -58,13 +58,13 @@ func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunn
 	return specExecutor
 }
 
-func (specExec *specExecutor) initialize(specificationToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
-	specExec.specification = specificationToExecute
-	specExec.runner = runner
-	specExec.pluginHandler = pluginHandler
-	specExec.dataTableIndex = tableRows
-	specExec.consoleReporter = consoleReporter
-	specExec.errMap = errMap
+func (e *specExecutor) initialize(specificationToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
+	e.specification = specificationToExecute
+	e.runner = runner
+	e.pluginHandler = pluginHandler
+	e.dataTableIndex = tableRows
+	e.consoleReporter = consoleReporter
+	e.errMap = errMap
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -78,7 +78,7 @@ func (e *specExecutor) initSpecDataStore() error {
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		return fmt.Errorf("Spec data store didn't get initialized : %s", initResult.ErrorMessage)
+		return fmt.Errorf("Spec data store didn't get initialized : %s", initResult.GetErrorMessage())
 	}
 	return nil
 }
@@ -96,227 +96,235 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (specExecutor *specExecutor) getSkippedSpecResult() *result.SpecResult {
-	scenarioResults := make([]*result.ScenarioResult, 0)
-	for _, scenario := range specExecutor.specification.Scenarios {
-		scenarioResults = append(scenarioResults, specExecutor.getSkippedScenarioResult(scenario))
+func (e *specExecutor) getSkippedSpecResult() *result.SpecResult {
+	var scenarioResults []*result.ScenarioResult
+	for _, scenario := range e.specification.Scenarios {
+		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
-	specExecutor.specResult.AddScenarioResults(scenarioResults)
-	specExecutor.specResult.Skipped = true
-	return specExecutor.specResult
+	e.specResult.AddScenarioResults(scenarioResults)
+	e.specResult.Skipped = true
+	return e.specResult
 }
 
-func (s *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
-	scenarioResult := &result.ScenarioResult{gauge.NewProtoScenario(scenario)}
-	s.addAllItemsForScenarioExecution(scenario, scenarioResult)
-	s.setSkipInfoInResult(scenarioResult, scenario)
+func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
+	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
+	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	e.setSkipInfoInResult(scenarioResult, scenario)
 	return scenarioResult
 }
 
-func (specExecutor *specExecutor) execute() *result.SpecResult {
-	specInfo := &gauge_messages.SpecInfo{Name: proto.String(specExecutor.specification.Heading.Value),
-		FileName: proto.String(specExecutor.specification.FileName),
-		IsFailed: proto.Bool(false), Tags: getTagValue(specExecutor.specification.Tags)}
-	specExecutor.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
-	specExecutor.specResult = gauge.NewSpecResult(specExecutor.specification)
-	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
-	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
-	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
-		return specExecutor.getSkippedSpecResult()
+func (e *specExecutor) execute() *result.SpecResult {
+	specInfo := &gauge_messages.SpecInfo{Name: proto.String(e.specification.Heading.Value),
+		FileName: proto.String(e.specification.FileName),
+		IsFailed: proto.Bool(false), Tags: getTagValue(e.specification.Tags)}
+	e.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
+	e.specResult = gauge.NewSpecResult(e.specification)
+	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
+	e.specResult.AddSpecItems(resolvedSpecItems)
+	if _, ok := e.errMap.specErrs[e.specification]; ok {
+		return e.getSkippedSpecResult()
 	}
-	err := specExecutor.initSpecDataStore()
+	err := e.initSpecDataStore()
 	if err != nil {
-		specExecutor.errMap.specErrs[specExecutor.specification] = []*stepValidationError{
-			&stepValidationError{
-				step:     &gauge.Step{LineNo: specExecutor.specification.Heading.LineNo, LineText: specExecutor.specification.Heading.Value},
-				message:  err.Error(),
-				fileName: specExecutor.specification.FileName,
-			},
-		}
-		return specExecutor.getSkippedSpecResult()
+		return e.handleSpecDataStoreFailure(err)
 	}
-	specExecutor.consoleReporter.SpecStart(specInfo.GetName())
-	beforeSpecHookStatus := specExecutor.executeBeforeSpecHook()
+	e.consoleReporter.SpecStart(specInfo.GetName())
+	beforeSpecHookStatus := e.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
-		result.AddPreHook(specExecutor.specResult, beforeSpecHookStatus)
-		setSpecFailure(specExecutor.currentExecutionInfo)
-		printStatus(beforeSpecHookStatus, specExecutor.consoleReporter)
+		result.AddPreHook(e.specResult, beforeSpecHookStatus)
+		setSpecFailure(e.currentExecutionInfo)
+		printStatus(beforeSpecHookStatus, e.consoleReporter)
 	} else {
-		dataTableRowCount := specExecutor.specification.DataTable.Table.GetRowCount()
+		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
-			scenarioResult := specExecutor.executeScenarios()
-			specExecutor.specResult.AddScenarioResults(scenarioResult)
+			scenarioResult := e.executeScenarios()
+			e.specResult.AddScenarioResults(scenarioResult)
 		} else {
-			specExecutor.executeTableDrivenSpec()
+			e.executeTableDrivenSpec()
 		}
 	}
 
-	afterSpecHookStatus := specExecutor.executeAfterSpecHook()
+	afterSpecHookStatus := e.executeAfterSpecHook()
 	if afterSpecHookStatus.GetFailed() {
-		result.AddPostHook(specExecutor.specResult, afterSpecHookStatus)
-		setSpecFailure(specExecutor.currentExecutionInfo)
-		printStatus(afterSpecHookStatus, specExecutor.consoleReporter)
+		result.AddPostHook(e.specResult, afterSpecHookStatus)
+		setSpecFailure(e.currentExecutionInfo)
+		printStatus(afterSpecHookStatus, e.consoleReporter)
 	}
-	specExecutor.specResult.Skipped = specExecutor.specResult.ScenarioSkippedCount > 0
-	specExecutor.consoleReporter.SpecEnd()
-	return specExecutor.specResult
+	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
+	e.consoleReporter.SpecEnd()
+	return e.specResult
 }
 
-func (specExecutor *specExecutor) executeTableDrivenSpec() {
-	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
-	for specExecutor.currentTableRow = specExecutor.dataTableIndex.start; specExecutor.currentTableRow <= specExecutor.dataTableIndex.end; specExecutor.currentTableRow++ {
-		var dataTable gauge.Table
-		dataTable.AddHeaders(specExecutor.specification.DataTable.Table.Headers)
-		dataTable.AddRowValues(specExecutor.specification.DataTable.Table.Rows()[specExecutor.currentTableRow])
-		specExecutor.consoleReporter.DataTable(formatter.FormatTable(&dataTable))
-		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, specExecutor.executeScenarios())
+func (e *specExecutor) handleSpecDataStoreFailure(err error) *result.SpecResult {
+	e.errMap.specErrs[e.specification] = []*stepValidationError{
+		&stepValidationError{
+			step:     &gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
+			message:  err.Error(),
+			fileName: e.specification.FileName,
+		},
 	}
-	specExecutor.specResult.AddTableDrivenScenarioResult(dataTableScenarioExecutionResult)
+	return e.getSkippedSpecResult()
+}
+
+func (e *specExecutor) executeTableDrivenSpec() {
+	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
+	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
+		var dataTable gauge.Table
+		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
+		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])
+		e.consoleReporter.DataTable(formatter.FormatTable(&dataTable))
+		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, e.executeScenarios())
+	}
+	e.specResult.AddTableDrivenScenarioResult(dataTableScenarioExecutionResult)
 }
 
 func getTagValue(tags *gauge.Tags) []string {
-	tagValues := make([]string, 0)
+	var tagValues []string
 	if tags != nil {
 		tagValues = append(tagValues, tags.Values...)
 	}
 	return tagValues
 }
 
-func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) executeBeforeScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
-		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	return executor.executeHook(message, scenarioResult)
+		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message, scenarioResult)
 }
 
-func (executor *specExecutor) initScenarioDataStore() error {
+func (e *specExecutor) initScenarioDataStore() error {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
+	initResult := executeAndGetStatus(e.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		return fmt.Errorf("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
+		return fmt.Errorf("Scenario data store didn't get initialized : %s", initResult.GetErrorMessage())
 	}
 	return nil
 }
 
-func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding.Enum(),
-		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	return executor.executeHook(message, scenarioResult)
+		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message, scenarioResult)
 }
 
-func (specExecutor *specExecutor) executeScenarios() []*result.ScenarioResult {
-	scenarioResults := make([]*result.ScenarioResult, 0)
-	for _, scenario := range specExecutor.specification.Scenarios {
-		scenarioResults = append(scenarioResults, specExecutor.executeScenario(scenario))
+func (e *specExecutor) executeScenarios() []*result.ScenarioResult {
+	var scenarioResults []*result.ScenarioResult
+	for _, scenario := range e.specification.Scenarios {
+		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
 	}
 	return scenarioResults
 }
 
-func (executor *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
-	executor.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.Value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
-	scenarioResult := &result.ScenarioResult{gauge.NewProtoScenario(scenario)}
-	executor.addAllItemsForScenarioExecution(scenario, scenarioResult)
+func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
+	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.Value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
+	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
+	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
-	if _, ok := executor.errMap.scenarioErrs[scenario]; ok {
-		executor.setSkipInfoInResult(scenarioResult, scenario)
+	if _, ok := e.errMap.scenarioErrs[scenario]; ok {
+		e.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
-	err := executor.initScenarioDataStore()
+	err := e.initScenarioDataStore()
 	if err != nil {
-		executor.errMap.scenarioErrs[scenario] = []*stepValidationError{
-			&stepValidationError{
-				step:     &gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
-				message:  err.Error(),
-				fileName: executor.specification.FileName,
-			},
-		}
-		executor.setSkipInfoInResult(scenarioResult, scenario)
+		e.handleScenarioDataStoreFailure(scenarioResult, scenario, err)
 		return scenarioResult
 	}
-	executor.consoleReporter.ScenarioStart(scenario.Heading.Value)
-	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
+	e.consoleReporter.ScenarioStart(scenario.Heading.Value)
+	beforeHookExecutionStatus := e.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
-		setScenarioFailure(executor.currentExecutionInfo)
-		printStatus(beforeHookExecutionStatus, executor.consoleReporter)
+		setScenarioFailure(e.currentExecutionInfo)
+		printStatus(beforeHookExecutionStatus, e.consoleReporter)
 	} else {
-		executor.executeContextItems(scenarioResult)
+		e.executeContextItems(scenarioResult)
 		if !scenarioResult.GetFailure() {
-			executor.executeScenarioItems(scenarioResult)
+			e.executeScenarioItems(scenarioResult)
 		}
-		executor.executeTearDownItems(scenarioResult)
+		e.executeTearDownItems(scenarioResult)
 	}
 
-	afterHookExecutionStatus := executor.executeAfterScenarioHook(scenarioResult)
+	afterHookExecutionStatus := e.executeAfterScenarioHook(scenarioResult)
 	result.AddPostHook(scenarioResult, afterHookExecutionStatus)
 	scenarioResult.UpdateExecutionTime()
 	if afterHookExecutionStatus.GetFailed() {
-		setScenarioFailure(executor.currentExecutionInfo)
-		printStatus(afterHookExecutionStatus, executor.consoleReporter)
+		setScenarioFailure(e.currentExecutionInfo)
+		printStatus(afterHookExecutionStatus, e.consoleReporter)
 	}
-	executor.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
+	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
 
 	return scenarioResult
 }
 
-func (executor *specExecutor) setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario) {
-	executor.specResult.ScenarioSkippedCount += 1
+func (e *specExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
+	e.errMap.scenarioErrs[scenario] = []*stepValidationError{
+		&stepValidationError{
+			step:     &gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+			message:  err.Error(),
+			fileName: e.specification.FileName,
+		},
+	}
+	e.setSkipInfoInResult(scenarioResult, scenario)
+}
+
+func (e *specExecutor) setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario) {
+	e.specResult.ScenarioSkippedCount++
 	result.ProtoScenario.Skipped = proto.Bool(true)
-	errors := make([]string, 0)
-	for _, err := range executor.errMap.scenarioErrs[scenario] {
+	var errors []string
+	for _, err := range e.errMap.scenarioErrs[scenario] {
 		errors = append(errors, fmt.Sprintf("%s:%d: %s. %s", err.fileName, err.step.LineNo, err.Error(), err.step.LineText))
 	}
 	result.ProtoScenario.SkipErrors = errors
 }
 
-func (executor *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
-	scenarioResult.AddContexts(executor.getContextItemsForScenarioExecution(executor.specification.Contexts))
-	scenarioResult.AddTearDownSteps(executor.getContextItemsForScenarioExecution(executor.specification.TearDownSteps))
-	scenarioResult.AddItems(executor.resolveItems(scenario.Items))
+func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
+	scenarioResult.AddContexts(e.getContextItemsForScenarioExecution(e.specification.Contexts))
+	scenarioResult.AddTearDownSteps(e.getContextItemsForScenarioExecution(e.specification.TearDownSteps))
+	scenarioResult.AddItems(e.resolveItems(scenario.Items))
 }
 
-func (executor *specExecutor) getContextItemsForScenarioExecution(steps []*gauge.Step) []*gauge_messages.ProtoItem {
+func (e *specExecutor) getContextItemsForScenarioExecution(steps []*gauge.Step) []*gauge_messages.ProtoItem {
 	items := make([]gauge.Item, len(steps))
 	for i, context := range steps {
 		items[i] = context
 	}
-	return executor.resolveItems(items)
+	return e.resolveItems(items)
 }
 
-func (executor *specExecutor) executeContextItems(scenarioResult *result.ScenarioResult) {
-	failure := executor.executeItems(scenarioResult.ProtoScenario.GetContexts())
+func (e *specExecutor) executeContextItems(scenarioResult *result.ScenarioResult) {
+	failure := e.executeItems(scenarioResult.ProtoScenario.GetContexts())
 	if failure {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (executor *specExecutor) executeTearDownItems(scenarioResult *result.ScenarioResult) {
-	failure := executor.executeItems(scenarioResult.ProtoScenario.TearDownSteps)
+func (e *specExecutor) executeTearDownItems(scenarioResult *result.ScenarioResult) {
+	failure := e.executeItems(scenarioResult.ProtoScenario.TearDownSteps)
 	if failure {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (executor *specExecutor) executeScenarioItems(scenarioResult *result.ScenarioResult) {
-	failure := executor.executeItems(scenarioResult.ProtoScenario.GetScenarioItems())
+func (e *specExecutor) executeScenarioItems(scenarioResult *result.ScenarioResult) {
+	failure := e.executeItems(scenarioResult.ProtoScenario.GetScenarioItems())
 	if failure {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (executor *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
-	protoItems := make([]*gauge_messages.ProtoItem, 0)
+func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
+	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range items {
 		if item.Kind() != gauge.TearDownKind {
-			protoItems = append(protoItems, executor.resolveToProtoItem(item))
+			protoItems = append(protoItems, e.resolveToProtoItem(item))
 		}
 	}
 	return protoItems
 }
 
-func (executor *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem) bool {
+func (e *specExecutor) executeItems(executingItems []*gauge_messages.ProtoItem) bool {
 	for _, protoItem := range executingItems {
-		failure := executor.executeItem(protoItem)
+		failure := e.executeItem(protoItem)
 		if failure == true {
 			return true
 		}
@@ -324,15 +332,15 @@ func (executor *specExecutor) executeItems(executingItems []*gauge_messages.Prot
 	return false
 }
 
-func (executor *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_messages.ProtoItem {
 	var protoItem *gauge_messages.ProtoItem
 	switch item.Kind() {
 	case gauge.StepKind:
 		if (item.(*gauge.Step)).IsConcept {
 			concept := item.(*gauge.Step)
-			protoItem = executor.resolveToProtoConceptItem(*concept)
+			protoItem = e.resolveToProtoConceptItem(*concept)
 		} else {
-			protoItem = executor.resolveToProtoStepItem(item.(*gauge.Step))
+			protoItem = e.resolveToProtoStepItem(item.(*gauge.Step))
 		}
 		break
 
@@ -342,40 +350,40 @@ func (executor *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_message
 	return protoItem
 }
 
-func (executor *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.ProtoItem {
 	protoStepItem := gauge.ConvertToProtoItem(step)
 	paramResolver := new(parser.ParamResolver)
-	parameters := paramResolver.GetResolvedParams(step, nil, executor.dataTableLookup())
+	parameters := paramResolver.GetResolvedParams(step, nil, e.dataTableLookup())
 	updateProtoStepParameters(protoStepItem.Step, parameters)
-	executor.setSkipInfo(protoStepItem.Step, step)
+	e.setSkipInfo(protoStepItem.Step, step)
 	return protoStepItem
 }
 
-func (executor *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *gauge.Step) {
+func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *gauge.Step) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 	protoStep.StepExecutionResult.Skipped = proto.Bool(false)
-	if _, ok := executor.errMap.stepErrs[step]; ok {
+	if _, ok := e.errMap.stepErrs[step]; ok {
 		protoStep.StepExecutionResult.Skipped = proto.Bool(true)
 		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implemenatation not found")
 	}
 }
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
-func (executor *specExecutor) resolveToProtoConceptItem(concept gauge.Step) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step) *gauge_messages.ProtoItem {
 	paramResolver := new(parser.ParamResolver)
 
-	parser.PopulateConceptDynamicParams(&concept, executor.dataTableLookup())
+	parser.PopulateConceptDynamicParams(&concept, e.dataTableLookup())
 	protoConceptItem := gauge.ConvertToProtoItem(&concept)
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 	for stepIndex, step := range concept.ConceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
 			step.Parent = &concept
-			protoConceptItem.GetConcept().GetSteps()[stepIndex] = executor.resolveToProtoConceptItem(*step)
+			protoConceptItem.GetConcept().GetSteps()[stepIndex] = e.resolveToProtoConceptItem(*step)
 		} else {
-			stepParameters := paramResolver.GetResolvedParams(step, &concept, executor.dataTableLookup())
+			stepParameters := paramResolver.GetResolvedParams(step, &concept, e.dataTableLookup())
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
-			executor.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
+			e.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
 	}
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
@@ -392,22 +400,22 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 	}
 }
 
-func (executor *specExecutor) dataTableLookup() *gauge.ArgLookup {
-	return new(gauge.ArgLookup).FromDataTableRow(&executor.specification.DataTable.Table, executor.currentTableRow)
+func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
+	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, e.currentTableRow)
 }
 
-func (executor *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
+func (e *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
-		return executor.executeConcept(protoItem.GetConcept())
+		return e.executeConcept(protoItem.GetConcept())
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-		return executor.executeStep(protoItem.GetStep())
+		return e.executeStep(protoItem.GetStep())
 	}
 	return false
 }
 
-func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep) bool {
+func (e *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep) bool {
 	for _, protoStep := range protoSteps {
-		failure := executor.executeStep(protoStep)
+		failure := e.executeStep(protoStep)
 		if failure {
 			return true
 		}
@@ -415,21 +423,21 @@ func (executor *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoSte
 	return false
 }
 
-func (executor *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
-	executor.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
+func (e *specExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) bool {
+	e.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
 	for _, step := range protoConcept.Steps {
-		failure := executor.executeItem(step)
-		executor.setExecutionResultForConcept(protoConcept)
+		failure := e.executeItem(step)
+		e.setExecutionResultForConcept(protoConcept)
 		if failure {
 			return true
 		}
 	}
 	conceptFailed := protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
-	executor.consoleReporter.ConceptEnd(conceptFailed)
+	e.consoleReporter.ConceptEnd(conceptFailed)
 	return conceptFailed
 }
 
-func (executor *specExecutor) setExecutionResultForConcept(protoConcept *gauge_messages.ProtoConcept) {
+func (e *specExecutor) setExecutionResultForConcept(protoConcept *gauge_messages.ProtoConcept) {
 	var conceptExecutionTime int64
 	for _, step := range protoConcept.GetSteps() {
 		if step.GetItemType() == gauge_messages.ProtoItem_Concept {
@@ -464,33 +472,33 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult, reporter 
 	reporter.Error("Stacktrace: \n%s", executionResult.GetStackTrace())
 }
 
-func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
-	stepRequest := executor.createStepRequest(protoStep)
+func (e *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
+	stepRequest := e.createStepRequest(protoStep)
 	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
-	executor.consoleReporter.StepStart(stepText)
+	e.consoleReporter.StepStart(stepText)
 
 	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{}
-	executor.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 
-	beforeHookStatus := executor.executeBeforeStepHook()
+	beforeHookStatus := e.executeBeforeStepHook()
 	if beforeHookStatus.GetFailed() {
 		protoStepExecResult.PreHookFailure = result.GetProtoHookFailure(beforeHookStatus)
 		protoStepExecResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true)}
-		setStepFailure(executor.currentExecutionInfo, executor.consoleReporter)
-		printStatus(beforeHookStatus, executor.consoleReporter)
+		setStepFailure(e.currentExecutionInfo, e.consoleReporter)
+		printStatus(beforeHookStatus, e.consoleReporter)
 	} else {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
-		stepExecutionStatus := executeAndGetStatus(executor.runner, executeStepMessage)
+		stepExecutionStatus := executeAndGetStatus(e.runner, executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
-			setStepFailure(executor.currentExecutionInfo, executor.consoleReporter)
+			setStepFailure(e.currentExecutionInfo, e.consoleReporter)
 		}
 		protoStepExecResult.ExecutionResult = stepExecutionStatus
 	}
-	afterStepHookStatus := executor.executeAfterStepHook()
+	afterStepHookStatus := e.executeAfterStepHook()
 	addExecutionTimes(protoStepExecResult, beforeHookStatus, afterStepHookStatus)
 	if afterStepHookStatus.GetFailed() {
-		setStepFailure(executor.currentExecutionInfo, executor.consoleReporter)
-		printStatus(afterStepHookStatus, executor.consoleReporter)
+		setStepFailure(e.currentExecutionInfo, e.consoleReporter)
+		printStatus(afterStepHookStatus, e.consoleReporter)
 		protoStepExecResult.PostHookFailure = result.GetProtoHookFailure(afterStepHookStatus)
 		protoStepExecResult.ExecutionResult.Failed = proto.Bool(true)
 	}
@@ -500,12 +508,12 @@ func (executor *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) b
 	protoStep.StepExecutionResult = protoStepExecResult
 
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
-	executor.consoleReporter.StepEnd(stepFailed)
+	e.consoleReporter.StepEnd(stepFailed)
 	if stepFailed {
 		result := protoStep.GetStepExecutionResult().GetExecutionResult()
-		executor.consoleReporter.Error("Failed Step: %s", executor.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
-		executor.consoleReporter.Error("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
-		executor.consoleReporter.Error("Stacktrace: \n%s", result.GetStackTrace())
+		e.consoleReporter.Error("Failed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
+		e.consoleReporter.Error("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
+		e.consoleReporter.Error("Stacktrace: \n%s", result.GetStackTrace())
 	}
 	return stepFailed
 }
@@ -521,28 +529,28 @@ func addExecutionTimes(stepExecResult *gauge_messages.ProtoStepExecutionResult, 
 	}
 }
 
-func (executor *specExecutor) executeBeforeStepHook() *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) executeBeforeStepHook() *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepExecutionStarting.Enum(),
-		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	executor.pluginHandler.NotifyPlugins(message)
-	return executeAndGetStatus(executor.runner, message)
+		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	e.pluginHandler.NotifyPlugins(message)
+	return executeAndGetStatus(e.runner, message)
 }
 
-func (executor *specExecutor) executeAfterStepHook() *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) executeAfterStepHook() *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepExecutionEnding.Enum(),
-		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: executor.currentExecutionInfo}}
-	executor.pluginHandler.NotifyPlugins(message)
-	return executeAndGetStatus(executor.runner, message)
+		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	e.pluginHandler.NotifyPlugins(message)
+	return executeAndGetStatus(e.runner, message)
 }
 
-func (executor *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
+func (e *specExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
 	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: proto.String(protoStep.GetParsedText()), ActualStepText: proto.String(protoStep.GetActualText())}
 	stepRequest.Parameters = getParameters(protoStep.GetFragments())
 	return stepRequest
 }
 
-func (executor *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return executor.specification.DataTable.Table.Get(columnName)[executor.currentTableRow].Value
+func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
+	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
 }
 
 func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
@@ -559,11 +567,10 @@ func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Mess
 			return errorResult(errMsg)
 		}
 		return executionResult
-	} else {
-		errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-		logger.Error(errMsg)
-		return errorResult(errMsg)
 	}
+	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
+	logger.Error(errMsg)
+	return errorResult(errMsg)
 }
 
 func errorResult(message string) *gauge_messages.ProtoExecutionResult {
@@ -585,7 +592,7 @@ func setStepFailure(executionInfo *gauge_messages.ExecutionInfo, reporter report
 }
 
 func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Parameter {
-	parameters := make([]*gauge_messages.Parameter, 0)
+	var parameters []*gauge_messages.Parameter
 	for _, fragment := range fragments {
 		if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
 			parameters = append(parameters, fragment.GetParameter())
