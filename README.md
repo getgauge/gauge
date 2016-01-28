@@ -38,7 +38,7 @@ Certain features of Gauge makes it stand unique amongst others.
 
 | **[User Docs] [userdocs]**     | **[Setup Guide] [setup]**     | **[Roadmap] [roadmap]**           | **[Contributing] [contributing]**           |
 |:-------------------------------------:|:-------------------------------:|:-----------------------------------:|:---------------------------------------------:|
-| [![i1] [userdocs-image]](techdocs)<br>Learn more about Gauge Technical details | [![i2] [setup-image]](setup)<br> Getting started with Gauge | [![i3] [roadmap-image]](roadmap)<br>Roadmap of Gauge Project | [![i4] [contributing-image]](contributing)<br>How can you contribute to Gauge? |
+| [![i1] [userdocs-image]](techdocs)<br>Learn more about using Gauge | [![i2] [setup-image]](setup)<br> Getting started with Gauge | [![i3] [roadmap-image]](roadmap)<br>Roadmap of Gauge Project | [![i4] [contributing-image]](contributing)<br>How can you contribute to Gauge? |
 
 
 ## Questions or need help?
