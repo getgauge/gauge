@@ -131,9 +131,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 	e.consoleReporter.SpecStart(specInfo.GetName())
 	beforeSpecHookStatus := e.executeBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
-		result.AddPreHook(e.specResult, beforeSpecHookStatus)
 		setSpecFailure(e.currentExecutionInfo)
-		printStatus(beforeSpecHookStatus, e.consoleReporter)
+		handleHookFailure(e.specResult, beforeSpecHookStatus, result.AddPreHook, e.consoleReporter)
 	} else {
 		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
@@ -146,9 +145,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 
 	afterSpecHookStatus := e.executeAfterSpecHook()
 	if afterSpecHookStatus.GetFailed() {
-		result.AddPostHook(e.specResult, afterSpecHookStatus)
 		setSpecFailure(e.currentExecutionInfo)
-		printStatus(afterSpecHookStatus, e.consoleReporter)
+		handleHookFailure(e.specResult, afterSpecHookStatus, result.AddPostHook, e.consoleReporter)
 	}
 	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
 	e.consoleReporter.SpecEnd()
@@ -238,9 +236,8 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	e.consoleReporter.ScenarioStart(scenario.Heading.Value)
 	beforeHookExecutionStatus := e.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
-		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
+		handleHookFailure(scenarioResult, beforeHookExecutionStatus, result.AddPreHook, e.consoleReporter)
 		setScenarioFailure(e.currentExecutionInfo)
-		printStatus(beforeHookExecutionStatus, e.consoleReporter)
 	} else {
 		e.executeContextItems(scenarioResult)
 		if !scenarioResult.GetFailure() {
@@ -248,13 +245,11 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 		}
 		e.executeTearDownItems(scenarioResult)
 	}
-
 	afterHookExecutionStatus := e.executeAfterScenarioHook(scenarioResult)
-	result.AddPostHook(scenarioResult, afterHookExecutionStatus)
 	scenarioResult.UpdateExecutionTime()
 	if afterHookExecutionStatus.GetFailed() {
+		handleHookFailure(scenarioResult, afterHookExecutionStatus, result.AddPostHook, e.consoleReporter)
 		setScenarioFailure(e.currentExecutionInfo)
-		printStatus(afterHookExecutionStatus, e.consoleReporter)
 	}
 	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
 

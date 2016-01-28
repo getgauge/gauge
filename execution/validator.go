@@ -63,10 +63,10 @@ func newValidator(manifest *manifest.Manifest, specsToExecute []*gauge.Specifica
 	return &validator{manifest: manifest, specsToExecute: specsToExecute, runner: runner, conceptsDictionary: conceptsDictionary}
 }
 
-func (self *validator) validate() validationErrors {
+func (v *validator) validate() validationErrors {
 	validationStatus := make(validationErrors)
-	specValidator := &specValidator{runner: self.runner, conceptsDictionary: self.conceptsDictionary, stepValidationCache: make(map[string]*stepValidationError)}
-	for _, spec := range self.specsToExecute {
+	specValidator := &specValidator{runner: v.runner, conceptsDictionary: v.conceptsDictionary, stepValidationCache: make(map[string]*stepValidationError)}
+	for _, spec := range v.specsToExecute {
 		specValidator.specification = spec
 		validationErrors := specValidator.validate()
 		if len(validationErrors) != 0 {
@@ -75,55 +75,53 @@ func (self *validator) validate() validationErrors {
 	}
 	if len(validationStatus) > 0 {
 		return validationStatus
-	} else {
-		return nil
 	}
+	return nil
 }
 
-func (self *specValidator) validate() []*stepValidationError {
-	self.specification.Traverse(self)
-	return self.stepValidationErrors
+func (v *specValidator) validate() []*stepValidationError {
+	v.specification.Traverse(v)
+	return v.stepValidationErrors
 }
 
-func (self *specValidator) Step(step *gauge.Step) {
+func (v *specValidator) Step(step *gauge.Step) {
 	if step.IsConcept {
 		for _, conceptStep := range step.ConceptSteps {
-			self.Step(conceptStep)
+			v.Step(conceptStep)
 		}
 	} else {
-		value, ok := self.stepValidationCache[step.Value]
+		value, ok := v.stepValidationCache[step.Value]
 		if !ok {
-			err := self.validateStep(step)
+			err := v.validateStep(step)
 			if err != nil {
-				self.stepValidationErrors = append(self.stepValidationErrors, err)
+				v.stepValidationErrors = append(v.stepValidationErrors, err)
 			}
-			self.stepValidationCache[step.Value] = err
+			v.stepValidationCache[step.Value] = err
 		} else if value != nil {
-			self.stepValidationErrors = append(self.stepValidationErrors,
-				&stepValidationError{step: step, fileName: self.specification.FileName, errorType: value.errorType, message: value.message})
+			v.stepValidationErrors = append(v.stepValidationErrors,
+				&stepValidationError{step: step, fileName: v.specification.FileName, errorType: value.errorType, message: value.message})
 		}
 	}
 }
 
 var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
 
-func (self *specValidator) validateStep(step *gauge.Step) *stepValidationError {
+func (v *specValidator) validateStep(step *gauge.Step) *stepValidationError {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
-	response, err := conn.GetResponseForMessageWithTimeout(message, self.runner.Connection, config.RunnerRequestTimeout())
+	response, err := conn.GetResponseForMessageWithTimeout(message, v.runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		return &stepValidationError{step: step, message: err.Error(), fileName: self.specification.FileName}
+		return &stepValidationError{step: step, message: err.Error(), fileName: v.specification.FileName}
 	}
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
 			message := getMessage(validateResponse.ErrorType.String())
-			return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: validateResponse.ErrorType, message: message}
+			return &stepValidationError{step: step, fileName: v.specification.FileName, errorType: validateResponse.ErrorType, message: message}
 		}
 		return nil
-	} else {
-		return &stepValidationError{step: step, fileName: self.specification.FileName, errorType: &invalidResponse, message: "Invalid response from runner for Validation request"}
 	}
+	return &stepValidationError{step: step, fileName: v.specification.FileName, errorType: &invalidResponse, message: "Invalid response from runner for Validation request"}
 }
 
 func getMessage(message string) string {
@@ -131,39 +129,39 @@ func getMessage(message string) string {
 	return strings.ToUpper(lower[:1]) + lower[1:]
 }
 
-func (self *specValidator) ContextStep(step *gauge.Step) {
-	self.Step(step)
+func (v *specValidator) ContextStep(step *gauge.Step) {
+	v.Step(step)
 }
 
-func (self *specValidator) TearDown(step *gauge.TearDown) {
+func (v *specValidator) TearDown(step *gauge.TearDown) {
 }
 
-func (self *specValidator) SpecHeading(heading *gauge.Heading) {
-	self.stepValidationErrors = make([]*stepValidationError, 0)
+func (v *specValidator) SpecHeading(heading *gauge.Heading) {
+	v.stepValidationErrors = make([]*stepValidationError, 0)
 }
 
-func (self *specValidator) SpecTags(tags *gauge.Tags) {
+func (v *specValidator) SpecTags(tags *gauge.Tags) {
 }
 
-func (self *specValidator) ScenarioTags(tags *gauge.Tags) {
-
-}
-
-func (self *specValidator) DataTable(dataTable *gauge.Table) {
+func (v *specValidator) ScenarioTags(tags *gauge.Tags) {
 
 }
 
-func (self *specValidator) Scenario(scenario *gauge.Scenario) {
+func (v *specValidator) DataTable(dataTable *gauge.Table) {
 
 }
 
-func (self *specValidator) ScenarioHeading(heading *gauge.Heading) {
+func (v *specValidator) Scenario(scenario *gauge.Scenario) {
+
 }
 
-func (self *specValidator) Comment(comment *gauge.Comment) {
+func (v *specValidator) ScenarioHeading(heading *gauge.Heading) {
 }
 
-func (self *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
+func (v *specValidator) Comment(comment *gauge.Comment) {
+}
+
+func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
 }
 

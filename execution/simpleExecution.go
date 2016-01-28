@@ -111,9 +111,7 @@ func (e *simpleExecution) run() *result.SuiteResult {
 	} else {
 		beforeSuiteHookExecResult := e.startExecution()
 		if beforeSuiteHookExecResult.GetFailed() {
-			result.AddPreHook(e.suiteResult, beforeSuiteHookExecResult)
-			e.suiteResult.SetFailure()
-			printStatus(beforeSuiteHookExecResult, e.consoleReporter)
+			handleHookFailure(e.suiteResult, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
 		} else {
 			for e.specStore.hasNext() {
 				e.executeSpec(e.specStore.next())
@@ -121,14 +119,18 @@ func (e *simpleExecution) run() *result.SuiteResult {
 		}
 		afterSuiteHookExecResult := e.endExecution()
 		if afterSuiteHookExecResult.GetFailed() {
-			result.AddPostHook(e.suiteResult, afterSuiteHookExecResult)
-			e.suiteResult.SetFailure()
-			printStatus(afterSuiteHookExecResult, e.consoleReporter)
+			handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
 		}
 	}
 	e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
 	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	return e.suiteResult
+}
+
+func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, predicate func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
+	predicate(result, execResult)
+	result.SetFailure()
+	printStatus(execResult, reporter)
 }
 
 func getDataTableRows(rowCount int) indexRange {
