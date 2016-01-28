@@ -73,14 +73,14 @@ func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionRes
 	return e.executeHook(message, e.specResult)
 }
 
-func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) initSpecDataStore() error {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		e.consoleReporter.Error("Spec data store didn't get initialized : %s", initResult.ErrorMessage)
+		return fmt.Errorf("Spec data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-	return initResult
+	return nil
 }
 
 func (e *specExecutor) executeAfterSpecHook() *gauge_messages.ProtoExecutionResult {
@@ -122,6 +122,17 @@ func (specExecutor *specExecutor) execute() *result.SpecResult {
 	resolvedSpecItems := specExecutor.resolveItems(specExecutor.specification.GetSpecItems())
 	specExecutor.specResult.AddSpecItems(resolvedSpecItems)
 	if _, ok := specExecutor.errMap.specErrs[specExecutor.specification]; ok {
+		return specExecutor.getSkippedSpecResult()
+	}
+	err := specExecutor.initSpecDataStore()
+	if err != nil {
+		specExecutor.errMap.specErrs[specExecutor.specification] = []*stepValidationError{
+			&stepValidationError{
+				step:     &gauge.Step{LineNo: specExecutor.specification.Heading.LineNo, LineText: specExecutor.specification.Heading.Value},
+				message:  err.Error(),
+				fileName: specExecutor.specification.FileName,
+			},
+		}
 		return specExecutor.getSkippedSpecResult()
 	}
 	specExecutor.consoleReporter.SpecStart(specInfo.GetName())
@@ -177,14 +188,14 @@ func (executor *specExecutor) executeBeforeScenarioHook(scenarioResult *result.S
 	return executor.executeHook(message, scenarioResult)
 }
 
-func (executor *specExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
+func (executor *specExecutor) initScenarioDataStore() error {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(executor.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		executor.consoleReporter.Error("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
+		return fmt.Errorf("Scenario data store didn't get initialized : %s", initResult.ErrorMessage)
 	}
-	return initResult
+	return nil
 }
 
 func (executor *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
@@ -210,8 +221,19 @@ func (executor *specExecutor) executeScenario(scenario *gauge.Scenario) *result.
 		executor.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
+	err := executor.initScenarioDataStore()
+	if err != nil {
+		executor.errMap.scenarioErrs[scenario] = []*stepValidationError{
+			&stepValidationError{
+				step:     &gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+				message:  err.Error(),
+				fileName: executor.specification.FileName,
+			},
+		}
+		executor.setSkipInfoInResult(scenarioResult, scenario)
+		return scenarioResult
+	}
 	executor.consoleReporter.ScenarioStart(scenario.Heading.Value)
-
 	beforeHookExecutionStatus := executor.executeBeforeScenarioHook(scenarioResult)
 	if beforeHookExecutionStatus.GetFailed() {
 		result.AddPreHook(scenarioResult, beforeHookExecutionStatus)
