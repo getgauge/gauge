@@ -53,7 +53,7 @@ Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)*
 [techdocs]:http://getgauge.io/documentation/user/current/getting_started/creating_a_gauge_project.html
 [setup]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
-[contributing]:http://github.com/getgauge/gauge/wiki/Contributing
+[contributing]:CONTRIBUTING.md
 
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
