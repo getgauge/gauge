@@ -78,7 +78,7 @@ func (e *specExecutor) initSpecDataStore() error {
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 	if initResult.GetFailed() {
-		return fmt.Errorf("Spec data store didn't get initialized : %s", initResult.GetErrorMessage())
+		return fmt.Errorf("Spec data store didn't get initialized : %s\n", initResult.GetErrorMessage())
 	}
 	return nil
 }
@@ -156,13 +156,18 @@ func (e *specExecutor) execute() *result.SpecResult {
 }
 
 func (e *specExecutor) handleSpecDataStoreFailure(err error) *result.SpecResult {
-	e.errMap.specErrs[e.specification] = []*stepValidationError{
+	e.consoleReporter.Error(err.Error())
+	validationErrors := []*stepValidationError{
 		&stepValidationError{
 			step:     &gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 			message:  err.Error(),
 			fileName: e.specification.FileName,
 		},
 	}
+	for _, scenario := range e.specification.Scenarios {
+		e.errMap.scenarioErrs[scenario] = validationErrors
+	}
+	e.errMap.specErrs[e.specification] = validationErrors
 	return e.getSkippedSpecResult()
 }
 
@@ -197,7 +202,7 @@ func (e *specExecutor) initScenarioDataStore() error {
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	initResult := executeAndGetStatus(e.runner, initScenarioDataStoreMessage)
 	if initResult.GetFailed() {
-		return fmt.Errorf("Scenario data store didn't get initialized : %s", initResult.GetErrorMessage())
+		return fmt.Errorf("Scenario data store didn't get initialized : %s\n", initResult.GetErrorMessage())
 	}
 	return nil
 }
@@ -257,6 +262,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 }
 
 func (e *specExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
+	e.consoleReporter.Error(err.Error())
 	e.errMap.scenarioErrs[scenario] = []*stepValidationError{
 		&stepValidationError{
 			step:     &gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
