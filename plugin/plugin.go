@@ -223,8 +223,8 @@ func setEnvironmentProperties(properties map[string]string) error {
 }
 
 func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bool {
-	for _, pluginId := range manifest.Plugins {
-		if pluginId == descriptor.Id {
+	for _, pluginID := range manifest.Plugins {
+		if pluginID == descriptor.Id {
 			return true
 		}
 	}
@@ -232,14 +232,14 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 }
 
 func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) {
-	warnings := make([]string, 0)
+	var warnings []string
 	handler := &Handler{}
 	envProperties := make(map[string]string)
 
-	for _, pluginId := range manifest.Plugins {
-		pd, err := GetPluginDescriptor(pluginId, "")
+	for _, pluginID := range manifest.Plugins {
+		pd, err := GetPluginDescriptor(pluginID, "")
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginId, err.Error(), pluginId))
+			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginID, err.Error(), pluginID))
 			continue
 		}
 		compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
@@ -272,7 +272,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 				continue
 			}
 			plugin.connection = pluginConnection
-			handler.addPlugin(pluginId, plugin)
+			handler.addPlugin(pluginID, plugin)
 		}
 
 	}
@@ -288,15 +288,15 @@ func isExecutionScopePlugin(pd *pluginDescriptor) bool {
 	return false
 }
 
-func (handler *Handler) addPlugin(pluginId string, pluginToAdd *plugin) {
+func (handler *Handler) addPlugin(pluginID string, pluginToAdd *plugin) {
 	if handler.pluginsMap == nil {
 		handler.pluginsMap = make(map[string]*plugin)
 	}
-	handler.pluginsMap[pluginId] = pluginToAdd
+	handler.pluginsMap[pluginID] = pluginToAdd
 }
 
-func (handler *Handler) removePlugin(pluginId string) {
-	delete(handler.pluginsMap, pluginId)
+func (handler *Handler) removePlugin(pluginID string) {
+	delete(handler.pluginsMap, pluginID)
 }
 
 func (handler *Handler) NotifyPlugins(message *gauge_messages.Message) {
@@ -309,14 +309,14 @@ func (handler *Handler) NotifyPlugins(message *gauge_messages.Message) {
 	}
 }
 
-func (handler *Handler) killPlugin(pluginId string) {
-	plugin := handler.pluginsMap[pluginId]
+func (handler *Handler) killPlugin(pluginID string) {
+	plugin := handler.pluginsMap[pluginID]
 	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
 		logger.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
-	handler.removePlugin(pluginId)
+	handler.removePlugin(pluginID)
 }
 
 func (handler *Handler) GracefullyKillPlugins() {
@@ -329,8 +329,8 @@ func (handler *Handler) GracefullyKillPlugins() {
 }
 
 func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
-	messageId := common.GetUniqueID()
-	message.MessageId = &messageId
+	messageID := common.GetUniqueID()
+	message.MessageId = &messageID
 	messageBytes, err := proto.Marshal(message)
 	if err != nil {
 		return err
@@ -353,7 +353,7 @@ func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
 	}
-	availableVersions := make([]*version.Version, 0)
+	var availableVersions []*version.Version
 
 	for _, file := range files {
 		if file.IsDir() {

@@ -78,10 +78,6 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 	return len(s.specsSkipped)
 }
 
-func isLazy() bool {
-	return strings.ToLower(Strategy) == Lazy
-}
-
 func (e *parallelExecution) getNumberOfStreams() int {
 	nStreams := e.numberOfExecutionStreams
 	size := e.specStore.size()
@@ -196,6 +192,10 @@ func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult)
 	}
 	aggregateResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
 	return aggregateResult
+}
+
+func isLazy() bool {
+	return strings.ToLower(Strategy) == Lazy
 }
 
 func isValidStrategy(strategy string) bool {

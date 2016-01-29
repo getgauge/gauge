@@ -244,7 +244,7 @@ func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 
 func getInstallDescription(plugin string) (*installDescription, installResult) {
 	versionInstallDescriptionJSONFile := plugin + "-install.json"
-	versionInstallDescriptionJSONUrl, result := constructPluginInstallJsonUrl(plugin)
+	versionInstallDescriptionJSONUrl, result := constructPluginInstallJSONURL(plugin)
 	if !result.Success {
 		return nil, installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.Error))
 	}
@@ -270,7 +270,7 @@ func getInstallDescriptionFromJSON(installJSON string) (*installDescription, ins
 	return installDescription, installSuccess("")
 }
 
-func constructPluginInstallJsonUrl(plugin string) (string, installResult) {
+func constructPluginInstallJSONURL(plugin string) (string, installResult) {
 	installJSONFile := plugin + "-install.json"
 	repoURL := config.GaugeRepositoryUrl()
 	if repoURL == "" {
@@ -298,8 +298,8 @@ func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersi
 	return nil, fmt.Errorf("Compatible version to %s not found", currentVersion)
 }
 
-func (installDescription *installDescription) sortVersionInstallDescriptions() {
-	sort.Sort(byDecreasingVersion(installDescription.Versions))
+func (installDesc *installDescription) sortVersionInstallDescriptions() {
+	sort.Sort(byDecreasingVersion(installDesc.Versions))
 }
 
 func InstallPluginZip(zipFile string, pluginName string) {
@@ -334,16 +334,24 @@ func installPluginFromDir(unzippedPluginDir string) error {
 }
 
 func installRunnerFromDir(unzippedPluginDir string, language string) error {
-	var r runner.Runner
-	contents, err := common.ReadFileContents(filepath.Join(unzippedPluginDir, language+jsonExt))
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal([]byte(contents), &r)
+	r, err := getRunnerJSONContents(filepath.Join(unzippedPluginDir, language+jsonExt))
 	if err != nil {
 		return err
 	}
 	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, r.Id, r.Version)
+}
+
+func getRunnerJSONContents(file string) (*runner.Runner, error) {
+	var r runner.Runner
+	contents, err := common.ReadFileContents(file)
+	if err != nil {
+		return nil, err
+	}
+	err = json.Unmarshal([]byte(contents), &r)
+	if err != nil {
+		return nil, err
+	}
+	return &r, nil
 }
 
 func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string, version string) error {
@@ -393,7 +401,6 @@ func DownloadAndInstallPlugin(plugin, version, messageFormat string) {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	os.Exit(0)
 }
 
 func downloadAndInstall(plugin, version string, successMessage string) error {
@@ -451,12 +458,8 @@ func IsCompatibleLanguagePluginInstalled(name string) bool {
 	if err != nil {
 		return false
 	}
-	var r runner.Runner
-	contents, err := common.ReadFileContents(jsonFilePath)
-	if err != nil {
-		return false
-	}
-	err = json.Unmarshal([]byte(contents), &r)
+
+	r, err := getRunnerJSONContents(jsonFilePath)
 	if err != nil {
 		return false
 	}
