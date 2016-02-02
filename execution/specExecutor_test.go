@@ -21,9 +21,11 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/reporter"
 	. "gopkg.in/check.v1"
 )
 
@@ -298,4 +300,52 @@ func (s *MySuite) TestToGetDataTableRowFromInvalidInput(c *C) {
 	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
 	_, err = getDataTableRowsRange("", 3)
 	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+}
+
+func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
+
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
+	specExecutor.errMap = &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
+	specExecutor.consoleReporter = reporter.Current()
+	specExecutor.specResult = &result.SpecResult{}
+	result := specExecutor.createSkippedSpecResult(fmt.Errorf("ERROR"))
+
+	c.Assert(result.IsFailed, Equals, false)
+	c.Assert(result.Skipped, Equals, true)
+
+	c.Assert(len(specExecutor.errMap.specErrs[spec]), Equals, 1)
+	c.Assert(specExecutor.errMap.specErrs[spec][0].Error(), Equals, "ERROR")
+	c.Assert(specExecutor.errMap.specErrs[spec][0].fileName, Equals, "FILE")
+	c.Assert(specExecutor.errMap.specErrs[spec][0].step.LineNo, Equals, 0)
+	c.Assert(specExecutor.errMap.specErrs[spec][0].step.LineText, Equals, "SPEC_HEADING")
+}
+
+func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"456\" \"foo\" and \"9900\"").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec.FileName = "FILE"
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil)
+	specExecutor.errMap = &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
+	specExecutor.consoleReporter = reporter.Current()
+	specExecutor.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
+	result := specExecutor.createSkippedSpecResult(fmt.Errorf("ERROR"))
+
+	c.Assert(result.IsFailed, Equals, false)
+	c.Assert(result.Skipped, Equals, true)
+
+	c.Assert(len(specExecutor.errMap.specErrs[spec]), Equals, 1)
+	c.Assert(specExecutor.errMap.specErrs[spec][0].Error(), Equals, "ERROR")
+	c.Assert(specExecutor.errMap.specErrs[spec][0].fileName, Equals, "FILE")
+	c.Assert(specExecutor.errMap.specErrs[spec][0].step.LineNo, Equals, 1)
+	c.Assert(specExecutor.errMap.specErrs[spec][0].step.LineText, Equals, "A spec heading")
+	c.Assert(len(specExecutor.errMap.scenarioErrs[spec.Scenarios[0]]), Equals, 1)
+	c.Assert(specExecutor.errMap.scenarioErrs[spec.Scenarios[0]][0].Error(), Equals, "ERROR")
+	c.Assert(specExecutor.errMap.scenarioErrs[spec.Scenarios[0]][0].fileName, Equals, "FILE")
+	c.Assert(specExecutor.errMap.scenarioErrs[spec.Scenarios[0]][0].step.LineNo, Equals, 1)
+	c.Assert(specExecutor.errMap.scenarioErrs[spec.Scenarios[0]][0].step.LineText, Equals, "A spec heading")
 }

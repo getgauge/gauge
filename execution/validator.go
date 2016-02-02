@@ -53,6 +53,10 @@ type stepValidationError struct {
 	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
+func newValidationError(step *gauge.Step, message string, fileName string, errType *gauge_messages.StepValidateResponse_ErrorType) *stepValidationError {
+	return &stepValidationError{step: step, message: message, fileName: fileName, errorType: errType}
+}
+
 func (e *stepValidationError) Error() string {
 	return e.message
 }
@@ -99,7 +103,7 @@ func (v *specValidator) Step(step *gauge.Step) {
 			v.stepValidationCache[step.Value] = err
 		} else if value != nil {
 			v.stepValidationErrors = append(v.stepValidationErrors,
-				&stepValidationError{step: step, fileName: v.specification.FileName, errorType: value.errorType, message: value.message})
+				newValidationError(step, value.message, v.specification.FileName, value.errorType))
 		}
 	}
 }
@@ -111,17 +115,17 @@ func (v *specValidator) validateStep(step *gauge.Step) *stepValidationError {
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
 	response, err := conn.GetResponseForMessageWithTimeout(message, v.runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		return &stepValidationError{step: step, message: err.Error(), fileName: v.specification.FileName}
+		return newValidationError(step, err.Error(), v.specification.FileName, nil)
 	}
 	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		validateResponse := response.GetStepValidateResponse()
 		if !validateResponse.GetIsValid() {
 			message := getMessage(validateResponse.ErrorType.String())
-			return &stepValidationError{step: step, fileName: v.specification.FileName, errorType: validateResponse.ErrorType, message: message}
+			return newValidationError(step, message, v.specification.FileName, validateResponse.ErrorType)
 		}
 		return nil
 	}
-	return &stepValidationError{step: step, fileName: v.specification.FileName, errorType: &invalidResponse, message: "Invalid response from runner for Validation request"}
+	return newValidationError(step, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
 }
 
 func getMessage(message string) string {

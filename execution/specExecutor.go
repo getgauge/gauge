@@ -126,7 +126,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 	err := e.initSpecDataStore()
 	if err != nil {
-		return e.handleSpecDataStoreFailure(err)
+		return e.createSkippedSpecResult(err)
+	}
+	if len(e.specification.Scenarios) == 0 {
+		return e.createSkippedSpecResult(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
 	}
 	e.consoleReporter.SpecStart(specInfo.GetName())
 	beforeSpecHookStatus := e.executeBeforeSpecHook()
@@ -153,19 +156,14 @@ func (e *specExecutor) execute() *result.SpecResult {
 	return e.specResult
 }
 
-func (e *specExecutor) handleSpecDataStoreFailure(err error) *result.SpecResult {
-	e.consoleReporter.Error(err.Error())
-	validationErrors := []*stepValidationError{
-		&stepValidationError{
-			step:     &gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
-			message:  err.Error(),
-			fileName: e.specification.FileName,
-		},
-	}
+func (e *specExecutor) createSkippedSpecResult(err error) *result.SpecResult {
+	logger.Error(err.Error())
+	validationError := newValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
+		err.Error(), e.specification.FileName, nil)
 	for _, scenario := range e.specification.Scenarios {
-		e.errMap.scenarioErrs[scenario] = validationErrors
+		e.errMap.scenarioErrs[scenario] = []*stepValidationError{validationError}
 	}
-	e.errMap.specErrs[e.specification] = validationErrors
+	e.errMap.specErrs[e.specification] = []*stepValidationError{validationError}
 	return e.getSkippedSpecResult()
 }
 
@@ -258,13 +256,9 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 func (e *specExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
 	e.consoleReporter.Error(err.Error())
-	e.errMap.scenarioErrs[scenario] = []*stepValidationError{
-		&stepValidationError{
-			step:     &gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
-			message:  err.Error(),
-			fileName: e.specification.FileName,
-		},
-	}
+	validationError := newValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+		err.Error(), e.specification.FileName, nil)
+	e.errMap.scenarioErrs[scenario] = []*stepValidationError{validationError}
 	e.setSkipInfoInResult(scenarioResult, scenario)
 }
 
