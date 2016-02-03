@@ -755,9 +755,9 @@
 						<key>VALUE</key>
 						<dict>
 							<key>PATH</key>
-							<string>/Users/apoorvam/gauge/go/src/github.com/getgauge/gauge/build/install/macosx/resources/readme.txt</string>
+							<string>resources/readme.txt</string>
 							<key>PATH_TYPE</key>
-							<integer>0</integer>
+							<integer>1</integer>
 						</dict>
 					</dict>
 				</array>
