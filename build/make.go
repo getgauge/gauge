@@ -161,6 +161,8 @@ func addInstallScripts(files map[string]string) map[string]string {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	} else if getGOOS() == windows {
 		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
+		files[filepath.Join("build", "install", "windows", "backup_properties_file.bat")] = ""
+		files[filepath.Join("build", "install", "windows", "set_timestamp.bat")] = ""
 	}
 	return files
 }

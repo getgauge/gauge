@@ -6,7 +6,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Gauge"
-!define PRODUCT_PUBLISHER "Thoughtworks Technologies"
+!define PRODUCT_PUBLISHER "ThoughtWorks Inc."
 !define PRODUCT_WEB_SITE "http://getgauge.io"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gauge.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
@@ -15,6 +15,7 @@
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
 !include "MUI2.nsh"
+!include "MUI_EXTRAPAGES.nsh"
 !include "EnvVarUpdate.nsh"
 !include "x64.nsh"
 !include "winmessages.nsh"
@@ -34,8 +35,10 @@
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
+;Readme page
+;!insertmacro MUI_PAGE_README "readme.txt"
 ; Finish page
-;!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README"
+;!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\readme.txt"
 !insertmacro MUI_PAGE_FINISH
 
 ; Uninstaller pages
@@ -61,6 +64,9 @@ function .onInit
 functionEnd
 
 Section "Gauge" SEC01
+  IfFileExists "$INSTDIR\share\gauge\gauge.properties" 0 +3
+  CreateDirectory $%temp%\Gauge
+  CopyFiles "$INSTDIR\share\gauge\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
   SectionIn RO
   SetOutPath "$INSTDIR"
   SetOverwrite on
@@ -94,10 +100,15 @@ Section -Post
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
   WriteRegExpandStr ${env_hklm} GAUGE_ROOT $INSTDIR
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
+  ExecWait '"$INSTDIR\set_timestamp.bat" "$INSTDIR"'
+  IfFileExists "$%temp%\Gauge\gauge.properties.bak" 0 +3
+  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$INSTDIR\share\gauge"
+  RMDir /r /REBOOTOK "$%temp%\Gauge"
+
   IfSilent +2 0
     ExecShell "open" "http://getgauge.io/documentation/user/current"
   ExecWait '"$INSTDIR\plugin-install.bat" "html-report"'
-  
+
   SectionGetFlags ${SEC_JAVA} $R0
   SectionGetFlags ${SEC_CSHARP} $R1
   SectionGetFlags ${SEC_RUBY} $R2
