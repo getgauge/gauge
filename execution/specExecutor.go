@@ -157,7 +157,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 }
 
 func (e *specExecutor) createSkippedSpecResult(err error) *result.SpecResult {
-	logger.Error(err.Error())
+	logger.Errorf(err.Error())
 	validationError := newValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 		err.Error(), e.specification.FileName, nil)
 	for _, scenario := range e.specification.Scenarios {
@@ -558,13 +558,13 @@ func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Mess
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Error(errMsg)
+			logger.Errorf(errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	}
 	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-	logger.Error(errMsg)
+	logger.Errorf(errMsg)
 	return errorResult(errMsg)
 }
 

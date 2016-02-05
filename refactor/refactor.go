@@ -324,7 +324,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	if !refactoringResult.Success {
 		exitCode = 1
 		for _, err := range refactoringResult.Errors {
-			logger.Error("%s \n", err)
+			logger.Errorf("%s \n", err)
 		}
 	}
 	for _, warning := range refactoringResult.warnings {

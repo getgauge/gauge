@@ -117,7 +117,7 @@ func GetSpecFiles(specSource string) []string {
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		logger.Error("Failed to refactor '%s': %s\n", fileName, err.Error())
+		logger.Errorf("Failed to refactor '%s': %s\n", fileName, err.Error())
 	}
 }
 

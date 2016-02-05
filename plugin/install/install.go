@@ -212,7 +212,7 @@ func UninstallPlugin(pluginName string, version string) {
 }
 
 func handleUninstallFailure(err error, pluginName string) {
-	logger.Error("%s plugin uninstallation failed", pluginName)
+	logger.Errorf("%s plugin uninstallation failed", pluginName)
 	logger.Fatalf(err.Error())
 }
 
@@ -383,13 +383,13 @@ func UpdatePlugins() {
 		logger.Info("Updating plugin '%s'", pluginInfo.Name)
 		err := downloadAndInstall(pluginInfo.Name, "", fmt.Sprintf("Successfully updated plugin => %s", pluginInfo.Name))
 		if err != nil {
-			logger.Error(err.Error())
+			logger.Errorf(err.Error())
 			failedPlugin = append(failedPlugin, pluginInfo.Name)
 		}
 		fmt.Println()
 	}
 	if len(failedPlugin) > 0 {
-		logger.Error("Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
+		logger.Errorf("Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
 		os.Exit(1)
 	}
 	logger.Info("Successfully updated all the plugins.")
@@ -430,7 +430,7 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 			if installResult.Success {
 				logger.Info("Successfully installed the plugin %s.", pluginName)
 			} else {
-				logger.Error("Failed to install the %s plugin.", pluginName)
+				logger.Errorf("Failed to install the %s plugin.", pluginName)
 			}
 		} else {
 			logger.Info("Plugin %s is already installed.", pluginName)
@@ -505,7 +505,7 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		logger.Info("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
 		result := InstallPlugin(pluginName, pluginArgs["version"])
 		if !result.Success {
-			logger.Error(result.getMessage())
+			logger.Errorf(result.getMessage())
 		}
 	}
 	pd, err := plugin.GetPluginDescriptor(pluginName, pluginArgs["version"])

@@ -121,7 +121,7 @@ func (e *parallelExecution) eagerExecution(distributions int) []*result.SuiteRes
 func (e *parallelExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		logger.Error("Failed: " + err.Error())
+		logger.Errorf("Failed: " + err.Error())
 		logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
 		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
@@ -148,7 +148,7 @@ func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.
 	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		logger.Error("Failed to start runner. Reason: %s", err.Error())
+		logger.Errorf("Failed to start runner. Reason: %s", err.Error())
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}

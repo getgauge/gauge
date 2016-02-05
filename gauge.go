@@ -112,7 +112,7 @@ func main() {
 		if *refactorSteps != "" {
 			startChan := api.StartAPI()
 			if len(flag.Args()) != 1 {
-				logger.Error("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
+				logger.Errorf("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
 				os.Exit(1)
 			}
 			refactor.RefactorSteps(*refactorSteps, flag.Args()[0], startChan)
@@ -127,7 +127,7 @@ func main() {
 			os.Exit(exitCode)
 		}
 	} else {
-		logger.Error(err.Error())
+		logger.Errorf(err.Error())
 		os.Exit(1)
 	}
 }

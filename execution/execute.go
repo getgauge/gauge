@@ -241,7 +241,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	for _, unhandledErr := range suiteResult.UnhandledErrors {
-		logger.Error(unhandledErr.Error())
+		logger.Errorf(unhandledErr.Error())
 	}
 	exitCode := 0
 	if suiteResult.IsFailed || (nSkippedSpecs+nSkippedScenarios) > 0 {
@@ -251,11 +251,11 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 }
 
 func printValidationFailures(validationErrors validationErrors) {
-	logger.Error("Validation failed. The following steps have errors")
+	logger.Errorf("Validation failed. The following steps have errors")
 	for _, stepValidationErrors := range validationErrors {
 		for _, stepValidationError := range stepValidationErrors {
 			s := stepValidationError.step
-			logger.Error("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
+			logger.Errorf("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
 		}
 	}
 }

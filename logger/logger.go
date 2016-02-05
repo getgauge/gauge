@@ -47,8 +47,8 @@ func Info(msg string, args ...interface{}) {
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
-// Error logs ERROR messages
-func Error(msg string, args ...interface{}) {
+// Errorf logs ERROR messages
+func Errorf(msg string, args ...interface{}) {
 	GaugeLog.Error(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }

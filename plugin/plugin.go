@@ -303,7 +303,7 @@ func (handler *Handler) NotifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range handler.pluginsMap {
 		err := plugin.sendMessage(message)
 		if err != nil {
-			logger.Error("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+			logger.Errorf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 			handler.killPlugin(id)
 		}
 	}
@@ -314,7 +314,7 @@ func (handler *Handler) killPlugin(pluginID string) {
 	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		logger.Error("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		logger.Errorf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	handler.removePlugin(pluginID)
 }
