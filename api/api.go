@@ -23,7 +23,7 @@ import (
 	"os"
 	"path"
 	"strconv"
-	"sync"
+	"time"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -40,6 +40,7 @@ import (
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -87,15 +88,30 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 	return runner, nil
 }
 
-func runAPIServiceIndefinitely(port int, wg *sync.WaitGroup) {
-	wg.Add(1)
+func runAPIServiceIndefinitely(port int) {
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	go StartAPIService(port, startChan)
-	select {
-	case runner := <-startChan.RunnerChan:
-		runner.Kill()
-	case err := <-startChan.ErrorChan:
-		logger.Fatalf(err.Error())
+	go checkParentIsAlive(startChan)
+
+	for {
+		select {
+		case runner := <-startChan.RunnerChan:
+			logger.Info("Got a kill message. Killing runner.")
+			runner.Kill()
+		case err := <-startChan.ErrorChan:
+			logger.Fatalf("Killing Gauge daemon. %v", err.Error())
+		}
+	}
+}
+
+func checkParentIsAlive(startChannels *runner.StartChannels) {
+	parentProcessID := os.Getppid()
+	for {
+		if !util.IsProcessRunning(parentProcessID) {
+			startChannels.ErrorChan <- fmt.Errorf("Parent process with pid %d has terminated.", parentProcessID)
+			return
+		}
+		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -114,9 +130,7 @@ func RunInBackground(apiPort string) {
 			logger.Fatalf(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
-	var wg sync.WaitGroup
-	runAPIServiceIndefinitely(port, &wg)
-	wg.Wait()
+	runAPIServiceIndefinitely(port)
 }
 
 type gaugeApiMessageHandler struct {
