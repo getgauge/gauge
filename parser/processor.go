@@ -34,7 +34,7 @@ func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
 
 func processTearDown(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(token.Value) < 3 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Teardown should have at least three character"}, true
+		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Teardown should have at least three underscore characters"}, true
 	}
 	return nil, false
 }

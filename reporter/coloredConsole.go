@@ -112,7 +112,7 @@ func (c *coloredConsole) ConceptStart(conceptHeading string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
-		c.displayMessage(indent(conceptHeading, c.indentation)+newline, ct.Magenta)
+		c.displayMessage(indent(strings.TrimSpace(conceptHeading), c.indentation)+newline, ct.Magenta)
 		c.writer.Reset()
 	}
 }

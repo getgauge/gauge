@@ -87,7 +87,7 @@ func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 	sc.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
 	if Verbose {
-		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(conceptHeading, sc.indentation), newline))
+		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(conceptHeading), sc.indentation), newline))
 	}
 }
 
