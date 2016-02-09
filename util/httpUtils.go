@@ -30,7 +30,7 @@ import (
 // Download fires a HTTP GET request to download a resource to target directory
 func Download(url, targetDir string) (string, error) {
 	if !common.DirExists(targetDir) {
-		return "", fmt.Errorf("Failed downloading file: %s\nTarget dir %s doesn't exists.", url, targetDir)
+		return "", fmt.Errorf("Error downloading file: %s\nTarget dir %s doesn't exists.", url, targetDir)
 	}
 	targetFile := filepath.Join(targetDir, filepath.Base(url))
 

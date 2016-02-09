@@ -77,7 +77,7 @@ func (s *MySuite) TestDownloadFailureIfTargetDirDoesntExist(c *C) {
 	defer server.Close()
 
 	_, err := Download(server.URL, "/foo/bar")
-	errMsg := fmt.Sprintf("Failed downloading file: %s\nTarget dir /foo/bar doesn't exists.", server.URL)
+	errMsg := fmt.Sprintf("Error downloading file: %s\nTarget dir /foo/bar doesn't exists.", server.URL)
 
 	c.Assert(err, NotNil)
 	c.Assert(err.Error(), Equals, errMsg)

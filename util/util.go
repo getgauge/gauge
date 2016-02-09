@@ -43,7 +43,7 @@ func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
 	logger.Debug("Downloading => %s", downloadLink)
 	downloadedFile, err := Download(downloadLink, tempDir)
 	if err != nil {
-		return "", fmt.Errorf("Could not download file %s: %s", downloadLink, err.Error())
+		return "", err
 	}
 	logger.Debug("Downloaded to %s", downloadedFile)
 
