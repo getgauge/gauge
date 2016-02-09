@@ -50,5 +50,5 @@ func Download(url, targetDir string) (string, error) {
 	defer out.Close()
 
 	_, err = io.Copy(out, resp.Body)
-	return "", err
+	return targetFile, err
 }

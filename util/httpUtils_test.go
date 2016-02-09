@@ -94,14 +94,16 @@ func (s *MySuite) TestDownloadSuccess(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	_, err := Download(server.URL, "temp")
-	expectedDownloadFilePath, _ := filepath.Abs(filepath.Join("temp", strings.TrimPrefix(server.URL, "http://")))
+	actualDownloadedFilePath, err := Download(server.URL, "temp")
+	expectedDownloadFilePath := filepath.Join("temp", strings.TrimPrefix(server.URL, "http://"))
+	absoluteDownloadFilePath, _ := filepath.Abs(expectedDownloadFilePath)
 	expectedFileContents := "All OK\n"
 
 	c.Assert(err, Equals, nil)
-	c.Assert(common.FileExists(expectedDownloadFilePath), Equals, true)
+	c.Assert(actualDownloadedFilePath, Equals, expectedDownloadFilePath)
+	c.Assert(common.FileExists(absoluteDownloadFilePath), Equals, true)
 
-	actualFileContents, err := common.ReadFileContents(expectedDownloadFilePath)
+	actualFileContents, err := common.ReadFileContents(absoluteDownloadFilePath)
 	c.Assert(err, Equals, nil)
 	c.Assert(actualFileContents, Equals, expectedFileContents)
 }
