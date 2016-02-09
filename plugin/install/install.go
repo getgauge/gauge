@@ -250,7 +250,7 @@ func getInstallDescription(plugin string) (*installDescription, installResult) {
 	}
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	downloadedFile, downloadErr := common.Download(versionInstallDescriptionJSONUrl, tempDir)
+	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir)
 	if downloadErr != nil {
 		return nil, installError(fmt.Sprintf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
 	}
