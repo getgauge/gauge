@@ -126,7 +126,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		return installSuccess(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
-	logger.Info("Installing Plugin => %s %s\n", installDesc.Name, versionInstallDescription.Version)
+	logger.Info("Installing Plugin %s %s", installDesc.Name, versionInstallDescription.Version)
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
 	if err != nil {
 		return installError(fmt.Sprintf("Could not get download link: %s", err.Error()))
@@ -355,7 +355,7 @@ func getRunnerJSONContents(file string) (*runner.Runner, error) {
 }
 
 func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string, version string) error {
-	logger.Info("Installing Plugin => %s %s\n", pluginID, version)
+	logger.Info("Installing Plugin %s %s", pluginID, version)
 
 	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {

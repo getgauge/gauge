@@ -90,7 +90,7 @@ func main() {
 	} else if *installZip != "" && *installPlugin != "" {
 		install.InstallPluginZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {
-		install.DownloadAndInstallPlugin(*installPlugin, *pluginVersion, "Successfully installed plugin => %s")
+		install.DownloadAndInstallPlugin(*installPlugin, *pluginVersion, "Successfully installed plugin %s")
 	} else if *uninstallPlugin != "" {
 		install.UninstallPlugin(*uninstallPlugin, *pluginVersion)
 	} else if *installAll {

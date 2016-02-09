@@ -20,6 +20,7 @@ package util
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"syscall"
 
@@ -40,7 +41,8 @@ func IsWindows() bool {
 // DownloadAndUnzip downloads the zip file from given download link and unzips it.
 // Returns the unzipped file path.
 func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
-	logger.Debug("Downloading => %s", downloadLink)
+	logger.Info("Downloading %s", filepath.Base(downloadLink))
+	logger.Debug("Download URL %s", downloadLink)
 	downloadedFile, err := Download(downloadLink, tempDir)
 	if err != nil {
 		return "", err

@@ -27,6 +27,29 @@ import (
 	"github.com/getgauge/common"
 )
 
+// progressReader is for indicating the download / upload progress on the console
+type progressReader struct {
+	io.Reader
+	bytesTransfered int64
+	totalBytes      int64
+	progress        float64
+}
+
+// Read overrides the underlying io.Reader's Read method.
+// io.Copy() will be calling this method.
+func (w *progressReader) Read(p []byte) (int, error) {
+	n, err := w.Reader.Read(p)
+	if n > 0 {
+		w.bytesTransfered += int64(n)
+		percent := float64(w.bytesTransfered) * float64(100) / float64(w.totalBytes)
+		if percent-w.progress > 4 {
+			fmt.Print(".")
+			w.progress = percent
+		}
+	}
+	return n, err
+}
+
 // Download fires a HTTP GET request to download a resource to target directory
 func Download(url, targetDir string) (string, error) {
 	if !common.DirExists(targetDir) {
@@ -42,6 +65,7 @@ func Download(url, targetDir string) (string, error) {
 		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
 	}
 	defer resp.Body.Close()
+	progressReader := &progressReader{Reader: resp.Body, totalBytes: resp.ContentLength}
 
 	out, err := os.Create(targetFile)
 	if err != nil {
@@ -49,6 +73,7 @@ func Download(url, targetDir string) (string, error) {
 	}
 	defer out.Close()
 
-	_, err = io.Copy(out, resp.Body)
+	_, err = io.Copy(out, progressReader)
+	fmt.Println()
 	return targetFile, err
 }

@@ -157,7 +157,7 @@ func showMessage(action, filename string) {
 func createProjectTemplate(language string) error {
 	if !install.IsCompatibleLanguagePluginInstalled(language) {
 		logger.Info("Compatible %s plugin is not installed \n", language)
-		logger.Info("Installing plugin => %s ... \n\n", language)
+		logger.Info("Installing plugin %s ... \n", language)
 
 		if result := install.InstallPlugin(language, ""); !result.Success {
 			return fmt.Errorf("Failed to install plugin %s . %s \n", language, result.Error.Error())
