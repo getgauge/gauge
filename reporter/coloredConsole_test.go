@@ -57,7 +57,7 @@ func (s *MySuite) TestScenarioStartInVerbose_ColoredConsole(c *C) {
 
 	cc.ScenarioStart("my first scenario")
 
-	c.Assert(dw.output, Equals, "    ## my first scenario    ")
+	c.Assert(dw.output, Equals, "    ## my first scenario\t")
 }
 
 func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
@@ -67,20 +67,19 @@ func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
 
 	cc.ScenarioStart("my first scenario")
 
-	c.Assert(dw.output, Equals, "    ## my first scenario\n")
+	c.Assert(dw.output, Equals, "    ## my first scenario\t\n")
 }
 
 func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
-	dw, cc := setupColoredConsole()
+	_, cc := setupColoredConsole()
 	Verbose = false
 	cc.indentation = 2
 	cc.ScenarioStart("failing step")
 	cc.Write([]byte("fail reason: blah"))
-	dw.output = ""
 
 	cc.ScenarioEnd(true)
 
-	c.Assert(dw.output, Equals, "\nfail reason: blah")
+	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "fail reason: blah")
 }
 
 func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
@@ -88,7 +87,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	Verbose = true
 
 	cc.ScenarioStart("First Scenario")
-	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\n")
+	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\t\n")
 	dw.output = ""
 
 	input := "* Say hello to all"
@@ -138,7 +137,7 @@ func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 
 	cc.StepEnd(true)
 
-	c.Assert(dw.output, Equals, getFailureSymbol())
+	c.Assert(dw.output, Equals, getFailureSymbol()+newline)
 }
 
 func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
@@ -211,18 +210,18 @@ func (s *MySuite) TestDataTable_ColoredConsole(c *C) {
 }
 
 func (s *MySuite) TestError_ColoredConsole(c *C) {
-	dw, cc := setupColoredConsole()
+	_, cc := setupColoredConsole()
 	initialIndentation := 6
 	cc.indentation = initialIndentation
 	Verbose = true
 
 	cc.Error("Failed %s", "network error")
 
-	c.Assert(dw.output, Equals, fmt.Sprintf("\n%sFailed network error", spaces(initialIndentation+errorIndentation)))
+	c.Assert(cc.errorMessagesBuffer.String(), Equals, fmt.Sprintf("%sFailed network error\n", spaces(initialIndentation+errorIndentation)))
 }
 
 func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
-	dw, cc := setupColoredConsole()
+	_, cc := setupColoredConsole()
 	cc.indentation = 6
 	Verbose = true
 	input := "hello, gauge"
@@ -230,11 +229,11 @@ func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
 	_, err := cc.Write([]byte(input))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(dw.output, Equals, input)
+	c.Assert(cc.pluginMessagesBuffer.String(), Equals, input)
 }
 
 func (s *MySuite) TestWrite_ColoredConsole(c *C) {
-	dw, cc := setupColoredConsole()
+	_, cc := setupColoredConsole()
 	cc.indentation = 6
 	Verbose = false
 	input := "hello, gauge"
@@ -242,5 +241,5 @@ func (s *MySuite) TestWrite_ColoredConsole(c *C) {
 	_, err := cc.Write([]byte(input))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(dw.output, Equals, input)
+	c.Assert(cc.pluginMessagesBuffer.String(), Equals, input)
 }

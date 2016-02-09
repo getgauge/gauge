@@ -32,6 +32,7 @@ type coloredConsole struct {
 	writer               *goterminal.Writer
 	headingBuffer        bytes.Buffer
 	pluginMessagesBuffer bytes.Buffer
+	errorMessagesBuffer  bytes.Buffer
 	indentation          int
 }
 
@@ -56,12 +57,10 @@ func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
 	msg := formatScenario(scenarioHeading)
 	logger.GaugeLog.Info(msg)
 
-	indentedText := indent(msg, c.indentation)
-	if !Verbose {
-		c.headingBuffer.WriteString(indentedText + spaces(4))
-		c.displayMessage(c.headingBuffer.String(), ct.None)
-	} else {
-		c.displayMessage(indentedText+newline, ct.Yellow)
+	indentedText := indent(msg+"\t", c.indentation)
+	c.displayMessage(indentedText, ct.Yellow)
+	if Verbose {
+		c.displayMessage(newline, ct.None)
 	}
 	c.writer.Reset()
 }
@@ -69,15 +68,15 @@ func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
 func (c *coloredConsole) ScenarioEnd(failed bool) {
 	if !Verbose {
 		c.displayMessage(newline, ct.None)
-		if failed {
-			c.displayMessage(c.pluginMessagesBuffer.String(), ct.Red)
-		}
 	}
 	c.writer.Reset()
 	c.indentation -= scenarioIndentation
 }
 
 func (c *coloredConsole) StepStart(stepText string) {
+	c.resetBuffers()
+	c.writer.Reset()
+
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
 	if Verbose {
@@ -95,16 +94,16 @@ func (c *coloredConsole) StepEnd(failed bool) {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
 		}
 		c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
-		c.resetBuffers()
 	} else {
 		if failed {
-			c.displayMessage(getFailureSymbol(), ct.Red)
+			c.displayMessage(getFailureSymbol()+newline, ct.Red)
 		} else {
 			c.displayMessage(getSuccessSymbol(), ct.Green)
-			c.resetBuffers()
 		}
 	}
+	c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	c.writer.Reset()
+	c.resetBuffers()
 	c.indentation -= stepIndentation
 }
 
@@ -130,8 +129,8 @@ func (c *coloredConsole) DataTable(table string) {
 func (c *coloredConsole) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args...)
 	logger.GaugeLog.Error(msg)
-	msg = indent(msg, c.indentation+errorIndentation)
-	c.displayMessage(newline+msg, ct.Red)
+	msg = indent(msg, c.indentation+errorIndentation) + newline
+	c.errorMessagesBuffer.WriteString(msg)
 }
 
 // Write writes the bytes to console via goterminal's writer.
@@ -153,4 +152,5 @@ func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
 func (c *coloredConsole) resetBuffers() {
 	c.headingBuffer.Reset()
 	c.pluginMessagesBuffer.Reset()
+	c.errorMessagesBuffer.Reset()
 }

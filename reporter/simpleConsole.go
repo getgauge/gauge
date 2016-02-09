@@ -116,7 +116,6 @@ func (sc *simpleConsole) Error(err string, args ...interface{}) {
 func (sc *simpleConsole) Write(b []byte) (int, error) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	formattedString := string(b)
-	fmt.Fprint(sc.writer, formattedString)
+	fmt.Fprint(sc.writer, string(b))
 	return len(b), nil
 }
