@@ -73,4 +73,4 @@ Please read the [guide](CONTRIBUTING.md) on contributing to Gauge.
 
 ## Copyright
 
-Copyright 2015 ThoughtWorks, Inc.
+Copyright 2016 ThoughtWorks, Inc.

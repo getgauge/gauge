@@ -148,7 +148,7 @@ func printVersion() {
 
 func printUsage() {
 	fmt.Printf("gauge -version %s\n", version.CurrentGaugeVersion.String())
-	fmt.Printf("Copyright %d Thoughtworks\n\n", time.Now().Year())
+	fmt.Printf("Copyright %d ThoughtWorks, Inc.\n\n", time.Now().Year())
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
 	fmt.Println("\tgauge specs/spec_name.spec")
