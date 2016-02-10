@@ -56,6 +56,25 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
 }
 
+func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
+	os.Clearenv()
+	os.Setenv("foo", "bar")
+	config.ProjectRoot = "testdata"
+
+	LoadEnv("default")
+
+	c.Assert(os.Getenv("foo"), Equals, "bar")
+}
+
+func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "testdata"
+
+	LoadEnv("default")
+
+	c.Assert(os.Getenv("property1"), Equals, "value1")
+}
+
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "testdata"
@@ -120,6 +139,17 @@ func (s *MySuite) TestPropertyCantBeOverwrittenIfNotSetToDefault(c *C) {
 	os.Setenv("gauge_reports_dir", "execution_reports")
 
 	canOverwrite := canOverwriteProperty("gauge_reports_dir")
+
+	c.Assert(canOverwrite, Equals, false)
+}
+
+func (s *MySuite) TestNonDefaultPropertyCantBeOverwrittenIfSet(c *C) {
+	os.Clearenv()
+	os.Setenv("foo", "bar")
+
+	loadDefaultProperties()
+
+	canOverwrite := canOverwriteProperty("foo")
 
 	c.Assert(canOverwrite, Equals, false)
 }

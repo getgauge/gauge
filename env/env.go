@@ -113,11 +113,11 @@ func canOverwriteProperty(property string) bool {
 	}
 
 	defaultVal, ok := defaultProperties[property]
-	if !ok {
-		return true
+	if ok {
+		return defaultVal == os.Getenv(property)
 	}
 
-	return defaultVal == os.Getenv(property)
+	return false
 }
 
 func isPropertySet(property string) bool {
