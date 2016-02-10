@@ -9,7 +9,7 @@ if [ -f $timestamp_file ] ; then
     oldTimeStamp=`cat $timestamp_file`
     if [ $currentTimeStamp != $oldTimeStamp ] ; then
         backupFile=$prefix/share/gauge/gauge.properties.bak
-        echo "There could be some changes in gauge.properties file. Taking a backup of it in $backupFile..."
+        echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at GAUGE_INSTALL_LOCATION\share\gauge\gauge.properties.bak. You can restore these configurations later."
         rm -rf $backupFile
         cat $gaugePropertiesFile > $backupFile
     fi
