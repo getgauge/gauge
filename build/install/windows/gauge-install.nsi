@@ -36,7 +36,7 @@
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
 ;Readme page
-;!insertmacro MUI_PAGE_README "readme.txt"
+!insertmacro MUI_PAGE_README "readme.txt"
 ; Finish page
 ;!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\readme.txt"
 !insertmacro MUI_PAGE_FINISH
