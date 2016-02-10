@@ -64,5 +64,8 @@ func IsProcessRunning(pid int) bool {
 	if err != nil {
 		return false
 	}
+	if IsWindows() {
+		return true
+	}
 	return process.Signal(syscall.Signal(0)) == nil
 }
