@@ -67,7 +67,7 @@ install_gauge() {
     echo "Copying files to $prefix"
     gaugePropertiesFile=$prefix/share/gauge/gauge.properties
     if [ -f $prefix/share/gauge/timestamp.txt ] ; then
-        currentTimeStamp=`stat -f "%m" $gaugePropertiesFile`
+        currentTimeStamp=`date +%s -r $gaugePropertiesFile`
         oldTimeStamp=`cat $prefix/share/gauge/timestamp.txt`
         if [ $currentTimeStamp != $oldTimeStamp ] ; then
             backupFile=$prefix/share/gauge/gauge.properties.bak
@@ -78,7 +78,7 @@ install_gauge() {
     fi
 
     cp -rf bin share $prefix
-    stat -f "%m" $gaugePropertiesFile > $prefix/share/gauge/timestamp.txt
+    date +%s -r $gaugePropertiesFile > $prefix/share/gauge/timestamp.txt
 
     set_gaugeroot
     echo "Gauge core successfully installed.\n"
