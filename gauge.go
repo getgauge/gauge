@@ -91,13 +91,13 @@ func main() {
 	} else if *installZip != "" && *installPlugin != "" {
 		install.InstallPluginFromZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {
-		install.DownloadAndInstallPlugin(*installPlugin, *pluginVersion, "Successfully installed plugin %s")
+		install.HandleInstallResult(install.InstallPlugin(*installPlugin, *pluginVersion), *installPlugin, true)
 	} else if *uninstallPlugin != "" {
 		install.UninstallPlugin(*uninstallPlugin, *pluginVersion)
 	} else if *installAll {
 		install.InstallAllPlugins()
 	} else if *update != "" {
-		install.DownloadAndInstallPlugin(*update, *pluginVersion, "Successfully updated plugin => %s")
+		install.HandleUpdateResult(install.InstallPlugin(*update, *pluginVersion), *update, true)
 	} else if *updateAll {
 		install.UpdatePlugins()
 	} else if *checkUpdates {
@@ -113,8 +113,7 @@ func main() {
 		if *refactorSteps != "" {
 			startChan := api.StartAPI()
 			if len(flag.Args()) != 1 {
-				logger.Errorf("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
-				os.Exit(1)
+				logger.Fatalf("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
 			}
 			refactor.RefactorSteps(*refactorSteps, flag.Args()[0], startChan)
 		} else if *daemonize {
@@ -128,8 +127,7 @@ func main() {
 			os.Exit(exitCode)
 		}
 	} else {
-		logger.Errorf(err.Error())
-		os.Exit(1)
+		logger.Fatalf(err.Error())
 	}
 }
 

@@ -127,7 +127,6 @@ func Validate(args []string) {
 		os.Exit(1)
 	}
 	logger.Info("No error found.")
-	os.Exit(0)
 }
 
 func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {

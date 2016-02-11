@@ -112,27 +112,26 @@ func ListTemplates() {
 	templatesURL := config.GaugeTemplatesUrl()
 	_, err := common.UrlExists(templatesURL)
 	if err != nil {
-		fmt.Printf("Gauge templates URL is not reachable: %s\n", err.Error())
-		os.Exit(1)
+		logger.Fatalf("Gauge templates URL is not reachable: %s\n", err.Error())
 	}
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
 	templatesPage, err := util.Download(templatesURL, tempDir)
 	if err != nil {
-		fmt.Printf("Error occurred while downloading templates list: %s\n", err.Error())
-		os.Exit(1)
+		util.Remove(tempDir)
+		logger.Fatalf("Error occurred while downloading templates list: %s\n", err.Error())
 	}
 
 	templatePageContents, err := common.ReadFileContents(templatesPage)
 	if err != nil {
-		fmt.Printf("Failed to read contents of file %s: %s\n", templatesPage, err.Error())
-		os.Exit(1)
+		util.Remove(tempDir)
+		logger.Fatalf("Failed to read contents of file %s: %s\n", templatesPage, err.Error())
 	}
 	templates := getTemplateNames(templatePageContents)
 	for _, template := range templates {
-		fmt.Println(template)
+		logger.Info(template)
 	}
-	fmt.Println("\nRun `gauge --init <template_name>` to create a new Gauge project.")
+	logger.Info("\nRun `gauge --init <template_name>` to create a new Gauge project.")
 }
 
 func getTemplateNames(text string) []string {
@@ -155,7 +154,7 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
-	if !install.IsCompatibleLanguagePluginInstalled(language) {
+	if !install.IsCompatiblePluginInstalled(language, true) {
 		logger.Info("Compatible %s plugin is not installed \n", language)
 		logger.Info("Installing plugin %s ... \n", language)
 
