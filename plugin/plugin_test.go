@@ -22,6 +22,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/version"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -54,43 +56,42 @@ func (s *MySuite) TestSortingOfPluginInfos(c *C) {
 	}
 }
 
-func (s *MySuite) TestGetPluginLatestVersion(c *C) {
+func (s *MySuite) TestGetLatestPluginPath(c *C) {
 	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
 
-	latestVersion, err := getPluginLatestVersion(path)
+	latestVersion, err := getLatestInstalledPlugin(path)
 
 	c.Assert(err, Equals, nil)
-	c.Assert(latestVersion.Major, Equals, 1)
-	c.Assert(latestVersion.Minor, Equals, 2)
-	c.Assert(latestVersion.Patch, Equals, 0)
+	c.Assert(latestVersion.Version.String(), Equals, "1.2.0")
+	c.Assert(latestVersion.Name, Equals, "java")
+	c.Assert(latestVersion.Path, Equals, filepath.Join(path, "1.2.0"))
 }
 
-func (s *MySuite) TestGetPluginLatestVersionIfNoPluginsFound(c *C) {
+func (s *MySuite) TestGetLatestPluginPathIfNoPluginsFound(c *C) {
 	testData := "_testdata"
 	path, _ := filepath.Abs(testData)
 
-	_, err := getPluginLatestVersion(path)
+	_, err := getLatestInstalledPlugin(path)
 
 	c.Assert(err.Error(), Equals, fmt.Sprintf("No valid versions of plugin %s found in %s", testData, path))
 }
 
-func (s *MySuite) TestGetLatestInstalledPluginVersionPath(c *C) {
+func (s *MySuite) TestGetLatestInstalledPlugin(c *C) {
 	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
 
-	vPath, err := GetLatestInstalledPluginVersionPath(path)
+	latestPlugin, err := getLatestInstalledPlugin(path)
 
 	c.Assert(err, Equals, nil)
-	c.Assert(vPath, Equals, filepath.Join(path, "1.2.0"))
+	c.Assert(latestPlugin.Path, Equals, filepath.Join(path, "1.2.0"))
 }
 
-func (s *MySuite) TestGetLatestInstalledPluginVersionPathIfNoPluginsFound(c *C) {
+func (s *MySuite) TestGetLatestInstalledPluginIfNoPluginsFound(c *C) {
 	testData := "_testdata"
 	path, _ := filepath.Abs(testData)
 
-	vPath, err := GetLatestInstalledPluginVersionPath(path)
+	_, err := getLatestInstalledPlugin(path)
 
 	c.Assert(err.Error(), Equals, fmt.Sprintf("No valid versions of plugin %s found in %s", testData, path))
-	c.Assert(vPath, Equals, "")
 }
 
 func (s *MySuite) TestGetPluginDescriptorFromJSON(c *C) {
@@ -100,7 +101,7 @@ func (s *MySuite) TestGetPluginDescriptorFromJSON(c *C) {
 	pd, err := GetPluginDescriptorFromJSON(filepath.Join(path, "_test.json"))
 
 	c.Assert(err, Equals, nil)
-	c.Assert(pd.Id, Equals, "html-report")
+	c.Assert(pd.ID, Equals, "html-report")
 	c.Assert(pd.Version, Equals, "1.1.0")
 	c.Assert(pd.Name, Equals, "Html Report")
 	c.Assert(pd.Description, Equals, "Html reporting plugin")
@@ -121,4 +122,60 @@ func (s *MySuite) TestGetPluginDescriptorFromNonExistingJSON(c *C) {
 	_, err := GetPluginDescriptorFromJSON(JSONPath)
 
 	c.Assert(err, DeepEquals, fmt.Errorf("File %s doesn't exist.", JSONPath))
+}
+
+func (s *MySuite) TestGetStablePluginAmongGivenPluginsOfAVersion(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2"}
+	plugins := []PluginInfo{pluginInfo1}
+	latestBuild := getLatestOf(plugins, v)
+	c.Assert(latestBuild.Version, Equals, v)
+
+	pluginInfo2 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-09"}
+	plugins = []PluginInfo{pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+	c.Assert(latestBuild.Version, Equals, v)
+
+	pluginInfo1.Path = "0.2.2.nightly-2015-02-03"
+	pluginInfo2.Path = "0.2.2.nightly-2016-02-09"
+	pluginInfo3 := PluginInfo{Version: v, Path: "0.2.2.nightly-2017-02-09"}
+	plugins = []PluginInfo{pluginInfo1, pluginInfo3, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo3.Path)
+	c.Assert(latestBuild.Version, Equals, v)
+
+	pluginInfo1.Path = "0.2.2.nightly-2015-02-03"
+	pluginInfo2.Path = "0.2.2.nightly-2016-02-04"
+	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+	c.Assert(latestBuild.Version, Equals, v)
+
+	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
+	pluginInfo2.Path = "0.2.2.nightly-2015-02-03"
+	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+
+	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
+	pluginInfo2.Path = "0.2.2.nightly-2016-02-03"
+	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+
+	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
+	pluginInfo2.Path = "0.2.2.nightly-2017-02-03"
+	pluginInfo2.Path = "0.2.2.nightly-2016-02-03"
+	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+
+	pluginInfo1.Path = "0.2.2.nightly-2017-01-03"
+	pluginInfo2.Path = "0.2.2.nightly-2017-01-05"
+	pluginInfo2.Path = "0.2.2.nightly-2017-01-04"
+	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild = getLatestOf(plugins, v)
+	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
 }

@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"fmt"
+
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
 )
@@ -93,16 +94,37 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 }
 
 func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
-	err := installRunnerFromDir("test_resources/notPresent.zip", "ruby")
+	err := installRunnerFromDir("test_resources/notPresent.zip", "ruby", "")
 	c.Assert(err.Error(), Equals, fmt.Sprintf("File %s doesn't exist.", filepath.Join("test_resources", "notPresent.zip", "ruby.json")))
 }
 
 func (s *MySuite) TestInstallPlugin(c *C) {
-	err := installPluginFromDir("version")
+	err := installPluginFromDir("version", "")
 	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", pluginJSON)+" doesn't exist.")
 }
 
 func (s *MySuite) TestInstallRunnerFromDir(c *C) {
-	err := installRunnerFromDir("version", "java")
+	err := installRunnerFromDir("version", "java", "")
 	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", "java"+jsonExt)+" doesn't exist.")
+}
+
+func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
+	name := getVersionedPluginDirName("abcd/foo/bar/html-report-2.0.1.nightly-2016-02-09-darwin.x86.zip")
+	c.Assert(name, Equals, "2.0.1.nightly-2016-02-09")
+
+	name = getVersionedPluginDirName("abcd/foo/bar/xml-report-2.0.1.nightly-2016-02-09-darwin.x86.zip")
+	c.Assert(name, Equals, "2.0.1.nightly-2016-02-09")
+
+	name = getVersionedPluginDirName("abcd/foo/bar/html-report-0.3.4-windows.x86_64.zip")
+	c.Assert(name, Equals, "")
+
+	name = getVersionedPluginDirName("abcd/foo/bar/gauge-java-0.3.4.nightly-2016-02-09-linux.x86.zip")
+	c.Assert(name, Equals, "0.3.4.nightly-2016-02-09")
+
+	name = getVersionedPluginDirName("abcd/foo/bar/gauge-java-0.3.4-linux.x86_64.zip")
+	c.Assert(name, Equals, "")
+
+	name = getVersionedPluginDirName("abcd/foo/gauge-ruby-0.1.2.nightly-2016-02-09-linux.x86.zip")
+	c.Assert(name, Equals, "0.1.2.nightly-2016-02-09")
+
 }

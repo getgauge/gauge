@@ -50,7 +50,7 @@ const (
 )
 
 type pluginDescriptor struct {
-	Id          string
+	ID          string
 	Version     string
 	Name        string
 	Description string
@@ -205,7 +205,7 @@ func StartPlugin(pd *pluginDescriptor, action string) (*plugin, error) {
 }
 
 func SetEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
-	pluginEnvVars[fmt.Sprintf("%s_action", pd.Id)] = action
+	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = action
 	pluginEnvVars["test_language"] = manifest.Language
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
 		return err
@@ -224,7 +224,7 @@ func setEnvironmentProperties(properties map[string]string) error {
 
 func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bool {
 	for _, pluginID := range manifest.Plugins {
-		if pluginID == descriptor.Id {
+		if pluginID == descriptor.ID {
 			return true
 		}
 	}
@@ -328,16 +328,16 @@ func (handler *Handler) GracefullyKillPlugins() {
 	wg.Wait()
 }
 
-func (plugin *plugin) sendMessage(message *gauge_messages.Message) error {
+func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	messageID := common.GetUniqueID()
 	message.MessageId = &messageID
 	messageBytes, err := proto.Marshal(message)
 	if err != nil {
 		return err
 	}
-	err = conn.Write(plugin.connection, messageBytes)
+	err = conn.Write(p.connection, messageBytes)
 	if err != nil {
-		return fmt.Errorf("[Warning] Failed to send message to plugin: %s  %s", plugin.descriptor.Id, err.Error())
+		return fmt.Errorf("[Warning] Failed to send message to plugin: %s  %s", p.descriptor.ID, err.Error())
 	}
 	return nil
 }
@@ -348,41 +348,49 @@ func StartPlugins(manifest *manifest.Manifest) *Handler {
 	return pluginHandler
 }
 
-func getPluginLatestVersion(pluginDir string) (*version.Version, error) {
+func getLatestInstalledPlugin(pluginDir string) (*PluginInfo, error) {
 	files, err := ioutil.ReadDir(pluginDir)
 	if err != nil {
 		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
 	}
-	var availableVersions []*version.Version
+	versionToPlugins := make(map[*version.Version][]PluginInfo, 0)
+	pluginName := filepath.Base(pluginDir)
 
 	for _, file := range files {
 		if file.IsDir() {
-			version, err := version.ParseVersion(file.Name())
+			var v *version.Version
+			var err error
+			if strings.Contains(file.Name(), "nightly") {
+				v, err = version.ParseVersion(file.Name()[:strings.LastIndex(file.Name(), ".")])
+			} else {
+				v, err = version.ParseVersion(file.Name())
+			}
 			if err == nil {
-				availableVersions = append(availableVersions, version)
+				versionToPlugins[v] = append(versionToPlugins[v], PluginInfo{pluginName, v, filepath.Join(pluginDir, file.Name())})
 			}
 		}
 	}
-	pluginName := filepath.Base(pluginDir)
 
-	if len(availableVersions) < 1 {
+	if len(versionToPlugins) < 1 {
 		return nil, fmt.Errorf("No valid versions of plugin %s found in %s", pluginName, pluginDir)
 	}
-	latestVersion := version.GetLatestVersion(availableVersions)
-	return latestVersion, nil
-}
-
-func GetLatestInstalledPluginVersionPath(pluginDir string) (string, error) {
-	latestVersion, err := getPluginLatestVersion(pluginDir)
-	if err != nil {
-		return "", err
+	var availableVersions []*version.Version
+	for k := range versionToPlugins {
+		availableVersions = append(availableVersions, k)
 	}
-	return filepath.Join(pluginDir, latestVersion.String()), nil
+	latestVersion := version.GetLatestVersion(availableVersions)
+	latestBuild := getLatestOf(versionToPlugins[latestVersion], latestVersion)
+	return &latestBuild, nil
 }
 
-type PluginInfo struct {
-	Name    string
-	Version version.Version
+func getLatestOf(plugins []PluginInfo, latestVersion *version.Version) PluginInfo {
+	for _, v := range plugins {
+		if v.Path == latestVersion.String() {
+			return v
+		}
+	}
+	sort.Sort(byPath(plugins))
+	return plugins[0]
 }
 
 func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
@@ -402,20 +410,20 @@ func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
 				continue
 			}
 			if pluginDir.IsDir() {
-				latestVersion, err := getPluginLatestVersion(filepath.Join(prefix, file.Name()))
+				latestPlugin, err := getLatestInstalledPlugin(filepath.Join(prefix, file.Name()))
 				if err != nil {
 					continue
 				}
 				pluginAdded, repeated := allPlugins[file.Name()]
 				if repeated {
 					var availableVersions []*version.Version
-					availableVersions = append(availableVersions, &pluginAdded.Version, latestVersion)
+					availableVersions = append(availableVersions, pluginAdded.Version, latestPlugin.Version)
 					latest := version.GetLatestVersion(availableVersions)
-					if latest == latestVersion {
-						allPlugins[file.Name()] = PluginInfo{Name: file.Name(), Version: *latestVersion}
+					if latest.IsEqualTo(latestPlugin.Version) {
+						allPlugins[file.Name()] = *latestPlugin
 					}
 				} else {
-					allPlugins[file.Name()] = PluginInfo{Name: file.Name(), Version: *latestVersion}
+					allPlugins[file.Name()] = *latestPlugin
 				}
 			}
 		}
@@ -423,20 +431,35 @@ func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
 	return sortPlugins(allPlugins), nil
 }
 
-type ByPluginName []PluginInfo
+type PluginInfo struct {
+	Name    string
+	Version *version.Version
+	Path    string
+}
 
-func (a ByPluginName) Len() int      { return len(a) }
-func (a ByPluginName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a ByPluginName) Less(i, j int) bool {
+type byPluginName []PluginInfo
+
+func (a byPluginName) Len() int      { return len(a) }
+func (a byPluginName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byPluginName) Less(i, j int) bool {
 	return a[i].Name < a[j].Name
 }
+
 func sortPlugins(allPlugins map[string]PluginInfo) []PluginInfo {
 	var installedPlugins []PluginInfo
 	for _, plugin := range allPlugins {
 		installedPlugins = append(installedPlugins, plugin)
 	}
-	sort.Sort(ByPluginName(installedPlugins))
+	sort.Sort(byPluginName(installedPlugins))
 	return installedPlugins
+}
+
+type byPath []PluginInfo
+
+func (a byPath) Len() int      { return len(a) }
+func (a byPath) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
+func (a byPath) Less(i, j int) bool {
+	return a[i].Path > a[j].Path
 }
 
 func GetPluginsInfo() []PluginInfo {
@@ -458,10 +481,11 @@ func GetInstallDir(pluginName, version string) (string, error) {
 	if version != "" {
 		pluginDir = filepath.Join(pluginDir, version)
 	} else {
-		pluginDir, err = GetLatestInstalledPluginVersionPath(pluginDir)
+		latestPlugin, err := getLatestInstalledPlugin(pluginDir)
 		if err != nil {
 			return "", err
 		}
+		pluginDir = latestPlugin.Path
 	}
 	return pluginDir, nil
 }

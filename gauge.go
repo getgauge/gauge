@@ -20,6 +20,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/getgauge/gauge/api"
@@ -88,7 +89,7 @@ func main() {
 	} else if *initialize != "" {
 		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
-		install.InstallPluginZip(*installZip, *installPlugin)
+		install.InstallPluginFromZip(*installZip, *installPlugin)
 	} else if *installPlugin != "" {
 		install.DownloadAndInstallPlugin(*installPlugin, *pluginVersion, "Successfully installed plugin %s")
 	} else if *uninstallPlugin != "" {
@@ -142,7 +143,7 @@ func printVersion() {
 		os.Exit(0)
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
-		fmt.Printf("%s (%s)\n", pluginInfo.Name, pluginInfo.Version.String())
+		fmt.Printf("%s (%s)\n", pluginInfo.Name, filepath.Base(pluginInfo.Path))
 	}
 }
 

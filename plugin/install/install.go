@@ -24,6 +24,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"sort"
 	"strings"
@@ -92,6 +93,7 @@ func installSuccess(warning string) installResult {
 	return installResult{Warning: warning, Success: true}
 }
 
+// InstallPlugin download and install the latest plugin(if version not specified) of given plugin name
 func InstallPlugin(pluginName, version string) installResult {
 	installDescription, result := getInstallDescription(pluginName)
 	if !result.Success {
@@ -190,6 +192,8 @@ func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc 
 	return err
 }
 
+// UninstallPlugin uninstall the given plugin of the given version
+// If version is not specified, it uninstalls all the versions of given plugin
 func UninstallPlugin(pluginName string, version string) {
 	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
@@ -302,7 +306,8 @@ func (installDesc *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(byDecreasingVersion(installDesc.Versions))
 }
 
-func InstallPluginZip(zipFile string, pluginName string) {
+// InstallPluginFromZip installs the specified plugin using the given zip file
+func InstallPluginFromZip(zipFile string, pluginName string) {
 	tempDir := common.GetTempDir()
 	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
 	defer common.Remove(tempDir)
@@ -313,10 +318,11 @@ func InstallPluginZip(zipFile string, pluginName string) {
 	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 
 	hasPluginJSON := common.FileExists(filepath.Join(unzippedPluginDir, pluginJSON))
+	pluginDirName := getVersionedPluginDirName(zipFile)
 	if hasPluginJSON {
-		err = installPluginFromDir(unzippedPluginDir)
+		err = installPluginFromDir(unzippedPluginDir, pluginDirName)
 	} else {
-		err = installRunnerFromDir(unzippedPluginDir, pluginName)
+		err = installRunnerFromDir(unzippedPluginDir, pluginName, pluginDirName)
 	}
 	if err != nil {
 		common.Remove(tempDir)
@@ -325,20 +331,35 @@ func InstallPluginZip(zipFile string, pluginName string) {
 	logger.Info("Successfully installed plugin from file.")
 }
 
-func installPluginFromDir(unzippedPluginDir string) error {
+func getVersionedPluginDirName(pluginZip string) string {
+	zipFileName := path.Base(pluginZip)
+	if !strings.Contains(zipFileName, "nightly") {
+		return ""
+	}
+	re, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+.nightly-[0-9]+-[0-9]+-[0-9]+")
+	return re.FindString(zipFileName)
+}
+
+func installPluginFromDir(unzippedPluginDir string, pluginDirName string) error {
 	pd, err := plugin.GetPluginDescriptorFromJSON(filepath.Join(unzippedPluginDir, pluginJSON))
 	if err != nil {
 		return err
 	}
-	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.Id, pd.Version)
+	if pluginDirName == "" {
+		pluginDirName = pd.Version
+	}
+	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.ID, pluginDirName)
 }
 
-func installRunnerFromDir(unzippedPluginDir string, language string) error {
+func installRunnerFromDir(unzippedPluginDir string, language string, pluginDirName string) error {
 	r, err := getRunnerJSONContents(filepath.Join(unzippedPluginDir, language+jsonExt))
 	if err != nil {
 		return err
 	}
-	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, r.Id, r.Version)
+	if pluginDirName == "" {
+		pluginDirName = r.Version
+	}
+	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, r.Id, pluginDirName)
 }
 
 func getRunnerJSONContents(file string) (*runner.Runner, error) {
@@ -354,21 +375,22 @@ func getRunnerJSONContents(file string) (*runner.Runner, error) {
 	return &r, nil
 }
 
-func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string, version string) error {
-	logger.Info("Installing Plugin %s %s", pluginID, version)
+func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string, versionedPluginDirName string) error {
+	logger.Info("Installing Plugin %s %s", pluginID, versionedPluginDirName)
 
 	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
 		return err
 	}
-	versionedPluginDir := path.Join(pluginsDir, pluginID, version)
-	if common.DirExists(versionedPluginDir) {
-		return fmt.Errorf("Plugin %s %s already installed at %s", pluginID, version, versionedPluginDir)
+	versionedPluginDirPath := path.Join(pluginsDir, pluginID, versionedPluginDirName)
+	if common.DirExists(versionedPluginDirPath) {
+		return fmt.Errorf("Plugin %s %s already installed at %s", pluginID, versionedPluginDirName, versionedPluginDirPath)
 	}
-	_, err = common.MirrorDir(unzippedPluginDir, versionedPluginDir)
+	_, err = common.MirrorDir(unzippedPluginDir, versionedPluginDirPath)
 	return err
 }
 
+// InstallAllPlugins install the latest version of all plugins specified in Gauge project manifest file
 func InstallAllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
@@ -377,6 +399,7 @@ func InstallAllPlugins() {
 	installPluginsFromManifest(manifest)
 }
 
+// UpdatePlugins updates all the currently installed plugins to its latest version
 func UpdatePlugins() {
 	var failedPlugin []string
 	for _, pluginInfo := range plugin.GetPluginsInfo() {
@@ -515,6 +538,6 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	if plugin.IsPluginAdded(manifest, pd) {
 		return fmt.Errorf("Plugin %s is already added.", pd.Name)
 	}
-	manifest.Plugins = append(manifest.Plugins, pd.Id)
+	manifest.Plugins = append(manifest.Plugins, pd.ID)
 	return manifest.Save()
 }
