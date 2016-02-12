@@ -420,6 +420,7 @@ func UpdatePlugins() {
 }
 
 // HandleInstallResult handles the result of plugin Installation
+// TODO: Merge both HandleInstallResult and HandleUpdateResult, eliminate boolean exitIfFailure
 func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
 	if !result.Success {
 		logger.Errorf("Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
