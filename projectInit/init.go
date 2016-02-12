@@ -231,28 +231,3 @@ func createProjectTemplate(language string) error {
 
 	return runner.ExecuteInitHookForRunner(language)
 }
-
-// SetWorkingDir sets the current working directory to specified location
-func SetWorkingDir(workingDir string) {
-	targetDir, err := filepath.Abs(workingDir)
-	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
-	}
-
-	if !common.DirExists(targetDir) {
-		err = os.Mkdir(targetDir, 0777)
-		if err != nil {
-			logger.Fatalf("Unable to set working directory : %s", err.Error())
-		}
-	}
-
-	err = os.Chdir(targetDir)
-	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
-	}
-
-	_, err = os.Getwd()
-	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
-	}
-}

@@ -75,7 +75,7 @@ var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the
 
 func main() {
 	flag.Parse()
-	projectInit.SetWorkingDir(*workingDir)
+	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
