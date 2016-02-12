@@ -56,3 +56,9 @@ function navi(e){
 	c.Assert(names[4], Equals, "maven_123")
 	c.Assert(names[5], Equals, "ruby")
 }
+
+func (s *MySuite) TestGetTemplateLanguage(c *C) {
+	c.Assert(getTemplateLangauge("java"), Equals, "java")
+	c.Assert(getTemplateLangauge("java_maven"), Equals, "java")
+	c.Assert(getTemplateLangauge("java_maven_selenium"), Equals, "java")
+}

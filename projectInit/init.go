@@ -85,6 +85,10 @@ func getTemplateURL(templateName string) string {
 	return config.GaugeTemplatesUrl() + "/" + templateName + ".zip"
 }
 
+func getTemplateLangauge(templateName string) string {
+	return strings.Split(templateName, "_")[0]
+}
+
 // InitializeProject initializes a Gauge project with specified template
 func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
@@ -102,9 +106,16 @@ func InitializeProject(templateName string) {
 	}
 
 	if err != nil {
-		logger.Fatalf("Failed to initialize. %s", err.Error())
+		logger.Fatalf("Failed to initialize project. %s", err.Error())
 	}
-	logger.Info("\nSuccessfully initialized the project. Run specifications with \"gauge specs/\"")
+	logger.Info("Successfully initialized the project. Run specifications with \"gauge specs/\"\n")
+
+	language := getTemplateLangauge(templateName)
+	if !install.IsCompatiblePluginInstalled(language, true) {
+		logger.Info("Compatible langauge plugin %s is not installed. Installing plugin...", language)
+
+		install.HandleInstallResult(install.InstallPlugin(language, ""), language, true)
+	}
 }
 
 // ListTemplates lists all the Gauge templates available in GaugeTemplatesURL
@@ -154,14 +165,6 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
-	if !install.IsCompatiblePluginInstalled(language, true) {
-		logger.Info("Compatible %s plugin is not installed \n", language)
-		logger.Info("Installing plugin %s ... \n", language)
-
-		if result := install.InstallPlugin(language, ""); !result.Success {
-			return fmt.Errorf("Failed to install plugin %s . %s \n", language, result.Error.Error())
-		}
-	}
 	// Create the project manifest
 	showMessage("create", common.ManifestFile)
 	if common.FileExists(common.ManifestFile) {
