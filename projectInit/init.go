@@ -65,7 +65,7 @@ func initializeTemplate(templateName string) error {
 	}
 
 	if metadata.PostInstallCmd != "" {
-		command := strings.Split(metadata.PostInstallCmd, " ")
+		command := strings.Fields(metadata.PostInstallCmd)
 		cmd, err := common.ExecuteSystemCommand(command, wd, os.Stdout, os.Stderr)
 		cmd.Wait()
 		if err != nil {
@@ -123,20 +123,20 @@ func ListTemplates() {
 	templatesURL := config.GaugeTemplatesUrl()
 	_, err := common.UrlExists(templatesURL)
 	if err != nil {
-		logger.Fatalf("Gauge templates URL is not reachable: %s\n", err.Error())
+		logger.Fatalf("Gauge templates URL is not reachable: %s", err.Error())
 	}
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
 	templatesPage, err := util.Download(templatesURL, tempDir)
 	if err != nil {
 		util.Remove(tempDir)
-		logger.Fatalf("Error occurred while downloading templates list: %s\n", err.Error())
+		logger.Fatalf("Error occurred while downloading templates list: %s", err.Error())
 	}
 
 	templatePageContents, err := common.ReadFileContents(templatesPage)
 	if err != nil {
 		util.Remove(tempDir)
-		logger.Fatalf("Failed to read contents of file %s: %s\n", templatesPage, err.Error())
+		logger.Fatalf("Failed to read contents of file %s: %s", templatesPage, err.Error())
 	}
 	templates := getTemplateNames(templatePageContents)
 	for _, template := range templates {
