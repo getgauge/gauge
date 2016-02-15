@@ -61,11 +61,12 @@ func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
 // IsProcessRunning checks if the process with the given process id is still running
 func IsProcessRunning(pid int) bool {
 	process, err := os.FindProcess(pid)
-	if !IsWindows() {
-		return process.Signal(syscall.Signal(0)) == nil
-	}
 	if err != nil {
 		return false
+	}
+
+	if !IsWindows() {
+		return process.Signal(syscall.Signal(0)) == nil
 	}
 
 	processState, err := process.Wait()
