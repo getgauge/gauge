@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
@@ -52,6 +53,7 @@ const (
 	CC                 = "CC"
 	pkg                = ".pkg"
 	packagesBuild      = "packagesbuild"
+	nightlyDatelayout  = "2006-01-02"
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
@@ -98,7 +100,11 @@ func signExecutable(exeFilePath string, certFilePath string, certFilePwd string)
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	runProcess("go", "build", "-o", executablePath)
+	buildMetadata := ""
+	if *nightly {
+		buildMetadata = fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=nightly-%s", time.Now().Format(nightlyDatelayout))
+	}
+	runProcess("go", "build", "-ldflags", buildMetadata, "-o", executablePath)
 	compileGaugeScreenshot()
 }
 
@@ -198,6 +204,7 @@ type compileFunc func()
 var test = flag.Bool("test", false, "Run the test cases")
 var coverage = flag.Bool("coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
+var nightly = flag.Bool("nightly", false, "Add nightly build information")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")

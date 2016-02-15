@@ -18,6 +18,7 @@
 package version
 
 import (
+	"fmt"
 	"testing"
 
 	. "gopkg.in/check.v1"
@@ -185,4 +186,10 @@ func (s *MySuite) TestCheckVersionCompatibilityFailure(c *C) {
 	gaugeVersion = &Version{0, 0, 9}
 	c.Assert(CheckCompatibility(gaugeVersion, versionsSupported), NotNil)
 
+}
+
+func (s *MySuite) TestFullVersionWithBuildMetadata(c *C) {
+	c.Assert(FullVersion(), Equals, CurrentGaugeVersion.String())
+	BuildMetadata = "nightly-2016-02-21"
+	c.Assert(FullVersion(), Equals, fmt.Sprintf("%s.%s", CurrentGaugeVersion.String(), BuildMetadata))
 }

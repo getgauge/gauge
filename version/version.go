@@ -24,7 +24,11 @@ import (
 	"strings"
 )
 
+// CurrentGaugeVersion represents the current version of Gauge
 var CurrentGaugeVersion = &Version{0, 3, 3}
+
+// BuildMetadata represents build information of current release (e.g, nightly build information)
+var BuildMetadata = ""
 
 type Version struct {
 	Major int
@@ -116,6 +120,15 @@ func IsEqual(first, second int) bool {
 
 func (Version *Version) String() string {
 	return fmt.Sprintf("%d.%d.%d", Version.Major, Version.Minor, Version.Patch)
+}
+
+// FullVersion returns the CurrentGaugeVersion including build metadata.
+func FullVersion() string {
+	var metadata string
+	if BuildMetadata != "" {
+		metadata = fmt.Sprintf(".%s", BuildMetadata)
+	}
+	return fmt.Sprintf("%s%s", CurrentGaugeVersion.String(), metadata)
 }
 
 type byDecreasingVersion []*Version

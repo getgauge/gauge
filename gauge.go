@@ -132,7 +132,7 @@ func main() {
 }
 
 func printVersion() {
-	fmt.Printf("Gauge version: %s\n\n", version.CurrentGaugeVersion.String())
+	fmt.Printf("Gauge version: %s\n\n", version.FullVersion())
 	fmt.Println("Plugins\n-------")
 	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
@@ -146,7 +146,7 @@ func printVersion() {
 }
 
 func printUsage() {
-	fmt.Printf("gauge -version %s\n", version.CurrentGaugeVersion.String())
+	fmt.Printf("gauge -version %s\n", version.FullVersion())
 	fmt.Printf("Copyright %d ThoughtWorks, Inc.\n\n", time.Now().Year())
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
