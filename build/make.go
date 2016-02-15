@@ -53,7 +53,6 @@ const (
 	CC                 = "CC"
 	pkg                = ".pkg"
 	packagesBuild      = "packagesbuild"
-	nightlyDatelayout  = "2006-01-02"
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
@@ -243,7 +242,7 @@ var (
 func main() {
 	flag.Parse()
 	if *nightly {
-		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
+		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(common.NightlyDatelayout))
 	}
 	if *test {
 		runTests(*coverage)
