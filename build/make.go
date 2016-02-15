@@ -98,13 +98,18 @@ func signExecutable(exeFilePath string, certFilePath string, certFilePwd string)
 	}
 }
 
+var buildMetadata string
+
+func getBuildVersion() string {
+	if buildMetadata != "" {
+		return fmt.Sprintf("%s.%s", version.CurrentGaugeVersion.String(), buildMetadata)
+	}
+	return version.CurrentGaugeVersion.String()
+}
+
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	buildMetadata := ""
-	if *nightly {
-		buildMetadata = fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=nightly-%s", time.Now().Format(nightlyDatelayout))
-	}
-	runProcess("go", "build", "-ldflags", buildMetadata, "-o", executablePath)
+	runProcess("go", "build", "-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata="+buildMetadata, "-o", executablePath)
 	compileGaugeScreenshot()
 }
 
@@ -237,6 +242,9 @@ var (
 
 func main() {
 	flag.Parse()
+	if *nightly {
+		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
+	}
 	if *test {
 		runTests(*coverage)
 	} else if *install {
@@ -293,7 +301,7 @@ func createWindowsDistro() {
 }
 
 func createWindowsInstaller() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
 	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
 	installerFileName := filepath.Join(filepath.Dir(distroDir), packageName)
 	if err != nil {
@@ -301,7 +309,7 @@ func createWindowsInstaller() {
 	}
 	copyGaugeFiles(distroDir)
 	runProcess("makensis.exe",
-		fmt.Sprintf("/DPRODUCT_VERSION=%s", version.CurrentGaugeVersion.String()),
+		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
@@ -313,12 +321,12 @@ func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeFiles(distroDir)
 	runProcess(packagesBuild, "-v", darwinPackageProject)
-	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix(), pkg)))
+	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
 	os.RemoveAll(distroDir)
 }
 
 func createLinuxPackage() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, version.CurrentGaugeVersion.String(), getGOOS(), getPackageArchSuffix())
+	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
 	distroDir := filepath.Join(deploy, packageName)
 	copyGaugeFiles(distroDir)
 	createZipFromUtil(deploy, packageName)
