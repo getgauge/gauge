@@ -42,32 +42,13 @@ for f in `ls`; do
     mv "$f" "`echo $f | tr '[:upper:]' '[:lower:]'`"
 done
 
-VERSION=$(ls $PACKAGE_FILE_PREFIX* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | cut -d '-' -f 1);
-
-if [ "$NOVERSION" == "1" ]; then
-    VERSION="latest"
-    echo "Not checking for package version"
-    for f in $PACKAGE_FILE_PREFIX*;
-      do mv "$f" "`echo $f | sed s/$PACKAGE_FILE_PREFIX/$PACKAGE_FILE_PREFIX-$VERSION/`";
-    done
-else
-    if [ -z "$VERSION" ]; then
-        echo "Could not determine $PACKAGE version"
-        exit 1
-    fi
-fi
+VERSION=$(ls $PACKAGE_FILE_PREFIX* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
 
 echo "Version to be uploaded: $VERSION"
 
-CURR_DATE=$(date +"%Y-%m-%d")
-
-for f in $PACKAGE_FILE_PREFIX*;
-  do mv "$f" "`echo $f | sed s/$VERSION/$VERSION.$PACKAGE_TYPE-$CURR_DATE/`";
-done
-
 for i in `ls`; do
   PLATFORM=$( getPlatformFromFileName $i )
-  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION.$PACKAGE_TYPE-$CURR_DATE/$PLATFORM$i?publish=1&override=1"
+  URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION/$PLATFORM$i?publish=1&override=1"
 
   echo "Uploading to : $URL"
 
