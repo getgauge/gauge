@@ -117,8 +117,8 @@ function printMeta () {
     echo "Version to be uploaded: $VERSION"
 }
 
-setVersion
 renameToLowerCase
+setVersion
 renameNoVersion
 renameWithTimestamp
 setVersion
