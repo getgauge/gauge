@@ -25,8 +25,8 @@ if [ -z "$BINTRAY_PACKAGE" ]; then
     BINTRAY_PACKAGE="Nightly"
 fi
 
-if [ "$1" == "--rename" ]; then
-    RENAME=1
+if [ -z "$RENAME" ]; then
+    RENAME=0
 fi
 
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
