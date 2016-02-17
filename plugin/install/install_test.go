@@ -146,8 +146,9 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 }
 
 func (s *MySuite) TestIsValidGaugePluginDir(c *C) {
-	c.Assert(isValidGaugePluginDir("0.3.3"), Equals, true)
-	c.Assert(isValidGaugePluginDir("a0.3.3"), Equals, false)
-	c.Assert(isValidGaugePluginDir("blah"), Equals, false)
-	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02"), Equals, true)
+	c.Assert(isValidGaugePluginDir("0.3.3", ""), Equals, true)
+	c.Assert(isValidGaugePluginDir("a0.3.3", ""), Equals, false)
+	c.Assert(isValidGaugePluginDir("blah", ""), Equals, false)
+	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02", ""), Equals, true)
+	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02", "0.3.4"), Equals, false)
 }

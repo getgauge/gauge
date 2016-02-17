@@ -130,7 +130,6 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if err != nil {
 		return installError(err)
 	}
-	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
 
 	gp, err := getGaugePlugin(unzippedPluginDir, pluginName)
 	if err != nil {
@@ -257,8 +256,8 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 		return nil
 	}
 
-	logger.Info("Running plugin install command => %s\n", command)
-	cmd, err := common.ExecuteCommand(command, workingDir, os.Stdout, os.Stderr)
+	logger.Info("Running plugin install command => %s", command)
+	cmd, err := common.ExecuteSystemCommand(command, workingDir, os.Stdout, os.Stderr)
 
 	if err != nil {
 		return err
@@ -279,7 +278,7 @@ func UninstallPlugin(pluginName string, version string) {
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && dir != pluginsDir && isValidGaugePluginDir(path.Base(dir)) {
+		if err == nil && info.IsDir() && dir != pluginsDir && isValidGaugePluginDir(path.Base(dir), version) {
 			if err := uninstallVersionOfPlugin(dir, pluginName); err != nil {
 				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
 				failed = true
@@ -292,9 +291,9 @@ func UninstallPlugin(pluginName string, version string) {
 	}
 }
 
-func isValidGaugePluginDir(dir string) bool {
+func isValidGaugePluginDir(dir string, version string) bool {
 	re, _ := regexp.Compile("^[0-9]+.[0-9]+.[0-9]+")
-	return re.FindString(dir) != ""
+	return strings.HasPrefix(path.Base(dir), version) && re.FindString(dir) != ""
 }
 
 func uninstallVersionOfPlugin(pluginDir, pluginName string) error {
