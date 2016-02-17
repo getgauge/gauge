@@ -256,7 +256,7 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 		return nil
 	}
 
-	logger.Info("Running plugin install command => %s", command)
+	logger.Info("Running plugin hook command => %s", command)
 	cmd, err := common.ExecuteSystemCommand(command, workingDir, os.Stdout, os.Stderr)
 
 	if err != nil {
