@@ -86,12 +86,107 @@ func (installResult *InstallResult) getMessage() string {
 	return installResult.Error.Error()
 }
 
-func installError(err string) InstallResult {
-	return InstallResult{Error: errors.New(err), Success: false}
+func installError(err error) InstallResult {
+	return InstallResult{Error: err, Success: false}
 }
 
 func installSuccess(warning string) InstallResult {
 	return InstallResult{Warning: warning, Success: true}
+}
+
+// GaugePlugin represents any plugin to Gauge. It can be an language runner or any other plugin.
+type GaugePlugin struct {
+	ID          string
+	Version     string
+	Description string
+	PreInstall  struct {
+		Windows []string
+		Linux   []string
+		Darwin  []string
+	}
+	PostInstall struct {
+		Windows []string
+		Linux   []string
+		Darwin  []string
+	}
+	PreUnInstall struct {
+		Windows []string
+		Linux   []string
+		Darwin  []string
+	}
+	PostUnInstall struct {
+		Windows []string
+		Linux   []string
+		Darwin  []string
+	}
+	GaugeVersionSupport version.VersionSupport
+}
+
+// InstallPluginFromZipFile installs plugin from given zip file
+func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
+	tempDir := common.GetTempDir()
+	defer common.Remove(tempDir)
+	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
+	if err != nil {
+		return installError(err)
+	}
+	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
+
+	gp, err := getGaugePlugin(unzippedPluginDir, pluginName)
+	if err != nil {
+		return installError(err)
+	}
+
+	if err = runPlatformCommands(gp.PreInstall, unzippedPluginDir); err != nil {
+		return installError(err)
+	}
+
+	pluginInstallDir, err := getPluginInstallDir(gp.ID, getVersionedPluginDirName(zipFile))
+	if err != nil {
+		return installError(err)
+	}
+
+	// copy files to gauge plugin install location
+	logger.Info("Installing Plugin %s %s", gp.ID, path.Base(pluginInstallDir))
+	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
+		return installError(err)
+	}
+
+	if err = runPlatformCommands(gp.PostInstall, pluginInstallDir); err != nil {
+		return installError(err)
+	}
+	return installSuccess("")
+}
+
+func getPluginInstallDir(pluginID, pluginDirName string) (string, error) {
+	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
+	if err != nil {
+		return "", err
+	}
+	pluginDirPath := path.Join(pluginsDir, pluginID, pluginDirName)
+	if common.DirExists(pluginDirPath) {
+		return "", fmt.Errorf("Plugin %s %s already installed at %s", pluginID, pluginDirName, pluginDirPath)
+	}
+	return pluginDirPath, nil
+}
+
+func getGaugePlugin(pluginDir, pluginName string) (*GaugePlugin, error) {
+	var file string
+	if common.FileExists(filepath.Join(pluginDir, pluginName+jsonExt)) {
+		file = filepath.Join(pluginDir, pluginName+jsonExt)
+	} else {
+		file = filepath.Join(pluginDir, pluginJSON)
+	}
+
+	var gp GaugePlugin
+	contents, err := common.ReadFileContents(file)
+	if err != nil {
+		return nil, err
+	}
+	if err = json.Unmarshal([]byte(contents), &gp); err != nil {
+		return nil, err
+	}
+	return &gp, nil
 }
 
 // InstallPlugin download and install the latest plugin(if version not specified) of given plugin name
@@ -110,15 +205,15 @@ func installPluginWithDescription(installDescription *installDescription, curren
 	if currentVersion != "" {
 		versionInstallDescription, err = installDescription.getVersion(currentVersion)
 		if err != nil {
-			return installError(err.Error())
+			return installError(err)
 		}
 		if compatibilityError := version.CheckCompatibility(version.CurrentGaugeVersion, &versionInstallDescription.GaugeVersionSupport); compatibilityError != nil {
-			return installError(fmt.Sprintf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()))
+			return installError(fmt.Errorf("Plugin Version %s-%s is not supported for gauge %s : %s", installDescription.Name, versionInstallDescription.Version, version.CurrentGaugeVersion.String(), compatibilityError.Error()))
 		}
 	} else {
 		versionInstallDescription, err = installDescription.getLatestCompatibleVersionTo(version.CurrentGaugeVersion)
 		if err != nil {
-			return installError(fmt.Sprintf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err))
+			return installError(fmt.Errorf("Could not find compatible version for plugin %s. : %s", installDescription.Name, err))
 		}
 	}
 	return installPluginVersion(installDescription, versionInstallDescription)
@@ -132,37 +227,29 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	logger.Info("Installing Plugin %s %s", installDesc.Name, versionInstallDescription.Version)
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
 	if err != nil {
-		return installError(fmt.Sprintf("Could not get download link: %s", err.Error()))
+		return installError(fmt.Errorf("Could not get download link: %s", err.Error()))
 	}
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	unzippedPluginDir, err := util.DownloadAndUnzip(downloadLink, tempDir)
+	pluginZip, err := util.Download(downloadLink, tempDir)
 	if err != nil {
-		return installError(err.Error())
+		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
 	}
-
-	if err := runInstallCommands(versionInstallDescription.Install, unzippedPluginDir); err != nil {
-		return installError(fmt.Sprintf("Failed to Run install command. %s.", err.Error()))
-	}
-	err = copyPluginFilesToGauge(installDesc, versionInstallDescription, unzippedPluginDir)
-	if err != nil {
-		installError(err.Error())
-	}
-	return installSuccess("")
+	return InstallPluginFromZipFile(pluginZip, installDesc.Name)
 }
 
-func runInstallCommands(installCommands platformSpecificCommand, workingDir string) error {
+func runPlatformCommands(commands platformSpecificCommand, workingDir string) error {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
-		command = installCommands.Windows
+		command = commands.Windows
 		break
 	case "darwin":
-		command = installCommands.Darwin
+		command = commands.Darwin
 		break
 	default:
-		command = installCommands.Linux
+		command = commands.Linux
 		break
 	}
 
@@ -180,45 +267,55 @@ func runInstallCommands(installCommands platformSpecificCommand, workingDir stri
 	return cmd.Wait()
 }
 
-func copyPluginFilesToGauge(installDesc *installDescription, versionInstallDesc *versionInstallDescription, pluginContents string) error {
-	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
-	if err != nil {
-		return err
-	}
-	versionedPluginDir := path.Join(pluginsDir, installDesc.Name, versionInstallDesc.Version)
-	if common.DirExists(versionedPluginDir) {
-		return fmt.Errorf("Plugin %s %s is already installed at %s", installDesc.Name, versionInstallDesc.Version, versionedPluginDir)
-	}
-	_, err = common.MirrorDir(pluginContents, versionedPluginDir)
-	return err
-}
-
 // UninstallPlugin uninstall the given plugin of the given version
 // If version is not specified, it uninstalls all the versions of given plugin
 func UninstallPlugin(pluginName string, version string) {
-	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
+	pluginsHome, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
-		handleUninstallFailure(err, pluginName)
+		logger.Errorf("Failed to uninstall plugin %s. %s", pluginName, err.Error())
+		os.Exit(1)
 	}
-	pluginInfo := pluginName
-	if version != "" {
-		pluginInfo = fmt.Sprintf("%s(%s)", pluginName, version)
-	}
-	pluginInstallationDir := path.Join(pluginsDir, pluginName, version)
-	if common.DirExists(pluginInstallationDir) {
-		if err = os.RemoveAll(pluginInstallationDir); err != nil {
-			handleUninstallFailure(err, pluginInfo)
-		} else {
-			logger.Info("%s plugin uninstalled successfully", pluginInfo)
+
+	var failed bool
+	pluginsDir := filepath.Join(pluginsHome, pluginName)
+	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
+		if err == nil && info.IsDir() && dir != pluginsDir && isValidGaugePluginDir(path.Base(dir)) {
+			if err := uninstallVersionOfPlugin(dir, pluginName); err != nil {
+				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
+				failed = true
+			}
 		}
-	} else {
-		logger.Info("%s plugin is not installed", pluginInfo)
+		return nil
+	})
+	if failed {
+		os.Exit(1)
 	}
 }
 
-func handleUninstallFailure(err error, pluginName string) {
-	logger.Errorf("%s plugin uninstallation failed", pluginName)
-	logger.Fatalf(err.Error())
+func isValidGaugePluginDir(dir string) bool {
+	re, _ := regexp.Compile("^[0-9]+.[0-9]+.[0-9]+")
+	return re.FindString(dir) != ""
+}
+
+func uninstallVersionOfPlugin(pluginDir, pluginName string) error {
+	version := path.Base(pluginDir)
+
+	gp, err := getGaugePlugin(pluginDir, pluginName)
+	if err != nil {
+		return err
+	}
+	if err := runPlatformCommands(gp.PreUnInstall, pluginDir); err != nil {
+		return err
+	}
+
+	if err := os.RemoveAll(pluginDir); err != nil {
+		return err
+	}
+	if err := runPlatformCommands(gp.PostUnInstall, path.Dir(pluginDir)); err != nil {
+		return err
+	}
+	logger.Info("Successfully uninstalled plugin %s %s.", pluginName, version)
+	return nil
 }
 
 func getDownloadLink(downloadUrls downloadUrls) (string, error) {
@@ -251,7 +348,7 @@ func getInstallDescription(plugin string) (*installDescription, InstallResult) {
 	versionInstallDescriptionJSONFile := plugin + "-install.json"
 	versionInstallDescriptionJSONUrl, result := constructPluginInstallJSONURL(plugin)
 	if !result.Success {
-		return nil, installError(fmt.Sprintf("Could not construct plugin install json file URL. %s", result.Error))
+		return nil, installError(fmt.Errorf("Could not construct plugin install json file URL. %s", result.Error))
 	}
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
@@ -259,7 +356,7 @@ func getInstallDescription(plugin string) (*installDescription, InstallResult) {
 	logger.Info("Gathering metadata...")
 	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir)
 	if downloadErr != nil {
-		return nil, installError(fmt.Sprintf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
+		return nil, installError(fmt.Errorf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
 	}
 
 	return getInstallDescriptionFromJSON(downloadedFile)
@@ -268,11 +365,11 @@ func getInstallDescription(plugin string) (*installDescription, InstallResult) {
 func getInstallDescriptionFromJSON(installJSON string) (*installDescription, InstallResult) {
 	InstallJSONContents, readErr := common.ReadFileContents(installJSON)
 	if readErr != nil {
-		return nil, installError(readErr.Error())
+		return nil, installError(readErr)
 	}
 	installDescription := &installDescription{}
 	if err := json.Unmarshal([]byte(InstallJSONContents), installDescription); err != nil {
-		return nil, installError(err.Error())
+		return nil, installError(err)
 	}
 	return installDescription, installSuccess("")
 }
@@ -281,7 +378,7 @@ func constructPluginInstallJSONURL(plugin string) (string, InstallResult) {
 	installJSONFile := plugin + "-install.json"
 	repoURL := config.GaugeRepositoryUrl()
 	if repoURL == "" {
-		return "", installError("Could not find gauge repository url from configuration.")
+		return "", installError(fmt.Errorf("Could not find gauge repository url from configuration."))
 	}
 	return fmt.Sprintf("%s/%s", repoURL, installJSONFile), installSuccess("")
 }
@@ -309,60 +406,14 @@ func (installDesc *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(byDecreasingVersion(installDesc.Versions))
 }
 
-// InstallPluginFromZip installs the specified plugin using the given zip file
-func InstallPluginFromZip(zipFile string, pluginName string) {
-	tempDir := common.GetTempDir()
-	defer common.Remove(tempDir)
-	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
-	if err != nil {
-		common.Remove(tempDir)
-		logger.Fatalf("Failed to install plugin %s. Reason: %s", pluginName, err.Error())
-	}
-	logger.Info("Plugin unzipped to => %s\n", unzippedPluginDir)
-
-	hasPluginJSON := common.FileExists(filepath.Join(unzippedPluginDir, pluginJSON))
-	pluginDirName := getVersionedPluginDirName(zipFile)
-	if hasPluginJSON {
-		err = installPluginFromDir(unzippedPluginDir, pluginDirName)
-	} else {
-		err = installRunnerFromDir(unzippedPluginDir, pluginName, pluginDirName)
-	}
-	if err != nil {
-		common.Remove(tempDir)
-		logger.Fatalf("Failed to install plugin %s. Reason: %s", pluginName, err.Error())
-	}
-	logger.Info("Successfully installed plugin %s.", pluginName)
-}
-
 func getVersionedPluginDirName(pluginZip string) string {
 	zipFileName := path.Base(pluginZip)
 	if !strings.Contains(zipFileName, "nightly") {
-		return ""
+		re, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+")
+		return re.FindString(zipFileName)
 	}
 	re, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+.nightly-[0-9]+-[0-9]+-[0-9]+")
 	return re.FindString(zipFileName)
-}
-
-func installPluginFromDir(unzippedPluginDir string, pluginDirName string) error {
-	pd, err := plugin.GetPluginDescriptorFromJSON(filepath.Join(unzippedPluginDir, pluginJSON))
-	if err != nil {
-		return err
-	}
-	if pluginDirName == "" {
-		pluginDirName = pd.Version
-	}
-	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, pd.ID, pluginDirName)
-}
-
-func installRunnerFromDir(unzippedPluginDir string, language string, pluginDirName string) error {
-	r, err := getRunnerJSONContents(filepath.Join(unzippedPluginDir, language+jsonExt))
-	if err != nil {
-		return err
-	}
-	if pluginDirName == "" {
-		pluginDirName = r.Version
-	}
-	return copyPluginFilesToGaugeInstallDir(unzippedPluginDir, r.Id, pluginDirName)
 }
 
 func getRunnerJSONContents(file string) (*runner.Runner, error) {
@@ -376,21 +427,6 @@ func getRunnerJSONContents(file string) (*runner.Runner, error) {
 		return nil, err
 	}
 	return &r, nil
-}
-
-func copyPluginFilesToGaugeInstallDir(unzippedPluginDir string, pluginID string, versionedPluginDirName string) error {
-	logger.Info("Installing Plugin %s %s", pluginID, versionedPluginDirName)
-
-	pluginsDir, err := common.GetPrimaryPluginsInstallDir()
-	if err != nil {
-		return err
-	}
-	versionedPluginDirPath := path.Join(pluginsDir, pluginID, versionedPluginDirName)
-	if common.DirExists(versionedPluginDirPath) {
-		return fmt.Errorf("Plugin %s %s already installed at %s", pluginID, versionedPluginDirName, versionedPluginDirPath)
-	}
-	_, err = common.MirrorDir(unzippedPluginDir, versionedPluginDirPath)
-	return err
 }
 
 // InstallAllPlugins install the latest version of all plugins specified in Gauge project manifest file
@@ -470,6 +506,7 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 }
 
 // IsCompatiblePluginInstalled checks if a plugin compatible to gauge is installed
+// TODO: This always checks if latest installed version of a given plugin is compatible. This should also check for older versions.
 func IsCompatiblePluginInstalled(pluginName string, isRunner bool) bool {
 	if isRunner {
 		return isCompatibleLanguagePluginInstalled(pluginName)

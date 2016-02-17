@@ -1,0 +1,40 @@
+{
+    "id": "java",
+    "version": "0.3.4",
+    "description": "Java support for gauge",
+    "preInstall": {
+        "windows": [],
+        "linux": [],
+        "darwin": ["pre install command"]
+    },
+    "postInstall": {
+        "windows": [],
+        "linux": [],
+        "darwin": []
+    },
+    "run": {
+        "windows": ["bin/gauge-java", "--start"],
+        "linux": ["bin/gauge-java", "--start"],
+        "darwin": ["bin/gauge-java", "--start"]
+    },
+    "init": {
+        "windows": ["bin/gauge-java", "--init"],
+        "linux": ["bin/gauge-java", "--init"],
+        "darwin": ["bin/gauge-java", "--init"]
+    },
+    "preUnInstall": {
+        "windows": [],
+        "linux": [],
+        "darwin": ["pre uninstall command"]
+    },
+    "postUnInstall": {
+        "windows": [],
+        "linux": [],
+        "darwin": []
+    },
+    "lib": "libs",
+    "gaugeVersionSupport": {
+        "minimum": "0.3.0",
+        "maximum": ""
+    }
+}

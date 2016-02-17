@@ -472,6 +472,7 @@ func GetPluginsInfo() []PluginInfo {
 	return allPluginsWithVersion
 }
 
+// GetInstallDir returns the install directory of given plugin and a given version.
 func GetInstallDir(pluginName, version string) (string, error) {
 	allPluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {

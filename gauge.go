@@ -89,7 +89,7 @@ func main() {
 	} else if *initialize != "" {
 		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
-		install.InstallPluginFromZip(*installZip, *installPlugin)
+		install.HandleInstallResult(install.InstallPluginFromZipFile(*installZip, *installPlugin), *installPlugin, true)
 	} else if *installPlugin != "" {
 		install.HandleInstallResult(install.InstallPlugin(*installPlugin, *pluginVersion), *installPlugin, true)
 	} else if *uninstallPlugin != "" {

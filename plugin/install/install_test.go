@@ -80,7 +80,7 @@ func (s *MySuite) TestFindingLatestCompatibleVersionFailing(c *C) {
 }
 
 func createInstallDescriptionWithVersions(versionNumbers ...string) *installDescription {
-	versionInstallDescriptions := make([]versionInstallDescription, 0)
+	var versionInstallDescriptions []versionInstallDescription
 	for _, version := range versionNumbers {
 		versionInstallDescriptions = append(versionInstallDescriptions, versionInstallDescription{Version: version})
 	}
@@ -88,24 +88,14 @@ func createInstallDescriptionWithVersions(versionNumbers ...string) *installDesc
 }
 
 func addVersionSupportToInstallDescription(installDescription *installDescription, versionSupportList ...*version.VersionSupport) {
-	for i, _ := range installDescription.Versions {
+	for i := range installDescription.Versions {
 		installDescription.Versions[i].GaugeVersionSupport = *versionSupportList[i]
 	}
 }
 
-func (s *MySuite) TestInstallRunnerFromInvalidZip(c *C) {
-	err := installRunnerFromDir("test_resources/notPresent.zip", "ruby", "")
-	c.Assert(err.Error(), Equals, fmt.Sprintf("File %s doesn't exist.", filepath.Join("test_resources", "notPresent.zip", "ruby.json")))
-}
-
-func (s *MySuite) TestInstallPlugin(c *C) {
-	err := installPluginFromDir("version", "")
-	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", pluginJSON)+" doesn't exist.")
-}
-
-func (s *MySuite) TestInstallRunnerFromDir(c *C) {
-	err := installRunnerFromDir("version", "java", "")
-	c.Assert(err.Error(), Equals, "File "+filepath.Join("version", "java"+jsonExt)+" doesn't exist.")
+func (s *MySuite) TestInstallGaugePluginFromNonExistingZipFile(c *C) {
+	result := InstallPluginFromZipFile(filepath.Join("test_resources", "notPresent.zip"), "ruby")
+	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("ZipFile %s does not exist", filepath.Join("test_resources", "notPresent.zip")))
 }
 
 func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
@@ -116,15 +106,48 @@ func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
 	c.Assert(name, Equals, "2.0.1.nightly-2016-02-09")
 
 	name = getVersionedPluginDirName("abcd/foo/bar/html-report-0.3.4-windows.x86_64.zip")
-	c.Assert(name, Equals, "")
+	c.Assert(name, Equals, "0.3.4")
 
 	name = getVersionedPluginDirName("abcd/foo/bar/gauge-java-0.3.4.nightly-2016-02-09-linux.x86.zip")
 	c.Assert(name, Equals, "0.3.4.nightly-2016-02-09")
 
 	name = getVersionedPluginDirName("abcd/foo/bar/gauge-java-0.3.4-linux.x86_64.zip")
-	c.Assert(name, Equals, "")
+	c.Assert(name, Equals, "0.3.4")
 
 	name = getVersionedPluginDirName("abcd/foo/gauge-ruby-0.1.2.nightly-2016-02-09-linux.x86.zip")
 	c.Assert(name, Equals, "0.1.2.nightly-2016-02-09")
 
+}
+
+func (s *MySuite) TestGetGaugePluginForJava(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
+	p, err := getGaugePlugin(path, "java")
+	c.Assert(err, Equals, nil)
+	c.Assert(p.ID, Equals, "java")
+	c.Assert(p.Version, Equals, "0.3.4")
+	c.Assert(p.Description, Equals, "Java support for gauge")
+	c.Assert(p.PreInstall.Darwin[0], Equals, "pre install command")
+	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
+	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
+	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
+}
+
+func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
+	path, _ := filepath.Abs("_testdata")
+	p, err := getGaugePlugin(path, "html-report")
+	c.Assert(err, Equals, nil)
+	c.Assert(p.ID, Equals, "html-report")
+	c.Assert(p.Version, Equals, "2.0.1")
+	c.Assert(p.Description, Equals, "Html reporting plugin")
+	c.Assert(p.PreInstall.Darwin[0], Equals, "pre install command")
+	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
+	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
+	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
+}
+
+func (s *MySuite) TestIsValidGaugePluginDir(c *C) {
+	c.Assert(isValidGaugePluginDir("0.3.3"), Equals, true)
+	c.Assert(isValidGaugePluginDir("a0.3.3"), Equals, false)
+	c.Assert(isValidGaugePluginDir("blah"), Equals, false)
+	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02"), Equals, true)
 }
