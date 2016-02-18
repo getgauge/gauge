@@ -72,6 +72,7 @@ var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for val
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
 var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
+var buildMetadata string
 
 func main() {
 	flag.Parse()
@@ -159,6 +160,7 @@ func initPackageFlags() {
 	if *parallel {
 		*simpleConsoleOutput = true
 	}
+	version.BuildMetadata = buildMetadata
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
 	execution.ExecuteTags = *executeTags
