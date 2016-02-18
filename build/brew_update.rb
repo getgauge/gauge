@@ -5,9 +5,13 @@ require 'json'
 
 
 if ARGV.length < 2
-  puts "Minimum two arguments required.\nUsage: ruby brew_update.rb <version> <path to file>.\nExample: ruby brew_update.rb 0.3.2 Library/Formula/gauge.rb."
+  puts 'Minimum two arguments required.
+Usage: ruby brew_update.rb <version> <path to file>.
+Example: ruby brew_update.rb 0.3.2 Library/Formula/gauge.rb.
+'
   exit 1
 end
+
 Parser::Builders::Default.emit_lambda = true # opt-in to most recent AST format
 filter_dep = %w(gopkg.in/check.v1 golang.org/x/sys/unix golang.org/x/tools/go/ast/astutil golang.org/x/tools/go/exact golang.org/x/tools/go/types github.com/golang/protobuf/proto)
 dependency_map = {}
@@ -25,6 +29,7 @@ go_resource "%s" do
       :revision => "%s"
 end
 '
+
 class Processor < AST::Processor
   attr_accessor :dependency_map, :old_sha256
 
