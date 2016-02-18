@@ -18,6 +18,7 @@
 package util
 
 import (
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -137,4 +138,19 @@ func Remove(dir string) {
 
 func RemoveTempDir() {
 	Remove(common.GetTempDir())
+}
+
+// IsDirEmpty checks if the given directory is empty.
+func IsDirEmpty(name string) (bool, error) {
+	f, err := os.Open(name)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	_, err = f.Readdir(1)
+	if err == io.EOF {
+		return true, nil
+	}
+	return false, err // Either not empty or error, suits both cases
 }

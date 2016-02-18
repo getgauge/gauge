@@ -131,7 +131,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 
-	gp, err := getGaugePlugin(unzippedPluginDir, pluginName)
+	gp, err := parsePluginJSON(unzippedPluginDir, pluginName)
 	if err != nil {
 		return installError(err)
 	}
@@ -169,7 +169,7 @@ func getPluginInstallDir(pluginID, pluginDirName string) (string, error) {
 	return pluginDirPath, nil
 }
 
-func getGaugePlugin(pluginDir, pluginName string) (*GaugePlugin, error) {
+func parsePluginJSON(pluginDir, pluginName string) (*GaugePlugin, error) {
 	var file string
 	if common.FileExists(filepath.Join(pluginDir, pluginName+jsonExt)) {
 		file = filepath.Join(pluginDir, pluginName+jsonExt)
@@ -223,7 +223,6 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		return installSuccess(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
-	logger.Info("Installing Plugin %s %s", installDesc.Name, versionInstallDescription.Version)
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
 	if err != nil {
 		return installError(fmt.Errorf("Could not get download link: %s", err.Error()))
@@ -271,15 +270,14 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 func UninstallPlugin(pluginName string, version string) {
 	pluginsHome, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
-		logger.Errorf("Failed to uninstall plugin %s. %s", pluginName, err.Error())
-		os.Exit(1)
+		logger.Fatalf("Failed to uninstall plugin %s. %s", pluginName, err.Error())
 	}
 
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && dir != pluginsDir && isValidGaugePluginDir(path.Base(dir), version) {
-			if err := uninstallVersionOfPlugin(dir, pluginName); err != nil {
+		if err == nil && info.IsDir() && dir != pluginsDir && strings.HasPrefix(path.Base(dir), version) {
+			if err := uninstallVersionOfPlugin(dir, pluginName, path.Base(dir)); err != nil {
 				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
 				failed = true
 			}
@@ -289,17 +287,15 @@ func UninstallPlugin(pluginName string, version string) {
 	if failed {
 		os.Exit(1)
 	}
+	if empty, _ := util.IsDirEmpty(pluginsDir); empty {
+		if err := os.RemoveAll(pluginsDir); err != nil {
+			logger.Fatalf("Failed to remove directory %s. %s", pluginsDir, err.Error())
+		}
+	}
 }
 
-func isValidGaugePluginDir(dir string, version string) bool {
-	re, _ := regexp.Compile("^[0-9]+.[0-9]+.[0-9]+")
-	return strings.HasPrefix(path.Base(dir), version) && re.FindString(dir) != ""
-}
-
-func uninstallVersionOfPlugin(pluginDir, pluginName string) error {
-	version := path.Base(pluginDir)
-
-	gp, err := getGaugePlugin(pluginDir, pluginName)
+func uninstallVersionOfPlugin(pluginDir, pluginName, version string) error {
+	gp, err := parsePluginJSON(pluginDir, pluginName)
 	if err != nil {
 		return err
 	}

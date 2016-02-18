@@ -121,7 +121,7 @@ func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
 
 func (s *MySuite) TestGetGaugePluginForJava(c *C) {
 	path, _ := filepath.Abs(filepath.Join("_testdata", "java"))
-	p, err := getGaugePlugin(path, "java")
+	p, err := parsePluginJSON(path, "java")
 	c.Assert(err, Equals, nil)
 	c.Assert(p.ID, Equals, "java")
 	c.Assert(p.Version, Equals, "0.3.4")
@@ -134,7 +134,7 @@ func (s *MySuite) TestGetGaugePluginForJava(c *C) {
 
 func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	path, _ := filepath.Abs("_testdata")
-	p, err := getGaugePlugin(path, "html-report")
+	p, err := parsePluginJSON(path, "html-report")
 	c.Assert(err, Equals, nil)
 	c.Assert(p.ID, Equals, "html-report")
 	c.Assert(p.Version, Equals, "2.0.1")
@@ -143,12 +143,4 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
 	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
 	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
-}
-
-func (s *MySuite) TestIsValidGaugePluginDir(c *C) {
-	c.Assert(isValidGaugePluginDir("0.3.3", ""), Equals, true)
-	c.Assert(isValidGaugePluginDir("a0.3.3", ""), Equals, false)
-	c.Assert(isValidGaugePluginDir("blah", ""), Equals, false)
-	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02", ""), Equals, true)
-	c.Assert(isValidGaugePluginDir("0.3.3.nightly.2016-12-02", "0.3.4"), Equals, false)
 }
