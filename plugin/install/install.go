@@ -273,7 +273,9 @@ func UninstallPlugin(pluginName string, version string) {
 	if err != nil {
 		logger.Fatalf("Failed to uninstall plugin %s. %s", pluginName, err.Error())
 	}
-
+	if !common.DirExists(filepath.Join(pluginsHome, pluginName, version)) {
+		logger.Fatalf("Plugin %s not found.", strings.TrimSpace(pluginName+" "+version))
+	}
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
