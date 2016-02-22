@@ -23,6 +23,7 @@ import (
 
 	"fmt"
 
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
 )
@@ -117,6 +118,10 @@ func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
 	name = getVersionedPluginDirName("abcd/foo/gauge-ruby-0.1.2.nightly-2016-02-09-linux.x86.zip")
 	c.Assert(name, Equals, "0.1.2.nightly-2016-02-09")
 
+	if util.IsWindows() {
+		name = getVersionedPluginDirName("C:\\Users\\apoorvam\\AppData\\Local\\Temp\\gauge_temp1456130044460213700\\gauge-java-0.3.4-windows.x86_64.zip")
+		c.Assert(name, Equals, "0.3.4")
+	}
 }
 
 func (s *MySuite) TestGetGaugePluginForJava(c *C) {

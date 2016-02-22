@@ -146,7 +146,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	}
 
 	// copy files to gauge plugin install location
-	logger.Info("Installing Plugin %s %s", gp.ID, path.Base(pluginInstallDir))
+	logger.Info("Installing Plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
@@ -162,7 +162,7 @@ func getPluginInstallDir(pluginID, pluginDirName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	pluginDirPath := path.Join(pluginsDir, pluginID, pluginDirName)
+	pluginDirPath := filepath.Join(pluginsDir, pluginID, pluginDirName)
 	if common.DirExists(pluginDirPath) {
 		return "", fmt.Errorf("Plugin %s %s already installed at %s", pluginID, pluginDirName, pluginDirPath)
 	}
@@ -230,6 +230,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
+	logger.Info("Downloading plugin %s", installDesc.Name)
 	pluginZip, err := util.Download(downloadLink, tempDir)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
@@ -276,8 +277,8 @@ func UninstallPlugin(pluginName string, version string) {
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && dir != pluginsDir && strings.HasPrefix(path.Base(dir), version) {
-			if err := uninstallVersionOfPlugin(dir, pluginName, path.Base(dir)); err != nil {
+		if err == nil && info.IsDir() && dir != pluginsDir && strings.HasPrefix(filepath.Base(dir), version) {
+			if err := uninstallVersionOfPlugin(dir, pluginName, filepath.Base(dir)); err != nil {
 				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
 				failed = true
 			}
@@ -402,12 +403,12 @@ func (installDesc *installDescription) sortVersionInstallDescriptions() {
 }
 
 func getVersionedPluginDirName(pluginZip string) string {
-	zipFileName := path.Base(pluginZip)
+	zipFileName := filepath.Base(pluginZip)
 	if !strings.Contains(zipFileName, "nightly") {
-		re, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+")
+		re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+")
 		return re.FindString(zipFileName)
 	}
-	re, _ := regexp.Compile("[0-9]+.[0-9]+.[0-9]+.nightly-[0-9]+-[0-9]+-[0-9]+")
+	re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.nightly-[0-9]+-[0-9]+-[0-9]+")
 	return re.FindString(zipFileName)
 }
 
