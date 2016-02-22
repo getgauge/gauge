@@ -146,7 +146,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	}
 
 	// copy files to gauge plugin install location
-	logger.Info("Installing Plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
+	logger.Info("Installing plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
@@ -220,7 +220,7 @@ func installPluginWithDescription(installDescription *installDescription, curren
 
 func installPluginVersion(installDesc *installDescription, versionInstallDescription *versionInstallDescription) InstallResult {
 	if common.IsPluginInstalled(installDesc.Name, versionInstallDescription.Version) {
-		return installSuccess(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
+		return installError(fmt.Errorf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
@@ -230,7 +230,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	logger.Info("Downloading plugin %s", installDesc.Name)
+	logger.Info("Downloading %s", filepath.Base(downloadLink))
 	pluginZip, err := util.Download(downloadLink, tempDir)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
