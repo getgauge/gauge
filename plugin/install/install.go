@@ -287,7 +287,7 @@ func UninstallPlugin(pluginName string, version string) {
 	if failed {
 		os.Exit(1)
 	}
-	if empty, _ := util.IsDirEmpty(pluginsDir); empty {
+	if version == "" {
 		if err := os.RemoveAll(pluginsDir); err != nil {
 			logger.Fatalf("Failed to remove directory %s. %s", pluginsDir, err.Error())
 		}
