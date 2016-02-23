@@ -17,83 +17,95 @@
 
 package parse
 
-// import (
-// 	"strings"
-//
-// 	"github.com/getgauge/gauge/gauge"
-// )
-//
-// type parser struct {
-// 	name string
-// 	text string
-// 	// Parsing only
-// 	lex       *lexer
-// 	token     [3]item // three-token lookahead for parser.
-// 	peekCount int
-// }
-//
-// func (p *parser) next() item {
-// 	if p.peekCount > 0 {
-// 		p.peekCount--
-// 	} else {
-// 		p.token[0] = p.lex.nextItem()
-// 	}
-// 	return p.token[p.peekCount]
-// }
-//
-// func (p *parser) peek() item {
-// 	if p.peekCount > 0 {
-// 		return p.token[p.peekCount-1]
-// 	}
-// 	p.peekCount = 1
-// 	p.token[0] = p.lex.nextItem()
-// 	return p.token[0]
-// }
-//
-// func New(name, text string) *parser {
-// 	return &parser{
-// 		name: name,
-// 		text: text,
-// 		lex:  NewLexer(name, text),
-// 	}
-// }
-//
-// func ParseConcept(filename, text string) gauge.Concept {
-// 	p := New(filename, text)
-// 	cptHeading := p.parseConceptHeading()
-// 	steps := p.parseSteps()
-//
-// 	return gauge.Concept{
-// 		FileName: filename,
-// 		LineNo:   0,
-// 		Heading:  cptHeading,
-// 		Steps:    steps,
-// 	}
-// }
-//
-// func (p *parser) parseConceptHeading() string {
-// 	token := p.next()
-// 	var heading string
-// 	switch {
-// 	case token.typ == itemH1Hash:
-// 		heading = strings.TrimSpace(p.next().val)
-// 	default:
-// 		heading = strings.TrimSpace(token.val)
-// 	}
-// 	p.next()
-// 	return heading
-// }
-//
-// func (p *parser) parseSteps() []gauge.Step1 {
-// 	steps := make([]gauge.Step1, 0)
-// 	for p.peek().typ != itemEOF {
-// 		token := p.next()
-// 		if token.typ == itemAsterisk {
-// 			steps = append(steps, gauge.Step1{
-// 				LineNo:     0,
-// 				ActualText: strings.TrimSpace(p.next().val),
-// 			})
-// 		}
-// 	}
-// 	return steps
-// }
+import "strings"
+
+type nodeType int
+
+const (
+	nodeConcept nodeType = iota
+	nodeStep
+)
+
+// Node represents the node of AST
+type Node struct {
+	nodeType
+	value    string
+	children []*Node
+}
+
+func newNode(typ nodeType, value string) *Node {
+	return &Node{typ, value, make([]*Node, 0)}
+}
+
+// Parser represents the parser object
+type Parser struct {
+	name string
+	text string
+	// Parsing only
+	lex       *lexer
+	token     [3]item // three-token lookahead for parser.
+	peekCount int
+}
+
+// next returns the next token from the lexer channel for processing
+func (p *Parser) next() item {
+	if p.peekCount > 0 {
+		p.peekCount--
+	} else {
+		p.token[0] = p.lex.nextItem()
+	}
+	return p.token[p.peekCount]
+}
+
+// peek is a lookahead for the next item on the lexer channel
+func (p *Parser) peek() item {
+	if p.peekCount > 0 {
+		return p.token[p.peekCount-1]
+	}
+	p.peekCount = 1
+	p.token[0] = p.lex.nextItem()
+	return p.token[0]
+}
+
+// New returns the new parser object
+func New(name, text string) *Parser {
+	return &Parser{
+		name: name,
+		text: text,
+		lex:  NewLexer(name, text),
+	}
+}
+
+// Concept takes in the contents of concept file and returns the root node
+// of the concept AST
+func Concept(filename, text string) *Node {
+	p := New(filename, text)
+	cptHeading := p.parseConceptHeading()
+	conceptNode := newNode(nodeConcept, cptHeading)
+	conceptNode.children = p.parseSteps()
+	return conceptNode
+}
+
+func (p *Parser) parseConceptHeading() string {
+	token := p.next()
+	var heading string
+	switch {
+	case token.typ == itemH1Hash:
+		heading = strings.TrimSpace(p.next().val)
+	default:
+		heading = strings.TrimSpace(token.val)
+	}
+	p.next()
+	return heading
+}
+
+func (p *Parser) parseSteps() []*Node {
+	var steps []*Node
+	for p.peek().typ != itemEOF {
+		token := p.next()
+		if token.typ == itemAsterisk {
+			steps = append(steps, newNode(nodeStep, strings.TrimSpace(p.next().val)))
+		}
+	}
+	return steps
+}

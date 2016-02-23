@@ -17,42 +17,49 @@
 
 package parse
 
-// type conceptParseTest struct {
-// 	name    string
-// 	text    string
-// 	concept gauge.Concept
-// }
-//
-// var conceptParseTests = []conceptParseTest{
-// 	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n",
-// 		gauge.Concept{
-// 			FileName: "simple concept",
-// 			LineNo:   0,
-// 			Heading:  "This is a concept heading",
-// 			Steps: []gauge.Step{
-// 				{LineNo: 0, ActualText: "This is the first step"},
-// 				{LineNo: 0, ActualText: "This is the second step"},
-// 			},
-// 		},
-// 	},
-// 	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step",
-// 		gauge.Concept{
-// 			FileName: "simple underline concept",
-// 			LineNo:   0,
-// 			Heading:  "This is a concept heading",
-// 			Steps: []gauge.Step{
-// 				{LineNo: 0, ActualText: "This is the first step"},
-// 				{LineNo: 0, ActualText: "This is the second step"},
-// 			},
-// 		},
-// 	},
-// }
-//
-// func TestConceptParsing(t *testing.T) {
-// 	for _, test := range conceptParseTests {
-// 		cpt := ParseConcept(test.name, test.text)
-// 		if !reflect.DeepEqual(cpt, test.concept) {
-// 			t.Errorf("%s: \ngot\n\t%+v\nexpected\n\t%v", test.name, cpt, test.concept)
-// 		}
-// 	}
-// }
+import "testing"
+
+type conceptParseTest struct {
+	name string
+	text string
+	root *Node
+}
+
+func createNode(typ nodeType, value string, children []*Node) *Node {
+	n := newNode(typ, value)
+	n.children = children
+	return n
+}
+
+var conceptParseTests = []conceptParseTest{
+	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n", createNode(nodeConcept, "This is a concept heading", []*Node{newNode(nodeStep, "This is the first step"), newNode(nodeStep, "This is the second step")})},
+	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step", createNode(nodeConcept, "This is a concept heading", []*Node{newNode(nodeStep, "This is the first step"), newNode(nodeStep, "This is the second step")})},
+}
+
+func TestConceptParsing(t *testing.T) {
+	for _, test := range conceptParseTests {
+		cptNode := Concept(test.name, test.text)
+		if !equals(cptNode, test.root) {
+			t.Errorf("%s: \ngot\n\t%+v\nexpected\n\t%v", test.name, cptNode, test.root)
+		}
+	}
+}
+
+func equals(root1, root2 *Node) bool {
+	if root1.nodeType != root2.nodeType {
+		return false
+	}
+	if root1.value != root2.value {
+		return false
+	}
+	if len(root1.children) != len(root2.children) {
+		return false
+	}
+
+	for i := range root1.children {
+		if !equals(root1.children[i], root2.children[i]) {
+			return false
+		}
+	}
+	return true
+}
