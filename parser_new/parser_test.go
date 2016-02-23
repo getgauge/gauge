@@ -56,10 +56,19 @@ func equals(root1, root2 *Node) bool {
 		return false
 	}
 
-	for i := range root1.children {
-		if !equals(root1.children[i], root2.children[i]) {
-			return false
+	isEqual := true
+	for i1 := range root1.children {
+		for i2 := range root2.children {
+			if equals(root1.children[i1], root2.children[i2]) {
+				isEqual = true
+				break
+			} else {
+				isEqual = false
+			}
+		}
+		if !isEqual {
+			break
 		}
 	}
-	return true
+	return isEqual
 }
