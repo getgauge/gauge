@@ -80,6 +80,7 @@ type InstallResult struct {
 	Error   error
 	Warning string
 	Success bool
+	Skipped bool
 }
 
 func (installResult *InstallResult) getMessage() string {
@@ -92,6 +93,10 @@ func installError(err error) InstallResult {
 
 func installSuccess(warning string) InstallResult {
 	return InstallResult{Warning: warning, Success: true}
+}
+
+func installSkipped(warning string) InstallResult {
+	return InstallResult{Warning: warning, Skipped: true}
 }
 
 // GaugePlugin represents any plugin to Gauge. It can be an language runner or any other plugin.
@@ -220,7 +225,7 @@ func installPluginWithDescription(installDescription *installDescription, curren
 
 func installPluginVersion(installDesc *installDescription, versionInstallDescription *versionInstallDescription) InstallResult {
 	if common.IsPluginInstalled(installDesc.Name, versionInstallDescription.Version) {
-		return installError(fmt.Errorf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
+		return installSkipped(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
@@ -456,6 +461,12 @@ func UpdatePlugins() {
 // HandleInstallResult handles the result of plugin Installation
 // TODO: Merge both HandleInstallResult and HandleUpdateResult, eliminate boolean exitIfFailure
 func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
+	if result.Warning != "" {
+		logger.Warning(result.Warning)
+	}
+	if result.Skipped {
+		return true
+	}
 	if !result.Success {
 		logger.Errorf("Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
 		if exitIfFailure {
@@ -463,24 +474,25 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		}
 		return false
 	}
-	if result.Warning != "" {
-		logger.Warning(result.Warning)
-	}
+
 	logger.Info("Successfully installed plugin '%s'.", pluginName)
 	return true
 }
 
 // HandleUpdateResult handles the result of plugin Installation
 func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
+	if result.Warning != "" {
+		logger.Warning(result.Warning)
+	}
+	if result.Skipped {
+		return true
+	}
 	if !result.Success {
 		logger.Errorf("Failed to update plugin '%s'.\nReason: %s", pluginName, result.getMessage())
 		if exitIfFailure {
 			os.Exit(1)
 		}
 		return false
-	}
-	if result.Warning != "" {
-		logger.Warning(result.Warning)
 	}
 	logger.Info("Successfully updated plugin '%s'.", pluginName)
 	return true
