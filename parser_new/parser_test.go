@@ -42,6 +42,16 @@ var conceptParseTests = []conceptParseTest{
 			newNode(nodeStep, "This is the first step", "* This is the first step", 3),
 			newNode(nodeStep, "This is the second step", "* This is the second step", 4),
 		})},
+	{"simple concept with extra newlines", "# This is a concept heading\n\n\n* This is the first step\n\n\n* This is the second step\n\n\n",
+		createNode(nodeConcept, "This is a concept heading", "# This is a concept heading", 1, []*Node{
+			newNode(nodeStep, "This is the first step", "* This is the first step", 4),
+			newNode(nodeStep, "This is the second step", "* This is the second step", 7),
+		})},
+	{"simple underline concept with extra newlines", "This is a concept heading\n=======================\n\n\n* This is the first step\n\n\n* This is the second step\n\n\n",
+		createNode(nodeConcept, "This is a concept heading", "This is a concept heading\n=======================", 1, []*Node{
+			newNode(nodeStep, "This is the first step", "* This is the first step", 5),
+			newNode(nodeStep, "This is the second step", "* This is the second step", 8),
+		})},
 }
 
 func TestConceptParsing(t *testing.T) {

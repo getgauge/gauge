@@ -32,10 +32,9 @@ const (
 // Node represents the node of AST
 type Node struct {
 	nodeType
-	value   string
-	rawText string
-	lineNum int
-	// fileName int
+	value    string
+	rawText  string
+	lineNum  int
 	children []*Node
 }
 
