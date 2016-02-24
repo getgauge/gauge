@@ -23,13 +23,14 @@ import (
 )
 
 type item struct {
-	typ itemType
-	pos int
-	val string
+	typ     itemType
+	pos     int
+	lineNum int
+	val     string
 }
 
 func (i item) String() string {
-	return fmt.Sprintf("%q", i.val)
+	return fmt.Sprintf("%q %d", i.val, i.lineNum)
 }
 
 // itemType identifies the type of lex items.
@@ -49,6 +50,10 @@ const (
 	eof = -1
 )
 
+var (
+	lineCtr = 1
+)
+
 // stateFn represents the state of the scanner as a function that returns the next state.
 type stateFn func(*lexer) stateFn
 
@@ -63,7 +68,7 @@ type lexer struct {
 	items      chan item // channel of scanned items
 }
 
-func NewLexer(name, input string) *lexer {
+func newLexer(name, input string) *lexer {
 	l := &lexer{
 		name:       name,
 		input:      input,
@@ -71,6 +76,7 @@ func NewLexer(name, input string) *lexer {
 		start:      0,
 		items:      make(chan item),
 	}
+	lineCtr = 1
 	go l.run()
 	return l
 }
@@ -126,7 +132,7 @@ func (l *lexer) backup() {
 
 // emit passes an item back to the client.
 func (l *lexer) emit(t itemType) {
-	l.items <- item{t, l.start, l.input[l.start:l.currentPos]}
+	l.items <- item{t, l.start, lineCtr, l.input[l.start:l.currentPos]}
 	l.start = l.currentPos
 }
 
@@ -163,7 +169,6 @@ func lexStart(l *lexer) stateFn {
 		l.backup()
 		return lexText
 	}
-	return nil
 }
 
 func lexText(l *lexer) stateFn {
@@ -189,7 +194,7 @@ func lexText(l *lexer) stateFn {
 	if l.hasUnemittedText() {
 		l.emit(itemText)
 	}
-	return lexEof
+	return lexEOF
 }
 
 func lexAsterisk(l *lexer) stateFn {
@@ -202,13 +207,14 @@ func lexH1Hash(l *lexer) stateFn {
 	return lexText
 }
 
-func lexEof(l *lexer) stateFn {
+func lexEOF(l *lexer) stateFn {
 	l.emit(itemEOF)
 	return nil
 }
 
 func lexNewLine(l *lexer) stateFn {
 	l.emit(itemNewline)
+	lineCtr++
 	return lexText
 }
 

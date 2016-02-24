@@ -72,7 +72,7 @@ func New(name, text string) *Parser {
 	return &Parser{
 		name: name,
 		text: text,
-		lex:  NewLexer(name, text),
+		lex:  newLexer(name, text),
 	}
 }
 
