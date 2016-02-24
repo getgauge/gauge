@@ -18,6 +18,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -72,6 +73,7 @@ var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for val
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
 var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
+var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
 
 func main() {
 	flag.Parse()
@@ -84,7 +86,14 @@ func main() {
 	}
 	env.LoadEnv(*currentEnv)
 	logger.Initialize(*logLevel)
-	if *gaugeVersion {
+	if *gaugeVersion && *machineReadable {
+		printJSONVersion()
+	} else if *machineReadable {
+		fmt.Printf("flag '--machine-readable' can only be used with '--version' or '-v'\n\n")
+		fmt.Printf("Usage:\n\n")
+		flag.PrintDefaults()
+		os.Exit(1)
+	} else if *gaugeVersion {
 		printVersion()
 	} else if *initialize != "" {
 		projectInit.InitializeProject(*initialize)
@@ -129,6 +138,27 @@ func main() {
 	} else {
 		logger.Fatalf(err.Error())
 	}
+}
+
+func printJSONVersion() {
+	type pluginJSON struct {
+		Name    string `json:"name"`
+		Version string `json:"version"`
+	}
+	type versionJSON struct {
+		Version string        `json:"version"`
+		Plugins []*pluginJSON `json:"plugins"`
+	}
+	gaugeVersion := versionJSON{version.FullVersion(), make([]*pluginJSON, 0)}
+	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
+	for _, pluginInfo := range allPluginsWithVersion {
+		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
+	}
+	b, err := json.MarshalIndent(gaugeVersion, "", "    ")
+	if err != nil {
+		fmt.Println("error:", err)
+	}
+	fmt.Println(fmt.Sprintf("%s\n", string(b)))
 }
 
 func printVersion() {
