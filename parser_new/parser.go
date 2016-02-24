@@ -17,7 +17,10 @@
 
 package parse
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type nodeType int
 
@@ -29,12 +32,25 @@ const (
 // Node represents the node of AST
 type Node struct {
 	nodeType
-	value    string
+	value   string
+	rawText string
+	lineNum int
+	// fileName int
 	children []*Node
 }
 
-func newNode(typ nodeType, value string) *Node {
-	return &Node{typ, value, make([]*Node, 0)}
+func (n *Node) String() string {
+	return fmt.Sprintf("%v %v %v %v", n.nodeType, n.value, n.rawText, len(n.children))
+}
+
+func newNode(typ nodeType, value, rawText string, lineNum int) *Node {
+	return &Node{
+		nodeType: typ,
+		value:    value,
+		rawText:  rawText,
+		lineNum:  lineNum,
+		children: make([]*Node, 0),
+	}
 }
 
 // Parser represents the parser object
@@ -80,23 +96,27 @@ func New(name, text string) *Parser {
 // of the concept AST
 func Concept(filename, text string) *Node {
 	p := New(filename, text)
-	cptHeading := p.parseConceptHeading()
-	conceptNode := newNode(nodeConcept, cptHeading)
+	cptHeading, rawText, lineNum := p.parseConceptHeading()
+	conceptNode := newNode(nodeConcept, cptHeading, rawText, lineNum)
 	conceptNode.children = p.parseSteps()
 	return conceptNode
 }
 
-func (p *Parser) parseConceptHeading() string {
+func (p *Parser) parseConceptHeading() (string, string, int) {
 	token := p.next()
 	var heading string
+	var rawText string
 	switch {
 	case token.typ == itemH1Hash:
-		heading = strings.TrimSpace(p.next().val)
+		nextVal := p.next().val
+		heading = strings.TrimSpace(nextVal)
+		rawText = token.val + nextVal
 	default:
 		heading = strings.TrimSpace(token.val)
+		rawText = token.val + p.next().val + p.next().val
 	}
 	p.next()
-	return heading
+	return heading, rawText, token.lineNum
 }
 
 func (p *Parser) parseSteps() []*Node {
@@ -104,7 +124,8 @@ func (p *Parser) parseSteps() []*Node {
 	for p.peek().typ != itemEOF {
 		token := p.next()
 		if token.typ == itemAsterisk {
-			steps = append(steps, newNode(nodeStep, strings.TrimSpace(p.next().val)))
+			nextVal := p.next().val
+			steps = append(steps, newNode(nodeStep, strings.TrimSpace(nextVal), token.val+nextVal, token.lineNum))
 		}
 	}
 	return steps

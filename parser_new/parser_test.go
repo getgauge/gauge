@@ -25,15 +25,23 @@ type conceptParseTest struct {
 	root *Node
 }
 
-func createNode(typ nodeType, value string, children []*Node) *Node {
-	n := newNode(typ, value)
+func createNode(typ nodeType, value, rawText string, lineNum int, children []*Node) *Node {
+	n := newNode(typ, value, rawText, lineNum)
 	n.children = children
 	return n
 }
 
 var conceptParseTests = []conceptParseTest{
-	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n", createNode(nodeConcept, "This is a concept heading", []*Node{newNode(nodeStep, "This is the first step"), newNode(nodeStep, "This is the second step")})},
-	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step", createNode(nodeConcept, "This is a concept heading", []*Node{newNode(nodeStep, "This is the first step"), newNode(nodeStep, "This is the second step")})},
+	{"simple concept", "# This is a concept heading\n* This is the first step\n* This is the second step\n",
+		createNode(nodeConcept, "This is a concept heading", "# This is a concept heading", 1, []*Node{
+			newNode(nodeStep, "This is the first step", "* This is the first step", 2),
+			newNode(nodeStep, "This is the second step", "* This is the second step", 3),
+		})},
+	{"simple underline concept", "This is a concept heading\n=======================\n* This is the first step\n* This is the second step",
+		createNode(nodeConcept, "This is a concept heading", "This is a concept heading\n=======================", 1, []*Node{
+			newNode(nodeStep, "This is the first step", "* This is the first step", 3),
+			newNode(nodeStep, "This is the second step", "* This is the second step", 4),
+		})},
 }
 
 func TestConceptParsing(t *testing.T) {
@@ -50,6 +58,12 @@ func equals(root1, root2 *Node) bool {
 		return false
 	}
 	if root1.value != root2.value {
+		return false
+	}
+	if root1.rawText != root2.rawText {
+		return false
+	}
+	if root1.lineNum != root2.lineNum {
 		return false
 	}
 	if len(root1.children) != len(root2.children) {
