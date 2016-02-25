@@ -1,2 +1,2 @@
-- []Make sure you mention Gauge and its plugin versions that you are referencing. Run `gauge -v` on command line. 
-- []Add any of the steps to reproduce the issue, if applicable.
+- [ ] Make sure you mention Gauge and its plugin versions that you are referencing. Run `gauge -v` on command line. 
+- [ ] Add any of the steps to reproduce the issue, if applicable.
