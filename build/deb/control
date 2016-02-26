@@ -1,0 +1,8 @@
+Package: gauge
+Version: <version>
+Maintainer: ThoughtWorks, Inc. <studios@thoughtworks.com>
+Section: devel
+Priority: optional
+Architecture: <arch>
+Description: Cross-platform test automation
+ Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.

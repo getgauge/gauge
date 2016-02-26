@@ -1,0 +1,12 @@
+#!/bin/bash
+
+PREFIX=/usr
+
+set_gaugeroot() {
+    echo "Adding GAUGE_ROOT to environment..."
+    echo "export GAUGE_ROOT=$PREFIX"  >> ~/.profile
+    updated_profile=1
+    source ~/.profile
+}
+
+set_gaugeroot
