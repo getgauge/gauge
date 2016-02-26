@@ -7,6 +7,7 @@ set_gaugeroot() {
     echo "export GAUGE_ROOT=$PREFIX"  >> ~/.profile
     updated_profile=1
     source ~/.profile
+    echo -e "GAUGE_ROOT has been set. If you face errors, run '$ source ~/.profile'\n"
 }
 
 set_gaugeroot
