@@ -2,12 +2,10 @@
 
 ### Requirements
 
-- Debian 7 or Ubuntu 14.04
+- Debian 7 or Ubuntu 14.04 or Fedora 22+
 - Install these packages:
-
-    ```
-    $ sudo apt-get install build-essential fakeroot
-    ```
+    - For Ubuntu/Debian: `$ sudo apt-get install build-essential fakeroot`
+    - For Fedora: `$ sudo dnf install make automake gcc gcc-c++ kernel-devel dpkg-dev`
 
  ### Run the script
 
