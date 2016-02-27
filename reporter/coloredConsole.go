@@ -32,7 +32,6 @@ type coloredConsole struct {
 	writer               *goterminal.Writer
 	headingBuffer        bytes.Buffer
 	pluginMessagesBuffer bytes.Buffer
-	errorMessagesBuffer  bytes.Buffer
 	indentation          int
 }
 
@@ -101,7 +100,6 @@ func (c *coloredConsole) StepEnd(failed bool) {
 			c.displayMessage(getSuccessSymbol(), ct.Green)
 		}
 	}
-	c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	c.writer.Reset()
 	c.resetBuffers()
 	c.indentation -= stepIndentation
@@ -130,7 +128,7 @@ func (c *coloredConsole) Error(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args...)
 	logger.GaugeLog.Error(msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline
-	c.errorMessagesBuffer.WriteString(msg)
+	c.displayMessage(msg, ct.Red)
 }
 
 // Write writes the bytes to console via goterminal's writer.
@@ -152,5 +150,4 @@ func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
 func (c *coloredConsole) resetBuffers() {
 	c.headingBuffer.Reset()
 	c.pluginMessagesBuffer.Reset()
-	c.errorMessagesBuffer.Reset()
 }

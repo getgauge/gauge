@@ -210,14 +210,14 @@ func (s *MySuite) TestDataTable_ColoredConsole(c *C) {
 }
 
 func (s *MySuite) TestError_ColoredConsole(c *C) {
-	_, cc := setupColoredConsole()
+	dw, cc := setupColoredConsole()
 	initialIndentation := 6
 	cc.indentation = initialIndentation
 	Verbose = true
 
 	cc.Error("Failed %s", "network error")
 
-	c.Assert(cc.errorMessagesBuffer.String(), Equals, fmt.Sprintf("%sFailed network error\n", spaces(initialIndentation+errorIndentation)))
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(initialIndentation+errorIndentation)))
 }
 
 func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
