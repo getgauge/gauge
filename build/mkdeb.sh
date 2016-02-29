@@ -1,6 +1,4 @@
 #!/bin/bash
-# mkdeb name version arch
-
 # Original source: https://github.com/gauge/gauge/blob/master/script/mkdeb
 
 set -e
