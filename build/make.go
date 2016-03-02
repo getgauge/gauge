@@ -212,6 +212,7 @@ var install = flag.Bool("install", false, "Install to the specified prefix")
 var nightly = flag.Bool("nightly", false, "Add nightly build information")
 var gaugeInstallPrefix = flag.String("prefix", "", "Specifies the prefix where gauge files will be installed")
 var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms windows, linux, darwin both x86 and x86_64")
+var targetLinux = flag.Bool("target-linux", false, "Compiles for linux only, both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
@@ -260,8 +261,22 @@ func main() {
 	}
 }
 
+func filteredPlatforms() []map[string]string {
+	filteredPlatformEnvs := platformEnvs[:0]
+	for _, x := range platformEnvs {
+		if *targetLinux {
+			if x[GOOS] == linux {
+				filteredPlatformEnvs = append(filteredPlatformEnvs, x)
+			}
+		} else {
+			filteredPlatformEnvs = append(filteredPlatformEnvs, x)
+		}
+	}
+	return filteredPlatformEnvs
+}
+
 func crossCompileGauge() {
-	for _, platformEnv := range platformEnvs {
+	for _, platformEnv := range filteredPlatforms() {
 		setEnv(platformEnv)
 		log.Printf("Compiling for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
 		compileGauge()
@@ -278,7 +293,7 @@ func installGauge() {
 
 func createGaugeDistributables(forAllPlatforms bool) {
 	if forAllPlatforms {
-		for _, platformEnv := range platformEnvs {
+		for _, platformEnv := range filteredPlatforms() {
 			setEnv(platformEnv)
 			log.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
 			createDistro()
