@@ -115,6 +115,17 @@ function create_deb() {
     mv "$TARGET_ROOT/$NAME-$VERSION-$ARCH.deb" "$DEB_PATH"
 }
 
+function cleanup_temp() {
+    rm -rf "$TARGET_ROOT"
+    rm -rf "$PKG_SRC"
+}
+
+function print_status() {
+    echo -e "\nCreated .deb package at: $DEB_PATH$NAME-$VERSION-$ARCH.deb"
+    echo -e "  Version : $VERSION"
+    echo -e "  Arch    : $ARCH\n"
+}
+
 function init() {
     check_and_rebuild
 
@@ -132,17 +143,6 @@ function init() {
         cleanup_temp
         print_status
     done
-}
-
-function cleanup_temp() {
-    rm -rf "$TARGET_ROOT"
-    rm -rf "$PKG_SRC"
-}
-
-function print_status() {
-    echo -e "\nCreated .deb package at: $DEB_PATH$NAME-$VERSION-$ARCH.deb"
-    echo -e "  Version : $VERSION"
-    echo -e "  Arch    : $ARCH\n"
 }
 
 # Let the game begin
