@@ -19,8 +19,9 @@ ARCH="i386"
 NAME="gauge"
 FILE_EXT="zip"
 FILE_MODE=755
-CONTROL_FILE="$BUILD_DIR/deb/control"
-POSTINST_FILE="$BUILD_DIR/deb/postinst"
+CONTROL_FILE="$BUILD_DIR/packaging/deb/control"
+POSTINST_FILE="$BUILD_DIR/packaging/deb/postinst"
+GAUGE_SETUP_FILE="$BUILD_DIR/packaging/gauge_setup"
 
 if [ "$OS" != "linux" ]; then
     err "This script can only be run on Linux systems"
@@ -100,9 +101,11 @@ function prep_deb() {
     mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
     cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
+    cp "$GAUGE_SETUP_FILE" "$TARGET/usr/bin/gauge_setup"
 
     CONTROL_DATA=`cat "$TARGET/DEBIAN/control"`
-    echo "$CONTROL_DATA" | sed "s/<version>/$VERSION/" | sed "s/<arch>/$ARCH/" > "$TARGET/DEBIAN/control"
+    INSTALLED_SIZE=`du -s $TARGET/usr/bin/ | sed "s/^\([0-9]*\).*$/\1/"`
+    echo "$CONTROL_DATA" | sed "s/<version>/$VERSION/" | sed "s/<arch>/$ARCH/" | sed "s/<size>/$INSTALLED_SIZE/" > "$TARGET/DEBIAN/control"
 
     # Copy generated LICENSE.md to /usr/share/doc/gauge/copyright
     mkdir -m $FILE_MODE -p "$TARGET/usr/share/doc/$NAME"

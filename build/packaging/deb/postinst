@@ -1,0 +1,4 @@
+#!/bin/bash
+
+MSG="\n\nPlease run the 'gauge_setup' command to complete installation.\n"
+echo -e "$MSG"
