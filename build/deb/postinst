@@ -2,7 +2,7 @@
 
 PREFIX=/usr
 
-set_gaugeroot() {
+function set_gaugeroot() {
     echo "Adding GAUGE_ROOT to environment..."
     echo "export GAUGE_ROOT=$PREFIX"  >> ~/.profile
     updated_profile=1
@@ -10,4 +10,9 @@ set_gaugeroot() {
     echo -e "GAUGE_ROOT has been set. If you face errors, run '$ source ~/.profile'\n"
 }
 
+function install_default_plugins() {
+    $PREFIX/bin/gauge --install html-report
+}
+
 set_gaugeroot
+install_default_plugins

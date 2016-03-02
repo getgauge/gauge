@@ -1,6 +1,9 @@
 #!/bin/bash
 # Original source: https://github.com/gauge/gauge/blob/master/script/mkdeb
 
+# Usage:
+# ./build/mkdeb.sh [--rebuild]
+
 set -e
 
 function err () {
@@ -14,6 +17,7 @@ BUILD_DIR="$ROOT/build"
 OS=`uname -s | tr '[:upper:]' '[:lower:]'`
 ARCH="i386"
 NAME="gauge"
+FILE_EXT="zip"
 FILE_MODE=755
 CONTROL_FILE="$BUILD_DIR/deb/control"
 POSTINST_FILE="$BUILD_DIR/deb/postinst"
@@ -28,42 +32,52 @@ fi
 
 function rebuild () {
     rm -rf "$DEPLOY_DIR"
-    go run build/make.go
-    go run build/make.go --distro
+    go run build/make.go --all-platforms --target-linux
+    go run build/make.go --distro --all-platforms --target-linux
 }
 
 function check_and_rebuild() {
     if [ ! -d "$DEPLOY_DIR" ]; then
-        echo "Building distro packages..."
+        echo -e "Building distro packages...\n"
         rebuild
     elif [ ! -z "$REBUILD_NEEDED" ]; then
-        echo "Rebuild flag set. Rebuilding distro packages..."
+        echo -e "Rebuild flag set. Rebuilding distro packages...\n"
         rebuild
     else
-        echo "Reusing existing distro package. Use '--rebuild' to trigger a package rebuild..."
+        echo -e "Reusing existing distro package. Use '--rebuild' to trigger a package rebuild...\n"
+    fi
+}
+
+function set_arch() {
+    if [ -z "$1" ]; then
+        ARCHTYPE=$(ls $NAME*.$FILE_EXT | head -1 | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 2)
+    else
+        ARCHTYPE=$(echo $1 | sed "s/^[a-z]*\///" | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 2)
+    fi
+
+    if [ "$ARCHTYPE" == "x86_64" ]; then
+        ARCH="amd64"
+    else
+        ARCH="i386"
     fi
 }
 
 function set_version() {
-    VERSION=$(ls $NAME*zip | head -1 | sed "s/\.[^\.]*$//" | sed "s/$NAME-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//")
-}
-
-function set_arch() {
-    ARCHTYPE=$(ls $NAME*zip | head -1 | rev | cut -d '-' -f 1 | rev | cut -d '.' -f 2)
-
-    if [ ARCHTYPE == "x86_64" ]; then
-        ARCH="amd64"
+    if [ -z "$1" ]; then
+        VERSION=$(ls $NAME*$ARCHTYPE.$FILE_EXT | head -1 | sed "s/\.[^\.]*$//" | sed "s/$NAME-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//")
+    else
+        VERSION=$(echo `basename $1` | sed "s/^[a-z]*\///" | sed "s/\.[^\.]*$//" | sed "s/$NAME-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//")
     fi
 }
 
 function set_pkg_info() {
-    PKG="$DEPLOY_DIR/$NAME-$VERSION-$OS.$ARCHTYPE.zip"
+    PKG="$DEPLOY_DIR/$NAME-$VERSION-$OS.$ARCHTYPE.$FILE_EXT"
     PKG_SRC="$DEPLOY_DIR/$NAME-$VERSION-pkg"
 }
 
 function set_info() {
-    set_version
-    set_arch
+    set_arch "$1"
+    set_version "$1"
     set_pkg_info
 }
 
@@ -96,7 +110,7 @@ function prep_deb() {
 }
 
 function create_deb() {
-    echo "Generating .deb"
+    echo "Generating .deb..."
     fakeroot dpkg-deb -b "$TARGET"
     mv "$TARGET_ROOT/$NAME-$VERSION-$ARCH.deb" "$DEB_PATH"
 }
@@ -104,14 +118,20 @@ function create_deb() {
 function init() {
     check_and_rebuild
 
-    pushd $DEPLOY_DIR > /dev/null
-    set_info
-    unzip -q "$PKG" -d "$PKG_SRC"
-    popd > /dev/null
+    for f in `ls $DEPLOY_DIR/$NAME-*$OS*.$FILE_EXT`; do
+        clean_stage
 
-    clean_stage
-    prep_deb
-    create_deb
+        pushd $DEPLOY_DIR > /dev/null
+        set_info "$f"
+        unzip -q "$PKG" -d "$PKG_SRC"
+        popd > /dev/null
+
+        clean_stage
+        prep_deb
+        create_deb
+        cleanup_temp
+        print_status
+    done
 }
 
 function cleanup_temp() {
@@ -125,6 +145,5 @@ function print_status() {
     echo -e "  Arch    : $ARCH\n"
 }
 
+# Let the game begin
 init
-cleanup_temp
-print_status
