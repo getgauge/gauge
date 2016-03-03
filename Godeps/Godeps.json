@@ -30,17 +30,25 @@
 			"ImportPath": "github.com/mattn/go-isatty",
 			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
 		},
-        {
-            "ImportPath": "gopkg.in/check.v1",
-            "Rev": "64131543e7896d5bcc6bd5a76287eb75ea96c673"
-        },
 		{
 			"ImportPath": "github.com/op/go-logging",
 			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
 		},
 		{
-			"ImportPath": "google.golang.org/grpc",
-			"Rev": "89f694edb447e224bd0ffff7a03f9161ce486482"
+			"ImportPath": "golang.org/x/net/context",
+			"Rev": "4599ae7937fce9b670ce32b8ad32bbb7ae726b3e"
+		},
+		{
+			"ImportPath": "golang.org/x/net/http2",
+			"Rev": "4599ae7937fce9b670ce32b8ad32bbb7ae726b3e"
+		},
+		{
+			"ImportPath": "golang.org/x/net/internal/timeseries",
+			"Rev": "4599ae7937fce9b670ce32b8ad32bbb7ae726b3e"
+		},
+		{
+			"ImportPath": "golang.org/x/net/trace",
+			"Rev": "4599ae7937fce9b670ce32b8ad32bbb7ae726b3e"
 		},
 		{
 			"ImportPath": "golang.org/x/sys/unix",
@@ -57,6 +65,10 @@
 		{
 			"ImportPath": "golang.org/x/tools/go/types",
 			"Rev": "2ef5a0d23bc4e07573bb094b97e96c9cd9844fca"
+		},
+		{
+			"ImportPath": "google.golang.org/grpc",
+			"Rev": "89f694edb447e224bd0ffff7a03f9161ce486482"
 		},
 		{
 			"ImportPath": "gopkg.in/fsnotify.v1",
