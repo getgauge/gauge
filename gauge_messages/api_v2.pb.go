@@ -41,8 +41,21 @@ var ExecutionRequest_LogLevel_value = map[string]int32{
 	"ERROR":   3,
 }
 
+func (x ExecutionRequest_LogLevel) Enum() *ExecutionRequest_LogLevel {
+	p := new(ExecutionRequest_LogLevel)
+	*p = x
+	return p
+}
 func (x ExecutionRequest_LogLevel) String() string {
 	return proto.EnumName(ExecutionRequest_LogLevel_name, int32(x))
+}
+func (x *ExecutionRequest_LogLevel) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ExecutionRequest_LogLevel_value, data, "ExecutionRequest_LogLevel")
+	if err != nil {
+		return err
+	}
+	*x = ExecutionRequest_LogLevel(value)
+	return nil
 }
 func (ExecutionRequest_LogLevel) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{0, 0} }
 
@@ -63,26 +76,39 @@ var ExecutionRequest_Strategy_value = map[string]int32{
 	"EAGER": 1,
 }
 
+func (x ExecutionRequest_Strategy) Enum() *ExecutionRequest_Strategy {
+	p := new(ExecutionRequest_Strategy)
+	*p = x
+	return p
+}
 func (x ExecutionRequest_Strategy) String() string {
 	return proto.EnumName(ExecutionRequest_Strategy_name, int32(x))
+}
+func (x *ExecutionRequest_Strategy) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ExecutionRequest_Strategy_value, data, "ExecutionRequest_Strategy")
+	if err != nil {
+		return err
+	}
+	*x = ExecutionRequest_Strategy(value)
+	return nil
 }
 func (ExecutionRequest_Strategy) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{0, 1} }
 
 // Types of Execution result
-type ExecutionResult_ExecutionResultType int32
+type ExecutionResponse_ExecutionResponseType int32
 
 const (
-	ExecutionResult_ScenarioResult           ExecutionResult_ExecutionResultType = 0
-	ExecutionResult_BeforeSuiteHookResult    ExecutionResult_ExecutionResultType = 1
-	ExecutionResult_AfterSuiteHookResult     ExecutionResult_ExecutionResultType = 2
-	ExecutionResult_BeforeSpecHookResult     ExecutionResult_ExecutionResultType = 3
-	ExecutionResult_AfterSpecHookResult      ExecutionResult_ExecutionResultType = 4
-	ExecutionResult_SuiteDataStoreInitResult ExecutionResult_ExecutionResultType = 5
-	ExecutionResult_SpecDataStoreInitResult  ExecutionResult_ExecutionResultType = 6
-	ExecutionResult_ValidationResult         ExecutionResult_ExecutionResultType = 7
+	ExecutionResponse_ScenarioResult           ExecutionResponse_ExecutionResponseType = 0
+	ExecutionResponse_BeforeSuiteHookResult    ExecutionResponse_ExecutionResponseType = 1
+	ExecutionResponse_AfterSuiteHookResult     ExecutionResponse_ExecutionResponseType = 2
+	ExecutionResponse_BeforeSpecHookResult     ExecutionResponse_ExecutionResponseType = 3
+	ExecutionResponse_AfterSpecHookResult      ExecutionResponse_ExecutionResponseType = 4
+	ExecutionResponse_SuiteDataStoreInitResult ExecutionResponse_ExecutionResponseType = 5
+	ExecutionResponse_SpecDataStoreInitResult  ExecutionResponse_ExecutionResponseType = 6
+	ExecutionResponse_ValidationResult         ExecutionResponse_ExecutionResponseType = 7
 )
 
-var ExecutionResult_ExecutionResultType_name = map[int32]string{
+var ExecutionResponse_ExecutionResponseType_name = map[int32]string{
 	0: "ScenarioResult",
 	1: "BeforeSuiteHookResult",
 	2: "AfterSuiteHookResult",
@@ -92,7 +118,7 @@ var ExecutionResult_ExecutionResultType_name = map[int32]string{
 	6: "SpecDataStoreInitResult",
 	7: "ValidationResult",
 }
-var ExecutionResult_ExecutionResultType_value = map[string]int32{
+var ExecutionResponse_ExecutionResponseType_value = map[string]int32{
 	"ScenarioResult":           0,
 	"BeforeSuiteHookResult":    1,
 	"AfterSuiteHookResult":     2,
@@ -103,62 +129,89 @@ var ExecutionResult_ExecutionResultType_value = map[string]int32{
 	"ValidationResult":         7,
 }
 
-func (x ExecutionResult_ExecutionResultType) String() string {
-	return proto.EnumName(ExecutionResult_ExecutionResultType_name, int32(x))
+func (x ExecutionResponse_ExecutionResponseType) Enum() *ExecutionResponse_ExecutionResponseType {
+	p := new(ExecutionResponse_ExecutionResponseType)
+	*p = x
+	return p
 }
-func (ExecutionResult_ExecutionResultType) EnumDescriptor() ([]byte, []int) {
+func (x ExecutionResponse_ExecutionResponseType) String() string {
+	return proto.EnumName(ExecutionResponse_ExecutionResponseType_name, int32(x))
+}
+func (x *ExecutionResponse_ExecutionResponseType) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ExecutionResponse_ExecutionResponseType_value, data, "ExecutionResponse_ExecutionResponseType")
+	if err != nil {
+		return err
+	}
+	*x = ExecutionResponse_ExecutionResponseType(value)
+	return nil
+}
+func (ExecutionResponse_ExecutionResponseType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor1, []int{1, 0}
 }
 
 // Specifies the execution status
-type ExecutionResult_Status int32
+type ExecutionResponse_Status int32
 
 const (
-	ExecutionResult_PASSED  ExecutionResult_Status = 0
-	ExecutionResult_FAILED  ExecutionResult_Status = 1
-	ExecutionResult_SKIPPED ExecutionResult_Status = 2
+	ExecutionResponse_PASSED  ExecutionResponse_Status = 0
+	ExecutionResponse_FAILED  ExecutionResponse_Status = 1
+	ExecutionResponse_SKIPPED ExecutionResponse_Status = 2
 )
 
-var ExecutionResult_Status_name = map[int32]string{
+var ExecutionResponse_Status_name = map[int32]string{
 	0: "PASSED",
 	1: "FAILED",
 	2: "SKIPPED",
 }
-var ExecutionResult_Status_value = map[string]int32{
+var ExecutionResponse_Status_value = map[string]int32{
 	"PASSED":  0,
 	"FAILED":  1,
 	"SKIPPED": 2,
 }
 
-func (x ExecutionResult_Status) String() string {
-	return proto.EnumName(ExecutionResult_Status_name, int32(x))
+func (x ExecutionResponse_Status) Enum() *ExecutionResponse_Status {
+	p := new(ExecutionResponse_Status)
+	*p = x
+	return p
 }
-func (ExecutionResult_Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{1, 1} }
+func (x ExecutionResponse_Status) String() string {
+	return proto.EnumName(ExecutionResponse_Status_name, int32(x))
+}
+func (x *ExecutionResponse_Status) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(ExecutionResponse_Status_value, data, "ExecutionResponse_Status")
+	if err != nil {
+		return err
+	}
+	*x = ExecutionResponse_Status(value)
+	return nil
+}
+func (ExecutionResponse_Status) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{1, 1} }
 
 // ExecutionRequest defines the structure of requests that the API's consumers can send to request execution of specs/scenarios
 type ExecutionRequest struct {
 	// Each ExecutionRequest can ask to execute multiple spec files or multiple scenarios in a spec or a directory or all
 	Specs []string `protobuf:"bytes,1,rep,name=specs" json:"specs,omitempty"`
 	// Tag expression to filter specs and scenarios during execution. Default: ""
-	Tags string `protobuf:"bytes,2,opt,name=tags" json:"tags,omitempty"`
+	Tags *string `protobuf:"bytes,2,opt,name=tags" json:"tags,omitempty"`
 	// The working directory for gauge.
-	WorkingDir string `protobuf:"bytes,3,opt,name=workingDir" json:"workingDir,omitempty"`
+	WorkingDir *string `protobuf:"bytes,3,opt,name=workingDir" json:"workingDir,omitempty"`
 	// Environment to choose for gauge.
-	Environment string                    `protobuf:"bytes,4,opt,name=environment" json:"environment,omitempty"`
-	LogLevel    ExecutionRequest_LogLevel `protobuf:"varint,5,opt,name=logLevel,enum=gauge.messages.ExecutionRequest_LogLevel" json:"logLevel,omitempty"`
+	Environment *string                    `protobuf:"bytes,4,opt,name=environment" json:"environment,omitempty"`
+	LogLevel    *ExecutionRequest_LogLevel `protobuf:"varint,5,opt,name=logLevel,enum=gauge.messages.ExecutionRequest_LogLevel" json:"logLevel,omitempty"`
 	// Whether to run gauge in parallel mode.
-	IsParallel bool `protobuf:"varint,6,opt,name=isParallel" json:"isParallel,omitempty"`
+	IsParallel *bool `protobuf:"varint,6,opt,name=isParallel" json:"isParallel,omitempty"`
 	// If isParallel is true, this specifies how many parallel streams to run.
-	ParallelStreams int32 `protobuf:"varint,7,opt,name=parallelStreams" json:"parallelStreams,omitempty"`
+	ParallelStreams *int32 `protobuf:"varint,7,opt,name=parallelStreams" json:"parallelStreams,omitempty"`
 	// Specify which group of specs to execute, based on number of parallel streams. Works only when strategy is EAGER.
-	Group int32 `protobuf:"varint,8,opt,name=group" json:"group,omitempty"`
+	Group *int32 `protobuf:"varint,8,opt,name=group" json:"group,omitempty"`
 	// Toggles simple console reporting
-	SimpleConsole bool `protobuf:"varint,9,opt,name=simpleConsole" json:"simpleConsole,omitempty"`
+	SimpleConsole *bool `protobuf:"varint,9,opt,name=simpleConsole" json:"simpleConsole,omitempty"`
 	// If true, sorts execution of specifications alphabetically
-	Sort     bool                      `protobuf:"varint,10,opt,name=sort" json:"sort,omitempty"`
-	Strategy ExecutionRequest_Strategy `protobuf:"varint,11,opt,name=strategy,enum=gauge.messages.ExecutionRequest_Strategy" json:"strategy,omitempty"`
+	Sort     *bool                      `protobuf:"varint,10,opt,name=sort" json:"sort,omitempty"`
+	Strategy *ExecutionRequest_Strategy `protobuf:"varint,11,opt,name=strategy,enum=gauge.messages.ExecutionRequest_Strategy" json:"strategy,omitempty"`
 	// Specify against which rows of datatable the scenarios should be executed
-	TableRows string `protobuf:"bytes,12,opt,name=tableRows" json:"tableRows,omitempty"`
+	TableRows        *string `protobuf:"bytes,12,opt,name=tableRows" json:"tableRows,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
 }
 
 func (m *ExecutionRequest) Reset()                    { *m = ExecutionRequest{} }
@@ -166,55 +219,199 @@ func (m *ExecutionRequest) String() string            { return proto.CompactText
 func (*ExecutionRequest) ProtoMessage()               {}
 func (*ExecutionRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
 
-// ExecutionResult defines the structure of response for ExecutionRequest message
-type ExecutionResult struct {
-	Type ExecutionResult_ExecutionResultType `protobuf:"varint,1,opt,name=type,enum=gauge.messages.ExecutionResult_ExecutionResultType" json:"type,omitempty"`
-	// An identifier for the current execution result
-	ID     string                 `protobuf:"bytes,2,opt,name=ID" json:"ID,omitempty"`
-	Status ExecutionResult_Status `protobuf:"varint,3,opt,name=status,enum=gauge.messages.ExecutionResult_Status" json:"status,omitempty"`
-	// Contains the Execution error and its details
-	Error []*ExecutionError `protobuf:"bytes,4,rep,name=error" json:"error,omitempty"`
-	// Specifies the execution time
-	ExecutionTime int64 `protobuf:"varint,5,opt,name=executionTime" json:"executionTime,omitempty"`
-	// Contains the console output messages
-	Stdout string `protobuf:"bytes,6,opt,name=stdout" json:"stdout,omitempty"`
+func (m *ExecutionRequest) GetSpecs() []string {
+	if m != nil {
+		return m.Specs
+	}
+	return nil
 }
 
-func (m *ExecutionResult) Reset()                    { *m = ExecutionResult{} }
-func (m *ExecutionResult) String() string            { return proto.CompactTextString(m) }
-func (*ExecutionResult) ProtoMessage()               {}
-func (*ExecutionResult) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (m *ExecutionRequest) GetTags() string {
+	if m != nil && m.Tags != nil {
+		return *m.Tags
+	}
+	return ""
+}
 
-func (m *ExecutionResult) GetError() []*ExecutionError {
+func (m *ExecutionRequest) GetWorkingDir() string {
+	if m != nil && m.WorkingDir != nil {
+		return *m.WorkingDir
+	}
+	return ""
+}
+
+func (m *ExecutionRequest) GetEnvironment() string {
+	if m != nil && m.Environment != nil {
+		return *m.Environment
+	}
+	return ""
+}
+
+func (m *ExecutionRequest) GetLogLevel() ExecutionRequest_LogLevel {
+	if m != nil && m.LogLevel != nil {
+		return *m.LogLevel
+	}
+	return ExecutionRequest_INFO
+}
+
+func (m *ExecutionRequest) GetIsParallel() bool {
+	if m != nil && m.IsParallel != nil {
+		return *m.IsParallel
+	}
+	return false
+}
+
+func (m *ExecutionRequest) GetParallelStreams() int32 {
+	if m != nil && m.ParallelStreams != nil {
+		return *m.ParallelStreams
+	}
+	return 0
+}
+
+func (m *ExecutionRequest) GetGroup() int32 {
+	if m != nil && m.Group != nil {
+		return *m.Group
+	}
+	return 0
+}
+
+func (m *ExecutionRequest) GetSimpleConsole() bool {
+	if m != nil && m.SimpleConsole != nil {
+		return *m.SimpleConsole
+	}
+	return false
+}
+
+func (m *ExecutionRequest) GetSort() bool {
+	if m != nil && m.Sort != nil {
+		return *m.Sort
+	}
+	return false
+}
+
+func (m *ExecutionRequest) GetStrategy() ExecutionRequest_Strategy {
+	if m != nil && m.Strategy != nil {
+		return *m.Strategy
+	}
+	return ExecutionRequest_LAZY
+}
+
+func (m *ExecutionRequest) GetTableRows() string {
+	if m != nil && m.TableRows != nil {
+		return *m.TableRows
+	}
+	return ""
+}
+
+// ExecutionResponse defines the structure of response for ExecutionRequest message
+type ExecutionResponse struct {
+	Type *ExecutionResponse_ExecutionResponseType `protobuf:"varint,1,req,name=type,enum=gauge.messages.ExecutionResponse_ExecutionResponseType" json:"type,omitempty"`
+	// An identifier for the current execution result
+	ID     *string                   `protobuf:"bytes,2,opt,name=ID" json:"ID,omitempty"`
+	Status *ExecutionResponse_Status `protobuf:"varint,3,opt,name=status,enum=gauge.messages.ExecutionResponse_Status" json:"status,omitempty"`
+	// Contains the Execution error and its details
+	Error         []*ExecutionResponse_ExecutionError `protobuf:"bytes,4,rep,name=error" json:"error,omitempty"`
+	ExecutionTime *int64                              `protobuf:"varint,5,opt,name=executionTime" json:"executionTime,omitempty"`
+	// Contains the console output messages
+	Stdout           *string `protobuf:"bytes,6,opt,name=stdout" json:"stdout,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ExecutionResponse) Reset()                    { *m = ExecutionResponse{} }
+func (m *ExecutionResponse) String() string            { return proto.CompactTextString(m) }
+func (*ExecutionResponse) ProtoMessage()               {}
+func (*ExecutionResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+
+func (m *ExecutionResponse) GetType() ExecutionResponse_ExecutionResponseType {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return ExecutionResponse_ScenarioResult
+}
+
+func (m *ExecutionResponse) GetID() string {
+	if m != nil && m.ID != nil {
+		return *m.ID
+	}
+	return ""
+}
+
+func (m *ExecutionResponse) GetStatus() ExecutionResponse_Status {
+	if m != nil && m.Status != nil {
+		return *m.Status
+	}
+	return ExecutionResponse_PASSED
+}
+
+func (m *ExecutionResponse) GetError() []*ExecutionResponse_ExecutionError {
 	if m != nil {
 		return m.Error
 	}
 	return nil
 }
 
-// ExecutionError represents the failure during execution along with details of failure
-type ExecutionError struct {
-	// / Stacktrace from the failure
-	StackTrace string `protobuf:"bytes,1,opt,name=stackTrace" json:"stackTrace,omitempty"`
-	// / Error message from the failure
-	ErrorMessage string `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
-	// / Byte array holding the screenshot taken at the time of failure.
-	ScreenShot []byte `protobuf:"bytes,3,opt,name=screenShot,proto3" json:"screenShot,omitempty"`
+func (m *ExecutionResponse) GetExecutionTime() int64 {
+	if m != nil && m.ExecutionTime != nil {
+		return *m.ExecutionTime
+	}
+	return 0
 }
 
-func (m *ExecutionError) Reset()                    { *m = ExecutionError{} }
-func (m *ExecutionError) String() string            { return proto.CompactTextString(m) }
-func (*ExecutionError) ProtoMessage()               {}
-func (*ExecutionError) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (m *ExecutionResponse) GetStdout() string {
+	if m != nil && m.Stdout != nil {
+		return *m.Stdout
+	}
+	return ""
+}
+
+// Specifies the execution time
+// ExecutionError represents the failure during execution along with details of failure
+type ExecutionResponse_ExecutionError struct {
+	// Stacktrace from the failure
+	StackTrace *string `protobuf:"bytes,1,opt,name=stackTrace" json:"stackTrace,omitempty"`
+	// Error message from the failure
+	ErrorMessage *string `protobuf:"bytes,2,opt,name=errorMessage" json:"errorMessage,omitempty"`
+	// Byte array holding the screenshot taken at the time of failure.
+	ScreenShot       []byte `protobuf:"bytes,3,opt,name=screenShot" json:"screenShot,omitempty"`
+	XXX_unrecognized []byte `json:"-"`
+}
+
+func (m *ExecutionResponse_ExecutionError) Reset()         { *m = ExecutionResponse_ExecutionError{} }
+func (m *ExecutionResponse_ExecutionError) String() string { return proto.CompactTextString(m) }
+func (*ExecutionResponse_ExecutionError) ProtoMessage()    {}
+func (*ExecutionResponse_ExecutionError) Descriptor() ([]byte, []int) {
+	return fileDescriptor1, []int{1, 0}
+}
+
+func (m *ExecutionResponse_ExecutionError) GetStackTrace() string {
+	if m != nil && m.StackTrace != nil {
+		return *m.StackTrace
+	}
+	return ""
+}
+
+func (m *ExecutionResponse_ExecutionError) GetErrorMessage() string {
+	if m != nil && m.ErrorMessage != nil {
+		return *m.ErrorMessage
+	}
+	return ""
+}
+
+func (m *ExecutionResponse_ExecutionError) GetScreenShot() []byte {
+	if m != nil {
+		return m.ScreenShot
+	}
+	return nil
+}
 
 func init() {
 	proto.RegisterType((*ExecutionRequest)(nil), "gauge.messages.ExecutionRequest")
-	proto.RegisterType((*ExecutionResult)(nil), "gauge.messages.ExecutionResult")
-	proto.RegisterType((*ExecutionError)(nil), "gauge.messages.ExecutionError")
+	proto.RegisterType((*ExecutionResponse)(nil), "gauge.messages.ExecutionResponse")
+	proto.RegisterType((*ExecutionResponse_ExecutionError)(nil), "gauge.messages.ExecutionResponse.ExecutionError")
 	proto.RegisterEnum("gauge.messages.ExecutionRequest_LogLevel", ExecutionRequest_LogLevel_name, ExecutionRequest_LogLevel_value)
 	proto.RegisterEnum("gauge.messages.ExecutionRequest_Strategy", ExecutionRequest_Strategy_name, ExecutionRequest_Strategy_value)
-	proto.RegisterEnum("gauge.messages.ExecutionResult_ExecutionResultType", ExecutionResult_ExecutionResultType_name, ExecutionResult_ExecutionResultType_value)
-	proto.RegisterEnum("gauge.messages.ExecutionResult_Status", ExecutionResult_Status_name, ExecutionResult_Status_value)
+	proto.RegisterEnum("gauge.messages.ExecutionResponse_ExecutionResponseType", ExecutionResponse_ExecutionResponseType_name, ExecutionResponse_ExecutionResponseType_value)
+	proto.RegisterEnum("gauge.messages.ExecutionResponse_Status", ExecutionResponse_Status_name, ExecutionResponse_Status_value)
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -252,7 +449,7 @@ func (c *executionClient) Execute(ctx context.Context, in *ExecutionRequest, opt
 }
 
 type Execution_ExecuteClient interface {
-	Recv() (*ExecutionResult, error)
+	Recv() (*ExecutionResponse, error)
 	grpc.ClientStream
 }
 
@@ -260,8 +457,8 @@ type executionExecuteClient struct {
 	grpc.ClientStream
 }
 
-func (x *executionExecuteClient) Recv() (*ExecutionResult, error) {
-	m := new(ExecutionResult)
+func (x *executionExecuteClient) Recv() (*ExecutionResponse, error) {
+	m := new(ExecutionResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -288,7 +485,7 @@ func _Execution_Execute_Handler(srv interface{}, stream grpc.ServerStream) error
 }
 
 type Execution_ExecuteServer interface {
-	Send(*ExecutionResult) error
+	Send(*ExecutionResponse) error
 	grpc.ServerStream
 }
 
@@ -296,7 +493,7 @@ type executionExecuteServer struct {
 	grpc.ServerStream
 }
 
-func (x *executionExecuteServer) Send(m *ExecutionResult) error {
+func (x *executionExecuteServer) Send(m *ExecutionResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -314,44 +511,44 @@ var _Execution_serviceDesc = grpc.ServiceDesc{
 }
 
 var fileDescriptor1 = []byte{
-	// 620 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x8c, 0x54, 0x4d, 0x6f, 0xd3, 0x40,
-	0x10, 0xad, 0xe3, 0x7c, 0x79, 0x92, 0xa6, 0x66, 0xdb, 0xaa, 0xe6, 0x43, 0xb4, 0xf2, 0x01, 0x95,
-	0x43, 0x23, 0x94, 0x4a, 0x70, 0xe0, 0xe4, 0x12, 0xb7, 0x44, 0x84, 0x34, 0xb2, 0x0b, 0x08, 0x24,
-	0x84, 0xb6, 0xe9, 0xd4, 0x58, 0x75, 0xbc, 0x66, 0x77, 0xdd, 0xd2, 0x2b, 0xbf, 0x84, 0xdf, 0xc6,
-	0x2f, 0x61, 0xbd, 0x31, 0xfd, 0x88, 0x0a, 0xe1, 0xe6, 0x99, 0xb7, 0x6f, 0xe7, 0xcd, 0xbc, 0x59,
-	0x43, 0x9b, 0x66, 0xf1, 0x97, 0xf3, 0x5e, 0x37, 0xe3, 0x4c, 0x32, 0xd2, 0x89, 0x68, 0x1e, 0x61,
-	0x77, 0x8a, 0x42, 0xd0, 0x08, 0x85, 0xfb, 0xd3, 0x04, 0xdb, 0xff, 0x8e, 0x93, 0x5c, 0xc6, 0x2c,
-	0x0d, 0xf0, 0x5b, 0x8e, 0x42, 0x92, 0x65, 0xa8, 0x89, 0x0c, 0x27, 0xc2, 0x31, 0xb6, 0xcc, 0x6d,
-	0x8b, 0xb4, 0xa1, 0x2a, 0x69, 0x24, 0x9c, 0xca, 0x96, 0xa1, 0x22, 0x02, 0x70, 0xc1, 0xf8, 0x59,
-	0x9c, 0x46, 0xfd, 0x98, 0x3b, 0xa6, 0xce, 0xad, 0x42, 0x0b, 0xd3, 0xf3, 0x98, 0xb3, 0x74, 0x8a,
-	0xa9, 0x74, 0xaa, 0x3a, 0xf9, 0x12, 0x9a, 0x09, 0x8b, 0x86, 0x78, 0x8e, 0x89, 0x53, 0x53, 0x99,
-	0x4e, 0xef, 0x69, 0xf7, 0x76, 0xf5, 0xee, 0x7c, 0xe5, 0xee, 0xb0, 0x24, 0x14, 0x55, 0x62, 0x31,
-	0xa6, 0x9c, 0x26, 0x89, 0xa2, 0xd7, 0x15, 0xbd, 0x49, 0x36, 0x60, 0x25, 0x2b, 0x33, 0xa1, 0xe4,
-	0x48, 0xa7, 0xc2, 0x69, 0x28, 0xa0, 0x56, 0xe8, 0x8d, 0x38, 0xcb, 0x33, 0xa7, 0xa9, 0xc3, 0x75,
-	0x58, 0x16, 0xf1, 0x34, 0x4b, 0xf0, 0x15, 0x4b, 0x05, 0x4b, 0xd0, 0xb1, 0x34, 0x5d, 0xb5, 0x21,
-	0x18, 0x97, 0x0e, 0xe8, 0x48, 0xa9, 0x13, 0x92, 0x53, 0x89, 0xd1, 0xa5, 0xd3, 0xfa, 0x4f, 0x75,
-	0x61, 0x49, 0x20, 0xf7, 0xc0, 0x92, 0xf4, 0x38, 0xc1, 0x80, 0x5d, 0x08, 0xa7, 0x5d, 0x74, 0xeb,
-	0xbe, 0x80, 0xe6, 0x95, 0xf8, 0x26, 0x54, 0x07, 0xa3, 0xfd, 0x43, 0x7b, 0x89, 0x58, 0x50, 0xeb,
-	0xfb, 0x7b, 0xef, 0x0e, 0x6c, 0x83, 0xb4, 0xa0, 0xf1, 0xc1, 0x0b, 0x46, 0x83, 0xd1, 0x81, 0x5d,
-	0x29, 0xf2, 0x7e, 0x10, 0x1c, 0x06, 0xb6, 0xe9, 0x6e, 0x42, 0xf3, 0xea, 0x5e, 0x45, 0x1c, 0x7a,
-	0x9f, 0x3e, 0xce, 0x88, 0xbe, 0x77, 0xe0, 0x07, 0xb6, 0xe1, 0xfe, 0xa8, 0xc2, 0xca, 0x0d, 0x29,
-	0x22, 0x4f, 0x24, 0xf1, 0x94, 0x25, 0x97, 0x19, 0x2a, 0x83, 0x0a, 0xe5, 0xbb, 0xff, 0x50, 0x5e,
-	0x1c, 0x9f, 0x8f, 0x8f, 0x14, 0x55, 0x0d, 0xb8, 0x32, 0xe8, 0x97, 0x9e, 0x3e, 0x87, 0xba, 0x90,
-	0x54, 0xe6, 0x42, 0xfb, 0xd9, 0xe9, 0x3d, 0x59, 0x74, 0x61, 0xa8, 0x4f, 0x93, 0x1d, 0xa8, 0x21,
-	0xe7, 0x8c, 0x2b, 0xc7, 0xcd, 0xed, 0x56, 0xef, 0xf1, 0x5f, 0x69, 0x7e, 0x71, 0xaa, 0x30, 0x06,
-	0xff, 0x64, 0x8e, 0xe2, 0x29, 0xea, 0xb5, 0x30, 0x49, 0xa7, 0xa8, 0x7e, 0xc2, 0x72, 0xa9, 0x7d,
-	0xb6, 0xdc, 0x5f, 0x06, 0xac, 0xde, 0xa5, 0x98, 0x40, 0x27, 0x9c, 0x60, 0x4a, 0x79, 0xcc, 0x66,
-	0x59, 0x35, 0xa7, 0xfb, 0xb0, 0xbe, 0x87, 0xa7, 0x8c, 0x63, 0x98, 0xc7, 0x12, 0x5f, 0x33, 0x76,
-	0x56, 0x42, 0x06, 0x71, 0x60, 0xcd, 0x3b, 0x95, 0xc8, 0xe7, 0x91, 0x4a, 0x81, 0x94, 0x24, 0xb5,
-	0xe5, 0x37, 0x10, 0x53, 0xad, 0xd8, 0xea, 0x8c, 0x73, 0x1b, 0xa8, 0x92, 0x47, 0xe0, 0xe8, 0x7b,
-	0xfa, 0x54, 0xd2, 0x50, 0x2a, 0xea, 0x20, 0x8d, 0x65, 0x89, 0xd6, 0xc8, 0x43, 0xd8, 0x28, 0x18,
-	0x77, 0x81, 0x75, 0xb2, 0x06, 0xf6, 0x7b, 0x9a, 0xc4, 0x27, 0xf4, 0xba, 0x1d, 0xbb, 0xe1, 0xee,
-	0x40, 0xbd, 0x1c, 0x22, 0x40, 0x7d, 0xec, 0x85, 0xa1, 0xdf, 0x57, 0xed, 0xa8, 0xef, 0x7d, 0x6f,
-	0x30, 0x54, 0xdf, 0x7a, 0x61, 0xc2, 0x37, 0x83, 0xf1, 0x58, 0x05, 0x15, 0x77, 0x04, 0x9d, 0xb9,
-	0x61, 0xaa, 0xb3, 0xca, 0xb3, 0xc9, 0xd9, 0x11, 0xa7, 0x93, 0xd9, 0x22, 0x58, 0xaa, 0x54, 0x5b,
-	0xfb, 0xf1, 0x76, 0x66, 0xc0, 0xf5, 0x8b, 0x15, 0x13, 0x8e, 0x98, 0x86, 0x5f, 0x99, 0xd4, 0x0e,
-	0xb7, 0x7b, 0x9f, 0xc1, 0xba, 0xba, 0x8f, 0x8c, 0xa1, 0x31, 0xf3, 0x05, 0xc9, 0xd6, 0xa2, 0x47,
-	0xf0, 0x60, 0x73, 0xc1, 0x6e, 0xb8, 0x4b, 0xcf, 0x8c, 0xe3, 0xba, 0xfe, 0xdb, 0xec, 0xfe, 0x0e,
-	0x00, 0x00, 0xff, 0xff, 0x55, 0xfb, 0x7d, 0xf2, 0x7d, 0x04, 0x00, 0x00,
+	// 619 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x09, 0x6e, 0x88, 0x02, 0xff, 0x94, 0x53, 0xdf, 0x53, 0xd3, 0x4a,
+	0x18, 0x25, 0x4d, 0x7f, 0x7e, 0x2d, 0xbd, 0x61, 0x81, 0x21, 0x97, 0x7b, 0x67, 0xc4, 0x3c, 0xe1,
+	0x83, 0x1d, 0xa6, 0x2f, 0x38, 0xe3, 0x83, 0x53, 0x6c, 0xc0, 0x8e, 0xb5, 0x74, 0x12, 0xd4, 0xd1,
+	0x17, 0x66, 0x2d, 0x1f, 0x31, 0x43, 0x9a, 0x8d, 0xbb, 0x1b, 0x90, 0xff, 0xc6, 0x3f, 0xce, 0x67,
+	0xff, 0x06, 0xbf, 0x6c, 0x23, 0x02, 0x32, 0xa2, 0x6f, 0xd9, 0x73, 0x72, 0x76, 0xcf, 0xd9, 0xf3,
+	0x2d, 0x74, 0x78, 0x16, 0x1f, 0x9f, 0xf7, 0x7b, 0x99, 0x14, 0x5a, 0xb0, 0x6e, 0xc4, 0xf3, 0x08,
+	0x7b, 0x73, 0x54, 0x8a, 0x47, 0xa8, 0xbc, 0x2f, 0x36, 0x38, 0xfe, 0x67, 0x9c, 0xe5, 0x3a, 0x16,
+	0x69, 0x80, 0x9f, 0x72, 0x54, 0x9a, 0x2d, 0x43, 0x4d, 0x65, 0x38, 0x53, 0xae, 0xb5, 0x65, 0x6f,
+	0xb7, 0x58, 0x07, 0xaa, 0x9a, 0x47, 0xca, 0xad, 0x6c, 0x59, 0xb4, 0x62, 0x00, 0x17, 0x42, 0x9e,
+	0xc5, 0x69, 0x34, 0x8c, 0xa5, 0x6b, 0x1b, 0x6c, 0x15, 0xda, 0x98, 0x9e, 0xc7, 0x52, 0xa4, 0x73,
+	0x4c, 0xb5, 0x5b, 0x35, 0xe0, 0x53, 0x68, 0x26, 0x22, 0x1a, 0xe3, 0x39, 0x26, 0x6e, 0x8d, 0x90,
+	0x6e, 0xff, 0x51, 0xef, 0xe6, 0xe9, 0xbd, 0xdb, 0x27, 0xf7, 0xc6, 0xa5, 0xa0, 0x38, 0x25, 0x56,
+	0x53, 0x2e, 0x79, 0x92, 0x90, 0xbc, 0x4e, 0xf2, 0x26, 0xdb, 0x80, 0x7f, 0xb2, 0x12, 0x09, 0xb5,
+	0x44, 0x3e, 0x57, 0x6e, 0x83, 0x88, 0x5a, 0xe1, 0x37, 0x92, 0x22, 0xcf, 0xdc, 0xa6, 0x59, 0xae,
+	0xc3, 0xb2, 0x8a, 0xe7, 0x59, 0x82, 0xcf, 0x45, 0xaa, 0x44, 0x82, 0x6e, 0xcb, 0xc8, 0x29, 0x86,
+	0x12, 0x52, 0xbb, 0x60, 0x56, 0xe4, 0x4e, 0x69, 0xc9, 0x35, 0x46, 0x97, 0x6e, 0xfb, 0x0f, 0xdd,
+	0x85, 0xa5, 0x80, 0xad, 0x40, 0x4b, 0xf3, 0x0f, 0x09, 0x06, 0xe2, 0x42, 0xb9, 0x9d, 0x22, 0xad,
+	0xb7, 0x0b, 0xcd, 0x2b, 0xf3, 0x4d, 0xa8, 0x8e, 0x26, 0xfb, 0x87, 0xce, 0x12, 0x6b, 0x41, 0x6d,
+	0xe8, 0xef, 0xbd, 0x3e, 0x70, 0x2c, 0xd6, 0x86, 0xc6, 0xdb, 0x41, 0x30, 0x19, 0x4d, 0x0e, 0x9c,
+	0x4a, 0x81, 0xfb, 0x41, 0x70, 0x18, 0x38, 0xb6, 0xf7, 0x00, 0x9a, 0x57, 0xfb, 0x92, 0x70, 0x3c,
+	0x78, 0xff, 0x6e, 0x21, 0xf4, 0x07, 0x07, 0x7e, 0xe0, 0x58, 0xde, 0xb7, 0x2a, 0xac, 0x5c, 0xb3,
+	0xa2, 0x32, 0x4a, 0x85, 0xcc, 0xa7, 0x52, 0x2e, 0x33, 0xa4, 0x8a, 0x2a, 0xe4, 0x7d, 0xf7, 0x37,
+	0xde, 0x17, 0x82, 0x5f, 0x91, 0x23, 0x92, 0xd3, 0x35, 0x57, 0x46, 0xc3, 0xb2, 0xd9, 0x27, 0x50,
+	0x57, 0x9a, 0xeb, 0x5c, 0x99, 0x56, 0xbb, 0xfd, 0xed, 0xfb, 0x37, 0x0d, 0xcd, 0xff, 0xec, 0x19,
+	0xd4, 0x50, 0x4a, 0x21, 0xa9, 0x79, 0x7b, 0xbb, 0xdd, 0xdf, 0xf9, 0x0b, 0x37, 0x7e, 0xa1, 0x2b,
+	0x2a, 0xc3, 0x1f, 0xc8, 0x51, 0x3c, 0x47, 0x33, 0x30, 0x36, 0xeb, 0x16, 0x8e, 0x4e, 0x44, 0xae,
+	0xcd, 0x04, 0xb4, 0x36, 0x27, 0xd0, 0xbd, 0x25, 0xa4, 0x00, 0xe4, 0x79, 0x76, 0x76, 0x24, 0xf9,
+	0xac, 0xb8, 0x8c, 0x22, 0xc7, 0x1a, 0x74, 0x8c, 0x9b, 0x57, 0x8b, 0xe3, 0x7f, 0xce, 0xad, 0x9a,
+	0x49, 0xc4, 0x34, 0xfc, 0x28, 0xb4, 0x49, 0xd8, 0xf1, 0xbe, 0x5a, 0xb0, 0x7e, 0xf7, 0xbd, 0x30,
+	0xe8, 0x86, 0x33, 0x4c, 0xb9, 0x8c, 0x05, 0xe1, 0x79, 0xa2, 0xa9, 0x93, 0x7f, 0x61, 0x7d, 0x0f,
+	0x4f, 0x85, 0xc4, 0x30, 0x8f, 0x35, 0xbe, 0x10, 0xe2, 0xac, 0xa4, 0x2c, 0xe6, 0xc2, 0xda, 0xe0,
+	0x54, 0xa3, 0xbc, 0xcd, 0x54, 0x0a, 0xa6, 0x14, 0xd1, 0x8b, 0xba, 0xc6, 0xd8, 0x34, 0xce, 0xab,
+	0x0b, 0xcd, 0x4d, 0xa2, 0xca, 0xfe, 0x07, 0xd7, 0xec, 0x33, 0xe4, 0x9a, 0x87, 0x9a, 0xa4, 0xa3,
+	0x34, 0xd6, 0x25, 0x5b, 0x63, 0xff, 0xc1, 0x46, 0xa1, 0xb8, 0x8b, 0xac, 0x53, 0x74, 0xe7, 0x0d,
+	0x4f, 0xe2, 0x13, 0x5e, 0x06, 0x2a, 0xd0, 0x86, 0xf7, 0x18, 0xea, 0x65, 0x51, 0x00, 0xf5, 0xe9,
+	0x20, 0x0c, 0xfd, 0x21, 0xc5, 0xa1, 0xef, 0xfd, 0xc1, 0x68, 0x4c, 0xdf, 0x66, 0x38, 0xc3, 0x97,
+	0xa3, 0xe9, 0x94, 0x16, 0x95, 0xfe, 0x31, 0xb4, 0xae, 0x2e, 0x85, 0x05, 0xd0, 0x58, 0x34, 0x83,
+	0x6c, 0xeb, 0xbe, 0x07, 0xb2, 0xf9, 0xf0, 0xde, 0xe2, 0xbd, 0xa5, 0x1d, 0xeb, 0x7b, 0x00, 0x00,
+	0x00, 0xff, 0xff, 0x9e, 0x1a, 0x21, 0x06, 0x93, 0x04, 0x00, 0x00,
 }
