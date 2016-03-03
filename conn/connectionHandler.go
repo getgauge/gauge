@@ -20,9 +20,10 @@ package conn
 import (
 	"bytes"
 	"fmt"
-	"github.com/golang/protobuf/proto"
 	"net"
 	"time"
+
+	"github.com/golang/protobuf/proto"
 )
 
 type messageHandler interface {
@@ -38,7 +39,6 @@ type GaugeConnectionHandler struct {
 
 func NewGaugeConnectionHandler(port int, messageHandler messageHandler) (*GaugeConnectionHandler, error) {
 	// port = 0 means GO will find a unused port
-
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func (connectionHandler *GaugeConnectionHandler) processMessage(buffer *bytes.Bu
 	}
 }
 
-//accepts multiple connections and Handler responds to incoming messages
+// HandleMultipleConnections accepts multiple connections and Handler responds to incoming messages
 func (connectionHandler *GaugeConnectionHandler) HandleMultipleConnections() {
 	for {
 		connectionHandler.acceptConnectionWithoutTimeout()
@@ -143,7 +143,6 @@ func (connectionHandler *GaugeConnectionHandler) HandleMultipleConnections() {
 func (connectionHandler *GaugeConnectionHandler) ConnectionPortNumber() int {
 	if connectionHandler.tcpListener != nil {
 		return connectionHandler.tcpListener.Addr().(*net.TCPAddr).Port
-	} else {
-		return 0
 	}
+	return 0
 }
