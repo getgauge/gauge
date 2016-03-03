@@ -24,7 +24,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "68415e7123da32b07eab49c96d2c4d6158360e9b"
+			"Rev": "552c7b9542c194800fd493123b3798ef0a832032"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-isatty",
