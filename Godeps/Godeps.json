@@ -39,6 +39,10 @@
 			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
 		},
 		{
+			"ImportPath": "google.golang.org/grpc",
+			"Rev": "89f694edb447e224bd0ffff7a03f9161ce486482"
+		},
+		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
 		},
