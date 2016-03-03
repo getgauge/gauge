@@ -8,6 +8,11 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -210,6 +215,102 @@ func init() {
 	proto.RegisterEnum("gauge.messages.ExecutionRequest_Strategy", ExecutionRequest_Strategy_name, ExecutionRequest_Strategy_value)
 	proto.RegisterEnum("gauge.messages.ExecutionResult_ExecutionResultType", ExecutionResult_ExecutionResultType_name, ExecutionResult_ExecutionResultType_value)
 	proto.RegisterEnum("gauge.messages.ExecutionResult_Status", ExecutionResult_Status_name, ExecutionResult_Status_value)
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// Client API for Execution service
+
+type ExecutionClient interface {
+	// Bind RPC method
+	Execute(ctx context.Context, in *ExecutionRequest, opts ...grpc.CallOption) (Execution_ExecuteClient, error)
+}
+
+type executionClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewExecutionClient(cc *grpc.ClientConn) ExecutionClient {
+	return &executionClient{cc}
+}
+
+func (c *executionClient) Execute(ctx context.Context, in *ExecutionRequest, opts ...grpc.CallOption) (Execution_ExecuteClient, error) {
+	stream, err := grpc.NewClientStream(ctx, &_Execution_serviceDesc.Streams[0], c.cc, "/gauge.messages.Execution/execute", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &executionExecuteClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Execution_ExecuteClient interface {
+	Recv() (*ExecutionResult, error)
+	grpc.ClientStream
+}
+
+type executionExecuteClient struct {
+	grpc.ClientStream
+}
+
+func (x *executionExecuteClient) Recv() (*ExecutionResult, error) {
+	m := new(ExecutionResult)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// Server API for Execution service
+
+type ExecutionServer interface {
+	// Bind RPC method
+	Execute(*ExecutionRequest, Execution_ExecuteServer) error
+}
+
+func RegisterExecutionServer(s *grpc.Server, srv ExecutionServer) {
+	s.RegisterService(&_Execution_serviceDesc, srv)
+}
+
+func _Execution_Execute_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ExecutionRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ExecutionServer).Execute(m, &executionExecuteServer{stream})
+}
+
+type Execution_ExecuteServer interface {
+	Send(*ExecutionResult) error
+	grpc.ServerStream
+}
+
+type executionExecuteServer struct {
+	grpc.ServerStream
+}
+
+func (x *executionExecuteServer) Send(m *ExecutionResult) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+var _Execution_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "gauge.messages.Execution",
+	HandlerType: (*ExecutionServer)(nil),
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "execute",
+			Handler:       _Execution_Execute_Handler,
+			ServerStreams: true,
+		},
+	},
 }
 
 var fileDescriptor1 = []byte{
