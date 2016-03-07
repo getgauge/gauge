@@ -33,6 +33,7 @@ import (
 	fsnotify "gopkg.in/fsnotify.v1"
 )
 
+// SpecInfoGatherer contains the caches for specs, concepts, and steps
 type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
 	mutex             sync.Mutex
@@ -42,6 +43,7 @@ type SpecInfoGatherer struct {
 	stepsCache        map[string]*gauge.StepValue
 }
 
+// MakeListOfAvailableSteps initializes all the SpecInfoGatherer caches
 func (s *SpecInfoGatherer) MakeListOfAvailableSteps() {
 	go s.watchForFileChanges()
 	s.waitGroup.Wait()
@@ -138,7 +140,7 @@ func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 }
 
 func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
-	stepValues := make([]*gauge.StepValue, 0)
+	var stepValues []*gauge.StepValue
 	s.mutex.Lock()
 	for _, specList := range s.specsCache {
 		for _, spec := range specList {
@@ -150,7 +152,7 @@ func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
 }
 
 func (s *SpecInfoGatherer) getStepsFromCachedConcepts() []*gauge.StepValue {
-	stepValues := make([]*gauge.StepValue, 0)
+	var stepValues []*gauge.StepValue
 	s.mutex.Lock()
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
@@ -188,7 +190,7 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 	}
 
 	for _, concept := range concepts {
-		c := gauge.Concept{concept, file}
+		c := gauge.Concept{ConceptStep: concept, FileName: file}
 		s.addToConceptsCache(file, &c)
 		stepsFromConcept := getStepsFromConcept(&c)
 		s.addToStepsCache(stepsFromConcept)
@@ -287,7 +289,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 		}
 	}()
 
-	allDirsToWatch := make([]string, 0)
+	var allDirsToWatch []string
 
 	specDir := filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
 	allDirsToWatch = append(allDirsToWatch, specDir)
@@ -300,10 +302,11 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	<-done
 }
 
+// GetAvailableSpecs returns the list of all the specs in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSpecs() []*gauge.Specification {
 	s.waitGroup.Wait()
 
-	allSpecs := make([]*gauge.Specification, 0)
+	var allSpecs []*gauge.Specification
 	s.mutex.Lock()
 	for _, specs := range s.specsCache {
 		allSpecs = append(allSpecs, specs...)
@@ -312,10 +315,11 @@ func (s *SpecInfoGatherer) GetAvailableSpecs() []*gauge.Specification {
 	return allSpecs
 }
 
+// GetAvailableSteps returns the list of all the steps in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
 	s.waitGroup.Wait()
 
-	steps := make([]*gauge.StepValue, 0)
+	var steps []*gauge.StepValue
 	s.mutex.Lock()
 	for _, stepValue := range s.stepsCache {
 		steps = append(steps, stepValue)
@@ -324,10 +328,11 @@ func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
 	return steps
 }
 
+// GetConceptInfos returns an array containing information about all the concepts present in the Gauge project
 func (s *SpecInfoGatherer) GetConceptInfos() []*gauge_messages.ConceptInfo {
 	s.waitGroup.Wait()
 
-	conceptInfos := make([]*gauge_messages.ConceptInfo, 0)
+	var conceptInfos []*gauge_messages.ConceptInfo
 	s.mutex.Lock()
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
@@ -352,7 +357,7 @@ func getStepsFromConcept(concept *gauge.Concept) []*gauge.StepValue {
 }
 
 func getParsedStepValues(steps []*gauge.Step) []*gauge.StepValue {
-	stepValues := make([]*gauge.StepValue, 0)
+	var stepValues []*gauge.StepValue
 	for _, step := range steps {
 		if !step.IsConcept {
 			stepValue := parser.CreateStepValue(step)
