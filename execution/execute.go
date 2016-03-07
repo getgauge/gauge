@@ -148,12 +148,11 @@ func newExecution(executionInfo *executionInfo) execution {
 }
 
 func startAPI() *runner.TestRunner {
-	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
-	go api.StartAPIService(0, startChan)
+	sc := api.StartAPI()
 	select {
-	case runner := <-startChan.RunnerChan:
+	case runner := <-sc.RunnerChan:
 		return runner
-	case err := <-startChan.ErrorChan:
+	case err := <-sc.ErrorChan:
 		logger.Fatalf("Failed to start gauge API: %s", err.Error())
 	}
 	return nil

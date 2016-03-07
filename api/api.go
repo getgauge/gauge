@@ -36,14 +36,14 @@ import (
 // StartAPI calls StartAPIService and returns the channels
 func StartAPI() *runner.StartChannels {
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
-	go StartAPIService(0, startChan)
+	sig := &infoGatherer.SpecInfoGatherer{}
+	go startAPIService(0, startChan, sig)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func StartAPIService(port int, startChannels *runner.StartChannels) {
-	specInfoGatherer := new(infoGatherer.SpecInfoGatherer)
-	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: specInfoGatherer}
+func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer) {
+	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
 		startChannels.ErrorChan <- fmt.Errorf("Connection error. %s", err.Error())
@@ -62,7 +62,6 @@ func StartAPIService(port int, startChannels *runner.StartChannels) {
 		startChannels.ErrorChan <- err
 		return
 	}
-	specInfoGatherer.MakeListOfAvailableSteps(runner)
 	startChannels.RunnerChan <- runner
 }
 
@@ -82,7 +81,10 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 
 func runAPIServiceIndefinitely(port int) {
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
-	go StartAPIService(port, startChan)
+
+	sig := &infoGatherer.SpecInfoGatherer{}
+	sig.MakeListOfAvailableSteps()
+	go startAPIService(port, startChan, sig)
 	go checkParentIsAlive(startChan)
 
 	for {

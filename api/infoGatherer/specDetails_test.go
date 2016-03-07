@@ -1,12 +1,14 @@
 package infoGatherer
 
 import (
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/util"
-	. "gopkg.in/check.v1"
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/util"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -84,15 +86,18 @@ func (s *MySuite) TestGetParsedConcepts(c *C) {
 }
 
 func (s *MySuite) TestGetParsedStepValues(c *C) {
-	steps := []string{"Say \"hello\" to \"gauge\"", "A context step", "Step with a <table>"}
-	specInfoGatherer := new(SpecInfoGatherer)
+	steps := []*gauge.Step{
+		&gauge.Step{Value: "Step with a <table>", IsConcept: true, HasInlineTable: true},
+		&gauge.Step{Value: "A context step", IsConcept: false},
+		&gauge.Step{Value: "Say \"hello\" to \"gauge\"", IsConcept: false,
+			Args: []*gauge.StepArg{&gauge.StepArg{Name: "first", Value: "hello", ArgType: gauge.Static}, &gauge.StepArg{Name: "second", Value: "gauge", ArgType: gauge.Static}}},
+	}
 
-	stepValues := specInfoGatherer.getParsedStepValues(steps)
+	stepValues := getParsedStepValues(steps)
 
-	c.Assert(len(stepValues), Equals, 3)
-	c.Assert(stepValues[0].StepValue, Equals, "Say {} to {}")
-	c.Assert(stepValues[1].StepValue, Equals, "A context step")
-	c.Assert(stepValues[2].StepValue, Equals, "Step with a {}")
+	c.Assert(len(stepValues), Equals, 2)
+	c.Assert(stepValues[0].StepValue, Equals, "A context step")
+	c.Assert(stepValues[1].ParameterizedStepValue, Equals, "Say {} to {}")
 }
 
 func (s *MySuite) TestInitSpecsCache(c *C) {
