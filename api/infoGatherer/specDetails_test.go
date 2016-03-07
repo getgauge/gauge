@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package infoGatherer
 
 import (
@@ -87,17 +104,20 @@ func (s *MySuite) TestGetParsedConcepts(c *C) {
 
 func (s *MySuite) TestGetParsedStepValues(c *C) {
 	steps := []*gauge.Step{
-		&gauge.Step{Value: "Step with a <table>", IsConcept: true, HasInlineTable: true},
-		&gauge.Step{Value: "A context step", IsConcept: false},
-		&gauge.Step{Value: "Say \"hello\" to \"gauge\"", IsConcept: false,
-			Args: []*gauge.StepArg{&gauge.StepArg{Name: "first", Value: "hello", ArgType: gauge.Static}, &gauge.StepArg{Name: "second", Value: "gauge", ArgType: gauge.Static}}},
+		&gauge.Step{Value: "Step with a {}", LineText: "Step with a <table>", IsConcept: true, HasInlineTable: true},
+		&gauge.Step{Value: "A context step", LineText: "A context step", IsConcept: false},
+		&gauge.Step{Value: "Say {} to {}", LineText: "Say \"hello\" to \"gauge\"", IsConcept: false,
+			Args: []*gauge.StepArg{
+				&gauge.StepArg{Name: "first", Value: "hello", ArgType: gauge.Static},
+				&gauge.StepArg{Name: "second", Value: "gauge", ArgType: gauge.Static}},
+		},
 	}
 
 	stepValues := getParsedStepValues(steps)
 
 	c.Assert(len(stepValues), Equals, 2)
 	c.Assert(stepValues[0].StepValue, Equals, "A context step")
-	c.Assert(stepValues[1].ParameterizedStepValue, Equals, "Say {} to {}")
+	c.Assert(stepValues[1].StepValue, Equals, "Say {} to {}")
 }
 
 func (s *MySuite) TestInitSpecsCache(c *C) {
