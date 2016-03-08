@@ -51,58 +51,6 @@ func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
-func (e *simpleExecution) result() *result.SuiteResult {
-	return e.suiteResult
-}
-
-func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
-		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
-	return e.executeHook(message)
-}
-
-func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
-	initSuiteDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
-		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSuiteDataStoreMessage)
-	return initResult
-}
-
-func (e *simpleExecution) endExecution() *(gauge_messages.ProtoExecutionResult) {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
-		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message)
-}
-
-func (e *simpleExecution) executeHook(message *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
-	e.pluginHandler.NotifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner, message)
-	e.addExecTime(executionResult.GetExecutionTime())
-	return executionResult
-}
-
-func (e *simpleExecution) addExecTime(execTime int64) {
-	e.suiteResult.ExecutionTime += execTime
-}
-
-func (e *simpleExecution) notifyExecutionResult() {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
-	e.pluginHandler.NotifyPlugins(message)
-}
-
-func (e *simpleExecution) notifyExecutionStop() {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
-		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
-	e.pluginHandler.NotifyPlugins(message)
-	e.pluginHandler.GracefullyKillPlugins()
-}
-
-func (e *simpleExecution) start() {
-	e.startTime = time.Now()
-	e.pluginHandler = plugin.StartPlugins(e.manifest)
-}
-
 func (e *simpleExecution) run() {
 	e.start()
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
@@ -118,7 +66,7 @@ func (e *simpleExecution) run() {
 		return
 	}
 
-	beforeSuiteHookExecResult := e.startExecution()
+	beforeSuiteHookExecResult := e.notifyBeforeSuite()
 	if beforeSuiteHookExecResult.GetFailed() {
 		handleHookFailure(e.suiteResult, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
 		setResult()
@@ -126,15 +74,21 @@ func (e *simpleExecution) run() {
 	}
 
 	for e.specStore.hasNext() {
-		e.executeSpec(e.specStore.next())
+		r := e.executeSpec(e.specStore.next())
+		e.suiteResult.AddSpecResult(r)
 	}
 
-	afterSuiteHookExecResult := e.endExecution()
+	afterSuiteHookExecResult := e.notifyAfterSuite()
 	if afterSuiteHookExecResult.GetFailed() {
 		handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
 	}
 	setResult()
 	e.finish()
+}
+
+func (e *simpleExecution) start() {
+	e.startTime = time.Now()
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) finish() {
@@ -149,14 +103,52 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specification) {
+func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specification) *result.SpecResult {
 	executor := newSpecExecutor(specificationToExecute, e.runner, e.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
-	protoSpecResult := executor.execute()
-	e.suiteResult.AddSpecResult(protoSpecResult)
+	return executor.execute()
 }
 
-func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, predicate func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
-	predicate(result, execResult)
+func (e *simpleExecution) result() *result.SuiteResult {
+	return e.suiteResult
+}
+
+func (e *simpleExecution) notifyBeforeSuite() *(gauge_messages.ProtoExecutionResult) {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
+		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
+	return e.executeHook(m)
+}
+func (e *simpleExecution) notifyAfterSuite() *(gauge_messages.ProtoExecutionResult) {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
+		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(m)
+}
+
+func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
+		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
+	return executeAndGetStatus(e.runner, m)
+}
+
+func (e *simpleExecution) executeHook(m *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
+	e.pluginHandler.NotifyPlugins(m)
+	return executeAndGetStatus(e.runner, m)
+}
+
+func (e *simpleExecution) notifyExecutionResult() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
+	e.pluginHandler.NotifyPlugins(m)
+}
+
+func (e *simpleExecution) notifyExecutionStop() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
+	e.pluginHandler.NotifyPlugins(m)
+	e.pluginHandler.GracefullyKillPlugins()
+}
+
+func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
+	f(result, execResult)
 	printStatus(execResult, reporter)
 }
 
