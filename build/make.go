@@ -109,7 +109,7 @@ func getBuildVersion() string {
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	runProcess("go", "build", "--race", "-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata="+buildMetadata, "-o", executablePath)
+	runProcess("go", "build", "-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata="+buildMetadata, "-o", executablePath)
 	compileGaugeScreenshot()
 }
 
