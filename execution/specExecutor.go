@@ -52,19 +52,8 @@ type indexRange struct {
 	end   int
 }
 
-func newSpecExecutor(specToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, reporter reporter.Reporter, errMaps *validationErrMaps) *specExecutor {
-	specExecutor := new(specExecutor)
-	specExecutor.initialize(specToExecute, runner, pluginHandler, tableRows, reporter, errMaps)
-	return specExecutor
-}
-
-func (e *specExecutor) initialize(specificationToExecute *gauge.Specification, runner *runner.TestRunner, pluginHandler *plugin.Handler, tableRows indexRange, consoleReporter reporter.Reporter, errMap *validationErrMaps) {
-	e.specification = specificationToExecute
-	e.runner = runner
-	e.pluginHandler = pluginHandler
-	e.dataTableIndex = tableRows
-	e.consoleReporter = consoleReporter
-	e.errMap = errMap
+func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validationErrMaps) *specExecutor {
+	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
 func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
