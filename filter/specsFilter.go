@@ -63,31 +63,19 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 	if group == nil {
 		return make([]*gauge.Specification, 0)
 	}
-	return group.Specs
+	return group.Specs()
 }
 
-func DistributeSpecs(specifications []*gauge.Specification, distributions int) []*SpecCollection {
-	specCollections := make([]*SpecCollection, distributions)
+func DistributeSpecs(specifications []*gauge.Specification, distributions int) []*gauge.SpecCollection {
+	s := make([]*gauge.SpecCollection, distributions)
 	for i := 0; i < len(specifications); i++ {
 		mod := i % distributions
-		if specCollections[mod] == nil {
-			specCollections[mod] = &SpecCollection{Specs: make([]*gauge.Specification, 0)}
+		if s[mod] == nil {
+			s[mod] = gauge.NewSpecCollection(make([]*gauge.Specification, 0))
 		}
-		specCollections[mod].Specs = append(specCollections[mod].Specs, specifications[i])
+		s[mod].Add(specifications[i])
 	}
-	return specCollections
-}
-
-type SpecCollection struct {
-	Specs []*gauge.Specification
-}
-
-func (s *SpecCollection) SpecNames() []string {
-	specNames := make([]string, 0)
-	for _, spec := range s.Specs {
-		specNames = append(specNames, spec.FileName)
-	}
-	return specNames
+	return s
 }
 
 func (randomizer *specRandomizer) filter(specs []*gauge.Specification) []*gauge.Specification {

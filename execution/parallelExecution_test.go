@@ -34,15 +34,15 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestNumberOfStreams(c *C) {
 	specs := createSpecsList(6)
-	e := parallelExecution{numberOfExecutionStreams: 5, specStore: &specStore{specs: specs}}
+	e := parallelExecution{numberOfExecutionStreams: 5, specCollection: gauge.NewSpecCollection(specs)}
 	c.Assert(e.numberOfStreams(), Equals, 5)
 
 	specs = createSpecsList(6)
-	e = parallelExecution{numberOfExecutionStreams: 10, specStore: &specStore{specs: specs}}
+	e = parallelExecution{numberOfExecutionStreams: 10, specCollection: gauge.NewSpecCollection(specs)}
 	c.Assert(e.numberOfStreams(), Equals, 6)
 
 	specs = createSpecsList(0)
-	e = parallelExecution{numberOfExecutionStreams: 17, specStore: &specStore{specs: specs}}
+	e = parallelExecution{numberOfExecutionStreams: 17, specCollection: gauge.NewSpecCollection(specs)}
 	c.Assert(e.numberOfStreams(), Equals, 0)
 }
 

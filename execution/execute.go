@@ -21,7 +21,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/getgauge/gauge/api"
@@ -49,7 +48,7 @@ type execution interface {
 
 type executionInfo struct {
 	manifest        *manifest.Manifest
-	specStore       *specStore
+	specs           *gauge.SpecCollection
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.Handler
 	consoleReporter reporter.Reporter
@@ -58,10 +57,10 @@ type executionInfo struct {
 	numberOfStreams int
 }
 
-func newExecutionInfo(m *manifest.Manifest, s *specStore, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validationErrMaps, p bool) *executionInfo {
+func newExecutionInfo(m *manifest.Manifest, s *gauge.SpecCollection, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validationErrMaps, p bool) *executionInfo {
 	return &executionInfo{
 		manifest:        m,
-		specStore:       s,
+		specs:           s,
 		runner:          r,
 		pluginHandler:   ph,
 		consoleReporter: rep,
@@ -69,33 +68,6 @@ func newExecutionInfo(m *manifest.Manifest, s *specStore, r *runner.TestRunner, 
 		inParallel:      p,
 		numberOfStreams: NumberOfExecutionStreams,
 	}
-}
-
-type specStore struct {
-	mutex sync.Mutex
-	index int
-	specs []*gauge.Specification
-}
-
-func (s *specStore) hasNext() bool {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return s.index < len(s.specs)
-}
-
-func (s *specStore) next() *gauge.Specification {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	spec := s.specs[s.index]
-	s.index++
-	return spec
-}
-
-func (s *specStore) size() int {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	length := len(s.specs)
-	return length
 }
 
 func ExecuteSpecs(args []string) int {
@@ -113,7 +85,7 @@ func ExecuteSpecs(args []string) int {
 	}
 	runner := startAPI()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	ei := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, nil, reporter.Current(), errMap, InParallel)
+	ei := newExecutionInfo(manifest, gauge.NewSpecCollection(specsToExecute), runner, nil, reporter.Current(), errMap, InParallel)
 	e := newExecution(ei)
 	e.run()
 	return printExecutionStatus(e.result(), errMap)

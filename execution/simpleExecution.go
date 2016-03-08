@@ -37,7 +37,7 @@ var TableRows = ""
 type simpleExecution struct {
 	manifest             *manifest.Manifest
 	runner               *runner.TestRunner
-	specStore            *specStore
+	specCollection       *gauge.SpecCollection
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
@@ -47,12 +47,23 @@ type simpleExecution struct {
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
-	return &simpleExecution{manifest: executionInfo.manifest, specStore: executionInfo.specStore,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
+	return &simpleExecution{
+		manifest:        executionInfo.manifest,
+		specCollection:  executionInfo.specs,
+		runner:          executionInfo.runner,
+		pluginHandler:   executionInfo.pluginHandler,
+		consoleReporter: executionInfo.consoleReporter,
+		errMaps:         executionInfo.errMaps,
+	}
 }
 
 func (e *simpleExecution) run() {
 	e.start()
+	e.execute()
+	e.finish()
+}
+
+func (e *simpleExecution) execute() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	setResult := func() {
 		e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
@@ -73,8 +84,8 @@ func (e *simpleExecution) run() {
 		return
 	}
 
-	for e.specStore.hasNext() {
-		r := e.executeSpec(e.specStore.next())
+	for e.specCollection.HasNext() {
+		r := e.executeSpec(e.specCollection.Next())
 		e.suiteResult.AddSpecResult(r)
 	}
 
@@ -83,7 +94,6 @@ func (e *simpleExecution) run() {
 		handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
 	}
 	setResult()
-	e.finish()
 }
 
 func (e *simpleExecution) start() {

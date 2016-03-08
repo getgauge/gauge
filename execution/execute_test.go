@@ -38,14 +38,14 @@ func (l *testLogger) Write(b []byte) (int, error) {
 }
 
 func (s *MySuite) TestFunctionsOfTypeSpecList(c *C) {
-	mySpecs := &specStore{specs: createSpecsList(4)}
-	c.Assert(mySpecs.next().FileName, Equals, "spec0")
-	c.Assert(mySpecs.next().FileName, Equals, "spec1")
-	c.Assert(mySpecs.hasNext(), Equals, true)
-	c.Assert(mySpecs.size(), Equals, 4)
-	c.Assert(mySpecs.next().FileName, Equals, "spec2")
-	c.Assert(mySpecs.next().FileName, Equals, "spec3")
-	c.Assert(mySpecs.hasNext(), Equals, false)
+	mySpecs := gauge.NewSpecCollection(createSpecsList(4))
+	c.Assert(mySpecs.Next().FileName, Equals, "spec0")
+	c.Assert(mySpecs.Next().FileName, Equals, "spec1")
+	c.Assert(mySpecs.HasNext(), Equals, true)
+	c.Assert(mySpecs.Size(), Equals, 4)
+	c.Assert(mySpecs.Next().FileName, Equals, "spec2")
+	c.Assert(mySpecs.Next().FileName, Equals, "spec3")
+	c.Assert(mySpecs.HasNext(), Equals, false)
 }
 
 func createSpecsList(number int) []*gauge.Specification {

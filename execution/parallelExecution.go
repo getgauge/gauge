@@ -43,7 +43,7 @@ const Lazy string = "lazy"
 type parallelExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
-	specStore                *specStore
+	specCollection           *gauge.SpecCollection
 	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *runner.TestRunner
@@ -54,11 +54,16 @@ type parallelExecution struct {
 	startTime                time.Time
 }
 
-func newParallelExecution(executionInfo *executionInfo) *parallelExecution {
-	return &parallelExecution{manifest: executionInfo.manifest, specStore: executionInfo.specStore,
-		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler,
-		numberOfExecutionStreams: executionInfo.numberOfStreams,
-		consoleReporter:          executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
+func newParallelExecution(e *executionInfo) *parallelExecution {
+	return &parallelExecution{
+		manifest:                 e.manifest,
+		specCollection:           e.specs,
+		runner:                   e.runner,
+		pluginHandler:            e.pluginHandler,
+		numberOfExecutionStreams: e.numberOfStreams,
+		consoleReporter:          e.consoleReporter,
+		errMaps:                  e.errMaps,
+	}
 }
 
 type streamExecError struct {
@@ -74,17 +79,13 @@ func (s streamExecError) Error() string {
 	return fmt.Sprintf("The following specifications could not be executed:\n%sReason : %s.", specNames, s.message)
 }
 
-func (s streamExecError) numberOfSpecsSkipped() int {
-	return len(s.specsSkipped)
-}
-
 func (e *parallelExecution) result() *result.SuiteResult {
 	return e.suiteResult
 }
 
 func (e *parallelExecution) numberOfStreams() int {
 	nStreams := e.numberOfExecutionStreams
-	size := e.specStore.size()
+	size := e.specCollection.Size()
 	if nStreams > size {
 		nStreams = size
 	}
@@ -92,8 +93,8 @@ func (e *parallelExecution) numberOfStreams() int {
 }
 
 func (e *parallelExecution) start() {
-	e.pluginHandler = plugin.StartPlugins(e.manifest)
 	e.startTime = time.Now()
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *parallelExecution) run() {
@@ -111,34 +112,34 @@ func (e *parallelExecution) run() {
 }
 
 func (e *parallelExecution) eagerExecution(distributions int) []*result.SuiteResult {
-	specCollections := filter.DistributeSpecs(e.specStore.specs, distributions)
-	suiteResultChannel := make(chan *result.SuiteResult, len(specCollections))
-	for i, specCollection := range specCollections {
-		go e.startSpecsExecution(specCollection, suiteResultChannel, reporter.NewParallelConsole(i+1))
+	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
+	schan := make(chan *result.SuiteResult, len(specs))
+	for i, s := range specs {
+		go e.startSpecsExecution(s, schan, reporter.NewParallelConsole(i+1))
 	}
 	var suiteResults []*result.SuiteResult
-	for _ = range specCollections {
-		suiteResults = append(suiteResults, <-suiteResultChannel)
+	for _ = range specs {
+		suiteResults = append(suiteResults, <-schan)
 	}
 	return suiteResults
 }
 
-func (e *parallelExecution) startSpecsExecution(specCollection *filter.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
+func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
 		logger.Errorf("Failed: " + err.Error())
-		logger.Debug("Skipping %s specifications", strconv.Itoa(len(specCollection.Specs)))
-		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: specCollection.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		logger.Debug("Skipping %d specifications", s.Size())
+		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(&specStore{specs: specCollection.Specs}, suiteResults, testRunner, reporter)
+	e.startSpecsExecutionWithRunner(s, suiteResults, testRunner, reporter)
 }
 
 func (e *parallelExecution) lazyExecution(totalStreams int) []*result.SuiteResult {
-	suiteResultChannel := make(chan *result.SuiteResult, e.specStore.size())
+	suiteResultChannel := make(chan *result.SuiteResult, e.specCollection.Size())
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
-		go e.startStream(e.specStore, reporter.NewParallelConsole(i+1), suiteResultChannel)
+		go e.startStream(e.specCollection, reporter.NewParallelConsole(i+1), suiteResultChannel)
 	}
 	e.wg.Wait()
 	var suiteResults []*result.SuiteResult
@@ -149,7 +150,7 @@ func (e *parallelExecution) lazyExecution(totalStreams int) []*result.SuiteResul
 	return suiteResults
 }
 
-func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.Reporter, suiteResultChannel chan *result.SuiteResult) {
+func (e *parallelExecution) startStream(s *gauge.SpecCollection, reporter reporter.Reporter, suiteResultChannel chan *result.SuiteResult) {
 	defer e.wg.Done()
 	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
@@ -157,13 +158,13 @@ func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.
 		suiteResultChannel <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(specStore, suiteResultChannel, testRunner, reporter)
+	e.startSpecsExecutionWithRunner(s, suiteResultChannel, testRunner, reporter)
 }
 
-func (e *parallelExecution) startSpecsExecutionWithRunner(specStore *specStore, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
-	executionInfo := newExecutionInfo(e.manifest, specStore, runner, e.pluginHandler, reporter, e.errMaps, false)
-	simpleExecution := newExecution(executionInfo)
-	simpleExecution.run()
+func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
+	executionInfo := newExecutionInfo(e.manifest, s, runner, e.pluginHandler, reporter, e.errMaps, false)
+	simpleExecution := newSimpleExecution(executionInfo)
+	simpleExecution.execute()
 	runner.Kill()
 	suiteResultsChan <- simpleExecution.result()
 }

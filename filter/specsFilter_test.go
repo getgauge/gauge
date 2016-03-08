@@ -49,9 +49,9 @@ func (s *MySuite) TestDistributionOfSpecs(c *C) {
 	c.Assert(len(specCollections), Equals, 0)
 }
 
-func verifySpecCollectionsForSize(c *C, size int, specCollections ...*SpecCollection) {
+func verifySpecCollectionsForSize(c *C, size int, specCollections ...*gauge.SpecCollection) {
 	for _, collection := range specCollections {
-		c.Assert(len(collection.Specs), Equals, size)
+		c.Assert(len(collection.Specs()), Equals, size)
 	}
 }
 
