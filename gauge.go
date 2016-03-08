@@ -126,7 +126,7 @@ func main() {
 			}
 			refactor.RefactorSteps(*refactorSteps, flag.Args()[0], startChan)
 		} else if *daemonize {
-			api.RunInBackground(*apiPort)
+			api.RunInBackground(*apiPort, flag.Args())
 		} else if *specFilesToFormat != "" {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {

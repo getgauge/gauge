@@ -107,7 +107,7 @@ func Validate(args []string) {
 }
 
 func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false)
+	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false, args)
 	parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
 	if len(specsToExecute) == 0 {

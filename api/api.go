@@ -79,10 +79,10 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 	return runner, nil
 }
 
-func runAPIServiceIndefinitely(port int) {
+func runAPIServiceIndefinitely(port int, specDirs []string) {
 	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 
-	sig := &infoGatherer.SpecInfoGatherer{}
+	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.MakeListOfAvailableSteps()
 	go startAPIService(port, startChan, sig)
 	go checkParentIsAlive(startChan)
@@ -110,7 +110,7 @@ func checkParentIsAlive(startChannels *runner.StartChannels) {
 }
 
 // RunInBackground runs Gauge in daemonized mode on the given apiPort
-func RunInBackground(apiPort string) {
+func RunInBackground(apiPort string, specDirs []string) {
 	var port int
 	var err error
 	if apiPort != "" {
@@ -125,5 +125,5 @@ func RunInBackground(apiPort string) {
 			logger.Fatalf(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
-	runAPIServiceIndefinitely(port)
+	runAPIServiceIndefinitely(port, specDirs)
 }

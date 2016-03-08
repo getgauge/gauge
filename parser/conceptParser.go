@@ -196,8 +196,15 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 		concept.Lookup.AddArgName(arg.Value)
 	}
 }
-func CreateConceptsDictionary(shouldIgnoreErrors bool) (*gauge.ConceptDictionary, *ParseResult) {
-	conceptFiles := util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
+	var conceptFiles []string
+	if len(dirs) < 1 {
+		conceptFiles = util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+	} else {
+		for _, dir := range dirs {
+			conceptFiles = append(conceptFiles, util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, dir))...)
+		}
+	}
 	conceptsDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		if err := AddConcepts(conceptFile, conceptsDictionary); err != nil {

@@ -79,7 +79,9 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	if !result.Success {
 		return result
 	}
-	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false)
+	// TODO: Make this work with current path
+	dirs := make([]string, 0)
+	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false, dirs)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {

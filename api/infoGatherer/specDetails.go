@@ -41,6 +41,7 @@ type SpecInfoGatherer struct {
 	specsCache        map[string][]*gauge.Specification
 	conceptsCache     map[string][]*gauge.Concept
 	stepsCache        map[string]*gauge.StepValue
+	SpecDirs          []string
 }
 
 // MakeListOfAvailableSteps initializes all the SpecInfoGatherer caches
@@ -58,8 +59,17 @@ func (s *SpecInfoGatherer) MakeListOfAvailableSteps() {
 func (s *SpecInfoGatherer) initSpecsCache() {
 	defer s.waitGroup.Done()
 
+	var specFiles []string
 	s.specsCache = make(map[string][]*gauge.Specification, 0)
-	specFiles := util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+
+	if len(s.SpecDirs) < 1 {
+		specFiles = util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
+	} else {
+		for _, dir := range s.SpecDirs {
+			specFiles = append(specFiles, util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, dir))...)
+		}
+	}
+
 	parsedSpecs := s.getParsedSpecs(specFiles)
 
 	logger.APILog.Info("Initializing specs cache with %d specs", len(parsedSpecs))
@@ -134,7 +144,7 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*gauge.Specifica
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
-	s.conceptDictionary, result = parser.CreateConceptsDictionary(true)
+	s.conceptDictionary, result = parser.CreateConceptsDictionary(true, s.SpecDirs)
 	handleParseFailures([]*parser.ParseResult{result})
 	return s.conceptDictionary.ConceptsMap
 }
@@ -290,10 +300,19 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	}()
 
 	var allDirsToWatch []string
+	var specDir string
 
-	specDir := filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
-	allDirsToWatch = append(allDirsToWatch, specDir)
-	allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
+	if len(s.SpecDirs) < 1 {
+		specDir = filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
+		allDirsToWatch = append(allDirsToWatch, specDir)
+		allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
+	} else {
+		for _, dir := range s.SpecDirs {
+			specDir = filepath.Join(config.ProjectRoot, dir)
+			allDirsToWatch = append(allDirsToWatch, specDir)
+			allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
+		}
+	}
 
 	for _, dir := range allDirsToWatch {
 		addDirToFileWatcher(watcher, dir)
