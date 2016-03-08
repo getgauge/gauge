@@ -32,18 +32,18 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetNumberOfStreams(c *C) {
+func (s *MySuite) TestNumberOfStreams(c *C) {
 	specs := createSpecsList(6)
 	e := parallelExecution{numberOfExecutionStreams: 5, specStore: &specStore{specs: specs}}
-	c.Assert(e.getNumberOfStreams(), Equals, 5)
+	c.Assert(e.numberOfStreams(), Equals, 5)
 
 	specs = createSpecsList(6)
 	e = parallelExecution{numberOfExecutionStreams: 10, specStore: &specStore{specs: specs}}
-	c.Assert(e.getNumberOfStreams(), Equals, 6)
+	c.Assert(e.numberOfStreams(), Equals, 6)
 
 	specs = createSpecsList(0)
 	e = parallelExecution{numberOfExecutionStreams: 17, specStore: &specStore{specs: specs}}
-	c.Assert(e.getNumberOfStreams(), Equals, 0)
+	c.Assert(e.numberOfStreams(), Equals, 0)
 }
 
 func getValidationErrorMap() *validationErrMaps {
@@ -57,8 +57,9 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{&result.SpecResult{}, &result.SpecResult{}}}
 	var suiteResults []*result.SuiteResult
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.aggregateResults(suiteResults)
+	aggregatedRes := e.result()
 	c.Assert(aggregatedRes.SpecsFailedCount, Equals, 1)
 	c.Assert(aggregatedRes.IsFailed, Equals, true)
 	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)
@@ -74,8 +75,9 @@ func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	suiteRes3 := &result.SuiteResult{IsFailed: false}
 	var suiteResults []*result.SuiteResult
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.aggregateResults(suiteResults)
+	aggregatedRes := e.result()
 	c.Assert(len(aggregatedRes.UnhandledErrors), Equals, 2)
 	c.Assert(aggregatedRes.UnhandledErrors[0].Error(), Equals, "The following specifications could not be executed:\n"+
 		"spec1\n"+
@@ -97,8 +99,9 @@ func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 	suiteRes3 := &result.SuiteResult{PostSuite: &gauge_messages.ProtoHookFailure{}}
 	var suiteResults []*result.SuiteResult
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.aggregateResults(suiteResults)
+	aggregatedRes := e.result()
 	c.Assert(aggregatedRes.PreSuite, Equals, suiteRes2.PreSuite)
 	c.Assert(aggregatedRes.PostSuite, Equals, suiteRes3.PostSuite)
 }

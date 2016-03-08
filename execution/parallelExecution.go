@@ -47,7 +47,7 @@ type parallelExecution struct {
 	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   *runner.TestRunner
-	aggregateResult          *result.SuiteResult
+	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
 	consoleReporter          reporter.Reporter
 	errMaps                  *validationErrMaps
@@ -78,7 +78,11 @@ func (s streamExecError) numberOfSpecsSkipped() int {
 	return len(s.specsSkipped)
 }
 
-func (e *parallelExecution) getNumberOfStreams() int {
+func (e *parallelExecution) result() *result.SuiteResult {
+	return e.suiteResult
+}
+
+func (e *parallelExecution) numberOfStreams() int {
 	nStreams := e.numberOfExecutionStreams
 	size := e.specStore.size()
 	if nStreams > size {
@@ -92,17 +96,16 @@ func (e *parallelExecution) start() {
 	e.startTime = time.Now()
 }
 
-func (e *parallelExecution) run() *result.SuiteResult {
+func (e *parallelExecution) run() {
 	var suiteResults []*result.SuiteResult
-	nStreams := e.getNumberOfStreams()
+	nStreams := e.numberOfStreams()
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 	if isLazy() {
 		suiteResults = e.lazyExecution(nStreams)
 	} else {
 		suiteResults = e.eagerExecution(nStreams)
 	}
-	e.aggregateResult = e.aggregateResults(suiteResults)
-	return e.aggregateResult
+	e.aggregateResults(suiteResults)
 }
 
 func (e *parallelExecution) eagerExecution(distributions int) []*result.SuiteResult {
@@ -159,39 +162,39 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(specStore *specStore, 
 	executionInfo := newExecutionInfo(e.manifest, specStore, runner, e.pluginHandler, reporter, e.errMaps, false)
 	simpleExecution := newExecution(executionInfo)
 	simpleExecution.start()
-	result := simpleExecution.run()
+	simpleExecution.run()
 	runner.Kill()
-	suiteResultsChan <- result
+	suiteResultsChan <- simpleExecution.result()
 }
 
 func (e *parallelExecution) finish() {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.aggregateResult)}}
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) *result.SuiteResult {
-	aggregateResult := result.NewSuiteResult(ExecuteTags, e.startTime)
-	aggregateResult.SpecsSkippedCount = len(e.errMaps.specErrs)
+func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {
+	r := result.NewSuiteResult(ExecuteTags, e.startTime)
+	r.SpecsSkippedCount = len(e.errMaps.specErrs)
 	for _, result := range suiteResults {
-		aggregateResult.SpecsFailedCount += result.SpecsFailedCount
-		aggregateResult.SpecResults = append(aggregateResult.SpecResults, result.SpecResults...)
+		r.SpecsFailedCount += result.SpecsFailedCount
+		r.SpecResults = append(r.SpecResults, result.SpecResults...)
 		if result.IsFailed {
-			aggregateResult.IsFailed = true
+			r.IsFailed = true
 		}
 		if result.PreSuite != nil {
-			aggregateResult.PreSuite = result.PreSuite
+			r.PreSuite = result.PreSuite
 		}
 		if result.PostSuite != nil {
-			aggregateResult.PostSuite = result.PostSuite
+			r.PostSuite = result.PostSuite
 		}
 		if result.UnhandledErrors != nil {
-			aggregateResult.UnhandledErrors = append(aggregateResult.UnhandledErrors, result.UnhandledErrors...)
+			r.UnhandledErrors = append(r.UnhandledErrors, result.UnhandledErrors...)
 		}
 	}
-	aggregateResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
-	return aggregateResult
+	r.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
+	e.suiteResult = r
 }
 
 func isLazy() bool {

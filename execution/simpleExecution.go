@@ -51,6 +51,10 @@ func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 		runner: executionInfo.runner, pluginHandler: executionInfo.pluginHandler, consoleReporter: executionInfo.consoleReporter, errMaps: executionInfo.errMaps}
 }
 
+func (e *simpleExecution) result() *result.SuiteResult {
+	return e.suiteResult
+}
+
 func (e *simpleExecution) startExecution() *(gauge_messages.ProtoExecutionResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
@@ -99,37 +103,46 @@ func (e *simpleExecution) killPlugins() {
 }
 
 func (e *simpleExecution) start() {
-	e.pluginHandler = plugin.StartPlugins(e.manifest)
 	e.startTime = time.Now()
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
-func (e *simpleExecution) run() *result.SuiteResult {
-	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
+func (e *simpleExecution) run() {
+	r := result.NewSuiteResult(ExecuteTags, e.startTime)
+	setResult := func() {
+		r.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
+		r.SpecsSkippedCount = len(e.errMaps.specErrs)
+		e.suiteResult = r
+		return
+	}
+
 	initSuiteDataStoreResult := e.initializeSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
-	} else {
-		beforeSuiteHookExecResult := e.startExecution()
-		if beforeSuiteHookExecResult.GetFailed() {
-			handleHookFailure(e.suiteResult, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
-		} else {
-			for e.specStore.hasNext() {
-				e.executeSpec(e.specStore.next())
-			}
-		}
-		afterSuiteHookExecResult := e.endExecution()
-		if afterSuiteHookExecResult.GetFailed() {
-			handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
-		}
+		setResult()
+		return
 	}
-	e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
-	e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
-	return e.suiteResult
+
+	beforeSuiteHookExecResult := e.startExecution()
+	if beforeSuiteHookExecResult.GetFailed() {
+		handleHookFailure(r, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
+		setResult()
+		return
+	}
+
+	for e.specStore.hasNext() {
+		e.executeSpec(e.specStore.next())
+	}
+
+	afterSuiteHookExecResult := e.endExecution()
+	if afterSuiteHookExecResult.GetFailed() {
+		handleHookFailure(r, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
+	}
+	setResult()
 }
 
 func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, predicate func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
 	predicate(result, execResult)
-	result.SetFailure()
 	printStatus(execResult, reporter)
 }
 

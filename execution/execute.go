@@ -44,8 +44,9 @@ var checkUpdatesDuringExecution = false
 
 type execution interface {
 	start()
-	run() *result.SuiteResult
+	run()
 	finish()
+	result() *result.SuiteResult
 }
 
 type executionInfo struct {
@@ -108,9 +109,9 @@ func ExecuteSpecs(args []string) int {
 	executionInfo := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, nil, reporter.Current(), errMap, InParallel)
 	execution := newExecution(executionInfo)
 	execution.start()
-	result := execution.run()
+	execution.run()
 	execution.finish()
-	exitCode := printExecutionStatus(result, errMap)
+	exitCode := printExecutionStatus(execution.result(), errMap)
 	return exitCode
 }
 
