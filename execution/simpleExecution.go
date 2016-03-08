@@ -98,22 +98,17 @@ func (e *simpleExecution) notifyExecutionStop() {
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func (e *simpleExecution) killPlugins() {
-	e.pluginHandler.GracefullyKillPlugins()
-}
-
 func (e *simpleExecution) start() {
 	e.startTime = time.Now()
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) run() {
-	r := result.NewSuiteResult(ExecuteTags, e.startTime)
+	e.start()
+	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	setResult := func() {
-		r.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
-		r.SpecsSkippedCount = len(e.errMaps.specErrs)
-		e.suiteResult = r
-		return
+		e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
+		e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
 	}
 
 	initSuiteDataStoreResult := e.initializeSuiteDataStore()
@@ -125,7 +120,7 @@ func (e *simpleExecution) run() {
 
 	beforeSuiteHookExecResult := e.startExecution()
 	if beforeSuiteHookExecResult.GetFailed() {
-		handleHookFailure(r, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(e.suiteResult, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
 		setResult()
 		return
 	}
@@ -136,25 +131,10 @@ func (e *simpleExecution) run() {
 
 	afterSuiteHookExecResult := e.endExecution()
 	if afterSuiteHookExecResult.GetFailed() {
-		handleHookFailure(r, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
+		handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
 	}
 	setResult()
-}
-
-func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, predicate func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
-	predicate(result, execResult)
-	printStatus(execResult, reporter)
-}
-
-func getDataTableRows(rowCount int) indexRange {
-	if TableRows == "" {
-		return indexRange{start: 0, end: rowCount - 1}
-	}
-	indexes, err := getDataTableRowsRange(TableRows, rowCount)
-	if err != nil {
-		logger.Errorf("Table rows validation failed. %s\n", err.Error())
-	}
-	return indexes
+	e.finish()
 }
 
 func (e *simpleExecution) finish() {
@@ -173,4 +153,20 @@ func (e *simpleExecution) executeSpec(specificationToExecute *gauge.Specificatio
 	executor := newSpecExecutor(specificationToExecute, e.runner, e.pluginHandler, getDataTableRows(specificationToExecute.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
 	protoSpecResult := executor.execute()
 	e.suiteResult.AddSpecResult(protoSpecResult)
+}
+
+func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, predicate func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
+	predicate(result, execResult)
+	printStatus(execResult, reporter)
+}
+
+func getDataTableRows(rowCount int) indexRange {
+	if TableRows == "" {
+		return indexRange{start: 0, end: rowCount - 1}
+	}
+	indexes, err := getDataTableRowsRange(TableRows, rowCount)
+	if err != nil {
+		logger.Errorf("Table rows validation failed. %s\n", err.Error())
+	}
+	return indexes
 }

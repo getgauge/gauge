@@ -43,9 +43,7 @@ var InParallel bool
 var checkUpdatesDuringExecution = false
 
 type execution interface {
-	start()
 	run()
-	finish()
 	result() *result.SuiteResult
 }
 
@@ -60,8 +58,17 @@ type executionInfo struct {
 	numberOfStreams int
 }
 
-func newExecutionInfo(manifest *manifest.Manifest, specStore *specStore, runner *runner.TestRunner, ph *plugin.Handler, reporter reporter.Reporter, errMap *validationErrMaps, isParallel bool) *executionInfo {
-	return &executionInfo{manifest, specStore, runner, ph, reporter, errMap, isParallel, NumberOfExecutionStreams}
+func newExecutionInfo(m *manifest.Manifest, s *specStore, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validationErrMaps, p bool) *executionInfo {
+	return &executionInfo{
+		manifest:        m,
+		specStore:       s,
+		runner:          r,
+		pluginHandler:   ph,
+		consoleReporter: rep,
+		errMaps:         e,
+		inParallel:      p,
+		numberOfStreams: NumberOfExecutionStreams,
+	}
 }
 
 type specStore struct {
@@ -106,13 +113,10 @@ func ExecuteSpecs(args []string) int {
 	}
 	runner := startAPI()
 	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	executionInfo := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, nil, reporter.Current(), errMap, InParallel)
-	execution := newExecution(executionInfo)
-	execution.start()
-	execution.run()
-	execution.finish()
-	exitCode := printExecutionStatus(execution.result(), errMap)
-	return exitCode
+	ei := newExecutionInfo(manifest, &specStore{specs: specsToExecute}, runner, nil, reporter.Current(), errMap, InParallel)
+	e := newExecution(ei)
+	e.run()
+	return printExecutionStatus(e.result(), errMap)
 }
 
 func Validate(args []string) {
@@ -166,13 +170,17 @@ type validationErrMaps struct {
 }
 
 func validateSpecs(manifest *manifest.Manifest, specsToExecute []*gauge.Specification, runner *runner.TestRunner, conceptDictionary *gauge.ConceptDictionary) *validationErrMaps {
-	validator := newValidator(manifest, specsToExecute, runner, conceptDictionary)
-	//TODO: validator.validate() should return validationErrMaps so that it has scenario/spec info with error(Which is currently done by fillErrors())
-	validationErrors := validator.validate()
-	errMap := &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
-	if len(validationErrors) > 0 {
-		printValidationFailures(validationErrors)
-		fillErrors(errMap, validationErrors)
+	v := newValidator(manifest, specsToExecute, runner, conceptDictionary)
+	vErrs := v.validate()
+	errMap := &validationErrMaps{
+		specErrs:     make(map[*gauge.Specification][]*stepValidationError),
+		scenarioErrs: make(map[*gauge.Scenario][]*stepValidationError),
+		stepErrs:     make(map[*gauge.Step]*stepValidationError),
+	}
+
+	if len(vErrs) > 0 {
+		printValidationFailures(vErrs)
+		fillErrors(errMap, vErrs)
 	}
 	return errMap
 }
@@ -185,9 +193,7 @@ func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
 		for _, scenario := range spec.Scenarios {
 			fillScenarioErrors(scenario, errMap, scenario.Steps)
 		}
-		fillSpecErrors(spec, errMap, spec.Contexts)
-		fillSpecErrors(spec, errMap, spec.TearDownSteps)
-
+		fillSpecErrors(spec, errMap, append(spec.Contexts, spec.TearDownSteps...))
 	}
 }
 

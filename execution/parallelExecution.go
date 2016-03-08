@@ -97,6 +97,7 @@ func (e *parallelExecution) start() {
 }
 
 func (e *parallelExecution) run() {
+	e.start()
 	var suiteResults []*result.SuiteResult
 	nStreams := e.numberOfStreams()
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
@@ -106,6 +107,7 @@ func (e *parallelExecution) run() {
 		suiteResults = e.eagerExecution(nStreams)
 	}
 	e.aggregateResults(suiteResults)
+	e.finish()
 }
 
 func (e *parallelExecution) eagerExecution(distributions int) []*result.SuiteResult {
@@ -161,7 +163,6 @@ func (e *parallelExecution) startStream(specStore *specStore, reporter reporter.
 func (e *parallelExecution) startSpecsExecutionWithRunner(specStore *specStore, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
 	executionInfo := newExecutionInfo(e.manifest, specStore, runner, e.pluginHandler, reporter, e.errMaps, false)
 	simpleExecution := newExecution(executionInfo)
-	simpleExecution.start()
 	simpleExecution.run()
 	runner.Kill()
 	suiteResultsChan <- simpleExecution.result()
