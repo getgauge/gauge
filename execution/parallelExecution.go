@@ -33,6 +33,7 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/validation"
 )
 
 var Strategy string
@@ -50,7 +51,7 @@ type parallelExecution struct {
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
 	consoleReporter          reporter.Reporter
-	errMaps                  *validationErrMaps
+	errMaps                  *validation.ValidationErrMaps
 	startTime                time.Time
 }
 
@@ -162,7 +163,7 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, reporter report
 }
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
-	executionInfo := newExecutionInfo(e.manifest, s, runner, e.pluginHandler, reporter, e.errMaps, false)
+	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, reporter, e.errMaps, false)
 	se := newSimpleExecution(executionInfo)
 	se.execute()
 	runner.Kill()
@@ -178,7 +179,7 @@ func (e *parallelExecution) finish() {
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {
 	r := result.NewSuiteResult(ExecuteTags, e.startTime)
-	r.SpecsSkippedCount = len(e.errMaps.specErrs)
+	r.SpecsSkippedCount = len(e.errMaps.SpecErrs)
 	for _, result := range suiteResults {
 		r.SpecsFailedCount += result.SpecsFailedCount
 		r.SpecResults = append(r.SpecResults, result.SpecResults...)

@@ -18,23 +18,20 @@
 package execution
 
 import (
-	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/validation"
 )
 
 var NumberOfExecutionStreams int
@@ -52,12 +49,16 @@ type executionInfo struct {
 	runner          *runner.TestRunner
 	pluginHandler   *plugin.Handler
 	consoleReporter reporter.Reporter
-	errMaps         *validationErrMaps
+	errMaps         *validation.ValidationErrMaps
 	inParallel      bool
 	numberOfStreams int
 }
 
-func newExecutionInfo(m *manifest.Manifest, s *gauge.SpecCollection, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validationErrMaps, p bool) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validation.ValidationErrMaps, p bool) *executionInfo {
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
 	return &executionInfo{
 		manifest:        m,
 		specs:           s,
@@ -78,43 +79,12 @@ func ExecuteSpecs(specDirs []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 
-	specsToExecute, conceptsDictionary := parseSpecs(specDirs)
-	manifest, err := manifest.ProjectManifest()
-	if err != nil {
-		logger.Fatalf(err.Error())
-	}
 	runner := startAPI()
-	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	ei := newExecutionInfo(manifest, gauge.NewSpecCollection(specsToExecute), runner, nil, reporter.Current(), errMap, InParallel)
+	specs, errMap := validation.ValidateSpecs(specDirs, runner)
+	ei := newExecutionInfo(specs, runner, nil, reporter.Current(), errMap, InParallel)
 	e := newExecution(ei)
 	e.run()
 	return printExecutionStatus(e.result(), errMap)
-}
-
-func Validate(specDirs []string) {
-	specsToExecute, conceptsDictionary := parseSpecs(specDirs)
-	manifest, err := manifest.ProjectManifest()
-	if err != nil {
-		logger.Fatalf(err.Error())
-	}
-	runner := startAPI()
-	errMap := validateSpecs(manifest, specsToExecute, runner, conceptsDictionary)
-	runner.Kill()
-	if len(errMap.stepErrs) > 0 {
-		os.Exit(1)
-	}
-	logger.Info("No error found.")
-}
-
-func parseSpecs(specDirs []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false, specDirs)
-	parser.HandleParseResult(conceptParseResult)
-	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, specDirs)
-	if len(specsToExecute) == 0 {
-		logger.Info("No specifications found in %s.", strings.Join(specDirs, ", "))
-		os.Exit(0)
-	}
-	return specsToExecute, conceptsDictionary
 }
 
 func newExecution(executionInfo *executionInfo) execution {
@@ -135,70 +105,9 @@ func startAPI() *runner.TestRunner {
 	return nil
 }
 
-type validationErrMaps struct {
-	specErrs     map[*gauge.Specification][]*stepValidationError
-	scenarioErrs map[*gauge.Scenario][]*stepValidationError
-	stepErrs     map[*gauge.Step]*stepValidationError
-}
-
-func validateSpecs(manifest *manifest.Manifest, specsToExecute []*gauge.Specification, runner *runner.TestRunner, conceptDictionary *gauge.ConceptDictionary) *validationErrMaps {
-	v := newValidator(manifest, specsToExecute, runner, conceptDictionary)
-	vErrs := v.validate()
-	errMap := &validationErrMaps{
-		specErrs:     make(map[*gauge.Specification][]*stepValidationError),
-		scenarioErrs: make(map[*gauge.Scenario][]*stepValidationError),
-		stepErrs:     make(map[*gauge.Step]*stepValidationError),
-	}
-
-	if len(vErrs) > 0 {
-		printValidationFailures(vErrs)
-		fillErrors(errMap, vErrs)
-	}
-	return errMap
-}
-
-func fillErrors(errMap *validationErrMaps, validationErrors validationErrors) {
-	for spec, errors := range validationErrors {
-		for _, err := range errors {
-			errMap.stepErrs[err.step] = err
-		}
-		for _, scenario := range spec.Scenarios {
-			fillScenarioErrors(scenario, errMap, scenario.Steps)
-		}
-		fillSpecErrors(spec, errMap, append(spec.Contexts, spec.TearDownSteps...))
-	}
-}
-
-func fillScenarioErrors(scenario *gauge.Scenario, errMap *validationErrMaps, steps []*gauge.Step) {
-	for _, step := range steps {
-		if step.IsConcept {
-			fillScenarioErrors(scenario, errMap, step.ConceptSteps)
-		}
-		if err, ok := errMap.stepErrs[step]; ok {
-			errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
-		}
-	}
-}
-
-func fillSpecErrors(spec *gauge.Specification, errMap *validationErrMaps, steps []*gauge.Step) {
-	for _, context := range steps {
-		if context.IsConcept {
-			fillSpecErrors(spec, errMap, context.ConceptSteps)
-		}
-		if err, ok := errMap.stepErrs[context]; ok {
-			errMap.specErrs[spec] = append(errMap.specErrs[spec], err)
-			for _, scenario := range spec.Scenarios {
-				if _, ok := errMap.scenarioErrs[scenario]; !ok {
-					errMap.scenarioErrs[scenario] = append(errMap.scenarioErrs[scenario], err)
-				}
-			}
-		}
-	}
-}
-
-func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErrMaps) int {
-	nSkippedScenarios := len(errMap.scenarioErrs)
-	nSkippedSpecs := len(errMap.specErrs)
+func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps) int {
+	nSkippedScenarios := len(errMap.ScenarioErrs)
+	nSkippedSpecs := len(errMap.SpecErrs)
 	nExecutedSpecs := len(suiteResult.SpecResults) - nSkippedSpecs
 	nFailedSpecs := suiteResult.SpecsFailedCount
 	nPassedSpecs := nExecutedSpecs - nFailedSpecs
@@ -225,16 +134,6 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validationErr
 		exitCode = 1
 	}
 	return exitCode
-}
-
-func printValidationFailures(validationErrors validationErrors) {
-	logger.Errorf("Validation failed. The following steps have errors")
-	for _, stepValidationErrors := range validationErrors {
-		for _, stepValidationError := range stepValidationErrors {
-			s := stepValidationError.step
-			logger.Errorf("%s:%d: %s. %s", stepValidationError.fileName, s.LineNo, stepValidationError.message, s.LineText)
-		}
-	}
 }
 
 func validateFlags() {

@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/validation"
 
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
@@ -42,7 +43,7 @@ type simpleExecution struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
 	consoleReporter      reporter.Reporter
-	errMaps              *validationErrMaps
+	errMaps              *validation.ValidationErrMaps
 	startTime            time.Time
 }
 
@@ -67,7 +68,7 @@ func (e *simpleExecution) execute() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	setResult := func() {
 		e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
-		e.suiteResult.SpecsSkippedCount = len(e.errMaps.specErrs)
+		e.suiteResult.SpecsSkippedCount = len(e.errMaps.SpecErrs)
 	}
 
 	initSuiteDataStoreResult := e.initializeSuiteDataStore()

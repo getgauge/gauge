@@ -34,6 +34,7 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/validation"
 	"github.com/getgauge/gauge/version"
 
 	"github.com/getgauge/gauge/plugin/install"
@@ -130,7 +131,7 @@ func main() {
 		} else if *specFilesToFormat != "" {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
-			execution.Validate(specDirs)
+			validation.Validate(flag.Args())
 		} else {
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)

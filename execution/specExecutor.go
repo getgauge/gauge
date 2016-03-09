@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/validation"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -44,7 +45,7 @@ type specExecutor struct {
 	specResult           *result.SpecResult
 	currentTableRow      int
 	consoleReporter      reporter.Reporter
-	errMap               *validationErrMaps
+	errMap               *validation.ValidationErrMaps
 }
 
 type indexRange struct {
@@ -52,7 +53,7 @@ type indexRange struct {
 	end   int
 }
 
-func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validationErrMaps) *specExecutor {
+func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps) *specExecutor {
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
@@ -109,7 +110,7 @@ func (e *specExecutor) execute() {
 	e.specResult = gauge.NewSpecResult(e.specification)
 	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
 	e.specResult.AddSpecItems(resolvedSpecItems)
-	if _, ok := e.errMap.specErrs[e.specification]; ok {
+	if _, ok := e.errMap.SpecErrs[e.specification]; ok {
 		e.skipSpec()
 		return
 	}
@@ -155,12 +156,12 @@ func (e *specExecutor) result() *result.SpecResult {
 
 func (e *specExecutor) skipSpecForError(err error) {
 	logger.Errorf(err.Error())
-	validationError := newValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
+	validationError := validation.NewValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 		err.Error(), e.specification.FileName, nil)
 	for _, scenario := range e.specification.Scenarios {
-		e.errMap.scenarioErrs[scenario] = []*stepValidationError{validationError}
+		e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
 	}
-	e.errMap.specErrs[e.specification] = []*stepValidationError{validationError}
+	e.errMap.SpecErrs[e.specification] = []*validation.StepValidationError{validationError}
 	e.skipSpec()
 }
 
@@ -219,7 +220,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
-	if _, ok := e.errMap.scenarioErrs[scenario]; ok {
+	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		e.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
@@ -253,9 +254,9 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 func (e *specExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
 	e.consoleReporter.Error(err.Error())
-	validationError := newValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.specification.FileName, nil)
-	e.errMap.scenarioErrs[scenario] = []*stepValidationError{validationError}
+	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
 	e.setSkipInfoInResult(scenarioResult, scenario)
 }
 
@@ -263,8 +264,8 @@ func (e *specExecutor) setSkipInfoInResult(result *result.ScenarioResult, scenar
 	e.specResult.ScenarioSkippedCount++
 	result.ProtoScenario.Skipped = proto.Bool(true)
 	var errors []string
-	for _, err := range e.errMap.scenarioErrs[scenario] {
-		errors = append(errors, fmt.Sprintf("%s:%d: %s. %s", err.fileName, err.step.LineNo, err.Error(), err.step.LineText))
+	for _, err := range e.errMap.ScenarioErrs[scenario] {
+		errors = append(errors, err.String())
 	}
 	result.ProtoScenario.SkipErrors = errors
 }
@@ -354,7 +355,7 @@ func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.
 func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *gauge.Step) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 	protoStep.StepExecutionResult.Skipped = proto.Bool(false)
-	if _, ok := e.errMap.stepErrs[step]; ok {
+	if _, ok := e.errMap.StepErrs[step]; ok {
 		protoStep.StepExecutionResult.Skipped = proto.Bool(true)
 		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implemenatation not found")
 	}
@@ -598,9 +599,9 @@ func getDataTableRowsRange(tableRows string, rowCount int) (indexRange, error) {
 	var err error
 	indexRanges := strings.Split(tableRows, "-")
 	if len(indexRanges) == 2 {
-		startIndex, endIndex, err = validateTableRowsRange(indexRanges[0], indexRanges[1], rowCount)
+		startIndex, endIndex, err = validation.ValidateTableRowsRange(indexRanges[0], indexRanges[1], rowCount)
 	} else if len(indexRanges) == 1 {
-		startIndex, endIndex, err = validateTableRowsRange(tableRows, tableRows, rowCount)
+		startIndex, endIndex, err = validation.ValidateTableRowsRange(tableRows, tableRows, rowCount)
 	} else {
 		return indexRange{start: 0, end: 0}, errors.New("Table rows range validation failed.")
 	}

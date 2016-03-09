@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/validation"
 	. "gopkg.in/check.v1"
 )
 
@@ -46,8 +47,12 @@ func (s *MySuite) TestNumberOfStreams(c *C) {
 	c.Assert(e.numberOfStreams(), Equals, 0)
 }
 
-func getValidationErrorMap() *validationErrMaps {
-	return &validationErrMaps{make(map[*gauge.Specification][]*stepValidationError), make(map[*gauge.Scenario][]*stepValidationError), make(map[*gauge.Step]*stepValidationError)}
+func getValidationErrorMap() *validation.ValidationErrMaps {
+	return &validation.ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]*validation.StepValidationError),
+		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
+		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
+	}
 }
 
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
@@ -68,7 +73,7 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	errMap := getValidationErrorMap()
-	errMap.specErrs[&gauge.Specification{}] = make([]*stepValidationError, 0)
+	errMap.SpecErrs[&gauge.Specification{}] = make([]*validation.StepValidationError, 0)
 	e := parallelExecution{errMaps: errMap}
 	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
 	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
