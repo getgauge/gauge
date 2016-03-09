@@ -56,12 +56,6 @@ func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Ha
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
-func (e *specExecutor) executeBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
-		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, e.specResult)
-}
-
 func (e *specExecutor) initSpecDataStore() error {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
@@ -72,7 +66,13 @@ func (e *specExecutor) initSpecDataStore() error {
 	return nil
 }
 
-func (e *specExecutor) executeAfterSpecHook() *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) notifyBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
+		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+	return e.executeHook(message, e.specResult)
+}
+
+func (e *specExecutor) notifyAfterSpecHook() *gauge_messages.ProtoExecutionResult {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding.Enum(),
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	return e.executeHook(message, e.specResult)
@@ -85,14 +85,13 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (e *specExecutor) getSkippedSpecResult() *result.SpecResult {
+func (e *specExecutor) skipSpec() {
 	var scenarioResults []*result.ScenarioResult
 	for _, scenario := range e.specification.Scenarios {
 		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
 	e.specResult.AddScenarioResults(scenarioResults)
 	e.specResult.Skipped = true
-	return e.specResult
 }
 
 func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
@@ -102,7 +101,7 @@ func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *resul
 	return scenarioResult
 }
 
-func (e *specExecutor) execute() *result.SpecResult {
+func (e *specExecutor) execute() {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(e.specification.Heading.Value),
 		FileName: proto.String(e.specification.FileName),
 		IsFailed: proto.Bool(false), Tags: getTagValue(e.specification.Tags)}
@@ -111,41 +110,50 @@ func (e *specExecutor) execute() *result.SpecResult {
 	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if _, ok := e.errMap.specErrs[e.specification]; ok {
-		return e.getSkippedSpecResult()
+		e.skipSpec()
+		return
 	}
+
 	err := e.initSpecDataStore()
 	if err != nil {
-		return e.createSkippedSpecResult(err)
+		e.skipSpecForError(err)
+		return
 	}
 	if len(e.specification.Scenarios) == 0 {
-		return e.createSkippedSpecResult(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
+		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
+		return
 	}
+
 	e.consoleReporter.SpecStart(specInfo.GetName())
-	beforeSpecHookStatus := e.executeBeforeSpecHook()
+	beforeSpecHookStatus := e.notifyBeforeSpecHook()
 	if beforeSpecHookStatus.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, beforeSpecHookStatus, result.AddPreHook, e.consoleReporter)
-	} else {
-		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
-		if dataTableRowCount == 0 {
-			scenarioResult := e.executeScenarios()
-			e.specResult.AddScenarioResults(scenarioResult)
-		} else {
-			e.executeTableDrivenSpec()
-		}
+		return
 	}
 
-	afterSpecHookStatus := e.executeAfterSpecHook()
+	dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
+	if dataTableRowCount == 0 {
+		scenarioResult := e.executeScenarios()
+		e.specResult.AddScenarioResults(scenarioResult)
+	} else {
+		e.executeTableDrivenSpec()
+	}
+
+	afterSpecHookStatus := e.notifyAfterSpecHook()
 	if afterSpecHookStatus.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, afterSpecHookStatus, result.AddPostHook, e.consoleReporter)
 	}
 	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
 	e.consoleReporter.SpecEnd()
+}
+
+func (e *specExecutor) result() *result.SpecResult {
 	return e.specResult
 }
 
-func (e *specExecutor) createSkippedSpecResult(err error) *result.SpecResult {
+func (e *specExecutor) skipSpecForError(err error) {
 	logger.Errorf(err.Error())
 	validationError := newValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 		err.Error(), e.specification.FileName, nil)
@@ -153,7 +161,7 @@ func (e *specExecutor) createSkippedSpecResult(err error) *result.SpecResult {
 		e.errMap.scenarioErrs[scenario] = []*stepValidationError{validationError}
 	}
 	e.errMap.specErrs[e.specification] = []*stepValidationError{validationError}
-	return e.getSkippedSpecResult()
+	e.skipSpec()
 }
 
 func (e *specExecutor) executeTableDrivenSpec() {

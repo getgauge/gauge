@@ -163,10 +163,10 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, reporter report
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, suiteResultsChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
 	executionInfo := newExecutionInfo(e.manifest, s, runner, e.pluginHandler, reporter, e.errMaps, false)
-	simpleExecution := newSimpleExecution(executionInfo)
-	simpleExecution.execute()
+	se := newSimpleExecution(executionInfo)
+	se.execute()
 	runner.Kill()
-	suiteResultsChan <- simpleExecution.result()
+	suiteResultsChan <- se.result()
 }
 
 func (e *parallelExecution) finish() {
