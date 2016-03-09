@@ -70,7 +70,7 @@ func newExecutionInfo(m *manifest.Manifest, s *gauge.SpecCollection, r *runner.T
 	}
 }
 
-func ExecuteSpecs(args []string) int {
+func ExecuteSpecs(specDirs []string) int {
 	validateFlags()
 	if checkUpdatesDuringExecution && config.CheckUpdates() {
 		i := &install.UpdateFacade{}
@@ -78,7 +78,7 @@ func ExecuteSpecs(args []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 
-	specsToExecute, conceptsDictionary := parseSpecs(args)
+	specsToExecute, conceptsDictionary := parseSpecs(specDirs)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -91,8 +91,8 @@ func ExecuteSpecs(args []string) int {
 	return printExecutionStatus(e.result(), errMap)
 }
 
-func Validate(args []string) {
-	specsToExecute, conceptsDictionary := parseSpecs(args)
+func Validate(specDirs []string) {
+	specsToExecute, conceptsDictionary := parseSpecs(specDirs)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -106,12 +106,12 @@ func Validate(args []string) {
 	logger.Info("No error found.")
 }
 
-func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false, args)
+func parseSpecs(specDirs []string) ([]*gauge.Specification, *gauge.ConceptDictionary) {
+	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false, specDirs)
 	parser.HandleParseResult(conceptParseResult)
-	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, args)
+	specsToExecute, _ := filter.GetSpecsToExecute(conceptsDictionary, specDirs)
 	if len(specsToExecute) == 0 {
-		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
+		logger.Info("No specifications found in %s.", strings.Join(specDirs, ", "))
 		os.Exit(0)
 	}
 	return specsToExecute, conceptsDictionary

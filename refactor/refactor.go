@@ -24,7 +24,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/formatter"
@@ -78,14 +77,10 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
 
-	if len(specDirs) < 1 {
-		specs, specParseResults = parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &gauge.ConceptDictionary{})
-	} else {
-		for _, dir := range specDirs {
-			specSlice, specParseResultsSlice := parser.FindSpecs(filepath.Join(config.ProjectRoot, dir), &gauge.ConceptDictionary{})
-			specs = append(specs, specSlice...)
-			specParseResults = append(specParseResults, specParseResultsSlice...)
-		}
+	for _, dir := range specDirs {
+		specSlice, specParseResultsSlice := parser.FindSpecs(filepath.Join(config.ProjectRoot, dir), &gauge.ConceptDictionary{})
+		specs = append(specs, specSlice...)
+		specParseResults = append(specParseResults, specParseResultsSlice...)
 	}
 
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)

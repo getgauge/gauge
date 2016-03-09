@@ -10,8 +10,8 @@ var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
 
-func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, args []string) ([]*gauge.Specification, int) {
-	specsToExecute := specsFromArgs(conceptsDictionary, args)
+func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, int) {
+	specsToExecute := specsFromArgs(conceptsDictionary, specDirs)
 	totalSpecs := specsToExecute
 	specsToExecute = applyFilters(specsToExecute, specsFilters())
 	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
@@ -28,11 +28,11 @@ func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) 
 	return specsToExecute
 }
 
-func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, args []string) []*gauge.Specification {
-	allSpecs := make([]*gauge.Specification, 0)
-	specs := make([]*gauge.Specification, 0)
+func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) []*gauge.Specification {
+	var allSpecs []*gauge.Specification
+	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
-	for _, arg := range args {
+	for _, arg := range specDirs {
 		specSource := arg
 		if isIndexedSpec(specSource) {
 			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)

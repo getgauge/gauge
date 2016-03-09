@@ -74,6 +74,7 @@ var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the insta
 var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
 var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
+var specDirs = []string{"specs"}
 
 func main() {
 	flag.Parse()
@@ -119,16 +120,19 @@ func main() {
 		printUsage()
 		os.Exit(0)
 	} else if validGaugeProject {
+		if len(flag.Args()) > 0 {
+			specDirs = flag.Args()
+		}
 		if *refactorSteps != "" {
 			refactorInit(flag.Args())
 		} else if *daemonize {
-			api.RunInBackground(*apiPort, flag.Args())
+			api.RunInBackground(*apiPort, specDirs)
 		} else if *specFilesToFormat != "" {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
-			execution.Validate(flag.Args())
+			execution.Validate(specDirs)
 		} else {
-			exitCode := execution.ExecuteSpecs(flag.Args())
+			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)
 		}
 	} else {
@@ -137,7 +141,6 @@ func main() {
 }
 
 func refactorInit(args []string) {
-	var specDirs []string
 	startChan := api.StartAPI()
 	if len(args) < 1 {
 		logger.Fatalf("Flag needs at least two arguments: --refactor\nUsage : gauge --refactor <old step> <new step> [[spec directories]]")

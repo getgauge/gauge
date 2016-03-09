@@ -30,6 +30,8 @@ import (
 
 func Test(t *testing.T) { TestingT(t) }
 
+const specDir = "specs"
+
 var _ = Suite(&MySuite{})
 
 var concept1 []byte
@@ -43,7 +45,7 @@ type MySuite struct {
 
 func (s *MySuite) SetUpTest(c *C) {
 	s.projectDir, _ = ioutil.TempDir("", "gaugeTest")
-	s.specsDir, _ = util.CreateDirIn(s.projectDir, "specs")
+	s.specsDir, _ = util.CreateDirIn(s.projectDir, specDir)
 	config.ProjectRoot = s.projectDir
 
 	s.buildTestData()
@@ -81,7 +83,7 @@ Scenario 1
 func (s *MySuite) TestGetParsedSpecs(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
 
 	specFiles := util.FindSpecFilesIn(s.specsDir)
 	specs := specInfoGatherer.getParsedSpecs(specFiles)
@@ -93,7 +95,7 @@ func (s *MySuite) TestGetParsedSpecs(c *C) {
 func (s *MySuite) TestGetParsedConcepts(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "concept.cpt", concept1)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
 
 	conceptsMap := specInfoGatherer.getParsedConcepts()
 
@@ -123,7 +125,7 @@ func (s *MySuite) TestGetParsedStepValues(c *C) {
 func (s *MySuite) TestInitSpecsCache(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
 	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initSpecsCache()
@@ -136,7 +138,7 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 	c.Assert(err, Equals, nil)
 	_, err = util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := new(SpecInfoGatherer)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
 	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initConceptsCache()

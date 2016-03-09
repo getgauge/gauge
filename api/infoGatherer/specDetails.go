@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -62,12 +61,8 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 	var specFiles []string
 	s.specsCache = make(map[string][]*gauge.Specification, 0)
 
-	if len(s.SpecDirs) < 1 {
-		specFiles = util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName))
-	} else {
-		for _, dir := range s.SpecDirs {
-			specFiles = append(specFiles, util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, dir))...)
-		}
+	for _, dir := range s.SpecDirs {
+		specFiles = append(specFiles, util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, dir))...)
 	}
 
 	parsedSpecs := s.getParsedSpecs(specFiles)
@@ -302,16 +297,10 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	var allDirsToWatch []string
 	var specDir string
 
-	if len(s.SpecDirs) < 1 {
-		specDir = filepath.Join(config.ProjectRoot, common.SpecsDirectoryName)
+	for _, dir := range s.SpecDirs {
+		specDir = filepath.Join(config.ProjectRoot, dir)
 		allDirsToWatch = append(allDirsToWatch, specDir)
 		allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
-	} else {
-		for _, dir := range s.SpecDirs {
-			specDir = filepath.Join(config.ProjectRoot, dir)
-			allDirsToWatch = append(allDirsToWatch, specDir)
-			allDirsToWatch = append(allDirsToWatch, util.FindAllNestedDirs(specDir)...)
-		}
 	}
 
 	for _, dir := range allDirsToWatch {
