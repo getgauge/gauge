@@ -62,7 +62,7 @@ func (refactoringResult *refactoringResult) String() string {
 	return result
 }
 
-func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels) *refactoringResult {
+func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) *refactoringResult {
 	defer killRunner(startChan)
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
@@ -74,14 +74,26 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	}
 
 	result := &refactoringResult{Success: true, Errors: make([]string, 0), warnings: make([]string, 0)}
-	specs, specParseResults := parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &gauge.ConceptDictionary{})
+
+	var specs []*gauge.Specification
+	var specParseResults []*parser.ParseResult
+
+	if len(specDirs) < 1 {
+		specs, specParseResults = parser.FindSpecs(filepath.Join(config.ProjectRoot, common.SpecsDirectoryName), &gauge.ConceptDictionary{})
+	} else {
+		for _, dir := range specDirs {
+			specSlice, specParseResultsSlice := parser.FindSpecs(filepath.Join(config.ProjectRoot, dir), &gauge.ConceptDictionary{})
+			specs = append(specs, specSlice...)
+			specParseResults = append(specParseResults, specParseResultsSlice...)
+		}
+	}
+
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.Success {
 		return result
 	}
-	// TODO: Make this work with current path
-	dirs := make([]string, 0)
-	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false, dirs)
+
+	conceptDictionary, parseResult := parser.CreateConceptsDictionary(false, specDirs)
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {
@@ -338,7 +350,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	os.Exit(exitCode)
 }
 
-func RefactorSteps(oldStep, newStep string, startChan *runner.StartChannels) {
-	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, startChan)
+func RefactorSteps(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) {
+	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, startChan, specDirs)
 	printRefactoringSummary(refactoringResult)
 }

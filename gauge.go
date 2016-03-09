@@ -32,12 +32,12 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
 
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
-	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	flag "github.com/getgauge/mflag"
 )
@@ -62,7 +62,7 @@ var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specif
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
 var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
-var refactorSteps = flag.String([]string{"-refactor"}, "", "Refactor steps")
+var refactorSteps = flag.String([]string{"-refactor"}, "", "Refactor steps. Eg: gauge --refactor <old step> <new step> [[spec directories]]")
 var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
 var numberOfExecutionStreams = flag.Int([]string{"n"}, util.NumberOfCores(), "Specify number of parallel execution streams")
 var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
@@ -120,11 +120,7 @@ func main() {
 		os.Exit(0)
 	} else if validGaugeProject {
 		if *refactorSteps != "" {
-			startChan := api.StartAPI()
-			if len(flag.Args()) != 1 {
-				logger.Fatalf("flag needs two arguments: --refactor\n.Usage : gauge --refactor {old step} {new step}")
-			}
-			refactor.RefactorSteps(*refactorSteps, flag.Args()[0], startChan)
+			refactorInit(flag.Args())
 		} else if *daemonize {
 			api.RunInBackground(*apiPort, flag.Args())
 		} else if *specFilesToFormat != "" {
@@ -138,6 +134,18 @@ func main() {
 	} else {
 		logger.Fatalf(err.Error())
 	}
+}
+
+func refactorInit(args []string) {
+	var specDirs []string
+	startChan := api.StartAPI()
+	if len(args) < 1 {
+		logger.Fatalf("Flag needs at least two arguments: --refactor\nUsage : gauge --refactor <old step> <new step> [[spec directories]]")
+	}
+	if len(args) > 1 {
+		specDirs = args[1:]
+	}
+	refactor.RefactorSteps(*refactorSteps, args[0], startChan, specDirs)
 }
 
 func printJSONVersion() {
