@@ -132,7 +132,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
 	for i, s := range specs {
-		go e.startSpecsExecution(s, resChan, reporter.NewParallelConsole(i+1))
+		go e.startSpecsExecution(s, reporter.NewParallelConsole(i+1), resChan)
 	}
 	e.wg.Wait()
 	close(resChan)
@@ -140,25 +140,25 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, reporter reporter.Reporter, resChan chan *result.SuiteResult) {
 	defer e.wg.Done()
-	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
+	runner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		logger.Errorf("Failed to start runner. Reason: %s", err.Error())
+		logger.Errorf("Failed to start runner. %s", err.Error())
 		resChan <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(s, resChan, testRunner, reporter)
+	e.startSpecsExecutionWithRunner(s, resChan, runner, reporter)
 }
 
-func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, suiteResults chan *result.SuiteResult, reporter reporter.Reporter) {
+func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, reporter reporter.Reporter, resChan chan *result.SuiteResult) {
 	defer e.wg.Done()
-	testRunner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
+	runner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter, make(chan bool))
 	if err != nil {
-		logger.Errorf("Failed: " + err.Error())
+		logger.Errorf("Failed to start runner. %s", err.Error())
 		logger.Debug("Skipping %d specifications", s.Size())
-		suiteResults <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
+		resChan <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
-	e.startSpecsExecutionWithRunner(s, suiteResults, testRunner, reporter)
+	e.startSpecsExecutionWithRunner(s, resChan, runner, reporter)
 }
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
@@ -170,8 +170,12 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 }
 
 func (e *parallelExecution) finish() {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
-		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
+	message := &gauge_messages.Message{
+		MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{
+			SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult),
+		},
+	}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
 }
