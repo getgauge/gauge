@@ -65,7 +65,7 @@ type StepValidationError struct {
 	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
-func (s *StepValidationError) String() string {
+func (s *StepValidationError) Error() string {
 	return fmt.Sprintf("%s:%d: %s. %s", s.fileName, s.step.LineNo, s.message, s.step.LineText)
 }
 
@@ -166,7 +166,7 @@ func printValidationFailures(validationErrors validationErrors) {
 	logger.Errorf("Validation failed. The following steps have errors")
 	for _, errs := range validationErrors {
 		for _, e := range errs {
-			logger.Errorf(e.String())
+			logger.Errorf(e.Error())
 		}
 	}
 }

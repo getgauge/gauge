@@ -265,7 +265,7 @@ func (e *specExecutor) setSkipInfoInResult(result *result.ScenarioResult, scenar
 	result.ProtoScenario.Skipped = proto.Bool(true)
 	var errors []string
 	for _, err := range e.errMap.ScenarioErrs[scenario] {
-		errors = append(errors, err.String())
+		errors = append(errors, err.Error())
 	}
 	result.ProtoScenario.SkipErrors = errors
 }
