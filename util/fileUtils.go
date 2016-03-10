@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -103,15 +104,29 @@ func CreateDirIn(dir string, dirName string) (string, error) {
 	return fullDirName, err
 }
 
-func GetSpecFiles(specSource string) []string {
+// GetSpecFiles returns the list of spec files present at the given path.
+// If the path itself represents a spec file, it returns the same.
+func GetSpecFiles(path string) []string {
 	var specFiles []string
-	if common.DirExists(specSource) {
-		specFiles = append(specFiles, FindSpecFilesIn(specSource)...)
-	} else if common.FileExists(specSource) && IsValidSpecExtension(specSource) {
-		specFile, _ := filepath.Abs(specSource)
-		specFiles = append(specFiles, specFile)
+	if common.DirExists(path) {
+		specFiles = append(specFiles, FindSpecFilesIn(path)...)
+	} else if common.FileExists(path) && IsValidSpecExtension(path) {
+		f, _ := filepath.Abs(path)
+		specFiles = append(specFiles, f)
 	}
 	return specFiles
+}
+
+// GetConceptFiles returns the list of concept files present at the given path.
+// If the given path is a file, it searches for concepts in the PROJECTROOT/base_dir_of_path
+func GetConceptFiles(path string) []string {
+	if !common.DirExists(path) {
+		path, _ = filepath.Abs(path)
+		projRoot, _ := common.GetProjectRoot()
+		path = strings.TrimPrefix(path, projRoot)
+		path = strings.Split(path, string(filepath.Separator))[0]
+	}
+	return FindConceptFilesIn(path)
 }
 
 func SaveFile(fileName string, content string, backup bool) {

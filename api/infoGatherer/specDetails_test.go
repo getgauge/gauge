@@ -44,7 +44,7 @@ type MySuite struct {
 }
 
 func (s *MySuite) SetUpTest(c *C) {
-	s.projectDir, _ = ioutil.TempDir("", "gaugeTest")
+	s.projectDir, _ = ioutil.TempDir("_testdata", "gaugeTest")
 	s.specsDir, _ = util.CreateDirIn(s.projectDir, specDir)
 	config.ProjectRoot = s.projectDir
 

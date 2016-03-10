@@ -19,11 +19,9 @@ package parser
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
@@ -198,9 +196,10 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 }
 func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
 	var conceptFiles []string
-	for _, dir := range dirs {
-		conceptFiles = append(conceptFiles, util.FindConceptFilesIn(filepath.Join(config.ProjectRoot, dir))...)
+	for _, d := range dirs {
+		conceptFiles = append(conceptFiles, util.GetConceptFiles(d)...)
 	}
+
 	conceptsDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		if err := AddConcepts(conceptFile, conceptsDictionary); err != nil {
