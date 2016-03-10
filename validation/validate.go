@@ -171,14 +171,14 @@ func printValidationFailures(validationErrors validationErrors) {
 	}
 }
 
-func NewValidationError(step *gauge.Step, message string, fileName string, errType *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
-	return &StepValidationError{step: step, message: message, fileName: fileName, errorType: errType}
+func NewValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
+	return &StepValidationError{step: s, message: m, fileName: f, errorType: e}
 }
 
 type validationErrors map[*gauge.Specification][]*StepValidationError
 
-func newValidator(manifest *manifest.Manifest, specsToExecute []*gauge.Specification, runner *runner.TestRunner, conceptsDictionary *gauge.ConceptDictionary) *validator {
-	return &validator{manifest: manifest, specsToExecute: specsToExecute, runner: runner, conceptsDictionary: conceptsDictionary}
+func newValidator(m *manifest.Manifest, s []*gauge.Specification, r *runner.TestRunner, c *gauge.ConceptDictionary) *validator {
+	return &validator{manifest: m, specsToExecute: s, runner: r, conceptsDictionary: c}
 }
 
 func (v *validator) validate() validationErrors {
@@ -202,44 +202,46 @@ func (v *specValidator) validate() []*StepValidationError {
 	return v.stepValidationErrors
 }
 
-func (v *specValidator) Step(step *gauge.Step) {
-	if step.IsConcept {
-		for _, conceptStep := range step.ConceptSteps {
-			v.Step(conceptStep)
+func (v *specValidator) Step(s *gauge.Step) {
+	if s.IsConcept {
+		for _, c := range s.ConceptSteps {
+			v.Step(c)
 		}
-	} else {
-		value, ok := v.stepValidationCache[step.Value]
-		if !ok {
-			err := v.validateStep(step)
-			if err != nil {
-				v.stepValidationErrors = append(v.stepValidationErrors, err)
-			}
-			v.stepValidationCache[step.Value] = err
-		} else if value != nil {
-			v.stepValidationErrors = append(v.stepValidationErrors,
-				NewValidationError(step, value.message, v.specification.FileName, value.errorType))
+		return
+	}
+	val, ok := v.stepValidationCache[s.Value]
+	if !ok {
+		err := v.validateStep(s)
+		if err != nil {
+			v.stepValidationErrors = append(v.stepValidationErrors, err)
 		}
+		v.stepValidationCache[s.Value] = err
+		return
+	}
+	if val != nil {
+		v.stepValidationErrors = append(v.stepValidationErrors,
+			NewValidationError(s, val.message, v.specification.FileName, val.errorType))
 	}
 }
 
 var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
 
-func (v *specValidator) validateStep(step *gauge.Step) *StepValidationError {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(step.Value), NumberOfParameters: proto.Int(len(step.Args))}}
-	response, err := conn.GetResponseForMessageWithTimeout(message, v.runner.Connection, config.RunnerRequestTimeout())
+func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(s.Value), NumberOfParameters: proto.Int(len(s.Args))}}
+	r, err := conn.GetResponseForMessageWithTimeout(m, v.runner.Connection, config.RunnerRequestTimeout())
 	if err != nil {
-		return NewValidationError(step, err.Error(), v.specification.FileName, nil)
+		return NewValidationError(s, err.Error(), v.specification.FileName, nil)
 	}
-	if response.GetMessageType() == gauge_messages.Message_StepValidateResponse {
-		validateResponse := response.GetStepValidateResponse()
-		if !validateResponse.GetIsValid() {
-			message := getMessage(validateResponse.ErrorType.String())
-			return NewValidationError(step, message, v.specification.FileName, validateResponse.ErrorType)
+	if r.GetMessageType() == gauge_messages.Message_StepValidateResponse {
+		res := r.GetStepValidateResponse()
+		if !res.GetIsValid() {
+			msg := getMessage(res.ErrorType.String())
+			return NewValidationError(s, msg, v.specification.FileName, res.ErrorType)
 		}
 		return nil
 	}
-	return NewValidationError(step, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
+	return NewValidationError(s, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
 }
 
 func getMessage(message string) string {
