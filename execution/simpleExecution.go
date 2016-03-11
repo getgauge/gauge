@@ -78,19 +78,12 @@ func (e *simpleExecution) execute() {
 		return
 	}
 
-	beforeSuiteHookExecResult := e.notifyBeforeSuite()
-	if beforeSuiteHookExecResult.GetFailed() {
-		handleHookFailure(e.suiteResult, beforeSuiteHookExecResult, result.AddPreHook, e.consoleReporter)
-		setResult()
-		return
+	e.notifyBeforeSuite()
+	if !e.suiteResult.IsFailed {
+		e.executeSpecs(e.specCollection)
 	}
+	e.notifyAfterSuite()
 
-	e.executeSpecs(e.specCollection)
-
-	afterSuiteHookExecResult := e.notifyAfterSuite()
-	if afterSuiteHookExecResult.GetFailed() {
-		handleHookFailure(e.suiteResult, afterSuiteHookExecResult, result.AddPostHook, e.consoleReporter)
-	}
 	setResult()
 }
 
@@ -124,15 +117,22 @@ func (e *simpleExecution) result() *result.SuiteResult {
 	return e.suiteResult
 }
 
-func (e *simpleExecution) notifyBeforeSuite() *(gauge_messages.ProtoExecutionResult) {
+func (e *simpleExecution) notifyBeforeSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
-	return e.executeHook(m)
+	res := e.executeHook(m)
+	if res.GetFailed() {
+		handleHookFailure(e.suiteResult, res, result.AddPreHook, e.consoleReporter)
+	}
 }
-func (e *simpleExecution) notifyAfterSuite() *(gauge_messages.ProtoExecutionResult) {
+
+func (e *simpleExecution) notifyAfterSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(m)
+	res := e.executeHook(m)
+	if res.GetFailed() {
+		handleHookFailure(e.suiteResult, res, result.AddPostHook, e.consoleReporter)
+	}
 }
 
 func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {

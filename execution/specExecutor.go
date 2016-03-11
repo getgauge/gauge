@@ -67,16 +67,24 @@ func (e *specExecutor) initSpecDataStore() error {
 	return nil
 }
 
-func (e *specExecutor) notifyBeforeSpecHook() *gauge_messages.ProtoExecutionResult {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
+func (e *specExecutor) notifyBeforeSpecHook() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
 		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, e.specResult)
+	res := e.executeHook(m, e.specResult)
+	if res.GetFailed() {
+		setSpecFailure(e.currentExecutionInfo)
+		handleHookFailure(e.specResult, res, result.AddPreHook, e.consoleReporter)
+	}
 }
 
-func (e *specExecutor) notifyAfterSpecHook() *gauge_messages.ProtoExecutionResult {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding.Enum(),
+func (e *specExecutor) notifyAfterSpecHook() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding.Enum(),
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, e.specResult)
+	res := e.executeHook(m, e.specResult)
+	if res.GetFailed() {
+		setSpecFailure(e.currentExecutionInfo)
+		handleHookFailure(e.specResult, res, result.AddPostHook, e.consoleReporter)
+	}
 }
 
 func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker) *gauge_messages.ProtoExecutionResult {
@@ -126,26 +134,18 @@ func (e *specExecutor) execute() {
 	}
 
 	e.consoleReporter.SpecStart(specInfo.GetName())
-	beforeSpecHookStatus := e.notifyBeforeSpecHook()
-	if beforeSpecHookStatus.GetFailed() {
-		setSpecFailure(e.currentExecutionInfo)
-		handleHookFailure(e.specResult, beforeSpecHookStatus, result.AddPreHook, e.consoleReporter)
-		return
+	e.notifyBeforeSpecHook()
+	if !e.specResult.IsFailed {
+		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
+		if dataTableRowCount == 0 {
+			scenarioResult := e.executeScenarios()
+			e.specResult.AddScenarioResults(scenarioResult)
+		} else {
+			e.executeTableDrivenSpec()
+		}
 	}
 
-	dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
-	if dataTableRowCount == 0 {
-		scenarioResult := e.executeScenarios()
-		e.specResult.AddScenarioResults(scenarioResult)
-	} else {
-		e.executeTableDrivenSpec()
-	}
-
-	afterSpecHookStatus := e.notifyAfterSpecHook()
-	if afterSpecHookStatus.GetFailed() {
-		setSpecFailure(e.currentExecutionInfo)
-		handleHookFailure(e.specResult, afterSpecHookStatus, result.AddPostHook, e.consoleReporter)
-	}
+	e.notifyAfterSpecHook()
 	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
 	e.consoleReporter.SpecEnd()
 }
