@@ -20,6 +20,7 @@ package infoGatherer
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/getgauge/gauge/config"
@@ -95,7 +96,7 @@ func (s *MySuite) TestGetParsedSpecs(c *C) {
 func (s *MySuite) TestGetParsedConcepts(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "concept.cpt", concept1)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.projectDir + string(filepath.Separator) + specDir}}
 
 	conceptsMap := specInfoGatherer.getParsedConcepts()
 
@@ -138,7 +139,7 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 	c.Assert(err, Equals, nil)
 	_, err = util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
 	c.Assert(err, Equals, nil)
-	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.projectDir + string(filepath.Separator) + specDir}}
 	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initConceptsCache()

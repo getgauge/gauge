@@ -123,6 +123,7 @@ func GetConceptFiles(path string) []string {
 	if !common.DirExists(path) {
 		path, _ = filepath.Abs(path)
 		projRoot, _ := common.GetProjectRoot()
+		projRoot += string(filepath.Separator)
 		path = strings.TrimPrefix(path, projRoot)
 		path = strings.Split(path, string(filepath.Separator))[0]
 	}
