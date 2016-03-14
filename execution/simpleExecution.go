@@ -71,7 +71,7 @@ func (e *simpleExecution) execute() {
 		e.suiteResult.SpecsSkippedCount = len(e.errMaps.SpecErrs)
 	}
 
-	initSuiteDataStoreResult := e.initializeSuiteDataStore()
+	initSuiteDataStoreResult := e.initSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 		setResult()
@@ -135,7 +135,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 	}
 }
 
-func (e *simpleExecution) initializeSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
+func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	return executeAndGetStatus(e.runner, m)

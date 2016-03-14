@@ -57,14 +57,10 @@ func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Ha
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
-func (e *specExecutor) initSpecDataStore() error {
+func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initSpecDataStoreMessage)
-	if initResult.GetFailed() {
-		return fmt.Errorf("Spec data store didn't get initialized : %s\n", initResult.GetErrorMessage())
-	}
-	return nil
+	return executeAndGetStatus(e.runner, initSpecDataStoreMessage)
 }
 
 func (e *specExecutor) notifyBeforeSpecHook() {
@@ -94,15 +90,6 @@ func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTrac
 	return executionResult
 }
 
-func (e *specExecutor) skipSpec() {
-	var scenarioResults []*result.ScenarioResult
-	for _, scenario := range e.specification.Scenarios {
-		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
-	}
-	e.specResult.AddScenarioResults(scenarioResults)
-	e.specResult.Skipped = true
-}
-
 func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
 	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
@@ -123,11 +110,13 @@ func (e *specExecutor) execute() {
 		return
 	}
 
-	err := e.initSpecDataStore()
-	if err != nil {
-		e.skipSpecForError(err)
+	res := e.initSpecDataStore()
+	if res.GetFailed() {
+		e.consoleReporter.Error("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
+		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
 		return
 	}
+
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
 		return
@@ -154,17 +143,6 @@ func (e *specExecutor) result() *result.SpecResult {
 	return e.specResult
 }
 
-func (e *specExecutor) skipSpecForError(err error) {
-	logger.Errorf(err.Error())
-	validationError := validation.NewValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
-		err.Error(), e.specification.FileName, nil)
-	for _, scenario := range e.specification.Scenarios {
-		e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
-	}
-	e.errMap.SpecErrs[e.specification] = []*validation.StepValidationError{validationError}
-	e.skipSpec()
-}
-
 func (e *specExecutor) executeTableDrivenSpec() {
 	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
@@ -185,26 +163,30 @@ func getTagValue(tags *gauge.Tags) []string {
 	return tagValues
 }
 
-func (e *specExecutor) executeBeforeScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) notifyBeforeScenarioHook(scenarioResult *result.ScenarioResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
 		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, scenarioResult)
-}
-
-func (e *specExecutor) initScenarioDataStore() error {
-	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
-		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
-	initResult := executeAndGetStatus(e.runner, initScenarioDataStoreMessage)
-	if initResult.GetFailed() {
-		return fmt.Errorf("Scenario data store didn't get initialized : %s\n", initResult.GetErrorMessage())
+	res := e.executeHook(message, scenarioResult)
+	if res.GetFailed() {
+		setScenarioFailure(e.currentExecutionInfo)
+		handleHookFailure(e.specResult, res, result.AddPreHook, e.consoleReporter)
 	}
-	return nil
 }
 
-func (e *specExecutor) executeAfterScenarioHook(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoExecutionResult {
+func (e *specExecutor) notifyAfterScenarioHook(scenarioResult *result.ScenarioResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding.Enum(),
 		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	return e.executeHook(message, scenarioResult)
+	res := e.executeHook(message, scenarioResult)
+	if res.GetFailed() {
+		setScenarioFailure(e.currentExecutionInfo)
+		handleHookFailure(e.specResult, res, result.AddPostHook, e.consoleReporter)
+	}
+}
+
+func (e *specExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
+	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
+		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
+	return executeAndGetStatus(e.runner, initScenarioDataStoreMessage)
 }
 
 func (e *specExecutor) executeScenarios() []*result.ScenarioResult {
@@ -216,39 +198,42 @@ func (e *specExecutor) executeScenarios() []*result.ScenarioResult {
 }
 
 func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
-	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{Name: proto.String(scenario.Heading.Value), Tags: getTagValue(scenario.Tags), IsFailed: proto.Bool(false)}
+	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
+		Name:     proto.String(scenario.Heading.Value),
+		Tags:     getTagValue(scenario.Tags),
+		IsFailed: proto.Bool(false),
+	}
+
 	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
+
 	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		e.setSkipInfoInResult(scenarioResult, scenario)
 		return scenarioResult
 	}
-	err := e.initScenarioDataStore()
-	if err != nil {
-		e.handleScenarioDataStoreFailure(scenarioResult, scenario, err)
+
+	res := e.initScenarioDataStore()
+	if res.GetFailed() {
+		e.consoleReporter.Error("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage())
+		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf(res.GetErrorMessage()))
 		return scenarioResult
 	}
 	e.consoleReporter.ScenarioStart(scenario.Heading.Value)
-	beforeHookExecutionStatus := e.executeBeforeScenarioHook(scenarioResult)
-	if beforeHookExecutionStatus.GetFailed() {
-		handleHookFailure(scenarioResult, beforeHookExecutionStatus, result.AddPreHook, e.consoleReporter)
-		setScenarioFailure(e.currentExecutionInfo)
-	} else {
+
+	e.notifyBeforeScenarioHook(scenarioResult)
+	if !e.specResult.IsFailed {
 		e.executeContextItems(scenarioResult)
 		if !scenarioResult.GetFailure() {
 			e.executeScenarioItems(scenarioResult)
 		}
 		e.executeTearDownItems(scenarioResult)
 	}
-	afterHookExecutionStatus := e.executeAfterScenarioHook(scenarioResult)
-	scenarioResult.UpdateExecutionTime()
-	if afterHookExecutionStatus.GetFailed() {
-		handleHookFailure(scenarioResult, afterHookExecutionStatus, result.AddPostHook, e.consoleReporter)
-		setScenarioFailure(e.currentExecutionInfo)
-	}
-	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
 
+	e.notifyAfterScenarioHook(scenarioResult)
+	scenarioResult.UpdateExecutionTime()
+
+	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
 	return scenarioResult
 }
 
@@ -268,6 +253,26 @@ func (e *specExecutor) setSkipInfoInResult(result *result.ScenarioResult, scenar
 		errors = append(errors, err.Error())
 	}
 	result.ProtoScenario.SkipErrors = errors
+}
+
+func (e *specExecutor) skipSpecForError(err error) {
+	logger.Errorf(err.Error())
+	validationError := validation.NewValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
+		err.Error(), e.specification.FileName, nil)
+	for _, scenario := range e.specification.Scenarios {
+		e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
+	}
+	e.errMap.SpecErrs[e.specification] = []*validation.StepValidationError{validationError}
+	e.skipSpec()
+}
+
+func (e *specExecutor) skipSpec() {
+	var scenarioResults []*result.ScenarioResult
+	for _, scenario := range e.specification.Scenarios {
+		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
+	}
+	e.specResult.AddScenarioResults(scenarioResults)
+	e.specResult.Skipped = true
 }
 
 func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
