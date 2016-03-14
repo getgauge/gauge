@@ -121,8 +121,14 @@ func GetSpecFiles(path string) []string {
 // If the given path is a file, it searches for concepts in the PROJECTROOT/base_dir_of_path
 func GetConceptFiles(path string) []string {
 	if !common.DirExists(path) {
-		path, _ = filepath.Abs(path)
-		projRoot, _ := common.GetProjectRoot()
+		path, err := filepath.Abs(path)
+		if err != nil {
+			logger.Fatalf("Error getting absolute path. %v", err)
+		}
+		projRoot, err := common.GetProjectRoot()
+		if err != nil {
+			logger.Fatalf("Error getting project root. %v", err)
+		}
 		projRoot += string(filepath.Separator)
 		path = strings.TrimPrefix(path, projRoot)
 		path = strings.Split(path, string(filepath.Separator))[0]
