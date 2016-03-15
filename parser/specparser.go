@@ -567,20 +567,6 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup) (*gauge.St
 	return step, &ParseDetailResult{Warnings: warnings}
 }
 
-func processConceptStepsFrom(spec *gauge.Specification, conceptDictionary *gauge.ConceptDictionary) {
-	for _, step := range spec.Contexts {
-		processConceptStep(spec, step, conceptDictionary)
-	}
-	for _, scenario := range spec.Scenarios {
-		for _, step := range scenario.Steps {
-			processConceptStep(spec, step, conceptDictionary)
-		}
-	}
-	for _, step := range spec.TearDownSteps {
-		processConceptStep(spec, step, conceptDictionary)
-	}
-}
-
 func createConceptStep(spec *gauge.Specification, concept *gauge.Step, originalStep *gauge.Step) {
 	stepCopy := concept.GetCopy()
 	originalArgs := originalStep.Args

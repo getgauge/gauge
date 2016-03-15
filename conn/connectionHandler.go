@@ -30,8 +30,6 @@ type messageHandler interface {
 	MessageBytesReceived([]byte, net.Conn)
 }
 
-type dataHandlerFn func(*GaugeConnectionHandler, []byte)
-
 type GaugeConnectionHandler struct {
 	tcpListener    *net.TCPListener
 	messageHandler messageHandler

@@ -139,28 +139,12 @@ func makeProtoTableRowCopy(tableRow *gauge_messages.ProtoTableRow) *gauge_messag
 	return &gauge_messages.ProtoTableRow{Cells: append(copiedCells, tableRow.GetCells()...)}
 }
 
-func convertToProtoSteps(steps []*Step) []*gauge_messages.ProtoStep {
-	protoSteps := make([]*gauge_messages.ProtoStep, 0)
-	for _, step := range steps {
-		protoSteps = append(protoSteps, convertToProtoStep(step))
-	}
-	return protoSteps
-}
-
 func convertToProtoCommentItem(comment *Comment) *gauge_messages.ProtoItem {
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.Value)}}
 }
 
 func convertToProtoDataTableItem(dataTable *DataTable) *gauge_messages.ProtoItem {
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table.Enum(), Table: convertToProtoTableParam(&dataTable.Table)}
-}
-
-func convertToProtoParameters(args []*StepArg) []*gauge_messages.Parameter {
-	params := make([]*gauge_messages.Parameter, 0)
-	for _, arg := range args {
-		params = append(params, convertToProtoParameter(arg))
-	}
-	return params
 }
 
 func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
@@ -186,12 +170,6 @@ func convertToProtoTableParam(table *Table) *gauge_messages.ProtoTable {
 		protoTableParam.Rows = append(protoTableParam.Rows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	return protoTableParam
-}
-
-func addExecutionResult(protoItem *gauge_messages.ProtoItem, protoStepExecutionResult *gauge_messages.ProtoStepExecutionResult) {
-	if protoStepExecutionResult != nil {
-		protoItem.Step.StepExecutionResult = protoStepExecutionResult
-	}
 }
 
 func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {

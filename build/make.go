@@ -18,14 +18,11 @@
 package main
 
 import (
-	"archive/zip"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -45,7 +42,6 @@ const (
 	linux              = "linux"
 	windows            = "windows"
 	bin                = "bin"
-	newDirPermissions  = 0755
 	gauge              = "gauge"
 	gaugeScreenshot    = "gauge_screenshot"
 	deploy             = "deploy"
@@ -61,14 +57,6 @@ var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pk
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
 
 var deployDir = filepath.Join(deploy, gauge)
-
-func set(envName, envValue string) {
-	log.Printf("%s = %s\n", envName, envValue)
-	err := os.Setenv(envName, envValue)
-	if err != nil {
-		panic(err)
-	}
-}
 
 func runProcess(command string, arg ...string) {
 	cmd := exec.Command(command, arg...)
@@ -178,33 +166,11 @@ func addInstallScripts(files map[string]string) map[string]string {
 	return files
 }
 
-func moveOSBinaryToCurrentOSArchDirectory() {
-	destDir := path.Join(bin, fmt.Sprintf("%s_%s", runtime.GOOS, runtime.GOARCH))
-	moveBinaryToDirectory(gauge, destDir)
-}
-
-func moveBinaryToDirectory(target, destDir string) error {
-	if runtime.GOOS == "windows" {
-		target = target + ".exe"
-	}
-	srcFile := path.Join(bin, target)
-	destFile := path.Join(destDir, target)
-	if err := os.MkdirAll(destDir, newDirPermissions); err != nil {
-		return err
-	}
-	if err := common.MirrorFile(srcFile, destFile); err != nil {
-		return err
-	}
-	return os.Remove(srcFile)
-}
-
 func setEnv(envVariables map[string]string) {
 	for k, v := range envVariables {
 		os.Setenv(k, v)
 	}
 }
-
-type compileFunc func()
 
 var test = flag.Bool("test", false, "Run the test cases")
 var coverage = flag.Bool("coverage", false, "Run the test cases and show the coverage")
@@ -219,16 +185,8 @@ var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of wind
 var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
 var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
 
-type targetOpts struct {
-	lookForChanges bool
-	targetFunc     compileFunc
-	name           string
-	dir            string
-}
-
 // Defines all the compile targets
 // Each target name is the directory name
-
 var (
 	platformEnvs = []map[string]string{
 		map[string]string{GOARCH: X86, GOOS: darwin, CGO_ENABLED: "0"},
@@ -362,50 +320,6 @@ func createZipFromUtil(dir, name string) {
 	os.Chdir(wd)
 }
 
-func createZip(dir, packageName string) {
-	wd, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	os.Chdir(dir)
-
-	zipFileName := packageName + ".zip"
-	newfile, err := os.Create(zipFileName)
-	if err != nil {
-		panic(err)
-	}
-	defer newfile.Close()
-	zipWriter := zip.NewWriter(newfile)
-	defer zipWriter.Close()
-
-	filepath.Walk(packageName, func(path string, info os.FileInfo, err error) error {
-		infoHeader, err := zip.FileInfoHeader(info)
-		if err != nil {
-			panic(err)
-		}
-		infoHeader.Name = strings.Replace(path, fmt.Sprintf("%s%c", packageName, filepath.Separator), "", 1)
-		if info.IsDir() {
-			return nil
-		}
-		writer, err := zipWriter.CreateHeader(infoHeader)
-		if err != nil {
-			panic(err)
-		}
-		file, err := os.Open(path)
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
-		_, err = io.Copy(writer, file)
-		if err != nil {
-			panic(err)
-		}
-		return nil
-	})
-	log.Printf("Created zip: ", zipFileName)
-	os.Chdir(wd)
-}
-
 func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {
 		if runtime.GOOS == "windows" {
@@ -418,10 +332,6 @@ func updateGaugeInstallPrefix() {
 			*gaugeInstallPrefix = "/usr/local"
 		}
 	}
-}
-
-func getUserHome() string {
-	return os.Getenv("HOME")
 }
 
 func getGaugeExecutablePath(file string) string {

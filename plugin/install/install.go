@@ -41,7 +41,6 @@ import (
 
 const (
 	pluginJSON = "plugin.json"
-	setupScope = "setup"
 	jsonExt    = ".json"
 )
 

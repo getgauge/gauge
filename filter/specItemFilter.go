@@ -30,8 +30,6 @@ import (
 	"golang.org/x/tools/go/types"
 )
 
-var currentTagExp string
-
 type scenarioIndexFilterToRetain struct {
 	indexToNotFilter     int
 	currentScenarioIndex int

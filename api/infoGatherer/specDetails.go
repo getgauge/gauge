@@ -398,7 +398,3 @@ func removeWatcherOn(watcher *fsnotify.Watcher, path string) {
 	logger.APILog.Info("Removing watcher on : %s", path)
 	watcher.Remove(path)
 }
-
-func createGetStepNamesRequest() *gauge_messages.Message {
-	return &gauge_messages.Message{MessageType: gauge_messages.Message_StepNamesRequest.Enum(), StepNamesRequest: &gauge_messages.StepNamesRequest{}}
-}

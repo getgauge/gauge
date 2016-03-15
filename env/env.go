@@ -28,10 +28,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
-const (
-	envDefaultDirName = "default"
-)
-
 var defaultProperties map[string]string
 
 var currentEnv = "default"
