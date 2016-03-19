@@ -30,7 +30,7 @@ Certain features of Gauge makes it stand unique amongst others.
 
 ## Get started quickly
 
-* Get gauge installers from the [download page](http://getgauge.io/download.html).
+* Get gauge installers from the [download page](http://getgauge.io/get-started/index.html).
 * [Create a gauge project](http://getgauge.io/documentation/user/current/getting_started/creating_a_gauge_project.html)
 * [Execute Specifications](http://getgauge.io/documentation/user/current/execution/README.html)
 
