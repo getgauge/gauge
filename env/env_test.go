@@ -34,7 +34,7 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	os.Clearenv()
-	config.ProjectRoot = "testdata"
+	config.ProjectRoot = "_testdata/proj1"
 
 	LoadEnv("default")
 
@@ -59,16 +59,17 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")
-	config.ProjectRoot = "testdata"
+	config.ProjectRoot = "_testdata/proj1"
 
 	LoadEnv("default")
 
 	c.Assert(os.Getenv("foo"), Equals, "bar")
+	c.Assert(os.Getenv("property1"), Equals, "value1")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
 	os.Clearenv()
-	config.ProjectRoot = "testdata"
+	config.ProjectRoot = "_testdata/proj1"
 
 	LoadEnv("default")
 
@@ -77,7 +78,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
 
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
-	config.ProjectRoot = "testdata"
+	config.ProjectRoot = "_testdata/proj1"
 
 	LoadEnv("foo")
 
@@ -158,7 +159,7 @@ func (s *MySuite) TestNonDefaultPropertyCantBeOverwrittenIfSet(c *C) {
 func TestFatalErrorIsThrownIfEnvNotFound(t *testing.T) {
 	if os.Getenv("NO_ENV") == "1" {
 		os.Clearenv()
-		config.ProjectRoot = "testdata"
+		config.ProjectRoot = "_testdata/proj1"
 
 		LoadEnv("bar")
 		return
