@@ -28,41 +28,38 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
-var defaultProperties map[string]string
+var envVars map[string]string
 
 var currentEnv = "default"
 
-// LoadEnv first loads the default env properties and then the user specified env properties.
-// This way user specified env variable can overwrite default if required
+// LoadEnv first generates the map of the env vars that needs to be set.
+// It starts by populating the map with the env passed by the user in --env flag.
+// It then adds the default values of the env vars which are required by Gauge,
+// but are not present in the map.
+//
+// Finally, all the env vars present in the map are actually set in the shell.
 func LoadEnv(envName string) {
+	envVars = make(map[string]string)
 	currentEnv = envName
 
-	err := loadDefaultProperties()
+	err := loadEnvDir(currentEnv)
 	if err != nil {
-		logger.Fatalf("Failed to load the default property. %s", err.Error())
+		logger.Fatalf("Failed to load env. %s", err.Error())
 	}
 
-	err = loadEnvDir(currentEnv)
+	loadDefaultEnvVars()
+
+	err = setEnvVars()
 	if err != nil {
 		logger.Fatalf("Failed to load env. %s", err.Error())
 	}
 }
 
-func loadDefaultProperties() error {
-	defaultProperties = make(map[string]string)
-	defaultProperties["gauge_reports_dir"] = "reports"
-	defaultProperties["overwrite_reports"] = "true"
-	defaultProperties["screenshot_on_failure"] = "true"
-	defaultProperties["logs_directory"] = "logs"
-
-	for property, value := range defaultProperties {
-		if !isPropertySet(property) {
-			if err := common.SetEnvVariable(property, value); err != nil {
-				return err
-			}
-		}
-	}
-	return nil
+func loadDefaultEnvVars() {
+	addEnvVar("gauge_reports_dir", "reports")
+	addEnvVar("overwrite_reports", "true")
+	addEnvVar("screenshot_on_failure", "true")
+	addEnvVar("logs_directory", "logs")
 }
 
 func loadEnvDir(envName string) error {
@@ -88,32 +85,32 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 	}
 
 	for property, value := range properties {
-		if canOverwriteProperty(property) {
-			err := common.SetEnvVariable(property, value)
-			if err != nil {
-				return fmt.Errorf("%s: %s", path, err.Error())
-			}
-		}
+		addEnvVar(property, value)
 	}
 
 	return nil
+}
+
+func addEnvVar(name, value string) {
+	if _, ok := envVars[name]; !ok {
+		envVars[name] = value
+	}
 }
 
 func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
 }
 
-func canOverwriteProperty(property string) bool {
-	if !isPropertySet(property) {
-		return true
+func setEnvVars() error {
+	for name, value := range envVars {
+		if !isPropertySet(name) {
+			err := common.SetEnvVariable(name, value)
+			if err != nil {
+				return fmt.Errorf("%s", err.Error())
+			}
+		}
 	}
-
-	defaultVal, ok := defaultProperties[property]
-	if ok {
-		return defaultVal == os.Getenv(property)
-	}
-
-	return false
+	return nil
 }
 
 func isPropertySet(property string) bool {
