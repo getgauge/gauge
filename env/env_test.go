@@ -44,6 +44,35 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
 }
 
+// If default env dir is present, the values present in there should overwrite
+// the default values (present in the code), even when env flag is passed
+func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj2"
+
+	LoadEnv("foo")
+
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+}
+
+// If default env dir is present, the values present in there should overwrite
+// the default values (present in the code), even when env flag is passed.
+// If the passed env also has the same values, that should take precedence.
+func (s *MySuite) TestLoadDefaultEnvFromDirAndOverwritePassedEnv(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj2"
+
+	LoadEnv("bar")
+
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
+}
+
 func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = ""

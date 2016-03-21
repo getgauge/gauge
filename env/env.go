@@ -47,6 +47,13 @@ func LoadEnv(envName string) {
 		logger.Fatalf("Failed to load env. %s", err.Error())
 	}
 
+	if currentEnv != "default" {
+		err := loadEnvDir("default")
+		if err != nil {
+			logger.Fatalf("Failed to load env. %s", err.Error())
+		}
+	}
+
 	loadDefaultEnvVars()
 
 	err = setEnvVars()
