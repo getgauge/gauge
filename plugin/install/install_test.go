@@ -19,7 +19,6 @@ package install
 
 import (
 	"path/filepath"
-	"strings"
 	"testing"
 
 	"fmt"
@@ -149,13 +148,4 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
 	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
 	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
-}
-
-func (s *MySuite) TestConstructPluginInstallJSONURL(c *C) {
-	plugin := "java"
-
-	URL, result := constructPluginInstallJSONURL(plugin)
-
-	c.Assert(strings.HasSuffix(URL, "/"+plugin), Equals, true)
-	c.Assert(result.Success, Equals, true)
 }
