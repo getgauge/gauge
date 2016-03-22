@@ -18,24 +18,17 @@
 package install
 
 import (
+	"strings"
+
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
 )
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetVersion(c *C) {
-	c.Assert(getVersion("v0.2.2"), Equals, "0.2.2")
-	c.Assert(getVersion("v0.2.1"), Equals, "0.2.1")
-	c.Assert(getVersion("v0.0.2"), Equals, "0.0.2")
-	c.Assert(getVersion("   v0.2.1    "), Equals, "0.2.1")
-	c.Assert(getVersion("0.0.2"), Equals, "0.0.2")
-	c.Assert(getVersion("0.1.2"), Equals, "0.1.2")
-}
-
 func (s *MySuite) TestCheckGaugeUpdateWhenThereIsAnUpdate(c *C) {
-	getLatestTagName = func(url string) (string, error) {
-		return "v0.1.0", nil
+	getLatestGaugeVersion = func(url string) (string, error) {
+		return "0.1.0", nil
 	}
 	version.CurrentGaugeVersion = &version.Version{0, 0, 1}
 	updateInfo := checkGaugeUpdate()[0]
@@ -44,8 +37,8 @@ func (s *MySuite) TestCheckGaugeUpdateWhenThereIsAnUpdate(c *C) {
 }
 
 func (s *MySuite) TestCheckGaugeUpdateWhenThereIsNoUpdate(c *C) {
-	getLatestTagName = func(url string) (string, error) {
-		return "v0.1.0", nil
+	getLatestGaugeVersion = func(url string) (string, error) {
+		return "0.1.0", nil
 	}
 	version.CurrentGaugeVersion = &version.Version{0, 2, 0}
 	updateInfos := checkGaugeUpdate()
@@ -69,4 +62,19 @@ func (s *MySuite) TestCreatePluginUpdateDetailWhenThereIsNoUpdate(c *C) {
 	i := installDescription{Name: ruby, Versions: []versionInstallDescription{versionInstallDescription{Version: "0.1.0", GaugeVersionSupport: version.VersionSupport{Minimum: "0.1.0", Maximum: "0.1.2"}}}}
 	updateDetails := createPluginUpdateDetail("0.1.0", i)
 	c.Assert(len(updateDetails), Equals, 0)
+}
+
+func (s *MySuite) TestGetGaugeVersionProperty(c *C) {
+	info := `version: 0.3.2
+darwin86: a41ba21c1517583fd741645bb89ce1264f525f1e
+darwin86_64: f2d3ef3dae561bf431e75a6bd46f3a4baff58499
+linux86: 32d0c75521523e510b2cc61491ce79c37fdf03f3
+linux86_64: c810361c4e0a622af528f8fa282b861baada769d
+windows86: 570429e9a1f574cf0df2e117246690fe31c6fed0
+windows86_64: a70281e005d97216a2535b6def57ef38df38b767`
+
+	r := strings.NewReader(info)
+	v, err := getGaugeVersionProperty(r)
+	c.Assert(err, Equals, nil)
+	c.Assert(v, Equals, "0.3.2")
 }

@@ -18,12 +18,13 @@
 package install
 
 import (
-	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"sync"
 
+	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
@@ -88,11 +89,11 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 
 func checkGaugeUpdate() []UpdateInfo {
 	var updateInfos []UpdateInfo
-	tagName, err := getLatestTagName(config.GaugeUpdateUrl())
+	v, err := getLatestGaugeVersion(config.GaugeUpdateUrl())
 	if err != nil {
 		return updateInfos
 	}
-	latestVersion, err := version.ParseVersion(getVersion(tagName))
+	latestVersion, err := version.ParseVersion(v)
 	if err != nil {
 		return updateInfos
 	}
@@ -101,14 +102,6 @@ func checkGaugeUpdate() []UpdateInfo {
 		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from http://getgauge.io/get-started/"})
 	}
 	return updateInfos
-}
-
-func getVersion(tagName string) string {
-	name := strings.TrimSpace(tagName)
-	if strings.HasPrefix(name, "v") {
-		return name[1:]
-	}
-	return name
 }
 
 type UpdateInfo struct {
@@ -147,16 +140,26 @@ func createPluginUpdateDetail(currentVersion string, latestVersionDetails instal
 	return updateInfo
 }
 
-var getLatestTagName = func(url string) (string, error) {
+var getLatestGaugeVersion = func(url string) (string, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return "", err
 	}
 	defer res.Body.Close()
-	dec := json.NewDecoder(res.Body)
-	var data struct {
-		TagName string
+
+	v, err := getGaugeVersionProperty(res.Body)
+	if err != nil {
+		return "", err
 	}
-	dec.Decode(&data)
-	return data.TagName, nil
+	return v, nil
+}
+
+func getGaugeVersionProperty(r io.Reader) (string, error) {
+	properties := make(properties.Properties)
+
+	err := properties.Load(r)
+	if err != nil {
+		return "", fmt.Errorf("Failed to parse: %s", err.Error())
+	}
+	return strings.TrimSpace(properties["version"]), nil
 }
