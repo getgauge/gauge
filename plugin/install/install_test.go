@@ -19,11 +19,11 @@ package install
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"fmt"
 
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
@@ -156,6 +156,6 @@ func (s *MySuite) TestConstructPluginInstallJSONURL(c *C) {
 
 	URL, result := constructPluginInstallJSONURL(plugin)
 
-	c.Assert(URL, Equals, config.GaugeRepositoryUrl()+"/"+plugin)
+	c.Assert(strings.HasSuffix(URL, "/"+plugin), Equals, true)
 	c.Assert(result.Success, Equals, true)
 }
