@@ -23,6 +23,7 @@ import (
 
 	"fmt"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
@@ -148,4 +149,13 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
 	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
 	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
+}
+
+func (s *MySuite) TestConstructPluginInstallJSONURL(c *C) {
+	plugin := "java"
+
+	URL, result := constructPluginInstallJSONURL(plugin)
+
+	c.Assert(URL, Equals, config.GaugeRepositoryUrl()+"/"+plugin)
+	c.Assert(result.Success, Equals, true)
 }

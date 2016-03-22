@@ -377,12 +377,11 @@ func getInstallDescriptionFromJSON(installJSON string) (*installDescription, Ins
 }
 
 func constructPluginInstallJSONURL(plugin string) (string, InstallResult) {
-	installJSONFile := plugin + "-install.json"
 	repoURL := config.GaugeRepositoryUrl()
 	if repoURL == "" {
 		return "", installError(fmt.Errorf("Could not find gauge repository url from configuration."))
 	}
-	return fmt.Sprintf("%s/%s", repoURL, installJSONFile), installSuccess("")
+	return fmt.Sprintf("%s/%s", repoURL, plugin), installSuccess("")
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {
