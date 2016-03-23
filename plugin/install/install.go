@@ -381,7 +381,11 @@ func constructPluginInstallJSONURL(plugin string) (string, InstallResult) {
 	if repoURL == "" {
 		return "", installError(fmt.Errorf("Could not find gauge repository url from configuration."))
 	}
-	return fmt.Sprintf("%s/%s", repoURL, plugin), installSuccess("")
+	JSONURL := fmt.Sprintf("%s/%s", repoURL, plugin)
+	if qp := getQueryParams(); qp != "" {
+		JSONURL += fmt.Sprintf("?%s", qp)
+	}
+	return JSONURL, installSuccess("")
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {
@@ -591,4 +595,53 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 	}
 	manifest.Plugins = append(manifest.Plugins, pd.ID)
 	return manifest.Save()
+}
+
+func getQueryParams() string {
+	qp := &QueryParams{}
+	pluginInfos, err := plugin.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		return ""
+	}
+
+	qp.getLanguageQueryParam()
+	qp.getPluginQueryParams(pluginInfos)
+
+	return qp.String()
+}
+
+type QueryParams struct {
+	Langauge string
+	Plugins  []string
+}
+
+func (qp *QueryParams) String() string {
+	var params []string
+	if qp.Langauge != "" {
+		params = append(params, "l="+qp.Langauge)
+	}
+	if len(qp.Plugins) != 0 {
+		params = append(params, "p="+strings.Join(qp.Plugins, ","))
+	}
+	return strings.Join(params, "&")
+}
+
+func (qp *QueryParams) getLanguageQueryParam() {
+	if config.ProjectRoot == "" {
+		return
+	}
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		return
+	}
+	qp.Langauge = m.Language
+}
+
+func (qp *QueryParams) getPluginQueryParams(pluginInfos []plugin.PluginInfo) {
+	var plugins []string
+	for _, p := range pluginInfos {
+		plugins = append(plugins, p.Name)
+	}
+	sort.Strings(plugins)
+	qp.Plugins = plugins
 }
