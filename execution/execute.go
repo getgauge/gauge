@@ -36,7 +36,6 @@ import (
 
 var NumberOfExecutionStreams int
 var InParallel bool
-var checkUpdatesDuringExecution = false
 
 type execution interface {
 	run()
@@ -73,7 +72,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r *runner.TestRunner, ph *plugin.
 
 func ExecuteSpecs(specDirs []string) int {
 	validateFlags()
-	if checkUpdatesDuringExecution && config.CheckUpdates() {
+	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}
 		i.BufferUpdateDetails()
 		defer i.PrintUpdateBuffer()

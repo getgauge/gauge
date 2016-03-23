@@ -73,7 +73,7 @@ var strategy = flag.String([]string{"-strategy"}, "lazy", "Set the parallelizati
 var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
 var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for validation and parse errors. Eg: gauge --validate specs")
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
-var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
+var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
 var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
 

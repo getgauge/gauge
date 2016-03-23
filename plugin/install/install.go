@@ -194,7 +194,8 @@ func parsePluginJSON(pluginDir, pluginName string) (*GaugePlugin, error) {
 
 // InstallPlugin download and install the latest plugin(if version not specified) of given plugin name
 func InstallPlugin(pluginName, version string) InstallResult {
-	installDescription, result := getInstallDescription(pluginName)
+	logger.Info("Gathering metadata for %s", pluginName)
+	installDescription, result := getInstallDescription(pluginName, false)
 	defer util.RemoveTempDir()
 	if !result.Success {
 		return result
@@ -235,7 +236,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
 	logger.Info("Downloading %s", filepath.Base(downloadLink))
-	pluginZip, err := util.Download(downloadLink, tempDir)
+	pluginZip, err := util.Download(downloadLink, tempDir, false)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
 	}
@@ -346,7 +347,7 @@ func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 	return downloadLink, nil
 }
 
-func getInstallDescription(plugin string) (*installDescription, InstallResult) {
+func getInstallDescription(plugin string, silent bool) (*installDescription, InstallResult) {
 	versionInstallDescriptionJSONFile := plugin + "-install.json"
 	versionInstallDescriptionJSONUrl, result := constructPluginInstallJSONURL(plugin)
 	if !result.Success {
@@ -355,8 +356,7 @@ func getInstallDescription(plugin string) (*installDescription, InstallResult) {
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
 
-	logger.Info("Gathering metadata...")
-	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir)
+	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, silent)
 	if downloadErr != nil {
 		return nil, installError(fmt.Errorf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
 	}

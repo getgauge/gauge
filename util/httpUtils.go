@@ -51,7 +51,7 @@ func (w *progressReader) Read(p []byte) (int, error) {
 }
 
 // Download fires a HTTP GET request to download a resource to target directory
-func Download(url, targetDir string) (string, error) {
+func Download(url, targetDir string, silent bool) (string, error) {
 	if !common.DirExists(targetDir) {
 		return "", fmt.Errorf("Error downloading file: %s\nTarget dir %s doesn't exists.", url, targetDir)
 	}
@@ -65,15 +65,18 @@ func Download(url, targetDir string) (string, error) {
 		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
 	}
 	defer resp.Body.Close()
-	progressReader := &progressReader{Reader: resp.Body, totalBytes: resp.ContentLength}
 
 	out, err := os.Create(targetFile)
 	if err != nil {
 		return "", err
 	}
 	defer out.Close()
-
-	_, err = io.Copy(out, progressReader)
-	fmt.Println()
+	if silent {
+		_, err = io.Copy(out, resp.Body)
+	} else {
+		progressReader := &progressReader{Reader: resp.Body, totalBytes: resp.ContentLength}
+		_, err = io.Copy(out, progressReader)
+		fmt.Println()
+	}
 	return targetFile, err
 }
