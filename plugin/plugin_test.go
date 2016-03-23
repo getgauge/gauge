@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/version"
 
 	. "gopkg.in/check.v1"
@@ -178,4 +179,21 @@ func (s *MySuite) TestGetStablePluginAmongGivenPluginsOfAVersion(c *C) {
 	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
 	latestBuild = getLatestOf(plugins, v)
 	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+}
+
+func (s *MySuite) TestGetLanguageQueryParamWhenProjectRootNotSet(c *C) {
+	config.ProjectRoot = ""
+
+	l := language()
+
+	c.Assert(l, Equals, "")
+}
+
+func (s *MySuite) TestGetLanguageQueryParam(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "sample"))
+	config.ProjectRoot = path
+
+	l := language()
+
+	c.Assert(l, Equals, "java")
 }

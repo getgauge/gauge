@@ -503,3 +503,30 @@ func GetLanguageJSONFilePath(language string) (string, error) {
 
 	return languageJSON, nil
 }
+
+func QueryParams() string {
+	return fmt.Sprintf("?l=%s&p=%s&o=%s&a=%s", language(), plugins(), runtime.GOOS, runtime.GOARCH)
+}
+
+func language() string {
+	if config.ProjectRoot == "" {
+		return ""
+	}
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		return ""
+	}
+	return m.Language
+}
+
+func plugins() string {
+	pluginInfos, err := GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		return ""
+	}
+	var plugins []string
+	for _, p := range pluginInfos {
+		plugins = append(plugins, p.Name)
+	}
+	return strings.Join(plugins, ",")
+}

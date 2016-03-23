@@ -89,7 +89,11 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 
 func checkGaugeUpdate() []UpdateInfo {
 	var updateInfos []UpdateInfo
-	v, err := getLatestGaugeVersion(config.GaugeUpdateUrl())
+	url := config.GaugeUpdateUrl()
+	if qp := plugin.QueryParams(); qp != "" {
+		url += qp
+	}
+	v, err := getLatestGaugeVersion(url)
 	if err != nil {
 		return updateInfos
 	}

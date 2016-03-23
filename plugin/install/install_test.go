@@ -23,8 +23,6 @@ import (
 
 	"fmt"
 
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
@@ -150,41 +148,4 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	c.Assert(p.PreUnInstall.Darwin[0], Equals, "pre uninstall command")
 	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
 	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
-}
-
-func (s *MySuite) TestGetPluginQueryParams(c *C) {
-	var pluginInfos []plugin.PluginInfo
-	pluginInfos = append(pluginInfos, plugin.PluginInfo{Name: "java"})
-	pluginInfos = append(pluginInfos, plugin.PluginInfo{Name: "ruby"})
-	pluginInfos = append(pluginInfos, plugin.PluginInfo{Name: "csharp"})
-	pluginInfos = append(pluginInfos, plugin.PluginInfo{Name: "python"})
-	pluginInfos = append(pluginInfos, plugin.PluginInfo{Name: "js"})
-	qp := &QueryParams{}
-
-	qp.getPluginQueryParams(pluginInfos)
-
-	c.Assert(qp.Plugins[0], Equals, "csharp")
-	c.Assert(qp.Plugins[1], Equals, "java")
-	c.Assert(qp.Plugins[2], Equals, "js")
-	c.Assert(qp.Plugins[3], Equals, "python")
-	c.Assert(qp.Plugins[4], Equals, "ruby")
-}
-
-func (s *MySuite) TestGetLanguageQueryParamWhenProjectRootNotSet(c *C) {
-	config.ProjectRoot = ""
-	qp := &QueryParams{}
-
-	qp.getLanguageQueryParam()
-
-	c.Assert(qp.Langauge, Equals, "")
-}
-
-func (s *MySuite) TestGetLanguageQueryParam(c *C) {
-	path, _ := filepath.Abs(filepath.Join("_testdata", "sample"))
-	config.ProjectRoot = path
-	qp := &QueryParams{}
-
-	qp.getLanguageQueryParam()
-
-	c.Assert(qp.Langauge, Equals, "java")
 }
