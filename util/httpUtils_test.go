@@ -37,7 +37,7 @@ func (s *MySuite) TestDownloadFailureIfFileNotFound(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	_, err := Download(server.URL, ".", false)
+	_, err := Download(server.URL, ".", "", false)
 
 	c.Assert(err, NotNil)
 }
@@ -50,7 +50,7 @@ func (s *MySuite) TestDownloadFailureIfServerError(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	_, err := Download(server.URL, ".", false)
+	_, err := Download(server.URL, ".", "", false)
 
 	c.Assert(err, NotNil)
 }
@@ -63,7 +63,7 @@ func (s *MySuite) TestDownloadFailureIfSomeHTTPError(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	_, err := Download(server.URL, ".", false)
+	_, err := Download(server.URL, ".", "", false)
 
 	c.Assert(err, NotNil)
 }
@@ -76,7 +76,7 @@ func (s *MySuite) TestDownloadFailureIfTargetDirDoesntExist(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	_, err := Download(server.URL, "/foo/bar", false)
+	_, err := Download(server.URL, "/foo/bar", "", false)
 	errMsg := fmt.Sprintf("Error downloading file: %s\nTarget dir /foo/bar doesn't exists.", server.URL)
 
 	c.Assert(err, NotNil)
@@ -94,7 +94,7 @@ func (s *MySuite) TestDownloadSuccess(c *C) {
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
-	actualDownloadedFilePath, err := Download(server.URL, "temp", false)
+	actualDownloadedFilePath, err := Download(server.URL, "temp", "", false)
 	expectedDownloadFilePath := filepath.Join("temp", strings.TrimPrefix(server.URL, "http://"))
 	absoluteDownloadFilePath, _ := filepath.Abs(expectedDownloadFilePath)
 	expectedFileContents := "All OK\n"
