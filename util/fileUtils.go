@@ -33,6 +33,7 @@ func init() {
 	AcceptedExtensions[".md"] = true
 }
 
+// AcceptedExtensions has all the file extensions that are supported by Gauge for its specs
 var AcceptedExtensions = make(map[string]bool)
 
 // findFilesIn Finds all the files in the directory of a given extension
@@ -72,6 +73,7 @@ func IsSpec(path string) bool {
 	return IsValidSpecExtension(path)
 }
 
+// FindAllNestedDirs returns list of all nested directories in given path
 func FindAllNestedDirs(dir string) []string {
 	var nestedDirs []string
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
@@ -83,6 +85,7 @@ func FindAllNestedDirs(dir string) []string {
 	return nestedDirs
 }
 
+// IsDir reports whether path describes a directory.
 func IsDir(path string) bool {
 	fileInfo, err := os.Stat(path)
 	if err != nil {
@@ -91,12 +94,14 @@ func IsDir(path string) bool {
 	return fileInfo.IsDir()
 }
 
+// CreateFileIn creates a file `fileName` in given dir with its content as data
 func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
 	os.MkdirAll(dir, 0755)
 	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
 }
 
+//CreateDirIn creates a dir in given path
 func CreateDirIn(dir string, dirName string) (string, error) {
 	tempDir, err := ioutil.TempDir(dir, dirName)
 	fullDirName := filepath.Join(dir, dirName)
@@ -138,6 +143,7 @@ func GetConceptFiles(path string) []string {
 	return FindConceptFilesIn(path)
 }
 
+// SaveFile saves contents at the given path
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
@@ -145,6 +151,7 @@ func SaveFile(fileName string, content string, backup bool) {
 	}
 }
 
+// GetPathToFile returns the path to a given file from the Project root
 func GetPathToFile(path string) string {
 	if filepath.IsAbs(path) {
 		return path
@@ -152,6 +159,7 @@ func GetPathToFile(path string) string {
 	return filepath.Join(config.ProjectRoot, path)
 }
 
+// Remove removes all the files and directories recursively for the given path
 func Remove(dir string) {
 	err := common.Remove(dir)
 	if err != nil {
@@ -159,6 +167,7 @@ func Remove(dir string) {
 	}
 }
 
+// RemoveTempDir removes the temp dir
 func RemoveTempDir() {
 	Remove(common.GetTempDir())
 }
