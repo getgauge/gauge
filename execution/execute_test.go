@@ -138,53 +138,57 @@ func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 
 // Result Builders
 type scenarioBuilder struct {
-	scn *gauge_messages.ProtoScenario
+	heading string
+	result  bool
 }
 
 func newScenarioBuilder() *scenarioBuilder {
-	return &scenarioBuilder{
-		scn: &gauge_messages.ProtoScenario{},
-	}
+	return &scenarioBuilder{}
 }
 
-func (sb *scenarioBuilder) heading(h string) *scenarioBuilder {
-	sb.scn.ScenarioHeading = proto.String(h)
+func (sb *scenarioBuilder) withHeading(h string) *scenarioBuilder {
+	sb.heading = h
 	return sb
 }
 
-func (sb *scenarioBuilder) failed(f bool) *scenarioBuilder {
-	sb.scn.Failed = proto.Bool(f)
+func (sb *scenarioBuilder) withResult(f bool) *scenarioBuilder {
+	sb.result = f
 	return sb
 }
 
 func (sb *scenarioBuilder) build() *gauge_messages.ProtoScenario {
-	return sb.scn
+	scn := &gauge_messages.ProtoScenario{
+		ScenarioHeading: proto.String(sb.heading),
+		Failed:          proto.Bool(sb.result),
+	}
+	return scn
 }
 
 // Suite Result Builder
 type protoSpecBuilder struct {
-	spec *gauge_messages.ProtoSpec
+	tableDriven bool
+	items       []*gauge_messages.ProtoItem
 }
 
 func newSpecBuilder() *protoSpecBuilder {
-	return &protoSpecBuilder{spec: &gauge_messages.ProtoSpec{}}
+	return &protoSpecBuilder{}
 }
 
-func (sb *protoSpecBuilder) tableDriven(f bool) *protoSpecBuilder {
-	sb.spec.IsTableDriven = proto.Bool(f)
+func (sb *protoSpecBuilder) withScenarios(scns ...*gauge_messages.ProtoScenario) *protoSpecBuilder {
+	sb.items = make([]*gauge_messages.ProtoItem, 0)
+	for _, scn := range scns {
+		sb.items = append(sb.items, &gauge_messages.ProtoItem{
+			ItemType: gauge_messages.ProtoItem_Scenario.Enum(),
+			Scenario: scn,
+		})
+	}
 	return sb
 }
 
-func (sb *protoSpecBuilder) scenario(scn *gauge_messages.ProtoScenario) *protoSpecBuilder {
-	sb.spec.Items = append(sb.spec.Items, &gauge_messages.ProtoItem{
-		ItemType: gauge_messages.ProtoItem_Scenario.Enum(),
-		Scenario: scn,
-	})
-	return sb
-}
-
-func (sb *protoSpecBuilder) tableDrivenScenario(scns []*gauge_messages.ProtoScenario) *protoSpecBuilder {
-	sb.spec.Items = append(sb.spec.Items, &gauge_messages.ProtoItem{
+func (sb *protoSpecBuilder) withTableDrivenScenario(scns []*gauge_messages.ProtoScenario) *protoSpecBuilder {
+	sb.tableDriven = true
+	sb.items = make([]*gauge_messages.ProtoItem, 0)
+	sb.items = append(sb.items, &gauge_messages.ProtoItem{
 		ItemType:            gauge_messages.ProtoItem_TableDrivenScenario.Enum(),
 		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenarios: scns},
 	})
@@ -192,49 +196,61 @@ func (sb *protoSpecBuilder) tableDrivenScenario(scns []*gauge_messages.ProtoScen
 }
 
 func (sb *protoSpecBuilder) build() *gauge_messages.ProtoSpec {
-	return sb.spec
+	return &gauge_messages.ProtoSpec{
+		Items:         sb.items,
+		IsTableDriven: proto.Bool(sb.tableDriven),
+	}
 }
 
 type specResultBuilder struct {
-	sr *result.SpecResult
+	spec *gauge_messages.ProtoSpec
+	res  bool
 }
 
 func newSpecResultBuilder() *specResultBuilder {
-	return &specResultBuilder{sr: &result.SpecResult{}}
+	return &specResultBuilder{}
 }
 
-func (s *specResultBuilder) spec(spec *gauge_messages.ProtoSpec) *specResultBuilder {
-	s.sr.ProtoSpec = spec
+func (s *specResultBuilder) withSpec(spec *gauge_messages.ProtoSpec) *specResultBuilder {
+	s.spec = spec
 	return s
 }
 
-func (s *specResultBuilder) failed(f bool) *specResultBuilder {
-	s.sr.IsFailed = f
+func (s *specResultBuilder) withResult(f bool) *specResultBuilder {
+	s.res = f
 	return s
 }
 
 func (s *specResultBuilder) build() *result.SpecResult {
-	return s.sr
+	return &result.SpecResult{
+		ProtoSpec: s.spec,
+		IsFailed:  s.res,
+	}
 }
 
 type suiteResultBuilder struct {
-	sr *result.SuiteResult
+	specRes []*result.SpecResult
+	res     bool
+	//sr *result.SuiteResult
 }
 
 func newSuiteResultBuilder() *suiteResultBuilder {
-	return &suiteResultBuilder{sr: &result.SuiteResult{}}
+	return &suiteResultBuilder{}
 }
 
-func (s *suiteResultBuilder) spec(res []*result.SpecResult) *suiteResultBuilder {
-	s.sr.SpecResults = res
+func (s *suiteResultBuilder) withSpecResults(res []*result.SpecResult) *suiteResultBuilder {
+	s.specRes = res
 	return s
 }
 
-func (s *suiteResultBuilder) failed(f bool) *suiteResultBuilder {
-	s.sr.IsFailed = f
+func (s *suiteResultBuilder) withResult(f bool) *suiteResultBuilder {
+	s.res = f
 	return s
 }
 
 func (s *suiteResultBuilder) build() *result.SuiteResult {
-	return s.sr
+	return &result.SuiteResult{
+		SpecResults: s.specRes,
+		IsFailed:    s.res,
+	}
 }
