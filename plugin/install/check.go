@@ -120,7 +120,7 @@ func checkPluginUpdates() []UpdateInfo {
 	if err != nil {
 		return pluginsToUpdate
 	}
-	logger.Info("Checking updates...")
+	logger.Debug("Checking updates...")
 	for _, plugin := range plugins {
 		desc, result := getInstallDescription(plugin.Name, true)
 		if result.Error != nil {
