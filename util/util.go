@@ -43,7 +43,7 @@ func IsWindows() bool {
 func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
 	logger.Info("Downloading %s", filepath.Base(downloadLink))
 	logger.Debug("Download URL %s", downloadLink)
-	downloadedFile, err := Download(downloadLink, tempDir, false)
+	downloadedFile, err := Download(downloadLink, tempDir, "", false)
 	if err != nil {
 		return "", err
 	}

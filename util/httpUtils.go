@@ -51,11 +51,15 @@ func (w *progressReader) Read(p []byte) (int, error) {
 }
 
 // Download fires a HTTP GET request to download a resource to target directory
-func Download(url, targetDir string, silent bool) (string, error) {
+func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	if !common.DirExists(targetDir) {
 		return "", fmt.Errorf("Error downloading file: %s\nTarget dir %s doesn't exists.", url, targetDir)
 	}
-	targetFile := filepath.Join(targetDir, filepath.Base(url))
+
+	if fileName == "" {
+		fileName = filepath.Base(url)
+	}
+	targetFile := filepath.Join(targetDir, fileName)
 
 	resp, err := http.Get(url)
 	if err != nil {

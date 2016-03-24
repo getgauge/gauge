@@ -127,7 +127,7 @@ func ListTemplates() {
 	}
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
-	templatesPage, err := util.Download(templatesURL, tempDir, true)
+	templatesPage, err := util.Download(templatesURL, tempDir, "", true)
 	if err != nil {
 		util.Remove(tempDir)
 		logger.Fatalf("Error occurred while downloading templates list: %s", err.Error())

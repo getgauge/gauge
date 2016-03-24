@@ -236,7 +236,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
 	logger.Info("Downloading %s", filepath.Base(downloadLink))
-	pluginZip, err := util.Download(downloadLink, tempDir, false)
+	pluginZip, err := util.Download(downloadLink, tempDir, "", false)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
 	}
@@ -356,7 +356,7 @@ func getInstallDescription(plugin string, silent bool) (*installDescription, Ins
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
 
-	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, silent)
+	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, versionInstallDescriptionJSONFile, silent)
 	if downloadErr != nil {
 		return nil, installError(fmt.Errorf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
 	}
