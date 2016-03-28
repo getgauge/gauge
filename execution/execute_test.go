@@ -23,10 +23,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 
 	. "gopkg.in/check.v1"
 )
@@ -134,107 +131,4 @@ func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 	c.Assert(ok, Equals, true)
 	c.Assert(e.Success(), Equals, false)
 	c.Assert(strings.TrimSpace(logger.output), Equals, "Invalid input(-1) to --n flag.")
-}
-
-// Result Builders
-type scenarioBuilder struct {
-	scn *gauge_messages.ProtoScenario
-}
-
-func newScenarioBuilder() *scenarioBuilder {
-	return &scenarioBuilder{
-		scn: &gauge_messages.ProtoScenario{},
-	}
-}
-
-func (sb *scenarioBuilder) heading(h string) *scenarioBuilder {
-	sb.scn.ScenarioHeading = proto.String(h)
-	return sb
-}
-
-func (sb *scenarioBuilder) failed(f bool) *scenarioBuilder {
-	sb.scn.Failed = proto.Bool(f)
-	return sb
-}
-
-func (sb *scenarioBuilder) build() *gauge_messages.ProtoScenario {
-	return sb.scn
-}
-
-// Suite Result Builder
-type protoSpecBuilder struct {
-	spec *gauge_messages.ProtoSpec
-}
-
-func newSpecBuilder() *protoSpecBuilder {
-	return &protoSpecBuilder{spec: &gauge_messages.ProtoSpec{}}
-}
-
-func (sb *protoSpecBuilder) tableDriven(f bool) *protoSpecBuilder {
-	sb.spec.IsTableDriven = proto.Bool(f)
-	return sb
-}
-
-func (sb *protoSpecBuilder) scenario(scn *gauge_messages.ProtoScenario) *protoSpecBuilder {
-	sb.spec.Items = append(sb.spec.Items, &gauge_messages.ProtoItem{
-		ItemType: gauge_messages.ProtoItem_Scenario.Enum(),
-		Scenario: scn,
-	})
-	return sb
-}
-
-func (sb *protoSpecBuilder) tableDrivenScenario(scns []*gauge_messages.ProtoScenario) *protoSpecBuilder {
-	sb.spec.Items = append(sb.spec.Items, &gauge_messages.ProtoItem{
-		ItemType:            gauge_messages.ProtoItem_TableDrivenScenario.Enum(),
-		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{Scenarios: scns},
-	})
-	return sb
-}
-
-func (sb *protoSpecBuilder) build() *gauge_messages.ProtoSpec {
-	return sb.spec
-}
-
-type specResultBuilder struct {
-	sr *result.SpecResult
-}
-
-func newSpecResultBuilder() *specResultBuilder {
-	return &specResultBuilder{sr: &result.SpecResult{}}
-}
-
-func (s *specResultBuilder) spec(spec *gauge_messages.ProtoSpec) *specResultBuilder {
-	s.sr.ProtoSpec = spec
-	return s
-}
-
-func (s *specResultBuilder) failed(f bool) *specResultBuilder {
-	s.sr.IsFailed = f
-	return s
-}
-
-func (s *specResultBuilder) build() *result.SpecResult {
-	return s.sr
-}
-
-type suiteResultBuilder struct {
-	sr *result.SuiteResult
-}
-
-func newSuiteResultBuilder() *suiteResultBuilder {
-	return &suiteResultBuilder{sr: &result.SuiteResult{}}
-}
-
-func (s *suiteResultBuilder) spec(res []*result.SpecResult) *suiteResultBuilder {
-	s.sr.SpecResults = res
-	return s
-}
-
-func (s *suiteResultBuilder) failed(f bool) *suiteResultBuilder {
-	s.sr.IsFailed = f
-	return s
-}
-
-func (s *suiteResultBuilder) build() *result.SuiteResult {
-	return s.sr
 }
