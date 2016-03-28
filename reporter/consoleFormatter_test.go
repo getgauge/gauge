@@ -31,5 +31,5 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestIndent(c *C) {
 	c.Assert(indent("foo bar", 2), Equals, "  foo bar")
-	c.Assert(indent("\nfoo bar", 2), Equals, "  foo bar")
+	c.Assert(indent("\nfoo bar", 2), Equals, "  \n  foo bar")
 }

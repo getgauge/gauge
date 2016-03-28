@@ -265,7 +265,7 @@ func (e *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
 	if stepFailed {
 		result := protoStep.GetStepExecutionResult().GetExecutionResult()
-		e.consoleReporter.Error("Failed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
+		e.consoleReporter.Error("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
 		e.consoleReporter.Error("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
 		e.consoleReporter.Error("Stacktrace: \n%s", result.GetStackTrace())
 	}

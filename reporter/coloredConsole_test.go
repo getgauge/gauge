@@ -170,6 +170,28 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
+func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	Verbose = true
+	cc.indentation = 2
+
+	input := "* Say hello to all"
+	cc.StepStart(input)
+
+	expectedStepStartOutput := spaces(cc.indentation) + "* Say hello to all\n"
+	c.Assert(dw.output, Equals, expectedStepStartOutput)
+	dw.output = ""
+
+	cc.Error("Failed!")
+	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
+	dw.output = ""
+
+	cc.StepEnd(true)
+
+	expectedStepEndOutput := cursorUp + eraseLine + cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n"
+	c.Assert(dw.output, Equals, expectedStepEndOutput)
+}
+
 func (s *MySuite) TestConceptStartAndEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
