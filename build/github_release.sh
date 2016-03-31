@@ -29,7 +29,7 @@ go get -v -u github.com/aktau/github-release
 
 version=$(ls $repoName-*-linux.x86.zip | sed "s/^$repoName-\([^;]*\)-linux.x86.zip/\1/")
 
-release_description=$(ruby create_release_text.rb $repoName)
+release_description=$(ruby <(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb) $repoName)
 
 $GOPATH/bin/github-release release -u getgauge -r $repoName --draft -t "v$version" -d "$release_description" -n "$repoName $version"
 
