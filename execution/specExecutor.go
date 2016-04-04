@@ -217,16 +217,6 @@ func (e *specExecutor) executeItem(protoItem *gauge_messages.ProtoItem) bool {
 	return false
 }
 
-func (e *specExecutor) executeSteps(protoSteps []*gauge_messages.ProtoStep) bool {
-	for _, protoStep := range protoSteps {
-		failure := e.executeStep(protoStep)
-		if failure {
-			return true
-		}
-	}
-	return false
-}
-
 func (e *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepRequest := e.createStepRequest(protoStep)
 	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
