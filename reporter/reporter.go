@@ -45,7 +45,7 @@ type Reporter interface {
 	ConceptEnd(bool)
 	DataTable(string)
 
-	Error(string, ...interface{})
+	Errorf(string, ...interface{})
 
 	io.Writer
 }

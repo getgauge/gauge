@@ -76,7 +76,7 @@ func (e *specExecutor) execute() {
 
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
-		e.consoleReporter.Error("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
+		e.consoleReporter.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
 		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
 		return
 	}
@@ -141,7 +141,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {
-		e.consoleReporter.Error("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage())
+		e.consoleReporter.Errorf("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage())
 		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf(res.GetErrorMessage()))
 		return scenarioResult
 	}
@@ -265,9 +265,9 @@ func (e *specExecutor) executeStep(protoStep *gauge_messages.ProtoStep) bool {
 	stepFailed := protoStep.GetStepExecutionResult().GetExecutionResult().GetFailed()
 	if stepFailed {
 		result := protoStep.GetStepExecutionResult().GetExecutionResult()
-		e.consoleReporter.Error("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
-		e.consoleReporter.Error("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
-		e.consoleReporter.Error("Stacktrace: \n%s", result.GetStackTrace())
+		e.consoleReporter.Errorf("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
+		e.consoleReporter.Errorf("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
+		e.consoleReporter.Errorf("Stacktrace: \n%s", result.GetStackTrace())
 	}
 	e.consoleReporter.StepEnd(stepFailed)
 	return stepFailed
@@ -413,7 +413,7 @@ func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *resul
 }
 
 func (e *specExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
-	e.consoleReporter.Error(err.Error())
+	e.consoleReporter.Errorf(err.Error())
 	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.specification.FileName, nil)
 	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
@@ -528,8 +528,8 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 }
 
 func printStatus(executionResult *gauge_messages.ProtoExecutionResult, reporter reporter.Reporter) {
-	reporter.Error("Error Message: %s", executionResult.GetErrorMessage())
-	reporter.Error("Stacktrace: \n%s", executionResult.GetStackTrace())
+	reporter.Errorf("Error Message: %s", executionResult.GetErrorMessage())
+	reporter.Errorf("Stacktrace: \n%s", executionResult.GetStackTrace())
 }
 
 func addExecutionTimes(stepExecResult *gauge_messages.ProtoStepExecutionResult, execResults ...*gauge_messages.ProtoExecutionResult) {

@@ -182,7 +182,7 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
 
-	cc.Error("Failed!")
+	cc.Errorf("Failed!")
 	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
 	dw.output = ""
 
@@ -237,7 +237,7 @@ func (s *MySuite) TestError_ColoredConsole(c *C) {
 	cc.indentation = initialIndentation
 	Verbose = true
 
-	cc.Error("Failed %s", "network error")
+	cc.Errorf("Failed %s", "network error")
 
 	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(initialIndentation+errorIndentation)))
 }

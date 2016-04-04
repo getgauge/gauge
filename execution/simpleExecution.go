@@ -73,7 +73,7 @@ func (e *simpleExecution) execute() {
 
 	initSuiteDataStoreResult := e.initSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		e.consoleReporter.Error("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		e.consoleReporter.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
 		setResult()
 		return
 	}
@@ -100,7 +100,7 @@ func (e *simpleExecution) finish() {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.Kill(); err != nil {
-		e.consoleReporter.Error("Failed to kill Runner: %s", err.Error())
+		e.consoleReporter.Errorf("Failed to kill Runner: %s", err.Error())
 	}
 }
 

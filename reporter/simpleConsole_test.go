@@ -178,7 +178,7 @@ func (s *MySuite) TestError_SimpleConsole(c *C) {
 	sc.indentation = 6
 	Verbose = true
 
-	sc.Error("Failed %s", "network error")
+	sc.Errorf("Failed %s", "network error")
 
 	c.Assert(dw.output, Equals, fmt.Sprintf("%sFailed network error\n", spaces(sc.indentation+errorIndentation)))
 }

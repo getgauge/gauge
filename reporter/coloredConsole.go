@@ -126,7 +126,7 @@ func (c *coloredConsole) DataTable(table string) {
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) Error(text string, args ...interface{}) {
+func (c *coloredConsole) Errorf(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args...)
 	logger.GaugeLog.Error(msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline

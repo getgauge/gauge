@@ -104,7 +104,7 @@ func (sc *simpleConsole) DataTable(table string) {
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", newline, table))
 }
 
-func (sc *simpleConsole) Error(err string, args ...interface{}) {
+func (sc *simpleConsole) Errorf(err string, args ...interface{}) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	errorMessage := fmt.Sprintf(err, args...)
