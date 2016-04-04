@@ -18,29 +18,9 @@
 package result
 
 import (
-	"path/filepath"
-	"time"
-
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
 )
-
-type SuiteResult struct {
-	SpecResults       []*SpecResult
-	PreSuite          *(gauge_messages.ProtoHookFailure)
-	PostSuite         *(gauge_messages.ProtoHookFailure)
-	IsFailed          bool
-	SpecsFailedCount  int
-	ExecutionTime     int64 //in milliseconds
-	UnhandledErrors   []error
-	Environment       string
-	Tags              string
-	ProjectName       string
-	Timestamp         string
-	SpecsSkippedCount int
-}
 
 type SpecResult struct {
 	ProtoSpec            *gauge_messages.ProtoSpec
@@ -53,104 +33,12 @@ type SpecResult struct {
 	ScenarioSkippedCount int
 }
 
-type ScenarioResult struct {
-	ProtoScenario *gauge_messages.ProtoScenario
-}
-
-type Result interface {
-	getPreHook() **(gauge_messages.ProtoHookFailure)
-	getPostHook() **(gauge_messages.ProtoHookFailure)
-	SetFailure()
-}
-
-type ExecTimeTracker interface {
-	AddExecTime(int64)
-}
-
-func (suiteResult *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &suiteResult.PreSuite
-}
-
-func (suiteResult *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &suiteResult.PostSuite
-}
-
-func (suiteResult *SuiteResult) SetFailure() {
-	suiteResult.IsFailed = true
-}
-
-func (specResult *SpecResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &specResult.ProtoSpec.PreHookFailure
-}
-
-func (specResult *SpecResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &specResult.ProtoSpec.PostHookFailure
-}
-
 func (specResult *SpecResult) SetFailure() {
 	specResult.IsFailed = true
 }
 
-func (scenarioResult *ScenarioResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &scenarioResult.ProtoScenario.PreHookFailure
-}
-
-func (scenarioResult *ScenarioResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &scenarioResult.ProtoScenario.PostHookFailure
-}
-
-func (scenarioResult *ScenarioResult) SetFailure() {
-	scenarioResult.ProtoScenario.Failed = proto.Bool(true)
-}
-
-func (scenarioResult *ScenarioResult) GetFailure() bool {
-	return scenarioResult.ProtoScenario.GetFailed()
-}
-
 func (specResult *SpecResult) AddSpecItems(resolvedItems []*gauge_messages.ProtoItem) {
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, resolvedItems...)
-}
-
-func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
-	result := new(SuiteResult)
-	result.SpecResults = make([]*SpecResult, 0)
-	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
-	result.ProjectName = filepath.Base(config.ProjectRoot)
-	result.Environment = env.CurrentEnv()
-	result.Tags = tags
-	return result
-}
-
-func AddPreHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
-	if executionResult.GetFailed() {
-		*(result.getPreHook()) = GetProtoHookFailure(executionResult)
-		result.SetFailure()
-	}
-}
-
-func AddPostHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
-	if executionResult.GetFailed() {
-		*(result.getPostHook()) = GetProtoHookFailure(executionResult)
-		result.SetFailure()
-	}
-}
-
-func (suiteResult *SuiteResult) AddSpecResult(specResult *SpecResult) {
-	if specResult.IsFailed {
-		suiteResult.IsFailed = true
-		suiteResult.SpecsFailedCount++
-	}
-	suiteResult.ExecutionTime += specResult.ExecutionTime
-	suiteResult.SpecResults = append(suiteResult.SpecResults, specResult)
-
-}
-
-func GetProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *(gauge_messages.ProtoHookFailure) {
-	return &gauge_messages.ProtoHookFailure{StackTrace: executionResult.StackTrace, ErrorMessage: executionResult.ErrorMessage, ScreenShot: executionResult.ScreenShot}
-}
-
-func (specResult *SpecResult) setFileName(fileName string) {
-	specResult.ProtoSpec.FileName = proto.String(fileName)
 }
 
 func (specResult *SpecResult) AddScenarioResults(scenarioResults []*ScenarioResult) {
@@ -195,36 +83,14 @@ func (specResult *SpecResult) AddExecTime(execTime int64) {
 	specResult.ExecutionTime += execTime
 }
 
-func (scenarioResult *ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.ScenarioItems = append(scenarioResult.ProtoScenario.ScenarioItems, protoItems...)
+func (specResult *SpecResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
+	return &specResult.ProtoSpec.PreHookFailure
 }
 
-func (scenarioResult *ScenarioResult) AddContexts(contextProtoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.Contexts = append(scenarioResult.ProtoScenario.Contexts, contextProtoItems...)
+func (specResult *SpecResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
+	return &specResult.ProtoSpec.PostHookFailure
 }
 
-func (scenarioResult *ScenarioResult) AddTearDownSteps(tearDownProtoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.TearDownSteps = append(scenarioResult.ProtoScenario.TearDownSteps, tearDownProtoItems...)
-}
-
-func (scenarioResult *ScenarioResult) UpdateExecutionTime() {
-	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetContexts())
-	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetScenarioItems())
-}
-
-func (scenarioResult *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messages.ProtoItem) {
-	for _, item := range protoItems {
-		if item.GetItemType() == gauge_messages.ProtoItem_Step {
-			stepExecTime := item.GetStep().GetStepExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.AddExecTime(stepExecTime)
-		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
-			conceptExecTime := item.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.AddExecTime(conceptExecTime)
-		}
-	}
-}
-
-func (scenarioResult *ScenarioResult) AddExecTime(execTime int64) {
-	currentScenarioExecTime := scenarioResult.ProtoScenario.GetExecutionTime()
-	scenarioResult.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
+func (specResult *SpecResult) setFileName(fileName string) {
+	specResult.ProtoSpec.FileName = proto.String(fileName)
 }
