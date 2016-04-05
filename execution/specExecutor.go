@@ -267,17 +267,6 @@ func printStatus(executionResult *gauge_messages.ProtoExecutionResult, reporter 
 	reporter.Errorf("Stacktrace: \n%s", executionResult.GetStackTrace())
 }
 
-func addExecutionTimes(stepExecResult *gauge_messages.ProtoStepExecutionResult, execResults ...*gauge_messages.ProtoExecutionResult) {
-	for _, execResult := range execResults {
-		currentScenarioExecTime := stepExecResult.ExecutionResult.ExecutionTime
-		if currentScenarioExecTime == nil {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(execResult.GetExecutionTime())
-		} else {
-			stepExecResult.ExecutionResult.ExecutionTime = proto.Int64(*currentScenarioExecTime + execResult.GetExecutionTime())
-		}
-	}
-}
-
 func getTagValue(tags *gauge.Tags) []string {
 	var tagValues []string
 	if tags != nil {
