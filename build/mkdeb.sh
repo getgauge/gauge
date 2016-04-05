@@ -103,8 +103,13 @@ function prep_deb() {
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
     cp "$GAUGE_SETUP_FILE" "$TARGET/usr/bin/gauge_setup"
 
-    CONTROL_DATA=`cat "$TARGET/DEBIAN/control"`
-    INSTALLED_SIZE=`du -s $TARGET/usr/bin/ | sed "s/^\([0-9]*\).*$/\1/"`
+    sync
+
+    CONTROL_DATA=$(cat "$TARGET/DEBIAN/control")
+    INSTALLED_SIZE=$(du -s $PKG_SRC/bin/ | sed "s/^\([0-9]*\).*$/\1/")
+    while [ $INSTALLED_SIZE -lt 1 ]; do
+            INSTALLED_SIZE=$(du -s $PKG_SRC/bin/ | sed "s/^\([0-9]*\).*$/\1/")
+    done
     echo "$CONTROL_DATA" | sed "s/<version>/$VERSION/" | sed "s/<arch>/$ARCH/" | sed "s/<size>/$INSTALLED_SIZE/" > "$TARGET/DEBIAN/control"
 
     # Copy generated LICENSE.md to /usr/share/doc/gauge/copyright
