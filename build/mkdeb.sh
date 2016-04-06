@@ -103,6 +103,8 @@ function prep_deb() {
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
     cp "$GAUGE_SETUP_FILE" "$TARGET/usr/bin/gauge_setup"
 
+    chmod +x $TARGET/usr/bin/*
+
     sync
 
     CONTROL_DATA=$(cat "$TARGET/DEBIAN/control")
