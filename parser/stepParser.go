@@ -30,6 +30,8 @@ const (
 	inEscape       = 1 << iota
 	inDynamicParam = 1 << iota
 	inSpecialParam = 1 << iota
+	inValue        = 1 << iota
+	inMultiline    = 1 << iota
 )
 const (
 	quotes                 = '"'
@@ -48,15 +50,25 @@ func acceptor(start rune, end rune, onEachChar func(rune, int) int, after func(s
 	return func(element rune, currentState int) (int, bool) {
 		currentState = onEachChar(element, currentState)
 		if element == start {
-			if currentState == inDefault {
+			if isInState(currentState, inDefault) {
 				return inState, true
+			}
+			if isInState(currentState, inState) && !isInState(currentState, inValue) {
+				addStates(&currentState, inMultiline)
+				return currentState, true
 			}
 		}
 		if element == end {
-			if currentState&inState != 0 {
+			if isInState(currentState, inMultiline) {
+				return currentState ^ inMultiline, true
+			}
+			if isInState(currentState, inState) {
 				after(currentState)
 				return inDefault, true
 			}
+		}
+		if isInState(currentState, inState) {
+			addStates(&currentState, inValue)
 		}
 		return currentState, false
 	}
@@ -110,7 +122,7 @@ func processStepText(text string) (string, []string, error) {
 	}, inQuotes)
 
 	acceptSpecialDynamicParam := acceptor(rune(dynamicParamStart), rune(dynamicParamEnd), func(currentChar rune, state int) int {
-		if currentChar == specialParamIdentifier && state == inDynamicParam {
+		if currentChar == specialParamIdentifier && isInState(state, inDynamicParam) {
 			return state | inSpecialParam
 		}
 		return state
@@ -126,7 +138,7 @@ func processStepText(text string) (string, []string, error) {
 
 	var inParamBoundary bool
 	for _, element := range text {
-		if currentState == inEscape {
+		if isInState(currentState, inEscape) {
 			currentState = lastState
 			element = getEscapedRuneIfValid(element)
 		} else if element == escape {
@@ -137,7 +149,7 @@ func processStepText(text string) (string, []string, error) {
 			continue
 		} else if currentState, inParamBoundary = acceptStaticParam(element, currentState); inParamBoundary {
 			continue
-		} else if _, isReservedChar := reservedChars[element]; currentState == inDefault && isReservedChar {
+		} else if _, isReservedChar := reservedChars[element]; isInState(currentState, inDefault) && isReservedChar {
 			return "", nil, fmt.Errorf("'%c' is a reserved character and should be escaped", element)
 		}
 
@@ -145,7 +157,7 @@ func processStepText(text string) (string, []string, error) {
 	}
 
 	// If it is a valid step, the state should be default when the control reaches here
-	if currentState == inQuotes {
+	if isInState(currentState, inQuotes) {
 		return "", nil, fmt.Errorf("String not terminated")
 	} else if isInState(currentState, inDynamicParam) {
 		return "", nil, fmt.Errorf("Dynamic parameter not terminated")

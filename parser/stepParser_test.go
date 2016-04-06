@@ -86,6 +86,22 @@ func (s *MySuite) TestParsingStepWithParametersWithQuotes(c *C) {
 
 }
 
+func (s *MySuite) TestParsingStepWithMultilineParams(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step(`enter multiline param ""\njohn\njack\n""`).String()
+
+	tokens, err := parser.GenerateTokens(specText)
+
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 3)
+
+	stepToken := tokens[2]
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
+	c.Assert(stepToken.Value, Equals, "enter multiline param {static}")
+	c.Assert(len(stepToken.Args), Equals, 1)
+	c.Assert(stepToken.Args[0], Equals, "\njohn\njack\n")
+}
+
 func (s *MySuite) TestParsingStepWithUnmatchedOpeningQuote(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("sample step \"param").String()

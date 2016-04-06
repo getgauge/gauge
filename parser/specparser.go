@@ -94,6 +94,11 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError
 			newToken.Kind = gauge.ScenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
+			if parser.isMultiline(trimmedLine) {
+				for nextLine, hasNextLine := parser.nextLine(); hasNextLine && !parser.isMultiline(strings.TrimSpace(nextLine)); nextLine, hasNextLine = parser.nextLine() {
+					trimmedLine += "\n" + strings.TrimSpace(nextLine)
+				}
+			}
 			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found {
 			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
@@ -158,6 +163,17 @@ func (parser *SpecParser) isStep(text string) bool {
 	} else {
 		return text[0] == '*'
 	}
+}
+
+func (parser *SpecParser) isMultiline(text string) bool {
+	if len(text) > 2 {
+		for i := 2; i < len(text); i++ {
+			if text[i-2] != '\\' && text[i-1] == '"' && text[i] == '"' {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (parser *SpecParser) isScenarioUnderline(text string) bool {
