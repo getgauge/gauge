@@ -31,8 +31,7 @@ fi
 PACKAGE_FILE_PREFIX=$(echo "$PACKAGE" | tr '[:upper:]' '[:lower:]');
 
 setVersion () {
-    #VERSION=$(ls $PACKAGE_FILE_PREFIX*.deb | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
-    VERSION=$(ls $PACKAGE_FILE_PREFIX*.deb | head -1 | cut -d '-' -f 2)
+    VERSION=$(ls $PACKAGE_FILE_PREFIX*.deb | head -1 | sed "s/\.[^\.]*$//" | sed "s/$PACKAGE_FILE_PREFIX-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//" | rev | sed "s/^[a-z0-9]*-//" | rev);
 }
 
 getArchFromFileName () {
