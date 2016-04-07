@@ -19,6 +19,9 @@ package filter
 
 import (
 	"errors"
+	"go/types"
+	"go/constant"
+	"go/token"
 	"regexp"
 	"sort"
 	"strconv"
@@ -26,8 +29,6 @@ import (
 
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"golang.org/x/tools/go/exact"
-	"golang.org/x/tools/go/types"
 )
 
 type scenarioIndexFilterToRetain struct {
@@ -147,11 +148,11 @@ func (filter *ScenarioFilterBasedOnTags) evaluateExp(tagExpression string) (bool
 
 	s := fre.ReplaceAllString(tre.ReplaceAllString(tagExpression, "1"), "0")
 
-	val, err := types.Eval(s, nil, nil)
+	val, err := types.Eval(token.NewFileSet(), nil, 0, s)
 	if err != nil {
 		return false, errors.New("Invalid Expression.\n" + err.Error())
 	}
-	res, _ := exact.Uint64Val(val.Value)
+	res, _ := constant.Uint64Val(val.Value)
 
 	var final bool
 	if res == 1 {
