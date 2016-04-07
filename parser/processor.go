@@ -26,7 +26,7 @@ import (
 )
 
 func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(token.Value) < 1 {
+	if len(strings.TrimSpace(token.Value)) < 1 {
 		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Spec heading should have at least one character"}, true
 	}
 	return nil, false
@@ -51,7 +51,7 @@ func processDataTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 }
 
 func processScenario(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(token.Value) < 1 {
+	if len(strings.TrimSpace(token.Value)) < 1 {
 		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Scenario heading should have at least one character"}, true
 	}
 	parser.clearState()

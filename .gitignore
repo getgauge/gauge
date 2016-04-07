@@ -26,6 +26,8 @@ tags
 bin/
 deploy
 .idea
+*.ipr
+*.iws
 _workspace/
 count.out
 gauge.iml
