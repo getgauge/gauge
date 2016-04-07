@@ -19,8 +19,7 @@ ARCH="i386"
 NAME="gauge"
 FILE_EXT="zip"
 FILE_MODE=755
-CONTROL_FILE="$BUILD_DIR/packaging/deb/control"
-POSTINST_FILE="$BUILD_DIR/packaging/deb/postinst"
+SPEC_FILE="$BUILD_DIR/packaging/rpm/gauge.spec"
 GAUGE_SETUP_FILE="$BUILD_DIR/packaging/gauge_setup"
 
 if [ "$OS" != "linux" ]; then
@@ -31,10 +30,14 @@ if [ "$1" == "--rebuild" ]; then
     REBUILD_NEEDED=1
 fi
 
+if [ "$2" == "--nightly" ]; then
+    NIGHTLY="--nightly"
+fi
+
 function rebuild () {
     rm -rf "$DEPLOY_DIR"
-    go run build/make.go --all-platforms --target-linux
-    go run build/make.go --distro --all-platforms --target-linux
+    go run build/make.go --all-platforms --target-linux $NIGHTLY
+    go run build/make.go --distro --all-platforms --target-linux $NIGHTLY
 }
 
 function check_and_rebuild() {
@@ -57,7 +60,7 @@ function set_arch() {
     fi
 
     if [ "$ARCHTYPE" == "x86_64" ]; then
-        ARCH="amd64"
+        ARCH="x86_64"
     else
         ARCH="i386"
     fi
@@ -69,6 +72,7 @@ function set_version() {
     else
         VERSION=$(echo `basename $1` | sed "s/^[a-z]*\///" | sed "s/\.[^\.]*$//" | sed "s/$NAME-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//")
     fi
+    RPM_VERSION=$(echo $VERSION | sed "s/-//g")
 }
 
 function set_pkg_info() {
@@ -83,48 +87,40 @@ function set_info() {
 }
 
 function clean_stage() {
-    TARGET_ROOT="$DEPLOY_DIR/deb"
-    rm -rf "$TARGET_ROOT"
-    mkdir -p "$TARGET_ROOT"
-    chmod $FILE_MODE "$TARGET_ROOT"
-    TARGET="$TARGET_ROOT/$NAME-$VERSION-$ARCH"
-    DEB_PATH="$DEPLOY_DIR/"
+    TARGET="$HOME/rpmbuild"
+    rm -rf "$TARGET"
+    RPM_PATH="$DEPLOY_DIR/"
 }
 
-function prep_deb() {
-    echo "Preparing .deb data..."
-    mkdir -m $FILE_MODE -p "$TARGET/usr"
+function prep_rpm() {
+    echo "Preparing .rpm data..."
+    rpmdev-setuptree
 
-    cp -r "$PKG_SRC/bin" "$TARGET/usr/"
-    cp -r "$PKG_SRC/share" "$TARGET/usr/"
+    cp -r "$PKG_SRC/bin" "$TARGET/BUILD/"
+    cp -r "$PKG_SRC/share" "$TARGET/BUILD/"
+    cp "$GAUGE_SETUP_FILE" "$TARGET/BUILD/bin/gauge_setup"
 
-    mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
-    cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
-    cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
-    cp "$GAUGE_SETUP_FILE" "$TARGET/usr/bin/gauge_setup"
-
-    CONTROL_DATA=`cat "$TARGET/DEBIAN/control"`
-    INSTALLED_SIZE=`du -s $TARGET/usr/bin/ | sed "s/^\([0-9]*\).*$/\1/"`
-    echo "$CONTROL_DATA" | sed "s/<version>/$VERSION/" | sed "s/<arch>/$ARCH/" | sed "s/<size>/$INSTALLED_SIZE/" > "$TARGET/DEBIAN/control"
-
+    SPEC_DATA=`cat "$SPEC_FILE"`
+    echo "$SPEC_DATA" | sed "s/<version>/$RPM_VERSION/g" > "$TARGET/SPECS/gauge.spec"
+    cat $TARGET/SPECS/gauge.spec
     # Copy generated LICENSE.md to /usr/share/doc/gauge/copyright
-    mkdir -m $FILE_MODE -p "$TARGET/usr/share/doc/$NAME"
-    cp "$ROOT/LICENSE" "$TARGET/usr/share/doc/$NAME/copyright"
+    mkdir -m $FILE_MODE -p "$TARGET/BUILD/usr/share/doc/$NAME"
+    cp "$ROOT/LICENSE" "$TARGET/BUILD/usr/share/doc/$NAME/copyright"
 }
 
-function create_deb() {
-    echo "Generating .deb..."
-    fakeroot dpkg-deb -b "$TARGET"
-    mv "$TARGET_ROOT/$NAME-$VERSION-$ARCH.deb" "$DEB_PATH"
+function create_rpm() {
+    echo "Generating .rpm..."
+    rpmbuild --target $ARCH-redhat-linux -ba "$TARGET/SPECS/gauge.spec"
+    mv $TARGET/RPMS/$ARCH/$NAME-$RPM_VERSION*$ARCH*.rpm "$RPM_PATH"
 }
 
 function cleanup_temp() {
-    rm -rf "$TARGET_ROOT"
+    rm -rf "$TARGET"
     rm -rf "$PKG_SRC"
 }
 
 function print_status() {
-    echo -e "\nCreated .deb package at: $DEB_PATH$NAME-$VERSION-$ARCH.deb"
+    echo -e "\nCreated .rpm package in: $RPM_PATH$NAME"
     echo -e "  Version : $VERSION"
     echo -e "  Arch    : $ARCH\n"
 }
@@ -141,8 +137,8 @@ function init() {
         popd > /dev/null
 
         clean_stage
-        prep_deb
-        create_deb
+        prep_rpm
+        create_rpm
         cleanup_temp
         print_status
     done
@@ -150,30 +146,3 @@ function init() {
 
 # Let the game begin
 init
-
-
-
-
-
-
-
-APP_NAME="gauge"
-APP_FILE_NAME="$2"
-SPEC_FILE="$3"
-DESKTOP_FILE="$4"
-BUILD_DIRECTORY="$5"
-
-RPM_BUILD_ROOT=~/rpmbuild
-ARCH=`uname -m`
-
-rpmdev-setuptree
-
-cp -r "$BUILD_DIRECTORY/$APP_NAME" "$RPM_BUILD_ROOT/BUILD"
-cp "$SPEC_FILE" "$RPM_BUILD_ROOT/SPECS"
-cp ./atom.sh "$RPM_BUILD_ROOT/BUILD"
-cp "$DESKTOP_FILE" "$RPM_BUILD_ROOT/BUILD"
-
-rpmbuild -ba "$SPEC_FILE"
-cp $RPM_BUILD_ROOT/RPMS/$ARCH/$APP_FILE_NAME-*.rpm "$BUILD_DIRECTORY/rpm"
-
-rm -rf "$RPM_BUILD_ROOT"

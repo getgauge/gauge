@@ -14,3 +14,22 @@ Run this command from the root of this project:
  ```
  $ ./build/mkdeb.sh
  ```
+
+ ## Generating .rpm
+
+ ### Requirements
+
+ - RHEL6+, CentOS 7+ or Fedora 22+
+ - Install these packages:
+
+         ```
+         $ sudo yum install make automake gcc gcc-c++ kernel-devel rpmdevtools
+         ```
+
+  ### Run the script
+
+ Run this command from the root of this project:
+
+  ```
+  $ ./build/mkrpm.sh
+  ```
