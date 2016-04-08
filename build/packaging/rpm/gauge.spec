@@ -1,6 +1,6 @@
 Name:           gauge
 Version:        <version>
-Release:        1%{?dist}
+Release:        <release>
 Summary:        Cross-platform test automation
 License:        GPLv3
 URL:            http://getgauge.io/

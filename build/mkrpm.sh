@@ -19,6 +19,7 @@ ARCH="i386"
 NAME="gauge"
 FILE_EXT="zip"
 FILE_MODE=755
+RELEASE=all
 SPEC_FILE="$BUILD_DIR/packaging/rpm/gauge.spec"
 GAUGE_SETUP_FILE="$BUILD_DIR/packaging/gauge_setup"
 
@@ -101,7 +102,7 @@ function prep_rpm() {
     cp "$GAUGE_SETUP_FILE" "$TARGET/BUILD/bin/gauge_setup"
 
     SPEC_DATA=`cat "$SPEC_FILE"`
-    echo "$SPEC_DATA" | sed "s/<version>/$RPM_VERSION/g" > "$TARGET/SPECS/gauge.spec"
+    echo "$SPEC_DATA" | sed "s/<version>/$RPM_VERSION/g" | sed "s/<release>/$RELEASE/g" > "$TARGET/SPECS/gauge.spec"
     cat $TARGET/SPECS/gauge.spec
     # Copy generated LICENSE.md to /usr/share/doc/gauge/copyright
     mkdir -m $FILE_MODE -p "$TARGET/BUILD/usr/share/doc/$NAME"
@@ -111,7 +112,7 @@ function prep_rpm() {
 function create_rpm() {
     echo "Generating .rpm..."
     rpmbuild --target $ARCH-redhat-linux -ba "$TARGET/SPECS/gauge.spec"
-    mv $TARGET/RPMS/$ARCH/$NAME-$RPM_VERSION*$ARCH*.rpm "$RPM_PATH"
+    mv $TARGET/RPMS/$ARCH/$NAME-$RPM_VERSION-$RELEASE.$ARCH.rpm "$RPM_PATH/"
 }
 
 function cleanup_temp() {
@@ -120,7 +121,7 @@ function cleanup_temp() {
 }
 
 function print_status() {
-    echo -e "\nCreated .rpm package in: $RPM_PATH$NAME"
+    echo -e "\nCreated .rpm package in: $RPM_PATH$NAME-$RPM_VERSION-$RELEASE.$ARCH.rpm"
     echo -e "  Version : $VERSION"
     echo -e "  Arch    : $ARCH\n"
 }
