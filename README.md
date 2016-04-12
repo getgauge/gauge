@@ -27,13 +27,16 @@ Some of its key features include:
 * Helps you create Maintainable and Understandable test suites
 * [IDE Support](ide_support/README.md)
 
-Learn about the [Gauge domain](gauge_domain.md) and get started.
 
-## Get started quickly
-
+## Looking for examples?
 * Get gauge installers from the [download page](http://getgauge.io/get-started/index.html).
-* [Create a gauge project](http://getgauge.io/documentation/user/current/getting_started/creating_a_gauge_project.html)
+* [Getting started in 3 steps - Java](https://github.com/getgauge/gauge/wiki/Getting-Started-in-3-Steps)
+* Other [example projects](examples/examples.md)
 * [Execute Specifications](http://getgauge.io/documentation/user/current/execution/README.html)
+
+##Help
+
+Refer our [Troubleshooting](troubleshooting/troubleshooting.md) guide.
 
 ## Find out more
 
