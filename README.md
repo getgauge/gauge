@@ -8,25 +8,26 @@ Gauge is a light weight cross-platform test automation tool. It provides the abi
 
 Gauge champions the idea of **living/executable documentation**.
 
+## Why Gauge?
+
+The communication breakdowns between Developers and Business Stakeholders is a common risk of software development.
+
+[BDD](http://agilecoach.typepad.com/agile-coaching/2012/03/bdd-in-a-nutshell.html) tools allow business analysts to write down behavioral requirements in a way that will also be understood by developers and help bridge the gap. Certain features of Gauge make it stand unique amongst others.
+
 Some of its key features include:
 
 * A rich markup based on [markdown](https://en.wikipedia.org/wiki/Markdown)
-* Support for writing test code in any programming language. See [Test Code](http://getgauge.io/documentation/user/current/test_code/index.html) for currently supported languages.
-* A modular architecture with [plugin](http://getgauge.io/documentation/user/current/plugins/README.html) support.
-* Consistency across language implementations.
-
-## Why Gauge?
-
-Certain features of Gauge makes it stand unique amongst others.
-
-* Consistent Cross Platform/Language Support
-* Business Language Tests : Supports the concept of executable documentation
-* Open Source, so it could be shared freely and improved by others as well
 * Simple, Flexible and Rich Syntax
-* Helps you create Maintainable and Understandable test suites
-* Extensible through [Plugins](http://getgauge.io/documentation/user/current/plugins/README.html) and Hackable
+* Business Language Tests : Supports the concept of executable documentation
+* Consistent Cross Platform/Language Support for writing test code. Currently [supported languages]((test_code/README.md).
+* Open Source, so it could be shared freely and improved by others as well
+* A modular architecture with [plugin](plugins/README.md) support.
+* Extensible through [plugins](plugins/README.md) and Hackable
 * Supports External Data Sources
-* IDE Support
+* Helps you create Maintainable and Understandable test suites
+* [IDE Support](ide_support/README.md)
+
+Learn about the [Gauge domain](gauge_domain.md) and get started.
 
 ## Get started quickly
 
