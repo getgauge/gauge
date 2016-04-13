@@ -80,10 +80,6 @@ func (s streamExecError) Error() string {
 	return fmt.Sprintf("The following specifications could not be executed:\n%sReason : %s.", specNames, s.message)
 }
 
-func (e *parallelExecution) result() *result.SuiteResult {
-	return e.suiteResult
-}
-
 func (e *parallelExecution) numberOfStreams() int {
 	nStreams := e.numberOfExecutionStreams
 	size := e.specCollection.Size()
@@ -98,7 +94,7 @@ func (e *parallelExecution) start() {
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
-func (e *parallelExecution) run() {
+func (e *parallelExecution) run() *result.SuiteResult {
 	e.start()
 
 	nStreams := e.numberOfStreams()
@@ -118,6 +114,7 @@ func (e *parallelExecution) run() {
 	e.aggregateResults(res)
 
 	e.finish()
+	return e.suiteResult
 }
 func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
 	e.wg.Add(totalStreams)
@@ -166,7 +163,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 	se := newSimpleExecution(executionInfo)
 	se.execute()
 	runner.Kill()
-	resChan <- se.result()
+	resChan <- se.suiteResult
 }
 
 func (e *parallelExecution) finish() {

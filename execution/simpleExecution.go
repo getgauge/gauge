@@ -58,10 +58,11 @@ func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 	}
 }
 
-func (e *simpleExecution) run() {
+func (e *simpleExecution) run() *result.SuiteResult {
 	e.start()
 	e.execute()
 	e.finish()
+	return e.suiteResult
 }
 
 func (e *simpleExecution) execute() {
@@ -108,13 +109,8 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) {
 	for specs.HasNext() {
 		s := specs.Next()
 		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
-		ex.execute()
-		e.suiteResult.AddSpecResult(ex.result())
+		e.suiteResult.AddSpecResult(ex.execute())
 	}
-}
-
-func (e *simpleExecution) result() *result.SuiteResult {
-	return e.suiteResult
 }
 
 func (e *simpleExecution) notifyBeforeSuite() {

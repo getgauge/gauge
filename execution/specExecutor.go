@@ -57,11 +57,7 @@ func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Ha
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
-func (e *specExecutor) result() *result.SpecResult {
-	return e.specResult
-}
-
-func (e *specExecutor) execute() {
+func (e *specExecutor) execute() *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: proto.String(e.specification.Heading.Value),
 		FileName: proto.String(e.specification.FileName),
 		IsFailed: proto.Bool(false), Tags: getTagValue(e.specification.Tags)}
@@ -71,19 +67,19 @@ func (e *specExecutor) execute() {
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if _, ok := e.errMap.SpecErrs[e.specification]; ok {
 		e.skipSpec()
-		return
+		return e.specResult
 	}
 
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
 		e.consoleReporter.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
 		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
-		return
+		return e.specResult
 	}
 
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
-		return
+		return e.specResult
 	}
 
 	e.consoleReporter.SpecStart(specInfo.GetName())
@@ -101,6 +97,7 @@ func (e *specExecutor) execute() {
 	e.notifyAfterSpecHook()
 	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
 	e.consoleReporter.SpecEnd()
+	return e.specResult
 }
 
 func (e *specExecutor) executeTableDrivenSpec() {

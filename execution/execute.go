@@ -38,8 +38,7 @@ var NumberOfExecutionStreams int
 var InParallel bool
 
 type execution interface {
-	run()
-	result() *result.SuiteResult
+	run() *result.SuiteResult
 }
 
 type executionInfo struct {
@@ -82,8 +81,7 @@ func ExecuteSpecs(specDirs []string) int {
 	specs, errMap := validation.ValidateSpecs(specDirs, runner)
 	ei := newExecutionInfo(specs, runner, nil, reporter.Current(), errMap, InParallel)
 	e := newExecution(ei)
-	e.run()
-	return printExecutionStatus(e.result(), errMap)
+	return printExecutionStatus(e.run(), errMap)
 }
 
 func newExecution(executionInfo *executionInfo) execution {

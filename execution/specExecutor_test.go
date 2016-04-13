@@ -310,10 +310,9 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 	se.consoleReporter = reporter.Current()
 	se.specResult = &result.SpecResult{}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
-	result := se.result()
 
-	c.Assert(result.IsFailed, Equals, false)
-	c.Assert(result.Skipped, Equals, true)
+	c.Assert(se.specResult.IsFailed, Equals, false)
+	c.Assert(se.specResult.Skipped, Equals, true)
 
 	// c.Assert(len(se.errMap.SpecErrs[spec]), Equals, 1)
 	// c.Assert(se.errMap.SpecErrs[spec][0].message, Equals, "ERROR")
@@ -335,10 +334,9 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 	se.consoleReporter = reporter.Current()
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
-	result := se.result()
 
-	c.Assert(result.IsFailed, Equals, false)
-	c.Assert(result.Skipped, Equals, true)
+	c.Assert(se.specResult.IsFailed, Equals, false)
+	c.Assert(se.specResult.Skipped, Equals, true)
 
 	// c.Assert(len(specExecutor.errMap.SpecErrs[spec]), Equals, 1)
 	// c.Assert(specExecutor.errMap.SpecErrs[spec][0].message, Equals, "ERROR")
