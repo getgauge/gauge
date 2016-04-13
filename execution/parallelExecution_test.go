@@ -64,7 +64,7 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.result()
+	aggregatedRes := e.suiteResult
 	c.Assert(aggregatedRes.SpecsFailedCount, Equals, 1)
 	c.Assert(aggregatedRes.IsFailed, Equals, true)
 	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)
@@ -82,7 +82,7 @@ func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.result()
+	aggregatedRes := e.suiteResult
 	c.Assert(len(aggregatedRes.UnhandledErrors), Equals, 2)
 	c.Assert(aggregatedRes.UnhandledErrors[0].Error(), Equals, "The following specifications could not be executed:\n"+
 		"spec1\n"+
@@ -106,7 +106,7 @@ func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 	e.aggregateResults(suiteResults)
 
-	aggregatedRes := e.result()
+	aggregatedRes := e.suiteResult
 	c.Assert(aggregatedRes.PreSuite, Equals, suiteRes2.PreSuite)
 	c.Assert(aggregatedRes.PostSuite, Equals, suiteRes3.PostSuite)
 }
