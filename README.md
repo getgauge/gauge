@@ -12,7 +12,7 @@ Gauge champions the idea of **living/executable documentation**.
 
 The communication breakdowns between Developers and Business Stakeholders is a common risk of software development.
 
-[BDD](http://agilecoach.typepad.com/agile-coaching/2012/03/bdd-in-a-nutshell.html) tools allow business analysts to write down behavioral requirements in a way that will also be understood by developers and help bridge the gap. Certain features of Gauge make it stand unique amongst others.
+Gauge is an advanced automation tool that allows requirements to be written in a way that will be understood by all roles in a project and help bridge the gap.
 
 Some of its key features include:
 
@@ -21,11 +21,11 @@ Some of its key features include:
 * Business Language Tests : Supports the concept of executable documentation
 * Consistent Cross Platform/Language Support for writing test code. Currently [supported languages](test_code/README.md).
 * Open Source, so it could be shared freely and improved by others as well
-* A modular architecture with [plugin](plugins/README.md) support.
-* Extensible through [plugins](plugins/README.md) and Hackable
+* A modular architecture with [plugin](http://getgauge.io/documentation/user/current/plugins/index.html) support.
+* Extensible through [plugins](http://getgauge.io/documentation/user/current/plugins/index.html) and Hackable
 * Supports External Data Sources
 * Helps you create Maintainable and Understandable test suites
-* [IDE Support](ide_support/README.md)
+* [IDE Support](http://getgauge.io/documentation/user/current/ide_support/index.html)
 
 
 ## Looking for examples?
