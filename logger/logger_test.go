@@ -18,8 +18,10 @@
 package logger
 
 import (
+	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
 )
@@ -63,4 +65,27 @@ func (s *MySuite) TestLoggerInitWithErrorLevel(c *C) {
 
 	c.Assert(GaugeLog.IsEnabledFor(logging.ERROR), Equals, true)
 	c.Assert(APILog.IsEnabledFor(logging.ERROR), Equals, true)
+}
+
+func (s *MySuite) TestGetLogFileGivenRelativePathInGaugeProject(c *C) {
+	config.ProjectRoot, _ = filepath.Abs("_testdata")
+	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
+
+	c.Assert(getLogFile(apiLogFileName), Equals, expected)
+}
+
+func (s *MySuite) TestGetLogFileInGaugeProject(c *C) {
+	config.ProjectRoot, _ = filepath.Abs("_testdata")
+	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
+
+	c.Assert(getLogFile(filepath.Join(config.ProjectRoot, apiLogFileName)), Equals, expected)
+}
+
+func (s *MySuite) TestGetLogFileInGaugeProjectGivenAbsPath(c *C) {
+	config.ProjectRoot, _ = filepath.Abs("_testdata")
+	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
+
+	logFile := getLogFile(filepath.Join(customLogsDir, apiLogFileName))
+
+	c.Assert(logFile, Equals, filepath.Join(customLogsDir, apiLogFileName))
 }

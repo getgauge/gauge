@@ -19,9 +19,9 @@ package filter
 
 import (
 	"errors"
-	"go/types"
 	"go/constant"
 	"go/token"
+	"go/types"
 	"regexp"
 	"sort"
 	"strconv"

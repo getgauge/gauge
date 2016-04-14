@@ -80,53 +80,34 @@ var GaugeLog = logging.MustGetLogger("gauge")
 var APILog = logging.MustGetLogger("gauge-api")
 
 var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
-var gaugeLogFile = filepath.Join(logs, gaugeLogFileName)
-var apiLogFile = filepath.Join(logs, apiLogFileName)
 
 // Initialize initializes the logger object
 func Initialize(logLevel string) {
 	level = loggingLevel(logLevel)
-	initGaugeFileLogger()
-	initAPIFileLogger()
+	initFileLogger(gaugeLogFileName, GaugeLog)
+	initFileLogger(apiLogFileName, APILog)
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}
 }
 
-func initGaugeFileLogger() {
-	logsDir, err := filepath.Abs(os.Getenv(logsDirectory))
-	var gaugeFileLogger logging.Backend
-	if logsDir == "" || err != nil {
-		gaugeFileLogger = createFileLogger(gaugeLogFile, 20)
+func initFileLogger(logFileName string, fileLogger *logging.Logger) {
+	customLogsDir := os.Getenv(logsDirectory)
+	var backend logging.Backend
+	if customLogsDir == "" {
+		backend = createFileLogger(filepath.Join(logs, logFileName), 10)
 	} else {
-		gaugeFileLogger = createFileLogger(filepath.Join(logsDir, gaugeLogFileName), 20)
+		backend = createFileLogger(filepath.Join(customLogsDir, logFileName), 10)
 	}
-	fileFormatter := logging.NewBackendFormatter(gaugeFileLogger, fileLogFormat)
+	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
 
-	GaugeLog.SetBackend(fileLoggerLeveled)
-}
-
-func initAPIFileLogger() {
-	logsDir, err := filepath.Abs(os.Getenv(logsDirectory))
-	var apiFileLogger logging.Backend
-	if logsDir == "" || err != nil {
-		apiFileLogger = createFileLogger(apiLogFile, 10)
-	} else {
-		apiFileLogger = createFileLogger(filepath.Join(logsDir, apiLogFileName), 10)
-	}
-	fileFormatter := logging.NewBackendFormatter(apiFileLogger, fileLogFormat)
-	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
-	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
-
-	APILog.SetBackend(fileLoggerLeveled)
+	fileLogger.SetBackend(fileLoggerLeveled)
 }
 
 func createFileLogger(name string, size int) logging.Backend {
-	if !filepath.IsAbs(name) {
-		name = getLogFile(name)
-	}
+	name = getLogFile(name)
 	return logging.NewLogBackend(&lumberjack.Logger{
 		Filename:   name,
 		MaxSize:    size, // megabytes
@@ -136,6 +117,9 @@ func createFileLogger(name string, size int) logging.Backend {
 }
 
 func getLogFile(fileName string) string {
+	if filepath.IsAbs(fileName) {
+		return fileName
+	}
 	if config.ProjectRoot != "" {
 		return filepath.Join(config.ProjectRoot, fileName)
 	}
