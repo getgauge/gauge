@@ -359,7 +359,8 @@ func getInstallDescription(plugin string, silent bool) (*installDescription, Ins
 
 	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, versionInstallDescriptionJSONFile, silent)
 	if downloadErr != nil {
-		return nil, installError(fmt.Errorf("Invalid plugin : Could not download %s file. %s", versionInstallDescriptionJSONFile, downloadErr))
+		logger.Debug("Failed to download %s file: %s", versionInstallDescriptionJSONFile, downloadErr)
+		return nil, installError(fmt.Errorf("Invalid plugin. Could not download %s file.", versionInstallDescriptionJSONFile))
 	}
 
 	return getInstallDescriptionFromJSON(downloadedFile)
