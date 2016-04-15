@@ -19,7 +19,7 @@ Some of its key features include:
 * A rich markup based on [markdown](https://en.wikipedia.org/wiki/Markdown)
 * Simple, Flexible and Rich Syntax
 * Business Language Tests : Supports the concept of executable documentation
-* Consistent Cross Platform/Language Support for writing test code. Currently [supported languages](test_code/README.md).
+* Consistent Cross Platform/Language Support for writing test code. Currently [supported languages](http://getgauge.io/documentation/user/current/test_code/index.html).
 * Open Source, so it could be shared freely and improved by others as well
 * A modular architecture with [plugin](http://getgauge.io/documentation/user/current/plugins/index.html) support.
 * Extensible through [plugins](http://getgauge.io/documentation/user/current/plugins/index.html) and Hackable
@@ -31,12 +31,12 @@ Some of its key features include:
 ## Looking for examples?
 * Get gauge installers from the [download page](http://getgauge.io/get-started/index.html).
 * [Getting started in 3 steps - Java](https://github.com/getgauge/gauge/wiki/Getting-Started-in-3-Steps)
-* Other [example projects](examples/examples.md)
-* [Execute Specifications](http://getgauge.io/documentation/user/current/execution/README.html)
+* Other [example projects](http://getgauge.io/documentation/user/current/examples/examples.html)
+* [Execute Specifications](http://getgauge.io/documentation/user/current/execution/index.html)
 
 ##Help
 
-Refer our [Troubleshooting](troubleshooting/troubleshooting.md) guide.
+Refer our [Troubleshooting](http://getgauge.io/documentation/user/current/troubleshooting/troubleshooting.html) guide.
 
 ## Find out more
 
