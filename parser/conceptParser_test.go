@@ -487,8 +487,8 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 		String()
 
 	scenarioHeading := SpecBuilder().
-			scenarioHeading("Scenario Heading").
-			String()
+		scenarioHeading("Scenario Heading").
+		String()
 	_, res := new(ConceptParser).Parse(conceptText)
 
 	var nilErr *ParseError

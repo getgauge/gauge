@@ -38,17 +38,18 @@ type SpecParser struct {
 }
 
 const (
-	initial        = 1 << iota
-	specScope      = 1 << iota
-	scenarioScope  = 1 << iota
-	commentScope   = 1 << iota
-	tableScope     = 1 << iota
-	tableDataScope = 1 << iota
-	stepScope      = 1 << iota
-	contextScope   = 1 << iota
-	tearDownScope  = 1 << iota
-	conceptScope   = 1 << iota
-	keywordScope   = 1 << iota
+	initial             = 1 << iota
+	specScope           = 1 << iota
+	scenarioScope       = 1 << iota
+	commentScope        = 1 << iota
+	tableScope          = 1 << iota
+	tableSeparatorScope = 1 << iota
+	tableDataScope      = 1 << iota
+	stepScope           = 1 << iota
+	contextScope        = 1 << iota
+	tearDownScope       = 1 << iota
+	conceptScope        = 1 << iota
+	keywordScope        = 1 << iota
 )
 
 func (parser *SpecParser) initialize() {
@@ -435,7 +436,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			} else {
 				spec.AddComment(&gauge.Comment{token.LineText, token.LineNo})
 			}
-		} else if areUnderlined(token.Args) {
+		} else if areUnderlined(token.Args) && !isInState(*state, tableSeparatorScope) {
+			retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope)
+			addStates(state, tableSeparatorScope)
 			// skip table separator
 			result = ParseResult{Ok: true}
 		} else if isInState(*state, stepScope) {
@@ -453,7 +456,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			spec.DataTable.Table.AddRowValues(token.Args)
 			result = ParseResult{Ok: true}
 		}
-		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope)
+		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope, tableSeparatorScope)
 		return result
 	})
 

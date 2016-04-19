@@ -1298,3 +1298,15 @@ func (s *MySuite) TestTearDownSteps(c *C) {
 	c.Assert(spec.TearDownSteps[1].Value, Equals, "Example step2")
 	c.Assert(spec.TearDownSteps[1].LineNo, Equals, 10)
 }
+
+func (s *MySuite) TestParsingOfTableWithHyphens(c *C) {
+	p := new(SpecParser)
+
+	text := SpecBuilder().specHeading("My Spec Heading").text("|id|").text("|--|").text("|1 |").text("|- |").String()
+	tokens, _ := p.GenerateTokens(text)
+
+	spec, _ := p.CreateSpecification(tokens, gauge.NewConceptDictionary())
+	c.Assert((len(spec.DataTable.Table.Get("id"))), Equals, 2)
+	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
+	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "-")
+}
