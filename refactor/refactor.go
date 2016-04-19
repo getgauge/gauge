@@ -120,17 +120,16 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
-
 	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
+
+	var runner *runner.TestRunner
+	select {
+	case runner = <-agent.startChan.RunnerChan:
+	case err := <-agent.startChan.ErrorChan:
+		result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
+		return result
+	}
 	if !agent.isConcept {
-		var runner *runner.TestRunner
-		select {
-		case runner = <-agent.startChan.RunnerChan:
-		case err := <-agent.startChan.ErrorChan:
-			result.Errors = append(result.Errors, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
-			return result
-		}
-		defer runner.Kill()
 		stepName, err, warning := agent.getStepNameFromRunner(runner)
 		if err != nil {
 			result.Errors = append(result.Errors, err.Error())

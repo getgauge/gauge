@@ -143,7 +143,6 @@ func main() {
 }
 
 func refactorInit(args []string) {
-	startChan := api.StartAPI()
 	if len(args) < 1 {
 		logger.Fatalf("Flag needs at least two arguments: --refactor\nUsage : gauge --refactor <old step> <new step> [[spec directories]]")
 	}
@@ -151,6 +150,7 @@ func refactorInit(args []string) {
 	if len(args) > 1 {
 		specDirs = args[1:]
 	}
+	startChan := api.StartAPI()
 	refactor.RefactorSteps(*refactorSteps, args[0], startChan, specDirs)
 }
 
