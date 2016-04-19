@@ -477,3 +477,22 @@ func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 	_, parseRes := new(ConceptParser).Parse(conceptText)
 	c.Assert(parseRes.Error.Message, Equals, "Concept heading can have only Dynamic Parameters")
 }
+
+func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("create user").
+		step("a step").
+		scenarioHeading("Scenario Heading").
+		step("a step1").
+		String()
+
+	scenarioHeading := SpecBuilder().
+			scenarioHeading("Scenario Heading").
+			String()
+	_, res := new(ConceptParser).Parse(conceptText)
+
+	var nilErr *ParseError
+	c.Assert(res.Error, Not(Equals), nilErr)
+	c.Assert(res.Error.Message, Equals, "Scenario Heading is not allowed in concept file")
+	c.Assert(res.Error.LineText, Equals, strings.TrimSpace(scenarioHeading))
+}

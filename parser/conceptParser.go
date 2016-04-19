@@ -91,6 +91,8 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *Pa
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
+		} else if parser.isScenarioHeading(token) {
+			return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText}}
 		} else if parser.isTableDataRow(token) {
 			parser.processTableDataRow(token, &parser.currentConcept.Lookup)
 		} else {
@@ -114,11 +116,15 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *Pa
 }
 
 func (parser *ConceptParser) isConceptHeading(token *Token) bool {
-	return token.Kind == gauge.SpecKind || token.Kind == gauge.ScenarioKind
+	return token.Kind == gauge.SpecKind
 }
 
 func (parser *ConceptParser) isStep(token *Token) bool {
 	return token.Kind == gauge.StepKind
+}
+
+func (parser *ConceptParser) isScenarioHeading(token *Token) bool {
+	return token.Kind == gauge.ScenarioKind
 }
 
 func (parser *ConceptParser) isTableHeader(token *Token) bool {
@@ -207,7 +213,6 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.Co
 				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
-			logger.Errorf(err.Error())
 			return nil, &ParseResult{ParseError: err, FileName: conceptFile}
 		}
 	}
