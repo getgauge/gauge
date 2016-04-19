@@ -259,7 +259,7 @@ func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.W
 		logger.APILog.Error("Failed to get abs file path for %s: %s", event.Name, err)
 		return
 	}
-	if util.IsSpec(file) || util.IsConcept(file) {
+	if util.IsSpec(file) || util.IsConcept(file) || util.IsDir(file) {
 		switch event.Op {
 		case fsnotify.Create:
 			s.onFileAdd(watcher, file)
