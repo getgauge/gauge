@@ -24,7 +24,6 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"runtime"
 	"sort"
@@ -122,13 +121,13 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 		return false
 	}
 
-	thisPluginDir := path.Join(pluginsInstallDir, pluginName)
+	thisPluginDir := filepath.Join(pluginsInstallDir, pluginName)
 	if !common.DirExists(thisPluginDir) {
 		return false
 	}
 
 	if pluginVersion != "" {
-		pluginJSON := path.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
+		pluginJSON := filepath.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
 		if common.FileExists(pluginJSON) {
 			return true
 		}
@@ -478,7 +477,7 @@ func GetInstallDir(pluginName, version string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	pluginDir := path.Join(allPluginsInstallDir, pluginName)
+	pluginDir := filepath.Join(allPluginsInstallDir, pluginName)
 	if version != "" {
 		pluginDir = filepath.Join(pluginDir, version)
 	} else {
