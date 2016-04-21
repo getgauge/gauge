@@ -70,9 +70,9 @@ func (s *MySuite) TestCreateConceptDictionary(c *C) {
 	dict, res := CreateConceptsDictionary(false, []string{cpt, cpt})
 	os.Chdir(oldWd)
 
+	c.Assert(res.Ok, Equals, true)
 	c.Assert(dict, NotNil)
 	c.Assert(len(dict.ConceptsMap), Equals, 1)
-	c.Assert(res.Ok, Equals, true)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {

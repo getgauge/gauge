@@ -202,10 +202,10 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 }
 
 func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
-	cptFilesMap := make(map[string]struct{}, 0)
+	cptFilesMap := make(map[string]bool, 0)
 	for _, dir := range dirs {
 		for _, cpt := range util.GetConceptFiles(dir) {
-			cptFilesMap[cpt] = struct{}{}
+			cptFilesMap[cpt] = true
 		}
 	}
 	var conceptFiles []string
