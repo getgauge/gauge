@@ -18,9 +18,11 @@
 package parser
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 
 	. "gopkg.in/check.v1"
@@ -57,6 +59,19 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 
 	c.Assert(err, NotNil)
 	c.Assert(err.Message, Equals, "Duplicate concept definition found")
+}
+
+func (s *MySuite) TestCreateConceptDictionary(c *C) {
+	config.ProjectRoot, _ = filepath.Abs("testdata")
+	oldWd, _ := os.Getwd()
+	os.Chdir(config.ProjectRoot)
+	cpt := filepath.Join("dir1")
+
+	cd, res := CreateConceptsDictionary(false, []string{cpt, cpt})
+	os.Chdir(oldWd)
+
+	c.Assert(len(cd.ConceptsMap), Equals, 1)
+	c.Assert(res.Ok, Equals, true)
 }
 
 func (s *MySuite) TestConceptDictionaryWithNestedConcepts(c *C) {

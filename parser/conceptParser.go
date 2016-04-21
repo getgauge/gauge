@@ -200,10 +200,17 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 		concept.Lookup.AddArgName(arg.Value)
 	}
 }
+
 func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
+	cptFilesMap := make(map[string]struct{}, 0)
+	for _, dir := range dirs {
+		for _, cpt := range util.GetConceptFiles(dir) {
+			cptFilesMap[cpt] = struct{}{}
+		}
+	}
 	var conceptFiles []string
-	for _, d := range dirs {
-		conceptFiles = append(conceptFiles, util.GetConceptFiles(d)...)
+	for cpt := range cptFilesMap {
+		conceptFiles = append(conceptFiles, cpt)
 	}
 
 	conceptsDictionary := gauge.NewConceptDictionary()
