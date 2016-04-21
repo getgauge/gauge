@@ -65,12 +65,13 @@ func (s *MySuite) TestCreateConceptDictionary(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("testdata")
 	oldWd, _ := os.Getwd()
 	os.Chdir(config.ProjectRoot)
-	cpt := filepath.Join("dir1")
+	cpt := "dir1"
 
-	cd, res := CreateConceptsDictionary(false, []string{cpt, cpt})
+	dict, res := CreateConceptsDictionary(false, []string{cpt, cpt})
 	os.Chdir(oldWd)
 
-	c.Assert(len(cd.ConceptsMap), Equals, 1)
+	c.Assert(dict, NotNil)
+	c.Assert(len(dict.ConceptsMap), Equals, 1)
 	c.Assert(res.Ok, Equals, true)
 }
 
