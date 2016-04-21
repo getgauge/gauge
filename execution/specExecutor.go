@@ -76,7 +76,6 @@ func (e *specExecutor) execute() *result.SpecResult {
 		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
 		return e.specResult
 	}
-
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
 		return e.specResult
@@ -87,8 +86,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 	if !e.specResult.IsFailed {
 		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
 		if dataTableRowCount == 0 {
-			scenarioResult := e.executeScenarios()
-			e.specResult.AddScenarioResults(scenarioResult)
+			scenarioResults := e.executeScenarios()
+			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
 			e.executeTableDrivenSpec()
 		}
@@ -180,7 +179,7 @@ func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult 
 func (e *specExecutor) notifyBeforeSpecHook() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
 		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	res := e.executeHook(m, e.specResult)
+	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook, e.consoleReporter)
@@ -190,16 +189,16 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 func (e *specExecutor) notifyAfterSpecHook() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding.Enum(),
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	res := e.executeHook(m, e.specResult)
+	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook, e.consoleReporter)
 	}
 }
 
-func (e *specExecutor) executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker) *gauge_messages.ProtoExecutionResult {
-	e.pluginHandler.NotifyPlugins(message)
-	executionResult := executeAndGetStatus(e.runner, message)
+func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r *runner.TestRunner, ph *plugin.Handler) *gauge_messages.ProtoExecutionResult {
+	ph.NotifyPlugins(message)
+	executionResult := executeAndGetStatus(r, message)
 	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -233,7 +232,7 @@ func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *ga
 	}
 }
 
-func (e *specExecutor) getContextItemsForScenarioExecution(steps []*gauge.Step) []*gauge_messages.ProtoItem {
+func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) []*gauge_messages.ProtoItem {
 	items := make([]gauge.Item, len(steps))
 	for i, context := range steps {
 		items[i] = context
@@ -247,6 +246,46 @@ func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
 
 func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
+}
+
+func (e *specExecutor) executeScenarios() []*result.ScenarioResult {
+	var scenarioResults []*result.ScenarioResult
+	for _, scenario := range e.specification.Scenarios {
+		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
+	}
+	return scenarioResults
+}
+
+func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
+	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
+		Name:     proto.String(scenario.Heading.Value),
+		Tags:     getTagValue(scenario.Tags),
+		IsFailed: proto.Bool(false),
+	}
+
+	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
+	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
+
+	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap)
+	scenarioExec.execute(scenarioResult, scenario)
+	if scenarioResult.ProtoScenario.GetSkipped() {
+		e.specResult.ScenarioSkippedCount++
+	}
+	return scenarioResult
+}
+
+func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
+	scenarioResult.AddContexts(e.getItemsForScenarioExecution(e.specification.Contexts))
+	scenarioResult.AddTearDownSteps(e.getItemsForScenarioExecution(e.specification.TearDownSteps))
+	scenarioResult.AddItems(e.resolveItems(scenario.Items))
+}
+
+func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
+	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
+	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+	e.specResult.ScenarioSkippedCount++
+	return scenarioResult
 }
 
 func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters []*gauge_messages.Parameter) {

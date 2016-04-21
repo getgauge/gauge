@@ -51,23 +51,29 @@ func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	return result
 }
 
-func (suiteResult *SuiteResult) SetFailure() {
-	suiteResult.IsFailed = true
+func (sr *SuiteResult) SetFailure() {
+	sr.IsFailed = true
 }
 
-func (suiteResult *SuiteResult) AddSpecResult(specResult *SpecResult) {
+func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	if specResult.IsFailed {
-		suiteResult.IsFailed = true
-		suiteResult.SpecsFailedCount++
+		sr.IsFailed = true
+		sr.SpecsFailedCount++
 	}
-	suiteResult.ExecutionTime += specResult.ExecutionTime
-	suiteResult.SpecResults = append(suiteResult.SpecResults, specResult)
+	sr.ExecutionTime += specResult.ExecutionTime
+	sr.SpecResults = append(sr.SpecResults, specResult)
 }
 
-func (suiteResult *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &suiteResult.PreSuite
+func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
+	for _, result := range specResults {
+		sr.AddSpecResult(result)
+	}
 }
 
-func (suiteResult *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &suiteResult.PostSuite
+func (sr *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
+	return &sr.PreSuite
+}
+
+func (sr *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
+	return &sr.PostSuite
 }
