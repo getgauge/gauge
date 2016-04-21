@@ -24,19 +24,18 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/util"
 )
 
 func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
 	parseResultsChan := make(chan *ParseResult, len(specFiles))
 	specsChan := make(chan *gauge.Specification, len(specFiles))
-	parseResults := make([]*ParseResult, 0)
-	specs := make([]*gauge.Specification, 0)
+	var parseResults []*ParseResult
+	var specs []*gauge.Specification
 
 	for _, specFile := range specFiles {
 		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
 	}
-	for _, _ = range specFiles {
+	for _ = range specFiles {
 		parseResults = append(parseResults, <-parseResultsChan)
 		spec := <-specsChan
 		if spec != nil {
@@ -63,12 +62,6 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	spec.FileName = specFile
 	specChannel <- spec
 	parseResultChan <- parseResult
-}
-
-func FindSpecs(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
-	specFiles := util.GetSpecFiles(specSource)
-
-	return ParseSpecFiles(specFiles, conceptDictionary)
 }
 
 func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*gauge.StepValue, error) {

@@ -3,6 +3,7 @@ package filter
 import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 )
 
 var ExecuteTags string
@@ -37,7 +38,7 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 		if isIndexedSpec(specSource) {
 			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)
 		} else {
-			specs, specParseResults = parser.FindSpecs(specSource, conceptDictionary)
+			specs, specParseResults = parser.ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary)
 		}
 		parser.HandleParseResult(specParseResults...)
 		allSpecs = append(allSpecs, specs...)
@@ -47,6 +48,6 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*parser.ParseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
-	parsedSpecs, parseResult := parser.FindSpecs(specName, conceptDictionary)
+	parsedSpecs, parseResult := parser.ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary)
 	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
 }

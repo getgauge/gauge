@@ -95,9 +95,8 @@ func processStepText(text string) (string, []string, error) {
 	curBuffer := func(state int) *bytes.Buffer {
 		if isInAnyState(state, inQuotes, inDynamicParam) {
 			return &argText
-		} else {
-			return &stepValue
 		}
+		return &stepValue
 	}
 
 	currentState := inDefault

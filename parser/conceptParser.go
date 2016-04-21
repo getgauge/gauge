@@ -59,9 +59,9 @@ func (parser *ConceptParser) resetState() {
 
 func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *ParseDetailResult) {
 	parser.currentState = initial
-	concepts := make([]*gauge.Step, 0)
+	var concepts []*gauge.Step
 	var parseDetails *ParseDetailResult
-	preComments := make([]*gauge.Comment, 0)
+	var preComments []*gauge.Comment
 	addPreComments := false
 	for _, token := range tokens {
 		if parser.isConceptHeading(token) {

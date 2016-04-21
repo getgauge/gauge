@@ -78,7 +78,8 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	var specParseResults []*parser.ParseResult
 
 	for _, dir := range specDirs {
-		specSlice, specParseResultsSlice := parser.FindSpecs(filepath.Join(config.ProjectRoot, dir), &gauge.ConceptDictionary{})
+		specFiles := util.GetSpecFiles(filepath.Join(config.ProjectRoot, dir))
+		specSlice, specParseResultsSlice := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
 		specs = append(specs, specSlice...)
 		specParseResults = append(specParseResults, specParseResultsSlice...)
 	}

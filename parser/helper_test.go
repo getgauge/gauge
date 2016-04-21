@@ -133,7 +133,7 @@ func (s *MySuite) TestAddStates(c *C) {
 }
 
 func (s *MySuite) TestAreUnderlinedForEmptyArray(c *C) {
-	emptyAray := make([]string, 0)
+	var emptyAray []string
 	c.Assert(false, Equals, areUnderlined(emptyAray))
 }
 
