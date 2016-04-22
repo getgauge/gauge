@@ -79,7 +79,7 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
 	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
-	return executeAndGetStatus(e.runner, initScenarioDataStoreMessage)
+	return e.runner.ExecuteAndGetStatus(initScenarioDataStoreMessage)
 }
 
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {

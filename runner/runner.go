@@ -34,11 +34,13 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
+	"github.com/golang/protobuf/proto"
 )
 
 type TestRunner struct {
@@ -156,6 +158,30 @@ func (testRunner *TestRunner) Kill() error {
 
 func (testRunner *TestRunner) killRunner() error {
 	return testRunner.Cmd.Process.Kill()
+}
+
+func (tr *TestRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	response, err := conn.GetResponseForGaugeMessage(message, tr.Connection)
+	if err != nil {
+		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
+	}
+
+	if response.GetMessageType() == gauge_messages.Message_ExecutionStatusResponse {
+		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
+		if executionResult == nil {
+			errMsg := "ProtoExecutionResult obtained is nil"
+			logger.Errorf(errMsg)
+			return errorResult(errMsg)
+		}
+		return executionResult
+	}
+	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
+	logger.Errorf(errMsg)
+	return errorResult(errMsg)
+}
+
+func errorResult(message string) *gauge_messages.ProtoExecutionResult {
+	return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(message), RecoverableError: proto.Bool(false)}
 }
 
 // Looks for a runner configuration inside the runner directory

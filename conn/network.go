@@ -21,13 +21,14 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 	"net"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/golang/protobuf/proto"
 )
 
 func WriteDataAndGetResponse(conn net.Conn, messageBytes []byte) ([]byte, error) {

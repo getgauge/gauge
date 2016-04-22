@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
@@ -173,7 +172,7 @@ func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
-	return executeAndGetStatus(e.runner, initSpecDataStoreMessage)
+	return e.runner.ExecuteAndGetStatus(initSpecDataStoreMessage)
 }
 
 func (e *specExecutor) notifyBeforeSpecHook() {
@@ -198,7 +197,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 
 func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r *runner.TestRunner, ph *plugin.Handler) *gauge_messages.ProtoExecutionResult {
 	ph.NotifyPlugins(message)
-	executionResult := executeAndGetStatus(r, message)
+	executionResult := r.ExecuteAndGetStatus(message)
 	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())
 	return executionResult
 }
@@ -309,30 +308,6 @@ func getTagValue(tags *gauge.Tags) []string {
 		tagValues = append(tagValues, tags.Values...)
 	}
 	return tagValues
-}
-
-func executeAndGetStatus(runner *runner.TestRunner, message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-	response, err := conn.GetResponseForGaugeMessage(message, runner.Connection)
-	if err != nil {
-		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
-	}
-
-	if response.GetMessageType() == gauge_messages.Message_ExecutionStatusResponse {
-		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
-		if executionResult == nil {
-			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Errorf(errMsg)
-			return errorResult(errMsg)
-		}
-		return executionResult
-	}
-	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-	logger.Errorf(errMsg)
-	return errorResult(errMsg)
-}
-
-func errorResult(message string) *gauge_messages.ProtoExecutionResult {
-	return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(message), RecoverableError: proto.Bool(false)}
 }
 
 func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {

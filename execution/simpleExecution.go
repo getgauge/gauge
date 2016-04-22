@@ -137,12 +137,12 @@ func (e *simpleExecution) notifyAfterSuite() {
 func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
-	return executeAndGetStatus(e.runner, m)
+	return e.runner.ExecuteAndGetStatus(m)
 }
 
 func (e *simpleExecution) executeHook(m *gauge_messages.Message) *(gauge_messages.ProtoExecutionResult) {
 	e.pluginHandler.NotifyPlugins(m)
-	return executeAndGetStatus(e.runner, m)
+	return e.runner.ExecuteAndGetStatus(m)
 }
 
 func (e *simpleExecution) notifyExecutionResult() {
