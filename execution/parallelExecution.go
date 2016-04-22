@@ -47,7 +47,7 @@ type parallelExecution struct {
 	specCollection           *gauge.SpecCollection
 	pluginHandler            *plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
-	runner                   *runner.TestRunner
+	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
 	consoleReporter          reporter.Reporter
@@ -158,7 +158,7 @@ func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, reporte
 	e.startSpecsExecutionWithRunner(s, resChan, runner, reporter)
 }
 
-func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner *runner.TestRunner, reporter reporter.Reporter) {
+func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner runner.Runner, reporter reporter.Reporter) {
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, reporter, e.errMaps, false)
 	se := newSimpleExecution(executionInfo)
 	se.execute()

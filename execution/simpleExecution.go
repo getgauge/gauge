@@ -37,7 +37,7 @@ var TableRows = ""
 
 type simpleExecution struct {
 	manifest             *manifest.Manifest
-	runner               *runner.TestRunner
+	runner               runner.Runner
 	specCollection       *gauge.SpecCollection
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo

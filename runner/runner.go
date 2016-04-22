@@ -43,14 +43,21 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-type TestRunner struct {
-	mutex        *sync.Mutex
-	Cmd          *exec.Cmd
-	Connection   net.Conn
-	ErrorChannel chan error
+type Runner interface {
+	ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
+	IsProcessRunning() bool
+	Kill() error
+	Connection() net.Conn
 }
 
-type Runner struct {
+type LanguageRunner struct {
+	mutex        *sync.Mutex
+	Cmd          *exec.Cmd
+	connection   net.Conn
+	errorChannel chan error
+}
+
+type RunnerInfo struct {
 	Id          string
 	Name        string
 	Version     string
@@ -101,8 +108,8 @@ func ExecuteInitHookForRunner(language string) error {
 	return cmd.Wait()
 }
 
-func GetRunnerInfo(language string) (*Runner, error) {
-	runnerInfo := new(Runner)
+func GetRunnerInfo(language string) (*RunnerInfo, error) {
+	runnerInfo := new(RunnerInfo)
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
 	if err != nil {
 		return nil, err
@@ -119,22 +126,22 @@ func GetRunnerInfo(language string) (*Runner, error) {
 	}
 	return runnerInfo, nil
 }
-func (testRunner *TestRunner) IsProcessRunning() bool {
-	testRunner.mutex.Lock()
-	ps := testRunner.Cmd.ProcessState
-	testRunner.mutex.Unlock()
+func (r *LanguageRunner) IsProcessRunning() bool {
+	r.mutex.Lock()
+	ps := r.Cmd.ProcessState
+	r.mutex.Unlock()
 	return ps == nil || !ps.Exited()
 }
 
-func (testRunner *TestRunner) Kill() error {
-	if testRunner.IsProcessRunning() {
-		defer testRunner.Connection.Close()
-		conn.SendProcessKillMessage(testRunner.Connection)
+func (r *LanguageRunner) Kill() error {
+	if r.IsProcessRunning() {
+		defer r.connection.Close()
+		conn.SendProcessKillMessage(r.connection)
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if testRunner.IsProcessRunning() {
+				if r.IsProcessRunning() {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -149,19 +156,23 @@ func (testRunner *TestRunner) Kill() error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			logger.Warning("Killing runner with PID:%d forcefully", testRunner.Cmd.Process.Pid)
-			return testRunner.killRunner()
+			logger.Warning("Killing runner with PID:%d forcefully", r.Cmd.Process.Pid)
+			return r.killRunner()
 		}
 	}
 	return nil
 }
 
-func (testRunner *TestRunner) killRunner() error {
-	return testRunner.Cmd.Process.Kill()
+func (r *LanguageRunner) Connection() net.Conn {
+	return r.connection
 }
 
-func (tr *TestRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-	response, err := conn.GetResponseForGaugeMessage(message, tr.Connection)
+func (r *LanguageRunner) killRunner() error {
+	return r.Cmd.Process.Kill()
+}
+
+func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	response, err := conn.GetResponseForGaugeMessage(message, r.connection)
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
 	}
@@ -186,8 +197,8 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*TestRunner, error) {
-	var r Runner
+func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*LanguageRunner, error) {
+	var r RunnerInfo
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
 		return nil, err
@@ -210,12 +221,12 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	testRunner := &TestRunner{Cmd: cmd, ErrorChannel: errChannel, mutex: &sync.Mutex{}}
+	testRunner := &LanguageRunner{Cmd: cmd, errorChannel: errChannel, mutex: &sync.Mutex{}}
 	testRunner.waitAndGetErrorMessage()
 	return testRunner, nil
 }
 
-func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, error) {
+func getLanguageJSONFilePath(manifest *manifest.Manifest, r *RunnerInfo) (string, error) {
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(manifest.Language)
 	if err != nil {
 		return "", err
@@ -231,15 +242,15 @@ func getLanguageJSONFilePath(manifest *manifest.Manifest, r *Runner) (string, er
 	return filepath.Dir(languageJSONFilePath), nil
 }
 
-func (t *TestRunner) waitAndGetErrorMessage() {
+func (r *LanguageRunner) waitAndGetErrorMessage() {
 	go func() {
-		pState, err := t.Cmd.Process.Wait()
-		t.mutex.Lock()
-		t.Cmd.ProcessState = pState
-		t.mutex.Unlock()
+		pState, err := r.Cmd.Process.Wait()
+		r.mutex.Lock()
+		r.Cmd.ProcessState = pState
+		r.mutex.Unlock()
 		if err != nil {
 			logger.Debug("Runner exited with error: %s", err)
-			t.ErrorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
+			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 	}()
 }
@@ -259,7 +270,7 @@ func getCleanEnv(port string, env []string) []string {
 	return env
 }
 
-func getOsSpecificCommand(r Runner) []string {
+func getOsSpecificCommand(r RunnerInfo) []string {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -277,14 +288,14 @@ func getOsSpecificCommand(r Runner) []string {
 
 type StartChannels struct {
 	// this will hold the runner
-	RunnerChan chan *TestRunner
+	RunnerChan chan Runner
 	// this will hold the error while creating runner
 	ErrorChan chan error
 	// this holds a flag based on which the runner is terminated
 	KillChan chan bool
 }
 
-func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (*TestRunner, error) {
+func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (Runner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -298,8 +309,8 @@ func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter
 		return nil, err
 	}
 
-	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.ErrorChannel)
-	testRunner.Connection = runnerConnection
+	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
+	testRunner.connection = runnerConnection
 	if connectionError != nil {
 		logger.Debug("Runner connection error: %s", connectionError)
 		err := testRunner.killRunner()

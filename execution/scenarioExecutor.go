@@ -32,7 +32,7 @@ import (
 )
 
 type scenarioExecutor struct {
-	runner               *runner.TestRunner
+	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	consoleReporter      reporter.Reporter
@@ -40,7 +40,7 @@ type scenarioExecutor struct {
 	errMap               *validation.ValidationErrMaps
 }
 
-func newScenarioExecutor(r *runner.TestRunner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, rep reporter.Reporter, errMap *validation.ValidationErrMaps) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, rep reporter.Reporter, errMap *validation.ValidationErrMaps) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,

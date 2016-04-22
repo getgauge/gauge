@@ -44,7 +44,7 @@ type execution interface {
 type executionInfo struct {
 	manifest        *manifest.Manifest
 	specs           *gauge.SpecCollection
-	runner          *runner.TestRunner
+	runner          runner.Runner
 	pluginHandler   *plugin.Handler
 	consoleReporter reporter.Reporter
 	errMaps         *validation.ValidationErrMaps
@@ -52,7 +52,7 @@ type executionInfo struct {
 	numberOfStreams int
 }
 
-func newExecutionInfo(s *gauge.SpecCollection, r *runner.TestRunner, ph *plugin.Handler, rep reporter.Reporter, e *validation.ValidationErrMaps, p bool) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, rep reporter.Reporter, e *validation.ValidationErrMaps, p bool) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -91,7 +91,7 @@ func newExecution(executionInfo *executionInfo) execution {
 	return newSimpleExecution(executionInfo)
 }
 
-func startAPI() *runner.TestRunner {
+func startAPI() runner.Runner {
 	sc := api.StartAPI()
 	select {
 	case runner := <-sc.RunnerChan:

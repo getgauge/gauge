@@ -39,7 +39,7 @@ import (
 
 type gaugeAPIMessageHandler struct {
 	specInfoGatherer *infoGatherer.SpecInfoGatherer
-	Runner           *runner.TestRunner
+	Runner           runner.Runner
 }
 
 func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, connection net.Conn) {

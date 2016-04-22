@@ -38,7 +38,7 @@ import (
 type specExecutor struct {
 	specification        *gauge.Specification
 	dataTableIndex       indexRange
-	runner               *runner.TestRunner
+	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
@@ -52,7 +52,7 @@ type indexRange struct {
 	end   int
 }
 
-func newSpecExecutor(s *gauge.Specification, r *runner.TestRunner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps) *specExecutor {
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps) *specExecutor {
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
 }
 
@@ -195,7 +195,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 	}
 }
 
-func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r *runner.TestRunner, ph *plugin.Handler) *gauge_messages.ProtoExecutionResult {
+func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r runner.Runner, ph *plugin.Handler) *gauge_messages.ProtoExecutionResult {
 	ph.NotifyPlugins(message)
 	executionResult := r.ExecuteAndGetStatus(message)
 	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())

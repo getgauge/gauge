@@ -46,13 +46,13 @@ type ValidationErrMaps struct {
 type validator struct {
 	manifest           *manifest.Manifest
 	specsToExecute     []*gauge.Specification
-	runner             *runner.TestRunner
+	runner             runner.Runner
 	conceptsDictionary *gauge.ConceptDictionary
 }
 
 type specValidator struct {
 	specification        *gauge.Specification
-	runner               *runner.TestRunner
+	runner               runner.Runner
 	conceptsDictionary   *gauge.ConceptDictionary
 	stepValidationErrors []*StepValidationError
 	stepValidationCache  map[string]*StepValidationError
@@ -80,7 +80,7 @@ func Validate(args []string) {
 }
 
 //TODO : duplicate in execute.go. Need to fix runner init.
-func startAPI() *runner.TestRunner {
+func startAPI() runner.Runner {
 	sc := api.StartAPI()
 	select {
 	case runner := <-sc.RunnerChan:
@@ -91,7 +91,7 @@ func startAPI() *runner.TestRunner {
 	return nil
 }
 
-func ValidateSpecs(args []string, r *runner.TestRunner) (*gauge.SpecCollection, *ValidationErrMaps) {
+func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *ValidationErrMaps) {
 	s, c := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
@@ -177,7 +177,7 @@ func NewValidationError(s *gauge.Step, m string, f string, e *gauge_messages.Ste
 
 type validationErrors map[*gauge.Specification][]*StepValidationError
 
-func newValidator(m *manifest.Manifest, s []*gauge.Specification, r *runner.TestRunner, c *gauge.ConceptDictionary) *validator {
+func newValidator(m *manifest.Manifest, s []*gauge.Specification, r runner.Runner, c *gauge.ConceptDictionary) *validator {
 	return &validator{manifest: m, specsToExecute: s, runner: r, conceptsDictionary: c}
 }
 
@@ -229,7 +229,7 @@ var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
 func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(s.Value), NumberOfParameters: proto.Int(len(s.Args))}}
-	r, err := conn.GetResponseForMessageWithTimeout(m, v.runner.Connection, config.RunnerRequestTimeout())
+	r, err := conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
 	if err != nil {
 		return NewValidationError(s, err.Error(), v.specification.FileName, nil)
 	}

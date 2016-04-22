@@ -35,7 +35,7 @@ import (
 
 // StartAPI calls StartAPIService and returns the channels
 func StartAPI() *runner.StartChannels {
-	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
 	go startAPIService(0, startChan, sig)
 	return startChan
@@ -65,7 +65,7 @@ func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGat
 	startChannels.RunnerChan <- runner
 }
 
-func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
+func connectToRunner(killChannel chan bool) (runner.Runner, error) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func connectToRunner(killChannel chan bool) (*runner.TestRunner, error) {
 }
 
 func runAPIServiceIndefinitely(port int, specDirs []string) {
-	startChan := &runner.StartChannels{RunnerChan: make(chan *runner.TestRunner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.MakeListOfAvailableSteps()

@@ -423,8 +423,8 @@ func getVersionedPluginDirName(pluginZip string) string {
 	return re.FindString(zipFileName)
 }
 
-func getRunnerJSONContents(file string) (*runner.Runner, error) {
-	var r runner.Runner
+func getRunnerJSONContents(file string) (*runner.RunnerInfo, error) {
+	var r runner.RunnerInfo
 	contents, err := common.ReadFileContents(file)
 	if err != nil {
 		return nil, err

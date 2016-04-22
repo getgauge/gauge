@@ -123,7 +123,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specificati
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
 	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
 
-	var runner *runner.TestRunner
+	var runner runner.Runner
 	select {
 	case runner = <-agent.startChan.RunnerChan:
 	case err := <-agent.startChan.ErrorChan:
@@ -211,7 +211,7 @@ func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartCh
 	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, nil
 }
 
-func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.TestRunner, stepName string) ([]string, error) {
+func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string) ([]string, error) {
 	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName)
 	if err != nil {
 		return nil, err
@@ -225,8 +225,8 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner *runner.
 	return refactorResponse.GetFilesChanged(), runnerError
 }
 
-func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *runner.TestRunner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
-	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.Connection, config.RefactorTimeout())
+func (agent *rephraseRefactorer) sendRefactorRequest(testRunner runner.Runner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
+	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.Connection(), config.RefactorTimeout())
 	if err != nil {
 		return &gauge_messages.RefactorResponse{Success: proto.Bool(false), Error: proto.String(err.Error())}
 	}
@@ -234,7 +234,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner *runner.TestRunn
 }
 
 //Todo: Check for inline tables
-func (agent *rephraseRefactorer) createRefactorRequest(runner *runner.TestRunner, stepName string) (*gauge_messages.Message, error) {
+func (agent *rephraseRefactorer) createRefactorRequest(runner runner.Runner, stepName string) (*gauge_messages.Message, error) {
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
@@ -264,9 +264,9 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return parser.ConvertToStepText(agent.newStep.Fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner *runner.TestRunner) (string, error, *parser.Warning) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest.Enum(), StepNameRequest: &gauge_messages.StepNameRequest{StepValue: proto.String(agent.oldStep.Value)}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.Connection, config.RunnerRequestTimeout())
+	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.Connection(), config.RunnerRequestTimeout())
 	if err != nil {
 		return "", err, nil
 	}

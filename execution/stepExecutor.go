@@ -31,7 +31,7 @@ import (
 )
 
 type stepExecutor struct {
-	runner               *runner.TestRunner
+	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	consoleReporter      reporter.Reporter
