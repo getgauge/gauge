@@ -24,6 +24,9 @@ type Result interface {
 	getPreHook() **(gauge_messages.ProtoHookFailure)
 	getPostHook() **(gauge_messages.ProtoHookFailure)
 	SetFailure()
+	GetFailed() bool
+	item() interface{}
+	ExecTime() int64
 }
 
 // ExecTimeTracker is an interface for tracking execution time

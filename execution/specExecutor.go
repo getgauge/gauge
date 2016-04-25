@@ -99,7 +99,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 }
 
 func (e *specExecutor) executeTableDrivenSpec() {
-	var dataTableScenarioExecutionResult [][]*result.ScenarioResult
+	var dataTableScenarioExecutionResult [][]result.Result
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
 		var dataTable gauge.Table
 		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
@@ -214,7 +214,7 @@ func (e *specExecutor) skipSpecForError(err error) {
 }
 
 func (e *specExecutor) skipSpec() {
-	var scenarioResults []*result.ScenarioResult
+	var scenarioResults []result.Result
 	for _, scenario := range e.specification.Scenarios {
 		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
@@ -247,8 +247,8 @@ func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
 }
 
-func (e *specExecutor) executeScenarios() []*result.ScenarioResult {
-	var scenarioResults []*result.ScenarioResult
+func (e *specExecutor) executeScenarios() []result.Result {
+	var scenarioResults []result.Result
 	for _, scenario := range e.specification.Scenarios {
 		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
 	}

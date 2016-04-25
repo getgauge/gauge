@@ -30,7 +30,7 @@ func (scenarioResult *ScenarioResult) SetFailure() {
 	scenarioResult.ProtoScenario.Failed = proto.Bool(true)
 }
 
-func (scenarioResult *ScenarioResult) GetFailure() bool {
+func (scenarioResult *ScenarioResult) GetFailed() bool {
 	return scenarioResult.ProtoScenario.GetFailed()
 }
 
@@ -56,6 +56,10 @@ func (scenarioResult *ScenarioResult) AddExecTime(execTime int64) {
 	scenarioResult.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
 }
 
+func (s *ScenarioResult) ExecTime() int64 {
+	return *s.ProtoScenario.ExecutionTime
+}
+
 func (scenarioResult *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messages.ProtoItem) {
 	for _, item := range protoItems {
 		if item.GetItemType() == gauge_messages.ProtoItem_Step {
@@ -74,4 +78,8 @@ func (scenarioResult *ScenarioResult) getPreHook() **(gauge_messages.ProtoHookFa
 
 func (scenarioResult *ScenarioResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
 	return &scenarioResult.ProtoScenario.PostHookFailure
+}
+
+func (r *ScenarioResult) item() interface{} {
+	return r.ProtoScenario
 }

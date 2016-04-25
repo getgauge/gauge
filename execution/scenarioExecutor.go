@@ -66,14 +66,14 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	e.notifyBeforeScenarioHook(scenarioResult)
 	if !scenarioResult.ProtoScenario.GetFailed() {
 		e.executeContextSteps(scenarioResult)
-		if !scenarioResult.GetFailure() {
+		if !scenarioResult.GetFailed() {
 			e.executeScenarioSteps(scenarioResult)
 		}
 		e.executeTearDownSteps(scenarioResult)
 	}
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
-	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailure())
+	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailed())
 }
 
 func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {

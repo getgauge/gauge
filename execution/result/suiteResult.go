@@ -77,3 +77,15 @@ func (sr *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
 func (sr *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
 	return &sr.PostSuite
 }
+
+func (sr *SuiteResult) ExecTime() int64 {
+	return sr.ExecutionTime
+}
+
+func (sr *SuiteResult) GetFailed() bool {
+	return sr.IsFailed
+}
+
+func (sr *SuiteResult) item() interface{} {
+	return nil
+}
