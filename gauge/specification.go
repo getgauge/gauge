@@ -164,16 +164,20 @@ func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs 
 }
 
 func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
-	isRefactored := false
-	for _, step := range spec.Contexts {
-		isConcept := false
-		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
-	}
+	isRefactored := spec.rename(spec.Contexts, oldStep, newStep, false, orderMap)
 	for _, scenario := range spec.Scenarios {
 		refactor := scenario.renameSteps(oldStep, newStep, orderMap)
 		if refactor {
 			isRefactored = refactor
 		}
+	}
+	return spec.rename(spec.TearDownSteps, oldStep, newStep, isRefactored, orderMap)
+}
+
+func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) bool{
+	isConcept := false
+	for _, step := range steps {
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
 	return isRefactored
 }

@@ -47,8 +47,8 @@ func (scenario *Scenario) AddComment(comment *Comment) {
 
 func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
 	isRefactored := false
+	isConcept := false
 	for _, step := range scenario.Steps {
-		isConcept := false
 		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
 	return isRefactored

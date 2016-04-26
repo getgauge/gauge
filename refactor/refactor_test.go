@@ -447,3 +447,49 @@ func (s *MySuite) TestGenerateNewStepNameWhenParametersAreUnchanged(c *C) {
 
 	c.Assert(linetext, Equals, "make comment <a>")
 }
+
+func (s *MySuite) TestRefactoringInContextStep(c *C) {
+	oldStep := "first step {static} and {static} and {static} and {static}"
+	oldStep1 := "first step <a> and <b> and <c> and <d>"
+	newStep := "second step <d> and <b> and <c> and <a>"
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep + " sdf", LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+	}
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
+	c.Assert(specs[0].Contexts[0].Value, Equals, "second step {} and {} and {} and {}")
+	c.Assert(specs[0].Contexts[0].Args[0].Value, Equals, "id")
+	c.Assert(specs[0].Contexts[0].Args[1].Value, Equals, "address")
+	c.Assert(specs[0].Contexts[0].Args[2].Value, Equals, "number")
+	c.Assert(specs[0].Contexts[0].Args[3].Value, Equals, "name")
+}
+
+func (s *MySuite) TestRefactoringInTearDownStep(c *C) {
+	oldStep := "first step {static} and {static} and {static} and {static}"
+	oldStep1 := "first step <a> and <b> and <c> and <d>"
+	newStep := "second step <d> and <b> and <c> and <a>"
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep + "sdf", LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep + " sdf", LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+		&parser.Token{Kind: gauge.TearDownKind, Value: "____", LineNo: 3},
+		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3, Args: []string{"name", "address", "number", "id"}},
+	}
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	agent, _ := getRefactorAgent(oldStep1, newStep, nil)
+	specs := append(make([]*gauge.Specification, 0), spec)
+	dictionary := gauge.NewConceptDictionary()
+	agent.rephraseInSpecsAndConcepts(&specs, dictionary)
+	c.Assert(specs[0].TearDownSteps[0].Value, Equals, "second step {} and {} and {} and {}")
+	c.Assert(specs[0].TearDownSteps[0].Args[0].Value, Equals, "id")
+	c.Assert(specs[0].TearDownSteps[0].Args[1].Value, Equals, "address")
+	c.Assert(specs[0].TearDownSteps[0].Args[2].Value, Equals, "number")
+	c.Assert(specs[0].TearDownSteps[0].Args[3].Value, Equals, "name")
+}
