@@ -83,11 +83,11 @@ func (specResult *SpecResult) AddExecTime(execTime int64) {
 	specResult.ExecutionTime += execTime
 }
 
-func (specResult *SpecResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
+func (specResult *SpecResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
 	return &specResult.ProtoSpec.PreHookFailure
 }
 
-func (specResult *SpecResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
+func (specResult *SpecResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
 	return &specResult.ProtoSpec.PostHookFailure
 }
 

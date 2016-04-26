@@ -21,8 +21,8 @@ import "github.com/getgauge/gauge/gauge_messages"
 
 // Result represents execution result
 type Result interface {
-	getPreHook() **(gauge_messages.ProtoHookFailure)
-	getPostHook() **(gauge_messages.ProtoHookFailure)
+	GetPreHook() **(gauge_messages.ProtoHookFailure)
+	GetPostHook() **(gauge_messages.ProtoHookFailure)
 	SetFailure()
 	GetFailed() bool
 	item() interface{}
@@ -34,20 +34,23 @@ type ExecTimeTracker interface {
 	AddExecTime(int64)
 }
 
+// GetProtoHookFailure returns the failure result of hook execution
 func GetProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *(gauge_messages.ProtoHookFailure) {
 	return &gauge_messages.ProtoHookFailure{StackTrace: executionResult.StackTrace, ErrorMessage: executionResult.ErrorMessage, ScreenShot: executionResult.ScreenShot}
 }
 
+// AddPreHook adds the before hook execution result to the actual result object
 func AddPreHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
 	if executionResult.GetFailed() {
-		*(result.getPreHook()) = GetProtoHookFailure(executionResult)
+		*(result.GetPreHook()) = GetProtoHookFailure(executionResult)
 		result.SetFailure()
 	}
 }
 
+// AddPostHook adds the after hook execution result to the actual result object
 func AddPostHook(result Result, executionResult *gauge_messages.ProtoExecutionResult) {
 	if executionResult.GetFailed() {
-		*(result.getPostHook()) = GetProtoHookFailure(executionResult)
+		*(result.GetPostHook()) = GetProtoHookFailure(executionResult)
 		result.SetFailure()
 	}
 }

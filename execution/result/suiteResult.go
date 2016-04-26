@@ -70,11 +70,11 @@ func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
 	}
 }
 
-func (sr *SuiteResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
+func (sr *SuiteResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
 	return &sr.PreSuite
 }
 
-func (sr *SuiteResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
+func (sr *SuiteResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
 	return &sr.PostSuite
 }
 

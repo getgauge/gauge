@@ -155,7 +155,7 @@ func (e *scenarioExecutor) executeItem(protoItem *gauge_messages.ProtoItem) *gau
 		return e.executeConcept(protoItem.GetConcept())
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
-		protoItem.GetStep().StepExecutionResult = se.executeStep(protoItem.GetStep())
+		protoItem.GetStep().StepExecutionResult = se.executeStep(protoItem.GetStep()).ProtoStepExecResult()
 		return protoItem.GetStep().StepExecutionResult
 	}
 	return nil
