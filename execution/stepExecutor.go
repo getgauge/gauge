@@ -37,30 +37,28 @@ type stepExecutor struct {
 	consoleReporter      reporter.Reporter
 }
 
-func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *gauge_messages.ProtoStepExecutionResult {
+func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *result.StepResult {
 	stepRequest := e.createStepRequest(protoStep)
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 
 	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
 	e.consoleReporter.StepStart(stepText)
 
-	protoStepExecResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{}}
-	e.notifyBeforeStepHook(protoStepExecResult)
-	if !protoStepExecResult.ExecutionResult.GetFailed() {
+	res := result.NewStepResult(protoStep)
+	e.notifyBeforeStepHook(res)
+
+	if res.GetPreHook() == nil {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(e.currentExecutionInfo)
 		}
-		protoStepExecResult.ExecutionResult = stepExecutionStatus
+		res.SetProtoExecResult(stepExecutionStatus)
 	}
 
-	e.notifyAfterStepHook(protoStepExecResult)
+	e.notifyAfterStepHook(res)
 
-	protoStepExecResult.Skipped = protoStep.StepExecutionResult.Skipped
-	protoStepExecResult.SkippedReason = protoStep.StepExecutionResult.SkippedReason
-
-	stepFailed := protoStepExecResult.GetExecutionResult().GetFailed()
+	stepFailed := res.GetFailed()
 	if stepFailed {
 		result := protoStep.GetStepExecutionResult().GetExecutionResult()
 		e.consoleReporter.Errorf("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
@@ -68,7 +66,7 @@ func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *gauge_m
 		e.consoleReporter.Errorf("Stacktrace: \n%s", result.GetStackTrace())
 	}
 	e.consoleReporter.StepEnd(stepFailed)
-	return protoStepExecResult
+	return res
 }
 
 func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
@@ -77,48 +75,28 @@ func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *g
 	return stepRequest
 }
 
-func (e *stepExecutor) notifyBeforeStepHook(stepResult *gauge_messages.ProtoStepExecutionResult) {
-	msg := &gauge_messages.Message{
+func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
+	m := &gauge_messages.Message{
 		MessageType:                  gauge_messages.Message_StepExecutionStarting.Enum(),
 		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
 	}
-	e.pluginHandler.NotifyPlugins(msg)
-	execRes := e.runner.ExecuteAndGetStatus(msg)
 
-	if execRes.GetFailed() {
-		stepResult.PreHookFailure = result.GetProtoHookFailure(execRes)
-		stepResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true)}
+	res := executeHook(m, stepResult, e.runner, e.pluginHandler)
+	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
-		printStatus(execRes, e.consoleReporter)
-	}
-
-	execTime := stepResult.ExecutionResult.ExecutionTime
-	if execTime == nil {
-		stepResult.ExecutionResult.ExecutionTime = proto.Int64(execRes.GetExecutionTime())
-	} else {
-		stepResult.ExecutionResult.ExecutionTime = proto.Int64(*execTime + execRes.GetExecutionTime())
+		handleHookFailure(stepResult, res, result.AddPreHook, e.consoleReporter)
 	}
 }
 
-func (e *stepExecutor) notifyAfterStepHook(stepResult *gauge_messages.ProtoStepExecutionResult) {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_StepExecutionEnding.Enum(),
-		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	e.pluginHandler.NotifyPlugins(message)
-	execRes := e.runner.ExecuteAndGetStatus(message)
-
-	stepResult.ExecutionResult.Message = execRes.Message
-
-	if execRes.GetFailed() {
-		stepResult.PostHookFailure = result.GetProtoHookFailure(execRes)
-		stepResult.ExecutionResult.Failed = proto.Bool(true)
-		setStepFailure(e.currentExecutionInfo)
-		printStatus(execRes, e.consoleReporter)
+func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
+	m := &gauge_messages.Message{
+		MessageType:                gauge_messages.Message_StepExecutionEnding.Enum(),
+		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
 	}
 
-	execTime := stepResult.ExecutionResult.ExecutionTime
-	if execTime == nil {
-		stepResult.ExecutionResult.ExecutionTime = proto.Int64(execRes.GetExecutionTime())
-	} else {
-		stepResult.ExecutionResult.ExecutionTime = proto.Int64(*execTime + execRes.GetExecutionTime())
+	res := executeHook(m, stepResult, e.runner, e.pluginHandler)
+	if res.GetFailed() {
+		setStepFailure(e.currentExecutionInfo)
+		handleHookFailure(stepResult, res, result.AddPostHook, e.consoleReporter)
 	}
 }

@@ -72,11 +72,11 @@ func (scenarioResult *ScenarioResult) updateExecutionTimeFromItems(protoItems []
 	}
 }
 
-func (scenarioResult *ScenarioResult) getPreHook() **(gauge_messages.ProtoHookFailure) {
+func (scenarioResult *ScenarioResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
 	return &scenarioResult.ProtoScenario.PreHookFailure
 }
 
-func (scenarioResult *ScenarioResult) getPostHook() **(gauge_messages.ProtoHookFailure) {
+func (scenarioResult *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
 	return &scenarioResult.ProtoScenario.PostHookFailure
 }
 
