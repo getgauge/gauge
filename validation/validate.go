@@ -128,8 +128,15 @@ func fillErrors(errMap *ValidationErrMaps, validationErrors validationErrors) {
 		for _, err := range errors {
 			errMap.StepErrs[err.step] = err
 		}
+		skippedScnInSpec := 0
 		for _, scenario := range spec.Scenarios {
 			fillScenarioErrors(scenario, errMap, scenario.Steps)
+			if _, ok := errMap.ScenarioErrs[scenario]; ok {
+				skippedScnInSpec++
+			}
+		}
+		if skippedScnInSpec == len(spec.Scenarios) {
+			errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], errMap.ScenarioErrs[spec.Scenarios[0]]...)
 		}
 		fillSpecErrors(spec, errMap, append(spec.Contexts, spec.TearDownSteps...))
 	}
