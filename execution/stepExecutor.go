@@ -47,7 +47,7 @@ func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *result.
 	res := result.NewStepResult(protoStep)
 	e.notifyBeforeStepHook(res)
 
-	if res.GetPreHook() == nil {
+	if !res.GetFailed() {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
@@ -60,10 +60,10 @@ func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *result.
 
 	stepFailed := res.GetFailed()
 	if stepFailed {
-		result := protoStep.GetStepExecutionResult().GetExecutionResult()
+		r := protoStep.GetStepExecutionResult().GetExecutionResult()
 		e.consoleReporter.Errorf("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
-		e.consoleReporter.Errorf("Error Message: %s", strings.TrimSpace(result.GetErrorMessage()))
-		e.consoleReporter.Errorf("Stacktrace: \n%s", result.GetStackTrace())
+		e.consoleReporter.Errorf("Error Message: %s", strings.TrimSpace(r.GetErrorMessage()))
+		e.consoleReporter.Errorf("Stacktrace: \n%s", r.GetStackTrace())
 	}
 	e.consoleReporter.StepEnd(stepFailed)
 	return res
