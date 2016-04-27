@@ -24,7 +24,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"io"
 	"io/ioutil"
-	"path"
+	"path/filepath"
 	"strings"
 )
 
@@ -34,7 +34,7 @@ type Manifest struct {
 }
 
 func ProjectManifest() (*Manifest, error) {
-	contents, err := common.ReadFileContents(path.Join(config.ProjectRoot, common.ManifestFile))
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.ManifestFile))
 	if err != nil {
 		return nil, err
 	}

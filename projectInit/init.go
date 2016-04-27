@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -191,7 +190,7 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		return err
 	}
-	specFile := path.Join(specsDirName, skelFileName)
+	specFile := filepath.Join(specsDirName, skelFileName)
 	showMessage("create", specFile)
 	if common.FileExists(specFile) {
 		showMessage("skip", specFile)
@@ -210,7 +209,7 @@ func createProjectTemplate(language string) error {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", common.EnvDirectoryName, err.Error()))
 		}
 	}
-	defaultEnv := path.Join(common.EnvDirectoryName, envDefaultDirName)
+	defaultEnv := filepath.Join(common.EnvDirectoryName, envDefaultDirName)
 	showMessage("create", defaultEnv)
 	if !common.DirExists(defaultEnv) {
 		err = os.Mkdir(defaultEnv, common.NewDirectoryPermissions)
@@ -218,11 +217,11 @@ func createProjectTemplate(language string) error {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
 	}
-	defaultJSON, err := common.GetSkeletonFilePath(path.Join(common.EnvDirectoryName, common.DefaultEnvFileName))
+	defaultJSON, err := common.GetSkeletonFilePath(filepath.Join(common.EnvDirectoryName, common.DefaultEnvFileName))
 	if err != nil {
 		return err
 	}
-	defaultJSONDest := path.Join(defaultEnv, common.DefaultEnvFileName)
+	defaultJSONDest := filepath.Join(defaultEnv, common.DefaultEnvFileName)
 	showMessage("create", defaultJSONDest)
 	err = common.CopyFile(defaultJSON, defaultJSONDest)
 	if err != nil {

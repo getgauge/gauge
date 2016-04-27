@@ -19,7 +19,7 @@ package api
 
 import (
 	"net"
-	"path"
+	"path/filepath"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -162,7 +162,7 @@ func (handler *gaugeAPIMessageHandler) getLanguagePluginLibPath(message *gauge_m
 		return handler.getErrorMessage(err)
 	}
 	relativeLibPath := runnerInfo.Lib
-	libPath := path.Join(languageInstallDir, relativeLibPath)
+	libPath := filepath.Join(languageInstallDir, relativeLibPath)
 	response := &gauge_messages.GetLanguagePluginLibPathResponse{Path: proto.String(libPath)}
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetLanguagePluginLibPathResponse.Enum(), MessageId: message.MessageId, LibPathResponse: response}
 }
