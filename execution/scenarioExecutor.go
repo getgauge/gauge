@@ -62,14 +62,15 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf(res.GetErrorMessage()))
 		return
 	}
+
 	e.consoleReporter.ScenarioStart(scenarioResult.ProtoScenario.GetScenarioHeading())
 	e.notifyBeforeScenarioHook(scenarioResult)
-	if !scenarioResult.ProtoScenario.GetFailed() {
-		e.executeContextSteps(scenarioResult)
+	if !scenarioResult.GetFailed() {
+		e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetContexts())
 		if !scenarioResult.GetFailed() {
-			e.executeScenarioSteps(scenarioResult)
+			e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetScenarioItems())
 		}
-		e.executeTearDownSteps(scenarioResult)
+		e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetTearDownSteps())
 	}
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
@@ -119,29 +120,15 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	}
 }
 
-func (e *scenarioExecutor) executeContextSteps(scenarioResult *result.ScenarioResult) {
-	failure := e.executeItems(scenarioResult.ProtoScenario.GetContexts())
+func (e *scenarioExecutor) executeScenarioItems(scenarioResult *result.ScenarioResult, items []*gauge_messages.ProtoItem) {
+	failure := e.executeItems(items)
 	if failure {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (e *scenarioExecutor) executeScenarioSteps(scenarioResult *result.ScenarioResult) {
-	failure := e.executeItems(scenarioResult.ProtoScenario.GetScenarioItems())
-	if failure {
-		scenarioResult.SetFailure()
-	}
-}
-
-func (e *scenarioExecutor) executeTearDownSteps(scenarioResult *result.ScenarioResult) {
-	failure := e.executeItems(scenarioResult.ProtoScenario.TearDownSteps)
-	if failure {
-		scenarioResult.SetFailure()
-	}
-}
-
-func (e *scenarioExecutor) executeItems(executingItems []*gauge_messages.ProtoItem) bool {
-	for _, protoItem := range executingItems {
+func (e *scenarioExecutor) executeItems(items []*gauge_messages.ProtoItem) bool {
+	for _, protoItem := range items {
 		res := e.executeItem(protoItem)
 		if res != nil && res.GetExecutionResult().GetFailed() {
 			return true

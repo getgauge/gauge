@@ -55,6 +55,14 @@ func (sr *SuiteResult) SetFailure() {
 	sr.IsFailed = true
 }
 
+func (sr *SuiteResult) SetSpecsSkippedCount(count int) {
+	sr.SpecsSkippedCount = count
+}
+
+func (sr *SuiteResult) UpdateExecTime(startTime time.Time) {
+	sr.ExecutionTime = int64(time.Since(startTime) / 1e6)
+}
+
 func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	if specResult.IsFailed {
 		sr.IsFailed = true

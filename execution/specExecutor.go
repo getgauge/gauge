@@ -62,10 +62,15 @@ func (e *specExecutor) execute() *result.SpecResult {
 		IsFailed: proto.Bool(false), Tags: getTagValue(e.specification.Tags)}
 	e.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 	e.specResult = gauge.NewSpecResult(e.specification)
+
 	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if _, ok := e.errMap.SpecErrs[e.specification]; ok {
 		e.skipSpec()
+		return e.specResult
+	}
+	if len(e.specification.Scenarios) == 0 {
+		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
 		return e.specResult
 	}
 
@@ -75,25 +80,20 @@ func (e *specExecutor) execute() *result.SpecResult {
 		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
 		return e.specResult
 	}
-	if len(e.specification.Scenarios) == 0 {
-		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
-		return e.specResult
-	}
 
 	e.consoleReporter.SpecStart(specInfo.GetName())
 	e.notifyBeforeSpecHook()
-	if !e.specResult.IsFailed {
-		dataTableRowCount := e.specification.DataTable.Table.GetRowCount()
-		if dataTableRowCount == 0 {
+	if !e.specResult.GetFailed() {
+		if e.specification.DataTable.Table.GetRowCount() == 0 {
 			scenarioResults := e.executeScenarios()
 			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
 			e.executeTableDrivenSpec()
 		}
 	}
-
 	e.notifyAfterSpecHook()
-	e.specResult.Skipped = e.specResult.ScenarioSkippedCount > 0
+
+	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount > 0)
 	e.consoleReporter.SpecEnd()
 	return e.specResult
 }

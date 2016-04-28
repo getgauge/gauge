@@ -37,6 +37,10 @@ func (specResult *SpecResult) SetFailure() {
 	specResult.IsFailed = true
 }
 
+func (specResult *SpecResult) SetSkipped(skipped bool) {
+	specResult.Skipped = skipped
+}
+
 func (specResult *SpecResult) AddSpecItems(resolvedItems []*gauge_messages.ProtoItem) {
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, resolvedItems...)
 }

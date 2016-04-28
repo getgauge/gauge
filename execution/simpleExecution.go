@@ -67,26 +67,26 @@ func (e *simpleExecution) run() *result.SuiteResult {
 
 func (e *simpleExecution) execute() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
-	setResult := func() {
-		e.suiteResult.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
-		e.suiteResult.SpecsSkippedCount = len(e.errMaps.SpecErrs)
+	setResultMeta := func() {
+		e.suiteResult.UpdateExecTime(e.startTime)
+		e.suiteResult.SetSpecsSkippedCount(len(e.errMaps.SpecErrs))
 	}
 
 	initSuiteDataStoreResult := e.initSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		e.consoleReporter.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
-		setResult()
+		setResultMeta()
 		return
 	}
 
 	e.notifyBeforeSuite()
-	if !e.suiteResult.IsFailed {
+	if !e.suiteResult.GetFailed() {
 		results := e.executeSpecs(e.specCollection)
 		e.suiteResult.AddSpecResults(results)
 	}
 	e.notifyAfterSuite()
 
-	setResult()
+	setResultMeta()
 }
 
 func (e *simpleExecution) start() {
