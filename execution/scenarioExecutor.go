@@ -116,7 +116,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	res := executeHook(message, scenarioResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
-		handleHookFailure(scenarioResult, res, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(scenarioResult, res, result.AddPostHook, e.consoleReporter)
 	}
 }
 
