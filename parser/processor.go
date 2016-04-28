@@ -64,6 +64,12 @@ func processComment(parser *SpecParser, token *Token) (*ParseError, bool) {
 	return nil, false
 }
 
+func processNewLine(parser *SpecParser, token *Token) (*ParseError, bool) {
+	parser.clearState()
+	addStates(&parser.currentState, newLineScope)
+	return nil, false
+}
+
 func processTag(parser *SpecParser, token *Token) (*ParseError, bool) {
 	parser.clearState()
 	tokens := splitAndTrimTags(token.Value)

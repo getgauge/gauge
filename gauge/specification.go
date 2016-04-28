@@ -251,6 +251,7 @@ const (
 	TagKind
 	ScenarioKind
 	CommentKind
+	NewLineKind
 	StepKind
 	TableHeader
 	TableRow
