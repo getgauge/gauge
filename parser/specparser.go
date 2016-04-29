@@ -739,7 +739,7 @@ type ParseResult struct {
 	FileName    string
 }
 
-func (result *ParseResult) Error() []string {
+func (result *ParseResult) Errors() []string {
 	var errors []string
 	for _, err := range result.ParseErrors {
 		errors = append(errors, fmt.Sprintf("[ParseError] %s:%s", result.FileName, err.Error()))

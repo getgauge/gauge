@@ -104,7 +104,7 @@ func HandleParseResult(results ...*ParseResult) bool {
 	var failed = false
 	for _, result := range results {
 		if !result.Ok {
-			for _, err := range result.Error() {
+			for _, err := range result.Errors() {
 				logger.Errorf(err)
 			}
 			failed = true

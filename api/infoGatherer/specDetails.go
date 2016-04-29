@@ -378,7 +378,7 @@ func getParsedStepValues(steps []*gauge.Step) []*gauge.StepValue {
 func handleParseFailures(parseResults []*parser.ParseResult) {
 	for _, result := range parseResults {
 		if !result.Ok {
-			logger.APILog.Error("Spec Parse failure: %s", result.Error())
+			logger.APILog.Error("Spec Parse failure: %s", result.Errors())
 		}
 	}
 }
