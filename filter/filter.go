@@ -11,11 +11,11 @@ var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
 
-func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, int) {
-	specsToExecute := specsFromArgs(conceptsDictionary, specDirs)
+func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, int, bool) {
+	specsToExecute, failed := specsFromArgs(conceptsDictionary, specDirs)
 	totalSpecs := specsToExecute
 	specsToExecute = applyFilters(specsToExecute, specsFilters())
-	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute)
+	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute), failed
 }
 
 func specsFilters() []specsFilter {
@@ -29,10 +29,11 @@ func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) 
 	return specsToExecute
 }
 
-func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) []*gauge.Specification {
+func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
 	var allSpecs []*gauge.Specification
 	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
+	passed := true
 	for _, arg := range specDirs {
 		specSource := arg
 		if isIndexedSpec(specSource) {
@@ -40,10 +41,10 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 		} else {
 			specs, specParseResults = parser.ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary)
 		}
-		parser.HandleParseResult(specParseResults...)
+		passed = !parser.HandleParseResult(specParseResults...) && passed
 		allSpecs = append(allSpecs, specs...)
 	}
-	return allSpecs
+	return allSpecs, !passed
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*parser.ParseResult) {

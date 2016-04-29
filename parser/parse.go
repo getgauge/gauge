@@ -18,7 +18,6 @@
 package parser
 
 import (
-	"os"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -55,7 +54,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary)
 	parseResult.FileName = specFile
 	if !parseResult.Ok {
-		specChannel <- nil
+		specChannel <- spec
 		parseResultChan <- parseResult
 		return
 	}
@@ -106,7 +105,7 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 	return stepValue
 }
 
-func HandleParseResult(results ...*ParseResult) {
+func HandleParseResult(results ...*ParseResult) bool {
 	var failed = false
 	for _, result := range results {
 		if !result.Ok {
@@ -121,7 +120,5 @@ func HandleParseResult(results ...*ParseResult) {
 			}
 		}
 	}
-	if failed {
-		os.Exit(1)
-	}
+	return failed
 }

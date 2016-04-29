@@ -20,6 +20,7 @@ package formatter
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -264,5 +265,7 @@ func getRepeatedChars(character string, repeatCount int) string {
 func FormatSpecFilesIn(filesLocation string) {
 	specFiles := util.GetSpecFiles(filesLocation)
 	parseResults := FormatSpecFiles(specFiles...)
-	parser.HandleParseResult(parseResults...)
+	if parser.HandleParseResult(parseResults...) {
+		os.Exit(1)
+	}
 }

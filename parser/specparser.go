@@ -229,9 +229,8 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	parser.conceptDictionary = conceptDictionary
 	converters := parser.initializeConverters()
 	specification := &gauge.Specification{}
-	finalResult := &ParseResult{ParseErrors: make([]*ParseError, 0)}
+	finalResult := &ParseResult{ParseErrors: make([]*ParseError, 0), Ok: true}
 	state := initial
-
 	for _, token := range tokens {
 		for _, converter := range converters {
 			result := converter(token, &state, specification)
@@ -249,19 +248,12 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 			}
 		}
 	}
-
-	if len(finalResult.ParseErrors) > 0 {
-		return nil, finalResult
-	}
-
 	specification.ProcessConceptStepsFrom(conceptDictionary)
 	validationError := parser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.Ok = false
 		finalResult.ParseErrors = append(finalResult.ParseErrors, validationError)
-		return nil, finalResult
 	}
-	finalResult.Ok = true
 	return specification, finalResult
 }
 
