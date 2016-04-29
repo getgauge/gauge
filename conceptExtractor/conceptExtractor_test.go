@@ -34,8 +34,9 @@ func (s *MySuite) TestExtractConceptWithoutParameters(c *C) {
 	STEP := "step that takes a table"
 	name := "concept"
 	conceptName := &gauge_messages.Step{Name: &name}
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\nsome comment\n* some step")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept\n* step that takes a table\n")
 	c.Assert(conceptText, Equals, "* concept")
 }
@@ -44,8 +45,9 @@ func (s *MySuite) TestExtractConcept(c *C) {
 	STEP := "step that takes a table \"arg\""
 	name := "concept with \"arg\""
 	conceptName := &gauge_messages.Step{Name: &name}
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\nsome comment\n* some step")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept with <arg>\n* step that takes a table <arg>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\"")
 }
@@ -54,8 +56,9 @@ func (s *MySuite) TestExtractConceptWithSkippedParameters(c *C) {
 	STEP := "step that takes a table \"arg\" and \"hello again\" "
 	name := "concept with \"arg\""
 	conceptName := &gauge_messages.Step{Name: &name}
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\nsome comment\n* some step")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept with <arg>\n* step that takes a table <arg> and \"hello again\"\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\"")
 }
@@ -64,8 +67,9 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParameters(c *C) {
 	STEP := "step that takes a table \"arg\" and <hello again> "
 	name := "concept with \"arg\" <hello again>"
 	conceptName := &gauge_messages.Step{Name: &name}
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept with <arg> <hello again>\n* step that takes a table <arg> and <hello again>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\" <hello again>")
 }
@@ -74,8 +78,9 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParametersWithParamChar(
 	STEP := "step that takes a table \"arg <hello>\" and <hello again> "
 	name := "concept with \"arg <hello>\" <hello again>"
 	conceptName := &gauge_messages.Step{Name: &name}
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept with <arg {hello}> <hello again>\n* step that takes a table <arg {hello}> and <hello again>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg <hello>\" <hello again>")
 }
@@ -90,9 +95,10 @@ func (s *MySuite) TestExtractConceptWithTableAsArg(c *C) {
 	|1 |foo |
 	|2 |bar |
 	`
-	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName},
-		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}}, "# sdfdsf\n\n")
+	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName},
+		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}}, "# sdfdsf\nsome comment\n* some step")
 
+	c.Assert(err, IsNil)
 	c.Assert(concept, Equals, "# concept with <table1>\n* step that takes a table <table1>\n* step that takes a table <table1>\n")
 	c.Assert(conceptText, Equals, "* concept with "+`
 
@@ -137,7 +143,7 @@ func (s *MySuite) TestExtractConceptWithSkippedTableAsArg(c *C) {
 	|2 |bar |
 	`
 	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName},
-		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}, &gauge_messages.Step{Name: &STEP, Table: &table}}, "# sdfdsf\n\n")
+		&gauge_messages.Step{Name: &STEP, Table: &table, ParamTableName: &tableName}, &gauge_messages.Step{Name: &STEP, Table: &table}}, "# sdfdsf\nsome comment\n* some step")
 
 	c.Assert(concept, Equals, "# concept with <table1>\n* step that takes a table <table1>\n* step that takes a table <table1>\n* step that takes a table "+`
 

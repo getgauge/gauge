@@ -371,13 +371,6 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	newLineConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.NewLineKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		comment := &gauge.Comment{token.Value, token.LineNo}
-		if isInState(*state, scenarioScope) {
-			spec.LatestScenario().AddComment(comment)
-		} else {
-			spec.AddComment(comment)
-		}
-		retainStates(state, specScope, scenarioScope, tearDownScope, stepScope)
 		return ParseResult{Ok: true}
 	})
 
