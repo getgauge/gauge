@@ -217,8 +217,10 @@ func (handler *gaugeAPIMessageHandler) formatSpecs(message *gauge_messages.APIMe
 	var warnings []string
 	var errors []string
 	for _, result := range results {
-		if result.ParseError != nil {
-			errors = append(errors, result.ParseError.Error())
+		if result.ParseErrors != nil {
+			for _, err := range result.ParseErrors {
+				errors = append(errors, err.Error())
+			}
 		}
 		if result.Warnings != nil {
 			var warningTexts []string

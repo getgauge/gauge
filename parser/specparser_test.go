@@ -596,7 +596,7 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
 
 	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
-	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
 
@@ -605,7 +605,7 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
 
 	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
-	c.Assert(parseRes.ParseError.Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
 
@@ -614,7 +614,7 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").String()
 
 	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
-	c.Assert(parseRes.ParseError.Message, Equals, "Table location not specified")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table location not specified")
 	c.Assert(parseRes.Ok, Equals, false)
 }
 
@@ -637,8 +637,8 @@ func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseError.Message, Equals, "Parse error: Multiple spec headings found in same file")
-	c.Assert(result.ParseError.LineNo, Equals, 4)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Multiple spec headings found in same file")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 4)
 }
 
 func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
@@ -651,8 +651,8 @@ func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseError.Message, Equals, "Parse error: Scenario should be defined after the spec heading")
-	c.Assert(result.ParseError.LineNo, Equals, 1)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Scenario should be defined after the spec heading")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 1)
 }
 
 func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
@@ -667,8 +667,8 @@ func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseError.Message, Equals, "Parse error: Duplicate scenario definition 'Scenario Heading' found in the same specification")
-	c.Assert(result.ParseError.LineNo, Equals, 4)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Duplicate scenario definition 'Scenario Heading' found in the same specification")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 4)
 }
 
 func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
@@ -776,8 +776,8 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 
 	c.Assert(result, NotNil)
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseError.Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
-	c.Assert(result.ParseError.LineNo, Equals, 3)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
 }
 
 func (s *MySuite) TestContextWithKeywords(c *C) {
@@ -791,8 +791,8 @@ func (s *MySuite) TestContextWithKeywords(c *C) {
 
 	c.Assert(result, NotNil)
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseError.Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
-	c.Assert(result.ParseError.LineNo, Equals, 3)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
 }
 
 func (s *MySuite) TestSpecWithDataTable(c *C) {
@@ -968,8 +968,8 @@ func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
 	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseError.Message, Equals, "Data table should have at least 1 data row")
-	c.Assert(result.ParseError.LineNo, Equals, 3)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Data table should have at least 1 data row")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
 }
 
 func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
@@ -1063,8 +1063,8 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseError.Message, Equals, "Dynamic parameter <foo> could not be resolved")
-	c.Assert(result.ParseError.LineNo, Equals, 3)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
 
 }
 
@@ -1080,8 +1080,8 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseError.Message, Equals, "Dynamic parameter <foo> could not be resolved")
-	c.Assert(result.ParseError.LineNo, Equals, 5)
+	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
+	c.Assert(result.ParseErrors[0].LineNo, Equals, 5)
 
 }
 

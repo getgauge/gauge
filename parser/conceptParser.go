@@ -220,7 +220,7 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.Co
 				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
 				continue
 			}
-			return nil, &ParseResult{ParseError: err, FileName: conceptFile}
+			return nil, &ParseResult{ParseErrors: []*ParseError{err}, FileName: conceptFile}
 		}
 	}
 	return conceptsDictionary, &ParseResult{Ok: true}

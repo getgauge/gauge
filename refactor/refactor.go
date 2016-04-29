@@ -113,7 +113,9 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	for _, parseResult := range parseResults {
 		if !parseResult.Ok {
 			refactorResult.Success = false
-			refactorResult.Errors = append(refactorResult.Errors, parseResult.Error())
+			for _, err := range parseResult.Error() {
+				refactorResult.Errors = append(refactorResult.Errors, err)
+			}
 		}
 		refactorResult.appendWarnings(parseResult.Warnings)
 	}

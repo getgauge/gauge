@@ -116,7 +116,7 @@ func addArgsFromTable(concept *gauge.Step, conceptName *string, args []string) {
 func getContentWithDataTable(content string) (string, error) {
 	spec, result := new(parser.SpecParser).Parse(content, &gauge.ConceptDictionary{})
 	if !result.Ok {
-		return "", fmt.Errorf("Spec Parse failure: %s", result.ParseError)
+		return "", fmt.Errorf("Spec Parse failure: %s", result.ParseErrors)
 	}
 	newSpec := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING"}}
 	if spec.DataTable.IsInitialized() {
@@ -142,7 +142,9 @@ func (self *extractor) handleTable(stepInConcept *gauge.Step, step *gauge_messag
 	specText := self.fileContent + step.GetTable()
 	spec, result := new(parser.SpecParser).Parse(specText, &gauge.ConceptDictionary{})
 	if !result.Ok {
-		self.errors = append(self.errors, result.ParseError)
+		for _, err := range result.ParseErrors {
+			self.errors = append(self.errors, err)
+		}
 		return
 	}
 	stepArgs := []*gauge.StepArg{spec.Scenarios[0].Steps[0].Args[0]}

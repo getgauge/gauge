@@ -70,7 +70,7 @@ func (parser *SpecParser) initialize() {
 func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {
 	tokens, parseError := parser.GenerateTokens(specText)
 	if parseError != nil {
-		return nil, &ParseResult{ParseError: parseError, Ok: false}
+		return nil, &ParseResult{ParseErrors: []*ParseError{parseError}, Ok: false}
 	}
 	return parser.CreateSpecification(tokens, conceptDictionary)
 }
@@ -229,17 +229,16 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	parser.conceptDictionary = conceptDictionary
 	converters := parser.initializeConverters()
 	specification := &gauge.Specification{}
-	finalResult := &ParseResult{}
+	finalResult := &ParseResult{ParseErrors: make([]*ParseError, 0)}
 	state := initial
 
 	for _, token := range tokens {
 		for _, converter := range converters {
 			result := converter(token, &state, specification)
 			if !result.Ok {
-				if result.ParseError != nil {
+				if result.ParseErrors != nil {
 					finalResult.Ok = false
-					finalResult.ParseError = result.ParseError
-					return nil, finalResult
+					finalResult.ParseErrors = append(finalResult.ParseErrors, result.ParseErrors...)
 				}
 			}
 			if result.Warnings != nil {
@@ -251,11 +250,15 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 		}
 	}
 
+	if len(finalResult.ParseErrors) > 0 {
+		return nil, finalResult
+	}
+
 	specification.ProcessConceptStepsFrom(conceptDictionary)
 	validationError := parser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.Ok = false
-		finalResult.ParseError = validationError
+		finalResult.ParseErrors = append(finalResult.ParseErrors, validationError)
 		return nil, finalResult
 	}
 	finalResult.Ok = true
@@ -267,7 +270,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.SpecKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading != nil {
-			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Multiple spec headings found in same file", token.LineText}}
+			return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{token.LineNo, "Parse error: Multiple spec headings found in same file", token.LineText}}}
 		}
 
 		spec.AddHeading(&gauge.Heading{LineNo: token.LineNo, Value: token.Value})
@@ -279,11 +282,11 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.ScenarioKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading == nil {
-			return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Scenario should be defined after the spec heading", token.LineText}}
+			return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{token.LineNo, "Parse error: Scenario should be defined after the spec heading", token.LineText}}}
 		}
 		for _, scenario := range spec.Scenarios {
 			if strings.ToLower(scenario.Heading.Value) == strings.ToLower(token.Value) {
-				return ParseResult{Ok: false, ParseError: &ParseError{token.LineNo, "Parse error: Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}
+				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{token.LineNo, "Parse error: Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
 			}
 		}
 		scenario := &gauge.Scenario{}
@@ -301,7 +304,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		latestScenario := spec.LatestScenario()
 		stepToAdd, parseDetails := createStep(spec, token)
 		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
+			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		latestScenario.AddStep(stepToAdd)
 		retainStates(state, specScope, scenarioScope)
@@ -317,7 +320,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
 		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
+			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.AddContext(stepToAdd)
 		retainStates(state, specScope)
@@ -342,7 +345,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
 		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseError: parseDetails.Error, Ok: false, Warnings: parseDetails.Warnings}
+			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.TearDownSteps = append(spec.TearDownSteps, stepToAdd)
 		spec.AddItem(stepToAdd)
@@ -738,14 +741,18 @@ func (token *Token) String() string {
 }
 
 type ParseResult struct {
-	ParseError *ParseError
-	Warnings   []*Warning
-	Ok         bool
-	FileName   string
+	ParseErrors []*ParseError
+	Warnings    []*Warning
+	Ok          bool
+	FileName    string
 }
 
-func (result *ParseResult) Error() string {
-	return fmt.Sprintf("[ParseError] %s : %s", result.FileName, result.ParseError.Error())
+func (result *ParseResult) Error() []string {
+	var errors []string
+	for _, err := range result.ParseErrors {
+		errors = append(errors, fmt.Sprintf("[ParseError] %s : %s", result.FileName, err.Error()))
+	}
+	return errors
 }
 
 type Warning struct {

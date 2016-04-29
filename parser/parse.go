@@ -49,7 +49,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
 		specChannel <- nil
-		parseResultChan <- &ParseResult{ParseError: &ParseError{Message: err.Error()}, Ok: false, FileName: specFile}
+		parseResultChan <- &ParseResult{ParseErrors: []*ParseError{&ParseError{Message: err.Error()}}, Ok: false, FileName: specFile}
 		return
 	}
 	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary)
@@ -110,7 +110,9 @@ func HandleParseResult(results ...*ParseResult) {
 	var failed = false
 	for _, result := range results {
 		if !result.Ok {
-			logger.Errorf(result.Error())
+			for _, err := range result.Error() {
+				logger.Errorf(err)
+			}
 			failed = true
 		}
 		if result.Warnings != nil {

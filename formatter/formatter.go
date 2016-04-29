@@ -38,7 +38,7 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 	specs, results := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
 	for i, spec := range specs {
 		if err := formatAndSave(spec); err != nil {
-			results[i].ParseError = &parser.ParseError{Message: err.Error()}
+			results[i].ParseErrors = []*parser.ParseError{&parser.ParseError{Message: err.Error()}}
 		}
 	}
 	return results
