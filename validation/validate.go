@@ -99,22 +99,22 @@ func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *Vali
 	}
 	v := newValidator(manifest, s, r, c)
 	vErrs := v.validate()
-
 	errMap := &ValidationErrMaps{
 		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
 		ScenarioErrs: make(map[*gauge.Scenario][]*StepValidationError),
 		StepErrs:     make(map[*gauge.Step]*StepValidationError),
 	}
-
 	if len(vErrs) > 0 {
 		printValidationFailures(vErrs)
 		fillErrors(errMap, vErrs)
 	}
-
 	if f {
 		os.Exit(1)
 	}
-
+	if len(s) == 0 {
+		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
+		os.Exit(0)
+	}
 	return gauge.NewSpecCollection(s), errMap
 }
 
@@ -122,11 +122,6 @@ func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary
 	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(false, args)
 	conceptFailed := parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _, specFailed := filter.GetSpecsToExecute(conceptsDictionary, args)
-
-	if len(specsToExecute) == 0 {
-		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
-		os.Exit(0)
-	}
 	return specsToExecute, conceptsDictionary, conceptFailed || specFailed
 }
 
