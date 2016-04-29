@@ -110,6 +110,9 @@ func FormatTable(table *gauge.Table) string {
 	}
 
 	var tableStringBuffer bytes.Buffer
+
+	tableStringBuffer.WriteString("\n")
+
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
 	for i, header := range table.Headers {
 		width := columnToWidthMap[i]

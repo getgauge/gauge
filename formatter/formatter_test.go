@@ -53,6 +53,7 @@ Scenario Heading
 ----------------
 * Example step
 * Step with inline table`+" "+`
+
      |id |name|
      |---|----|
      |<1>|foo |
@@ -196,6 +197,7 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 	c.Assert(formatted, Equals,
 		`Spec Heading
 ============
+
      |id|foo|
      |--|---|
      |1 |f  |
@@ -203,6 +205,7 @@ Scenario Heading
 ----------------
 * Example step
 * Step with inline table `+`
+
      |id|name |
      |--|-----|
      |1 |<foo>|
