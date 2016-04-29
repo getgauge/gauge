@@ -66,11 +66,11 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	e.consoleReporter.ScenarioStart(scenarioResult.ProtoScenario.GetScenarioHeading())
 	e.notifyBeforeScenarioHook(scenarioResult)
 	if !scenarioResult.GetFailed() {
-		e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetContexts())
+		e.executeItems(scenarioResult, scenarioResult.ProtoScenario.GetContexts())
 		if !scenarioResult.GetFailed() {
-			e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetScenarioItems())
+			e.executeItems(scenarioResult, scenarioResult.ProtoScenario.GetScenarioItems())
 		}
-		e.executeScenarioItems(scenarioResult, scenarioResult.ProtoScenario.GetTearDownSteps())
+		e.executeItems(scenarioResult, scenarioResult.ProtoScenario.GetTearDownSteps())
 	}
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
@@ -120,40 +120,37 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	}
 }
 
-func (e *scenarioExecutor) executeScenarioItems(scenarioResult *result.ScenarioResult, items []*gauge_messages.ProtoItem) {
-	failure := e.executeItems(items)
-	if failure {
+func (e *scenarioExecutor) executeItems(scenarioResult *result.ScenarioResult, items []*gauge_messages.ProtoItem) {
+	for _, protoItem := range items {
+		e.executeItem(protoItem, scenarioResult)
+		if scenarioResult.GetFailed() {
+			return
+		}
+	}
+}
+
+func (e *scenarioExecutor) executeItem(protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) {
+	var res *gauge_messages.ProtoStepExecutionResult
+	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
+		protoConcept := protoItem.GetConcept()
+		res = e.executeConcept(protoConcept, scenarioResult)
+		result.SetConceptExecResult(protoConcept)
+	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
+		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
+		res = se.executeStep(protoItem.GetStep()).ProtoStepExecResult()
+		protoItem.GetStep().StepExecutionResult = res
+	}
+
+	if res.GetExecutionResult().GetFailed() {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (e *scenarioExecutor) executeItems(items []*gauge_messages.ProtoItem) bool {
-	for _, protoItem := range items {
-		res := e.executeItem(protoItem)
-		if res != nil && res.GetExecutionResult().GetFailed() {
-			return true
-		}
-	}
-	return false
-}
-
-func (e *scenarioExecutor) executeItem(protoItem *gauge_messages.ProtoItem) *gauge_messages.ProtoStepExecutionResult {
-	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
-		return e.executeConcept(protoItem.GetConcept())
-	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
-		protoItem.GetStep().StepExecutionResult = se.executeStep(protoItem.GetStep()).ProtoStepExecResult()
-		return protoItem.GetStep().StepExecutionResult
-	}
-	return nil
-}
-
-func (e *scenarioExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept) *gauge_messages.ProtoStepExecutionResult {
+func (e *scenarioExecutor) executeConcept(protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *gauge_messages.ProtoStepExecutionResult {
 	e.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
 	for _, step := range protoConcept.Steps {
-		res := e.executeItem(step)
-		e.setExecutionResultForConcept(protoConcept)
-		if res.GetExecutionResult().GetFailed() {
+		e.executeItem(step, scenarioResult)
+		if scenarioResult.GetFailed() {
 			return protoConcept.GetConceptExecutionResult()
 		}
 	}
@@ -165,36 +162,6 @@ func (e *scenarioExecutor) executeConcept(protoConcept *gauge_messages.ProtoConc
 func setStepFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setScenarioFailure(executionInfo)
 	executionInfo.CurrentStep.IsFailed = proto.Bool(true)
-}
-
-func (e *scenarioExecutor) setExecutionResultForConcept(protoConcept *gauge_messages.ProtoConcept) {
-	var conceptExecutionTime int64
-	for _, step := range protoConcept.GetSteps() {
-		if step.GetItemType() == gauge_messages.ProtoItem_Concept {
-			stepExecResult := step.GetConcept().GetConceptExecutionResult().GetExecutionResult()
-			conceptExecutionTime += stepExecResult.GetExecutionTime()
-			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
-				protoConcept.ConceptExecutionResult = conceptExecutionResult
-				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
-			}
-		} else if step.GetItemType() == gauge_messages.ProtoItem_Step {
-			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
-			conceptExecutionTime += stepExecResult.GetExecutionTime()
-			if stepExecResult.GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
-				protoConcept.ConceptExecutionResult = conceptExecutionResult
-				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
-			}
-		}
-	}
-	protoConcept.ConceptExecutionResult = &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(false), ExecutionTime: proto.Int64(conceptExecutionTime)}}
-	protoConcept.ConceptStep.StepExecutionResult = protoConcept.ConceptExecutionResult
-	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 }
 
 func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Parameter {
