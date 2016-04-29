@@ -75,7 +75,7 @@ func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 1, Spec heading should have at least one character")
+	c.Assert(err.Error(), Equals, "1: Spec heading should have at least one character => ''")
 }
 
 func (s *MySuite) TestParsingScenarioHeading(c *C) {
@@ -97,7 +97,7 @@ func (s *MySuite) TestParsingThrowErrorForEmptyScenarioHeading(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 2, Scenario heading should have at least one character")
+	c.Assert(err.Error(), Equals, "2: Scenario heading should have at least one character => ''")
 }
 
 func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
@@ -429,7 +429,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithEmptyHeader(c *C) {
 
 	_, err := parser.GenerateTokens(specText)
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 2, Table header should not be blank")
+	c.Assert(err.Error(), Equals, "2: Table header should not be blank => '| name|id |||'")
 }
 
 func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
@@ -438,7 +438,7 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
 
 	_, err := parser.GenerateTokens(specText)
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 2, Table header cannot have repeated column values")
+	c.Assert(err.Error(), Equals, "2: Table header cannot have repeated column values => '| name|id|name|'")
 }
 
 func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {

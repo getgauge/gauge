@@ -725,7 +725,7 @@ type ParseDetailResult struct {
 }
 
 func (se *ParseError) Error() string {
-	return fmt.Sprintf("line no: %d, %s", se.LineNo, se.Message)
+	return fmt.Sprintf("%d: %s => '%s'", se.LineNo, se.Message, se.LineText)
 }
 
 func (token *Token) String() string {
@@ -742,7 +742,7 @@ type ParseResult struct {
 func (result *ParseResult) Error() []string {
 	var errors []string
 	for _, err := range result.ParseErrors {
-		errors = append(errors, fmt.Sprintf("[ParseError] %s : %s", result.FileName, err.Error()))
+		errors = append(errors, fmt.Sprintf("[ParseError] %s:%s", result.FileName, err.Error()))
 	}
 	return errors
 }

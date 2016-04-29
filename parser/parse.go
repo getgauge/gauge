@@ -53,11 +53,6 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	}
 	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary)
 	parseResult.FileName = specFile
-	if !parseResult.Ok {
-		specChannel <- spec
-		parseResultChan <- parseResult
-		return
-	}
 	spec.FileName = specFile
 	specChannel <- spec
 	parseResultChan <- parseResult

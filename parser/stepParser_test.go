@@ -43,7 +43,7 @@ func (s *MySuite) TestParsingEmptyStepTextShouldThrowError(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 3, Step should not be blank")
+	c.Assert(err.Error(), Equals, "3: Step should not be blank => ''")
 }
 
 func (s *MySuite) TestParsingStepWithParams(c *C) {
@@ -93,7 +93,7 @@ func (s *MySuite) TestParsingStepWithUnmatchedOpeningQuote(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 3, String not terminated")
+	c.Assert(err.Error(), Equals, "3: String not terminated => 'sample step \"param'")
 }
 
 func (s *MySuite) TestParsingStepWithEscaping(c *C) {
@@ -114,7 +114,7 @@ func (s *MySuite) TestParsingExceptionIfStepContainsReservedChars(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 3, '{' is a reserved character and should be escaped")
+	c.Assert(err.Error(), Equals, "3: '{' is a reserved character and should be escaped => 'step with {braces}'")
 }
 
 func (s *MySuite) TestParsingStepContainsEscapedReservedChars(c *C) {
@@ -149,7 +149,7 @@ func (s *MySuite) TestParsingStepWithUnmatchedDynamicParameterCharacter(c *C) {
 	_, err := parser.GenerateTokens(specText)
 
 	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "line no: 3, Dynamic parameter not terminated")
+	c.Assert(err.Error(), Equals, "3: Dynamic parameter not terminated => 'Step with \"static param\" and <name1'")
 
 }
 

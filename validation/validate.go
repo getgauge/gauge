@@ -66,7 +66,7 @@ type StepValidationError struct {
 }
 
 func (s *StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d: %s. %s", s.fileName, s.step.LineNo, s.message, s.step.LineText)
+	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.LineText)
 }
 
 func Validate(args []string) {
@@ -177,10 +177,9 @@ func fillSpecErrors(spec *gauge.Specification, errMap *ValidationErrMaps, steps 
 }
 
 func printValidationFailures(validationErrors validationErrors) {
-	logger.Errorf("Validation failed. The following steps have errors")
 	for _, errs := range validationErrors {
 		for _, e := range errs {
-			logger.Errorf(e.Error())
+			logger.Errorf("[ValidationError] %s", e.Error())
 		}
 	}
 }
