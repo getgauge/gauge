@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/logger"
 )
 
 const (
@@ -37,20 +38,30 @@ const (
 
 func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 	specs, results := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
-	for i, spec := range specs {
-		if err := formatAndSave(spec); err != nil {
-			results[i].ParseErrors = []*parser.ParseError{&parser.ParseError{Message: err.Error()}}
+	resultsMap := getParseResult(results)
+	filesSkipped := make([]string, 0)
+	for _, spec := range specs {
+		result := resultsMap[spec.FileName]
+		if !result.Ok {
+			filesSkipped = append(filesSkipped, spec.FileName)
+			continue
 		}
+		if err := formatAndSave(spec); err != nil {
+			result.ParseErrors = []*parser.ParseError{&parser.ParseError{Message: err.Error()}}
+		}
+	}
+	if len(filesSkipped) > 0 {
+		logger.Errorf("Skipping %d file(s), due to following error(s):", len(filesSkipped))
 	}
 	return results
 }
 
-func FormatSpecHeading(specHeading string) string {
-	return FormatHeading(specHeading, "=")
-}
-
-func FormatScenarioHeading(scenarioHeading string) string {
-	return fmt.Sprintf("%s", FormatHeading(scenarioHeading, "-"))
+func getParseResult(results []*parser.ParseResult) map[string]*parser.ParseResult {
+	resultsMap := make(map[string]*parser.ParseResult)
+	for _, result := range results {
+		resultsMap[result.FileName] = result
+	}
+	return resultsMap
 }
 
 func FormatStep(step *gauge.Step) string {
