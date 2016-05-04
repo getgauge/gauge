@@ -54,25 +54,32 @@ const (
 	SuiteEnd
 )
 
-var eventRegistry map[Topic][]chan ExecutionEvent
+var subscriberRegistry map[Topic][]chan ExecutionEvent
+
+func InitRegistry() {
+	subscriberRegistry = make(map[Topic][]chan ExecutionEvent, 0)
+	subscriberRegistry[SuiteStart] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[ScenarioStart] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[ConceptStart] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[StepStart] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[SuiteEnd] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[ConceptEnd] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[ScenarioEnd] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[SpecEnd] = make([]chan ExecutionEvent, 0)
+	subscriberRegistry[SuiteEnd] = make([]chan ExecutionEvent, 0)
+}
 
 // Register registers the given channel to the given list of topics. Any updates for the given topics
 // will be sent on this channel
 func Register(ch chan ExecutionEvent, topics ...Topic) {
-	if eventRegistry == nil {
-		eventRegistry = make(map[Topic][]chan ExecutionEvent, 0)
-	}
 	for _, t := range topics {
-		if _, ok := eventRegistry[t]; !ok {
-			eventRegistry[t] = make([]chan ExecutionEvent, 0)
-		}
-		eventRegistry[t] = append(eventRegistry[t], ch)
+		subscriberRegistry[t] = append(subscriberRegistry[t], ch)
 	}
 }
 
 // Notify notifies all the subscribers of the event about its occurrence
 func Notify(e ExecutionEvent) {
-	for _, c := range eventRegistry[e.Topic] {
+	for _, c := range subscriberRegistry[e.Topic] {
 		c <- e
 	}
 }
