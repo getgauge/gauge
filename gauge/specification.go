@@ -26,6 +26,23 @@ const (
 	ScenarioHeading = 1
 )
 
+type TokenKind int
+
+const (
+	SpecKind TokenKind = iota
+	TagKind
+	ScenarioKind
+	CommentKind
+	NewLineKind
+	StepKind
+	TableHeader
+	TableRow
+	HeadingKind
+	TableKind
+	DataTableKind
+	TearDownKind
+)
+
 type Specification struct {
 	Heading       *Heading
 	Scenarios     []*Scenario
@@ -40,6 +57,10 @@ type Specification struct {
 
 type Item interface {
 	Kind() TokenKind
+}
+
+func (spec *Specification) Kind() TokenKind {
+	return SpecKind
 }
 
 func (spec *Specification) ProcessConceptStepsFrom(conceptDictionary *ConceptDictionary) {
@@ -174,7 +195,7 @@ func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[
 	return spec.rename(spec.TearDownSteps, oldStep, newStep, isRefactored, orderMap)
 }
 
-func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) bool{
+func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) bool {
 	isConcept := false
 	for _, step := range steps {
 		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
@@ -243,23 +264,6 @@ func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 	}
 	return -1
 }
-
-type TokenKind int
-
-const (
-	SpecKind TokenKind = iota
-	TagKind
-	ScenarioKind
-	CommentKind
-	NewLineKind
-	StepKind
-	TableHeader
-	TableRow
-	HeadingKind
-	TableKind
-	DataTableKind
-	TearDownKind
-)
 
 type Heading struct {
 	Value       string

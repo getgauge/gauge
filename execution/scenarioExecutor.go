@@ -20,6 +20,7 @@ package execution
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
@@ -56,6 +57,11 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 		return
 	}
+
+	e.consoleReporter.ScenarioStart(scenarioResult.ProtoScenario.GetScenarioHeading())
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil))
+	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, scenarioResult))
+
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {
 		e.consoleReporter.Errorf("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage())
@@ -63,7 +69,6 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		return
 	}
 
-	e.consoleReporter.ScenarioStart(scenarioResult.ProtoScenario.GetScenarioHeading())
 	e.notifyBeforeScenarioHook(scenarioResult)
 	if !scenarioResult.GetFailed() {
 		e.executeItems(scenarioResult, scenarioResult.ProtoScenario.GetContexts())

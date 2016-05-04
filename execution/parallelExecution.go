@@ -24,6 +24,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
@@ -91,6 +92,7 @@ func (e *parallelExecution) numberOfStreams() int {
 
 func (e *parallelExecution) start() {
 	e.startTime = time.Now()
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
@@ -167,6 +169,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 }
 
 func (e *parallelExecution) finish() {
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult))
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{

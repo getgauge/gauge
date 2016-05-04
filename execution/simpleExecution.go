@@ -20,6 +20,7 @@ package execution
 import (
 	"time"
 
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -91,10 +92,12 @@ func (e *simpleExecution) execute() {
 
 func (e *simpleExecution) start() {
 	e.startTime = time.Now()
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) finish() {
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult))
 	e.notifyExecutionResult()
 	e.stopAllPlugins()
 }

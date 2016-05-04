@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
@@ -74,6 +75,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
+	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil))
+	e.consoleReporter.SpecStart(specInfo.GetName())
+	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult))
+
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
 		e.consoleReporter.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
@@ -81,7 +86,6 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
-	e.consoleReporter.SpecStart(specInfo.GetName())
 	e.notifyBeforeSpecHook()
 	if !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {

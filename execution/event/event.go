@@ -26,15 +26,15 @@ import (
 // execution lifecycle. This is only for execution and excludes parsing, validation, etc.
 type ExecutionEvent struct {
 	Topic  Topic
-	Result result.Result
 	Item   gauge.Item
+	Result result.Result
 }
 
-func NewExecutionEvent(t Topic, r result.Result, i gauge.Item) ExecutionEvent {
+func NewExecutionEvent(t Topic, i gauge.Item, r result.Result) ExecutionEvent {
 	return ExecutionEvent{
 		Topic:  t,
-		Result: r,
 		Item:   i,
+		Result: r,
 	}
 }
 
