@@ -27,7 +27,15 @@ import (
 type ExecutionEvent struct {
 	Topic  Topic
 	Result result.Result
-	item   gauge.Item
+	Item   gauge.Item
+}
+
+func NewExecutionEvent(t Topic, r result.Result, i gauge.Item) ExecutionEvent {
+	return ExecutionEvent{
+		Topic:  t,
+		Result: r,
+		Item:   i,
+	}
 }
 
 // Topic indicates the topic of ExecutionEvent
@@ -53,12 +61,18 @@ var eventRegistry map[Topic][]chan ExecutionEvent
 func Register(ch chan ExecutionEvent, topics ...Topic) {
 	if eventRegistry == nil {
 		eventRegistry = make(map[Topic][]chan ExecutionEvent, 0)
-
 	}
 	for _, t := range topics {
 		if _, ok := eventRegistry[t]; !ok {
 			eventRegistry[t] = make([]chan ExecutionEvent, 0)
 		}
 		eventRegistry[t] = append(eventRegistry[t], ch)
+	}
+}
+
+// Notify notifies all the subscribers of the event about its occurrence
+func Notify(e ExecutionEvent) {
+	for _, c := range eventRegistry[e.Topic] {
+		c <- e
 	}
 }

@@ -20,6 +20,9 @@ package event
 import (
 	"testing"
 
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
@@ -79,6 +82,32 @@ func (s *MySuite) TestMultipleSubscribersRegisteringForMultipleEvent(c *C) {
 	c.Assert(contains(eventRegistry[StepEnd], ch1), Equals, true)
 	c.Assert(contains(eventRegistry[StepEnd], ch2), Equals, true)
 	c.Assert(contains(eventRegistry[StepEnd], ch3), Equals, true)
+}
+
+func (s *MySuite) TestNotify(c *C) {
+	eventRegistry = nil
+
+	ch1 := make(chan ExecutionEvent, 2)
+	Register(ch1, StepStart, StepEnd)
+
+	ch2 := make(chan ExecutionEvent, 2)
+	Register(ch2, StepStart, StepEnd)
+
+	stepText := "Hello World"
+	protoStep := &gauge_messages.ProtoStep{ActualText: &stepText}
+	stepRes := result.NewStepResult(protoStep)
+
+	step := &gauge.Step{Value: stepText}
+	stepStartEvent := NewExecutionEvent(StepStart, nil, step)
+	stepEndEvent := NewExecutionEvent(StepEnd, stepRes, nil)
+
+	Notify(stepStartEvent)
+	c.Assert(<-ch1, DeepEquals, stepStartEvent)
+	c.Assert(<-ch2, DeepEquals, stepStartEvent)
+
+	Notify(stepEndEvent)
+	c.Assert(<-ch1, DeepEquals, stepEndEvent)
+	c.Assert(<-ch2, DeepEquals, stepEndEvent)
 }
 
 func contains(arr []chan ExecutionEvent, key chan ExecutionEvent) bool {
