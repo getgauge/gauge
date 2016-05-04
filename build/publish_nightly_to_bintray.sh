@@ -29,6 +29,8 @@ if [ -z "$RENAME" ]; then
     RENAME=0
 fi
 
+command -v jq >/dev/null 2>&1 || { echo >&2 "jq is not installed, aborting."; exit 1; }
+
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
 
 function setVersion () {
@@ -106,6 +108,22 @@ function bintraySetDownloads () {
     done
 }
 
+function cleanOldNightlyVersions() {
+    URL="https://api.bintray.com/packages/gauge/$PACKAGE/$BINTRAY_PACKAGE"
+    versions=($(curl -X GET -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL | jq -r '.versions'))
+    for v in ${versions[@]:11}; do
+        version=$(echo $v | sed -e 's/,//' -e 's/"//g')
+        echo "Deleting version: $version"
+        DELETE_URL="$URL/versions/$version"
+        RESPONSE_CODE=$(curl -X DELETE -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $DELETE_URL -s -w "%{http_code}" -o /dev/null);
+        if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
+            echo "Unable to delete version : $v, HTTP response code: $RESPONSE_CODE"
+            exit 1
+        fi
+        echo "HTTP response code: $RESPONSE_CODE"
+    done;
+}
+
 function snooze () {
     echo "\nSleeping for 30 seconds. Have a coffee..."
     sleep 30s;
@@ -126,3 +144,4 @@ printMeta
 bintrayUpload
 snooze
 bintraySetDownloads
+cleanOldNightlyVersions
