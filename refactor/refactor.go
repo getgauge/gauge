@@ -66,10 +66,14 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
 	}
-	agent, err := getRefactorAgent(oldStep, newStep, startChan)
+	agent, errs := getRefactorAgent(oldStep, newStep, startChan)
 
-	if err != nil {
-		return rephraseFailure(err.Error())
+	if len(errs) > 0 {
+		var messages []string
+		for _, err := range errs {
+			messages = append(messages, err.Error())
+		}
+		return rephraseFailure(messages...)
 	}
 
 	result := &refactoringResult{Success: true, Errors: make([]string, 0), warnings: make([]string, 0)}
@@ -195,22 +199,22 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, error) {
+func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, []*parser.ParseError) {
 	specParser := new(parser.SpecParser)
-	stepTokens, err := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
-	if err != nil {
-		return nil, err
+	stepTokens, errs := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
+	if len(errs) > 0 {
+		return nil, errs
 	}
 
 	steps := make([]*gauge.Step, 0)
 	for _, stepToken := range stepTokens {
 		step, parseDetails := parser.CreateStepUsingLookup(stepToken, nil)
-		if parseDetails != nil && parseDetails.Error != nil {
-			return nil, parseDetails.Error
+		if parseDetails != nil && len(parseDetails.Errors) > 0 {
+			return nil, parseDetails.Errors
 		}
 		steps = append(steps, step)
 	}
-	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, nil
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, []*parser.ParseError{}
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string) ([]string, error) {

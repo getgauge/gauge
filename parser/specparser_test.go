@@ -70,12 +70,12 @@ func (s *MySuite) TestParsingMultipleSpecHeading(c *C) {
 
 func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("").specHeading("Another Spec Heading").String()
+	specText := SpecBuilder().specHeading("").text("dsfdsf").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, res := parser.Parse(specText, gauge.NewConceptDictionary())
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "1: Spec heading should have at least one character => ''")
+	c.Assert(len(res.ParseErrors) > 0, Equals, true)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "1: Spec heading should have at least one character => ''")
 }
 
 func (s *MySuite) TestParsingScenarioHeading(c *C) {
@@ -94,10 +94,10 @@ func (s *MySuite) TestParsingThrowErrorForEmptyScenarioHeading(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, errs := parser.GenerateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "2: Scenario heading should have at least one character => ''")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "2: Scenario heading should have at least one character => ''")
 }
 
 func (s *MySuite) TestParsingScenarioWithoutSpecHeading(c *C) {
@@ -427,18 +427,18 @@ func (s *MySuite) TestParsingDataTableThrowsErrorWithEmptyHeader(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id |||").text("| escape \\| pipe |second|third|second|").String()
 
-	_, err := parser.GenerateTokens(specText)
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "2: Table header should not be blank => '| name|id |||'")
+	_, errs := parser.GenerateTokens(specText)
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "2: Table header should not be blank => '| name|id |||'")
 }
 
 func (s *MySuite) TestParsingDataTableThrowsErrorWithSameColumnHeader(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("| name|id|name|").text("|1|2|3|").String()
 
-	_, err := parser.GenerateTokens(specText)
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "2: Table header cannot have repeated column values => '| name|id|name|'")
+	_, errs := parser.GenerateTokens(specText)
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "2: Table header cannot have repeated column values => '| name|id|name|'")
 }
 
 func (s *MySuite) TestParsingDataTableWithSeparatorAsHeader(c *C) {
@@ -583,17 +583,9 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	c.Assert(secondStepInSpec.Parent, IsNil)
 }
 
-func (s *MySuite) TestTableFromInvalidFile(c *C) {
-	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
-
-	_, err := parser.GenerateTokens(specText)
-	c.Assert(err.Message, Equals, "Could not resolve table from table: inputinvalid.csv")
-}
-
 func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").String()
+	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").text("comment").String()
 
 	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
@@ -602,7 +594,7 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 
 func (s *MySuite) TestTableInputFromFile(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").String()
+	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").text("comment").String()
 
 	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
@@ -645,13 +637,14 @@ func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 1},
 		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 2},
+		&Token{Kind: gauge.CommentKind, Value: "Comment", LineNo: 3},
 	}
 
 	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Scenario should be defined after the spec heading")
+	c.Assert(result.ParseErrors[0].Message, Equals, "Spec heading not found")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 1)
 }
 
@@ -737,6 +730,18 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 	c.Assert(scenario.Heading.Value, Equals, "Scenario Heading")
 	c.Assert(len(scenario.Steps), Equals, 1)
 }
+
+func (s *MySuite) TestTableFromInvalidFile(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").text("comment").String()
+
+	tokens, _ := parser.GenerateTokens(specText)
+	_, res := parser.CreateSpecification(tokens, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors) > 0, Equals, true)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
+}
+
 
 func (s *MySuite) TestStepsWithParam(c *C) {
 	tokens := []*Token{
@@ -1345,4 +1350,82 @@ func (s *MySuite) TestCreateStepWithNewlineBetweenTextAndTable(c *C) {
 	spec, _ := new(SpecParser).CreateSpecification(tokens, conceptDictionary)
 
 	c.Assert(spec.Scenarios[0].Steps[0].HasInlineTable, Equals, true)
+}
+
+func (s *MySuite) TestSpecParsingWhenSpecHeadingIsNotPresentAndDynamicParseError(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse(`#
+Scenario Heading
+----------------
+* def <a>
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "1: Spec heading should have at least one character => ''")
+	c.Assert(res.ParseErrors[1].Error(), Equals, "4: Dynamic parameter <a> could not be resolved => 'def <a>'")
+}
+
+func (s *MySuite) TestSpecParsingWhenSpecHeadingIsNotPresent(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse(`#
+Scenario Heading
+----------------
+* def "sad"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 1)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "1: Spec heading should have at least one character => ''")
+}
+
+func (s *MySuite) TestSpecParsingWhenUnderlinedSpecHeadingIsNotPresent(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse(`======
+Scenario Heading
+----------------
+* def "sd"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "1: Spec heading not found => ''")
+	c.Assert(res.ParseErrors[1].Error(), Equals, "2: Parse error: Scenario should be defined after the spec heading => 'Scenario Heading'")
+}
+
+func (s *MySuite) TestProcessingTokensGivesErrorWhenSpecHeadingHasOnlySpaces(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse("#" + "           " + `
+Scenario Heading
+----------------
+* def "sd"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 1)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "1: Spec heading should have at least one character => ''")
+}
+
+func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingIsEmpty(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse(`# dfgdfg
+##
+* def "sd"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 1)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "2: Scenario heading should have at least one character => ''")
+}
+
+func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingHasOnlySpaces(c *C) {
+	p := new(SpecParser)
+
+	_, res := p.Parse(`# dfgs
+##`  + "           " + `
+* def "sd"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(res.ParseErrors), Equals, 1)
+	c.Assert(res.ParseErrors[0].Error(), Equals, "2: Scenario heading should have at least one character => ''")
 }

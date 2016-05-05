@@ -42,9 +42,9 @@ func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	step2 := &gauge.Step{Value: step2Text, LineNo: 4, IsConcept: true, LineText: step2Text}
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 
-	err := AddConcepts(path, dictionary)
+	errs := AddConcepts(path, dictionary)
 
-	c.Assert(err, IsNil)
+	c.Assert(len(errs), Equals, 0)
 	assertStepEqual(c, dictionary.ConceptsMap[step1Text].ConceptStep, step1)
 	c.Assert(dictionary.ConceptsMap[step1Text].FileName, Equals, path)
 	assertStepEqual(c, dictionary.ConceptsMap[step2Text].ConceptStep, step2)
@@ -55,10 +55,10 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "duplicate_concept.cpt"))
 
-	err := AddConcepts(path, dictionary)
+	errs := AddConcepts(path, dictionary)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Message, Equals, "Duplicate concept definition found")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found")
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -202,7 +202,7 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	parser := new(ConceptParser)
 	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step ")
 
-	c.Assert(parseRes.Error, IsNil)
+	c.Assert(len(parseRes.Errors), Equals, 0)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -217,12 +217,12 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept with \"paratemer\" \n * first step \n * second step ")
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
 
 	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ")
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <table: foo> could not be resolved")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Dynamic parameter <table: foo> could not be resolved")
 
 }
 
@@ -231,8 +231,8 @@ func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
 
 	_, parseRes := parser.Parse("* first step \n * second step ")
 
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Step is not defined inside a concept heading")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Step is not defined inside a concept heading")
 }
 
 func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
@@ -240,15 +240,15 @@ func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 
 	_, parseRes := parser.Parse("# my concept with \n")
 
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Concept should have atleast one step")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Concept should have atleast one step")
 }
 
 func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 	parser := new(ConceptParser)
 	concepts, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ")
 
-	c.Assert(parseRes.Error, IsNil)
+	c.Assert(len(parseRes.Errors), Equals, 0)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -278,23 +278,23 @@ func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept \n * first step using \n * my concept ")
 
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Cyclic dependancy found. Step is calling concept again.")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Cyclic dependancy found. Step is calling concept again.")
 }
 
 func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
 
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <param3> could not be resolved")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Dynamic parameter <param3> could not be resolved")
 }
 
 func (s *MySuite) TestParsingMultipleConcept(c *C) {
 	parser := new(ConceptParser)
 	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ")
 
-	c.Assert(parseRes.Error, IsNil)
+	c.Assert(len(parseRes.Errors), Equals, 0)
 	c.Assert(len(concepts), Equals, 3)
 
 	firstConcept := concepts[0]
@@ -326,7 +326,7 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	parser := new(ConceptParser)
 	concepts, parseRes := parser.Parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
-	c.Assert(parseRes.Error, IsNil)
+	c.Assert(len(parseRes.Errors), Equals, 0)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -356,8 +356,8 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n")
 
-	c.Assert(parseRes.Error, NotNil)
-	c.Assert(parseRes.Error.Message, Equals, "Table doesn't belong to any step")
+	c.Assert(len(parseRes.Errors), Not(Equals), 0)
+	c.Assert(parseRes.Errors[0].Message, Equals, "Table doesn't belong to any step")
 }
 
 func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
@@ -461,10 +461,10 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "circular_concept.cpt"))
 
-	err := AddConcepts(path, dictionary)
+	errs := AddConcepts(path, dictionary)
 
-	c.Assert(err, NotNil)
-	c.Assert(true, Equals, strings.Contains(err.Message, "Circular reference found in concept"))
+	c.Assert(len(errs), Not(Equals), 0)
+	c.Assert(true, Equals, strings.Contains(errs[0].Message, "Circular reference found in concept"))
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
@@ -483,7 +483,7 @@ func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
 		specHeading("create user <user:id> <table:name> and <file>").
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText)
-	c.Assert(parseRes.Error.Message, Equals, "Dynamic parameter <table:name> could not be resolved")
+	c.Assert(parseRes.Errors[0].Message, Equals, "Dynamic parameter <table:name> could not be resolved")
 }
 
 func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
@@ -491,7 +491,7 @@ func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 		specHeading("create user <user:id> \"abc\" and <file>").
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText)
-	c.Assert(parseRes.Error.Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(parseRes.Errors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
 }
 
 func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
@@ -507,8 +507,7 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 		String()
 	_, res := new(ConceptParser).Parse(conceptText)
 
-	var nilErr *ParseError
-	c.Assert(res.Error, Not(Equals), nilErr)
-	c.Assert(res.Error.Message, Equals, "Scenario Heading is not allowed in concept file")
-	c.Assert(res.Error.LineText, Equals, strings.TrimSpace(scenarioHeading))
+	c.Assert(len(res.Errors), Not(Equals), 0)
+	c.Assert(res.Errors[0].Message, Equals, "Scenario Heading is not allowed in concept file")
+	c.Assert(res.Errors[0].LineText, Equals, strings.TrimSpace(scenarioHeading))
 }

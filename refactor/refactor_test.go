@@ -40,11 +40,11 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgs(c *C) {
 		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 3},
 	}
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
-	agent, err := getRefactorAgent(oldStep, newStep, nil)
+	agent, errs := getRefactorAgent(oldStep, newStep, nil)
 	specs := append(make([]*gauge.Specification, 0), spec)
 	agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
-	c.Assert(err, Equals, nil)
+	c.Assert(len(errs), Equals, 0)
 	c.Assert(len(specs[0].Scenarios[0].Steps), Equals, 1)
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, newStep)
 }
@@ -63,11 +63,11 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneScenario(c *
 		&parser.Token{Kind: gauge.StepKind, Value: oldStep, LineNo: 50},
 	}
 	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
-	agent, err := getRefactorAgent(oldStep, newStep, nil)
+	agent, errs := getRefactorAgent(oldStep, newStep, nil)
 	specs := append(make([]*gauge.Specification, 0), spec)
 	agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
-	c.Assert(err, Equals, nil)
+	c.Assert(len(errs), Equals, 0)
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
 	c.Assert(len(specs[0].Scenarios[0].Steps), Equals, 2)
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, newStep)
@@ -95,13 +95,13 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	spec1, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
 	specs := append(make([]*gauge.Specification, 0), spec)
 	specs = append(specs, spec1)
-	agent, err := getRefactorAgent(oldStep, newStep, nil)
+	agent, errs := getRefactorAgent(oldStep, newStep, nil)
 	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	for _, isRefactored := range specRefactored {
 		c.Assert(true, Equals, isRefactored)
 	}
-	c.Assert(err, Equals, nil)
+	c.Assert(len(errs), Equals, 0)
 	c.Assert(len(specs[0].Scenarios[0].Steps), Equals, 1)
 	c.Assert(specs[0].Scenarios[0].Steps[0].Value, Equals, newStep)
 

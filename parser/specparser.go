@@ -68,17 +68,20 @@ func (parser *SpecParser) initialize() {
 }
 
 func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {
-	tokens, parseError := parser.GenerateTokens(specText)
-	if parseError != nil {
-		return nil, &ParseResult{ParseErrors: []*ParseError{parseError}, Ok: false}
+	tokens, errs:= parser.GenerateTokens(specText)
+	spec, res := parser.CreateSpecification(tokens, conceptDictionary)
+	if len(errs) > 0 {
+		res.Ok = false
 	}
-	return parser.CreateSpecification(tokens, conceptDictionary)
+	res.ParseErrors = append(errs, res.ParseErrors...)
+	return spec, res
 }
 
-func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError) {
+func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, []*ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial
+	var errors []*ParseError
 	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
 		trimmedLine := strings.TrimSpace(line)
 		var newToken *Token
@@ -110,12 +113,12 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, *ParseError
 		} else {
 			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
-		error := parser.accept(newToken)
-		if error != nil {
-			return nil, error
+		err := parser.accept(newToken)
+		if err != nil {
+			errors = append(errors, err)
 		}
 	}
-	return parser.tokens, nil
+	return parser.tokens, errors
 }
 
 func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
@@ -197,15 +200,9 @@ func isConceptHeader(lookup *gauge.ArgLookup) bool {
 }
 
 func (parser *SpecParser) accept(token *Token) *ParseError {
-	error, shouldSkip := parser.processors[token.Kind](parser, token)
-	if error != nil {
-		return error
-	}
-	if shouldSkip {
-		return nil
-	}
+	error, _ := parser.processors[token.Kind](parser, token)
 	parser.tokens = append(parser.tokens, token)
-	return nil
+	return error
 }
 
 func (parser *SpecParser) nextLine() (string, bool) {
@@ -252,7 +249,7 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	validationError := parser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.Ok = false
-		finalResult.ParseErrors = append(finalResult.ParseErrors, validationError)
+		finalResult.ParseErrors = append([]*ParseError{validationError},finalResult.ParseErrors...)
 	}
 	return specification, finalResult
 }
@@ -295,8 +292,8 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		latestScenario := spec.LatestScenario()
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
+		if parseDetails != nil && len(parseDetails.Errors) > 0 {
+			return ParseResult{ParseErrors: parseDetails.Errors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		latestScenario.AddStep(stepToAdd)
 		retainStates(state, specScope, scenarioScope)
@@ -311,8 +308,8 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope) && !isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
+		if parseDetails != nil && len(parseDetails.Errors) > 0 {
+			return ParseResult{ParseErrors: parseDetails.Errors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.AddContext(stepToAdd)
 		retainStates(state, specScope)
@@ -336,8 +333,8 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && parseDetails.Error != nil {
-			return ParseResult{ParseErrors: []*ParseError{parseDetails.Error}, Ok: false, Warnings: parseDetails.Warnings}
+		if parseDetails != nil && len(parseDetails.Errors) > 0 {
+			return ParseResult{ParseErrors: parseDetails.Errors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.TearDownSteps = append(spec.TearDownSteps, stepToAdd)
 		spec.AddItem(stepToAdd)
@@ -372,7 +369,11 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	keywordConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.DataTableKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		resolvedArg, _ := newSpecialTypeResolver().resolve(token.Value)
+		resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
+		if resolvedArg == nil || err != nil {
+			e := &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
+			return ParseResult{ParseErrors: []*ParseError{e}, Ok: false}
+		}
 		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
 			externalTable := &gauge.DataTable{}
 			externalTable.Table = resolvedArg.Table
@@ -489,6 +490,10 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) *Pars
 	if specification.Heading == nil {
 		return &ParseError{LineNo: 1, Message: "Spec heading not found"}
 	}
+	if len(strings.TrimSpace(specification.Heading.Value)) < 1 {
+		return &ParseError{LineNo: specification.Heading.LineNo, Message: "Spec heading should have at least one character"}
+	}
+
 	dataTable := specification.DataTable.Table
 	if dataTable.IsInitialized() && dataTable.GetRowCount() == 0 {
 		return &ParseError{LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
@@ -543,7 +548,7 @@ func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *Pars
 	dataTableLookup := new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table)
 	stepToAdd, parseDetails := CreateStepUsingLookup(stepToken, dataTableLookup)
 
-	if parseDetails != nil && parseDetails.Error != nil {
+	if parseDetails != nil && len(parseDetails.Errors) > 0 {
 		return nil, parseDetails
 	}
 	return stepToAdd, parseDetails
@@ -552,14 +557,14 @@ func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *Pars
 func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup) (*gauge.Step, *ParseDetailResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
-		return nil, &ParseDetailResult{Error: &ParseError{stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}, Warnings: nil}
+		return nil, &ParseDetailResult{Errors: []*ParseError{&ParseError{stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}}, Warnings: nil}
 	}
 	step := &gauge.Step{LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
 	arguments := make([]*gauge.StepArg, 0)
 	var warnings []*Warning
 	for i, argType := range argsType {
 		argument, parseDetails := createStepArg(stepToken.Args[i], argType, stepToken, lookup)
-		if parseDetails != nil && parseDetails.Error != nil {
+		if parseDetails != nil && len(parseDetails.Errors) > 0 {
 			return nil, parseDetails
 		}
 		arguments = append(arguments, argument)
@@ -619,7 +624,7 @@ func createStepArg(argValue string, typeOfArg string, token *Token, lookup *gaug
 			case invalidSpecialParamError:
 				return treatArgAsDynamic(argValue, token, lookup)
 			default:
-				return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
+				return nil, &ParseDetailResult{Errors: []*ParseError{&ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
 			}
 		}
 		return resolvedArgValue, nil
@@ -634,8 +639,8 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *gauge.ArgLookup) (
 	parseDetailRes := &ParseDetailResult{Warnings: []*Warning{&Warning{LineNo: token.LineNo, Message: fmt.Sprintf("Could not resolve special param type <%s>. Treating it as dynamic param.", argValue)}}}
 	stepArg, result := validateDynamicArg(argValue, token, lookup)
 	if result != nil {
-		if result.Error != nil {
-			parseDetailRes.Error = result.Error
+		if len(result.Errors) > 0 {
+			parseDetailRes.Errors = result.Errors
 		}
 		if result.Warnings != nil {
 			for _, warn := range result.Warnings {
@@ -648,7 +653,7 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *gauge.ArgLookup) (
 
 func validateDynamicArg(argValue string, token *Token, lookup *gauge.ArgLookup) (*gauge.StepArg, *ParseDetailResult) {
 	if !isConceptHeader(lookup) && !lookup.ContainsArg(argValue) {
-		return nil, &ParseDetailResult{Error: &ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}
+		return nil, &ParseDetailResult{Errors: []*ParseError{&ParseError{LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
 	}
 	stepArgument := &gauge.StepArg{ArgType: gauge.Dynamic, Value: argValue, Name: argValue}
 	return stepArgument, nil
@@ -720,7 +725,7 @@ type ParseError struct {
 }
 
 type ParseDetailResult struct {
-	Error    *ParseError
+	Errors    []*ParseError
 	Warnings []*Warning
 }
 

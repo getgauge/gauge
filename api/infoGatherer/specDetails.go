@@ -189,8 +189,10 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 	logger.APILog.Info("Concept file added / modified: %s", file)
 	conceptParser := new(parser.ConceptParser)
 	concepts, parseResults := conceptParser.ParseFile(file)
-	if parseResults != nil && parseResults.Error != nil {
-		logger.APILog.Error("Error parsing concepts: ", parseResults.Error)
+	if parseResults != nil && len(parseResults.Errors) > 0 {
+		for _, err := range parseResults.Errors {
+			logger.APILog.Error("Error parsing concepts: ", err)
+		}
 		return
 	}
 

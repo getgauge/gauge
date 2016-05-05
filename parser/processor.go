@@ -19,16 +19,12 @@ package parser
 
 import (
 	"bytes"
-	"fmt"
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
 )
 
 func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
-	if len(strings.TrimSpace(token.Value)) < 1 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Spec heading should have at least one character"}, true
-	}
 	return nil, false
 }
 
@@ -42,10 +38,6 @@ func processTearDown(parser *SpecParser, token *Token) (*ParseError, bool) {
 func processDataTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 	if len(strings.TrimSpace(strings.Replace(token.Value, "table:", "", 1))) == 0 {
 		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table location not specified"}, true
-	}
-	resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
-	if resolvedArg == nil || err != nil {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}, true
 	}
 	return nil, false
 }

@@ -40,10 +40,10 @@ func (s *MySuite) TestParsingEmptyStepTextShouldThrowError(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, errs := parser.GenerateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "3: Step should not be blank => ''")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "3: Step should not be blank => ''")
 }
 
 func (s *MySuite) TestParsingStepWithParams(c *C) {
@@ -90,10 +90,10 @@ func (s *MySuite) TestParsingStepWithUnmatchedOpeningQuote(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("sample step \"param").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, errs := parser.GenerateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "3: String not terminated => 'sample step \"param'")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "3: String not terminated => 'sample step \"param'")
 }
 
 func (s *MySuite) TestParsingStepWithEscaping(c *C) {
@@ -111,10 +111,10 @@ func (s *MySuite) TestParsingExceptionIfStepContainsReservedChars(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("step with {braces}").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, errs := parser.GenerateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "3: '{' is a reserved character and should be escaped => 'step with {braces}'")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "3: '{' is a reserved character and should be escaped => 'step with {braces}'")
 }
 
 func (s *MySuite) TestParsingStepContainsEscapedReservedChars(c *C) {
@@ -146,10 +146,10 @@ func (s *MySuite) TestParsingStepWithUnmatchedDynamicParameterCharacter(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").step("Step with \"static param\" and <name1").String()
 
-	_, err := parser.GenerateTokens(specText)
+	_, errs := parser.GenerateTokens(specText)
 
-	c.Assert(err, NotNil)
-	c.Assert(err.Error(), Equals, "3: Dynamic parameter not terminated => 'Step with \"static param\" and <name1'")
+	c.Assert(len(errs) > 0, Equals, true)
+	c.Assert(errs[0].Error(), Equals, "3: Dynamic parameter not terminated => 'Step with \"static param\" and <name1'")
 
 }
 
