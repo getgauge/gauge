@@ -18,9 +18,10 @@
 package filter
 
 import (
-	"github.com/getgauge/gauge/util"
 	"regexp"
 	"strconv"
+
+	"github.com/getgauge/gauge/util"
 )
 
 func isIndexedSpec(specSource string) bool {

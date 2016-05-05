@@ -742,7 +742,6 @@ func (s *MySuite) TestTableFromInvalidFile(c *C) {
 	c.Assert(res.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 }
 
-
 func (s *MySuite) TestStepsWithParam(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
@@ -1396,7 +1395,7 @@ Scenario Heading
 func (s *MySuite) TestProcessingTokensGivesErrorWhenSpecHeadingHasOnlySpaces(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse("#" + "           " + `
+	_, res := p.Parse("#"+"           "+`
 Scenario Heading
 ----------------
 * def "sd"
@@ -1422,7 +1421,7 @@ func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingHasOnlySpaces
 	p := new(SpecParser)
 
 	_, res := p.Parse(`# dfgs
-##`  + "           " + `
+##`+"           "+`
 * def "sd"
 `, gauge.NewConceptDictionary())
 

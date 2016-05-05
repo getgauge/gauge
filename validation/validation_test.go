@@ -20,9 +20,9 @@ package validation
 import (
 	"testing"
 
-	. "gopkg.in/check.v1"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/parser"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -61,7 +61,6 @@ Scenario 2
 	c.Assert(len(errMap.ScenarioErrs), Equals, 2)
 	c.Assert(len(errMap.StepErrs), Equals, 2)
 }
-
 
 func (s *MySuite) TestDoesNotSkipSpecIfAllScenariosAreNotSkipped(c *C) {
 	specText := `Specification Heading

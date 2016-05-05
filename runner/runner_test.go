@@ -18,9 +18,10 @@
 package runner
 
 import (
+	"testing"
+
 	"github.com/getgauge/common"
 	. "gopkg.in/check.v1"
-	"testing"
 )
 
 func Test(t *testing.T) { TestingT(t) }

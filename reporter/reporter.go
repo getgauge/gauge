@@ -88,7 +88,7 @@ func ListenExecutionEvents() {
 
 	go func() {
 		for {
-			e := <- ch
+			e := <-ch
 			switch e.Topic {
 			case event.SpecStart:
 				Current().SpecStart(e.Item.(*gauge.Specification).Heading.Value)

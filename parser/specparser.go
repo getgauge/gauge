@@ -68,7 +68,7 @@ func (parser *SpecParser) initialize() {
 }
 
 func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {
-	tokens, errs:= parser.GenerateTokens(specText)
+	tokens, errs := parser.GenerateTokens(specText)
 	spec, res := parser.CreateSpecification(tokens, conceptDictionary)
 	if len(errs) > 0 {
 		res.Ok = false
@@ -249,7 +249,7 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	validationError := parser.validateSpec(specification)
 	if validationError != nil {
 		finalResult.Ok = false
-		finalResult.ParseErrors = append([]*ParseError{validationError},finalResult.ParseErrors...)
+		finalResult.ParseErrors = append([]*ParseError{validationError}, finalResult.ParseErrors...)
 	}
 	return specification, finalResult
 }
@@ -725,7 +725,7 @@ type ParseError struct {
 }
 
 type ParseDetailResult struct {
-	Errors    []*ParseError
+	Errors   []*ParseError
 	Warnings []*Warning
 }
 

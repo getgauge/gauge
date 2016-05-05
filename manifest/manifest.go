@@ -20,12 +20,13 @@ package manifest
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
 	"io"
 	"io/ioutil"
 	"path/filepath"
 	"strings"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 )
 
 type Manifest struct {

@@ -18,18 +18,18 @@
 package reporter
 
 import (
+	"github.com/getgauge/gauge/execution/event"
 	. "gopkg.in/check.v1"
-    "github.com/getgauge/gauge/execution/event"
 )
 
 func (s *MySuite) TestSubscribeSpecEnd(c *C) {
-    dw, sc := setupSimpleConsole()
-    currentReporter = sc
-    SimpleConsoleOutput = true
-    event.InitRegistry()
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
 
-    ListenExecutionEvents()
+	ListenExecutionEvents()
 
-    event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, nil))
-    c.Assert(dw.output, Equals, "\n")
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, nil))
+	c.Assert(dw.output, Equals, "\n")
 }
