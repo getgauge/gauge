@@ -83,6 +83,7 @@ func ExecuteSpecs(specDirs []string) int {
 	ei := newExecutionInfo(specs, runner, nil, reporter.Current(), errMap, InParallel)
 	e := newExecution(ei)
 	event.InitRegistry()
+	reporter.ListenExecutionEvents()
 	return printExecutionStatus(e.run(), errMap)
 }
 

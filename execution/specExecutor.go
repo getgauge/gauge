@@ -76,7 +76,6 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 
 	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil))
-	e.consoleReporter.SpecStart(specInfo.GetName())
 	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult))
 
 	res := e.initSpecDataStore()
@@ -98,7 +97,6 @@ func (e *specExecutor) execute() *result.SpecResult {
 	e.notifyAfterSpecHook()
 
 	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount > 0)
-	e.consoleReporter.SpecEnd()
 	return e.specResult
 }
 

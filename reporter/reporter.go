@@ -21,6 +21,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/gauge"
 )
 
 // SimpleConsoleOutput represents if coloring should be removed from the Console output
@@ -76,4 +79,22 @@ func (p *parallelReportWriter) Write(b []byte) (int, error) {
 func NewParallelConsole(n int) Reporter {
 	writer := &parallelReportWriter{nRunner: n}
 	return newSimpleConsole(writer)
+}
+
+// ListenExecutionEvents listens to all execution events for reporting on console
+func ListenExecutionEvents() {
+	ch := make(chan event.ExecutionEvent, 0)
+	event.Register(ch, event.SpecStart, event.SpecEnd)
+
+	go func() {
+		for {
+			e := <- ch
+			switch e.Topic {
+			case event.SpecStart:
+				Current().SpecStart(e.Item.(*gauge.Specification).Heading.Value)
+			case event.SpecEnd:
+				Current().SpecEnd()
+			}
+		}
+	}()
 }
