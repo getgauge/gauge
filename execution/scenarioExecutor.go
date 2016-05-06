@@ -58,7 +58,6 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		return
 	}
 
-	e.consoleReporter.ScenarioStart(scenarioResult.ProtoScenario.GetScenarioHeading())
 	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil))
 	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, scenarioResult))
 
@@ -79,7 +78,6 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	}
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
-	e.consoleReporter.ScenarioEnd(scenarioResult.GetFailed())
 }
 
 func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {

@@ -19,6 +19,9 @@ package reporter
 
 import (
 	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/gauge"
 	. "gopkg.in/check.v1"
 )
 
@@ -32,4 +35,44 @@ func (s *MySuite) TestSubscribeSpecEnd(c *C) {
 
 	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, nil))
 	c.Assert(dw.output, Equals, "\n")
+}
+
+func (s *MySuite) TestSubscribeSpecStart(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	spec := &gauge.Specification{Heading: &gauge.Heading{Value: "My Spec Heading"}}
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil))
+	c.Assert(dw.output, Equals, "# My Spec Heading\n")
+}
+
+func (s *MySuite) TestSubscribeScenarioStart(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}}
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil))
+	c.Assert(dw.output, Equals, "  ## My Scenario Heading\n")
+}
+
+func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	sceHeading := "My scenario heading"
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes))
+	c.Assert(dw.output, Equals, "")
 }
