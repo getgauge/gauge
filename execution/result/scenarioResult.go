@@ -26,6 +26,10 @@ type ScenarioResult struct {
 	ProtoScenario *gauge_messages.ProtoScenario
 }
 
+func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
+	return &ScenarioResult{ProtoScenario: sce}
+}
+
 func (scenarioResult *ScenarioResult) SetFailure() {
 	scenarioResult.ProtoScenario.Failed = proto.Bool(true)
 }

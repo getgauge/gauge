@@ -264,7 +264,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 		IsFailed: proto.Bool(false),
 	}
 
-	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
+	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
 	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap)
