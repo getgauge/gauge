@@ -201,7 +201,7 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 	}
 }
 
-func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
+func CreateConceptsDictionary(dirs []string) (*gauge.ConceptDictionary, *ParseResult) {
 	cptFilesMap := make(map[string]bool, 0)
 	for _, dir := range dirs {
 		for _, cpt := range util.GetConceptFiles(dir) {
@@ -216,11 +216,8 @@ func CreateConceptsDictionary(shouldIgnoreErrors bool, dirs []string) (*gauge.Co
 	conceptsDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		if errs := AddConcepts(conceptFile, conceptsDictionary); len(errs) > 0 {
-			if shouldIgnoreErrors {
-				for _, err := range errs {
-					logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
-				}
-				continue
+			for _, err := range errs {
+				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
 			}
 			return nil, &ParseResult{ParseErrors: errs, FileName: conceptFile}
 		}

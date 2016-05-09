@@ -139,7 +139,7 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*gauge.Specifica
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
-	s.conceptDictionary, result = parser.CreateConceptsDictionary(true, s.SpecDirs)
+	s.conceptDictionary, result = parser.CreateConceptsDictionary(s.SpecDirs)
 	handleParseFailures([]*parser.ParseResult{result})
 	return s.conceptDictionary.ConceptsMap
 }

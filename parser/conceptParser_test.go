@@ -67,7 +67,7 @@ func (s *MySuite) TestCreateConceptDictionary(c *C) {
 	os.Chdir(config.ProjectRoot)
 	cpt := "dir1"
 
-	dict, res := CreateConceptsDictionary(false, []string{cpt, cpt})
+	dict, res := CreateConceptsDictionary([]string{cpt, cpt})
 	os.Chdir(oldWd)
 
 	c.Assert(res.Ok, Equals, true)
