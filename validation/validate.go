@@ -109,10 +109,12 @@ func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *Vali
 		fillErrors(errMap, vErrs)
 	}
 	if f {
+		r.Kill()
 		os.Exit(1)
 	}
 	if len(s) == 0 {
 		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
+		r.Kill()
 		os.Exit(0)
 	}
 	return gauge.NewSpecCollection(s), errMap
