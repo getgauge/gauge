@@ -94,16 +94,16 @@ func ListenExecutionEvents() {
 			switch e.Topic {
 			case event.SpecStart:
 				Current().SpecStart(e.Item.(*gauge.Specification).Heading.Value)
-			case event.SpecEnd:
-				Current().SpecEnd()
 			case event.ScenarioStart:
 				Current().ScenarioStart(e.Item.(*gauge.Scenario).Heading.Value)
-			case event.ScenarioEnd:
-				Current().ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
 			case event.StepStart:
 				Current().StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepEnd:
 				Current().StepEnd(e.Result.(*result.StepResult).GetFailed())
+			case event.ScenarioEnd:
+				Current().ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
+			case event.SpecEnd:
+				Current().SpecEnd()
 			}
 		}
 	}()
