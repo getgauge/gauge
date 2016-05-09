@@ -22,6 +22,7 @@ import (
 
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
@@ -37,7 +38,8 @@ type stepExecutor struct {
 	consoleReporter      reporter.Reporter
 }
 
-func (e *stepExecutor) executeStep(protoStep *gauge_messages.ProtoStep) *result.StepResult {
+// TODO: stepExecutor should not consume both gauge.Step and gauge_messages.ProtoStep. The usage of ProtoStep should be eliminated.
+func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.ProtoStep) *result.StepResult {
 	stepRequest := e.createStepRequest(protoStep)
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 

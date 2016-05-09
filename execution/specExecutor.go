@@ -268,7 +268,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
 	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap)
-	scenarioExec.execute(scenarioResult, scenario)
+	scenarioExec.execute(scenarioResult, scenario, e.specification.Contexts, e.specification.TearDownSteps)
 	if scenarioResult.ProtoScenario.GetSkipped() {
 		e.specResult.ScenarioSkippedCount++
 	}
