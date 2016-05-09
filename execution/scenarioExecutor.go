@@ -155,10 +155,14 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *gauge_messages.ProtoStepExecutionResult {
 	e.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
+	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
-		e.executeItem(item, protoStep, scenarioResult)
-		if scenarioResult.GetFailed() {
-			return protoConcept.GetConceptExecutionResult()
+		if protoStep.GetItemType() == gauge_messages.ProtoItem_Concept || protoStep.GetItemType() == gauge_messages.ProtoItem_Step {
+			e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
+			conceptStepIndex ++
+			if scenarioResult.GetFailed() {
+				return protoConcept.GetConceptExecutionResult()
+			}
 		}
 	}
 	conceptFailed := protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()

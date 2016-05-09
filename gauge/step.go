@@ -59,6 +59,10 @@ func (step *Step) GetArg(name string) *StepArg {
 	return step.Parent.GetArg(step.Lookup.GetArg(name).Value)
 }
 
+func (step *Step) GetFragments() []*gauge_messages.Fragment {
+	return step.Fragments
+}
+
 func (step *Step) getLineText() string {
 	if step.HasInlineTable {
 		return fmt.Sprintf("%s <%s>", step.LineText, TableArg)
