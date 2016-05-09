@@ -23,8 +23,8 @@ import (
 	"os"
 
 	"github.com/getgauge/gauge/execution/event"
-	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 )
 

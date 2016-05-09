@@ -87,34 +87,3 @@ func (scenarioResult *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookF
 func (r *ScenarioResult) item() interface{} {
 	return r.ProtoScenario
 }
-
-// SetConceptExecResult sets the result of Concept execution
-func SetConceptExecResult(protoConcept *gauge_messages.ProtoConcept) {
-	var conceptExecutionTime int64
-	for _, step := range protoConcept.GetSteps() {
-		if step.GetItemType() == gauge_messages.ProtoItem_Concept {
-			stepExecResult := step.GetConcept().GetConceptExecutionResult().GetExecutionResult()
-			conceptExecutionTime += stepExecResult.GetExecutionTime()
-			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
-				protoConcept.ConceptExecutionResult = conceptExecutionResult
-				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
-			}
-		} else if step.GetItemType() == gauge_messages.ProtoItem_Step {
-			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
-			conceptExecutionTime += stepExecResult.GetExecutionTime()
-			if stepExecResult.GetFailed() {
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
-				protoConcept.ConceptExecutionResult = conceptExecutionResult
-				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
-			}
-		}
-	}
-	protoConcept.ConceptExecutionResult = &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(false), ExecutionTime: proto.Int64(conceptExecutionTime)}}
-	protoConcept.ConceptStep.StepExecutionResult = protoConcept.ConceptExecutionResult
-	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
-}

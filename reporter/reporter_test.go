@@ -88,7 +88,7 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil))
-	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+ stepText+newline)
+	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+stepText+newline)
 }
 
 func (s *MySuite) TestSubscribeStepEnd(c *C) {

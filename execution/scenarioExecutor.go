@@ -137,37 +137,42 @@ func (e *scenarioExecutor) executeItems(items []*gauge.Step, protoItems []*gauge
 }
 
 func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) {
-	var res *gauge_messages.ProtoStepExecutionResult
+	var failed bool
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
 		protoConcept := protoItem.GetConcept()
-		res = e.executeConcept(item, protoConcept, scenarioResult)
-		result.SetConceptExecResult(protoConcept)
+		failed = e.executeConcept(item, protoConcept, scenarioResult).GetFailed()
+
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
-		res = se.executeStep(item, protoItem.GetStep()).ProtoStepExecResult()
-		protoItem.GetStep().StepExecutionResult = res
+		res := se.executeStep(item, protoItem.GetStep())
+		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
+		failed = res.GetFailed()
 	}
-
-	if res.GetExecutionResult().GetFailed() {
+	if failed {
 		scenarioResult.SetFailure()
 	}
 }
 
-func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *gauge_messages.ProtoStepExecutionResult {
+func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
 	e.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
+	cptResult := result.NewConceptResult(protoConcept)
+
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
 		if protoStep.GetItemType() == gauge_messages.ProtoItem_Concept || protoStep.GetItemType() == gauge_messages.ProtoItem_Step {
 			e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
-			conceptStepIndex ++
+			conceptStepIndex++
 			if scenarioResult.GetFailed() {
-				return protoConcept.GetConceptExecutionResult()
+				cptResult.UpdateConceptExecResult()
+				return cptResult
 			}
 		}
 	}
 	conceptFailed := protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
 	e.consoleReporter.ConceptEnd(conceptFailed)
-	return protoConcept.GetConceptExecutionResult()
+
+	cptResult.UpdateConceptExecResult()
+	return cptResult
 }
 
 func setStepFailure(executionInfo *gauge_messages.ExecutionInfo) {
