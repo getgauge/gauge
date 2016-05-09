@@ -24,7 +24,6 @@ import (
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
-
 	. "gopkg.in/check.v1"
 )
 
@@ -32,6 +31,10 @@ func assertStepEqual(c *C, expected, actual *gauge.Step) {
 	c.Assert(expected.LineNo, Equals, actual.LineNo)
 	c.Assert(expected.Value, Equals, actual.Value)
 	c.Assert(expected.LineText, Equals, actual.LineText)
+}
+
+func (s *MySuite) TearDownTest(c *C) {
+	config.ProjectRoot = ""
 }
 
 func (s *MySuite) TestConceptDictionaryAdd(c *C) {
@@ -53,12 +56,24 @@ func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 
 func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	dictionary := gauge.NewConceptDictionary()
-	path, _ := filepath.Abs(filepath.Join("testdata", "duplicate_concept.cpt"))
+	path, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate_concept.cpt"))
 
 	errs := AddConcepts(path, dictionary)
 
 	c.Assert(len(errs) > 0, Equals, true)
 	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found")
+}
+
+func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
+	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err"))
+	oldWd, _ := os.Getwd()
+	os.Chdir(config.ProjectRoot)
+
+	_, res := CreateConceptsDictionary([]string{filepath.Join(config.ProjectRoot, "cpt")})
+
+	os.Chdir(oldWd)
+	c.Assert(res.Ok, Equals, false)
+	c.Assert(len(res.ParseErrors), Equals, 3)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -458,13 +473,16 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 }
 
 func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
-	dictionary := gauge.NewConceptDictionary()
-	path, _ := filepath.Abs(filepath.Join("testdata", "circular_concept.cpt"))
+	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err"))
+	oldWd, _ := os.Getwd()
+	os.Chdir(config.ProjectRoot)
 
-	errs := AddConcepts(path, dictionary)
+	_, res := CreateConceptsDictionary([]string{filepath.Join(config.ProjectRoot, "cpt", "circular_concept.cpt")})
 
-	c.Assert(len(errs), Not(Equals), 0)
-	c.Assert(true, Equals, strings.Contains(errs[0].Message, "Circular reference found in concept"))
+	os.Chdir(oldWd)
+
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found in concept"), Equals, true)
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
@@ -510,4 +528,13 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 	c.Assert(len(res.Errors), Not(Equals), 0)
 	c.Assert(res.Errors[0].Message, Equals, "Scenario Heading is not allowed in concept file")
 	c.Assert(res.Errors[0].LineText, Equals, strings.TrimSpace(scenarioHeading))
+}
+
+func containsAny(errs []*ParseError, msg string) bool {
+	for _, err := range errs {
+		if strings.Contains(err.Message, msg) {
+			return true
+		}
+	}
+	return false
 }
