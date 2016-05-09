@@ -76,3 +76,32 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes))
 	c.Assert(dw.output, Equals, "")
 }
+
+func (s *MySuite) TestSubscribeStepStart(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	stepText := "My first step"
+	step := &gauge.Step{Value: stepText}
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil))
+	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+ stepText+newline)
+}
+
+func (s *MySuite) TestSubscribeStepEnd(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	failed := true
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
+	c.Assert(dw.output, Equals, "")
+}

@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 )
@@ -85,7 +86,7 @@ func NewParallelConsole(n int) Reporter {
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents() {
 	ch := make(chan event.ExecutionEvent, 0)
-	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd)
+	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd)
 
 	go func() {
 		for {
@@ -99,6 +100,10 @@ func ListenExecutionEvents() {
 				Current().ScenarioStart(e.Item.(*gauge.Scenario).Heading.Value)
 			case event.ScenarioEnd:
 				Current().ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
+			case event.StepStart:
+				Current().StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
+			case event.StepEnd:
+				Current().StepEnd(e.Result.(*result.StepResult).GetFailed())
 			}
 		}
 	}()

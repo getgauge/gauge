@@ -21,10 +21,9 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/formatter"
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
@@ -42,33 +41,30 @@ type stepExecutor struct {
 func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.ProtoStep) *result.StepResult {
 	stepRequest := e.createStepRequest(protoStep)
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
+	stepResult := result.NewStepResult(protoStep)
 
-	stepText := formatter.FormatStep(parser.CreateStepFromStepRequest(stepRequest))
-	e.consoleReporter.StepStart(stepText)
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil))
 
-	res := result.NewStepResult(protoStep)
-	e.notifyBeforeStepHook(res)
-
-	if !res.GetFailed() {
+	e.notifyBeforeStepHook(stepResult)
+	if !stepResult.GetFailed() {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(e.currentExecutionInfo)
 		}
-		res.SetProtoExecResult(stepExecutionStatus)
+		stepResult.SetProtoExecResult(stepExecutionStatus)
 	}
+	e.notifyAfterStepHook(stepResult)
 
-	e.notifyAfterStepHook(res)
-
-	stepFailed := res.GetFailed()
+	stepFailed := stepResult.GetFailed()
 	if stepFailed {
 		r := protoStep.GetStepExecutionResult().GetExecutionResult()
 		e.consoleReporter.Errorf("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
 		e.consoleReporter.Errorf("Error Message: %s", strings.TrimSpace(r.GetErrorMessage()))
 		e.consoleReporter.Errorf("Stacktrace: \n%s", r.GetStackTrace())
 	}
-	e.consoleReporter.StepEnd(stepFailed)
-	return res
+	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepResult))
+	return stepResult
 }
 
 func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
