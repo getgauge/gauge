@@ -65,6 +65,7 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 
 func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	dw, sc := setupSimpleConsole()
+	sc.indentation = scenarioIndentation
 	currentReporter = sc
 	SimpleConsoleOutput = true
 	event.InitRegistry()
@@ -75,6 +76,7 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes))
 	c.Assert(dw.output, Equals, "")
+	c.Assert(sc.indentation, Equals, 0)
 }
 
 func (s *MySuite) TestSubscribeStepStart(c *C) {
@@ -93,6 +95,7 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 
 func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	dw, sc := setupSimpleConsole()
+	sc.indentation = stepIndentation
 	currentReporter = sc
 	SimpleConsoleOutput = true
 	event.InitRegistry()
@@ -104,4 +107,36 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 
 	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
 	c.Assert(dw.output, Equals, "")
+	c.Assert(sc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSubscribeConceptStart(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	cptText := "My last concept"
+	concept := &gauge.Step{Value: cptText, IsConcept: true}
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil))
+	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+cptText+newline)
+}
+
+func (s *MySuite) TestSubscribeConceptEnd(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = stepIndentation
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	failed := true
+	cptExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	cptRes := result.NewConceptResult(&gauge_messages.ProtoConcept{ConceptExecutionResult: cptExeRes})
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes))
+	c.Assert(dw.output, Equals, "")
+	c.Assert(sc.indentation, Equals, 0)
 }

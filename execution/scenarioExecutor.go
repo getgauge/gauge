@@ -22,7 +22,6 @@ import (
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/plugin"
@@ -154,8 +153,9 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 }
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
-	e.consoleReporter.ConceptStart(formatter.FormatConcept(protoConcept))
 	cptResult := result.NewConceptResult(protoConcept)
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil))
+	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult))
 
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
@@ -168,9 +168,6 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 			}
 		}
 	}
-	conceptFailed := protoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
-	e.consoleReporter.ConceptEnd(conceptFailed)
-
 	cptResult.UpdateConceptExecResult()
 	return cptResult
 }
