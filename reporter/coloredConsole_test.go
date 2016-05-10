@@ -221,8 +221,7 @@ func (s *MySuite) TestDataTable_ColoredConsole(c *C) {
 |-------|-----------------------------|
 |Gauge  |Test automation with ease    |`
 
-	want := `
-|Product|Description                  |
+	want := `|Product|Description                  |
 |-------|-----------------------------|
 |Gauge  |Test automation with ease    |`
 

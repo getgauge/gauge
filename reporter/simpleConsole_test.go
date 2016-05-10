@@ -163,8 +163,7 @@ func (s *MySuite) TestDataTable_SimpleConsole(c *C) {
 |-------|-----------------------------|
 |Gauge  |Test automation with ease    |`
 
-	want := `
-|Product|Description                  |
+	want := `|Product|Description                  |
 |-------|-----------------------------|
 |Gauge  |Test automation with ease    |`
 
