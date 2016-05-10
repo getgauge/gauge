@@ -19,6 +19,7 @@ package parser
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -223,7 +224,17 @@ func CreateConceptsDictionary(dirs []string) (*gauge.ConceptDictionary, *ParseRe
 			res.Ok = false
 		}
 	}
-	res.ParseErrors = append(res.ParseErrors, validateConcepts(conceptsDictionary)...)
+	vRes := validateConcepts(conceptsDictionary)
+	if len(vRes.ParseErrors) > 0 {
+		for _, err := range res.ParseErrors {
+			logger.Errorf(err.Error())
+		}
+		for _, err := range vRes.ParseErrors {
+			logger.Errorf("%s:%s", vRes.FileName, err.Error())
+		}
+
+		os.Exit(1)
+	}
 	return conceptsDictionary, res
 }
 
@@ -248,15 +259,14 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 	return []*ParseError{}
 }
 
-func validateConcepts(conceptDictionary *gauge.ConceptDictionary) []*ParseError {
+func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	for _, concept := range conceptDictionary.ConceptsMap {
 		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
 		if err != nil {
-			err.Message = fmt.Sprintf("Circular reference found in concept: \"%s\"\n%s", concept.ConceptStep.LineText, err.Message)
-			return []*ParseError{err}
+			return &ParseResult{ParseErrors: []*ParseError{err}, FileName: concept.FileName}
 		}
 	}
-	return []*ParseError{}
+	return &ParseResult{ParseErrors: []*ParseError{}}
 }
 
 func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) *ParseError {
@@ -267,10 +277,10 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
 		if fileName, exists := traversedSteps[step.Value]; exists {
-			return &ParseError{LineNo: step.LineNo,
-				Message: fmt.Sprintf("%s: The concept \"%s\" references a higher concept > %s: \"%s\"", currentConceptFileName, concept.LineText, fileName, step.LineText),
+			return &ParseError{
+				LineText: step.LineText,
+				Message:  fmt.Sprintf("File name is %s:%d: Circular reference found. \"%s\" => %s:%d", currentConceptFileName, concept.LineNo, concept.LineText, fileName, step.LineNo),
 			}
-
 		}
 		if step.IsConcept {
 			if err := checkCircularReferencing(conceptDictionary, step, traversedSteps); err != nil {
