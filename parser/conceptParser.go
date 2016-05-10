@@ -278,7 +278,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 		if fileName, exists := traversedSteps[step.Value]; exists {
 			return &ParseError{
 				LineText: step.LineText,
-				Message:  fmt.Sprintf("File name is %s:%d: Circular reference found. \"%s\" => %s:%d", currentConceptFileName, concept.LineNo, concept.LineText, fileName, step.LineNo),
+				Message:  fmt.Sprintf("%s:%d: Circular reference found in concept. \"%s\" => %s:%d", currentConceptFileName, concept.LineNo, concept.LineText, fileName, step.LineNo),
 			}
 		}
 		if step.IsConcept {
