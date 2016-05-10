@@ -101,7 +101,7 @@ func (sc *simpleConsole) DataTable(table string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	logger.GaugeLog.Debug(table)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", newline, table))
+	fmt.Fprint(sc.writer, fmt.Sprintf("%s", table))
 }
 
 func (sc *simpleConsole) Errorf(err string, args ...interface{}) {

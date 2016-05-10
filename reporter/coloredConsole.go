@@ -122,7 +122,7 @@ func (c *coloredConsole) ConceptEnd(failed bool) {
 
 func (c *coloredConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
-	c.displayMessage(newline+table, ct.Yellow)
+	c.displayMessage(table, ct.Yellow)
 	c.writer.Reset()
 }
 

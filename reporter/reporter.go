@@ -95,7 +95,12 @@ func ListenExecutionEvents() {
 			case event.SpecStart:
 				Current().SpecStart(e.Item.(*gauge.Specification).Heading.Value)
 			case event.ScenarioStart:
-				Current().ScenarioStart(e.Item.(*gauge.Scenario).Heading.Value)
+				sce := e.Item.(*gauge.Scenario)
+				// if it is datatable driven execution
+				if sce.DataTableRow.GetRowCount() != 0 {
+					Current().DataTable(formatter.FormatTable(&sce.DataTableRow))
+				}
+				Current().ScenarioStart(sce.Heading.Value)
 			case event.ConceptStart:
 				Current().ConceptStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepStart:

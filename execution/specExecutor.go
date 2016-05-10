@@ -24,7 +24,6 @@ import (
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -103,10 +102,6 @@ func (e *specExecutor) execute() *result.SpecResult {
 func (e *specExecutor) executeTableDrivenSpec() {
 	var dataTableScenarioExecutionResult [][]result.Result
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
-		var dataTable gauge.Table
-		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
-		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])
-		e.consoleReporter.DataTable(formatter.FormatTable(&dataTable))
 		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, e.executeScenarios())
 	}
 	e.specResult.AddTableDrivenScenarioResult(dataTableScenarioExecutionResult)
@@ -265,6 +260,16 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	}
 
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
+
+	// TODO: During data driven execution, scenario holds the last row of datatable in scenario.DataTableRow.
+	// This can be eliminated by creating a new scenario instance for each of the table row execution.
+	if e.specification.DataTable.Table.GetRowCount() != 0 {
+		var dataTable gauge.Table
+		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
+		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])
+		scenario.DataTableRow = dataTable
+	}
+
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
 	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap)

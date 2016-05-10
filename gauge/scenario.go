@@ -18,11 +18,12 @@
 package gauge
 
 type Scenario struct {
-	Heading  *Heading
-	Steps    []*Step
-	Comments []*Comment
-	Tags     *Tags
-	Items    []Item
+	Heading      *Heading
+	Steps        []*Step
+	Comments     []*Comment
+	Tags         *Tags
+	Items        []Item
+	DataTableRow Table
 }
 
 func (scenario *Scenario) AddHeading(heading *Heading) {

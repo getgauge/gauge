@@ -63,6 +63,26 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 	c.Assert(dw.output, Equals, "  ## My Scenario Heading\n")
 }
 
+func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
+	dw, sc := setupSimpleConsole()
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	dataTable := gauge.Table{}
+	dataTable.AddHeaders([]string{"foo", "bar"})
+	dataTable.AddRowValues([]string{"one", "two"})
+	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}, DataTableRow: dataTable}
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil))
+	table := `
+     |foo|bar|
+     |---|---|
+     |one|two|`
+	c.Assert(dw.output, Equals, table+newline+"  ## My Scenario Heading\n")
+}
+
 func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	dw, sc := setupSimpleConsole()
 	sc.indentation = scenarioIndentation
