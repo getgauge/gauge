@@ -232,7 +232,6 @@ func CreateConceptsDictionary(dirs []string) (*gauge.ConceptDictionary, *ParseRe
 		for _, err := range vRes.ParseErrors {
 			logger.Errorf("%s:%s", vRes.FileName, err.Error())
 		}
-
 		os.Exit(1)
 	}
 	return conceptsDictionary, res

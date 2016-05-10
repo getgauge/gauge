@@ -73,7 +73,7 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 
 	os.Chdir(oldWd)
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 3)
+	c.Assert(len(res.ParseErrors), Equals, 2)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -473,16 +473,13 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 }
 
 func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
-	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err"))
-	oldWd, _ := os.Getwd()
-	os.Chdir(config.ProjectRoot)
+	cd := gauge.NewConceptDictionary()
+	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
 
-	_, res := CreateConceptsDictionary([]string{filepath.Join(config.ProjectRoot, "cpt", "circular_concept.cpt")})
-
-	os.Chdir(oldWd)
+	res := validateConcepts(cd)
 
 	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(containsAny(res.ParseErrors, "Circular reference found in concept"), Equals, true)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
