@@ -18,8 +18,6 @@
 package execution
 
 import (
-	"strings"
-
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -56,13 +54,6 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	}
 	e.notifyAfterStepHook(stepResult)
 
-	stepFailed := stepResult.GetFailed()
-	if stepFailed {
-		r := protoStep.GetStepExecutionResult().GetExecutionResult()
-		e.consoleReporter.Errorf("\nFailed Step: %s", e.currentExecutionInfo.CurrentStep.Step.GetActualStepText())
-		e.consoleReporter.Errorf("Error Message: %s", strings.TrimSpace(r.GetErrorMessage()))
-		e.consoleReporter.Errorf("Stacktrace: \n%s", r.GetStackTrace())
-	}
 	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepResult))
 	return stepResult
 }

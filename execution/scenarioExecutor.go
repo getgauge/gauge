@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -62,8 +63,7 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {
-		e.consoleReporter.Errorf("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage())
-		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf(res.GetErrorMessage()))
+		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage()))
 		return
 	}
 
@@ -86,7 +86,7 @@ func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutio
 }
 
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
-	e.consoleReporter.Errorf(err.Error())
+	logger.Errorf(err.Error())
 	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
 	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}

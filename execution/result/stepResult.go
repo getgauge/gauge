@@ -50,6 +50,21 @@ func (s *StepResult) GetFailed() bool {
 	return s.protoStep.StepExecutionResult.ExecutionResult.GetFailed()
 }
 
+// GetStackTrace returns the stacktrace for step failure
+func (s *StepResult) GetStackTrace() string {
+	return s.protoStep.GetStepExecutionResult().GetExecutionResult().GetStackTrace()
+}
+
+// GetErrorMessage returns the error message for step failure
+func (s *StepResult) GetErrorMessage() string {
+	return s.protoStep.GetStepExecutionResult().GetExecutionResult().GetErrorMessage()
+}
+
+// GetStepActualText returns the Actual text of step from step result
+func (s *StepResult) GetStepActualText() string {
+	return s.protoStep.GetActualText()
+}
+
 func (s *StepResult) item() interface{} {
 	return s.protoStep
 }

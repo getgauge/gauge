@@ -121,7 +121,7 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	currentReporter = sc
 	SimpleConsoleOutput = true
 	event.InitRegistry()
-	failed := true
+	failed := false
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
@@ -130,6 +130,36 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	failed := true
+	stepText := "* say hello"
+	errMsg := "failure message"
+	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
+sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes, ActualText: &stepText})
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
+	want := spaces(errorIndentation) + newline +
+`  Failed Step: * say hello
+  Error Message: failure message
+  Stacktrace:` + spaces(1) +
+`
+  StepImplementation.implementation4(StepImplementation.java:77)
+  sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+  sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+`
+	c.Assert(dw.output, Equals, want)
 }
 
 func (s *MySuite) TestSubscribeConceptStart(c *C) {

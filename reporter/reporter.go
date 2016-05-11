@@ -91,32 +91,39 @@ func ListenExecutionEvents() {
 	go func() {
 		for {
 			e := <-ch
+			r := Current()
 			switch e.Topic {
 			case event.SpecStart:
-				Current().SpecStart(e.Item.(*gauge.Specification).Heading.Value)
+				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
 			case event.ScenarioStart:
 				sce := e.Item.(*gauge.Scenario)
 				// if it is datatable driven execution
 				if sce.DataTableRow.GetRowCount() != 0 {
-					Current().DataTable(formatter.FormatTable(&sce.DataTableRow))
+					r.DataTable(formatter.FormatTable(&sce.DataTableRow))
 				}
-				Current().ScenarioStart(sce.Heading.Value)
+				r.ScenarioStart(sce.Heading.Value)
 			case event.ConceptStart:
-				Current().ConceptStart(formatter.FormatStep(e.Item.(*gauge.Step)))
+				r.ConceptStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepStart:
-				Current().StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
+				r.StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepEnd:
-				Current().StepEnd(e.Result.(*result.StepResult).GetFailed())
+				stepRes := e.Result.(*result.StepResult)
+				if stepRes.GetFailed() {
+					r.Errorf("\nFailed Step: %s", stepRes.GetStepActualText())
+					r.Errorf("Error Message: %s", stepRes.GetErrorMessage())
+					r.Errorf("Stacktrace: \n%s", stepRes.GetStackTrace())
+				}
+				r.StepEnd(stepRes.GetFailed())
 			case event.ConceptEnd:
-				Current().ConceptEnd(e.Result.(*result.ConceptResult).GetFailed())
+				r.ConceptEnd(e.Result.(*result.ConceptResult).GetFailed())
 			case event.ScenarioEnd:
-				Current().ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
+				r.ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
 			case event.SpecEnd:
-				Current().SpecEnd()
+				r.SpecEnd()
 			case event.SuiteEnd:
 				suiteRes := e.Result.(*result.SuiteResult)
 				for _, e := range suiteRes.UnhandledErrors {
-					Current().Errorf(e.Error())
+					r.Errorf(e.Error())
 				}
 			}
 		}

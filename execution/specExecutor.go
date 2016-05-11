@@ -79,8 +79,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
-		e.consoleReporter.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage())
-		e.skipSpecForError(fmt.Errorf(res.GetErrorMessage()))
+		e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
 		return e.specResult
 	}
 
