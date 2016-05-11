@@ -134,14 +134,10 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
-	for _, unhandledErr := range suiteResult.UnhandledErrors {
-		logger.Errorf(unhandledErr.Error())
-	}
-	exitCode := 0
 	if suiteResult.IsFailed || (nSkippedSpecs+nSkippedScenarios) > 0 {
-		exitCode = 1
+		return 1
 	}
-	return exitCode
+	return 0
 }
 
 func validateFlags() {

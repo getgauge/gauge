@@ -59,6 +59,10 @@ func (sr *SuiteResult) SetSpecsSkippedCount(count int) {
 	sr.SpecsSkippedCount = count
 }
 
+func (sr *SuiteResult) AddUnhandledError(err error) {
+	sr.UnhandledErrors = append(sr.UnhandledErrors, err)
+}
+
 func (sr *SuiteResult) UpdateExecTime(startTime time.Time) {
 	sr.ExecutionTime = int64(time.Since(startTime) / 1e6)
 }

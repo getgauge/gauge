@@ -18,6 +18,8 @@
 package reporter
 
 import (
+	"fmt"
+
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -159,4 +161,18 @@ func (s *MySuite) TestSubscribeConceptEnd(c *C) {
 	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	suiteRes := &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("failure 1"), fmt.Errorf("failure 2")}}
+
+	ListenExecutionEvents()
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes))
+
+	c.Assert(dw.output, Equals, spaces(errorIndentation) + "failure 1\n" + spaces(errorIndentation) + "failure 2\n")
 }

@@ -86,7 +86,7 @@ func NewParallelConsole(n int) Reporter {
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents() {
 	ch := make(chan event.ExecutionEvent, 0)
-	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd)
+	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
 
 	go func() {
 		for {
@@ -113,6 +113,11 @@ func ListenExecutionEvents() {
 				Current().ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
 			case event.SpecEnd:
 				Current().SpecEnd()
+			case event.SuiteEnd:
+				suiteRes := e.Result.(*result.SuiteResult)
+				for _, e := range suiteRes.UnhandledErrors {
+					Current().Errorf(e.Error())
+				}
 			}
 		}
 	}()

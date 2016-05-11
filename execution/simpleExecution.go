@@ -18,6 +18,7 @@
 package execution
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/getgauge/gauge/execution/event"
@@ -75,7 +76,7 @@ func (e *simpleExecution) execute() {
 
 	initSuiteDataStoreResult := e.initSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
-		e.consoleReporter.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage())
+		e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
 		setResultMeta()
 		return
 	}
@@ -105,7 +106,7 @@ func (e *simpleExecution) finish() {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.Kill(); err != nil {
-		e.consoleReporter.Errorf("Failed to kill Runner: %s", err.Error())
+		logger.Errorf("Failed to kill Runner: %s", err.Error())
 	}
 }
 
