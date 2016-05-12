@@ -125,60 +125,87 @@ func (s *MySuite) TestGetPluginDescriptorFromNonExistingJSON(c *C) {
 	c.Assert(err, DeepEquals, fmt.Errorf("File %s doesn't exist.", JSONPath))
 }
 
-func (s *MySuite) TestGetStablePluginAmongGivenPluginsOfAVersion(c *C) {
+func (s *MySuite) TestLatestVersionWithOnlyStableVersion(c *C) {
 	v, _ := version.ParseVersion("0.2.2")
 
 	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2"}
 	plugins := []PluginInfo{pluginInfo1}
 	latestBuild := getLatestOf(plugins, v)
-	c.Assert(latestBuild.Version, Equals, v)
 
+	c.Assert(latestBuild.Version, Equals, v)
+	c.Assert(latestBuild.Version, Equals, v)
+}
+
+func (s *MySuite) TestLatestVersionWithOnlyNightlyVersion(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-09"}
+	plugins := []PluginInfo{pluginInfo1}
+	latestBuild := getLatestOf(plugins, v)
+
+	c.Assert(latestBuild.Version, Equals, v)
+	c.Assert(latestBuild.Version, Equals, v)
+}
+
+func (s *MySuite) TestLatestVersionWithDifferentYearNightlies(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2.nightly-2015-02-09"}
 	pluginInfo2 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-09"}
-	plugins = []PluginInfo{pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
-	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
-	c.Assert(latestBuild.Version, Equals, v)
-
-	pluginInfo1.Path = "0.2.2.nightly-2015-02-03"
-	pluginInfo2.Path = "0.2.2.nightly-2016-02-09"
 	pluginInfo3 := PluginInfo{Version: v, Path: "0.2.2.nightly-2017-02-09"}
-	plugins = []PluginInfo{pluginInfo1, pluginInfo3, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
+	plugins := []PluginInfo{pluginInfo1, pluginInfo3, pluginInfo2}
+	latestBuild := getLatestOf(plugins, v)
+
 	c.Assert(latestBuild.Path, Equals, pluginInfo3.Path)
 	c.Assert(latestBuild.Version, Equals, v)
+}
 
-	pluginInfo1.Path = "0.2.2.nightly-2015-02-03"
-	pluginInfo2.Path = "0.2.2.nightly-2016-02-04"
-	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
+func (s *MySuite) TestLatestVersionWithDifferentMonthNightlies(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-03-03"}
+	pluginInfo2 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-03"}
+	plugins := []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild := getLatestOf(plugins, v)
+
+	c.Assert(latestBuild.Path, Equals, pluginInfo1.Path)
+	c.Assert(latestBuild.Version, Equals, v)
+}
+
+func (s *MySuite) TestLatestVersionWithDifferentDaysNightlies(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-03"}
+	pluginInfo2 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-09"}
+	plugins := []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild := getLatestOf(plugins, v)
+
 	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
 	c.Assert(latestBuild.Version, Equals, v)
+}
 
-	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
-	pluginInfo2.Path = "0.2.2.nightly-2015-02-03"
-	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
-	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+func (s *MySuite) TestLatestNightlyVersionWithDifferentStableVersion(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
 
-	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
-	pluginInfo2.Path = "0.2.2.nightly-2016-02-03"
-	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
-	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+	pluginInfo1 := PluginInfo{Version: v, Path: "0.2.2.nightly-2016-02-09"}
+	pluginInfo2 := PluginInfo{Version: v, Path: "0.2.3.nightly-2016-02-09"}
+	plugins := []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild := getLatestOf(plugins, v)
 
-	pluginInfo1.Path = "0.2.2.nightly-2015-01-03"
-	pluginInfo2.Path = "0.2.2.nightly-2017-02-03"
-	pluginInfo2.Path = "0.2.2.nightly-2016-02-03"
-	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
 	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+	c.Assert(latestBuild.Version, Equals, v)
+}
 
-	pluginInfo1.Path = "0.2.2.nightly-2017-01-03"
-	pluginInfo2.Path = "0.2.2.nightly-2017-01-05"
-	pluginInfo2.Path = "0.2.2.nightly-2017-01-04"
-	plugins = []PluginInfo{pluginInfo1, pluginInfo2}
-	latestBuild = getLatestOf(plugins, v)
-	c.Assert(latestBuild.Path, Equals, pluginInfo2.Path)
+func (s *MySuite) TestLatestNightlyVersionWithDifferentDates(c *C) {
+	v, _ := version.ParseVersion("0.2.2")
+
+	pluginInfo1 := PluginInfo{Version: v, Path: "2.1.1.nightly-2016-05-02"}
+	pluginInfo2 := PluginInfo{Version: v, Path: "2.1.1.nightly-2016-04-27"}
+	plugins := []PluginInfo{pluginInfo1, pluginInfo2}
+	latestBuild := getLatestOf(plugins, v)
+
+	c.Assert(latestBuild.Path, Equals, pluginInfo1.Path)
+	c.Assert(latestBuild.Version, Equals, v)
 }
 
 func (s *MySuite) TestGetLanguageQueryParamWhenProjectRootNotSet(c *C) {
