@@ -417,17 +417,7 @@ func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
 			if err != nil {
 				continue
 			}
-			pluginAdded, repeated := allPlugins[file.Name()]
-			if repeated {
-				var availableVersions []*version.Version
-				availableVersions = append(availableVersions, pluginAdded.Version, latestPlugin.Version)
-				latest := version.GetLatestVersion(availableVersions)
-				if latest.IsEqualTo(latestPlugin.Version) {
-					allPlugins[file.Name()] = *latestPlugin
-				}
-			} else {
-				allPlugins[file.Name()] = *latestPlugin
-			}
+			allPlugins[file.Name()] = *latestPlugin
 		}
 	}
 	return sortPlugins(allPlugins), nil
