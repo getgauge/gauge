@@ -41,13 +41,13 @@ const newline = "\n"
 // 2. Status (pass/fail) of the spec / scenario / step (if verbose) once its executed.
 type Reporter interface {
 	SpecStart(string)
-	SpecEnd()
+	SpecEnd(result.Result)
 	ScenarioStart(string)
-	ScenarioEnd(bool)
+	ScenarioEnd(result.Result)
 	StepStart(string)
-	StepEnd(bool)
+	StepEnd(gauge.Step, result.Result)
 	ConceptStart(string)
-	ConceptEnd(bool)
+	ConceptEnd(result.Result)
 	DataTable(string)
 
 	Errorf(string, ...interface{})
@@ -107,19 +107,13 @@ func ListenExecutionEvents() {
 			case event.StepStart:
 				r.StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepEnd:
-				stepRes := e.Result.(*result.StepResult)
-				if stepRes.GetFailed() {
-					r.Errorf("\nFailed Step: %s", stepRes.GetStepActualText())
-					r.Errorf("Error Message: %s", stepRes.GetErrorMessage())
-					r.Errorf("Stacktrace: \n%s", stepRes.GetStackTrace())
-				}
-				r.StepEnd(stepRes.GetFailed())
+				r.StepEnd(e.Item.(gauge.Step), e.Result)
 			case event.ConceptEnd:
-				r.ConceptEnd(e.Result.(*result.ConceptResult).GetFailed())
+				r.ConceptEnd(e.Result)
 			case event.ScenarioEnd:
-				r.ScenarioEnd(e.Result.(*result.ScenarioResult).GetFailed())
+				r.ScenarioEnd(e.Result)
 			case event.SpecEnd:
-				r.SpecEnd()
+				r.SpecEnd(e.Result)
 			case event.SuiteEnd:
 				suiteRes := e.Result.(*result.SuiteResult)
 				for _, e := range suiteRes.UnhandledErrors {

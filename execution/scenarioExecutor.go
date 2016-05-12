@@ -21,10 +21,10 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/execution/event"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
@@ -145,6 +145,7 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
 		res := se.executeStep(item, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
+		scenarioResult.AddStepResult(res)
 		failed = res.GetFailed()
 	}
 	if failed {

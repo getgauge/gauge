@@ -65,7 +65,7 @@ func (s *StepResult) GetStepActualText() string {
 	return s.protoStep.GetActualText()
 }
 
-func (s *StepResult) item() interface{} {
+func (s *StepResult) Item() interface{} {
 	return s.protoStep
 }
 
@@ -92,4 +92,8 @@ func (s *StepResult) ProtoStepExecResult() *gauge_messages.ProtoStepExecutionRes
 // SetProtoExecResult sets the execution result
 func (s *StepResult) SetProtoExecResult(r *gauge_messages.ProtoExecutionResult) {
 	s.protoStep.StepExecutionResult.ExecutionResult = r
+}
+
+func (s *StepResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
+	return []gauge_messages.ProtoExecutionResult{*s.protoStep.GetStepExecutionResult().GetExecutionResult()}
 }

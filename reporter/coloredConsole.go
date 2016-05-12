@@ -25,6 +25,8 @@ import (
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -47,7 +49,7 @@ func (c *coloredConsole) SpecStart(heading string) {
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) SpecEnd() {
+func (c *coloredConsole) SpecEnd(res result.Result) {
 	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
 }
@@ -65,7 +67,7 @@ func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) ScenarioEnd(failed bool) {
+func (c *coloredConsole) ScenarioEnd(res result.Result) {
 	if !Verbose {
 		c.displayMessage(newline, ct.None)
 	}
@@ -85,10 +87,10 @@ func (c *coloredConsole) StepStart(stepText string) {
 	}
 }
 
-func (c *coloredConsole) StepEnd(failed bool) {
+func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result) {
 	if Verbose {
 		c.writer.Clear()
-		if failed {
+		if res.GetFailed() {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
 		} else {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
@@ -96,7 +98,7 @@ func (c *coloredConsole) StepEnd(failed bool) {
 		c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
 		c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	} else {
-		if failed {
+		if res.GetFailed() {
 			c.displayMessage(getFailureSymbol()+newline, ct.Red)
 		} else {
 			c.displayMessage(getSuccessSymbol(), ct.Green)
@@ -116,7 +118,7 @@ func (c *coloredConsole) ConceptStart(conceptHeading string) {
 	}
 }
 
-func (c *coloredConsole) ConceptEnd(failed bool) {
+func (c *coloredConsole) ConceptEnd(res result.Result) {
 	c.indentation -= stepIndentation
 }
 

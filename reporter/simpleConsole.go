@@ -23,6 +23,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -44,7 +46,7 @@ func (sc *simpleConsole) SpecStart(heading string) {
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
 }
 
-func (sc *simpleConsole) SpecEnd() {
+func (sc *simpleConsole) SpecEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	fmt.Fprintln(sc.writer)
@@ -59,7 +61,7 @@ func (sc *simpleConsole) ScenarioStart(heading string) {
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formattedHeading, sc.indentation), newline))
 }
 
-func (sc *simpleConsole) ScenarioEnd(failed bool) {
+func (sc *simpleConsole) ScenarioEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.indentation -= scenarioIndentation
@@ -75,9 +77,22 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	}
 }
 
-func (sc *simpleConsole) StepEnd(failed bool) {
+func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
+	printPreHookFailure(sc, res)
+	if res.GetFailed() && res.GetExecResult() != nil {
+		stepText := prepStepMsg(step.LineText)
+		logger.GaugeLog.Error(stepText)
+		errMsg := prepErrorMessage(res.GetExecResult()[0].GetErrorMessage())
+		logger.GaugeLog.Error(errMsg)
+		stacktrace := prepStacktrace(res.GetExecResult()[0].GetStackTrace())
+		logger.GaugeLog.Error(stacktrace)
+
+		msg := formatStepText(stepText, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
+		fmt.Fprint(sc.writer, msg)
+	}
+	printPostHookFailure(sc, res)
 	sc.indentation -= stepIndentation
 }
 
@@ -91,7 +106,7 @@ func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 	}
 }
 
-func (sc *simpleConsole) ConceptEnd(failed bool) {
+func (sc *simpleConsole) ConceptEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.indentation -= stepIndentation
@@ -118,4 +133,24 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 	defer sc.mu.Unlock()
 	fmt.Fprint(sc.writer, string(b))
 	return len(b), nil
+}
+
+func printPreHookFailure(sc *simpleConsole, res result.Result) {
+	if res.GetFailed() && res.GetPreHook() != nil && *res.GetPreHook() != nil {
+		errMsg := prepErrorMessage((*res.GetPreHook()).GetErrorMessage())
+		logger.GaugeLog.Error(errMsg)
+		stacktrace := prepStacktrace((*res.GetPreHook()).GetStackTrace())
+		logger.GaugeLog.Error(stacktrace)
+		fmt.Fprint(sc.writer, formatErrorMessage(errMsg, sc.indentation), formatStacktrace(stacktrace, sc.indentation))
+	}
+}
+
+func printPostHookFailure(sc *simpleConsole, res result.Result) {
+	if res.GetFailed() && res.GetPostHook() != nil && *res.GetPostHook() != nil {
+		errMsg := prepErrorMessage((*res.GetPostHook()).GetErrorMessage())
+		logger.GaugeLog.Error(errMsg)
+		stacktrace := prepStacktrace((*res.GetPostHook()).GetStackTrace())
+		logger.GaugeLog.Error(stacktrace)
+		fmt.Fprint(sc.writer, formatErrorMessage(errMsg, sc.indentation), formatStacktrace(stacktrace, sc.indentation))
+	}
 }

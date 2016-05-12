@@ -105,6 +105,7 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 	dw, sc := setupSimpleConsole()
 	currentReporter = sc
 	SimpleConsoleOutput = true
+	Verbose = true
 	event.InitRegistry()
 	stepText := "My first step"
 	step := &gauge.Step{Value: stepText}
@@ -127,7 +128,7 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -142,21 +143,19 @@ func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
 	stepText := "* say hello"
 	errMsg := "failure message"
 	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
-sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
 sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
-	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes, ActualText: &stepText})
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes))
 	want := spaces(errorIndentation) + newline +
-`  Failed Step: * say hello
+		`  Failed Step: * say hello
   Error Message: failure message
   Stacktrace:` + spaces(1) +
-`
+		`
   StepImplementation.implementation4(StepImplementation.java:77)
-  sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
   sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
 `
 	c.Assert(dw.output, Equals, want)
@@ -167,6 +166,7 @@ func (s *MySuite) TestSubscribeConceptStart(c *C) {
 	currentReporter = sc
 	SimpleConsoleOutput = true
 	event.InitRegistry()
+	Verbose = true
 	cptText := "My last concept"
 	concept := &gauge.Step{Value: cptText, IsConcept: true}
 
@@ -204,5 +204,5 @@ func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
 	ListenExecutionEvents()
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes))
 
-	c.Assert(dw.output, Equals, spaces(errorIndentation) + "failure 1\n" + spaces(errorIndentation) + "failure 2\n")
+	c.Assert(dw.output, Equals, spaces(errorIndentation)+"failure 1\n"+spaces(errorIndentation)+"failure 2\n")
 }

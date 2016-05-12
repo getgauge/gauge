@@ -24,6 +24,7 @@ import (
 
 type SpecResult struct {
 	ProtoSpec            *gauge_messages.ProtoSpec
+	ScenarioResults      []*ScenarioResult
 	ScenarioFailedCount  int
 	ScenarioCount        int
 	IsFailed             bool
@@ -51,8 +52,9 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 			specResult.IsFailed = true
 			specResult.ScenarioFailedCount++
 		}
+		specResult.ScenarioResults = append(specResult.ScenarioResults, scenarioResult.(*ScenarioResult))
 		specResult.AddExecTime(scenarioResult.ExecTime())
-		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: scenarioResult.item().(*gauge_messages.ProtoScenario)})
+		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: scenarioResult.Item().(*gauge_messages.ProtoScenario)})
 	}
 	specResult.ScenarioCount += len(scenarioResults)
 }
@@ -64,7 +66,7 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]R
 		protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenarios: make([]*gauge_messages.ProtoScenario, 0)}
 		scenarioFailed := false
 		for rowIndex, eachRow := range scenarioResults {
-			protoScenario := eachRow[scenarioIndex].item().(*gauge_messages.ProtoScenario)
+			protoScenario := eachRow[scenarioIndex].Item().(*gauge_messages.ProtoScenario)
 			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), protoScenario)
 			specResult.AddExecTime(protoScenario.GetExecutionTime())
 			if protoScenario.GetFailed() {
@@ -107,6 +109,14 @@ func (specResult *SpecResult) GetFailed() bool {
 	return specResult.IsFailed
 }
 
-func (specResult *SpecResult) item() interface{} {
+func (specResult *SpecResult) Item() interface{} {
 	return specResult.ProtoSpec
+}
+
+func (specResult *SpecResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
+	var results []gauge_messages.ProtoExecutionResult
+	for _, r := range specResult.ScenarioResults {
+		results = append(results, r.GetExecResult()...)
+	}
+	return results
 }

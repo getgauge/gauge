@@ -20,6 +20,9 @@ package reporter
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
@@ -27,6 +30,34 @@ var (
 	eraseLine = "\x1b[2K\r"
 	cursorUp  = "\x1b[0A"
 )
+
+type DummyResult struct {
+	PreHookFailure  **(gauge_messages.ProtoHookFailure)
+	PostHookFailure **(gauge_messages.ProtoHookFailure)
+	IsFailed        bool
+}
+
+func (r *DummyResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
+	return r.PreHookFailure
+}
+func (r *DummyResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
+	return r.PostHookFailure
+}
+func (r *DummyResult) SetFailure() {
+	r.IsFailed = true
+}
+func (r *DummyResult) GetFailed() bool {
+	return r.IsFailed
+}
+func (r *DummyResult) Item() interface{} {
+	return nil
+}
+func (r *DummyResult) ExecTime() int64 {
+	return 0
+}
+func (r *DummyResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
+	return nil
+}
 
 func setupColoredConsole() (*dummyWriter, *coloredConsole) {
 	dw := newDummyWriter()
@@ -45,8 +76,8 @@ func (s *MySuite) TestSpecStart_ColoredConsole(c *C) {
 func (s *MySuite) TestSpecEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 
-	cc.SpecEnd()
-
+	res := &DummyResult{IsFailed: false}
+	cc.SpecEnd(res)
 	c.Assert(dw.output, Equals, "\n")
 }
 
@@ -76,8 +107,8 @@ func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 	cc.indentation = 2
 	cc.ScenarioStart("failing step")
 	cc.Write([]byte("fail reason: blah"))
-
-	cc.ScenarioEnd(true)
+	res := &DummyResult{IsFailed: true}
+	cc.ScenarioEnd(res)
 
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "fail reason: blah")
 }
@@ -85,8 +116,9 @@ func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
+	sceHeading := "First Scenario"
 
-	cc.ScenarioStart("First Scenario")
+	cc.ScenarioStart(sceHeading)
 	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\t\n")
 	dw.output = ""
 
@@ -97,11 +129,13 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	expectedStepStartOutput := twoLevelIndentation + input + newline
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: false}
 
-	cc.StepEnd(false)
+	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
 
 	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
-	cc.ScenarioEnd(false)
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
+	cc.ScenarioEnd(sceRes)
 	c.Assert(cc.headingBuffer.String(), Equals, "")
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "")
 }
@@ -122,8 +156,9 @@ func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
 	cc.indentation = 2
 	cc.StepStart("* say hello")
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(true)
+	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
 
 	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      * say hello\t ...[FAIL]\n")
 }
@@ -134,8 +169,9 @@ func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 	cc.indentation = 2
 	cc.StepStart("* say hello")
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(true)
+	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
 
 	c.Assert(dw.output, Equals, getFailureSymbol()+newline)
 }
@@ -146,8 +182,9 @@ func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
 	cc.indentation = 2
 	cc.StepStart("* say hello")
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: false}
 
-	cc.StepEnd(false)
+	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
 
 	c.Assert(dw.output, Equals, getSuccessSymbol())
 }
@@ -163,8 +200,9 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 	expectedStepStartOutput := spaces(cc.indentation) + "* Say hello to all\n"
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(true)
+	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
 
 	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n"
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
@@ -185,8 +223,9 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	cc.Errorf("Failed!")
 	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
 	dw.output = ""
+	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(true)
+	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
 
 	expectedStepEndOutput := cursorUp + eraseLine + cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n"
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
@@ -196,20 +235,24 @@ func (s *MySuite) TestConceptStartAndEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
 	cc.indentation = 4
+	cpt1 := "* my concept"
+	cpt2 := "* my concept1"
+	cptRes1 := &DummyResult{IsFailed: true}
+	cptRes2 := &DummyResult{IsFailed: true}
 
-	cc.ConceptStart("* my concept")
-	c.Assert(dw.output, Equals, "        * my concept\n")
+	cc.ConceptStart(cpt1)
+	c.Assert(dw.output, Equals, spaces(8)+cpt1+newline)
 	c.Assert(cc.indentation, Equals, 8)
 
 	dw.output = ""
-	cc.ConceptStart("* my concept1")
-	c.Assert(dw.output, Equals, "            * my concept1\n")
+	cc.ConceptStart(cpt2)
+	c.Assert(dw.output, Equals, spaces(12)+cpt2+newline)
 	c.Assert(cc.indentation, Equals, 12)
 
-	cc.ConceptEnd(true)
+	cc.ConceptEnd(cptRes1)
 	c.Assert(cc.indentation, Equals, 8)
 
-	cc.ConceptEnd(true)
+	cc.ConceptEnd(cptRes2)
 	c.Assert(cc.indentation, Equals, 4)
 }
 
@@ -245,18 +288,6 @@ func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
 	_, cc := setupColoredConsole()
 	cc.indentation = 6
 	Verbose = true
-	input := "hello, gauge"
-
-	_, err := cc.Write([]byte(input))
-
-	c.Assert(err, Equals, nil)
-	c.Assert(cc.pluginMessagesBuffer.String(), Equals, input)
-}
-
-func (s *MySuite) TestWrite_ColoredConsole(c *C) {
-	_, cc := setupColoredConsole()
-	cc.indentation = 6
-	Verbose = false
 	input := "hello, gauge"
 
 	_, err := cc.Write([]byte(input))
