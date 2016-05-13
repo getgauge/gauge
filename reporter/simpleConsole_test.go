@@ -20,6 +20,7 @@ package reporter
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 
@@ -97,9 +98,8 @@ func (s *MySuite) TestStepStartInNonVerboseMode_SimpleConsole(c *C) {
 func (s *MySuite) TestStepEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 6
-	res := &DummyResult{IsFailed: true}
 
-	sc.StepEnd(gauge.Step{LineText: ""}, res)
+	sc.StepEnd(gauge.Step{LineText: ""}, result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}}))
 
 	c.Assert(sc.indentation, Equals, 2)
 }
@@ -222,8 +222,11 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	sc.StepStart("* do foo bar")
 	sc.Write([]byte("doing foo bar"))
 	res := &DummyResult{IsFailed: false}
+	failed := false
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
-	sc.StepEnd(gauge.Step{LineText: "* do foo bar"}, res)
+	sc.StepEnd(gauge.Step{LineText: "* do foo bar"}, stepRes)
 	sc.ScenarioEnd(res)
 	sc.SpecEnd(res)
 
@@ -242,9 +245,10 @@ func (s *MySuite) TestStepEndWithPreHookFailure_SimpleConsole(c *C) {
 	errMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
-	res := &DummyResult{IsFailed: true, PreHookFailure: &preHookFailure}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PreHookFailure: preHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
-	sc.StepEnd(gauge.Step{LineText: "* my step"}, res)
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
 
 	c.Assert(sc.indentation, Equals, 2)
 	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), errMsg, spaces(8), spaces(8), stackTrace))
@@ -256,9 +260,10 @@ func (s *MySuite) TestStepEndWithPostHookFailure_SimpleConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
-	res := &DummyResult{IsFailed: true, PostHookFailure: &postHookFailure}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
-	sc.StepEnd(gauge.Step{LineText: "* my step"}, res)
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
 
 	c.Assert(sc.indentation, Equals, 2)
 	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), errMsg, spaces(8), spaces(8), stackTrace))
@@ -272,9 +277,10 @@ func (s *MySuite) TestStepEndWithPreAndPostHookFailure_SimpleConsole(c *C) {
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &postHookErrMsg, StackTrace: &stackTrace}
-	res := &DummyResult{IsFailed: true, PreHookFailure: &preHookFailure, PostHookFailure: &postHookFailure}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure, PreHookFailure: preHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
-	sc.StepEnd(gauge.Step{LineText: "* my step"}, res)
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
 
 	c.Assert(sc.indentation, Equals, 2)
 	err1 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), preHookErrMsg, spaces(8), spaces(8), stackTrace)

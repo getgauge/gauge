@@ -55,9 +55,6 @@ func (r *DummyResult) Item() interface{} {
 func (r *DummyResult) ExecTime() int64 {
 	return 0
 }
-func (r *DummyResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
-	return nil
-}
 
 func setupColoredConsole() (*dummyWriter, *coloredConsole) {
 	dw := newDummyWriter()
