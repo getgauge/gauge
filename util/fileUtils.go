@@ -43,7 +43,16 @@ var AcceptedExtensions = make(map[string]bool)
 var ignoredDirectories = make(map[string]bool)
 
 func add(value string) {
-	ignoredDirectories[strings.TrimSpace(value)] = true
+	value = strings.TrimSpace(value)
+	if !filepath.IsAbs(value) {
+		path, err := filepath.Abs(filepath.Join(config.ProjectRoot, value))
+		if err != nil {
+			logger.Errorf("Error getting absolute path. %v", err)
+			return
+		}
+		value = path
+	}
+	ignoredDirectories[value] = true
 }
 
 func addDirectories(value string) {
@@ -53,10 +62,10 @@ func addDirectories(value string) {
 }
 
 func addIgnoredDirectories() {
-	ignoredDirectories["gauge_bin"] = true
-	ignoredDirectories["reports"] = true
-	ignoredDirectories["logs"] = true
-	ignoredDirectories[common.EnvDirectoryName] = true
+	ignoredDirectories[filepath.Join(config.ProjectRoot, "gauge_bin")] = true
+	ignoredDirectories[filepath.Join(config.ProjectRoot, "reports")] = true
+	ignoredDirectories[filepath.Join(config.ProjectRoot, "logs")] = true
+	ignoredDirectories[filepath.Join(config.ProjectRoot, common.EnvDirectoryName)] = true
 	addDirFromEnv(env.GaugeReportsDir, add)
 	addDirFromEnv(env.LogsDirectory, add)
 	addDirFromEnv(gaugeExcludeDirectories, addDirectories)
@@ -70,7 +79,7 @@ func addDirFromEnv(name string, add func(value string)) {
 }
 
 // findFilesIn Finds all the files in the directory of a given extension
-func findFilesIn(dirRoot string, isValidFile func(path string) bool, shouldSkip func(f os.FileInfo) bool) []string {
+func findFilesIn(dirRoot string, isValidFile func(path string) bool, shouldSkip func(path string, f os.FileInfo) bool) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
 	files := common.FindFilesInDir(absRoot, isValidFile, shouldSkip)
 	return files
@@ -78,7 +87,7 @@ func findFilesIn(dirRoot string, isValidFile func(path string) bool, shouldSkip 
 
 // FindSpecFilesIn Finds spec files in the given directory
 func FindSpecFilesIn(dir string) []string {
-	return findFilesIn(dir, IsValidSpecExtension, func(f os.FileInfo) bool {
+	return findFilesIn(dir, IsValidSpecExtension, func(path string, f os.FileInfo) bool {
 		return false
 	})
 }
@@ -91,11 +100,11 @@ func IsValidSpecExtension(path string) bool {
 // FindConceptFilesIn Finds the concept files in specified directory
 func FindConceptFilesIn(dir string) []string {
 	addIgnoredDirectories()
-	return findFilesIn(dir, IsValidConceptExtension, func(f os.FileInfo) bool {
+	return findFilesIn(dir, IsValidConceptExtension, func(path string, f os.FileInfo) bool {
 		if !f.IsDir() {
 			return false
 		}
-		_, ok := ignoredDirectories[f.Name()]
+		_, ok := ignoredDirectories[path]
 		return strings.HasPrefix(f.Name(), ".") || ok
 	})
 }

@@ -78,6 +78,7 @@ func (s *MySuite) TestFindAllConceptFiles(c *C) {
 }
 
 func (s *MySuite) TestFindAllConceptFilesShouldFilterDirectoriesThatAreSkipped(c *C) {
+	config.ProjectRoot = dir
 	data := []byte(`#Concept Heading`)
 	git, _ := CreateDirIn(dir, ".git")
 	bin, _ := CreateDirIn(dir, "gauge_bin")
