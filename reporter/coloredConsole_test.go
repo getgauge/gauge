@@ -19,6 +19,7 @@ package reporter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -114,24 +115,24 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
 	sceHeading := "First Scenario"
+	stepText := "* Say hello to all"
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
 
 	cc.ScenarioStart(sceHeading)
 	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\t\n")
 	dw.output = ""
 
-	input := "* Say hello to all"
-	cc.StepStart(input)
+	cc.StepStart(stepText)
 
 	twoLevelIndentation := spaces(scenarioIndentation + stepIndentation)
-	expectedStepStartOutput := twoLevelIndentation + input + newline
+	expectedStepStartOutput := twoLevelIndentation + stepText + newline
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: false}
 
-	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+stepText+"\t ...[PASS]\n")
 
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+"* Say hello to all\t ...[PASS]\n")
-	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
 	cc.ScenarioEnd(sceRes)
 	c.Assert(cc.headingBuffer.String(), Equals, "")
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "")
@@ -151,26 +152,48 @@ func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
 	cc.indentation = 2
-	cc.StepStart("* say hello")
+	stepText := "* say hello"
+	cc.StepStart(stepText)
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: true}
+	errMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stackTrace}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
 
-	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
 
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      * say hello\t ...[FAIL]\n")
+	expectedErrMsg := `        ` + `
+        Failed Step: * say hello
+        Error Message: pre hook failure message
+        Stacktrace:` + spaces(1) + `
+        my stacktrace
+`
+	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      "+stepText+"\t ...[FAIL]\n"+expectedErrMsg)
 }
 
 func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = false
 	cc.indentation = 2
-	cc.StepStart("* say hello")
+	stepText := "* say hello"
+	errMsg := "pre hook failure message"
+	stacktrace := "my stacktrace"
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
+	cc.StepStart(stepText)
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: true}
 
 	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
 
-	c.Assert(dw.output, Equals, getFailureSymbol()+newline)
+	expectedErrMsg := spaces(8) + `
+        Failed Step: ` + stepText + `
+        Error Message: ` + errMsg + `
+        Stacktrace:` + spaces(1) + `
+        ` + stacktrace + `
+`
+	c.Assert(dw.output, Equals, getFailureSymbol()+newline+expectedErrMsg)
 }
 
 func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
@@ -179,7 +202,7 @@ func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
 	cc.indentation = 2
 	cc.StepStart("* say hello")
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: false}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 
 	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
 
@@ -190,18 +213,28 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
 	cc.indentation = 2
+	stepText := "* Say hello to all"
+	errMsg := "pre hook failure message"
+	stacktrace := "my stacktrace"
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
 
-	input := "* Say hello to all"
-	cc.StepStart(input)
+	cc.StepStart(stepText)
 
-	expectedStepStartOutput := spaces(cc.indentation) + "* Say hello to all\n"
+	expectedStepStartOutput := spaces(cc.indentation) + stepText + newline
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
 
-	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n"
+	expectedErrMsg := spaces(8) + `
+        Failed Step: ` + stepText + `
+        Error Message: ` + errMsg + `
+        Stacktrace:` + spaces(1) + `
+        ` + stacktrace + `
+`
+	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + stepText + "\t ...[FAIL]\n" + expectedErrMsg
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
@@ -209,22 +242,31 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	Verbose = true
 	cc.indentation = 2
+	errMsg := "pre hook failure message"
+	stacktrace := "my stacktrace"
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
+	stepText := "* Say hello to all"
+	cc.StepStart(stepText)
 
-	input := "* Say hello to all"
-	cc.StepStart(input)
-
-	expectedStepStartOutput := spaces(cc.indentation) + "* Say hello to all\n"
+	expectedStepStartOutput := spaces(cc.indentation) + stepText + newline
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
 
 	cc.Errorf("Failed!")
 	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
 	dw.output = ""
-	stepRes := &DummyResult{IsFailed: true}
 
-	cc.StepEnd(gauge.Step{LineText: input}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
 
-	expectedStepEndOutput := cursorUp + eraseLine + cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n"
+	expectedErrMsg := spaces(8) + `
+        Failed Step: ` + stepText + `
+        Error Message: ` + errMsg + `
+        Stacktrace:` + spaces(1) + `
+        ` + stacktrace + `
+`
+	expectedStepEndOutput := cursorUp + eraseLine + cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n" + expectedErrMsg
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
@@ -291,4 +333,113 @@ func (s *MySuite) TestWrite_VerboseColoredConsole(c *C) {
 
 	c.Assert(err, Equals, nil)
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, input)
+}
+
+func (s *MySuite) TestStepEndWithPreHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 2
+	Verbose = true
+	errMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	stepText := "* my step"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{PreHookFailure: preHookFailure}})
+	cc.StepStart(stepText)
+	dw.output = ""
+
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+
+	c.Assert(cc.indentation, Equals, 2)
+	expectedErrMsg := spaces(8) + `Error Message: ` + errMsg + `
+        Stacktrace:` + spaces(1) + `
+        ` + stackTrace + `
+`
+	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      "+stepText+"\t ...[PASS]\n"+expectedErrMsg)
+}
+
+func (s *MySuite) TestStepEndWithPostHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 6
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure}})
+
+	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+
+	c.Assert(cc.indentation, Equals, 2)
+	expectedErrMsg := spaces(8) + `Error Message: ` + errMsg + `
+        Stacktrace:` + spaces(1) + `
+        ` + stackTrace + `
+`
+	c.Assert(dw.output, Equals, "\t ...[PASS]\n"+expectedErrMsg)
+}
+
+func (s *MySuite) TestStepEndWithPreAndPostHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 6
+	preHookErrMsg := "pre hook failure message"
+	postHookErrMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &postHookErrMsg, StackTrace: &stackTrace}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure, PreHookFailure: preHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+
+	c.Assert(cc.indentation, Equals, 2)
+	err1 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), preHookErrMsg, spaces(8), spaces(8), stackTrace)
+	err2 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), postHookErrMsg, spaces(8), spaces(8), stackTrace)
+	c.Assert(dw.output, Equals, "\t ...[PASS]\n"+err1+err2)
+}
+
+func (s *MySuite) TestSubscribeScenarioEndPreHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = scenarioIndentation
+	currentReporter = cc
+	preHookErrMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PreHookFailure: &preHookFailure}
+
+	cc.ScenarioEnd(res)
+
+	ind := spaces(scenarioIndentation + errorIndentation)
+	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+	c.Assert(cc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSpecEndWithPostHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PostHookFailure: &postHookFailure}
+
+	cc.SpecEnd(res)
+
+	c.Assert(cc.indentation, Equals, 0)
+	ind := spaces(errorIndentation)
+	want := newline + ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+}
+
+func (s *MySuite) TestSuiteEndWithPostHookFailure_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	res := result.NewSuiteResult("", time.Now())
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res.PostSuite = postHookFailure
+
+	cc.SuiteEnd(res)
+
+	c.Assert(cc.indentation, Equals, 0)
+	ind := spaces(errorIndentation)
+	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
 }

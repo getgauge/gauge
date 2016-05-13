@@ -317,7 +317,9 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
 	sc.SpecEnd(res)
 
 	c.Assert(sc.indentation, Equals, 0)
-	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n\n", spaces(errorIndentation), errMsg, spaces(errorIndentation), spaces(errorIndentation), stackTrace))
+	ind := spaces(errorIndentation)
+	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline + newline
+	c.Assert(dw.output, Equals, want)
 }
 
 func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
@@ -329,8 +331,10 @@ func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
 	res.PostSuite = postHookFailure
 
-	sc.SpecEnd(res)
+	sc.SuiteEnd(res)
 
 	c.Assert(sc.indentation, Equals, 0)
-	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n\n", spaces(errorIndentation), errMsg, spaces(errorIndentation), spaces(errorIndentation), stackTrace))
+	ind := spaces(errorIndentation)
+	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
 }

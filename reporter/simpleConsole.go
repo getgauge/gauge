@@ -50,8 +50,8 @@ func (sc *simpleConsole) SpecStart(heading string) {
 func (sc *simpleConsole) SpecEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	printHookFailure(sc, res, res.GetPreHook)
-	printHookFailure(sc, res, res.GetPostHook)
+	printHookFailureSC(sc, res, res.GetPreHook)
+	printHookFailureSC(sc, res, res.GetPostHook)
 	fmt.Fprintln(sc.writer)
 }
 
@@ -67,8 +67,8 @@ func (sc *simpleConsole) ScenarioStart(heading string) {
 func (sc *simpleConsole) ScenarioEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	printHookFailure(sc, res, res.GetPreHook)
-	printHookFailure(sc, res, res.GetPostHook)
+	printHookFailureSC(sc, res, res.GetPreHook)
+	printHookFailureSC(sc, res, res.GetPostHook)
 	sc.indentation -= scenarioIndentation
 }
 
@@ -85,7 +85,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	printHookFailure(sc, res, res.GetPreHook)
+	printHookFailureSC(sc, res, res.GetPreHook)
 	stepRes := res.(*result.StepResult)
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
@@ -98,7 +98,7 @@ func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
 		msg := formatStepText(stepText, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
 		fmt.Fprint(sc.writer, msg)
 	}
-	printHookFailure(sc, res, res.GetPostHook)
+	printHookFailureSC(sc, res, res.GetPostHook)
 	sc.indentation -= stepIndentation
 }
 
@@ -121,8 +121,8 @@ func (sc *simpleConsole) ConceptEnd(res result.Result) {
 func (sc *simpleConsole) SuiteEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	printHookFailure(sc, res, res.GetPreHook)
-	printHookFailure(sc, res, res.GetPostHook)
+	printHookFailureSC(sc, res, res.GetPreHook)
+	printHookFailureSC(sc, res, res.GetPostHook)
 	suiteRes := res.(*result.SuiteResult)
 	for _, e := range suiteRes.UnhandledErrors {
 		logger.GaugeLog.Error(e.Error())
@@ -153,7 +153,7 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func printHookFailure(sc *simpleConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
+func printHookFailureSC(sc *simpleConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
 	if hookFailure() != nil && *hookFailure() != nil {
 		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)

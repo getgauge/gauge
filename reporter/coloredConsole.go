@@ -27,6 +27,7 @@ import (
 	ct "github.com/daviddengcn/go-colortext"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -52,6 +53,8 @@ func (c *coloredConsole) SpecStart(heading string) {
 func (c *coloredConsole) SpecEnd(res result.Result) {
 	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
+	printHookFailureCC(c, res, res.GetPreHook)
+	printHookFailureCC(c, res, res.GetPostHook)
 }
 
 func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
@@ -72,6 +75,8 @@ func (c *coloredConsole) ScenarioEnd(res result.Result) {
 		c.displayMessage(newline, ct.None)
 	}
 	c.writer.Reset()
+	printHookFailureCC(c, res, res.GetPreHook)
+	printHookFailureCC(c, res, res.GetPostHook)
 	c.indentation -= scenarioIndentation
 }
 
@@ -88,9 +93,10 @@ func (c *coloredConsole) StepStart(stepText string) {
 }
 
 func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result) {
+	stepRes := res.(*result.StepResult)
 	if Verbose {
 		c.writer.Clear()
-		if res.GetFailed() {
+		if stepRes.GetStepFailed() {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
 		} else {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
@@ -98,12 +104,25 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result) {
 		c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
 		c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	} else {
-		if res.GetFailed() {
+		if stepRes.GetStepFailed() {
 			c.displayMessage(getFailureSymbol()+newline, ct.Red)
 		} else {
 			c.displayMessage(getSuccessSymbol(), ct.Green)
 		}
 	}
+	if stepRes.GetStepFailed() {
+		stepText := prepStepMsg(step.LineText)
+		logger.GaugeLog.Error(stepText)
+		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
+		logger.GaugeLog.Error(errMsg)
+		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
+		logger.GaugeLog.Error(stacktrace)
+
+		msg := formatStepText(stepText, c.indentation) + formatErrorMessage(errMsg, c.indentation) + formatStacktrace(stacktrace, c.indentation)
+		c.displayMessage(msg, ct.Red)
+	}
+	printHookFailureCC(c, res, res.GetPreHook)
+	printHookFailureCC(c, res, res.GetPostHook)
 	c.writer.Reset()
 	c.resetBuffers()
 	c.indentation -= stepIndentation
@@ -124,6 +143,8 @@ func (c *coloredConsole) ConceptEnd(res result.Result) {
 
 func (c *coloredConsole) SuiteEnd(res result.Result) {
 	suiteRes := res.(*result.SuiteResult)
+	printHookFailureCC(c, res, res.GetPreHook)
+	printHookFailureCC(c, res, res.GetPostHook)
 	for _, e := range suiteRes.UnhandledErrors {
 		logger.GaugeLog.Error(e.Error())
 		c.displayMessage(indent(e.Error(), c.indentation+errorIndentation)+newline, ct.Red)
@@ -164,4 +185,14 @@ func (c *coloredConsole) resetBuffers() {
 	c.headingBuffer.Reset()
 	c.pluginMessagesBuffer.Reset()
 	c.errorMessagesBuffer.Reset()
+}
+
+func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
+	if hookFailure() != nil && *hookFailure() != nil {
+		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
+		logger.GaugeLog.Error(errMsg)
+		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
+		logger.GaugeLog.Error(stacktrace)
+		c.displayMessage(formatErrorMessage(errMsg, c.indentation)+formatStacktrace(stacktrace, c.indentation), ct.Red)
+	}
 }
