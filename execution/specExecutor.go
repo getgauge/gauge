@@ -303,11 +303,6 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 	}
 }
 
-func printStatus(executionResult *gauge_messages.ProtoExecutionResult, reporter reporter.Reporter) {
-	// reporter.Errorf("Error Message: %s", executionResult.GetErrorMessage())
-	// reporter.Errorf("Stacktrace: \n%s", executionResult.GetStackTrace())
-}
-
 func getTagValue(tags *gauge.Tags) []string {
 	var tagValues []string
 	if tags != nil {

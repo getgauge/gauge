@@ -164,7 +164,6 @@ func (e *simpleExecution) notifyExecutionStop() {
 
 func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
 	f(result, execResult)
-	printStatus(execResult, reporter)
 }
 
 func getDataTableRows(rowCount int) indexRange {
