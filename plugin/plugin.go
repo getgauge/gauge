@@ -352,34 +352,34 @@ func getLatestInstalledPlugin(pluginDir string) (*PluginInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
 	}
-	versionToPlugins := make(map[version.Version][]PluginInfo, 0)
+	versionToPlugins := make(map[string][]PluginInfo, 0)
 	pluginName := filepath.Base(pluginDir)
 
 	for _, file := range files {
 		if !file.IsDir() {
 			continue
 		}
-		var v *version.Version
-		var err error
+		v := file.Name()
 		if strings.Contains(file.Name(), "nightly") {
-			v, err = version.ParseVersion(file.Name()[:strings.LastIndex(file.Name(), ".")])
-		} else {
-			v, err = version.ParseVersion(file.Name())
+			v = file.Name()[:strings.LastIndex(file.Name(), ".")]
 		}
+		vp, err := version.ParseVersion(v)
 		if err == nil {
-			versionToPlugins[*v] = append(versionToPlugins[*v], PluginInfo{pluginName, v, filepath.Join(pluginDir, file.Name())})
+			versionToPlugins[v] = append(versionToPlugins[v], PluginInfo{pluginName, vp, filepath.Join(pluginDir, file.Name())})
 		}
 	}
 
 	if len(versionToPlugins) < 1 {
 		return nil, fmt.Errorf("No valid versions of plugin %s found in %s", pluginName, pluginDir)
 	}
+
 	var availableVersions []*version.Version
 	for k := range versionToPlugins {
-		availableVersions = append(availableVersions, &k)
+		vp, _ := version.ParseVersion(k)
+		availableVersions = append(availableVersions, vp)
 	}
 	latestVersion := version.GetLatestVersion(availableVersions)
-	latestBuild := getLatestOf(versionToPlugins[*latestVersion], latestVersion)
+	latestBuild := getLatestOf(versionToPlugins[latestVersion.String()], latestVersion)
 	return &latestBuild, nil
 }
 
