@@ -77,6 +77,25 @@ func (s *MySuite) TestFindAllConceptFiles(c *C) {
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
 }
 
+func (s *MySuite) TestFindAllConceptFilesShouldFilterDirectoriesThatAreSkipped(c *C) {
+	data := []byte(`#Concept Heading`)
+	git, _ := CreateDirIn(dir, ".git")
+	bin, _ := CreateDirIn(dir, "gauge_bin")
+	reports, _ := CreateDirIn(dir, "reports")
+	env, _ := CreateDirIn(dir, "env")
+
+	CreateFileIn(git, "concept1.cpt", data)
+	CreateFileIn(bin, "concept2.cpt", data)
+	CreateFileIn(reports, "concept3.cpt", data)
+	CreateFileIn(env, "concept4.cpt", data)
+
+	c.Assert(len(FindConceptFilesIn(dir)), Equals, 0)
+
+	_, err := CreateFileIn(dir, "concept2.cpt", data)
+	c.Assert(err, Equals, nil)
+	c.Assert(len(FindConceptFilesIn(dir)), Equals, 1)
+}
+
 func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 	data := []byte(`#Concept Heading
 * Say "hello" to gauge

@@ -28,6 +28,11 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
+const (
+	GaugeReportsDir = "gauge_reports_dir"
+	LogsDirectory   = "logs_directory"
+)
+
 var envVars map[string]string
 
 var currentEnv = "default"
@@ -63,10 +68,10 @@ func LoadEnv(envName string) {
 }
 
 func loadDefaultEnvVars() {
-	addEnvVar("gauge_reports_dir", "reports")
+	addEnvVar(GaugeReportsDir, "reports")
+	addEnvVar(LogsDirectory, "logs")
 	addEnvVar("overwrite_reports", "true")
 	addEnvVar("screenshot_on_failure", "true")
-	addEnvVar("logs_directory", "logs")
 }
 
 func loadEnvDir(envName string) error {

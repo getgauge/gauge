@@ -21,9 +21,16 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/logger"
+)
+
+const (
+	gaugeExcludeDirectories = "gauge_exclude_dirs"
 )
 
 func init() {
@@ -33,17 +40,47 @@ func init() {
 
 // AcceptedExtensions has all the file extensions that are supported by Gauge for its specs
 var AcceptedExtensions = make(map[string]bool)
+var ignoredDirectories = make(map[string]bool)
+
+func add(value string) {
+	ignoredDirectories[strings.TrimSpace(value)] = true
+}
+
+func addDirectories(value string) {
+	for _, dir := range strings.Split(value, ",") {
+		add(dir)
+	}
+}
+
+func addIgnoredDirectories() {
+	ignoredDirectories["gauge_bin"] = true
+	ignoredDirectories["reports"] = true
+	ignoredDirectories["logs"] = true
+	ignoredDirectories[common.EnvDirectoryName] = true
+	addDirFromEnv(env.GaugeReportsDir, add)
+	addDirFromEnv(env.LogsDirectory, add)
+	addDirFromEnv(gaugeExcludeDirectories, addDirectories)
+}
+
+func addDirFromEnv(name string, add func(value string)) {
+	value := os.Getenv(name)
+	if value != "" {
+		add(value)
+	}
+}
 
 // findFilesIn Finds all the files in the directory of a given extension
-func findFilesIn(dirRoot string, isValidFile func(path string) bool) []string {
+func findFilesIn(dirRoot string, isValidFile func(path string) bool, shouldSkip func(f os.FileInfo) bool) []string {
 	absRoot, _ := filepath.Abs(dirRoot)
-	files := common.FindFilesInDir(absRoot, isValidFile)
+	files := common.FindFilesInDir(absRoot, isValidFile, shouldSkip)
 	return files
 }
 
 // FindSpecFilesIn Finds spec files in the given directory
 func FindSpecFilesIn(dir string) []string {
-	return findFilesIn(dir, IsValidSpecExtension)
+	return findFilesIn(dir, IsValidSpecExtension, func(f os.FileInfo) bool {
+		return false
+	})
 }
 
 // IsValidSpecExtension Checks if the path has a spec file extension
@@ -53,7 +90,14 @@ func IsValidSpecExtension(path string) bool {
 
 // FindConceptFilesIn Finds the concept files in specified directory
 func FindConceptFilesIn(dir string) []string {
-	return findFilesIn(dir, IsValidConceptExtension)
+	addIgnoredDirectories()
+	return findFilesIn(dir, IsValidConceptExtension, func(f os.FileInfo) bool {
+		if !f.IsDir() {
+			return false
+		}
+		_, ok := ignoredDirectories[f.Name()]
+		return strings.HasPrefix(f.Name(), ".") || ok
+	})
 }
 
 // IsValidConceptExtension Checks if the path has a concept file extension

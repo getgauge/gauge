@@ -151,10 +151,10 @@ sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
 
 	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepRes))
 	want := spaces(errorIndentation) + newline +
-`  Failed Step: * say hello
+		`  Failed Step: * say hello
   Error Message: failure message
   Stacktrace:` + spaces(1) +
-`
+		`
   StepImplementation.implementation4(StepImplementation.java:77)
   sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
   sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
@@ -204,5 +204,5 @@ func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
 	ListenExecutionEvents()
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes))
 
-	c.Assert(dw.output, Equals, spaces(errorIndentation) + "failure 1\n" + spaces(errorIndentation) + "failure 2\n")
+	c.Assert(dw.output, Equals, spaces(errorIndentation)+"failure 1\n"+spaces(errorIndentation)+"failure 2\n")
 }
