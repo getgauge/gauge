@@ -287,3 +287,34 @@ func (s *MySuite) TestStepEndWithPreAndPostHookFailure_SimpleConsole(c *C) {
 	err2 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), postHookErrMsg, spaces(8), spaces(8), stackTrace)
 	c.Assert(dw.output, Equals, err1+err2)
 }
+
+func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = scenarioIndentation
+	currentReporter = sc
+	preHookErrMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PreHookFailure: &preHookFailure}
+
+	sc.ScenarioEnd(res)
+
+	ind := spaces(scenarioIndentation + errorIndentation)
+	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+	c.Assert(sc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PostHookFailure: &postHookFailure}
+
+	sc.SpecEnd(res)
+
+	c.Assert(sc.indentation, Equals, 0)
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n\n", spaces(errorIndentation), errMsg, spaces(errorIndentation), spaces(errorIndentation), stackTrace))
+}

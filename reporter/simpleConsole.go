@@ -50,6 +50,8 @@ func (sc *simpleConsole) SpecStart(heading string) {
 func (sc *simpleConsole) SpecEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
+	printHookFailure(sc, res, res.GetPreHook)
+	printHookFailure(sc, res, res.GetPostHook)
 	fmt.Fprintln(sc.writer)
 }
 
