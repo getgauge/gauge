@@ -98,6 +98,6 @@ func (sr *SuiteResult) GetFailed() bool {
 	return sr.IsFailed
 }
 
-func (sr *SuiteResult) item() interface{} {
+func (sr *SuiteResult) Item() interface{} {
 	return nil
 }

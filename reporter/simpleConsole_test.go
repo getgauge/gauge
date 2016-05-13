@@ -19,6 +19,11 @@ package reporter
 
 import (
 	"fmt"
+	"time"
+
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 
 	. "gopkg.in/check.v1"
 )
@@ -50,7 +55,8 @@ func (s *MySuite) TestSpecStart_SimpleConsole(c *C) {
 
 func (s *MySuite) TestSpecEnd_SimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
-	sc.SpecEnd()
+
+	sc.SpecEnd(&DummyResult{})
 	c.Assert(dw.output, Equals, "\n")
 }
 
@@ -63,8 +69,9 @@ func (s *MySuite) TestScenarioStart_SimpleConsole(c *C) {
 func (s *MySuite) TestScenarioEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 2
+	res := &DummyResult{IsFailed: true}
 
-	sc.ScenarioEnd(true)
+	sc.ScenarioEnd(res)
 
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -93,7 +100,7 @@ func (s *MySuite) TestStepEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 6
 
-	sc.StepEnd(true)
+	sc.StepEnd(gauge.Step{LineText: ""}, result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}}))
 
 	c.Assert(sc.indentation, Equals, 2)
 }
@@ -149,8 +156,9 @@ func (s *MySuite) TestConceptEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 6
 	Verbose = true
+	res := &DummyResult{IsFailed: false}
 
-	sc.ConceptEnd(false)
+	sc.ConceptEnd(res)
 
 	c.Assert(sc.indentation, Equals, 2)
 }
@@ -214,9 +222,14 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	sc.ScenarioStart("My First scenario")
 	sc.StepStart("* do foo bar")
 	sc.Write([]byte("doing foo bar"))
-	sc.StepEnd(false)
-	sc.ScenarioEnd(false)
-	sc.SpecEnd()
+	res := &DummyResult{IsFailed: false}
+	failed := false
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	sc.StepEnd(gauge.Step{LineText: "* do foo bar"}, stepRes)
+	sc.ScenarioEnd(res)
+	sc.SpecEnd(res)
 
 	want := `# Specification heading
   ## My First scenario
@@ -224,5 +237,104 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 doing foo bar
 `
 
+	c.Assert(dw.output, Equals, want)
+}
+
+func (s *MySuite) TestStepEndWithPreHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 6
+	errMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PreHookFailure: preHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+
+	c.Assert(sc.indentation, Equals, 2)
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), errMsg, spaces(8), spaces(8), stackTrace))
+}
+
+func (s *MySuite) TestStepEndWithPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 6
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+
+	c.Assert(sc.indentation, Equals, 2)
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), errMsg, spaces(8), spaces(8), stackTrace))
+}
+
+func (s *MySuite) TestStepEndWithPreAndPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 6
+	preHookErrMsg := "pre hook failure message"
+	postHookErrMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &postHookErrMsg, StackTrace: &stackTrace}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure, PreHookFailure: preHookFailure}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+
+	sc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+
+	c.Assert(sc.indentation, Equals, 2)
+	err1 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), preHookErrMsg, spaces(8), spaces(8), stackTrace)
+	err2 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), postHookErrMsg, spaces(8), spaces(8), stackTrace)
+	c.Assert(dw.output, Equals, err1+err2)
+}
+
+func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = scenarioIndentation
+	currentReporter = sc
+	preHookErrMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PreHookFailure: &preHookFailure}
+
+	sc.ScenarioEnd(res)
+
+	ind := spaces(scenarioIndentation + errorIndentation)
+	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+	c.Assert(sc.indentation, Equals, 0)
+}
+
+func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res := &DummyResult{PostHookFailure: &postHookFailure}
+
+	sc.SpecEnd(res)
+
+	c.Assert(sc.indentation, Equals, 0)
+	ind := spaces(errorIndentation)
+	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline + newline
+	c.Assert(dw.output, Equals, want)
+}
+
+func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	res := result.NewSuiteResult("", time.Now())
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res.PostSuite = postHookFailure
+
+	sc.SuiteEnd(res)
+
+	c.Assert(sc.indentation, Equals, 0)
+	ind := spaces(errorIndentation)
+	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
 	c.Assert(dw.output, Equals, want)
 }

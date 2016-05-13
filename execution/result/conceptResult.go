@@ -93,6 +93,6 @@ func (conceptResult *ConceptResult) GetPostHook() **(gauge_messages.ProtoHookFai
 	return nil
 }
 
-func (conceptResult *ConceptResult) item() interface{} {
+func (conceptResult *ConceptResult) Item() interface{} {
 	return conceptResult.ProtoConcept
 }

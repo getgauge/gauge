@@ -24,7 +24,8 @@ import (
 
 // StepResult represents the result of step execution
 type StepResult struct {
-	protoStep *gauge_messages.ProtoStep
+	protoStep  *gauge_messages.ProtoStep
+	StepFailed bool
 }
 
 // NewStepResult is a constructor for StepResult
@@ -50,6 +51,11 @@ func (s *StepResult) GetFailed() bool {
 	return s.protoStep.StepExecutionResult.ExecutionResult.GetFailed()
 }
 
+// GetFailed returns true if the actual step failed, and not step hook.
+func (s *StepResult) GetStepFailed() bool {
+	return s.StepFailed
+}
+
 // GetStackTrace returns the stacktrace for step failure
 func (s *StepResult) GetStackTrace() string {
 	return s.protoStep.GetStepExecutionResult().GetExecutionResult().GetStackTrace()
@@ -65,7 +71,12 @@ func (s *StepResult) GetStepActualText() string {
 	return s.protoStep.GetActualText()
 }
 
-func (s *StepResult) item() interface{} {
+// SetStepFailure sets the actual step as failed. StepResult.ProtoStep.GetFailed() returns true even if hook failed and not actual step.
+func (s *StepResult) SetStepFailure() {
+	s.StepFailed = true
+}
+
+func (s *StepResult) Item() interface{} {
 	return s.protoStep
 }
 

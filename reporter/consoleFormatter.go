@@ -63,3 +63,27 @@ func getSuccessSymbol() string {
 	}
 	return spaces(1) + successSymbol
 }
+
+func prepErrorMessage(msg string) string {
+	return fmt.Sprintf("Error Message: %s", msg)
+}
+
+func prepStepMsg(msg string) string {
+	return fmt.Sprintf("\nFailed Step: %s", msg)
+}
+
+func prepStacktrace(stacktrace string) string {
+	return fmt.Sprintf("Stacktrace: \n%s", stacktrace)
+}
+
+func formatErrorMessage(msg string, indentation int) string {
+	return indent(msg, indentation+errorIndentation) + newline
+}
+
+func formatStacktrace(stacktrace string, indentation int) string {
+	return indent(stacktrace, indentation+errorIndentation) + newline
+}
+
+func formatStepText(text string, indentation int) string {
+	return indent(text, indentation+errorIndentation) + newline
+}

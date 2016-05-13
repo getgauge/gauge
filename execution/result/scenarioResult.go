@@ -30,60 +30,60 @@ func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
 	return &ScenarioResult{ProtoScenario: sce}
 }
 
-func (scenarioResult *ScenarioResult) SetFailure() {
-	scenarioResult.ProtoScenario.Failed = proto.Bool(true)
+func (s *ScenarioResult) SetFailure() {
+	s.ProtoScenario.Failed = proto.Bool(true)
 }
 
-func (scenarioResult *ScenarioResult) GetFailed() bool {
-	return scenarioResult.ProtoScenario.GetFailed()
+func (s *ScenarioResult) GetFailed() bool {
+	return s.ProtoScenario.GetFailed()
 }
 
-func (scenarioResult *ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.ScenarioItems = append(scenarioResult.ProtoScenario.ScenarioItems, protoItems...)
+func (s *ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
+	s.ProtoScenario.ScenarioItems = append(s.ProtoScenario.ScenarioItems, protoItems...)
 }
 
-func (scenarioResult *ScenarioResult) AddContexts(contextProtoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.Contexts = append(scenarioResult.ProtoScenario.Contexts, contextProtoItems...)
+func (s *ScenarioResult) AddContexts(contextProtoItems []*gauge_messages.ProtoItem) {
+	s.ProtoScenario.Contexts = append(s.ProtoScenario.Contexts, contextProtoItems...)
 }
 
-func (scenarioResult *ScenarioResult) AddTearDownSteps(tearDownProtoItems []*gauge_messages.ProtoItem) {
-	scenarioResult.ProtoScenario.TearDownSteps = append(scenarioResult.ProtoScenario.TearDownSteps, tearDownProtoItems...)
+func (s *ScenarioResult) AddTearDownSteps(tearDownProtoItems []*gauge_messages.ProtoItem) {
+	s.ProtoScenario.TearDownSteps = append(s.ProtoScenario.TearDownSteps, tearDownProtoItems...)
 }
 
-func (scenarioResult *ScenarioResult) UpdateExecutionTime() {
-	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetContexts())
-	scenarioResult.updateExecutionTimeFromItems(scenarioResult.ProtoScenario.GetScenarioItems())
+func (s *ScenarioResult) UpdateExecutionTime() {
+	s.updateExecutionTimeFromItems(s.ProtoScenario.GetContexts())
+	s.updateExecutionTimeFromItems(s.ProtoScenario.GetScenarioItems())
 }
 
-func (scenarioResult *ScenarioResult) AddExecTime(execTime int64) {
-	currentScenarioExecTime := scenarioResult.ProtoScenario.GetExecutionTime()
-	scenarioResult.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
+func (s *ScenarioResult) AddExecTime(execTime int64) {
+	currentScenarioExecTime := s.ProtoScenario.GetExecutionTime()
+	s.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
 }
 
 func (s *ScenarioResult) ExecTime() int64 {
 	return *s.ProtoScenario.ExecutionTime
 }
 
-func (scenarioResult *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messages.ProtoItem) {
+func (s *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messages.ProtoItem) {
 	for _, item := range protoItems {
 		if item.GetItemType() == gauge_messages.ProtoItem_Step {
 			stepExecTime := item.GetStep().GetStepExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.AddExecTime(stepExecTime)
+			s.AddExecTime(stepExecTime)
 		} else if item.GetItemType() == gauge_messages.ProtoItem_Concept {
 			conceptExecTime := item.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetExecutionTime()
-			scenarioResult.AddExecTime(conceptExecTime)
+			s.AddExecTime(conceptExecTime)
 		}
 	}
 }
 
-func (scenarioResult *ScenarioResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &scenarioResult.ProtoScenario.PreHookFailure
+func (s *ScenarioResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
+	return &s.ProtoScenario.PreHookFailure
 }
 
-func (scenarioResult *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &scenarioResult.ProtoScenario.PostHookFailure
+func (s *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
+	return &s.ProtoScenario.PostHookFailure
 }
 
-func (r *ScenarioResult) item() interface{} {
-	return r.ProtoScenario
+func (s *ScenarioResult) Item() interface{} {
+	return s.ProtoScenario
 }

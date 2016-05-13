@@ -49,12 +49,13 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(e.currentExecutionInfo)
+			stepResult.SetStepFailure()
 		}
 		stepResult.SetProtoExecResult(stepExecutionStatus)
 	}
 	e.notifyAfterStepHook(stepResult)
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, nil, stepResult))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult))
 	return stepResult
 }
 

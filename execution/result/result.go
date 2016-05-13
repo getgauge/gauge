@@ -25,7 +25,7 @@ type Result interface {
 	GetPostHook() **(gauge_messages.ProtoHookFailure)
 	SetFailure()
 	GetFailed() bool
-	item() interface{}
+	Item() interface{}
 	ExecTime() int64
 }
 
