@@ -81,18 +81,18 @@ func (sc *simpleConsole) StepStart(stepText string) {
 func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	preHookFailure := printHookFailure(sc, res, res.GetPreHook)
-	if res.GetFailed() && res.GetExecResult() != nil && !preHookFailure {
-		stepText := prepStepMsg(step.LineText)
-		logger.GaugeLog.Error(stepText)
-		errMsg := prepErrorMessage(res.GetExecResult()[0].GetErrorMessage())
-		logger.GaugeLog.Error(errMsg)
-		stacktrace := prepStacktrace(res.GetExecResult()[0].GetStackTrace())
-		logger.GaugeLog.Error(stacktrace)
-
-		msg := formatStepText(stepText, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
-		fmt.Fprint(sc.writer, msg)
-	}
+	printHookFailure(sc, res, res.GetPreHook)
+	// if res.GetFailed() && res.GetExecResult() != nil {
+	// 	stepText := prepStepMsg(step.LineText)
+	// 	logger.GaugeLog.Error(stepText)
+	// 	errMsg := prepErrorMessage(res.GetExecResult()[0].GetErrorMessage())
+	// 	logger.GaugeLog.Error(errMsg)
+	// 	stacktrace := prepStacktrace(res.GetExecResult()[0].GetStackTrace())
+	// 	logger.GaugeLog.Error(stacktrace)
+	//
+	// 	msg := formatStepText(stepText, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
+	// 	fmt.Fprint(sc.writer, msg)
+	// }
 	printHookFailure(sc, res, res.GetPostHook)
 	sc.indentation -= stepIndentation
 }
@@ -136,14 +136,12 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func printHookFailure(sc *simpleConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
+func printHookFailure(sc *simpleConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
 	if res.GetFailed() && hookFailure() != nil && *hookFailure() != nil {
 		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 		fmt.Fprint(sc.writer, formatErrorMessage(errMsg, sc.indentation), formatStacktrace(stacktrace, sc.indentation))
-		return true
 	}
-	return false
 }

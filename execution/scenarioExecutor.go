@@ -145,7 +145,6 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter}
 		res := se.executeStep(item, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
-		scenarioResult.AddStepResult(res)
 		failed = res.GetFailed()
 	}
 	if failed {

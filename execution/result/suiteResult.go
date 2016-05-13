@@ -101,11 +101,3 @@ func (sr *SuiteResult) GetFailed() bool {
 func (sr *SuiteResult) Item() interface{} {
 	return nil
 }
-
-func (sr *SuiteResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
-	var r []gauge_messages.ProtoExecutionResult
-	for _, specRes := range sr.SpecResults {
-		r = append(r, specRes.GetExecResult()...)
-	}
-	return r
-}

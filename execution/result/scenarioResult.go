@@ -24,7 +24,6 @@ import (
 
 type ScenarioResult struct {
 	ProtoScenario *gauge_messages.ProtoScenario
-	StepResults   []*StepResult
 }
 
 func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
@@ -49,10 +48,6 @@ func (s *ScenarioResult) AddContexts(contextProtoItems []*gauge_messages.ProtoIt
 
 func (s *ScenarioResult) AddTearDownSteps(tearDownProtoItems []*gauge_messages.ProtoItem) {
 	s.ProtoScenario.TearDownSteps = append(s.ProtoScenario.TearDownSteps, tearDownProtoItems...)
-}
-
-func (s *ScenarioResult) AddStepResult(res *StepResult) {
-	s.StepResults = append(s.StepResults, res)
 }
 
 func (s *ScenarioResult) UpdateExecutionTime() {
@@ -91,12 +86,4 @@ func (s *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
 
 func (s *ScenarioResult) Item() interface{} {
 	return s.ProtoScenario
-}
-
-func (s *ScenarioResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
-	var results []gauge_messages.ProtoExecutionResult
-	for _, r := range s.StepResults {
-		results = append(results, r.GetExecResult()...)
-	}
-	return results
 }

@@ -133,33 +133,33 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	c.Assert(sc.indentation, Equals, 0)
 }
 
-func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = 0
-	currentReporter = sc
-	SimpleConsoleOutput = true
-	event.InitRegistry()
-	failed := true
-	stepText := "* say hello"
-	errMsg := "failure message"
-	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
-sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
-	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
-
-	ListenExecutionEvents()
-
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes))
-	want := spaces(errorIndentation) + newline +
-		`  Failed Step: * say hello
-  Error Message: failure message
-  Stacktrace:` + spaces(1) +
-		`
-  StepImplementation.implementation4(StepImplementation.java:77)
-  sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-`
-	c.Assert(dw.output, Equals, want)
-}
+// func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
+// 	dw, sc := setupSimpleConsole()
+// 	sc.indentation = 0
+// 	currentReporter = sc
+// 	SimpleConsoleOutput = true
+// 	event.InitRegistry()
+// 	failed := true
+// 	stepText := "* say hello"
+// 	errMsg := "failure message"
+// 	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
+// sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
+// 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+// 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+//
+// 	ListenExecutionEvents()
+//
+// 	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes))
+// 	want := spaces(errorIndentation) + newline +
+// 		`  Failed Step: * say hello
+//   Error Message: failure message
+//   Stacktrace:` + spaces(1) +
+// 		`
+//   StepImplementation.implementation4(StepImplementation.java:77)
+//   sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+// `
+// 	c.Assert(dw.output, Equals, want)
+// }
 
 func (s *MySuite) TestSubscribeConceptStart(c *C) {
 	dw, sc := setupSimpleConsole()

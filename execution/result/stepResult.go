@@ -93,7 +93,3 @@ func (s *StepResult) ProtoStepExecResult() *gauge_messages.ProtoStepExecutionRes
 func (s *StepResult) SetProtoExecResult(r *gauge_messages.ProtoExecutionResult) {
 	s.protoStep.StepExecutionResult.ExecutionResult = r
 }
-
-func (s *StepResult) GetExecResult() []gauge_messages.ProtoExecutionResult {
-	return []gauge_messages.ProtoExecutionResult{*s.protoStep.GetStepExecutionResult().GetExecutionResult()}
-}
