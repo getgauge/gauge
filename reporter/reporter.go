@@ -116,10 +116,7 @@ func ListenExecutionEvents() {
 			case event.SpecEnd:
 				r.SpecEnd(e.Result)
 			case event.SuiteEnd:
-				suiteRes := e.Result.(*result.SuiteResult)
-				for _, e := range suiteRes.UnhandledErrors {
-					r.Errorf(e.Error())
-				}
+				r.SuiteEnd(e.Result)
 			}
 		}
 	}()

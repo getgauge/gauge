@@ -123,6 +123,11 @@ func (c *coloredConsole) ConceptEnd(res result.Result) {
 }
 
 func (c *coloredConsole) SuiteEnd(res result.Result) {
+	suiteRes := res.(*result.SuiteResult)
+	for _, e := range suiteRes.UnhandledErrors {
+		logger.GaugeLog.Error(e.Error())
+		c.displayMessage(indent(e.Error(), c.indentation+errorIndentation)+newline, ct.Red)
+	}
 }
 
 func (c *coloredConsole) DataTable(table string) {

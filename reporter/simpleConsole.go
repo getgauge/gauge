@@ -121,6 +121,11 @@ func (sc *simpleConsole) ConceptEnd(res result.Result) {
 func (sc *simpleConsole) SuiteEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
+	suiteRes := res.(*result.SuiteResult)
+	for _, e := range suiteRes.UnhandledErrors {
+		logger.GaugeLog.Error(e.Error())
+		fmt.Fprint(sc.writer, indent(e.Error(), sc.indentation+errorIndentation)+newline)
+	}
 }
 
 func (sc *simpleConsole) DataTable(table string) {
