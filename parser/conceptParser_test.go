@@ -18,7 +18,6 @@
 package parser
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -65,25 +64,18 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 }
 
 func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
-	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err"))
-	oldWd, _ := os.Getwd()
-	os.Chdir(config.ProjectRoot)
+	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err", "cpt"))
 
-	_, res := CreateConceptsDictionary([]string{filepath.Join(config.ProjectRoot, "cpt")})
+	_, res := CreateConceptsDictionary()
 
-	os.Chdir(oldWd)
 	c.Assert(res.Ok, Equals, false)
 	c.Assert(len(res.ParseErrors), Equals, 2)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
-	config.ProjectRoot, _ = filepath.Abs("testdata")
-	oldWd, _ := os.Getwd()
-	os.Chdir(config.ProjectRoot)
-	cpt := "dir1"
+	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "dir1"))
 
-	dict, res := CreateConceptsDictionary([]string{cpt, cpt})
-	os.Chdir(oldWd)
+	dict, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, true)
 	c.Assert(dict, NotNil)

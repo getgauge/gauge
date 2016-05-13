@@ -97,10 +97,17 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 	config.ProjectRoot = "_testdata"
 	specsDir, _ := filepath.Abs(filepath.Join("_testdata", "specs"))
 
-	c.Assert(len(GetConceptFiles(specsDir)), Equals, 2)
-	c.Assert(len(GetConceptFiles(filepath.Join(specsDir, "concept1.cpt"))), Equals, 2)
-	c.Assert(len(GetConceptFiles(filepath.Join(specsDir, "subdir"))), Equals, 2)
-	c.Assert(len(GetConceptFiles(filepath.Join(specsDir, "subdir", "concept2.cpt"))), Equals, 2)
+	config.ProjectRoot = specsDir
+	c.Assert(len(GetConceptFiles()), Equals, 2)
+
+	config.ProjectRoot = filepath.Join(specsDir, "concept1.cpt")
+	c.Assert(len(GetConceptFiles()), Equals, 1)
+
+	config.ProjectRoot = filepath.Join(specsDir, "subdir")
+	c.Assert(len(GetConceptFiles()), Equals, 1)
+
+	config.ProjectRoot = filepath.Join(specsDir, "subdir", "concept2.cpt")
+	c.Assert(len(GetConceptFiles()), Equals, 1)
 }
 
 func (s *MySuite) TestFindAllNestedDirs(c *C) {

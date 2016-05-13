@@ -121,7 +121,7 @@ func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *Vali
 }
 
 func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary, bool) {
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary(args)
+	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary()
 	conceptFailed := parser.HandleParseResult(conceptParseResult)
 	specsToExecute, _, specFailed := filter.GetSpecsToExecute(conceptsDictionary, args)
 	return specsToExecute, conceptsDictionary, conceptFailed || specFailed

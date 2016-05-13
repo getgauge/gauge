@@ -21,8 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
@@ -122,22 +120,17 @@ func GetSpecFiles(path string) []string {
 	return specFiles
 }
 
-// GetConceptFiles returns the list of concept files present in the PROJECTROOT/base_dir_of_path
-func GetConceptFiles(path string) []string {
-	absPath, err := filepath.Abs(path)
+// GetConceptFiles returns the list of concept files present in the PROJECTROOT
+func GetConceptFiles() []string {
+	projRoot := config.ProjectRoot
+	if projRoot == "" {
+		logger.Fatalf("Failed to get project root.")
+	}
+	absPath, err := filepath.Abs(projRoot)
 	if err != nil {
 		logger.Fatalf("Error getting absolute path. %v", err)
 	}
-
-	projRoot := config.ProjectRoot
-	if projRoot == "" {
-		logger.Fatalf("Failed to get project root. %v", err)
-	}
-	projRoot += string(filepath.Separator)
-
-	path = strings.TrimPrefix(absPath, projRoot)
-	path = strings.Split(path, string(filepath.Separator))[0]
-	return FindConceptFilesIn(path)
+	return FindConceptFilesIn(absPath)
 }
 
 // SaveFile saves contents at the given path

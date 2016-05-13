@@ -93,7 +93,7 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 		return result
 	}
 
-	conceptDictionary, parseResult := parser.CreateConceptsDictionary(specDirs)
+	conceptDictionary, parseResult := parser.CreateConceptsDictionary()
 
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {
