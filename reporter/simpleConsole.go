@@ -65,6 +65,8 @@ func (sc *simpleConsole) ScenarioStart(heading string) {
 func (sc *simpleConsole) ScenarioEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
+	printHookFailure(sc, res, res.GetPreHook)
+	printHookFailure(sc, res, res.GetPostHook)
 	sc.indentation -= scenarioIndentation
 }
 

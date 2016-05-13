@@ -101,6 +101,28 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	c.Assert(sc.indentation, Equals, 0)
 }
 
+func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = scenarioIndentation
+	currentReporter = sc
+	SimpleConsoleOutput = true
+	event.InitRegistry()
+	sceHeading := "My scenario heading"
+	preHookErrMsg := "pre hook failure message"
+	stackTrace := "my stacktrace"
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading, PreHookFailure: preHookFailure})
+
+	ListenExecutionEvents()
+
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes))
+	ind := spaces(scenarioIndentation + errorIndentation)
+	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+	c.Assert(sc.indentation, Equals, 0)
+}
+
 func (s *MySuite) TestSubscribeStepStart(c *C) {
 	dw, sc := setupSimpleConsole()
 	currentReporter = sc
