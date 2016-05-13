@@ -118,6 +118,11 @@ func (sc *simpleConsole) ConceptEnd(res result.Result) {
 	sc.indentation -= stepIndentation
 }
 
+func (sc *simpleConsole) SuiteEnd(res result.Result) {
+	sc.mu.Lock()
+	defer sc.mu.Unlock()
+}
+
 func (sc *simpleConsole) DataTable(table string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()

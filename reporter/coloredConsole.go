@@ -122,6 +122,9 @@ func (c *coloredConsole) ConceptEnd(res result.Result) {
 	c.indentation -= stepIndentation
 }
 
+func (c *coloredConsole) SuiteEnd(res result.Result) {
+}
+
 func (c *coloredConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
 	c.displayMessage(table, ct.Yellow)

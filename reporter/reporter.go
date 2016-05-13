@@ -49,6 +49,7 @@ type Reporter interface {
 	ConceptStart(string)
 	ConceptEnd(result.Result)
 	DataTable(string)
+	SuiteEnd(result.Result)
 
 	Errorf(string, ...interface{})
 
