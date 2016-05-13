@@ -19,6 +19,7 @@ package reporter
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -312,6 +313,21 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
 	res := &DummyResult{PostHookFailure: &postHookFailure}
+
+	sc.SpecEnd(res)
+
+	c.Assert(sc.indentation, Equals, 0)
+	c.Assert(dw.output, Equals, fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n\n", spaces(errorIndentation), errMsg, spaces(errorIndentation), spaces(errorIndentation), stackTrace))
+}
+
+func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 0
+	errMsg := "post hook failure message"
+	stackTrace := "my stacktrace"
+	res := result.NewSuiteResult("", time.Now())
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	res.PostSuite = postHookFailure
 
 	sc.SpecEnd(res)
 

@@ -121,6 +121,8 @@ func (sc *simpleConsole) ConceptEnd(res result.Result) {
 func (sc *simpleConsole) SuiteEnd(res result.Result) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
+	printHookFailure(sc, res, res.GetPreHook)
+	printHookFailure(sc, res, res.GetPostHook)
 	suiteRes := res.(*result.SuiteResult)
 	for _, e := range suiteRes.UnhandledErrors {
 		logger.GaugeLog.Error(e.Error())
