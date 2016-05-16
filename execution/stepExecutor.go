@@ -85,6 +85,7 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	}
 
 	res := executeHook(m, stepResult, e.runner, e.pluginHandler)
+	stepResult.ProtoStepExecResult().GetExecutionResult().Message = res.Message
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook, e.consoleReporter)
