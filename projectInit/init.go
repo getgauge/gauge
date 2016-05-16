@@ -164,6 +164,10 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
+	err := runner.ExecuteInitHookForRunner(language)
+	if err != nil {
+		return err
+	}
 	// Create the project manifest
 	showMessage("create", common.ManifestFile)
 	if common.FileExists(common.ManifestFile) {
@@ -227,6 +231,5 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJSONDest, err.Error()))
 	}
-
-	return runner.ExecuteInitHookForRunner(language)
+	return nil
 }
