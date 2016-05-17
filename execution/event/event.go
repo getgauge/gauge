@@ -28,13 +28,15 @@ type ExecutionEvent struct {
 	Topic  Topic
 	Item   gauge.Item
 	Result result.Result
+	Stream int
 }
 
-func NewExecutionEvent(t Topic, i gauge.Item, r result.Result) ExecutionEvent {
+func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int) ExecutionEvent {
 	return ExecutionEvent{
 		Topic:  t,
 		Item:   i,
 		Result: r,
+		Stream: stream,
 	}
 }
 

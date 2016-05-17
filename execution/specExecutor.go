@@ -45,6 +45,7 @@ type specExecutor struct {
 	currentTableRow      int
 	consoleReporter      reporter.Reporter
 	errMap               *validation.ValidationErrMaps
+	stream               int
 }
 
 type indexRange struct {
@@ -52,8 +53,8 @@ type indexRange struct {
 	end   int
 }
 
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps) *specExecutor {
-	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e}
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps, stream int) *specExecutor {
+	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e, stream: stream}
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
@@ -74,8 +75,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
-	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil))
-	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult))
+	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream))
+	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream))
 
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
@@ -271,7 +272,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
-	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap)
+	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap, e.stream)
 	scenarioExec.execute(scenarioResult, scenario, e.specification.Contexts, e.specification.TearDownSteps)
 	if scenarioResult.ProtoScenario.GetSkipped() {
 		e.specResult.ScenarioSkippedCount++

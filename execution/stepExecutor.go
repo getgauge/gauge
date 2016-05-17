@@ -33,6 +33,7 @@ type stepExecutor struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	consoleReporter      reporter.Reporter
+	stream               int
 }
 
 // TODO: stepExecutor should not consume both gauge.Step and gauge_messages.ProtoStep. The usage of ProtoStep should be eliminated.
@@ -41,7 +42,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 	stepResult := result.NewStepResult(protoStep)
 
-	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil))
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream))
 
 	e.notifyBeforeStepHook(stepResult)
 	if !stepResult.GetFailed() {
@@ -55,7 +56,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	}
 	e.notifyAfterStepHook(stepResult)
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream))
 	return stepResult
 }
 

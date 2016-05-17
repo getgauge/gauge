@@ -47,6 +47,7 @@ type simpleExecution struct {
 	consoleReporter      reporter.Reporter
 	errMaps              *validation.ValidationErrMaps
 	startTime            time.Time
+	stream               int
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
@@ -57,6 +58,7 @@ func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 		pluginHandler:   executionInfo.pluginHandler,
 		consoleReporter: executionInfo.consoleReporter,
 		errMaps:         executionInfo.errMaps,
+		stream:          executionInfo.stream,
 	}
 }
 
@@ -93,12 +95,12 @@ func (e *simpleExecution) execute() {
 
 func (e *simpleExecution) start() {
 	e.startTime = time.Now()
-	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil))
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) finish() {
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0))
 	e.notifyExecutionResult()
 	e.stopAllPlugins()
 }
@@ -114,7 +116,7 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.Sp
 	var results []*result.SpecResult
 	for specs.HasNext() {
 		s := specs.Next()
-		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps)
+		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps, e.stream)
 		results = append(results, ex.execute())
 	}
 	return results

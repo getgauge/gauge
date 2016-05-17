@@ -51,9 +51,10 @@ type executionInfo struct {
 	errMaps         *validation.ValidationErrMaps
 	inParallel      bool
 	numberOfStreams int
+	stream          int
 }
 
-func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, rep reporter.Reporter, e *validation.ValidationErrMaps, p bool) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -63,10 +64,10 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handl
 		specs:           s,
 		runner:          r,
 		pluginHandler:   ph,
-		consoleReporter: rep,
 		errMaps:         e,
 		inParallel:      p,
 		numberOfStreams: NumberOfExecutionStreams,
+		stream:          stream,
 	}
 }
 
@@ -80,10 +81,10 @@ func ExecuteSpecs(specDirs []string) int {
 
 	runner := startAPI()
 	specs, errMap := validation.ValidateSpecs(specDirs, runner)
-	ei := newExecutionInfo(specs, runner, nil, reporter.Current(), errMap, InParallel)
-	e := newExecution(ei)
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
+	ei := newExecutionInfo(specs, runner, nil, errMap, InParallel, 0)
+	e := newExecution(ei)
 	return printExecutionStatus(e.run(), errMap)
 }
 

@@ -21,12 +21,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 )
+
+// IsParallel represents console reporting format based on simple/parallel execution
+var IsParallel bool
 
 // SimpleConsoleOutput represents if coloring should be removed from the Console output
 var SimpleConsoleOutput bool
@@ -78,21 +82,59 @@ func (p *parallelReportWriter) Write(b []byte) (int, error) {
 	return fmt.Printf("[runner: %d] %s", p.nRunner, string(b))
 }
 
-// NewParallelConsole returns the instance of parallel console reporter
-func NewParallelConsole(n int) Reporter {
+// ParallelReporter returns the instance of parallel console reporter
+func ParallelReporter(n int) Reporter {
+	if r, ok := cParallelReporters.Get(n); ok {
+		return r
+	}
 	writer := &parallelReportWriter{nRunner: n}
-	return newSimpleConsole(writer)
+	r := newSimpleConsole(writer)
+	cParallelReporters.Add(n, r)
+	return r
+}
+
+type parallelReporters struct {
+	mu        *sync.Mutex
+	reporters map[int]Reporter
+}
+
+// Holds all the current parallel reporters
+var cParallelReporters parallelReporters
+
+func initParallelReporters() {
+	cParallelReporters = parallelReporters{mu: &sync.Mutex{}, reporters: make(map[int]Reporter)}
+}
+
+func (pr *parallelReporters) Add(n int, r Reporter) {
+	pr.mu.Lock()
+	defer pr.mu.Unlock()
+	pr.reporters[n] = r
+}
+
+func (pr *parallelReporters) Get(n int) (Reporter, bool) {
+	pr.mu.Lock()
+	defer pr.mu.Unlock()
+	if r, ok := cParallelReporters.reporters[n]; ok {
+		return r, true
+	}
+	return nil, false
 }
 
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents() {
 	ch := make(chan event.ExecutionEvent, 0)
+	initParallelReporters()
 	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
+	var r Reporter
 
 	go func() {
 		for {
 			e := <-ch
-			r := Current()
+			if IsParallel {
+				r = ParallelReporter(e.Stream)
+			} else {
+				r = Current()
+			}
 			switch e.Topic {
 			case event.SpecStart:
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)

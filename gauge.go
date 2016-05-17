@@ -202,6 +202,7 @@ func printUsage() {
 func initPackageFlags() {
 	if *parallel {
 		*simpleConsoleOutput = true
+		reporter.IsParallel = true
 	}
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
