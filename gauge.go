@@ -214,6 +214,7 @@ func initPackageFlags() {
 	filter.DoNotRandomize = *doNotRandomize
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
+	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	execution.Strategy = *strategy
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sync"
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -31,6 +30,9 @@ import (
 
 // IsParallel represents console reporting format based on simple/parallel execution
 var IsParallel bool
+
+// NumberOfExecutionStreams indicates the total number of parallel execution streams
+var NumberOfExecutionStreams int
 
 // SimpleConsoleOutput represents if coloring should be removed from the Console output
 var SimpleConsoleOutput bool
@@ -84,40 +86,20 @@ func (p *parallelReportWriter) Write(b []byte) (int, error) {
 
 // ParallelReporter returns the instance of parallel console reporter
 func ParallelReporter(n int) Reporter {
-	if r, ok := cParallelReporters.Get(n); ok {
+	if r, ok := parallelReporters[n]; ok {
 		return r
 	}
-	writer := &parallelReportWriter{nRunner: n}
-	r := newSimpleConsole(writer)
-	cParallelReporters.Add(n, r)
-	return r
+	return Current()
 }
 
-type parallelReporters struct {
-	mu        *sync.Mutex
-	reporters map[int]Reporter
-}
-
-// Holds all the current parallel reporters
-var cParallelReporters parallelReporters
+var parallelReporters map[int]Reporter
 
 func initParallelReporters() {
-	cParallelReporters = parallelReporters{mu: &sync.Mutex{}, reporters: make(map[int]Reporter)}
-}
-
-func (pr *parallelReporters) Add(n int, r Reporter) {
-	pr.mu.Lock()
-	defer pr.mu.Unlock()
-	pr.reporters[n] = r
-}
-
-func (pr *parallelReporters) Get(n int) (Reporter, bool) {
-	pr.mu.Lock()
-	defer pr.mu.Unlock()
-	if r, ok := cParallelReporters.reporters[n]; ok {
-		return r, true
+	parallelReporters = make(map[int]Reporter, NumberOfExecutionStreams)
+	for i := 1; i <= NumberOfExecutionStreams; i++ {
+		writer := &parallelReportWriter{nRunner: i}
+		parallelReporters[i] = newSimpleConsole(writer)
 	}
-	return nil, false
 }
 
 // ListenExecutionEvents listens to all execution events for reporting on console
