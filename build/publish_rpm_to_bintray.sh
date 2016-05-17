@@ -23,6 +23,11 @@ if [ -z "$API_KEY" ]; then
   exit 1
 fi
 
+if [ -z "$PASSPHRASE" ]; then
+  echo "PASSPHRASE is not set"
+  exit 1
+fi
+
 
 PACKAGE_FILE_PREFIX=$(echo "$PACKAGE" | tr '[:upper:]' '[:lower:]');
 
@@ -49,7 +54,7 @@ bintrayUpload () {
         echo "\tarch: $ARCH"
         echo "\tURL: $URL"
 
-        RESPONSE_CODE=$(curl -T $i -u$USER:$API_KEY "$URL" -I -s -w "%{http_code}" -o /dev/null);
+        RESPONSE_CODE=$(curl -H "X-GPG-PASSPHRASE: $PASSPHRASE" -T $i -u$USER:$API_KEY "$URL" -I -s -w "%{http_code}" -o /dev/null);
         if [ "$(echo $RESPONSE_CODE | head -c2)" != "20" ]; then
             echo "Unable to upload, HTTP response code: $RESPONSE_CODE"
             exit 1
