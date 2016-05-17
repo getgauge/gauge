@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/validation"
 	"github.com/golang/protobuf/proto"
@@ -43,7 +42,6 @@ type specExecutor struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	currentTableRow      int
-	consoleReporter      reporter.Reporter
 	errMap               *validation.ValidationErrMaps
 	stream               int
 }
@@ -53,8 +51,8 @@ type indexRange struct {
 	end   int
 }
 
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, rep reporter.Reporter, e *validation.ValidationErrMaps, stream int) *specExecutor {
-	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, consoleReporter: rep, errMap: e, stream: stream}
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, e *validation.ValidationErrMaps, stream int) *specExecutor {
+	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, errMap: e, stream: stream}
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
@@ -178,7 +176,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
-		handleHookFailure(e.specResult, res, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(e.specResult, res, result.AddPreHook)
 	}
 }
 
@@ -188,7 +186,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
-		handleHookFailure(e.specResult, res, result.AddPostHook, e.consoleReporter)
+		handleHookFailure(e.specResult, res, result.AddPostHook)
 	}
 }
 
@@ -272,7 +270,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
-	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.consoleReporter, e.errMap, e.stream)
+	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.errMap, e.stream)
 	scenarioExec.execute(scenarioResult, scenario, e.specification.Contexts, e.specification.TearDownSteps)
 	if scenarioResult.ProtoScenario.GetSkipped() {
 		e.specResult.ScenarioSkippedCount++

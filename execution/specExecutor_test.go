@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/reporter"
 	. "gopkg.in/check.v1"
 )
 
@@ -109,7 +108,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
@@ -147,7 +146,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -194,7 +193,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary)
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 
 	// For first row
 	specExecutor.currentTableRow = 0
@@ -305,9 +304,8 @@ func (s *MySuite) TestToGetDataTableRowFromInvalidInput(c *C) {
 func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 
-	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	se.errMap = getValidationErrorMap()
-	se.consoleReporter = reporter.Current()
 	se.specResult = &result.SpecResult{}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
 
@@ -329,9 +327,8 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	spec.FileName = "FILE"
-	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	se.errMap = getValidationErrorMap()
-	se.consoleReporter = reporter.Current()
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
 

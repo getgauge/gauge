@@ -51,7 +51,6 @@ type parallelExecution struct {
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
-	consoleReporter          reporter.Reporter
 	errMaps                  *validation.ValidationErrMaps
 	startTime                time.Time
 }
@@ -63,7 +62,6 @@ func newParallelExecution(e *executionInfo) *parallelExecution {
 		runner:                   e.runner,
 		pluginHandler:            e.pluginHandler,
 		numberOfExecutionStreams: e.numberOfStreams,
-		consoleReporter:          e.consoleReporter,
 		errMaps:                  e.errMaps,
 	}
 }

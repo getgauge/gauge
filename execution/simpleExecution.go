@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/validation"
 
 	"github.com/getgauge/gauge/manifest"
@@ -44,7 +43,6 @@ type simpleExecution struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	consoleReporter      reporter.Reporter
 	errMaps              *validation.ValidationErrMaps
 	startTime            time.Time
 	stream               int
@@ -52,13 +50,12 @@ type simpleExecution struct {
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 	return &simpleExecution{
-		manifest:        executionInfo.manifest,
-		specCollection:  executionInfo.specs,
-		runner:          executionInfo.runner,
-		pluginHandler:   executionInfo.pluginHandler,
-		consoleReporter: executionInfo.consoleReporter,
-		errMaps:         executionInfo.errMaps,
-		stream:          executionInfo.stream,
+		manifest:       executionInfo.manifest,
+		specCollection: executionInfo.specs,
+		runner:         executionInfo.runner,
+		pluginHandler:  executionInfo.pluginHandler,
+		errMaps:        executionInfo.errMaps,
+		stream:         executionInfo.stream,
 	}
 }
 
@@ -116,7 +113,7 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.Sp
 	var results []*result.SpecResult
 	for specs.HasNext() {
 		s := specs.Next()
-		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.consoleReporter, e.errMaps, e.stream)
+		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.errMaps, e.stream)
 		results = append(results, ex.execute())
 	}
 	return results
@@ -127,7 +124,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
-		handleHookFailure(e.suiteResult, res, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
 }
 
@@ -136,7 +133,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
-		handleHookFailure(e.suiteResult, res, result.AddPostHook, e.consoleReporter)
+		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}
 }
 
@@ -164,7 +161,7 @@ func (e *simpleExecution) notifyExecutionStop() {
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult), reporter reporter.Reporter) {
+func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult)) {
 	f(result, execResult)
 }
 

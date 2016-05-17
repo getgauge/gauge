@@ -23,7 +23,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/golang/protobuf/proto"
 )
@@ -32,7 +31,6 @@ type stepExecutor struct {
 	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	consoleReporter      reporter.Reporter
 	stream               int
 }
 
@@ -75,7 +73,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	res := executeHook(m, stepResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
-		handleHookFailure(stepResult, res, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(stepResult, res, result.AddPreHook)
 	}
 }
 
@@ -89,6 +87,6 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	stepResult.ProtoStepExecResult().GetExecutionResult().Message = res.Message
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
-		handleHookFailure(stepResult, res, result.AddPostHook, e.consoleReporter)
+		handleHookFailure(stepResult, res, result.AddPostHook)
 	}
 }

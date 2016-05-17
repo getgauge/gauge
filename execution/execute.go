@@ -47,7 +47,6 @@ type executionInfo struct {
 	specs           *gauge.SpecCollection
 	runner          runner.Runner
 	pluginHandler   *plugin.Handler
-	consoleReporter reporter.Reporter
 	errMaps         *validation.ValidationErrMaps
 	inParallel      bool
 	numberOfStreams int

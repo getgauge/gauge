@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/validation"
 	"github.com/golang/protobuf/proto"
@@ -36,18 +35,16 @@ type scenarioExecutor struct {
 	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	consoleReporter      reporter.Reporter
 	stepExecutor         *stepExecutor
 	errMap               *validation.ValidationErrMaps
 	stream               int
 }
 
-func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, rep reporter.Reporter, errMap *validation.ValidationErrMaps, stream int) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *validation.ValidationErrMaps, stream int) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,
 		currentExecutionInfo: ei,
-		consoleReporter:      rep,
 		errMap:               errMap,
 		stream:               stream,
 	}
@@ -110,7 +107,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	res := executeHook(message, scenarioResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
-		handleHookFailure(scenarioResult, res, result.AddPreHook, e.consoleReporter)
+		handleHookFailure(scenarioResult, res, result.AddPreHook)
 	}
 }
 
@@ -120,7 +117,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	res := executeHook(message, scenarioResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
-		handleHookFailure(scenarioResult, res, result.AddPostHook, e.consoleReporter)
+		handleHookFailure(scenarioResult, res, result.AddPostHook)
 	}
 }
 
@@ -144,7 +141,7 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 		failed = e.executeConcept(item, protoConcept, scenarioResult).GetFailed()
 
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, consoleReporter: e.consoleReporter, stream: e.stream}
+		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, stream: e.stream}
 		res := se.executeStep(item, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
 		failed = res.GetFailed()
