@@ -113,14 +113,16 @@ function cleanOldNightlyVersions() {
     versions=($(curl -X GET -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL | jq -r '.versions'))
     for v in ${versions[@]:11}; do
         version=$(echo $v | sed -e 's/,//' -e 's/"//g')
-        echo "Deleting version: $version"
-        DELETE_URL="$URL/versions/$version"
-        RESPONSE_CODE=$(curl -X DELETE -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $DELETE_URL -s -w "%{http_code}" -o /dev/null);
-        if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
-            echo "Unable to delete version : $v, HTTP response code: $RESPONSE_CODE"
-            exit 1
+        if [ $version !=  "]" ]; then
+            echo "Deleting version: $version"
+            DELETE_URL="$URL/versions/$version"
+            RESPONSE_CODE=$(curl -X DELETE -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $DELETE_URL -s -w "%{http_code}" -o /dev/null);
+            if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
+                echo "Unable to delete version : $v, HTTP response code: $RESPONSE_CODE"
+                exit 1
+            fi
+            echo "HTTP response code: $RESPONSE_CODE"
         fi
-        echo "HTTP response code: $RESPONSE_CODE"
     done;
 }
 
