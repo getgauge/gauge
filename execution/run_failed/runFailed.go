@@ -35,6 +35,12 @@ const (
 	failedFile = "failed.txt"
 )
 
+var Environment string
+var Tags string
+var TableRows string
+var SimpleConsole bool
+var Verbose bool
+
 var failedInfo string
 
 func appendFailedInfo(info string) {
@@ -64,7 +70,8 @@ func addFailedInfo() {
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(failedPath, []byte(failedInfo), common.NewFilePermissions)
+	contents := prepareCmd() + failedInfo
+	err := ioutil.WriteFile(failedPath, []byte(contents), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf("Failed to write to %s. Reason: %s", failedPath, err.Error())
 	}
@@ -76,4 +83,25 @@ func addSpecToFailedInfo(res result.Result) {
 		specRelPath := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
 		appendFailedInfo(specRelPath)
 	}
+}
+
+func prepareCmd() string {
+	cmd := []string{"gauge"}
+
+	if Environment != "default" && Environment != "" {
+		cmd = append(cmd, "--env="+Environment)
+	}
+	if Tags != "" {
+		cmd = append(cmd, "--tags="+Tags)
+	}
+	if TableRows != "" {
+		cmd = append(cmd, "--tableRows="+TableRows)
+	}
+	if SimpleConsole {
+		cmd = append(cmd, "--simple-console")
+	}
+	if Verbose {
+		cmd = append(cmd, "--verbose")
+	}
+	return strings.Join(cmd, " ") + "\n"
 }

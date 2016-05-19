@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
+	"github.com/getgauge/gauge/execution/run_failed"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
@@ -210,12 +211,17 @@ func initPackageFlags() {
 	execution.TableRows = *tableRows
 	execution.NumberOfExecutionStreams = *numberOfExecutionStreams
 	execution.InParallel = *parallel
+	execution.Strategy = *strategy
 	filter.ExecuteTags = *executeTags
 	filter.DoNotRandomize = *doNotRandomize
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams
-	execution.Strategy = *strategy
+	run_failed.Tags = *executeTags
+	run_failed.Environment = *currentEnv
+	run_failed.SimpleConsole = *simpleConsoleOutput
+	run_failed.TableRows = *tableRows
+	run_failed.Verbose = *verbosity
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager
 	}
