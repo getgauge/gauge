@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/execution/run_failed"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -82,6 +83,7 @@ func ExecuteSpecs(specDirs []string) int {
 	specs, errMap := validation.ValidateSpecs(specDirs, runner)
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
+	run_failed.ListenFailedScenarios()
 	ei := newExecutionInfo(specs, runner, nil, errMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), errMap)
