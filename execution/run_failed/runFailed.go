@@ -21,10 +21,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -33,9 +35,15 @@ const (
 	failedFile = "failed.txt"
 )
 
+var failedInfo string
+
+func appendFailedInfo(info string) {
+	failedInfo += info + "\n"
+}
+
 func ListenFailedScenarios() {
 	ch := make(chan event.ExecutionEvent, 0)
-	event.Register(ch, event.SuiteEnd)
+	event.Register(ch, event.SuiteEnd, event.SpecEnd)
 
 	go func() {
 		for {
@@ -43,6 +51,8 @@ func ListenFailedScenarios() {
 			switch e.Topic {
 			case event.SuiteEnd:
 				addFailedInfo()
+			case event.SpecEnd:
+				addSpecToFailedInfo(e.Result)
 			}
 		}
 	}()
@@ -54,8 +64,16 @@ func addFailedInfo() {
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(failedPath, []byte(""), common.NewFilePermissions)
+	err := ioutil.WriteFile(failedPath, []byte(failedInfo), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf("Failed to write to %s. Reason: %s", failedPath, err.Error())
+	}
+}
+
+func addSpecToFailedInfo(res result.Result) {
+	if res.GetFailed() {
+		specPath := *res.(*result.SpecResult).ProtoSpec.FileName
+		specRelPath := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
+		appendFailedInfo(specRelPath)
 	}
 }

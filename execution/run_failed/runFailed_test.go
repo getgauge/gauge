@@ -18,6 +18,7 @@
 package run_failed
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -25,6 +26,8 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge_messages"
 
 	. "gopkg.in/check.v1"
 )
@@ -38,11 +41,41 @@ var _ = Suite(&MySuite{})
 func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	p, _ := filepath.Abs("_testdata")
 	config.ProjectRoot = p
+	failedInfo = "hello world"
+
+	addFailedInfo()
+
+	file := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
+	c.Assert(common.FileExists(file), Equals, true)
+	content, _ := ioutil.ReadFile(file)
+	c.Assert(string(content), Equals, failedInfo)
+	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
+}
+
+func (s *MySuite) TestListenToSpecFailure(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	failedInfo = ""
+	config.ProjectRoot = p
 	event.InitRegistry()
 
 	ListenFailedScenarios()
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, nil, 0))
+	fileName := filepath.Join(p, "specs", "example.spec")
+	sr := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &fileName}}
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr, 0))
 
-	c.Assert(common.FileExists(filepath.Join(config.ProjectRoot, dotGauge, failedFile)), Equals, true)
-	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
+	c.Assert(failedInfo, Equals, filepath.Join("specs", "example.spec")+"\n")
+}
+
+func (s *MySuite) TestListenToSpecPass(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	failedInfo = ""
+	config.ProjectRoot = p
+	event.InitRegistry()
+
+	ListenFailedScenarios()
+	fileName := filepath.Join(p, "specs", "example.spec")
+	sr := &result.SpecResult{IsFailed: false, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &fileName}}
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr, 0))
+
+	c.Assert(failedInfo, Equals, "")
 }
