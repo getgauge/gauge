@@ -23,14 +23,15 @@ import (
 )
 
 type SpecResult struct {
-	ProtoSpec            *gauge_messages.ProtoSpec
-	ScenarioFailedCount  int
-	ScenarioCount        int
-	IsFailed             bool
-	FailedDataTableRows  []int32
-	ExecutionTime        int64
-	Skipped              bool
-	ScenarioSkippedCount int
+	ProtoSpec             *gauge_messages.ProtoSpec
+	ScenarioFailedCount   int
+	ScenarioCount         int
+	IsFailed              bool
+	FailedDataTableRows   []int32
+	FailedScenarioIndices []int
+	ExecutionTime         int64
+	Skipped               bool
+	ScenarioSkippedCount  int
 }
 
 func (specResult *SpecResult) SetFailure() {

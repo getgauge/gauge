@@ -244,8 +244,12 @@ func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 
 func (e *specExecutor) executeScenarios() []result.Result {
 	var scenarioResults []result.Result
-	for _, scenario := range e.specification.Scenarios {
-		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
+	for i, scenario := range e.specification.Scenarios {
+		res := e.executeScenario(scenario)
+		if res.GetFailed() {
+			e.specResult.FailedScenarioIndices = append(e.specResult.FailedScenarioIndices, i)
+		}
+		scenarioResults = append(scenarioResults, res)
 	}
 	return scenarioResults
 }

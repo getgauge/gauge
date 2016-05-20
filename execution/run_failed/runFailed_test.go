@@ -60,13 +60,31 @@ func (s *MySuite) TestListenToSpecFailure(c *C) {
 	failedInfo = ""
 	config.ProjectRoot = p
 	event.InitRegistry()
+	specRel := filepath.Join("specs", "example.spec")
+	specAbs := filepath.Join(p, specRel)
 
 	ListenFailedScenarios()
-	fileName := filepath.Join(p, "specs", "example.spec")
-	sr := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &fileName}}
+	sr := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &specAbs}, FailedScenarioIndices: []int{2}}
 	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr, 0))
 
-	c.Assert(failedInfo, Equals, filepath.Join("specs", "example.spec")+"\n")
+	expected := specRel + ":2\n"
+	c.Assert(failedInfo, Equals, expected)
+}
+func (s *MySuite) TestListenToMultipleFailedScenarios(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	failedInfo = ""
+	config.ProjectRoot = p
+	event.InitRegistry()
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec1Abs := filepath.Join(p, spec1Rel)
+	sr1 := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &spec1Abs}, FailedScenarioIndices: []int{2, 6}}
+
+	ListenFailedScenarios()
+
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr1, 0))
+
+	expected := spec1Rel + ":2\n" + spec1Rel + ":6\n"
+	c.Assert(failedInfo, Equals, expected)
 }
 
 func (s *MySuite) TestListenToSpecPass(c *C) {
@@ -98,6 +116,7 @@ func (s *MySuite) TestPrepareCommand(c *C) {
 
 	obtained := prepareCmd()
 
-	expected := "gauge --env=chrome --tags=tag1&tag2 --tableRows=1-2 --verbose\n"
+	expected := `gauge --env="chrome" --tags="tag1&tag2" --tableRows="1-2" --verbose
+`
 	c.Assert(obtained, Equals, expected)
 }

@@ -18,9 +18,11 @@
 package run_failed
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -79,9 +81,12 @@ func addFailedInfo() {
 
 func addSpecToFailedInfo(res result.Result) {
 	if res.GetFailed() {
-		specPath := *res.(*result.SpecResult).ProtoSpec.FileName
-		specRelPath := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
-		appendFailedInfo(specRelPath)
+		specRes := *res.(*result.SpecResult)
+		specPath := *specRes.ProtoSpec.FileName
+		failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
+		for _, i := range specRes.FailedScenarioIndices {
+			appendFailedInfo(fmt.Sprintf("%s:%v", failedScenario, i))
+		}
 	}
 }
 
@@ -89,13 +94,13 @@ func prepareCmd() string {
 	cmd := []string{"gauge"}
 
 	if Environment != "default" && Environment != "" {
-		cmd = append(cmd, "--env="+Environment)
+		cmd = append(cmd, "--env="+strconv.Quote(Environment))
 	}
 	if Tags != "" {
-		cmd = append(cmd, "--tags="+Tags)
+		cmd = append(cmd, "--tags="+strconv.Quote(Tags))
 	}
 	if TableRows != "" {
-		cmd = append(cmd, "--tableRows="+TableRows)
+		cmd = append(cmd, "--tableRows="+strconv.Quote(TableRows))
 	}
 	if SimpleConsole {
 		cmd = append(cmd, "--simple-console")
