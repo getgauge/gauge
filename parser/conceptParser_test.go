@@ -281,14 +281,6 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 
 }
 
-func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
-	parser := new(ConceptParser)
-	_, parseRes := parser.Parse("# my concept \n * first step using \n * my concept ")
-
-	c.Assert(len(parseRes.Errors), Not(Equals), 0)
-	c.Assert(parseRes.Errors[0].Message, Equals, "Cyclic dependancy found. Step is calling concept again.")
-}
-
 func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ")
@@ -467,6 +459,16 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 	cd := gauge.NewConceptDictionary()
 	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
+
+	res := validateConcepts(cd)
+
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+}
+
+func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
+	cd := gauge.NewConceptDictionary()
+	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: false}}}, FileName: "filename.cpt"}
 
 	res := validateConcepts(cd)
 
