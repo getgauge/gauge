@@ -70,8 +70,7 @@ func (s *StepValidationError) Error() string {
 }
 
 func Validate(args []string) {
-	runner := startAPI()
-	_, errMap := ValidateSpecs(args, runner)
+	_, errMap, runner := ValidateSpecs(args)
 	runner.Kill()
 	if len(errMap.StepErrs) > 0 {
 		os.Exit(1)
@@ -91,12 +90,13 @@ func startAPI() runner.Runner {
 	return nil
 }
 
-func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *ValidationErrMaps) {
+func ValidateSpecs(args []string) (*gauge.SpecCollection, *ValidationErrMaps, runner.Runner) {
 	s, c, f := parseSpecs(args)
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
+	r := startAPI()
 	v := newValidator(manifest, s, r, c)
 	vErrs := v.validate()
 	errMap := &ValidationErrMaps{
@@ -117,7 +117,7 @@ func ValidateSpecs(args []string, r runner.Runner) (*gauge.SpecCollection, *Vali
 		r.Kill()
 		os.Exit(0)
 	}
-	return gauge.NewSpecCollection(s), errMap
+	return gauge.NewSpecCollection(s), errMap, r
 }
 
 func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary, bool) {

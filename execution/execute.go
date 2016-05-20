@@ -79,8 +79,7 @@ func ExecuteSpecs(specDirs []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 
-	runner := startAPI()
-	specs, errMap := validation.ValidateSpecs(specDirs, runner)
+	specs, errMap, runner := validation.ValidateSpecs(specDirs)
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
 	run_failed.ListenFailedScenarios()
