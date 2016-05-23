@@ -36,18 +36,21 @@ func Test(t *testing.T) { TestingT(t) }
 
 type MySuite struct{}
 
+type MySuite1 struct{}
+
 var _ = Suite(&MySuite{})
+var _ = Suite(&MySuite1{})
 
 func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	p, _ := filepath.Abs("_testdata")
 	config.ProjectRoot = p
-	failedInfo = "hello world"
+	failedInfo := "hello world"
 
-	addFailedInfo()
+	writeFailedMeta(failedInfo)
 
 	file := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
 	c.Assert(common.FileExists(file), Equals, true)
-	expected := "gauge\n" + failedInfo
+	expected := failedInfo
 
 	content, _ := ioutil.ReadFile(file)
 
@@ -55,9 +58,8 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }
 
-func (s *MySuite) TestListenToSpecFailure(c *C) {
+func (s *MySuite1) TestListenToSpecFailure(c *C) {
 	p, _ := filepath.Abs("_testdata")
-	failedInfo = ""
 	config.ProjectRoot = p
 	event.InitRegistry()
 	specRel := filepath.Join("specs", "example.spec")
@@ -65,58 +67,62 @@ func (s *MySuite) TestListenToSpecFailure(c *C) {
 
 	ListenFailedScenarios()
 	sr := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &specAbs}, FailedScenarioIndices: []int{2}}
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr, 0))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{SpecResults: []*result.SpecResult{sr}}, 0))
 
-	expected := specRel + ":2\n"
-	c.Assert(failedInfo, Equals, expected)
+	contents, _ := common.ReadFileContents(filepath.Join(p, dotGauge, failedFile))
+	expected := `{
+	"Env": "",
+	"Tags": "",
+	"TableRows": "",
+	"Verbose": false,
+	"SimpleConsole": false,
+	"FailedScenarios": [
+		"specs/example.spec:2"
+	]
+}`
+	c.Assert(contents, Equals, expected)
 }
-func (s *MySuite) TestListenToMultipleFailedScenarios(c *C) {
+
+func (s *MySuite1) TestListenToSpecPass(c *C) {
 	p, _ := filepath.Abs("_testdata")
-	failedInfo = ""
 	config.ProjectRoot = p
 	event.InitRegistry()
+	specRel := filepath.Join("specs", "example.spec")
+	Verbose = true
+	Tags = "tag1 & tag2"
+	specAbs := filepath.Join(p, specRel)
+
+	ListenFailedScenarios()
+	sr := &result.SpecResult{IsFailed: false, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &specAbs}}
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{SpecResults: []*result.SpecResult{sr}}, 0))
+
+	contents, _ := common.ReadFileContents(filepath.Join(p, dotGauge, failedFile))
+	expected := `{
+	"Env": "",
+	"Tags": "tag1 \u0026 tag2",
+	"TableRows": "",
+	"Verbose": true,
+	"SimpleConsole": false,
+	"FailedScenarios": []
+}`
+	c.Assert(contents, Equals, expected)
+}
+
+func (s *MySuite1) TearDownTest(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	os.RemoveAll(filepath.Join(p, dotGauge))
+}
+
+func (s *MySuite) TestGetFailedMetadata(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	config.ProjectRoot = p
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(p, spec1Rel)
 	sr1 := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &spec1Abs}, FailedScenarioIndices: []int{2, 6}}
 
-	ListenFailedScenarios()
+	meta := getFailedMetadata([]*result.SpecResult{sr1})
 
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr1, 0))
-
-	expected := spec1Rel + ":2\n" + spec1Rel + ":6\n"
-	c.Assert(failedInfo, Equals, expected)
-}
-
-func (s *MySuite) TestListenToSpecPass(c *C) {
-	p, _ := filepath.Abs("_testdata")
-	failedInfo = ""
-	config.ProjectRoot = p
-	event.InitRegistry()
-
-	ListenFailedScenarios()
-	fileName := filepath.Join(p, "specs", "example.spec")
-	sr := &result.SpecResult{IsFailed: false, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &fileName}}
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, sr, 0))
-
-	c.Assert(failedInfo, Equals, "")
-}
-
-func (s *MySuite) TestPrepCommandShouldNotAddUnsetFlags(c *C) {
-	obtained := prepareCmd()
-
-	c.Assert(obtained, Equals, "gauge\n")
-}
-
-func (s *MySuite) TestPrepareCommand(c *C) {
-	Environment = "chrome"
-	Tags = "tag1&tag2"
-	Verbose = true
-	SimpleConsole = false
-	TableRows = "1-2"
-
-	obtained := prepareCmd()
-
-	expected := `gauge --env="chrome" --tags="tag1&tag2" --tableRows="1-2" --verbose
-`
-	c.Assert(obtained, Equals, expected)
+	c.Assert(len(meta.FailedScenarios), Equals, 2)
+	c.Assert(meta.FailedScenarios[0], Equals, spec1Rel+":2")
+	c.Assert(meta.FailedScenarios[1], Equals, spec1Rel+":6")
 }

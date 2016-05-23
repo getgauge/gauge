@@ -18,11 +18,11 @@
 package run_failed
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -34,7 +34,7 @@ import (
 
 const (
 	dotGauge   = ".gauge"
-	failedFile = "failed.txt"
+	failedFile = "failed.json"
 )
 
 var Environment string
@@ -43,70 +43,65 @@ var TableRows string
 var SimpleConsole bool
 var Verbose bool
 
-var failedInfo string
+type FailedMetadata struct {
+	Env             string
+	Tags            string
+	TableRows       string
+	Verbose         bool
+	SimpleConsole   bool
+	FailedScenarios []string
+}
 
-func appendFailedInfo(info string) {
-	failedInfo += info + "\n"
+func (m *FailedMetadata) AddFailedScenario(sce string) {
+	m.FailedScenarios = append(m.FailedScenarios, sce)
 }
 
 func ListenFailedScenarios() {
 	ch := make(chan event.ExecutionEvent, 0)
-	event.Register(ch, event.SuiteEnd, event.SpecEnd)
+	event.Register(ch, event.SuiteEnd)
 
 	go func() {
 		for {
 			e := <-ch
 			switch e.Topic {
 			case event.SuiteEnd:
-				addFailedInfo()
-			case event.SpecEnd:
-				addSpecToFailedInfo(e.Result)
+				failedMeta := getFailedMetadata(e.Result.(*result.SuiteResult).SpecResults)
+				writeFailedMeta(getJSON(failedMeta))
 			}
 		}
 	}()
 }
 
-func addFailedInfo() {
+func getFailedMetadata(specResults []*result.SpecResult) *FailedMetadata {
+	failedMeta := &FailedMetadata{Env: Environment, Tags: Tags, TableRows: TableRows, Verbose: Verbose, SimpleConsole: SimpleConsole, FailedScenarios: []string{}}
+	for _, specRes := range specResults {
+		if specRes.GetFailed() {
+			specPath := *specRes.ProtoSpec.FileName
+			failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
+			for _, i := range specRes.FailedScenarioIndices {
+				failedMeta.AddFailedScenario(fmt.Sprintf("%s:%v", failedScenario, i))
+			}
+		}
+	}
+	return failedMeta
+}
+
+func writeFailedMeta(contents string) {
 	failedPath := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	contents := prepareCmd() + failedInfo
 	err := ioutil.WriteFile(failedPath, []byte(contents), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf("Failed to write to %s. Reason: %s", failedPath, err.Error())
 	}
 }
 
-func addSpecToFailedInfo(res result.Result) {
-	if res.GetFailed() {
-		specRes := *res.(*result.SpecResult)
-		specPath := *specRes.ProtoSpec.FileName
-		failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
-		for _, i := range specRes.FailedScenarioIndices {
-			appendFailedInfo(fmt.Sprintf("%s:%v", failedScenario, i))
-		}
+func getJSON(failedMeta *FailedMetadata) string {
+	json, err := json.MarshalIndent(failedMeta, "", "\t")
+	if err != nil {
+		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
 	}
-}
-
-func prepareCmd() string {
-	cmd := []string{"gauge"}
-
-	if Environment != "default" && Environment != "" {
-		cmd = append(cmd, "--env="+strconv.Quote(Environment))
-	}
-	if Tags != "" {
-		cmd = append(cmd, "--tags="+strconv.Quote(Tags))
-	}
-	if TableRows != "" {
-		cmd = append(cmd, "--tableRows="+strconv.Quote(TableRows))
-	}
-	if SimpleConsole {
-		cmd = append(cmd, "--simple-console")
-	}
-	if Verbose {
-		cmd = append(cmd, "--verbose")
-	}
-	return strings.Join(cmd, " ") + "\n"
+	return string(json)
 }
