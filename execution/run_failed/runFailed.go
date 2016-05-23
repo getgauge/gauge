@@ -30,29 +30,41 @@ import (
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/logger"
+	flag "github.com/getgauge/mflag"
 )
+
+var RunFailed bool
 
 const (
 	dotGauge   = ".gauge"
 	failedFile = "failed.json"
 )
 
-var Environment string
-var Tags string
-var TableRows string
-var SimpleConsole bool
-var Verbose bool
+func init() {
+	failedMeta = &failedMetadata{Flags: make(map[string]string), FailedScenarios: []string{}}
+}
 
-type FailedMetadata struct {
-	Env             string
-	Tags            string
-	TableRows       string
-	Verbose         bool
-	SimpleConsole   bool
+type failedMetadata struct {
+	Flags           map[string]string
 	FailedScenarios []string
 }
 
-func (m *FailedMetadata) AddFailedScenario(sce string) {
+func (m *failedMetadata) String() string {
+	cmd := "gauge "
+	for flag, value := range m.Flags {
+		cmd += "-" + flag + "=" + value + " "
+	}
+	cmd += strings.Join(m.FailedScenarios, " ")
+	return cmd
+}
+
+func newFailedMetaData() *failedMetadata {
+	return &failedMetadata{Flags: make(map[string]string), FailedScenarios: []string{}}
+}
+
+var failedMeta *failedMetadata
+
+func (m *failedMetadata) AddFailedScenario(sce string) {
 	m.FailedScenarios = append(m.FailedScenarios, sce)
 }
 
@@ -65,15 +77,14 @@ func ListenFailedScenarios() {
 			e := <-ch
 			switch e.Topic {
 			case event.SuiteEnd:
-				failedMeta := getFailedMetadata(e.Result.(*result.SuiteResult).SpecResults)
+				failedMeta = getFailedMetadata(e.Result.(*result.SuiteResult).SpecResults)
 				writeFailedMeta(getJSON(failedMeta))
 			}
 		}
 	}()
 }
 
-func getFailedMetadata(specResults []*result.SpecResult) *FailedMetadata {
-	failedMeta := &FailedMetadata{Env: Environment, Tags: Tags, TableRows: TableRows, Verbose: Verbose, SimpleConsole: SimpleConsole, FailedScenarios: []string{}}
+func getFailedMetadata(specResults []*result.SpecResult) *failedMetadata {
 	for _, specRes := range specResults {
 		if specRes.GetFailed() {
 			specPath := *specRes.ProtoSpec.FileName
@@ -98,10 +109,49 @@ func writeFailedMeta(contents string) {
 	}
 }
 
-func getJSON(failedMeta *FailedMetadata) string {
+func remove(f *flag.Flag) {
+	if f.Value.String() == f.DefValue {
+		delete(failedMeta.Flags, f.Names[0])
+	}
+}
+
+func getJSON(failedMeta *failedMetadata) string {
+	flag.Visit(remove)
 	json, err := json.MarshalIndent(failedMeta, "", "\t")
+	if err != nil {
+		logger.Warning("Failed to save run info. Reason: %s", err.Error())
+	}
+	return string(json)
+}
+
+func SaveFlagState(f *flag.Flag) {
+	failedMeta.Flags[f.Names[0]] = f.Value.String()
+}
+
+func setDefault(f *flag.Flag) {
+	f.Value.Set(f.DefValue)
+}
+
+func SetFlags() {
+	flag.VisitAll(setDefault)
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, failedFile))
 	if err != nil {
 		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
 	}
-	return string(json)
+	var meta failedMetadata
+	if err = json.Unmarshal([]byte(contents), &meta); err != nil {
+		logger.Fatalf("Invalid last run information. Reason: %s", err.Error())
+	}
+	for k, v := range meta.Flags {
+		err = flag.Set(k, v)
+		if err != nil {
+			logger.Warning("Failed to set flag %v to %v. Reason: %v", k, v, err.Error())
+		}
+	}
+	flag.CommandLine.Parse(meta.FailedScenarios)
+	flag.Visit(SaveFlagState)
+}
+
+func PrintCmd() {
+	fmt.Printf("%v", failedMeta)
 }

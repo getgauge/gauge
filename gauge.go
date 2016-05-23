@@ -77,9 +77,15 @@ var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the insta
 var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
 var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
+var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios failed in previous run. Eg: gauge --failed")
 
 func main() {
 	flag.Parse()
+	flag.Visit(run_failed.SaveFlagState)
+	if *runFailed {
+		run_failed.SetFlags()
+		run_failed.PrintCmd()
+	}
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
@@ -217,11 +223,7 @@ func initPackageFlags() {
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams
-	run_failed.Tags = *executeTags
-	run_failed.Environment = *currentEnv
-	run_failed.SimpleConsole = *simpleConsoleOutput
-	run_failed.TableRows = *tableRows
-	run_failed.Verbose = *verbosity
+	run_failed.RunFailed = *runFailed
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager
 	}

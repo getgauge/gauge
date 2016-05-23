@@ -42,6 +42,15 @@ type MySuite1 struct{}
 var _ = Suite(&MySuite{})
 var _ = Suite(&MySuite1{})
 
+func (s *MySuite1) SetUpTest(c *C) {
+	failedMeta = newFailedMetaData()
+}
+
+func (s *MySuite1) TearDownTest(c *C) {
+	p, _ := filepath.Abs("_testdata")
+	os.RemoveAll(filepath.Join(p, dotGauge))
+}
+
 func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	p, _ := filepath.Abs("_testdata")
 	config.ProjectRoot = p
@@ -65,6 +74,8 @@ func (s *MySuite1) TestListenToSpecFailure(c *C) {
 	event.InitRegistry()
 	specRel := filepath.Join("specs", "example.spec")
 	specAbs := filepath.Join(p, specRel)
+	failedMeta.Flags["-tags"] = "tag1"
+	failedMeta.Flags["-verbose"] = "true"
 
 	ListenFailedScenarios()
 	sr := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &specAbs}, FailedScenarioIndices: []int{2}}
@@ -76,11 +87,10 @@ func (s *MySuite1) TestListenToSpecFailure(c *C) {
 		pathInFile = `specs\\example.spec`
 	}
 	expected := `{
-	"Env": "",
-	"Tags": "",
-	"TableRows": "",
-	"Verbose": false,
-	"SimpleConsole": false,
+	"Flags": {
+		"-tags": "tag1",
+		"-verbose": "true"
+	},
 	"FailedScenarios": [
 		` + `"` + pathInFile + `:2"
 	]
@@ -93,9 +103,10 @@ func (s *MySuite1) TestListenToSpecPass(c *C) {
 	config.ProjectRoot = p
 	event.InitRegistry()
 	specRel := filepath.Join("specs", "example.spec")
-	Verbose = true
-	Tags = "tag1 & tag2"
 	specAbs := filepath.Join(p, specRel)
+	failedMeta.Flags["-tags"] = "tag1 & tag2"
+	failedMeta.Flags["-verbose"] = "true"
+	failedMeta.Flags["-env"] = "chrome"
 
 	ListenFailedScenarios()
 	sr := &result.SpecResult{IsFailed: false, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &specAbs}}
@@ -103,19 +114,14 @@ func (s *MySuite1) TestListenToSpecPass(c *C) {
 
 	contents, _ := common.ReadFileContents(filepath.Join(p, dotGauge, failedFile))
 	expected := `{
-	"Env": "",
-	"Tags": "tag1 \u0026 tag2",
-	"TableRows": "",
-	"Verbose": true,
-	"SimpleConsole": false,
+	"Flags": {
+		"-env": "chrome",
+		"-tags": "tag1 \u0026 tag2",
+		"-verbose": "true"
+	},
 	"FailedScenarios": []
 }`
 	c.Assert(contents, Equals, expected)
-}
-
-func (s *MySuite1) TearDownTest(c *C) {
-	p, _ := filepath.Abs("_testdata")
-	os.RemoveAll(filepath.Join(p, dotGauge))
 }
 
 func (s *MySuite) TestGetFailedMetadata(c *C) {
