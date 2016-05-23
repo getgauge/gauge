@@ -77,7 +77,7 @@ func (s *MySuite1) TestListenToSpecFailure(c *C) {
 	"Verbose": false,
 	"SimpleConsole": false,
 	"FailedScenarios": [
-		"specs/example.spec:2"
+		`+`"`+specRel+`:2"
 	]
 }`
 	c.Assert(contents, Equals, expected)
