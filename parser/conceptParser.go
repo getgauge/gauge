@@ -110,7 +110,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *Pa
 		}
 	}
 	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
-		parseDetails.Errors = append(parseDetails.Errors,&ParseError{LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
+		parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
 		return nil, parseDetails
 	}
 
@@ -276,7 +276,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 		if fileName, exists := traversedSteps[step.Value]; exists {
 			return &ParseError{
 				LineText: step.LineText,
-				LineNo: concept.LineNo,
+				LineNo:   concept.LineNo,
 				Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, fileName, step.LineNo),
 			}
 		}

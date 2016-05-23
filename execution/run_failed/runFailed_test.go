@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/util"
 
 	. "gopkg.in/check.v1"
 )
@@ -70,6 +71,10 @@ func (s *MySuite1) TestListenToSpecFailure(c *C) {
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{SpecResults: []*result.SpecResult{sr}}, 0))
 
 	contents, _ := common.ReadFileContents(filepath.Join(p, dotGauge, failedFile))
+	pathInFile := specRel
+	if util.IsWindows() {
+		pathInFile = `specs\\example.spec`
+	}
 	expected := `{
 	"Env": "",
 	"Tags": "",
@@ -77,7 +82,7 @@ func (s *MySuite1) TestListenToSpecFailure(c *C) {
 	"Verbose": false,
 	"SimpleConsole": false,
 	"FailedScenarios": [
-		`+`"`+specRel+`:2"
+		` + `"` + pathInFile + `:2"
 	]
 }`
 	c.Assert(contents, Equals, expected)
