@@ -35,7 +35,7 @@ func (s *MySuite) TestSubscribeSpecEnd(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &DummyResult{}, 0))
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &DummyResult{}, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "\n")
 }
 
@@ -48,7 +48,7 @@ func (s *MySuite) TestSubscribeSpecStart(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "# My Spec Heading\n")
 }
 
@@ -61,7 +61,7 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "  ## My Scenario Heading\n")
 }
 
@@ -77,7 +77,7 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0, gauge_messages.ExecutionInfo{}))
 	table := `
      |foo|bar|
      |---|---|
@@ -96,7 +96,7 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes, 0))
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -112,7 +112,7 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+stepText+newline)
 }
 
@@ -128,7 +128,7 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes, 0))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -150,7 +150,7 @@ sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes, 0))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes, 0, gauge_messages.ExecutionInfo{}))
 	want := spaces(errorIndentation) + newline +
 		`  Failed Step: * say hello
   Error Message: failure message
@@ -173,7 +173,7 @@ func (s *MySuite) TestSubscribeConceptStart(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+cptText+newline)
 }
 
@@ -189,7 +189,7 @@ func (s *MySuite) TestSubscribeConceptEnd(c *C) {
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes, 0))
+	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "")
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -203,7 +203,7 @@ func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
 	suiteRes := &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("failure 1"), fmt.Errorf("failure 2")}}
 
 	ListenExecutionEvents()
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 0))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 0, gauge_messages.ExecutionInfo{}))
 
 	c.Assert(dw.output, Equals, spaces(errorIndentation)+"failure 1\n"+spaces(errorIndentation)+"failure 2\n")
 }

@@ -90,7 +90,7 @@ func (e *parallelExecution) numberOfStreams() int {
 
 func (e *parallelExecution) start() {
 	e.startTime = time.Now()
-	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0))
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
@@ -167,7 +167,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 }
 
 func (e *parallelExecution) finish() {
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{

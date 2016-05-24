@@ -20,23 +20,26 @@ package event
 import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 )
 
 // ExecutionEvent represents an event raised during various phases of the
 // execution lifecycle. This is only for execution and excludes parsing, validation, etc.
 type ExecutionEvent struct {
-	Topic  Topic
-	Item   gauge.Item
-	Result result.Result
-	Stream int
+	Topic         Topic
+	Item          gauge.Item
+	Result        result.Result
+	Stream        int
+	ExecutionInfo gauge_messages.ExecutionInfo
 }
 
-func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int) ExecutionEvent {
+func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int, executionInfo gauge_messages.ExecutionInfo) ExecutionEvent {
 	return ExecutionEvent{
-		Topic:  t,
-		Item:   i,
-		Result: r,
-		Stream: stream,
+		Topic:         t,
+		Item:          i,
+		Result:        r,
+		Stream:        stream,
+		ExecutionInfo: executionInfo,
 	}
 }
 

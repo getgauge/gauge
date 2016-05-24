@@ -57,8 +57,8 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		return
 	}
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil, e.stream))
-	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, scenarioResult, e.stream))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil, e.stream, gauge_messages.ExecutionInfo{}))
+	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, scenarioResult, e.stream, gauge_messages.ExecutionInfo{}))
 
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {
@@ -153,8 +153,8 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
 	cptResult := result.NewConceptResult(protoConcept)
-	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream))
-	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream))
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, gauge_messages.ExecutionInfo{}))
+	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, gauge_messages.ExecutionInfo{}))
 
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {

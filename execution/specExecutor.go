@@ -73,8 +73,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
-	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream))
-	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream))
+	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream, gauge_messages.ExecutionInfo{}))
+	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream, gauge_messages.ExecutionInfo{}))
 
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
