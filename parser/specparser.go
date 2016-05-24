@@ -245,6 +245,9 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 			}
 		}
 	}
+	if len(specification.Scenarios) > 0 {
+		specification.LatestScenario().Span.End = tokens[len(tokens)-1].LineNo
+	}
 	specification.ProcessConceptStepsFrom(conceptDictionary)
 	validationError := parser.validateSpec(specification)
 	if validationError != nil {
@@ -278,7 +281,10 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{token.LineNo, "Parse error: Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
 			}
 		}
-		scenario := &gauge.Scenario{}
+		scenario := &gauge.Scenario{Span: &gauge.Span{Start: token.LineNo, End: token.LineNo}}
+		if len(spec.Scenarios) > 0 {
+			spec.LatestScenario().Span.End = token.LineNo - 1
+		}
 		scenario.AddHeading(&gauge.Heading{Value: token.Value, LineNo: token.LineNo})
 		spec.AddScenario(scenario)
 

@@ -31,30 +31,20 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
-type scenarioIndexFilterToRetain struct {
-	indexToNotFilter     int
-	currentScenarioIndex int
+type scenarioFilterBasedOnSpan struct {
+	lineNumber int
 }
 type ScenarioFilterBasedOnTags struct {
 	specTags      []string
 	tagExpression string
 }
 
-func newScenarioIndexFilterToRetain(index int) *scenarioIndexFilterToRetain {
-	return &scenarioIndexFilterToRetain{index, 0}
+func newScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
+	return &scenarioFilterBasedOnSpan{lineNumber}
 }
 
-func (filter *scenarioIndexFilterToRetain) Filter(item gauge.Item) bool {
-	if item.Kind() == gauge.ScenarioKind {
-		if filter.currentScenarioIndex != filter.indexToNotFilter {
-			filter.currentScenarioIndex++
-			return true
-		} else {
-			filter.currentScenarioIndex++
-			return false
-		}
-	}
-	return false
+func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
+	return !(item.Kind() == gauge.ScenarioKind && item.(*gauge.Scenario).InSpan(filter.lineNumber))
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {

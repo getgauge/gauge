@@ -100,7 +100,7 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 	return specBuilder
 }
 
-func (s *MySuite) TestScenarioIndexFilter(c *C) {
+func (s *MySuite) TestScenarioSpanFilter(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
 		scenarioHeading("First scenario").
 		step("a step").
@@ -114,13 +114,13 @@ func (s *MySuite) TestScenarioIndexFilter(c *C) {
 	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseResult.Ok, Equals, true)
 
-	spec.Filter(newScenarioIndexFilterToRetain(2))
+	spec.Filter(newScenarioFilterBasedOnSpan(6))
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "Third scenario")
 
 }
 
-func (s *MySuite) TestScenarioIndexFilterLastScenario(c *C) {
+func (s *MySuite) TestScenarioSpanFilterLastScenario(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
 		scenarioHeading("First scenario").
 		step("a step").
@@ -134,13 +134,13 @@ func (s *MySuite) TestScenarioIndexFilterLastScenario(c *C) {
 	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseResult.Ok, Equals, true)
 
-	spec.Filter(newScenarioIndexFilterToRetain(3))
+	spec.Filter(newScenarioFilterBasedOnSpan(8))
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "Fourth scenario")
 
 }
 
-func (s *MySuite) TestScenarioIndexFilterFirstScenario(c *C) {
+func (s *MySuite) TestScenarioSpanFilterFirstScenario(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
 		scenarioHeading("First scenario").
 		step("a step").
@@ -154,13 +154,14 @@ func (s *MySuite) TestScenarioIndexFilterFirstScenario(c *C) {
 	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseResult.Ok, Equals, true)
 
-	spec.Filter(newScenarioIndexFilterToRetain(0))
+	spec.Filter(newScenarioFilterBasedOnSpan(2))
+
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "First scenario")
 
 }
 
-func (s *MySuite) TestScenarioIndexFilterForSingleScenarioSpec(c *C) {
+func (s *MySuite) TestScenarioSpanFilterForSingleScenarioSpec(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
 		scenarioHeading("First scenario").
 		step("a step").String()
@@ -168,12 +169,12 @@ func (s *MySuite) TestScenarioIndexFilterForSingleScenarioSpec(c *C) {
 	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseResult.Ok, Equals, true)
 
-	spec.Filter(newScenarioIndexFilterToRetain(0))
+	spec.Filter(newScenarioFilterBasedOnSpan(3))
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "First scenario")
 }
 
-func (s *MySuite) TestScenarioIndexFilterWithWrongScenarioIndex(c *C) {
+func (s *MySuite) TestScenarioSpanFilterWithWrongScenarioIndex(c *C) {
 	specText := SpecBuilder().specHeading("spec heading").
 		scenarioHeading("First scenario").
 		step("a step").String()
@@ -181,7 +182,7 @@ func (s *MySuite) TestScenarioIndexFilterWithWrongScenarioIndex(c *C) {
 	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
 	c.Assert(parseResult.Ok, Equals, true)
 
-	spec.Filter(newScenarioIndexFilterToRetain(1))
+	spec.Filter(newScenarioFilterBasedOnSpan(1))
 	c.Assert(len(spec.Scenarios), Equals, 0)
 }
 

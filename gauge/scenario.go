@@ -24,6 +24,17 @@ type Scenario struct {
 	Tags         *Tags
 	Items        []Item
 	DataTableRow Table
+	Span         *Span
+}
+
+// Span represents scope of Scenario based on line number
+type Span struct {
+	Start int
+	End   int
+}
+
+func (s *Span) isInRange(lineNumber int) bool {
+	return s.Start <= lineNumber && s.End >= lineNumber
 }
 
 func (scenario *Scenario) AddHeading(heading *Heading) {
@@ -44,6 +55,10 @@ func (scenario *Scenario) AddTags(tags *Tags) {
 func (scenario *Scenario) AddComment(comment *Comment) {
 	scenario.Comments = append(scenario.Comments, comment)
 	scenario.AddItem(comment)
+}
+
+func (scenario *Scenario) InSpan(lineNumber int) bool {
+	return scenario.Span.isInRange(lineNumber)
 }
 
 func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {

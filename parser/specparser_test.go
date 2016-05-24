@@ -1428,3 +1428,34 @@ func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingHasOnlySpaces
 	c.Assert(len(res.ParseErrors), Equals, 1)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "2: Scenario heading should have at least one character => ''")
 }
+
+func (s *MySuite) TestScenarioProcessingToHaveScenarioSpan(c *C) {
+	p := new(SpecParser)
+
+	spec, _ := p.Parse(`# Spec 1
+## Scenario 1
+* def "sd"
+comment1
+* def "sd"
+
+
+## Scenario 2
+* def "sd"
+comment2
+* def "sd"
+
+
+## Scenario 3
+* def "sd"
+comment3
+* def "sd"
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(spec.Scenarios), Equals, 3)
+	c.Assert(spec.Scenarios[0].Span.Start, Equals, 2)
+	c.Assert(spec.Scenarios[0].Span.End, Equals, 7)
+	c.Assert(spec.Scenarios[1].Span.Start, Equals, 8)
+	c.Assert(spec.Scenarios[1].Span.End, Equals, 13)
+	c.Assert(spec.Scenarios[2].Span.Start, Equals, 14)
+	c.Assert(spec.Scenarios[2].Span.End, Equals, 17)
+}

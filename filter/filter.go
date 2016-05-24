@@ -50,5 +50,5 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*parser.ParseResult) {
 	specName, indexToFilter := GetIndexedSpecName(specSource)
 	parsedSpecs, parseResult := parser.ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary)
-	return filterSpecsItems(parsedSpecs, newScenarioIndexFilterToRetain(indexToFilter)), parseResult
+	return filterSpecsItems(parsedSpecs, newScenarioFilterBasedOnSpan(indexToFilter)), parseResult
 }
