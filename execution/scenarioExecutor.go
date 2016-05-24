@@ -57,8 +57,8 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		return
 	}
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil, e.stream, gauge_messages.ExecutionInfo{}))
-	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, scenarioResult, e.stream, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil, e.stream, *e.currentExecutionInfo))
+	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
 
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {

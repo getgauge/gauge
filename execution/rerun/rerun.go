@@ -29,6 +29,8 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	flag "github.com/getgauge/mflag"
 )
@@ -72,29 +74,25 @@ var failedMeta *failedMetadata
 // ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
 func ListenFailedScenarios() {
 	ch := make(chan event.ExecutionEvent, 0)
-	event.Register(ch, event.SuiteEnd)
+	event.Register(ch, event.ScenarioEnd)
 
 	go func() {
 		for {
 			e := <-ch
 			switch e.Topic {
-			case event.SuiteEnd:
-				prepareFailedMetadata(e.Result.(*result.SuiteResult).SpecResults)
+			case event.ScenarioEnd:
+				prepareFailedMetadata(e.Result.(*result.ScenarioResult), e.Item.(*gauge.Scenario), e.ExecutionInfo)
 				writeFailedMeta(getJSON(failedMeta))
 			}
 		}
 	}()
 }
 
-func prepareFailedMetadata(specResults []*result.SpecResult) {
-	for _, specRes := range specResults {
-		if specRes.GetFailed() {
-			specPath := *specRes.ProtoSpec.FileName
-			failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
-			for _, i := range specRes.FailedScenarioIndices {
-				failedMeta.AddFailedScenario(fmt.Sprintf("%s:%v", failedScenario, i))
-			}
-		}
+func prepareFailedMetadata(scenarioRes *result.ScenarioResult, sce *gauge.Scenario, executionInfo gauge_messages.ExecutionInfo) {
+	if scenarioRes.GetFailed() {
+		specPath := executionInfo.GetCurrentSpec().GetFileName()
+		failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
+		failedMeta.AddFailedScenario(fmt.Sprintf("%s:%v", failedScenario, sce.Span.Start))
 	}
 }
 

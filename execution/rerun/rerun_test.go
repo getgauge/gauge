@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 
 	. "gopkg.in/check.v1"
@@ -61,11 +62,12 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 func (s *MySuite) TestGetFailedMetadata(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
-	sr1 := &result.SpecResult{IsFailed: true, ProtoSpec: &gauge_messages.ProtoSpec{FileName: &spec1Abs}, FailedScenarioIndices: []int{2, 6}}
+	failed := true
+	sce := &gauge.Scenario{Span: &gauge.Span{Start: 2}}
+	sr1 := &result.ScenarioResult{ProtoScenario: &gauge_messages.ProtoScenario{Failed: &failed}}
 
-	prepareFailedMetadata([]*result.SpecResult{sr1})
+	prepareFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &spec1Abs}})
 
-	c.Assert(len(failedMeta.FailedScenarios), Equals, 2)
+	c.Assert(len(failedMeta.FailedScenarios), Equals, 1)
 	c.Assert(failedMeta.FailedScenarios[0], Equals, spec1Rel+":2")
-	c.Assert(failedMeta.FailedScenarios[1], Equals, spec1Rel+":6")
 }
