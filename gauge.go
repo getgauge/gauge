@@ -29,7 +29,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
-	"github.com/getgauge/gauge/execution/run_failed"
+	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
@@ -83,7 +83,7 @@ func main() {
 	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
-	run_failed.SetFlags()
+	rerun.SetFlags()
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
@@ -219,7 +219,7 @@ func initPackageFlags() {
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams
-	run_failed.RunFailed = *runFailed
+	rerun.RunFailed = *runFailed
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager
 	}
