@@ -33,6 +33,7 @@ import (
 	flag "github.com/getgauge/mflag"
 )
 
+// RunFailed represents if this is a re-run of only failed scenarios or a new run
 var RunFailed bool
 
 const (
@@ -62,12 +63,13 @@ func newFailedMetaData() *failedMetadata {
 	return &failedMetadata{Flags: make(map[string]string), FailedScenarios: []string{}}
 }
 
-var failedMeta *failedMetadata
-
 func (m *failedMetadata) AddFailedScenario(sce string) {
 	m.FailedScenarios = append(m.FailedScenarios, sce)
 }
 
+var failedMeta *failedMetadata
+
+// ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
 func ListenFailedScenarios() {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.SuiteEnd)
@@ -109,14 +111,7 @@ func writeFailedMeta(contents string) {
 	}
 }
 
-func remove(f *flag.Flag) {
-	if f.Value.String() == f.DefValue {
-		delete(failedMeta.Flags, f.Names[0])
-	}
-}
-
 func getJSON(failedMeta *failedMetadata) string {
-	flag.Visit(remove)
 	json, err := json.MarshalIndent(failedMeta, "", "\t")
 	if err != nil {
 		logger.Warning("Failed to save run info. Reason: %s", err.Error())
@@ -124,7 +119,7 @@ func getJSON(failedMeta *failedMetadata) string {
 	return string(json)
 }
 
-func SaveFlagState(f *flag.Flag) {
+func saveFlagState(f *flag.Flag) {
 	failedMeta.Flags[f.Names[0]] = f.Value.String()
 }
 
@@ -132,7 +127,12 @@ func setDefault(f *flag.Flag) {
 	f.Value.Set(f.DefValue)
 }
 
+// SetFlags sets the flags if its a re-run of failed scenarios. Else, it will save the current execution run for next re-run.
 func SetFlags() {
+	if !RunFailed {
+		flag.Visit(saveFlagState)
+		return
+	}
 	flag.VisitAll(setDefault)
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, failedFile))
 	if err != nil {
@@ -142,6 +142,7 @@ func SetFlags() {
 	if err = json.Unmarshal([]byte(contents), &meta); err != nil {
 		logger.Fatalf("Invalid last run information. Reason: %s", err.Error())
 	}
+	failedMeta.Flags = meta.Flags
 	for k, v := range meta.Flags {
 		err = flag.Set(k, v)
 		if err != nil {
@@ -149,9 +150,5 @@ func SetFlags() {
 		}
 	}
 	flag.CommandLine.Parse(meta.FailedScenarios)
-	flag.Visit(SaveFlagState)
-}
-
-func PrintCmd() {
-	fmt.Printf("%v", failedMeta)
+	fmt.Printf("Executing => %s\n", meta.String())
 }

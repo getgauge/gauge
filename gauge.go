@@ -81,13 +81,9 @@ var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios fa
 
 func main() {
 	flag.Parse()
-	flag.Visit(run_failed.SaveFlagState)
-	if *runFailed {
-		run_failed.SetFlags()
-		run_failed.PrintCmd()
-	}
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
+	run_failed.SetFlags()
 	validGaugeProject := true
 	err := config.SetProjectRoot(flag.Args())
 	if err != nil {
