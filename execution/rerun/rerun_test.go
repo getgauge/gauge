@@ -29,6 +29,9 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 
+	"sort"
+
+	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
@@ -59,15 +62,71 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }
 
-func (s *MySuite) TestGetFailedMetadata(c *C) {
+func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 	failed := true
 	sce := &gauge.Scenario{Span: &gauge.Span{Start: 2}}
 	sr1 := &result.ScenarioResult{ProtoScenario: &gauge_messages.ProtoScenario{Failed: &failed}}
 
-	prepareFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &spec1Abs}})
+	prepareScenarioFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &spec1Abs}})
 
-	c.Assert(len(failedMeta.FailedScenarios), Equals, 1)
-	c.Assert(failedMeta.FailedScenarios[0], Equals, spec1Rel+":2")
+	c.Assert(len(failedMeta.failedItemsMap[spec1Abs]), Equals, 1)
+	c.Assert(failedMeta.failedItemsMap[spec1Abs][0], Equals, spec1Rel+":2")
+}
+
+func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("error")}, FileName: proto.String(spec1Abs)}}
+
+	addFailedMetadata(spec1, addSpecFailedMetadata)
+
+	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+}
+
+func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("error")}, FileName: proto.String(spec1Abs)}}
+
+	addFailedMetadata(spec1, addSpecFailedMetadata)
+
+	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+}
+
+func (s *MySuite) TestAddSpecFailedMetadataOverwritesPreviouslyAddedValues(c *C) {
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("error")}, FileName: proto.String(spec1Abs)}}
+	failedMeta.failedItemsMap[spec1Rel] = []string{"scn1", "scn2"}
+
+	addSpecFailedMetadata(spec1)
+
+	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+}
+
+func (s *MySuite) TestGetRelativePath(c *C) {
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
+
+	path := getRelativePath(spec1Abs)
+
+	c.Assert(path, Equals, spec1Rel)
+}
+
+func (s *MySuite) TestGetAllFailedItems(c *C) {
+	spec1Rel := filepath.Join("specs", "example1.spec")
+	spec2Rel := filepath.Join("specs", "example2.spec")
+	metaData := newFailedMetaData()
+	metaData.failedItemsMap[spec1Rel] = []string{"scn1", "scn2"}
+	metaData.failedItemsMap[spec2Rel] = []string{"scn3"}
+
+	failedItems := metaData.getFailedItems()
+	sort.Strings(failedItems)
+
+	c.Assert(failedItems, DeepEquals, []string{"scn1", "scn2", "scn3"})
 }

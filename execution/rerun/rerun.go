@@ -43,13 +43,16 @@ const (
 	failedFile = "failed.json"
 )
 
+var failedMeta *failedMetadata
+
 func init() {
-	failedMeta = &failedMetadata{Flags: make(map[string]string), FailedScenarios: []string{}}
+	failedMeta = newFailedMetaData()
 }
 
 type failedMetadata struct {
-	Flags           map[string]string
-	FailedScenarios []string
+	Flags          map[string]string
+	failedItemsMap map[string][]string
+	FailedItems    []string
 }
 
 func (m *failedMetadata) String() string {
@@ -57,42 +60,90 @@ func (m *failedMetadata) String() string {
 	for flag, value := range m.Flags {
 		cmd += "-" + flag + "=" + value + " "
 	}
-	cmd += strings.Join(m.FailedScenarios, " ")
-	return cmd
+	return cmd + strings.Join(m.getFailedItems(), " ")
+}
+
+func (m *failedMetadata) getFailedItems() []string {
+	failedItems := []string{}
+	for _, v := range m.failedItemsMap {
+		failedItems = append(failedItems, v...)
+	}
+	return failedItems
+}
+
+func (m *failedMetadata) aggregateFailedItems() {
+	m.FailedItems = m.getFailedItems()
 }
 
 func newFailedMetaData() *failedMetadata {
-	return &failedMetadata{Flags: make(map[string]string), FailedScenarios: []string{}}
+	return &failedMetadata{Flags: make(map[string]string), failedItemsMap: make(map[string][]string), FailedItems: []string{}}
 }
 
-func (m *failedMetadata) AddFailedScenario(sce string) {
-	m.FailedScenarios = append(m.FailedScenarios, sce)
+func (m *failedMetadata) addFailedItem(itemName string, item string) {
+	if _, ok := m.failedItemsMap[itemName]; !ok {
+		m.failedItemsMap[itemName] = make([]string, 0)
+	}
+	m.failedItemsMap[itemName] = append(m.failedItemsMap[itemName], item)
 }
-
-var failedMeta *failedMetadata
 
 // ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
 func ListenFailedScenarios() {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.ScenarioEnd)
+	event.Register(ch, event.SpecEnd)
+	event.Register(ch, event.SuiteEnd)
 
 	go func() {
 		for {
 			e := <-ch
 			switch e.Topic {
 			case event.ScenarioEnd:
-				prepareFailedMetadata(e.Result.(*result.ScenarioResult), e.Item.(*gauge.Scenario), e.ExecutionInfo)
+				prepareScenarioFailedMetadata(e.Result.(*result.ScenarioResult), e.Item.(*gauge.Scenario), e.ExecutionInfo)
+			case event.SpecEnd:
+				addFailedMetadata(e.Result, addSpecFailedMetadata)
+			case event.SuiteEnd:
+				addFailedMetadata(e.Result, addSuiteFailedMetadata)
+				failedMeta.aggregateFailedItems()
 				writeFailedMeta(getJSON(failedMeta))
 			}
 		}
 	}()
 }
 
-func prepareFailedMetadata(scenarioRes *result.ScenarioResult, sce *gauge.Scenario, executionInfo gauge_messages.ExecutionInfo) {
-	if scenarioRes.GetFailed() {
+func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenario, executionInfo gauge_messages.ExecutionInfo) {
+	if res.GetFailed() {
 		specPath := executionInfo.GetCurrentSpec().GetFileName()
-		failedScenario := strings.TrimPrefix(specPath, config.ProjectRoot+string(filepath.Separator))
-		failedMeta.AddFailedScenario(fmt.Sprintf("%s:%v", failedScenario, sce.Span.Start))
+		failedScenario := getRelativePath(specPath)
+		failedMeta.addFailedItem(specPath, fmt.Sprintf("%s:%v", failedScenario, sce.Span.Start))
+	}
+}
+
+func getRelativePath(path string) string {
+	return strings.TrimPrefix(path, config.ProjectRoot+string(filepath.Separator))
+}
+
+func addSpecFailedMetadata(res result.Result) {
+	fileName := getRelativePath(res.(*result.SpecResult).ProtoSpec.GetFileName())
+	if _, ok := failedMeta.failedItemsMap[fileName]; ok {
+		failedMeta.failedItemsMap[fileName] = []string{}
+	}
+	failedMeta.addFailedItem(fileName, fileName)
+}
+
+func addSuiteFailedMetadata(res result.Result) {
+	failedMeta.failedItemsMap = make(map[string][]string)
+	for _, arg := range flag.Args() {
+		path, err := filepath.Abs(arg)
+		path = getRelativePath(path)
+		if err == nil {
+			failedMeta.addFailedItem(path, path)
+		}
+	}
+}
+
+func addFailedMetadata(res result.Result, add func(res result.Result)) {
+	if (res.GetPostHook() != nil && *res.GetPostHook() != nil) || (res.GetPreHook() != nil && *res.GetPreHook() != nil) {
+		add(res)
 	}
 }
 
@@ -146,6 +197,6 @@ func SetFlags() {
 			logger.Warning("Failed to set flag %v to %v. Reason: %v", k, v, err.Error())
 		}
 	}
-	flag.CommandLine.Parse(meta.FailedScenarios)
+	flag.CommandLine.Parse(meta.getFailedItems())
 	fmt.Printf("Executing => %s\n", meta.String())
 }
