@@ -60,7 +60,7 @@ func (m *failedMetadata) String() string {
 	for flag, value := range m.Flags {
 		cmd += "-" + flag + "=" + value + " "
 	}
-	return cmd + strings.Join(m.getFailedItems(), " ")
+	return cmd + strings.Join(m.FailedItems, " ")
 }
 
 func (m *failedMetadata) getFailedItems() []string {
@@ -197,6 +197,6 @@ func SetFlags() {
 			logger.Warning("Failed to set flag %v to %v. Reason: %v", k, v, err.Error())
 		}
 	}
-	flag.CommandLine.Parse(meta.getFailedItems())
+	flag.CommandLine.Parse(meta.FailedItems)
 	fmt.Printf("Executing => %s\n", meta.String())
 }
