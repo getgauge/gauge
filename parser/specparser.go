@@ -85,6 +85,7 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, []*ParseErr
 		trimmedLine := strings.TrimSpace(line)
 		if len(trimmedLine) == 0 {
 			if newToken != nil && newToken.Kind == gauge.StepKind {
+				newToken.Suffix = "\n"
 				continue
 			}
 			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
@@ -552,6 +553,7 @@ func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *Pars
 	if parseDetails != nil && len(parseDetails.Errors) > 0 {
 		return nil, parseDetails
 	}
+	stepToAdd.Suffix = stepToken.Suffix
 	return stepToAdd, parseDetails
 }
 
@@ -715,6 +717,7 @@ type Token struct {
 	Kind     gauge.TokenKind
 	LineNo   int
 	LineText string
+	Suffix   string
 	Args     []string
 	Value    string
 }

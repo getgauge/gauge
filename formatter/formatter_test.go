@@ -249,6 +249,30 @@ Scenario Heading
 `)
 }
 
+func (s *MySuite) TestFormatShouldRetainNewlinesBetweenSteps(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 6, LineText: "Example step", Suffix: "\n\n"},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 9, LineText: "Example step", Suffix: "\n\n"},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+Scenario Heading
+----------------
+* Example step
+
+
+* Example step
+
+
+`)
+}
+
 func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTable(c *C) {
 	tokens := []*parser.Token{
 		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},

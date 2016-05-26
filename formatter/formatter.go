@@ -86,7 +86,7 @@ func FormatStep(step *gauge.Step) string {
 	if strings.HasSuffix(text, "\n") {
 		stepText = fmt.Sprintf("* %s", text)
 	} else {
-		stepText = fmt.Sprintf("* %s\n", text)
+		stepText = fmt.Sprintf("* %s%s\n", text, step.Suffix)
 	}
 	return stepText
 }

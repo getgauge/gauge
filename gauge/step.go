@@ -45,6 +45,7 @@ type Step struct {
 	HasInlineTable bool
 	Items          []Item
 	PreComments    []*Comment
+	Suffix         string
 }
 
 func (step *Step) GetArg(name string) *StepArg {
