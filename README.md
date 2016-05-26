@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/getgauge/gauge.png?label=ready&title=Ready)](https://waffle.io/getgauge/gauge)
 ![Gauge Logo](Gauge-Logo.png)
 
 # Welcome to Gauge
