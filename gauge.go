@@ -78,6 +78,7 @@ var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gaug
 var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
 var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
 var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios failed in previous run. Eg: gauge --failed")
+var docs = flag.String([]string{"-docs"}, "", "Generate documenation using specified plugin. Eg: gauge --docs <plugin name> specs/")
 
 func main() {
 	flag.Parse()
@@ -136,6 +137,9 @@ func main() {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
 			validation.Validate(flag.Args())
+		} else if *docs != "" {
+			gaugeConnectionHandler := api.Start(specDirs)
+			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)

@@ -45,6 +45,7 @@ import (
 
 const (
 	executionScope          = "execution"
+	docScope                = "documentation"
 	pluginConnectionPortEnv = "plugin_connection_port"
 )
 
@@ -246,7 +247,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion))
 			continue
 		}
-		if isExecutionScopePlugin(pd) {
+		if isPluginValidFor(pd, executionScope) {
 			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
 			if err != nil {
 				warnings = append(warnings, err.Error())
@@ -278,9 +279,36 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 	return handler, warnings
 }
 
-func isExecutionScopePlugin(pd *pluginDescriptor) bool {
-	for _, scope := range pd.Scope {
-		if strings.ToLower(scope) == executionScope {
+func GenerateDoc(pluginName string, specDirs []string, port int) {
+	pd, err := GetPluginDescriptor(pluginName, "")
+	if err != nil {
+		logger.Fatalf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginName, err.Error(), pluginName)
+	}
+	if err := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport); err != nil {
+		logger.Fatalf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion)
+	}
+	if !isPluginValidFor(pd, docScope) {
+		logger.Fatalf("Invalid plugin name: %s, this plugin cannot generate documentation.", pd.Name)
+	}
+	var sources []string
+	for _, src := range specDirs {
+		path, _ := filepath.Abs(src)
+		sources = append(sources, path)
+	}
+	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, " "))
+	os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
+	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
+	p, err := StartPlugin(pd, docScope)
+	if err != nil {
+		logger.Fatalf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
+	}
+	for p.IsProcessRunning() {
+	}
+}
+
+func isPluginValidFor(pd *pluginDescriptor, scope string) bool {
+	for _, s := range pd.Scope {
+		if strings.ToLower(s) == scope {
 			return true
 		}
 	}

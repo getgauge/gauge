@@ -25,6 +25,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -126,4 +127,21 @@ func RunInBackground(apiPort string, specDirs []string) {
 		}
 	}
 	runAPIServiceIndefinitely(port, specDirs)
+}
+
+func Start(specsDir []string) *conn.GaugeConnectionHandler {
+	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specsDir}
+	sig.MakeListOfAvailableSteps()
+	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
+	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, apiHandler)
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
+	errChan := make(chan error)
+	go gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), errChan)
+	go func() {
+		e := <-errChan
+		logger.Fatalf(e.Error())
+	}()
+	return gaugeConnectionHandler
 }
