@@ -42,7 +42,6 @@ const (
 	specScope           = 1 << iota
 	scenarioScope       = 1 << iota
 	commentScope        = 1 << iota
-	newLineScope        = 1 << iota
 	tableScope          = 1 << iota
 	tableSeparatorScope = 1 << iota
 	tableDataScope      = 1 << iota
@@ -58,7 +57,6 @@ func (parser *SpecParser) initialize() {
 	parser.processors[gauge.SpecKind] = processSpec
 	parser.processors[gauge.ScenarioKind] = processScenario
 	parser.processors[gauge.CommentKind] = processComment
-	parser.processors[gauge.NewLineKind] = processNewLine
 	parser.processors[gauge.StepKind] = processStep
 	parser.processors[gauge.TagKind] = processTag
 	parser.processors[gauge.TableHeader] = processTable
@@ -82,11 +80,14 @@ func (parser *SpecParser) GenerateTokens(specText string) ([]*Token, []*ParseErr
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial
 	var errors []*ParseError
+	var newToken *Token
 	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
 		trimmedLine := strings.TrimSpace(line)
-		var newToken *Token
 		if len(trimmedLine) == 0 {
-			newToken = &Token{Kind: gauge.NewLineKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
+			if newToken != nil && newToken.Kind == gauge.StepKind {
+				continue
+			}
+			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
 		} else if parser.isScenarioHeading(trimmedLine) {
 			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
@@ -366,12 +367,6 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return ParseResult{Ok: true}
 	})
 
-	newLineConverter := converterFn(func(token *Token, state *int) bool {
-		return token.Kind == gauge.NewLineKind
-	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		return ParseResult{Ok: true}
-	})
-
 	keywordConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.DataTableKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
@@ -483,7 +478,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	})
 
 	converter := []func(*Token, *int, *gauge.Specification) ParseResult{
-		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, newLineConverter, tableHeaderConverter, tableRowConverter, tagConverter, keywordConverter, tearDownConverter, tearDownStepConverter,
+		specConverter, scenarioConverter, stepConverter, contextConverter, commentConverter, tableHeaderConverter, tableRowConverter, tagConverter, keywordConverter, tearDownConverter, tearDownStepConverter,
 	}
 
 	return converter

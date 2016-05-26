@@ -212,3 +212,127 @@ Scenario Heading
      |2 |bar  |
 `)
 }
+
+func (s *MySuite) TestFormatShouldRetainNewlines(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 2},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 3},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineText: " |id|name|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}, LineText: " |1|foo|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}, LineText: "|2|bar|"},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step"},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "<foo>"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+
+
+Scenario Heading
+----------------
+ |id|name|
+ |1|foo|
+|2|bar|
+* Example step `+`
+
+     |id|name |
+     |--|-----|
+     |1 |<foo>|
+     |2 |bar  |
+`)
+}
+
+func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTable(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 2},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 3},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineText: " |id|name|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}, LineText: " |1|foo|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}, LineText: "|2|bar|"},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step\n\n"},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "<foo>"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+
+
+Scenario Heading
+----------------
+ |id|name|
+ |1|foo|
+|2|bar|
+* Example step `+`
+
+     |id|name |
+     |--|-----|
+     |1 |<foo>|
+     |2 |bar  |
+`)
+}
+
+func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTableInTeardown(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 2},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 3},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineText: " |id|name|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}, LineText: " |1|foo|"},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}, LineText: "|2|bar|"},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step\n\n"},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "<foo>"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 10},
+		&parser.Token{Kind: gauge.TearDownKind, Value: "____", LineNo: 9},
+		&parser.Token{Kind: gauge.CommentKind, Value: "\n", LineNo: 10},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step\n\n\n"},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"1", "<foo>"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+
+
+Scenario Heading
+----------------
+ |id|name|
+ |1|foo|
+|2|bar|
+* Example step `+`
+
+     |id|name |
+     |--|-----|
+     |1 |<foo>|
+     |2 |bar  |
+
+____
+
+* Example step `+`
+
+     |id|name |
+     |--|-----|
+     |1 |<foo>|
+     |2 |bar  |
+`)
+}

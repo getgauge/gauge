@@ -487,7 +487,7 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 	c.Assert(tokens[0].Kind, Equals, gauge.SpecKind)
 	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
-	c.Assert(tokens[2].Kind, Equals, gauge.NewLineKind)
+	c.Assert(tokens[2].Kind, Equals, gauge.CommentKind)
 
 	c.Assert(tokens[3].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[3].Value, Equals, "Context step with {static} and {special}")
@@ -524,13 +524,12 @@ func (s *MySuite) TestParsingMultilineStep(c *C) {
 
 	tokens, err := parser.GenerateTokens(specText)
 	c.Assert(err, IsNil)
-	c.Assert(len(tokens), Equals, 4)
+	c.Assert(len(tokens), Equals, 3)
 
 	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
-	c.Assert(tokens[1].Kind, Equals, gauge.NewLineKind)
 
-	c.Assert(tokens[2].Kind, Equals, gauge.TableHeader)
-	c.Assert(tokens[3].Kind, Equals, gauge.TableRow)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 }
 
 func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
@@ -1338,8 +1337,7 @@ func (s *MySuite) TestCreateStepWithNewlineBetweenTextAndTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "some random step", LineNo: 3},
-		&Token{Kind: gauge.NewLineKind, Value: "\n", LineNo: 4},
+		&Token{Kind: gauge.StepKind, Value: "some random step\n", LineNo: 3},
 		&Token{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 5},
 		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 6},
 		&Token{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 7},
