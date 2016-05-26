@@ -40,7 +40,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
 	stepResult := result.NewStepResult(protoStep)
 
-	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, *e.currentExecutionInfo))
 
 	e.notifyBeforeStepHook(stepResult)
 	if !stepResult.GetFailed() {
@@ -54,7 +54,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	}
 	e.notifyAfterStepHook(stepResult)
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, *e.currentExecutionInfo))
 	return stepResult
 }
 

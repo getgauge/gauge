@@ -153,8 +153,8 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
 	cptResult := result.NewConceptResult(protoConcept)
-	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, gauge_messages.ExecutionInfo{}))
-	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, *e.currentExecutionInfo))
+	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, *e.currentExecutionInfo))
 
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
