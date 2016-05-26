@@ -258,6 +258,7 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 		Tags:            getTags(scenario.Tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
+		Skipped:         proto.Bool(false),
 	}
 }
 
