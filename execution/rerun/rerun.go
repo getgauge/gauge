@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/util"
 	flag "github.com/getgauge/mflag"
 )
 
@@ -113,17 +114,13 @@ func ListenFailedScenarios() {
 func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenario, executionInfo gauge_messages.ExecutionInfo) {
 	if res.GetFailed() {
 		specPath := executionInfo.GetCurrentSpec().GetFileName()
-		failedScenario := getRelativePath(specPath)
+		failedScenario := util.RelPathToProjectRoot(specPath)
 		failedMeta.addFailedItem(specPath, fmt.Sprintf("%s:%v", failedScenario, sce.Span.Start))
 	}
 }
 
-func getRelativePath(path string) string {
-	return strings.TrimPrefix(path, config.ProjectRoot+string(filepath.Separator))
-}
-
 func addSpecFailedMetadata(res result.Result) {
-	fileName := getRelativePath(res.(*result.SpecResult).ProtoSpec.GetFileName())
+	fileName := util.RelPathToProjectRoot(res.(*result.SpecResult).ProtoSpec.GetFileName())
 	if _, ok := failedMeta.failedItemsMap[fileName]; ok {
 		failedMeta.failedItemsMap[fileName] = []string{}
 	}
@@ -134,7 +131,7 @@ func addSuiteFailedMetadata(res result.Result) {
 	failedMeta.failedItemsMap = make(map[string][]string)
 	for _, arg := range flag.Args() {
 		path, err := filepath.Abs(arg)
-		path = getRelativePath(path)
+		path = util.RelPathToProjectRoot(path)
 		if err == nil {
 			failedMeta.addFailedItem(path, path)
 		}

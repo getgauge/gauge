@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/util"
 
 	"sort"
 
@@ -113,7 +114,7 @@ func (s *MySuite) TestGetRelativePath(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 
-	path := getRelativePath(spec1Abs)
+	path := util.RelPathToProjectRoot(spec1Abs)
 
 	c.Assert(path, Equals, spec1Rel)
 }

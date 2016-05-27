@@ -194,6 +194,10 @@ func SaveFile(fileName string, content string, backup bool) {
 	}
 }
 
+func RelPathToProjectRoot(path string) string {
+	return strings.TrimPrefix(path, config.ProjectRoot+string(filepath.Separator))
+}
+
 // GetPathToFile returns the path to a given file from the Project root
 func GetPathToFile(path string) string {
 	if filepath.IsAbs(path) {

@@ -19,10 +19,8 @@ package reporter
 
 import (
 	"fmt"
-	"path/filepath"
 	"strings"
 
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/util"
 )
 
@@ -75,7 +73,7 @@ func prepStepMsg(msg string) string {
 }
 
 func prepSpecInfo(fileName string, lineNo int) string {
-	return fmt.Sprintf("Specification: %s:%v", getRelativePath(fileName), lineNo)
+	return fmt.Sprintf("Specification: %s:%v", util.RelPathToProjectRoot(fileName), lineNo)
 }
 
 func prepStacktrace(stacktrace string) string {
@@ -84,8 +82,4 @@ func prepStacktrace(stacktrace string) string {
 
 func formatErrorFragment(fragment string, indentation int) string {
 	return indent(fragment, indentation+errorIndentation) + newline
-}
-
-func getRelativePath(path string) string {
-	return strings.TrimPrefix(path, config.ProjectRoot+string(filepath.Separator))
 }
