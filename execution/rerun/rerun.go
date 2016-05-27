@@ -19,6 +19,7 @@ package rerun
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -172,18 +173,13 @@ func setDefault(f *flag.Flag) {
 	f.Value.Set(f.DefValue)
 }
 
-// SetFlags sets the flags if its a re-run of failed scenarios. Else, it will save the current execution run for next re-run.
-func SetFlags() {
-	if !RunFailed {
-		flag.Visit(saveFlagState)
-		return
-	}
+// setFlags sets the flags if its a re-run of failed scenarios. Else, it will save the current execution run for next re-run.
+func setFlags(meta *failedMetadata) {
 	flag.VisitAll(setDefault)
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, failedFile))
 	if err != nil {
 		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
 	}
-	var meta failedMetadata
 	if err = json.Unmarshal([]byte(contents), &meta); err != nil {
 		logger.Fatalf("Invalid last run information. Reason: %s", err.Error())
 	}
@@ -195,5 +191,19 @@ func SetFlags() {
 		}
 	}
 	flag.CommandLine.Parse(meta.FailedItems)
+}
+
+// Initialize sets up rerun and determines whether any failed tests will be executed or not
+func Initialize() error {
+	if !RunFailed {
+		flag.Visit(saveFlagState)
+		return nil
+	}
+	meta := new(failedMetadata)
+	setFlags(meta)
+	if RunFailed && len(meta.FailedItems) == 0 {
+		return errors.New("No failed tests found.")
+	}
 	fmt.Printf("Executing => %s\n", meta.String())
+	return nil
 }
