@@ -35,6 +35,9 @@ func ConvertToProtoItem(item Item) *gauge_messages.ProtoItem {
 		return convertToProtoDataTableItem(item.(*DataTable))
 	case TagKind:
 		return convertToProtoTagItem(item.(*Tags))
+	case TearDownKind:
+		teardown := item.(*TearDown)
+		return convertToProtoCommentItem(&Comment{LineNo: teardown.LineNo, Value: teardown.Value})
 	}
 	return nil
 }
@@ -217,7 +220,7 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 
 func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
-	protoItems := make([]*gauge_messages.ProtoItem, 0)
+	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range spec.Items {
 		protoItems = append(protoItems, ConvertToProtoItem(item))
 	}
@@ -259,6 +262,8 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
 		Skipped:         proto.Bool(false),
+		TearDownSteps:   make([]*gauge_messages.ProtoItem, 0),
+		SkipErrors:      make([]string, 0),
 	}
 }
 
