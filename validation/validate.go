@@ -139,7 +139,7 @@ func fillErrors(errMap *ValidationErrMaps, validationErrors validationErrors) {
 				skippedScnInSpec++
 			}
 		}
-		if skippedScnInSpec == len(spec.Scenarios) {
+		if len(spec.Scenarios) > 0 && skippedScnInSpec == len(spec.Scenarios) {
 			errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], errMap.ScenarioErrs[spec.Scenarios[0]]...)
 		}
 		fillSpecErrors(spec, errMap, append(spec.Contexts, spec.TearDownSteps...))

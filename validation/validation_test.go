@@ -91,3 +91,26 @@ Scenario 2
 	c.Assert(len(errMap.ScenarioErrs), Equals, 1)
 	c.Assert(len(errMap.StepErrs), Equals, 1)
 }
+
+func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
+	specText := `Specification Heading
+=====================
+* say hello1
+* say hello2
+`
+	p := new(parser.SpecParser)
+	spec, _ := p.Parse(specText, gauge.NewConceptDictionary())
+
+	errMap := &ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
+		ScenarioErrs: make(map[*gauge.Scenario][]*StepValidationError),
+		StepErrs:     make(map[*gauge.Step]*StepValidationError),
+	}
+	errs := validationErrors{spec: []*StepValidationError{}}
+
+	fillErrors(errMap, errs)
+
+	c.Assert(len(errMap.SpecErrs), Equals, 0)
+	c.Assert(len(errMap.ScenarioErrs), Equals, 0)
+	c.Assert(len(errMap.StepErrs), Equals, 0)
+}
