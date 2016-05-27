@@ -82,7 +82,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	}
 }
 
-func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
+func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	printHookFailureSC(sc, res, res.GetPreHook)
@@ -90,12 +90,14 @@ func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result) {
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
 		logger.GaugeLog.Error(stepText)
+		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo)
+		logger.GaugeLog.Error(specInfo)
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 
-		msg := formatStepText(stepText, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
+		msg := formatStepText(stepText, sc.indentation) + formatSpecInfo(specInfo, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
 		fmt.Fprint(sc.writer, msg)
 	}
 	printHookFailureSC(sc, res, res.GetPostHook)

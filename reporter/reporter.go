@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 )
 
 // IsParallel represents console reporting format based on simple/parallel execution
@@ -51,7 +52,7 @@ type Reporter interface {
 	ScenarioStart(string)
 	ScenarioEnd(result.Result)
 	StepStart(string)
-	StepEnd(gauge.Step, result.Result)
+	StepEnd(gauge.Step, result.Result, gauge_messages.ExecutionInfo)
 	ConceptStart(string)
 	ConceptEnd(result.Result)
 	DataTable(string)
@@ -132,7 +133,7 @@ func ListenExecutionEvents() {
 			case event.StepStart:
 				r.StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepEnd:
-				r.StepEnd(e.Item.(gauge.Step), e.Result)
+				r.StepEnd(e.Item.(gauge.Step), e.Result, e.ExecutionInfo)
 			case event.ConceptEnd:
 				r.ConceptEnd(e.Result)
 			case event.ScenarioEnd:

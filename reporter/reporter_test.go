@@ -142,6 +142,8 @@ func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
 	failed := true
 	stepText := "* say hello"
 	errMsg := "failure message"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
 sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
@@ -150,9 +152,10 @@ sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes, 0, specInfo))
 	want := spaces(errorIndentation) + newline +
 		`  Failed Step: * say hello
+  Specification: hello.spec:0
   Error Message: failure message
   Stacktrace:` + spaces(1) +
 		`

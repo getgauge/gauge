@@ -116,6 +116,8 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	Verbose = true
 	sceHeading := "First Scenario"
 	stepText := "* Say hello to all"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
 
@@ -130,7 +132,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
 
-	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+stepText+"\t ...[PASS]\n")
 
 	cc.ScenarioEnd(sceRes)
@@ -157,14 +159,17 @@ func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
 	dw.output = ""
 	errMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stackTrace}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
 
-	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 
 	expectedErrMsg := `        ` + `
         Failed Step: * say hello
+        Specification: hello.spec:0
         Error Message: pre hook failure message
         Stacktrace:` + spaces(1) + `
         my stacktrace
@@ -179,16 +184,19 @@ func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 	stepText := "* say hello"
 	errMsg := "pre hook failure message"
 	stacktrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
 	cc.StepStart(stepText)
 	dw.output = ""
 
-	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes, specInfo)
 
 	expectedErrMsg := spaces(8) + `
         Failed Step: ` + stepText + `
+        Specification: ` + specName + `:0
         Error Message: ` + errMsg + `
         Stacktrace:` + spaces(1) + `
         ` + stacktrace + `
@@ -202,9 +210,12 @@ func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
 	cc.indentation = 2
 	cc.StepStart("* say hello")
 	dw.output = ""
+
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 
-	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes, specInfo)
 
 	c.Assert(dw.output, Equals, getSuccessSymbol())
 }
@@ -216,6 +227,8 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 	stepText := "* Say hello to all"
 	errMsg := "pre hook failure message"
 	stacktrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
@@ -226,10 +239,11 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 	c.Assert(dw.output, Equals, expectedStepStartOutput)
 	dw.output = ""
 
-	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 
 	expectedErrMsg := spaces(8) + `
         Failed Step: ` + stepText + `
+        Specification: ` + specName + `:0
         Error Message: ` + errMsg + `
         Stacktrace:` + spaces(1) + `
         ` + stacktrace + `
@@ -244,6 +258,8 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	cc.indentation = 2
 	errMsg := "pre hook failure message"
 	stacktrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
@@ -258,10 +274,11 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
 	dw.output = ""
 
-	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 
 	expectedErrMsg := spaces(8) + `
         Failed Step: ` + stepText + `
+        Specification: ` + specName + `:0
         Error Message: ` + errMsg + `
         Stacktrace:` + spaces(1) + `
         ` + stacktrace + `
@@ -342,12 +359,14 @@ func (s *MySuite) TestStepEndWithPreHookFailure_ColoredConsole(c *C) {
 	errMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	stepText := "* my step"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{PreHookFailure: preHookFailure}})
 	cc.StepStart(stepText)
 	dw.output = ""
 
-	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 
 	c.Assert(cc.indentation, Equals, 2)
 	expectedErrMsg := spaces(8) + `Error Message: ` + errMsg + `
@@ -362,10 +381,12 @@ func (s *MySuite) TestStepEndWithPostHookFailure_ColoredConsole(c *C) {
 	cc.indentation = 6
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure}})
 
-	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes, specInfo)
 
 	c.Assert(cc.indentation, Equals, 2)
 	expectedErrMsg := spaces(8) + `Error Message: ` + errMsg + `
@@ -381,12 +402,14 @@ func (s *MySuite) TestStepEndWithPreAndPostHookFailure_ColoredConsole(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	postHookErrMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
+	specName := "hello.spec"
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &postHookErrMsg, StackTrace: &stackTrace}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure, PreHookFailure: preHookFailure}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
-	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes)
+	cc.StepEnd(gauge.Step{LineText: "* my step"}, stepRes, specInfo)
 
 	c.Assert(cc.indentation, Equals, 2)
 	err1 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), preHookErrMsg, spaces(8), spaces(8), stackTrace)

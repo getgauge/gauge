@@ -92,7 +92,7 @@ func (c *coloredConsole) StepStart(stepText string) {
 	}
 }
 
-func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result) {
+func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 	if Verbose {
 		c.writer.Clear()
@@ -115,10 +115,12 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result) {
 		logger.GaugeLog.Error(stepText)
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
+		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo)
+		logger.GaugeLog.Error(specInfo)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 
-		msg := formatStepText(stepText, c.indentation) + formatErrorMessage(errMsg, c.indentation) + formatStacktrace(stacktrace, c.indentation)
+		msg := formatStepText(stepText, c.indentation) + formatSpecInfo(specInfo, c.indentation) + formatErrorMessage(errMsg, c.indentation) + formatStacktrace(stacktrace, c.indentation)
 		c.displayMessage(msg, ct.Red)
 	}
 	printHookFailureCC(c, res, res.GetPreHook)
