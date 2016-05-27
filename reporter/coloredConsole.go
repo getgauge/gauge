@@ -120,7 +120,8 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 
-		msg := formatStepText(stepText, c.indentation) + formatSpecInfo(specInfo, c.indentation) + formatErrorMessage(errMsg, c.indentation) + formatStacktrace(stacktrace, c.indentation)
+		msg := formatErrorFragment(stepText, c.indentation) + formatErrorFragment(specInfo, c.indentation) + formatErrorFragment(errMsg, c.indentation) + formatErrorFragment(stacktrace, c.indentation)
+
 		c.displayMessage(msg, ct.Red)
 	}
 	printHookFailureCC(c, res, res.GetPreHook)
@@ -195,6 +196,6 @@ func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func()
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
-		c.displayMessage(formatErrorMessage(errMsg, c.indentation)+formatStacktrace(stacktrace, c.indentation), ct.Red)
+		c.displayMessage(formatErrorFragment(errMsg, c.indentation)+formatErrorFragment(stacktrace, c.indentation), ct.Red)
 	}
 }

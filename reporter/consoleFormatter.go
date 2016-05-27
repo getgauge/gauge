@@ -82,22 +82,10 @@ func prepStacktrace(stacktrace string) string {
 	return fmt.Sprintf("Stacktrace: \n%s", stacktrace)
 }
 
-func formatErrorMessage(msg string, indentation int) string {
-	return indent(msg, indentation+errorIndentation) + newline
-}
-
-func formatSpecInfo(specInfo string, indentation int) string {
-	return indent(specInfo, indentation+errorIndentation) + newline
+func formatErrorFragment(fragment string, indentation int) string {
+	return indent(fragment, indentation+errorIndentation) + newline
 }
 
 func getRelativePath(path string) string {
 	return strings.TrimPrefix(path, config.ProjectRoot+string(filepath.Separator))
-}
-
-func formatStacktrace(stacktrace string, indentation int) string {
-	return indent(stacktrace, indentation+errorIndentation) + newline
-}
-
-func formatStepText(text string, indentation int) string {
-	return indent(text, indentation+errorIndentation) + newline
 }

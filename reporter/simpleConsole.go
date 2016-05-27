@@ -97,7 +97,7 @@ func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 
-		msg := formatStepText(stepText, sc.indentation) + formatSpecInfo(specInfo, sc.indentation) + formatErrorMessage(errMsg, sc.indentation) + formatStacktrace(stacktrace, sc.indentation)
+		msg := formatErrorFragment(stepText, sc.indentation) + formatErrorFragment(specInfo, sc.indentation) + formatErrorFragment(errMsg, sc.indentation) + formatErrorFragment(stacktrace, sc.indentation)
 		fmt.Fprint(sc.writer, msg)
 	}
 	printHookFailureSC(sc, res, res.GetPostHook)
@@ -161,6 +161,6 @@ func printHookFailureSC(sc *simpleConsole, res result.Result, hookFailure func()
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
-		fmt.Fprint(sc.writer, formatErrorMessage(errMsg, sc.indentation), formatStacktrace(stacktrace, sc.indentation))
+		fmt.Fprint(sc.writer, formatErrorFragment(errMsg, sc.indentation), formatErrorFragment(stacktrace, sc.indentation))
 	}
 }
