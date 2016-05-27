@@ -63,13 +63,30 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found")
 }
 
+func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
+	dictionary := gauge.NewConceptDictionary()
+	cpt1, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "concept.cpt"))
+	cpt2, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate.cpt"))
+
+	AddConcepts(cpt1, dictionary)
+	errs := AddConcepts(cpt2, dictionary)
+
+	c.Assert(len(errs), Equals, 2)
+
+	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found")
+	c.Assert(errs[0].LineText, Equals, "test concept step 1")
+
+	c.Assert(errs[1].Message, Equals, "Duplicate concept definition found")
+	c.Assert(errs[1].LineText, Equals, "test concept step 2")
+}
+
 func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err", "cpt"))
 
 	_, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(len(res.ParseErrors), Equals, 4)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
