@@ -11,6 +11,10 @@
  			"Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
 		},
 		{
+			"ImportPath": "golang.org/x/sys/unix",
+			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
+		},
+		{
 			"ImportPath": "github.com/daviddengcn/go-colortext",
 			"Rev": "3b18c8575a432453d41fdafb340099fff5bba2f7"
 		},
