@@ -84,9 +84,13 @@ func main() {
 	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
-	rerun.SetFlags()
+	err := rerun.Initialize()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(0)
+	}
 	validGaugeProject := true
-	err := config.SetProjectRoot(flag.Args())
+	err = config.SetProjectRoot(flag.Args())
 	if err != nil {
 		validGaugeProject = false
 	}
