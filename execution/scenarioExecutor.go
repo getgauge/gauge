@@ -125,16 +125,17 @@ func (e *scenarioExecutor) executeItems(items []*gauge.Step, protoItems []*gauge
 	var itemsIndex int
 	for _, protoItem := range protoItems {
 		if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept || protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-			e.executeItem(items[itemsIndex], protoItem, scenarioResult)
+			failed := e.executeItem(items[itemsIndex], protoItem, scenarioResult)
 			itemsIndex++
-			if scenarioResult.GetFailed() {
+			if failed {
+				scenarioResult.SetFailure()
 				return
 			}
 		}
 	}
 }
 
-func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) {
+func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) bool {
 	var failed bool
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
 		protoConcept := protoItem.GetConcept()
@@ -146,9 +147,7 @@ func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messag
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
 		failed = res.GetFailed()
 	}
-	if failed {
-		scenarioResult.SetFailure()
-	}
+	return failed
 }
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
@@ -159,9 +158,10 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
 		if protoStep.GetItemType() == gauge_messages.ProtoItem_Concept || protoStep.GetItemType() == gauge_messages.ProtoItem_Step {
-			e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
+			failed := e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
 			conceptStepIndex++
-			if scenarioResult.GetFailed() {
+			if failed {
+				scenarioResult.SetFailure()
 				cptResult.UpdateConceptExecResult()
 				return cptResult
 			}
