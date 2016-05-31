@@ -139,7 +139,10 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if err != nil {
 		return installError(err)
 	}
-
+	if gp.ID != pluginName {
+		err := fmt.Errorf("Provided zip file is not a valid plugin of %s.", pluginName)
+		return installError(err)
+	}
 	if err = runPlatformCommands(gp.PreInstall, unzippedPluginDir); err != nil {
 		return installError(err)
 	}
@@ -285,8 +288,8 @@ func UninstallPlugin(pluginName string, version string) {
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && dir != pluginsDir && strings.HasPrefix(filepath.Base(dir), version) {
-			if err := uninstallVersionOfPlugin(dir, pluginName, filepath.Base(dir)); err != nil {
+		if err == nil && info.IsDir() && dir != pluginsDir && filepath.Base(dir) == version {
+			if err := uninstallVersionOfPlugin(dir, pluginName, version); err != nil {
 				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
 				failed = true
 			}
