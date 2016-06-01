@@ -149,3 +149,24 @@ func (s *MySuite) TestGetGaugePluginForReportPlugin(c *C) {
 	c.Assert(p.GaugeVersionSupport.Minimum, Equals, "0.3.0")
 	c.Assert(p.GaugeVersionSupport.Maximum, Equals, "")
 }
+
+func (s *MySuite) TestMatchesUninstallVersionIfUninstallPluginVersionIsNotGiven(c *C) {
+	dirPath := "somepath"
+	uninstallVersion := ""
+
+	c.Assert(matchesUninstallVersion(dirPath, uninstallVersion), Equals, true)
+}
+
+func (s *MySuite) TestMatchesUninstallVersionIfUninstallPluginVersionMatches(c *C) {
+	dirPath := "0.1.1-nightly-2016-05-05"
+	uninstallVersion := "0.1.1-nightly-2016-05-05"
+
+	c.Assert(matchesUninstallVersion(dirPath, uninstallVersion), Equals, true)
+}
+
+func (s *MySuite) TestMatchesUninstallVersionIfUninstallPluginVersionDoesntMatches(c *C) {
+	dirPath := "0.1.1"
+	uninstallVersion := "0.1.1-nightly-2016-05-05"
+
+	c.Assert(matchesUninstallVersion(dirPath, uninstallVersion), Equals, false)
+}

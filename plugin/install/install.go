@@ -274,24 +274,26 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 	return cmd.Wait()
 }
 
-// UninstallPlugin uninstall the given plugin of the given version
-// If version is not specified, it uninstalls all the versions of given plugin
-func UninstallPlugin(pluginName string, version string) {
+// UninstallPlugin uninstall the given plugin of the given uninstallVersion
+// If uninstallVersion is not specified, it uninstalls all the versions of given plugin
+func UninstallPlugin(pluginName string, uninstallVersion string) {
 	pluginsHome, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
 		logger.Fatalf("Failed to uninstall plugin %s. %s", pluginName, err.Error())
 	}
-	if !common.DirExists(filepath.Join(pluginsHome, pluginName, version)) {
-		logger.Errorf("Plugin %s not found.", strings.TrimSpace(pluginName+" "+version))
+	if !common.DirExists(filepath.Join(pluginsHome, pluginName, uninstallVersion)) {
+		logger.Errorf("Plugin %s not found.", strings.TrimSpace(pluginName+" "+uninstallVersion))
 		os.Exit(0)
 	}
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
 	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && dir != pluginsDir && filepath.Base(dir) == version {
-			if err := uninstallVersionOfPlugin(dir, pluginName, version); err != nil {
-				logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, version, err.Error())
-				failed = true
+		if err == nil && info.IsDir() && dir != pluginsDir {
+			if matchesUninstallVersion(filepath.Base(dir), uninstallVersion) {
+				if err := uninstallVersionOfPlugin(dir, pluginName, filepath.Base(dir)); err != nil {
+					logger.Errorf("Failed to uninstall plugin %s %s. %s", pluginName, uninstallVersion, err.Error())
+					failed = true
+				}
 			}
 		}
 		return nil
@@ -299,14 +301,21 @@ func UninstallPlugin(pluginName string, version string) {
 	if failed {
 		os.Exit(1)
 	}
-	if version == "" {
+	if uninstallVersion == "" {
 		if err := os.RemoveAll(pluginsDir); err != nil {
 			logger.Fatalf("Failed to remove directory %s. %s", pluginsDir, err.Error())
 		}
 	}
 }
 
-func uninstallVersionOfPlugin(pluginDir, pluginName, version string) error {
+func matchesUninstallVersion(pluginDirPath, uninstallVersion string) bool {
+	if uninstallVersion == "" {
+		return true
+	}
+	return pluginDirPath == uninstallVersion
+}
+
+func uninstallVersionOfPlugin(pluginDir, pluginName, uninstallVersion string) error {
 	gp, err := parsePluginJSON(pluginDir, pluginName)
 	if err != nil {
 		return err
@@ -321,7 +330,7 @@ func uninstallVersionOfPlugin(pluginDir, pluginName, version string) error {
 	if err := runPlatformCommands(gp.PostUnInstall, path.Dir(pluginDir)); err != nil {
 		return err
 	}
-	logger.Info("Successfully uninstalled plugin %s %s.", pluginName, version)
+	logger.Info("Successfully uninstalled plugin %s %s.", pluginName, uninstallVersion)
 	return nil
 }
 
