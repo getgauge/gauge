@@ -197,7 +197,6 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 	c.Assert(formatted, Equals,
 		`Spec Heading
 ============
-
      |id|foo|
      |--|---|
      |1 |f  |
@@ -358,5 +357,32 @@ ____
      |--|-----|
      |1 |<foo>|
      |2 |bar  |
+`)
+}
+
+func (s *MySuite) TestFormatShouldNotAddExtraNewLinesBeforeDataTable(c *C) {
+	spec, _ := new(parser.SpecParser).Parse(`Specification Heading
+=====================
+
+     |Word  |Vowel Count|
+     |------|-----------|
+     |Gauge |3          |
+     |Mingle|2          |
+     |Snap  |1          |
+     |GoCD  |1          |
+     |Rhythm|0          |
+`, gauge.NewConceptDictionary())
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`Specification Heading
+=====================
+
+     |Word  |Vowel Count|
+     |------|-----------|
+     |Gauge |3          |
+     |Mingle|2          |
+     |Snap  |1          |
+     |GoCD  |1          |
+     |Rhythm|0          |
 `)
 }

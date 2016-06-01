@@ -20,6 +20,8 @@ package formatter
 import (
 	"bytes"
 
+	"strings"
+
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -36,7 +38,7 @@ func (formatter *formatter) SpecTags(tags *gauge.Tags) {
 }
 
 func (formatter *formatter) DataTable(table *gauge.Table) {
-	formatter.buffer.WriteString(FormatTable(table))
+	formatter.buffer.WriteString(strings.TrimPrefix(FormatTable(table), "\n"))
 }
 
 func (formatter *formatter) ExternalDataTable(extDataTable *gauge.DataTable) {
