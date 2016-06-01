@@ -139,7 +139,8 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 
 func getPluginJSONPath(pluginName, pluginVersion string) (string, error) {
 	if !IsPluginInstalled(pluginName, pluginVersion) {
-		return "", fmt.Errorf("Plugin %s %s is not installed", pluginName, pluginVersion)
+		plugin := strings.TrimSpace(fmt.Sprintf("%s %s", pluginName, pluginVersion))
+		return "", fmt.Errorf("Plugin %s is not installed", plugin)
 	}
 
 	pluginInstallDir, err := GetInstallDir(pluginName, "")
@@ -239,7 +240,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 	for _, pluginID := range manifest.Plugins {
 		pd, err := GetPluginDescriptor(pluginID, "")
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginID, err.Error(), pluginID))
+			warnings = append(warnings, fmt.Sprintf("Unable to start plugin %s. %s. To install, run `gauge --install %s`.", pluginID, err.Error(), pluginID))
 			continue
 		}
 		compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)

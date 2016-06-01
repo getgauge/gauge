@@ -149,6 +149,6 @@ func loggingLevel(logLevel string) logging.Level {
 // HandleWarningMessages logs multiple messages in WARNING mode
 func HandleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
-		GaugeLog.Warning(warning)
+		Warning(warning)
 	}
 }
