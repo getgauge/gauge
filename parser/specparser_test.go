@@ -1457,3 +1457,27 @@ comment3
 	c.Assert(spec.Scenarios[2].Span.Start, Equals, 14)
 	c.Assert(spec.Scenarios[2].Span.End, Equals, 17)
 }
+
+func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {
+	p := new(SpecParser)
+
+	spec, _ := p.Parse(`Specification Heading
+=====================
+* Vowels in English language are "aeiou".
+Vowel counts in single word
+---------------------------
+* The word "gauge" has "3" vowels.
+___
+     |Word  |Vowel Count|
+     |------|-----------|
+     |Gauge |3          |
+     |Mingle|2          |
+     |Snap  |1          |
+     |GoCD  |1          |
+     |Rhythm|0          |
+
+`, gauge.NewConceptDictionary())
+
+	c.Assert(len(spec.TearDownSteps), Equals, 0)
+	c.Assert(len(spec.Comments), Equals, 7)
+}

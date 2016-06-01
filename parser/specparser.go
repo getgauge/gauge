@@ -408,8 +408,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			latestContext := spec.LatestContext()
 			addInlineTableHeader(latestContext, token)
 		} else if isInState(*state, tearDownScope) {
-			latestTeardown := spec.LatestTeardown()
-			addInlineTableHeader(latestTeardown, token)
+			if len(spec.TearDownSteps) > 0 {
+				latestTeardown := spec.LatestTeardown()
+				addInlineTableHeader(latestTeardown, token)
+			} else {
+				spec.AddComment(&gauge.Comment{token.LineText, token.LineNo})
+			}
 		} else if !isInState(*state, scenarioScope) {
 			if !spec.DataTable.Table.IsInitialized() {
 				dataTable := &gauge.Table{}
@@ -455,8 +459,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			latestContext := spec.LatestContext()
 			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table))
 		} else if isInState(*state, tearDownScope) {
-			latestTeardown := spec.LatestTeardown()
-			result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table))
+			if len(spec.TearDownSteps) > 0 {
+				latestTeardown := spec.LatestTeardown()
+				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table))
+			} else {
+				spec.AddComment(&gauge.Comment{token.LineText, token.LineNo})
+			}
 		} else {
 			//todo validate datatable rows also
 			spec.DataTable.Table.AddRowValues(token.Args)
