@@ -208,9 +208,6 @@ func (spec *Specification) GetSpecItems() []Item {
 		if item.Kind() != ScenarioKind {
 			specItems = append(specItems, item)
 		}
-		if item.Kind() == TearDownKind {
-			return specItems
-		}
 	}
 	return specItems
 }
