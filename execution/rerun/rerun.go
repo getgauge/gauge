@@ -42,7 +42,7 @@ var RunFailed bool
 
 const (
 	dotGauge   = ".gauge"
-	failedFile = "failed.json"
+	failedFile = "failures.json"
 )
 
 var failedMeta *failedMetadata
@@ -146,14 +146,14 @@ func addFailedMetadata(res result.Result, add func(res result.Result)) {
 }
 
 func writeFailedMeta(contents string) {
-	failedPath := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
+	failuresFile := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(failedPath, []byte(contents), common.NewFilePermissions)
+	err := ioutil.WriteFile(failuresFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf("Failed to write to %s. Reason: %s", failedPath, err.Error())
+		logger.Fatalf("Failed to write to %s. Reason: %s", failuresFile, err.Error())
 	}
 }
 
