@@ -181,7 +181,7 @@ func (s *MySuite) TestRenameStep(c *C) {
 func (s *MySuite) TestGetLineTextForStep(c *C) {
 	step := &Step{LineText: "foo"}
 
-	c.Assert(step.getLineText(), Equals, "foo")
+	c.Assert(step.GetLineText(), Equals, "foo")
 }
 
 func (s *MySuite) TestGetLineTextForStepWithTable(c *C) {
@@ -189,7 +189,7 @@ func (s *MySuite) TestGetLineTextForStepWithTable(c *C) {
 		LineText:       "foo",
 		HasInlineTable: true}
 
-	c.Assert(step.getLineText(), Equals, "foo <table>")
+	c.Assert(step.GetLineText(), Equals, "foo <table>")
 }
 
 func (s *MySuite) TestReplaceArgsWithDynamicForSpecialParam(c *C) {

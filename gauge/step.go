@@ -64,7 +64,7 @@ func (step *Step) GetFragments() []*gauge_messages.Fragment {
 	return step.Fragments
 }
 
-func (step *Step) getLineText() string {
+func (step *Step) GetLineText() string {
 	if step.HasInlineTable {
 		return fmt.Sprintf("%s <%s>", step.LineText, TableArg)
 	}

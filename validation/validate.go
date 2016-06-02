@@ -67,7 +67,7 @@ type StepValidationError struct {
 }
 
 func (s *StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.LineText)
+	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
 }
 
 func Validate(args []string) {
