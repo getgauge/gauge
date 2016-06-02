@@ -66,13 +66,15 @@ func initializeTemplate(templateName string) error {
 	if metadata.PostInstallCmd != "" {
 		command := strings.Fields(metadata.PostInstallCmd)
 		cmd, err := common.ExecuteSystemCommand(command, wd, os.Stdout, os.Stderr)
-		cmd.Wait()
 		if err != nil {
 			for _, file := range filesAdded {
 				pathSegments := strings.Split(file, string(filepath.Separator))
 				util.Remove(filepath.Join(wd, pathSegments[0]))
 			}
 			return fmt.Errorf("Failed to run post install commands: %s", err.Error())
+		}
+		if err = cmd.Wait(); err != nil {
+			return err
 		}
 	}
 
