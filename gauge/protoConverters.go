@@ -264,6 +264,7 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 		Skipped:         proto.Bool(false),
 		TearDownSteps:   make([]*gauge_messages.ProtoItem, 0),
 		SkipErrors:      make([]string, 0),
+		Span:            &gauge_messages.Span{Start: proto.Int64(int64(scenario.Span.Start)), End: proto.Int64(int64(scenario.Span.End))},
 	}
 }
 

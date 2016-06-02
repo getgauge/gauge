@@ -71,13 +71,15 @@ func (s *MySuite) TestCopyingStepValue(c *C) {
 
 func (s *MySuite) TestNewProtoScenario(c *C) {
 	sceHeading := "sce heading"
-	sce := &Scenario{Heading: &Heading{Value: sceHeading}}
+	sce := &Scenario{Heading: &Heading{Value: sceHeading}, Span: &Span{Start: 1, End: 4}}
 
 	protoSce := NewProtoScenario(sce)
 
 	c.Assert(protoSce.GetScenarioHeading(), Equals, sceHeading)
 	c.Assert(*protoSce.Failed, Equals, false)
 	c.Assert(*protoSce.Skipped, Equals, false)
+	c.Assert(*protoSce.Span.Start, Equals, int64(1))
+	c.Assert(*protoSce.Span.End, Equals, int64(4))
 }
 
 func compareFragments(fragmentList1 []*gauge_messages.Fragment, fragmentList2 []*gauge_messages.Fragment, c *C) {
