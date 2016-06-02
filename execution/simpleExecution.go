@@ -70,7 +70,7 @@ func (e *simpleExecution) execute() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	setResultMeta := func() {
 		e.suiteResult.UpdateExecTime(e.startTime)
-		e.suiteResult.SetSpecsSkippedCount(len(e.errMaps.SpecErrs))
+		e.suiteResult.SetSpecsSkippedCount()
 	}
 
 	initSuiteDataStoreResult := e.initSuiteDataStore()

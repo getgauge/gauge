@@ -108,8 +108,11 @@ func startAPI() runner.Runner {
 
 func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps) int {
 	nSkippedScenarios := len(errMap.ScenarioErrs)
-	nSkippedSpecs := len(errMap.SpecErrs)
-	nExecutedSpecs := len(suiteResult.SpecResults) - nSkippedSpecs
+	nSkippedSpecs := suiteResult.SpecsSkippedCount
+	var nExecutedSpecs int
+	if len(suiteResult.SpecResults) != 0 {
+		nExecutedSpecs = len(suiteResult.SpecResults) - nSkippedSpecs
+	}
 	nFailedSpecs := suiteResult.SpecsFailedCount
 	nPassedSpecs := nExecutedSpecs - nFailedSpecs
 
