@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -70,6 +71,9 @@ func (s *StepValidationError) Error() string {
 }
 
 func Validate(args []string) {
+	if len(args) == 0 {
+		args = append(args, common.SpecsDirectoryName)
+	}
 	_, errMap, runner := ValidateSpecs(args)
 	runner.Kill()
 	if len(errMap.StepErrs) > 0 {
