@@ -479,8 +479,14 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		tags := &gauge.Tags{Values: token.Args}
 		if isInState(*state, scenarioScope) {
+			if spec.LatestScenario().NTags() != 0 {
+				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
+			}
 			spec.LatestScenario().AddTags(tags)
 		} else {
+			if spec.NTags() != 0 {
+				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
+			}
 			spec.AddTags(tags)
 		}
 		return ParseResult{Ok: true}

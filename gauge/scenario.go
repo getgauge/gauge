@@ -52,6 +52,13 @@ func (scenario *Scenario) AddTags(tags *Tags) {
 	scenario.AddItem(tags)
 }
 
+func (scenario *Scenario) NTags() int {
+	if scenario.Tags == nil {
+		return 0
+	}
+	return len(scenario.Tags.Values)
+}
+
 func (scenario *Scenario) AddComment(comment *Comment) {
 	scenario.Comments = append(scenario.Comments, comment)
 	scenario.AddItem(comment)

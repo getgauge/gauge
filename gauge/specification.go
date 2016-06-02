@@ -140,6 +140,13 @@ func (spec *Specification) AddTags(tags *Tags) {
 	spec.AddItem(tags)
 }
 
+func (spec *Specification) NTags() int {
+	if spec.Tags == nil {
+		return 0
+	}
+	return len(spec.Tags.Values)
+}
+
 func (spec *Specification) LatestScenario() *Scenario {
 	return spec.Scenarios[len(spec.Scenarios)-1]
 }

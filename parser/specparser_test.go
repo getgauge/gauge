@@ -1481,3 +1481,46 @@ ___
 	c.Assert(len(spec.TearDownSteps), Equals, 0)
 	c.Assert(len(spec.Comments), Equals, 7)
 }
+
+func (s *MySuite) TestSpecWithRepeatedTagDefinitions(c *C) {
+	p := new(SpecParser)
+	spec, parseRes := p.Parse(`Spec Heading
+==============
+tags: foo, bar
+
+* step
+tags: blah
+
+Scenario
+--------
+* step
+	`, gauge.NewConceptDictionary())
+	c.Assert(len(parseRes.ParseErrors), Equals, 1)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per specification")
+	c.Assert(len(spec.Tags.Values), Equals, 2)
+	c.Assert(spec.Tags.Values[0], Equals, "foo")
+	c.Assert(spec.Tags.Values[1], Equals, "bar")
+}
+
+func (s *MySuite) TestScenarioWithRepeatedTagDefinitions(c *C) {
+	p := new(SpecParser)
+	spec, parseRes := p.Parse(`Spec Heading
+==============
+tags: tag1
+
+* step
+
+Scenario
+--------
+tags: foo, bar
+* step
+tags: blah
+	`, gauge.NewConceptDictionary())
+	c.Assert(len(parseRes.ParseErrors), Equals, 1)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per scenario")
+	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "foo")
+	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "bar")
+	c.Assert(len(spec.Tags.Values), Equals, 1)
+	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+}
