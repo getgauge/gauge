@@ -136,10 +136,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	}
 
 	gp, err := parsePluginJSON(unzippedPluginDir, pluginName)
-	if err != nil {
-		return installError(err)
-	}
-	if gp.ID != pluginName {
+	if err != nil || gp.ID != pluginName {
 		err := fmt.Errorf("Provided zip file is not a valid plugin of %s.", pluginName)
 		return installError(err)
 	}
