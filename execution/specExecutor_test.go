@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/validation"
 	. "gopkg.in/check.v1"
 )
 
@@ -275,34 +276,29 @@ func (s *MySuite) TestToGetDataTableRow(c *C) {
 }
 
 func (s *MySuite) TestToGetDataTableRowFromInvalidInput(c *C) {
-	dataRange, err := getDataTableRowsRange("a", 7)
-	assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("a-5", 7)
-	assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("a-qwerty", 7)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("aas-helloo", 7)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("apoorva", 7)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("8-9", 7)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("12-9", 7)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("4:5", 6)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("4-5-8", 6)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("4", 3)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("0", 3)
-  assertErrorsForDataTable(c, dataRange, err)
-	dataRange, err = getDataTableRowsRange("", 3)
-	assertErrorsForDataTable(c, dataRange, err)
-}
-
-func assertErrorsForDataTable(c *C,dataRange indexRange,err error){
-	c.Assert(dataRange.start,Equals,-1)
+	_, err := getDataTableRowsRange("a", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("a-5", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("a-qwerty", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("aas-helloo", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("apoorva", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("8-9", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("12-9", 7)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4:5", 6)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4-5-8", 6)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("4", 3)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("0", 3)
+	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	_, err = getDataTableRowsRange("", 3)
 	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
 }
 
@@ -325,14 +321,7 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 }
 
 func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
-	specText := SpecBuilder().specHeading("A spec heading").
-		scenarioHeading("First scenario").
-		step("create user \"456\" \"foo\" and \"9900\"").
-		String()
-
-	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	spec.FileName = "FILE"
-	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	se := newSpecExecutor(anySpec(), nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	se.errMap = getValidationErrorMap()
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
@@ -350,4 +339,28 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].fileName, Equals, "FILE")
 	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineNo, Equals, 1)
 	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineText, Equals, "A spec heading")
+}
+
+func anySpec() *gauge.Specification {
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"456\" \"foo\" and \"9900\"").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec.FileName = "FILE"
+	return spec
+}
+
+func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
+	errMap := &validation.ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]*validation.StepValidationError),
+		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
+		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
+	}
+	se := newSpecExecutor(anySpec(), nil, nil, indexRange{start: -1, end: -1}, errMap, 0)
+
+	result := se.execute()
+
+	c.Assert(result.Skipped, Equals, true)
 }
