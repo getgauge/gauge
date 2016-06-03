@@ -70,7 +70,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 
 	if e.dataTableIndex.start < 0 {
-		e.skipSpecForError(fmt.Errorf("Data table doesn't match the given range in spec: %s\n", e.specification.FileName))
+		e.skipSpecForError(fmt.Errorf("Data Table doesn't match the given range in spec: %s\n", e.specification.FileName))
 		return e.specResult
 	}
 
