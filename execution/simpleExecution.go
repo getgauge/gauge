@@ -172,6 +172,7 @@ func getDataTableRows(rowCount int) indexRange {
 	indexes, err := getDataTableRowsRange(TableRows, rowCount)
 	if err != nil {
 		logger.Errorf("Table rows validation failed. %s\n", err.Error())
+		return indexRange{start: -1, end: -1}
 	}
 	return indexes
 }
