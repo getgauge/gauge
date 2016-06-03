@@ -111,7 +111,7 @@ func (s *MySuite) TestScenarioSpanFilter(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(parseResult.Ok, Equals, true)
 
 	spec.Filter(newScenarioFilterBasedOnSpan(6))
@@ -131,7 +131,7 @@ func (s *MySuite) TestScenarioSpanFilterLastScenario(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(parseResult.Ok, Equals, true)
 
 	spec.Filter(newScenarioFilterBasedOnSpan(8))
@@ -151,7 +151,7 @@ func (s *MySuite) TestScenarioSpanFilterFirstScenario(c *C) {
 		scenarioHeading("Fourth scenario").
 		step("Fourth user").String()
 
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(parseResult.Ok, Equals, true)
 
 	spec.Filter(newScenarioFilterBasedOnSpan(2))
@@ -166,7 +166,7 @@ func (s *MySuite) TestScenarioSpanFilterForSingleScenarioSpec(c *C) {
 		scenarioHeading("First scenario").
 		step("a step").String()
 
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(parseResult.Ok, Equals, true)
 
 	spec.Filter(newScenarioFilterBasedOnSpan(3))
@@ -179,7 +179,7 @@ func (s *MySuite) TestScenarioSpanFilterWithWrongScenarioIndex(c *C) {
 		scenarioHeading("First scenario").
 		step("a step").String()
 
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(parseResult.Ok, Equals, true)
 
 	spec.Filter(newScenarioFilterBasedOnSpan(1))
@@ -258,7 +258,7 @@ func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
 	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	tokens1 := []*parser.Token{
@@ -266,7 +266,7 @@ func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
 	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary())
+	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -288,7 +288,7 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 02", LineNo: 4},
 		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag3"}, LineNo: 5},
 	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	tokens1 := []*parser.Token{
@@ -297,7 +297,7 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
 	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary())
+	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -319,7 +319,7 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
 	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	tokens1 := []*parser.Token{
@@ -327,7 +327,7 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
 	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary())
+	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -353,7 +353,7 @@ func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 4", LineNo: 8},
 		&parser.Token{Kind: gauge.TagKind, Args: []string{"prod", "tag7", "tag1", "tag2"}, LineNo: 9},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -381,7 +381,7 @@ func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -407,7 +407,7 @@ func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
 		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag12"}, LineNo: 2},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -435,7 +435,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
 	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	tokens1 := []*parser.Token{
@@ -443,7 +443,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 1},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 2},
 	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary())
+	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	tokens2 := []*parser.Token{
@@ -452,7 +452,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
 	}
-	spec3, result := new(parser.SpecParser).CreateSpecification(tokens2, gauge.NewConceptDictionary())
+	spec3, result := new(parser.SpecParser).CreateSpecification(tokens2, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec1.Scenarios), Equals, 2)
@@ -480,7 +480,7 @@ func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 3},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios), Equals, 3)
@@ -504,7 +504,7 @@ func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 6},
 		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 7},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	var specs []*gauge.Specification
@@ -527,7 +527,7 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 3},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
 	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios), Equals, 3)
@@ -546,7 +546,7 @@ func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
 	}
 
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 
 	c.Assert(result.Ok, Equals, true)
 
@@ -562,7 +562,7 @@ func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
 		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 3},
 	}
 
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 
 	c.Assert(result.Ok, Equals, true)
 

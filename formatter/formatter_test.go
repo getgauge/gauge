@@ -42,7 +42,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 
 	formatted := FormatSpecification(spec)
 
@@ -89,7 +89,7 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 8, LineText: "Example step"},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -122,7 +122,7 @@ func (s *MySuite) TestFormatSpecificationWithTeardownSteps(c *C) {
 		&parser.Token{Kind: gauge.StepKind, Value: "Example step2", LineNo: 11, LineText: "Example step2"},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -163,7 +163,7 @@ func (s *MySuite) TestFormattingWithTableAsAComment(c *C) {
 		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 5, LineText: "Example step"},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -190,7 +190,7 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 
 	formatted := FormatSpecification(spec)
 
@@ -227,7 +227,7 @@ func (s *MySuite) TestFormatShouldRetainNewlines(c *C) {
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -256,7 +256,7 @@ func (s *MySuite) TestFormatShouldRetainNewlinesBetweenSteps(c *C) {
 		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 9, LineText: "Example step", Suffix: "\n\n"},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -287,7 +287,7 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTable(c *C) 
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -330,7 +330,7 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTableInTeard
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`My Spec Heading
@@ -371,7 +371,7 @@ func (s *MySuite) TestFormatShouldNotAddExtraNewLinesBeforeDataTable(c *C) {
      |Snap  |1          |
      |GoCD  |1          |
      |Rhythm|0          |
-`, gauge.NewConceptDictionary())
+`, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
 		`Specification Heading

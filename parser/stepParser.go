@@ -69,15 +69,14 @@ func simpleAcceptor(start rune, end rune, after func(int), inState int) acceptFn
 	return acceptor(start, end, onEach, after, inState)
 }
 
-func processStep(parser *SpecParser, token *Token) (*ParseError, bool) {
-
+func processStep(parser *SpecParser, token *Token) (error, bool) {
 	if len(token.Value) == 0 {
-		return &ParseError{LineNo: token.LineNo, LineText: token.LineText, Message: "Step should not be blank"}, true
+		return fmt.Errorf("Step should not be blank"), true
 	}
 
 	stepValue, args, err := processStepText(token.Value)
 	if err != nil {
-		return &ParseError{LineNo: token.LineNo, LineText: token.LineText, Message: err.Error()}, true
+		return err, true
 	}
 
 	token.Value = stepValue

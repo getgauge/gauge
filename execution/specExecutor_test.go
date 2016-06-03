@@ -106,7 +106,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts(path, conceptDictionary)
 
-	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary)
+	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
@@ -144,7 +144,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts(path, conceptDictionary)
 	specParser := new(parser.SpecParser)
-	spec, _ := specParser.Parse(specText, conceptDictionary)
+	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
@@ -191,7 +191,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts(path, conceptDictionary)
 	specParser := new(parser.SpecParser)
-	spec, _ := specParser.Parse(specText, conceptDictionary)
+	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 
@@ -325,7 +325,7 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 
-	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary())
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	spec.FileName = "FILE"
 	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
 	se.errMap = getValidationErrorMap()

@@ -51,11 +51,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 		parseResultChan <- &ParseResult{ParseErrors: []*ParseError{&ParseError{Message: err.Error()}}, Ok: false, FileName: specFile}
 		return
 	}
-	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary)
-	parseResult.FileName = specFile
-	if spec != nil {
-		spec.FileName = specFile
-	}
+	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	specChannel <- spec
 	parseResultChan <- parseResult
 }

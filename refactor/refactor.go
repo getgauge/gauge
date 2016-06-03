@@ -201,14 +201,14 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 
 func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, []*parser.ParseError) {
 	specParser := new(parser.SpecParser)
-	stepTokens, errs := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText)
+	stepTokens, errs := specParser.GenerateTokens("* " + oldStepText + "\n" + "*" + newStepText, "")
 	if len(errs) > 0 {
 		return nil, errs
 	}
 
 	steps := make([]*gauge.Step, 0)
 	for _, stepToken := range stepTokens {
-		step, parseDetails := parser.CreateStepUsingLookup(stepToken, nil)
+		step, parseDetails := parser.CreateStepUsingLookup(stepToken, nil, "")
 		if parseDetails != nil && len(parseDetails.Errors) > 0 {
 			return nil, parseDetails.Errors
 		}

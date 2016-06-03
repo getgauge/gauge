@@ -43,7 +43,7 @@ Scenario 2
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary())
+	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errMap := &ValidationErrMaps{
 		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
@@ -74,7 +74,7 @@ Scenario 2
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary())
+	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errMap := &ValidationErrMaps{
 		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
@@ -99,7 +99,7 @@ func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary())
+	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errMap := &ValidationErrMaps{
 		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),

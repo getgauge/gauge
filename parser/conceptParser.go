@@ -34,12 +34,12 @@ type ConceptParser struct {
 }
 
 //concept file can have multiple concept headings
-func (parser *ConceptParser) Parse(text string) ([]*gauge.Step, *ParseDetailResult) {
+func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *ParseDetailResult) {
 	defer parser.resetState()
 
 	specParser := new(SpecParser)
-	tokens, errs := specParser.GenerateTokens(text)
-	concepts, res := parser.createConcepts(tokens)
+	tokens, errs := specParser.GenerateTokens(text, fileName)
+	concepts, res := parser.createConcepts(tokens, fileName)
 	return concepts, &ParseDetailResult{Errors: append(errs, res.Errors...), Warnings: res.Warnings}
 }
 
@@ -48,7 +48,7 @@ func (parser *ConceptParser) ParseFile(file string) ([]*gauge.Step, *ParseDetail
 	if fileReadErr != nil {
 		return nil, &ParseDetailResult{Errors: []*ParseError{&ParseError{Message: fmt.Sprintf("failed to read concept file %s", file)}}}
 	}
-	return parser.Parse(fileText)
+	return parser.Parse(fileText, file)
 }
 
 func (parser *ConceptParser) resetState() {
@@ -56,7 +56,7 @@ func (parser *ConceptParser) resetState() {
 	parser.currentConcept = nil
 }
 
-func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *ParseDetailResult) {
+func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([]*gauge.Step, *ParseDetailResult) {
 	parser.currentState = initial
 	var concepts []*gauge.Step
 	parseDetails := &ParseDetailResult{Errors: make([]*ParseError, 0)}
@@ -67,7 +67,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *Pa
 			if isInState(parser.currentState, conceptScope, stepScope) {
 				concepts = append(concepts, parser.currentConcept)
 			}
-			parser.currentConcept, parseDetails = parser.processConceptHeading(token)
+			parser.currentConcept, parseDetails = parser.processConceptHeading(token, fileName)
 			if len(parseDetails.Errors) > 0 {
 				continue
 			}
@@ -81,7 +81,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token) ([]*gauge.Step, *Pa
 				parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText})
 				continue
 			}
-			if errs := parser.processConceptStep(token); len(errs) > 0 {
+			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
 				return nil, &ParseDetailResult{Errors: errs}
 			}
 			addStates(&parser.currentState, stepScope)
@@ -140,17 +140,17 @@ func (parser *ConceptParser) isTableDataRow(token *Token) bool {
 	return token.Kind == gauge.TableRow
 }
 
-func (parser *ConceptParser) processConceptHeading(token *Token) (*gauge.Step, *ParseDetailResult) {
+func (parser *ConceptParser) processConceptHeading(token *Token, fileName string) (*gauge.Step, *ParseDetailResult) {
 	processStep(new(SpecParser), token)
 	token.LineText = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(token.LineText), "#"))
 	var concept *gauge.Step
 	var parseDetails *ParseDetailResult
-	concept, parseDetails = CreateStepUsingLookup(token, nil)
+	concept, parseDetails = CreateStepUsingLookup(token, nil, fileName)
 	if parseDetails != nil && len(parseDetails.Errors) > 0 {
 		return nil, parseDetails
 	}
 	if !parser.hasOnlyDynamicParams(concept) {
-		parseDetails.Errors = []*ParseError{&ParseError{LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters"}}
+		parseDetails.Errors = []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters"}}
 		return nil, parseDetails
 	}
 
@@ -160,9 +160,9 @@ func (parser *ConceptParser) processConceptHeading(token *Token) (*gauge.Step, *
 	return concept, parseDetails
 }
 
-func (parser *ConceptParser) processConceptStep(token *Token) []*ParseError {
+func (parser *ConceptParser) processConceptStep(token *Token, fileName string) []*ParseError {
 	processStep(new(SpecParser), token)
-	conceptStep, parseDetails := CreateStepUsingLookup(token, &parser.currentConcept.Lookup)
+	conceptStep, parseDetails := CreateStepUsingLookup(token, &parser.currentConcept.Lookup, fileName)
 	if parseDetails != nil && len(parseDetails.Errors) > 0 {
 		return parseDetails.Errors
 	}

@@ -19,44 +19,45 @@ package parser
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
 )
 
-func processSpec(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processSpec(parser *SpecParser, token *Token) (error, bool) {
 	return nil, false
 }
 
-func processTearDown(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processTearDown(parser *SpecParser, token *Token) (error, bool) {
 	if len(token.Value) < 3 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Teardown should have at least three underscore characters"}, true
+		return fmt.Errorf("Teardown should have at least three underscore characters"), true
 	}
 	return nil, false
 }
 
-func processDataTable(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processDataTable(parser *SpecParser, token *Token) (error, bool) {
 	if len(strings.TrimSpace(strings.Replace(token.Value, "table:", "", 1))) == 0 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table location not specified"}, true
+		return fmt.Errorf("Table location not specified"), true
 	}
 	return nil, false
 }
 
-func processScenario(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processScenario(parser *SpecParser, token *Token) (error, bool) {
 	if len(strings.TrimSpace(token.Value)) < 1 {
-		return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Scenario heading should have at least one character"}, true
+		return fmt.Errorf("Scenario heading should have at least one character"), true
 	}
 	parser.clearState()
 	return nil, false
 }
 
-func processComment(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processComment(parser *SpecParser, token *Token) (error, bool) {
 	parser.clearState()
 	addStates(&parser.currentState, commentScope)
 	return nil, false
 }
 
-func processTag(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processTag(parser *SpecParser, token *Token) (error, bool) {
 	parser.clearState()
 	tokens := splitAndTrimTags(token.Value)
 
@@ -68,7 +69,7 @@ func processTag(parser *SpecParser, token *Token) (*ParseError, bool) {
 	return nil, false
 }
 
-func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
+func processTable(parser *SpecParser, token *Token) (error, bool) {
 	var buffer bytes.Buffer
 	shouldEscape := false
 	for i, element := range token.Value {
@@ -88,11 +89,11 @@ func processTable(parser *SpecParser, token *Token) (*ParseError, bool) {
 
 			if token.Kind == gauge.TableHeader {
 				if len(trimmedValue) == 0 {
-					return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table header should not be blank"}, true
+					return fmt.Errorf("Table header should not be blank"), true
 				}
 
 				if arrayContains(token.Args, trimmedValue) {
-					return &ParseError{LineNo: parser.lineNo, LineText: token.Value, Message: "Table header cannot have repeated column values"}, true
+					return fmt.Errorf("Table header cannot have repeated column values"), true
 				}
 			}
 			token.Args = append(token.Args, trimmedValue)
