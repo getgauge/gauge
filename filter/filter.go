@@ -29,8 +29,18 @@ func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) 
 	return specsToExecute
 }
 
+func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Specification) {
+	for _, spec := range specs {
+		if _, ok := specsMap[spec.FileName]; ok {
+			specsMap[spec.FileName].Scenarios = append(specsMap[spec.FileName].Scenarios, spec.Scenarios...)
+			continue
+		}
+		specsMap[spec.FileName] = spec
+	}
+}
+
 func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
-	var allSpecs []*gauge.Specification
+	specsMap := make(map[string]*gauge.Specification)
 	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
 	passed := true
@@ -42,7 +52,11 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 			specs, specParseResults = parser.ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary)
 		}
 		passed = !parser.HandleParseResult(specParseResults...) && passed
-		allSpecs = append(allSpecs, specs...)
+		addSpecsToMap(specs, specsMap)
+	}
+	var allSpecs []*gauge.Specification
+	for _, spec := range specsMap {
+		allSpecs = append(allSpecs, spec)
 	}
 	return allSpecs, !passed
 }
