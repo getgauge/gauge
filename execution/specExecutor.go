@@ -93,7 +93,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 	e.notifyAfterSpecHook()
 
-	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount > 0)
+	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
 	return e.specResult
 }
 
