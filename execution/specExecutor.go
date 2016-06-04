@@ -69,10 +69,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
-  if e.dataTableIndex.start < 0 {
-	  e.skipSpecForError(fmt.Errorf("Data table doesn't match the given range in spec: %s\n", e.specification.FileName))
-	  return e.specResult
-  }
+	if e.dataTableIndex.start < 0 {
+		e.skipSpecForError(fmt.Errorf("Data table doesn't match the given range in spec: %s\n", e.specification.FileName))
+		return e.specResult
+	}
 
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
