@@ -1524,3 +1524,24 @@ tags: blah
 	c.Assert(len(spec.Tags.Values), Equals, 1)
 	c.Assert(spec.Tags.Values[0], Equals, "tag1")
 }
+
+func (s *MySuite) TestDatatTableWithEmptyHeaders(c *C) {
+	p := new(SpecParser)
+	_, parseRes := p.Parse(`Something
+=========
+
+     ||a|||a|
+     |-------|
+     |dsf|dsf|dsf|dsf|dsf|
+
+Scenario Heading
+----------------
+* Vowels in English language are "aeiou".
+`, gauge.NewConceptDictionary(), "")
+
+	c.Assert(len(parseRes.ParseErrors), Equals, 4)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table header should not be blank")
+	c.Assert(parseRes.ParseErrors[1].Message, Equals, "Table header should not be blank")
+	c.Assert(parseRes.ParseErrors[2].Message, Equals, "Table header should not be blank")
+	c.Assert(parseRes.ParseErrors[3].Message, Equals, "Table header cannot have repeated column values")
+}

@@ -33,7 +33,7 @@ type SpecParser struct {
 	lineNo            int
 	tokens            []*Token
 	currentState      int
-	processors        map[gauge.TokenKind]func(*SpecParser, *Token) (error, bool)
+	processors        map[gauge.TokenKind]func(*SpecParser, *Token) ([]error, bool)
 	conceptDictionary *gauge.ConceptDictionary
 }
 
@@ -53,7 +53,7 @@ const (
 )
 
 func (parser *SpecParser) initialize() {
-	parser.processors = make(map[gauge.TokenKind]func(*SpecParser, *Token) (error, bool))
+	parser.processors = make(map[gauge.TokenKind]func(*SpecParser, *Token) ([]error, bool))
 	parser.processors[gauge.SpecKind] = processSpec
 	parser.processors[gauge.ScenarioKind] = processScenario
 	parser.processors[gauge.CommentKind] = processComment
@@ -116,10 +116,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		} else {
 			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
-		err := parser.accept(newToken, fileName)
-		if err != nil {
-			errors = append(errors, err)
-		}
+		errors = append(errors, parser.accept(newToken, fileName)...)
 	}
 	return parser.tokens, errors
 }
@@ -202,13 +199,14 @@ func isConceptHeader(lookup *gauge.ArgLookup) bool {
 	return lookup == nil
 }
 
-func (parser *SpecParser) accept(token *Token, fileName string) *ParseError {
-	err, _ := parser.processors[token.Kind](parser, token)
+func (parser *SpecParser) accept(token *Token, fileName string) []*ParseError {
+	errs, _ := parser.processors[token.Kind](parser, token)
 	parser.tokens = append(parser.tokens, token)
-	if err != nil {
-		return &ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value}
+	var parseErrs []*ParseError
+	for _, err := range errs {
+		parseErrs = append(parseErrs, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value})
 	}
-	return nil
+	return parseErrs
 }
 
 func (parser *SpecParser) nextLine() (string, bool) {

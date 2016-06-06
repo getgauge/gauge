@@ -25,39 +25,39 @@ import (
 	"github.com/getgauge/gauge/gauge"
 )
 
-func processSpec(parser *SpecParser, token *Token) (error, bool) {
-	return nil, false
+func processSpec(parser *SpecParser, token *Token) ([]error, bool) {
+	return []error{}, false
 }
 
-func processTearDown(parser *SpecParser, token *Token) (error, bool) {
+func processTearDown(parser *SpecParser, token *Token) ([]error, bool) {
 	if len(token.Value) < 3 {
-		return fmt.Errorf("Teardown should have at least three underscore characters"), true
+		return []error{fmt.Errorf("Teardown should have at least three underscore characters")}, true
 	}
-	return nil, false
+	return []error{}, false
 }
 
-func processDataTable(parser *SpecParser, token *Token) (error, bool) {
+func processDataTable(parser *SpecParser, token *Token) ([]error, bool) {
 	if len(strings.TrimSpace(strings.Replace(token.Value, "table:", "", 1))) == 0 {
-		return fmt.Errorf("Table location not specified"), true
+		return []error{fmt.Errorf("Table location not specified")}, true
 	}
-	return nil, false
+	return []error{}, false
 }
 
-func processScenario(parser *SpecParser, token *Token) (error, bool) {
+func processScenario(parser *SpecParser, token *Token) ([]error, bool) {
 	if len(strings.TrimSpace(token.Value)) < 1 {
-		return fmt.Errorf("Scenario heading should have at least one character"), true
+		return []error{fmt.Errorf("Scenario heading should have at least one character")}, true
 	}
 	parser.clearState()
-	return nil, false
+	return []error{}, false
 }
 
-func processComment(parser *SpecParser, token *Token) (error, bool) {
+func processComment(parser *SpecParser, token *Token) ([]error, bool) {
 	parser.clearState()
 	addStates(&parser.currentState, commentScope)
-	return nil, false
+	return []error{}, false
 }
 
-func processTag(parser *SpecParser, token *Token) (error, bool) {
+func processTag(parser *SpecParser, token *Token) ([]error, bool) {
 	parser.clearState()
 	tokens := splitAndTrimTags(token.Value)
 
@@ -66,12 +66,13 @@ func processTag(parser *SpecParser, token *Token) (error, bool) {
 			token.Args = append(token.Args, tagValue)
 		}
 	}
-	return nil, false
+	return []error{}, false
 }
 
-func processTable(parser *SpecParser, token *Token) (error, bool) {
+func processTable(parser *SpecParser, token *Token) ([]error, bool) {
 	var buffer bytes.Buffer
 	shouldEscape := false
+	var errs []error
 	for i, element := range token.Value {
 		if i == 0 {
 			continue
@@ -89,11 +90,9 @@ func processTable(parser *SpecParser, token *Token) (error, bool) {
 
 			if token.Kind == gauge.TableHeader {
 				if len(trimmedValue) == 0 {
-					return fmt.Errorf("Table header should not be blank"), true
-				}
-
-				if arrayContains(token.Args, trimmedValue) {
-					return fmt.Errorf("Table header cannot have repeated column values"), true
+					errs = append(errs, fmt.Errorf("Table header should not be blank"))
+				} else if arrayContains(token.Args, trimmedValue) {
+					errs = append(errs, fmt.Errorf("Table header cannot have repeated column values"))
 				}
 			}
 			token.Args = append(token.Args, trimmedValue)
@@ -101,7 +100,6 @@ func processTable(parser *SpecParser, token *Token) (error, bool) {
 		} else {
 			buffer.WriteRune(element)
 		}
-
 	}
 
 	if !isInState(parser.currentState, tableScope) {
@@ -110,13 +108,7 @@ func processTable(parser *SpecParser, token *Token) (error, bool) {
 		addStates(&parser.currentState, tableDataScope)
 	}
 
-	return nil, false
-}
-
-func processConceptStep(spec *gauge.Specification, step *gauge.Step, conceptDictionary *gauge.ConceptDictionary) {
-	if conceptFromDictionary := conceptDictionary.Search(step.Value); conceptFromDictionary != nil {
-		createConceptStep(spec, conceptFromDictionary.ConceptStep, step)
-	}
+	return errs, false
 }
 
 func splitAndTrimTags(tag string) []string {

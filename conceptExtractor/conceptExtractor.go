@@ -86,7 +86,7 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 }
 
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string, cptFileName string) (string, string, error) {
-	tokens, _ := new(parser.SpecParser).GenerateTokens("* " + conceptName.GetName(), cptFileName)
+	tokens, _ := new(parser.SpecParser).GenerateTokens("* "+conceptName.GetName(), cptFileName)
 	conceptStep, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
 	specText, err := getContentWithDataTable(content, cptFileName)
 	if err != nil {
@@ -127,7 +127,7 @@ func getContentWithDataTable(content, cptFileName string) (string, error) {
 
 func (self *extractor) extractSteps(cptFileName string) {
 	for _, step := range self.stepsToExtract {
-		tokens, _ := new(parser.SpecParser).GenerateTokens("*" + step.GetName(), cptFileName)
+		tokens, _ := new(parser.SpecParser).GenerateTokens("*"+step.GetName(), cptFileName)
 		stepInConcept, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
 		if step.GetTable() != "" {
 			self.handleTable(stepInConcept, step, cptFileName)
