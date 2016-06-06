@@ -78,7 +78,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			addStates(&parser.currentState, conceptScope)
 		} else if parser.isStep(token) {
 			if !isInState(parser.currentState, conceptScope) {
-				parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText})
+				parseDetails.Errors = append(parseDetails.Errors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText})
 				continue
 			}
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
@@ -87,17 +87,17 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
-				parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText})
+				parseDetails.Errors = append(parseDetails.Errors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText})
 				continue
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
 		} else if parser.isScenarioHeading(token) {
-			parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText})
+			parseDetails.Errors = append(parseDetails.Errors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText})
 			continue
 		} else if parser.isTableDataRow(token) {
 			if isInState(parser.currentState, stepScope) {
-				parser.processTableDataRow(token, &parser.currentConcept.Lookup)
+				parser.processTableDataRow(token, &parser.currentConcept.Lookup, fileName)
 			}
 		} else {
 			comment := &gauge.Comment{Value: token.Value, LineNo: token.LineNo}
@@ -110,7 +110,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 		}
 	}
 	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
-		parseDetails.Errors = append(parseDetails.Errors, &ParseError{LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
+		parseDetails.Errors = append(parseDetails.Errors, &ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
 		return nil, parseDetails
 	}
 
@@ -179,10 +179,10 @@ func (parser *ConceptParser) processTableHeader(token *Token) {
 	items[len(items)-1] = currentStep
 }
 
-func (parser *ConceptParser) processTableDataRow(token *Token, argLookup *gauge.ArgLookup) {
+func (parser *ConceptParser) processTableDataRow(token *Token, argLookup *gauge.ArgLookup, fileName string) {
 	steps := parser.currentConcept.ConceptSteps
 	currentStep := steps[len(steps)-1]
-	addInlineTableRow(currentStep, token, argLookup)
+	addInlineTableRow(currentStep, token, argLookup, fileName)
 	items := parser.currentConcept.Items
 	items[len(items)-1] = currentStep
 }
@@ -248,7 +248,7 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 	var errs []*ParseError
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-			errs = append(errs, &ParseError{Message: "Duplicate concept definition found", LineNo: conceptStep.LineNo, LineText: conceptStep.LineText})
+			errs = append(errs, &ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
 		}
 		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
@@ -276,6 +276,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	for _, step := range concept.ConceptSteps {
 		if fileName, exists := traversedSteps[step.Value]; exists {
 			return &ParseError{
+				FileName: fileName,
 				LineText: step.LineText,
 				LineNo:   concept.LineNo,
 				Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, fileName, step.LineNo),

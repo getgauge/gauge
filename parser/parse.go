@@ -109,7 +109,7 @@ func HandleParseResult(results ...*ParseResult) bool {
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Warning("%s : %v", result.FileName, warning)
+				logger.Warning("[ParseWarning] %s", warning)
 			}
 		}
 	}

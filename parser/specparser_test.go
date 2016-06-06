@@ -628,7 +628,7 @@ func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Multiple spec headings found in same file")
+	c.Assert(result.ParseErrors[0].Message, Equals, "Multiple spec headings found in same file")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 4)
 }
 
@@ -659,7 +659,7 @@ func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 
 	c.Assert(result.Ok, Equals, false)
 
-	c.Assert(result.ParseErrors[0].Message, Equals, "Parse error: Duplicate scenario definition 'Scenario Heading' found in the same specification")
+	c.Assert(result.ParseErrors[0].Message, Equals, "Duplicate scenario definition 'Scenario Heading' found in the same specification")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 4)
 }
 
@@ -988,11 +988,11 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"2"}},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
 
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(len(result.Warnings), Equals, 1)
-	c.Assert(result.Warnings[0].String(), Equals, "line no: 7, Multiple data table present, ignoring table")
+	c.Assert(result.Warnings[0].String(), Equals, "foo.spec:7 Multiple data table present, ignoring table")
 
 }
 
@@ -1010,11 +1010,11 @@ func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"2"}},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(len(result.Warnings), Equals, 2)
-	c.Assert(result.Warnings[0].String(), Equals, "line no: 3, Table not associated with a step, ignoring table")
-	c.Assert(result.Warnings[1].String(), Equals, "line no: 8, Table not associated with a step, ignoring table")
+	c.Assert(result.Warnings[0].String(), Equals, "foo.spec:3 Table not associated with a step, ignoring table")
+	c.Assert(result.Warnings[1].String(), Equals, "foo.spec:8 Table not associated with a step, ignoring table")
 
 }
 
@@ -1387,7 +1387,7 @@ Scenario Heading
 
 	c.Assert(len(res.ParseErrors), Equals, 2)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading not found => ''")
-	c.Assert(res.ParseErrors[1].Error(), Equals, "foo.spec:2 Parse error: Scenario should be defined after the spec heading => 'Scenario Heading'")
+	c.Assert(res.ParseErrors[1].Error(), Equals, "foo.spec:2 Scenario should be defined after the spec heading => 'Scenario Heading'")
 }
 
 func (s *MySuite) TestProcessingTokensGivesErrorWhenSpecHeadingHasOnlySpaces(c *C) {
