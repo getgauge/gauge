@@ -72,7 +72,10 @@ func prepStepMsg(msg string) string {
 	return fmt.Sprintf("\nFailed Step: %s", msg)
 }
 
-func prepSpecInfo(fileName string, lineNo int) string {
+func prepSpecInfo(fileName string, lineNo int, excludeLineNo bool) string {
+	if excludeLineNo {
+		return fmt.Sprintf("Specification: %s", util.RelPathToProjectRoot(fileName))
+	}
 	return fmt.Sprintf("Specification: %s:%v", util.RelPathToProjectRoot(fileName), lineNo)
 }
 

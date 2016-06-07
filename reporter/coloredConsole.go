@@ -115,7 +115,7 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 		logger.GaugeLog.Error(stepText)
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
-		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo)
+		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo, step.InConcept())
 		logger.GaugeLog.Error(specInfo)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)

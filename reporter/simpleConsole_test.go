@@ -348,3 +348,46 @@ func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
 	want := ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
 	c.Assert(dw.output, Equals, want)
 }
+
+func (s *MySuite) TestExcludeLineNoForFailedStepInConcept(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 4
+	errMsg := "failure message"
+	stackTrace := "my stacktrace"
+	failed := true
+	specName := "hello.spec"
+	stepText := "* my Step"
+	parentStep := gauge.Step{LineText: "* parent step"}
+	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, StackTrace: &stackTrace, ErrorMessage: &errMsg}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
+
+	sc.StepEnd(gauge.Step{LineText: stepText, Parent: &parentStep}, stepRes, exeInfo)
+
+	c.Assert(sc.indentation, Equals, 0)
+	ind := spaces(errorIndentation + 4)
+	want := ind + newline + ind + "Failed Step: " + stepText + newline + ind + "Specification: " + specName + newline + ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+}
+
+func (s *MySuite) TestIncludeLineNoForFailedStep(c *C) {
+	dw, sc := setupSimpleConsole()
+	sc.indentation = 4
+	errMsg := "failure message"
+	stackTrace := "my stacktrace"
+	failed := true
+	specName := "hello.spec"
+	stepText := "* my Step"
+	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, StackTrace: &stackTrace, ErrorMessage: &errMsg}}
+	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
+	stepRes.SetStepFailure()
+
+	sc.StepEnd(gauge.Step{LineText: stepText, LineNo: 3}, stepRes, exeInfo)
+
+	c.Assert(sc.indentation, Equals, 0)
+	ind := spaces(errorIndentation + 4)
+	want := ind + newline + ind + "Failed Step: " + stepText + newline + ind + "Specification: " + specName + ":3" + newline + ind + "Error Message: " + errMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
+	c.Assert(dw.output, Equals, want)
+}

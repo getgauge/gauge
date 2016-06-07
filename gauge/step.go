@@ -170,6 +170,11 @@ func (step *Step) PopulateFragments() {
 
 }
 
+// InConcept returns true if the step belongs to a concept
+func (step *Step) InConcept() bool {
+	return step.Parent != nil
+}
+
 // Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
 // are copied and their parent copying again comes back to copy the same concept.
 func (self *Step) GetCopy() *Step {

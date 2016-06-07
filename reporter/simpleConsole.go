@@ -90,8 +90,10 @@ func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
 		logger.GaugeLog.Error(stepText)
-		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo)
+
+		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo, step.InConcept())
 		logger.GaugeLog.Error(specInfo)
+
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
