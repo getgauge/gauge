@@ -33,6 +33,7 @@ type templateMetadata struct {
 	Description    string
 	Version        string
 	PostInstallCmd string
+	PostInstallMsg string
 }
 
 func initializeTemplate(templateName string) error {
@@ -77,6 +78,7 @@ func initializeTemplate(templateName string) error {
 			return err
 		}
 	}
+	fmt.Printf("Successfully initialized the project. %s\n", metadata.PostInstallMsg)
 
 	util.Remove(metadataFile)
 	return nil
@@ -109,7 +111,6 @@ func InitializeProject(templateName string) {
 	if err != nil {
 		logger.Fatalf("Failed to initialize project. %s", err.Error())
 	}
-	logger.Info("Successfully initialized the project. Run specifications with \"gauge specs/\"\n")
 
 	language := getTemplateLangauge(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
@@ -233,5 +234,6 @@ func createProjectTemplate(language string) error {
 	if err != nil {
 		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJSONDest, err.Error()))
 	}
+	fmt.Printf("Successfully initialized the project. Run specifications with \"gauge specs/\".\n")
 	return nil
 }
