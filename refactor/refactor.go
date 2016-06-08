@@ -208,9 +208,9 @@ func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartCh
 
 	steps := make([]*gauge.Step, 0)
 	for _, stepToken := range stepTokens {
-		step, parseDetails := parser.CreateStepUsingLookup(stepToken, nil, "")
-		if parseDetails != nil && len(parseDetails.Errors) > 0 {
-			return nil, parseDetails.Errors
+		step, parseRes := parser.CreateStepUsingLookup(stepToken, nil, "")
+		if parseRes != nil && len(parseRes.ParseErrors) > 0 {
+			return nil, parseRes.ParseErrors
 		}
 		steps = append(steps, step)
 	}
