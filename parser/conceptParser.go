@@ -82,7 +82,8 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 				continue
 			}
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
-				return nil, &ParseDetailResult{Errors: errs}
+				parseDetails.Errors = append(parseDetails.Errors, errs...)
+				continue
 			}
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
