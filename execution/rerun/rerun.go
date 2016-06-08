@@ -201,6 +201,7 @@ func Initialize() error {
 	}
 	meta := new(failedMetadata)
 	setFlags(meta)
+	util.SetWorkingDir(config.ProjectRoot)
 	if RunFailed && len(meta.FailedItems) == 0 {
 		return errors.New("No failed tests found.")
 	}

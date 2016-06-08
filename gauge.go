@@ -84,15 +84,15 @@ func main() {
 	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
-	err := rerun.Initialize()
+	validGaugeProject := true
+	err := config.SetProjectRoot(flag.Args())
+	if err != nil {
+		validGaugeProject = false
+	}
+	err = rerun.Initialize()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(0)
-	}
-	validGaugeProject := true
-	err = config.SetProjectRoot(flag.Args())
-	if err != nil {
-		validGaugeProject = false
 	}
 	env.LoadEnv(*currentEnv)
 	logger.Initialize(*logLevel)
