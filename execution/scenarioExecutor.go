@@ -52,6 +52,9 @@ func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages
 
 func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, contexts []*gauge.Step, teardowns []*gauge.Step) {
 	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
+	if len(scenario.Steps) == 0 {
+		e.skipSceForError(scenario, scenarioResult)
+	}
 	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 		return
@@ -90,6 +93,14 @@ func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
 	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+}
+
+func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
+	errMsg := fmt.Sprintf("%s:%d No steps found in scenario", e.currentExecutionInfo.GetCurrentSpec().GetFileName(), scenario.Heading.LineNo)
+	logger.Errorf(errMsg)
+	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+		errMsg, e.currentExecutionInfo.GetCurrentSpec().GetFileName(), nil)
+	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
 }
 
 func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *validation.ValidationErrMaps) {

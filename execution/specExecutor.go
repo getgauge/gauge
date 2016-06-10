@@ -75,7 +75,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 
 	if len(e.specification.Scenarios) == 0 {
-		e.skipSpecForError(fmt.Errorf("No scenarios found in spec: %s\n", e.specification.FileName))
+		e.skipSpecForError(fmt.Errorf("%s: No scenarios found in spec\n", e.specification.FileName))
 		return e.specResult
 	}
 
