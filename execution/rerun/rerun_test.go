@@ -73,7 +73,7 @@ func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 	prepareScenarioFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &spec1Abs}})
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Abs]), Equals, 1)
-	c.Assert(failedMeta.failedItemsMap[spec1Abs][0], Equals, spec1Rel+":2")
+	c.Assert(failedMeta.failedItemsMap[spec1Abs][spec1Rel+":2"], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
@@ -84,7 +84,7 @@ func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
 	addFailedMetadata(spec1, addSpecFailedMetadata)
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
@@ -95,19 +95,21 @@ func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
 	addFailedMetadata(spec1, addSpecFailedMetadata)
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecFailedMetadataOverwritesPreviouslyAddedValues(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("error")}, FileName: proto.String(spec1Abs)}}
-	failedMeta.failedItemsMap[spec1Rel] = []string{"scn1", "scn2"}
+	failedMeta.failedItemsMap[spec1Rel] = make(map[string]bool)
+	failedMeta.failedItemsMap[spec1Rel]["scn1"] = true
+	failedMeta.failedItemsMap[spec1Rel]["scn2"] = true
 
 	addSpecFailedMetadata(spec1)
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(failedMeta.failedItemsMap[spec1Rel][0], Equals, spec1Rel)
+	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestGetRelativePath(c *C) {
@@ -123,8 +125,11 @@ func (s *MySuite) TestGetAllFailedItems(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec2Rel := filepath.Join("specs", "example2.spec")
 	metaData := newFailedMetaData()
-	metaData.failedItemsMap[spec1Rel] = []string{"scn1", "scn2"}
-	metaData.failedItemsMap[spec2Rel] = []string{"scn3"}
+	metaData.failedItemsMap[spec1Rel] = make(map[string]bool)
+	metaData.failedItemsMap[spec2Rel] = make(map[string]bool)
+	metaData.failedItemsMap[spec1Rel]["scn1"] = true
+	metaData.failedItemsMap[spec1Rel]["scn2"] = true
+	metaData.failedItemsMap[spec2Rel]["scn3"] = true
 
 	failedItems := metaData.getFailedItems()
 	sort.Strings(failedItems)

@@ -53,7 +53,7 @@ func init() {
 
 type failedMetadata struct {
 	Flags          map[string]string
-	failedItemsMap map[string][]string
+	failedItemsMap map[string]map[string]bool
 	FailedItems    []string
 }
 
@@ -68,7 +68,9 @@ func (m *failedMetadata) String() string {
 func (m *failedMetadata) getFailedItems() []string {
 	failedItems := []string{}
 	for _, v := range m.failedItemsMap {
-		failedItems = append(failedItems, v...)
+		for k := range v {
+			failedItems = append(failedItems, k)
+		}
 	}
 	return failedItems
 }
@@ -78,14 +80,14 @@ func (m *failedMetadata) aggregateFailedItems() {
 }
 
 func newFailedMetaData() *failedMetadata {
-	return &failedMetadata{Flags: make(map[string]string), failedItemsMap: make(map[string][]string), FailedItems: []string{}}
+	return &failedMetadata{Flags: make(map[string]string), failedItemsMap: make(map[string]map[string]bool), FailedItems: []string{}}
 }
 
 func (m *failedMetadata) addFailedItem(itemName string, item string) {
 	if _, ok := m.failedItemsMap[itemName]; !ok {
-		m.failedItemsMap[itemName] = make([]string, 0)
+		m.failedItemsMap[itemName] = make(map[string]bool, 0)
 	}
-	m.failedItemsMap[itemName] = append(m.failedItemsMap[itemName], item)
+	m.failedItemsMap[itemName][item] = true
 }
 
 // ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
@@ -123,13 +125,13 @@ func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenar
 func addSpecFailedMetadata(res result.Result) {
 	fileName := util.RelPathToProjectRoot(res.(*result.SpecResult).ProtoSpec.GetFileName())
 	if _, ok := failedMeta.failedItemsMap[fileName]; ok {
-		failedMeta.failedItemsMap[fileName] = []string{}
+		delete(failedMeta.failedItemsMap, fileName)
 	}
 	failedMeta.addFailedItem(fileName, fileName)
 }
 
 func addSuiteFailedMetadata(res result.Result) {
-	failedMeta.failedItemsMap = make(map[string][]string)
+	failedMeta.failedItemsMap = make(map[string]map[string]bool)
 	for _, arg := range flag.Args() {
 		path, err := filepath.Abs(arg)
 		path = util.RelPathToProjectRoot(path)
