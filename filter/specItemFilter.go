@@ -44,7 +44,7 @@ func newScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
 }
 
 func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
-	return !(item.Kind() == gauge.ScenarioKind && item.(*gauge.Scenario).InSpan(filter.lineNumber))
+	return (item.Kind() == gauge.ScenarioKind) && !(item.(*gauge.Scenario).InSpan(filter.lineNumber))
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
