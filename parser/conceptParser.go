@@ -151,7 +151,7 @@ func (parser *ConceptParser) processConceptHeading(token *Token, fileName string
 		return nil, parseRes
 	}
 	if !parser.hasOnlyDynamicParams(concept) {
-		parseRes.ParseErrors = []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters"}}
+		parseRes.ParseErrors = []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters", LineText: token.LineText}}
 		return nil, parseRes
 	}
 

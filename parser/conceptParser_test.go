@@ -240,13 +240,13 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
 	parser := new(ConceptParser)
-	_, parseRes := parser.Parse("# my concept with \"paratemer\" \n * first step \n * second step ", "")
+	_, parseRes := parser.Parse("# my concept with \"parameter\" \n * first step \n * second step ", "foo.spec")
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
-	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.spec:1 Concept heading can have only Dynamic Parameters => 'my concept with \"parameter\"'")
 
-	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ", "")
+	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ", "foo2.spec")
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
-	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Dynamic parameter <table: foo> could not be resolved")
+	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo2.spec:1 Dynamic parameter <table: foo> could not be resolved => 'my concept with <table: foo>'")
 
 }
 
