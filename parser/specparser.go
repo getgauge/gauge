@@ -377,7 +377,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
 		if resolvedArg == nil || err != nil {
-			e := &ParseError{FileName: spec.FileName, LineNo: parser.lineNo, LineText: token.Value, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
+			e := &ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
 			return ParseResult{ParseErrors: []*ParseError{e}, Ok: false}
 		}
 		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {

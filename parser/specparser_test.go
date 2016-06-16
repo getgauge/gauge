@@ -996,6 +996,21 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 
 }
 
+func (s *MySuite) TestParseErrorWhenCouldNotResolveExternalDataTable(c *C) {
+	tokens := []*Token{
+		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&Token{Kind: gauge.CommentKind, Value: "Comment before data table", LineNo: 2},
+		&Token{Kind: gauge.DataTableKind, Value: "table: foo", LineNo: 3, LineText: "table: foo"},
+	}
+
+	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
+
+	c.Assert(result.Ok, Equals, false)
+	c.Assert(len(result.Warnings), Equals, 0)
+	c.Assert(result.Errors()[0], Equals, "[ParseError] foo.spec:3 Could not resolve table from table: foo => 'table: foo'")
+
+}
+
 func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
