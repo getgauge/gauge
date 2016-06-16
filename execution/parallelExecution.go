@@ -180,7 +180,6 @@ func (e *parallelExecution) finish() {
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {
 	r := result.NewSuiteResult(ExecuteTags, e.startTime)
-	r.SpecsSkippedCount = len(e.errMaps.SpecErrs)
 	for _, result := range suiteResults {
 		r.SpecsFailedCount += result.SpecsFailedCount
 		r.SpecResults = append(r.SpecResults, result.SpecResults...)
@@ -199,6 +198,7 @@ func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult)
 	}
 	r.ExecutionTime = int64(time.Since(e.startTime) / 1e6)
 	e.suiteResult = r
+	e.suiteResult.SetSpecsSkippedCount()
 }
 
 func isLazy() bool {

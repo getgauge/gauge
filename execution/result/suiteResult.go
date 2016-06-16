@@ -55,8 +55,13 @@ func (sr *SuiteResult) SetFailure() {
 	sr.IsFailed = true
 }
 
-func (sr *SuiteResult) SetSpecsSkippedCount(count int) {
-	sr.SpecsSkippedCount = count
+func (sr *SuiteResult) SetSpecsSkippedCount() {
+	sr.SpecsSkippedCount = 0
+	for _, specRes := range sr.SpecResults {
+		if specRes.Skipped {
+			sr.SpecsSkippedCount++
+		}
+	}
 }
 
 func (sr *SuiteResult) AddUnhandledError(err error) {

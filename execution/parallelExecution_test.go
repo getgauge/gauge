@@ -72,14 +72,13 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
-	errMap := getValidationErrorMap()
-	errMap.SpecErrs[&gauge.Specification{}] = make([]*validation.StepValidationError, 0)
-	e := parallelExecution{errMaps: errMap}
+	e := parallelExecution{}
 	suiteRes1 := &result.SuiteResult{IsFailed: true, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec1", "spec2"}, message: "Runner failed to start"}}}
 	suiteRes2 := &result.SuiteResult{IsFailed: false, UnhandledErrors: []error{streamExecError{specsSkipped: []string{"spec3", "spec4"}, message: "Runner failed to start"}}}
 	suiteRes3 := &result.SuiteResult{IsFailed: false}
+	suiteRes4 := &result.SuiteResult{SpecResults: []*result.SpecResult{&result.SpecResult{Skipped: true}}}
 	var suiteResults []*result.SuiteResult
-	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
+	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3, suiteRes4)
 	e.aggregateResults(suiteResults)
 
 	aggregatedRes := e.suiteResult
