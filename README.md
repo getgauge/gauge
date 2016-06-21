@@ -4,38 +4,17 @@
 
 [![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://snap-ci.com/getgauge/gauge/branch/master/build_image)](https://snap-ci.com/getgauge/gauge/branch/master)  [ ![Download Nightly](https://api.bintray.com/packages/gauge/Gauge/Nightly/images/download.svg) ](https://bintray.com/gauge/Gauge/Nightly/_latestVersion) [![Stories in Ready](https://badge.waffle.io/getgauge/gauge.png?label=ready&title=Ready)](https://waffle.io/getgauge/gauge)
 
-Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
+# Welcome to Gauge
 
-Gauge champions the idea of **living/executable documentation**.
+Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language. It champions the idea of [**living/executable documentation**](http://getgauge.io/documentation/user/current/advanced_readings/living_documentation.md).
 
-## Why Gauge?
-
-The communication breakdowns between Developers and Business Stakeholders is a common risk of software development.
-
-Gauge is an advanced automation tool that allows requirements to be written in a way that will be understood by all roles in a project and help bridge the gap.
-
-Some of its key features include:
-
-* A rich markup based on [markdown](https://en.wikipedia.org/wiki/Markdown)
-* Simple, Flexible and Rich Syntax
-* Business Language Tests : Supports the concept of executable documentation
-* Consistent Cross Platform/Language Support for writing test code. Currently [supported languages](http://getgauge.io/documentation/user/current/test_code/index.html).
-* Open Source, so it could be shared freely and improved by others as well
-* A modular architecture with [plugin](http://getgauge.io/documentation/user/current/plugins/index.html) support.
-* Extensible through [plugins](http://getgauge.io/documentation/user/current/plugins/index.html) and Hackable
-* Supports External Data Sources
-* Helps you create Maintainable and Understandable test suites
-* [IDE Support](http://getgauge.io/documentation/user/current/ide_support/index.html)
-
+## Get Started
+Read more about [Why Gauge](http://getgauge.io/documentation/user/current/why_gauge.md) can be used, its [terminologies](http://getgauge.io/documentation/user/current/gauge_terminologies/README.md) and [**get started...**](http://getgauge.io/documentation/user/current/getting_started/README.md)
 
 ## Looking for examples?
-* Get gauge installers from the [download page](http://getgauge.io/get-started/index.html).
-* [Getting started in 3 steps - Java](https://github.com/getgauge/gauge/wiki/Getting-Started-in-3-Steps)
-* Other [example projects](http://getgauge.io/documentation/user/current/examples/examples.html)
-* [Execute Specifications](http://getgauge.io/documentation/user/current/execution/index.html)
+Get started by [example projects](http://getgauge.io/documentation/user/current/examples/README.md)
 
-##Help
-
+## Help
 Refer our [Troubleshooting](http://getgauge.io/documentation/user/current/troubleshooting/troubleshooting.html) guide.
 
 ## Find out more
