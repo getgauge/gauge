@@ -67,6 +67,7 @@ func convertToProtoScenarioItem(scenario *Scenario) *gauge_messages.ProtoItem {
 		scenarioItems = append(scenarioItems, ConvertToProtoItem(item))
 	}
 	protoScenario := NewProtoScenario(scenario)
+	protoScenario.ScenarioItems = scenarioItems
 	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: protoScenario}
 }
 
