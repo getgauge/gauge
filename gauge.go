@@ -90,7 +90,7 @@ func main() {
 		validGaugeProject = false
 	}
 	if rerunErr := rerun.Initialize(); rerunErr != nil {
-		fmt.Println(err)
+		fmt.Println(rerunErr)
 		os.Exit(0)
 	}
 	env.LoadEnv(*currentEnv)
