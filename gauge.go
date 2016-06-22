@@ -89,8 +89,7 @@ func main() {
 	if err != nil {
 		validGaugeProject = false
 	}
-	err = rerun.Initialize()
-	if err != nil {
+	if rerunErr := rerun.Initialize(); rerunErr != nil {
 		fmt.Println(err)
 		os.Exit(0)
 	}
@@ -149,11 +148,7 @@ func main() {
 			os.Exit(exitCode)
 		}
 	} else {
-		if err != nil {
-			logger.Fatalf(err.Error())
-		}
-		logger.Info("Not a valid Gauge project.")
-		printUsage()
+		logger.Fatalf(err.Error())
 	}
 }
 
