@@ -149,7 +149,11 @@ func main() {
 			os.Exit(exitCode)
 		}
 	} else {
-		logger.Fatalf(err.Error())
+		if err != nil {
+			logger.Fatalf(err.Error())
+		}
+		logger.Info("Not a valid Gauge project.")
+		printUsage()
 	}
 }
 
@@ -201,7 +205,7 @@ func printVersion() {
 }
 
 func printUsage() {
-	fmt.Printf("gauge version %s\n", version.FullVersion())
+	fmt.Printf("Gauge version %s\n", version.FullVersion())
 	fmt.Printf("Copyright %d ThoughtWorks, Inc.\n\n", time.Now().Year())
 	fmt.Println("Usage:")
 	fmt.Println("\tgauge specs/")
