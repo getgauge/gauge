@@ -571,6 +571,21 @@ func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseEr
 	c.Assert(res.ParseErrors[0].LineText, Equals, "|sdfsdf|")
 }
 
+func (s *MySuite) TestMultipleConceptsInAFileHavingErrorsShouldBeConsolidated(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("1<werwer>").
+		step("self <werwe1r>").
+		specHeading("2 <werwer> two").
+		step("self <werwer>").
+		String()
+
+	_, res := new(ConceptParser).Parse(conceptText, "")
+
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic parameter <werwe1r> could not be resolved")
+	c.Assert(res.ParseErrors[0].LineText, Equals, "self <werwe1r>")
+}
+
 func containsAny(errs []*ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {
