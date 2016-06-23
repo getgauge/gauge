@@ -553,6 +553,24 @@ func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError
 	c.Assert(res.ParseErrors[0].LineText, Equals, "testinghjk \"sdf\"")
 }
 
+func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseError(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("Concept Heading37a").
+		step("a step").
+		specHeading("testinghjk ").
+		text("|sdfsdf|").
+		text("|----|").
+		text("|wer|").
+		step("a step1").
+		String()
+
+	_, res := new(ConceptParser).Parse(conceptText, "")
+
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Table doesn't belong to any step")
+	c.Assert(res.ParseErrors[0].LineText, Equals, "|sdfsdf|")
+}
+
 func containsAny(errs []*ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {
