@@ -1,0 +1,9 @@
+COMMENT
+# my concept <foo>
+* first step with <foo> and inline table
+  |id|id  |
+  |1 |gauge |
+  |2 |mingle|
+
+# my <foo>
+* first step with <foo>

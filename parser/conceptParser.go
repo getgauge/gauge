@@ -246,19 +246,15 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 			logger.Warning(warning.String())
 		}
 	}
-	if parseRes != nil && len(parseRes.ParseErrors) > 0 {
-		return parseRes.ParseErrors
-	}
-	var errs []*ParseError
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-			errs = append(errs, &ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
+			parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
 		}
 		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
 	}
 	conceptDictionary.UpdateLookupForNestedConcepts()
-	return errs
+	return parseRes.ParseErrors
 }
 
 func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {

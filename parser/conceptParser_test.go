@@ -586,6 +586,18 @@ func (s *MySuite) TestMultipleConceptsInAFileHavingErrorsShouldBeConsolidated(c 
 	c.Assert(res.ParseErrors[0].LineText, Equals, "self <werwe1r>")
 }
 
+func (s *MySuite) TestConceptFileHavingItemsWithDuplicateTableHeaders(c *C) {
+	conceptDictionary := gauge.NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "tabular_concept1.cpt"))
+
+	AddConcepts(path, conceptDictionary)
+	concept := conceptDictionary.Search("my concept {}")
+	concept1 := conceptDictionary.Search("my {}")
+
+	c.Assert(concept, Not(Equals), nil)
+	c.Assert(concept1, Not(Equals), nil)
+}
+
 func containsAny(errs []*ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {
