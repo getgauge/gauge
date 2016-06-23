@@ -538,6 +538,21 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 	c.Assert(res.ParseErrors[0].LineText, Equals, strings.TrimSpace(scenarioHeading))
 }
 
+func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("Concept Heading37a").
+		step("a step").
+		specHeading("testinghjk \"sdf\"").
+		step("a step1").
+		String()
+
+	_, res := new(ConceptParser).Parse(conceptText, "")
+
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(res.ParseErrors[0].LineText, Equals, "testinghjk \"sdf\"")
+}
+
 func containsAny(errs []*ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {

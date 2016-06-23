@@ -69,6 +69,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			}
 			parser.currentConcept, parseRes = parser.processConceptHeading(token, fileName)
 			if len(parseRes.ParseErrors) > 0 {
+				parser.currentState = initial
 				continue
 			}
 			if addPreComments {
