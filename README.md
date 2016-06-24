@@ -2,7 +2,7 @@
 
 # Welcome to Gauge
 
-[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://snap-ci.com/getgauge/gauge/branch/master/build_image)](https://snap-ci.com/getgauge/gauge/branch/master)  [ ![Download Nightly](https://api.bintray.com/packages/gauge/Gauge/Nightly/images/download.svg) ](https://bintray.com/gauge/Gauge/Nightly/_latestVersion) [![Stories in Ready](https://badge.waffle.io/getgauge/gauge.png?label=ready&title=Ready)](https://waffle.io/getgauge/gauge)
+[![Join the chat at https://gitter.im/getgauge/gauge](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/getgauge/chat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Build Status](https://snap-ci.com/getgauge/gauge/branch/master/build_image)](https://snap-ci.com/getgauge/gauge/branch/master)  [ ![Download Nightly](https://api.bintray.com/packages/gauge/Gauge/Nightly/images/download.svg) ](https://bintray.com/gauge/Gauge/Nightly/_latestVersion)
 
 # Welcome to Gauge
 
