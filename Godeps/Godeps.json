@@ -32,7 +32,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "552c7b9542c194800fd493123b3798ef0a832032"
+			"Rev": "0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0"
 		},
 		{
 			"ImportPath": "github.com/op/go-logging",
@@ -40,11 +40,15 @@
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "4599ae7937fce9b670ce32b8ad32bbb7ae726b3e"
+			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
+		},
+		{
+			"ImportPath": "golang.org/x/net/http2",
+			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
 		},
 		{
 			"ImportPath": "google.golang.org/grpc",
-			"Rev": "89f694edb447e224bd0ffff7a03f9161ce486482"
+			"Rev": "0eb7c5dcd059d77bde1eb5bc7d953940170d0d18"
 		},
 		{
       "ImportPath": "gopkg.in/check.v1",
