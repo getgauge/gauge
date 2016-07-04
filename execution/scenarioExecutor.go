@@ -136,29 +136,34 @@ func (e *scenarioExecutor) executeItems(items []*gauge.Step, protoItems []*gauge
 	var itemsIndex int
 	for _, protoItem := range protoItems {
 		if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept || protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
-			failed := e.executeItem(items[itemsIndex], protoItem, scenarioResult)
+			failed, recoverable := e.executeItem(items[itemsIndex], protoItem, scenarioResult)
 			itemsIndex++
 			if failed {
 				scenarioResult.SetFailure()
-				return
+				if !recoverable {
+					return
+				}
 			}
 		}
 	}
 }
 
-func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) bool {
-	var failed bool
+func (e *scenarioExecutor) executeItem(item *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) (bool, bool) {
+	var failed, recoverable bool
 	if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept {
 		protoConcept := protoItem.GetConcept()
-		failed = e.executeConcept(item, protoConcept, scenarioResult).GetFailed()
+		res := e.executeConcept(item, protoConcept, scenarioResult)
+		failed = res.GetFailed()
+		recoverable = res.GetRecoverable()
 
 	} else if protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, stream: e.stream}
 		res := se.executeStep(item, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
 		failed = res.GetFailed()
+		recoverable = res.ProtoStepExecResult().GetExecutionResult().GetRecoverableError()
 	}
-	return failed
+	return failed, recoverable
 }
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
@@ -169,11 +174,14 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
 		if protoStep.GetItemType() == gauge_messages.ProtoItem_Concept || protoStep.GetItemType() == gauge_messages.ProtoItem_Step {
-			failed := e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
+			failed, recoverable := e.executeItem(item.ConceptSteps[conceptStepIndex], protoStep, scenarioResult)
 			conceptStepIndex++
 			if failed {
 				scenarioResult.SetFailure()
 				cptResult.UpdateConceptExecResult()
+				if recoverable {
+					continue
+				}
 				return cptResult
 			}
 		}

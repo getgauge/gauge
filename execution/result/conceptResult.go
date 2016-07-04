@@ -42,6 +42,11 @@ func (conceptResult *ConceptResult) GetFailed() bool {
 	return conceptResult.ProtoConcept.GetConceptExecutionResult().GetExecutionResult().GetFailed()
 }
 
+// GetRecoverable returns the state of the concept result
+func (conceptResult *ConceptResult) GetRecoverable() bool {
+	return conceptResult.ProtoConcept.GetConceptExecutionResult().GetExecutionResult().GetRecoverableError()
+}
+
 // ExecTime returns the time taken for concept execution
 func (conceptResult *ConceptResult) ExecTime() int64 {
 	return conceptResult.ProtoConcept.GetConceptExecutionResult().GetExecutionResult().GetExecutionTime()
@@ -55,6 +60,7 @@ func (conceptResult *ConceptResult) SetConceptExecResult(conceptExecResult *gaug
 
 // UpdateConceptExecResult sets the result of Concept execution
 func (conceptResult *ConceptResult) UpdateConceptExecResult() {
+	var failed, recoverable bool
 	protoConcept := conceptResult.ProtoConcept
 	var conceptExecutionTime int64
 	for _, step := range protoConcept.GetSteps() {
@@ -62,26 +68,34 @@ func (conceptResult *ConceptResult) UpdateConceptExecResult() {
 			stepExecResult := step.GetConcept().GetConceptExecutionResult().GetExecutionResult()
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
+				failed = true
 				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: proto.Bool(false)}
 				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
+				recoverable = step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetRecoverableError()
+				if !recoverable {
+					return
+				}
 			}
 		} else if step.GetItemType() == gauge_messages.ProtoItem_Step {
 			stepExecResult := step.GetStep().GetStepExecutionResult().GetExecutionResult()
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if stepExecResult.GetFailed() {
+				failed = true
 				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: proto.Bool(false)}
 				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
-				return
+				recoverable = step.GetStep().GetStepExecutionResult().GetExecutionResult().GetRecoverableError()
+				if !recoverable {
+					return
+				}
 			}
 		}
 	}
 
-	conceptResult.SetConceptExecResult(&gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(false), ExecutionTime: proto.Int64(conceptExecutionTime)}})
+	conceptResult.SetConceptExecResult(&gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{RecoverableError: proto.Bool(recoverable), Failed: proto.Bool(failed), ExecutionTime: proto.Int64(conceptExecutionTime)}})
 	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
 }
 
