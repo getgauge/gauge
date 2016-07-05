@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
@@ -30,7 +31,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
-type coloredConsole struct {
+type verboseColoredConsole struct {
 	writer               *goterminal.Writer
 	headingBuffer        bytes.Buffer
 	pluginMessagesBuffer bytes.Buffer
@@ -38,58 +39,64 @@ type coloredConsole struct {
 	indentation          int
 }
 
-func newColoredConsole(out io.Writer) *coloredConsole {
-	return &coloredConsole{writer: goterminal.New(out)}
+func newVerboseColoredConsole(out io.Writer) *verboseColoredConsole {
+	return &verboseColoredConsole{writer: goterminal.New(out)}
 }
 
-func (c *coloredConsole) SpecStart(heading string) {
+func (c *verboseColoredConsole) SpecStart(heading string) {
 	msg := formatSpec(heading)
 	logger.GaugeLog.Info(msg)
 	c.displayMessage(msg+newline, ct.Cyan)
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) SpecEnd(res result.Result) {
+func (c *verboseColoredConsole) SpecEnd(res result.Result) {
 	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
-	printHookFailureCC(c, res, res.GetPreHook)
-	printHookFailureCC(c, res, res.GetPostHook)
+	printHookFailureVCC(c, res, res.GetPreHook)
+	printHookFailureVCC(c, res, res.GetPostHook)
 }
 
-func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
+func (c *verboseColoredConsole) ScenarioStart(scenarioHeading string) {
 	c.indentation += scenarioIndentation
 	msg := formatScenario(scenarioHeading)
 	logger.GaugeLog.Info(msg)
 
 	indentedText := indent(msg+"\t", c.indentation)
 	c.displayMessage(indentedText, ct.Yellow)
+	if Verbose {
+		c.displayMessage(newline, ct.None)
+	}
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) ScenarioEnd(res result.Result) {
-	c.displayMessage(newline, ct.None)
+func (c *verboseColoredConsole) ScenarioEnd(res result.Result) {
 	c.writer.Reset()
-	printHookFailureCC(c, res, res.GetPreHook)
-	printHookFailureCC(c, res, res.GetPostHook)
+	printHookFailureVCC(c, res, res.GetPreHook)
+	printHookFailureVCC(c, res, res.GetPostHook)
 	c.indentation -= scenarioIndentation
 }
 
-func (c *coloredConsole) StepStart(stepText string) {
+func (c *verboseColoredConsole) StepStart(stepText string) {
 	c.resetBuffers()
 	c.writer.Reset()
 
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
+	c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
+	c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 }
 
-func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
-
+	c.writer.Clear()
 	if stepRes.GetStepFailed() {
-		c.displayMessage(getFailureSymbol()+newline, ct.Red)
+		c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
 	} else {
-		c.displayMessage(getSuccessSymbol(), ct.Green)
+		c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
 	}
+	c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
+	c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
 		logger.GaugeLog.Error(stepText)
@@ -104,39 +111,41 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 
 		c.displayMessage(msg, ct.Red)
 	}
-	printHookFailureCC(c, res, res.GetPreHook)
-	printHookFailureCC(c, res, res.GetPostHook)
+	printHookFailureVCC(c, res, res.GetPreHook)
+	printHookFailureVCC(c, res, res.GetPostHook)
 	c.writer.Reset()
 	c.resetBuffers()
 	c.indentation -= stepIndentation
 }
 
-func (c *coloredConsole) ConceptStart(conceptHeading string) {
+func (c *verboseColoredConsole) ConceptStart(conceptHeading string) {
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(conceptHeading)
+	c.displayMessage(indent(strings.TrimSpace(conceptHeading), c.indentation)+newline, ct.Magenta)
+	c.writer.Reset()
 }
 
-func (c *coloredConsole) ConceptEnd(res result.Result) {
+func (c *verboseColoredConsole) ConceptEnd(res result.Result) {
 	c.indentation -= stepIndentation
 }
 
-func (c *coloredConsole) SuiteEnd(res result.Result) {
+func (c *verboseColoredConsole) SuiteEnd(res result.Result) {
 	suiteRes := res.(*result.SuiteResult)
-	printHookFailureCC(c, res, res.GetPreHook)
-	printHookFailureCC(c, res, res.GetPostHook)
+	printHookFailureVCC(c, res, res.GetPreHook)
+	printHookFailureVCC(c, res, res.GetPostHook)
 	for _, e := range suiteRes.UnhandledErrors {
 		logger.GaugeLog.Error(e.Error())
 		c.displayMessage(indent(e.Error(), c.indentation+errorIndentation)+newline, ct.Red)
 	}
 }
 
-func (c *coloredConsole) DataTable(table string) {
+func (c *verboseColoredConsole) DataTable(table string) {
 	logger.GaugeLog.Debug(table)
 	c.displayMessage(table, ct.Yellow)
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) Errorf(text string, args ...interface{}) {
+func (c *verboseColoredConsole) Errorf(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args...)
 	logger.GaugeLog.Error(msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline
@@ -146,27 +155,27 @@ func (c *coloredConsole) Errorf(text string, args ...interface{}) {
 
 // Write writes the bytes to console via goterminal's writer.
 // This is called when any sysouts are to be printed on console.
-func (c *coloredConsole) Write(b []byte) (int, error) {
+func (c *verboseColoredConsole) Write(b []byte) (int, error) {
 	text := string(b)
 	c.pluginMessagesBuffer.WriteString(text)
 	c.displayMessage(text, ct.None)
 	return len(b), nil
 }
 
-func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
+func (c *verboseColoredConsole) displayMessage(msg string, color ct.Color) {
 	ct.Foreground(color, false)
 	defer ct.ResetColor()
 	fmt.Fprint(c.writer, msg)
 	c.writer.Print()
 }
 
-func (c *coloredConsole) resetBuffers() {
+func (c *verboseColoredConsole) resetBuffers() {
 	c.headingBuffer.Reset()
 	c.pluginMessagesBuffer.Reset()
 	c.errorMessagesBuffer.Reset()
 }
 
-func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
+func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
 	if hookFailure() != nil && *hookFailure() != nil {
 		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)

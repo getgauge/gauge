@@ -70,6 +70,8 @@ func Current() Reporter {
 	if currentReporter == nil {
 		if SimpleConsoleOutput {
 			currentReporter = newSimpleConsole(os.Stdout)
+		} else if Verbose {
+			currentReporter = newVerboseColoredConsole(os.Stdout)
 		} else {
 			currentReporter = newColoredConsole(os.Stdout)
 		}
