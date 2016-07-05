@@ -21,6 +21,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"strings"
+	"time"
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
@@ -31,11 +33,16 @@ import (
 )
 
 type coloredConsole struct {
-	writer               *goterminal.Writer
-	headingBuffer        bytes.Buffer
-	pluginMessagesBuffer bytes.Buffer
-	errorMessagesBuffer  bytes.Buffer
-	indentation          int
+	writer          *goterminal.Writer
+	scenarioHeading string
+	indentation     int
+	progressBuffer  bytes.Buffer
+	sceInfo         []stepInfo
+}
+
+type stepInfo struct {
+	sceFailuresBuffer bytes.Buffer
+	// sceOutputBuffer   bytes.Buffer
 }
 
 func newColoredConsole(out io.Writer) *coloredConsole {
@@ -62,12 +69,14 @@ func (c *coloredConsole) ScenarioStart(scenarioHeading string) {
 	logger.GaugeLog.Info(msg)
 
 	indentedText := indent(msg+"\t", c.indentation)
-	c.displayMessage(indentedText, ct.Yellow)
-	c.writer.Reset()
+	c.scenarioHeading = indentedText
+	c.displayMessage(indentedText+newline, ct.Yellow)
+	c.sceInfo = make([]stepInfo, 0)
 }
 
 func (c *coloredConsole) ScenarioEnd(res result.Result) {
 	c.displayMessage(newline, ct.None)
+	c.progressBuffer.Reset()
 	c.writer.Reset()
 	printHookFailureCC(c, res, res.GetPreHook)
 	printHookFailureCC(c, res, res.GetPostHook)
@@ -75,20 +84,18 @@ func (c *coloredConsole) ScenarioEnd(res result.Result) {
 }
 
 func (c *coloredConsole) StepStart(stepText string) {
-	c.resetBuffers()
-	c.writer.Reset()
-
 	c.indentation += stepIndentation
 	logger.GaugeLog.Debug(stepText)
+	c.sceInfo = append(c.sceInfo, stepInfo{})
 }
 
 func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 
 	if stepRes.GetStepFailed() {
-		c.displayMessage(getFailureSymbol()+newline, ct.Red)
+		c.progressBuffer.WriteString(getFailureSymbol())
 	} else {
-		c.displayMessage(getSuccessSymbol(), ct.Green)
+		c.progressBuffer.WriteString(getSuccessSymbol())
 	}
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
@@ -100,15 +107,25 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 
-		msg := formatErrorFragment(stepText, c.indentation) + formatErrorFragment(specInfo, c.indentation) + formatErrorFragment(errMsg, c.indentation) + formatErrorFragment(stacktrace, c.indentation)
+		// 		stacktrace = "Stacktrace:" + newline + `org.junit.Assert.fail(Assert.java:88)
+		// org.junit.Assert.assertEquals(Assert.java:645)`
+		failureMsg := formatErrorFragment(stepText, c.indentation) + formatErrorFragment(specInfo, c.indentation) + formatErrorFragment(errMsg, c.indentation) + formatStacktrace(stacktrace, c.indentation)
+		failureMsg = strings.Trim(failureMsg, newline)
+		c.sceInfo[len(c.sceInfo)-1].sceFailuresBuffer.WriteString(failureMsg)
+	}
 
-		c.displayMessage(msg, ct.Red)
+	c.writer.Clear()
+	c.displayMessage(c.scenarioHeading, ct.Yellow)
+	c.displayMessage(c.progressBuffer.String()+newline, ct.None)
+	for _, stepInfo := range c.sceInfo {
+		if stepInfo.sceFailuresBuffer.Len() != 0 {
+			c.displayMessage(strings.Trim(stepInfo.sceFailuresBuffer.String(), newline)+newline, ct.Red)
+		}
 	}
 	printHookFailureCC(c, res, res.GetPreHook)
 	printHookFailureCC(c, res, res.GetPostHook)
-	c.writer.Reset()
-	c.resetBuffers()
 	c.indentation -= stepIndentation
+	time.Sleep(time.Second * 2)
 }
 
 func (c *coloredConsole) ConceptStart(conceptHeading string) {
@@ -141,14 +158,12 @@ func (c *coloredConsole) Errorf(text string, args ...interface{}) {
 	logger.GaugeLog.Error(msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline
 	c.displayMessage(msg, ct.Red)
-	c.errorMessagesBuffer.WriteString(msg)
 }
 
 // Write writes the bytes to console via goterminal's writer.
 // This is called when any sysouts are to be printed on console.
 func (c *coloredConsole) Write(b []byte) (int, error) {
 	text := string(b)
-	c.pluginMessagesBuffer.WriteString(text)
 	c.displayMessage(text, ct.None)
 	return len(b), nil
 }
@@ -160,11 +175,9 @@ func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
 	c.writer.Print()
 }
 
-func (c *coloredConsole) resetBuffers() {
-	c.headingBuffer.Reset()
-	c.pluginMessagesBuffer.Reset()
-	c.errorMessagesBuffer.Reset()
-}
+// func (c *coloredConsole) resetBuffers() {
+//
+// }
 
 func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
 	if hookFailure() != nil && *hookFailure() != nil {

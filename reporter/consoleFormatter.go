@@ -86,3 +86,7 @@ func prepStacktrace(stacktrace string) string {
 func formatErrorFragment(fragment string, indentation int) string {
 	return indent(fragment, indentation+errorIndentation) + newline
 }
+
+func formatStacktrace(fragment string, indentation int) string {
+	return indent(fragment, indentation+errorIndentation) + newline
+}
