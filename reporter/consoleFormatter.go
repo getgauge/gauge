@@ -47,6 +47,9 @@ func indent(text string, indentation int) string {
 }
 
 func spaces(numOfSpaces int) string {
+	if numOfSpaces <= 0 {
+		return ""
+	}
 	return strings.Repeat(" ", numOfSpaces)
 }
 
@@ -84,9 +87,5 @@ func prepStacktrace(stacktrace string) string {
 }
 
 func formatErrorFragment(fragment string, indentation int) string {
-	return indent(fragment, indentation+errorIndentation) + newline
-}
-
-func formatStacktrace(fragment string, indentation int) string {
 	return indent(fragment, indentation+errorIndentation) + newline
 }

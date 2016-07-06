@@ -51,10 +51,10 @@ func (c *verboseColoredConsole) SpecStart(heading string) {
 }
 
 func (c *verboseColoredConsole) SpecEnd(res result.Result) {
-	c.displayMessage(newline, ct.None)
-	c.writer.Reset()
 	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
+	c.displayMessage(newline, ct.None)
+	c.writer.Reset()
 }
 
 func (c *verboseColoredConsole) ScenarioStart(scenarioHeading string) {
@@ -63,17 +63,15 @@ func (c *verboseColoredConsole) ScenarioStart(scenarioHeading string) {
 	logger.GaugeLog.Info(msg)
 
 	indentedText := indent(msg+"\t", c.indentation)
-	c.displayMessage(indentedText, ct.Yellow)
-	if Verbose {
-		c.displayMessage(newline, ct.None)
-	}
+	c.displayMessage(indentedText+newline, ct.Yellow)
 	c.writer.Reset()
 }
 
 func (c *verboseColoredConsole) ScenarioEnd(res result.Result) {
-	c.writer.Reset()
 	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
+
+	c.writer.Reset()
 	c.indentation -= scenarioIndentation
 }
 
@@ -90,11 +88,16 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 	c.writer.Clear()
-	if stepRes.GetStepFailed() {
-		c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
+	if !(hookFailed(res.GetPreHook) || hookFailed(res.GetPostHook)) {
+		if stepRes.GetStepFailed() {
+			c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
+		} else {
+			c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
+		}
 	} else {
-		c.displayMessage(c.headingBuffer.String()+"\t ...[PASS]\n", ct.Green)
+		c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 	}
+	printHookFailureVCC(c, res, res.GetPreHook)
 	c.displayMessage(c.pluginMessagesBuffer.String(), ct.None)
 	c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	if stepRes.GetStepFailed() {
@@ -111,11 +114,10 @@ func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, exec
 
 		c.displayMessage(msg, ct.Red)
 	}
-	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
+	c.indentation -= stepIndentation
 	c.writer.Reset()
 	c.resetBuffers()
-	c.indentation -= stepIndentation
 }
 
 func (c *verboseColoredConsole) ConceptStart(conceptHeading string) {
@@ -175,12 +177,18 @@ func (c *verboseColoredConsole) resetBuffers() {
 	c.errorMessagesBuffer.Reset()
 }
 
-func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) {
-	if hookFailure() != nil && *hookFailure() != nil {
+func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
+	if hookFailed(hookFailure) {
 		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
 		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 		c.displayMessage(formatErrorFragment(errMsg, c.indentation)+formatErrorFragment(stacktrace, c.indentation), ct.Red)
+		return false
 	}
+	return true
+}
+
+func hookFailed(hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
+	return hookFailure() != nil && *hookFailure() != nil
 }

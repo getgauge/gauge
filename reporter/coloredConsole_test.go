@@ -13,25 +13,27 @@ func setupColoredConsole() (*dummyWriter, *coloredConsole) {
 	return dw, cc
 }
 
-func (s *MySuite) TestScenarioStartInVerbose_ColoredConsole(c *C) {
+func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	cc.indentation = 2
 
 	cc.ScenarioStart("my first scenario")
 
-	c.Assert(dw.output, Equals, "    ## my first scenario\t\n")
+	c.Assert(dw.output, Equals, "    ## my first scenario\t")
 }
 
-// func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
-// 	_, cc := setupColoredConsole()
-// 	cc.indentation = 2
-// 	cc.ScenarioStart("failing step")
-// 	cc.Write([]byte("fail reason: blah"))
-// 	res := &DummyResult{IsFailed: true}
-// 	cc.ScenarioEnd(res)
-//
-// 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "fail reason: blah")
-// }
+func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
+	dw, cc := setupColoredConsole()
+	cc.indentation = 2
+	cc.ScenarioStart("failing step")
+	dw.output = ""
+
+	cc.Write([]byte("fail reason: blah"))
+	res := &DummyResult{IsFailed: true}
+	cc.ScenarioEnd(res)
+
+	c.Assert(dw.output, Equals, "fail reason: blah\n")
+}
 
 func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 	dw, cc := setupColoredConsole()
@@ -49,14 +51,7 @@ func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 
 	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes, specInfo)
 
-	expectedErrMsg := spaces(8) + `
-        Failed Step: ` + stepText + `
-        Specification: ` + specName + `:0
-        Error Message: ` + errMsg + `
-        Stacktrace:` + spaces(1) + `
-        ` + stacktrace + `
-`
-	c.Assert(dw.output, Equals, getFailureSymbol()+newline+expectedErrMsg)
+	c.Assert(dw.output, Equals, getFailureSymbol())
 }
 
 func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
@@ -71,5 +66,5 @@ func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
 
 	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes, specInfo)
 
-	c.Assert(dw.output, Equals, getSuccessSymbol()+newline)
+	c.Assert(dw.output, Equals, getSuccessSymbol())
 }
