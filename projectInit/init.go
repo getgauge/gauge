@@ -156,7 +156,6 @@ func getTemplateNames(text string) []string {
 	}
 	// add other templates
 	matches = append(matches, "csharp")
-	matches = append(matches, "ruby")
 
 	sort.Strings(matches)
 	return matches
