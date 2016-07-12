@@ -54,7 +54,6 @@ function navi(e){
 	c.Assert(names[2], Equals, "java_maven")
 	c.Assert(names[3], Equals, "java_maven_selenium")
 	c.Assert(names[4], Equals, "maven_123")
-	c.Assert(names[5], Equals, "ruby")
 }
 
 func (s *MySuite) TestGetTemplateLanguage(c *C) {
