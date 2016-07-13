@@ -21,7 +21,10 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
+	"github.com/golang/protobuf/proto"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -113,4 +116,33 @@ func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
 	c.Assert(len(errMap.SpecErrs), Equals, 0)
 	c.Assert(len(errMap.ScenarioErrs), Equals, 0)
 	c.Assert(len(errMap.StepErrs), Equals, 0)
+}
+
+func (s *MySuite) TestValidateStep(c *C) {
+	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
+	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: proto.Bool(false), ErrorMessage: proto.String("my err msg"), ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse.Enum(), StepValidateResponse: res}, nil
+	}
+	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	valErr := specVal.validateStep(myStep)
+
+	c.Assert(valErr, Not(Equals), nil)
+	c.Assert(valErr.Error(), Equals, "foo.spec:3: Step implementation not found => 'my step'")
+}
+
+func (s *MySuite) TestValidateStepInConcept(c *C) {
+	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
+	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
+	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: proto.Bool(false), ErrorMessage: proto.String("my err msg"), ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse.Enum(), StepValidateResponse: res}, nil
+	}
+	cptDict := gauge.NewConceptDictionary()
+	cptDict.ConceptsMap["my concept"] = &gauge.Concept{ConceptStep: parentStep, FileName: "concept.cpt"}
+	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}, conceptsDictionary: cptDict}
+	valErr := specVal.validateStep(myStep)
+
+	c.Assert(valErr, Not(Equals), nil)
+	c.Assert(valErr.Error(), Equals, "concept.cpt:3: Step implementation not found => 'my step'")
 }

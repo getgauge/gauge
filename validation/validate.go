@@ -233,17 +233,27 @@ func (v *specValidator) Step(s *gauge.Step) {
 		return
 	}
 	if val != nil {
-		v.stepValidationErrors = append(v.stepValidationErrors,
-			NewValidationError(s, val.message, v.specification.FileName, val.errorType))
+		if s.Parent == nil {
+			v.stepValidationErrors = append(v.stepValidationErrors,
+				NewValidationError(s, val.message, v.specification.FileName, val.errorType))
+		} else {
+			cpt := v.conceptsDictionary.Search(s.Parent.Value)
+			v.stepValidationErrors = append(v.stepValidationErrors,
+				NewValidationError(s, val.message, cpt.FileName, val.errorType))
+		}
 	}
 }
 
 var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
 
+var getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
+}
+
 func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
 		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(s.Value), NumberOfParameters: proto.Int(len(s.Args))}}
-	r, err := conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
+	r, err := getResponseFromRunner(m, v)
 	if err != nil {
 		return NewValidationError(s, err.Error(), v.specification.FileName, nil)
 	}
@@ -251,7 +261,11 @@ func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.ErrorType.String())
-			return NewValidationError(s, msg, v.specification.FileName, res.ErrorType)
+			if s.Parent == nil {
+				return NewValidationError(s, msg, v.specification.FileName, res.ErrorType)
+			}
+			cpt := v.conceptsDictionary.Search(s.Parent.Value)
+			return NewValidationError(s, msg, cpt.FileName, res.ErrorType)
 		}
 		return nil
 	}
