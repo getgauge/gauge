@@ -6,13 +6,13 @@
 
 # Welcome to Gauge
 
-Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language. It champions the idea of [**living/executable documentation**](http://getgauge.io/documentation/user/current/advanced_readings/living_documentation.html).
+Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 ## Get Started
-Read more about [Why Gauge](http://getgauge.io/documentation/user/current/why_gauge.html) can be used, its [terminologies](http://getgauge.io/documentation/user/current/gauge_terminologies/README.html) and [**get started...**](http://getgauge.io/documentation/user/current/getting_started/README.html)
+Read more about [Why Gauge](http://getgauge.io/documentation/user/current/why_gauge.html) can be used, its [terminologies](http://getgauge.io/documentation/user/current/gauge_terminologies/) and [**get started...**](http://getgauge.io/documentation/user/current/getting_started/)
 
 ## Looking for examples?
-Get started by [example projects](http://getgauge.io/documentation/user/current/examples/README.html)
+Get started by [example projects](http://getgauge.io/documentation/user/current/examples/)
 
 ## Help
 Refer our [Troubleshooting](http://getgauge.io/documentation/user/current/troubleshooting/troubleshooting.html) guide.
