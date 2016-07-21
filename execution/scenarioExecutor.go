@@ -71,11 +71,12 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 
 	e.notifyBeforeScenarioHook(scenarioResult)
 	if !scenarioResult.GetFailed() {
-		e.executeItems(contexts, scenarioResult.ProtoScenario.GetContexts(), scenarioResult)
-		if !scenarioResult.GetFailed() {
-			e.executeItems(scenario.Steps, scenarioResult.ProtoScenario.GetScenarioItems(), scenarioResult)
-		}
-		e.executeItems(teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
+		allSteps := append(contexts, append(scenario.Steps, teardowns...)...)
+		protoContexts := scenarioResult.ProtoScenario.GetContexts()
+		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
+		protoTeardowns := scenarioResult.ProtoScenario.GetTearDownSteps()
+		allItems := append(protoContexts, append(protoScenItems, protoTeardowns...)...)
+		e.executeItems(allSteps, allItems, scenarioResult)
 	}
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
