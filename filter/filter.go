@@ -11,11 +11,10 @@ var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
 
-func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, int, bool) {
-	specsToExecute, failed := specsFromArgs(conceptsDictionary, specDirs)
-	totalSpecs := specsToExecute
+func GetSpecsToExecute(conceptsDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
+	specsToExecute, failed := parseSpecsInDirs(conceptsDictionary, specDirs)
 	specsToExecute = applyFilters(specsToExecute, specsFilters())
-	return sortSpecsList(specsToExecute), len(totalSpecs) - len(specsToExecute), failed
+	return sortSpecsList(specsToExecute), failed
 }
 
 func specsFilters() []specsFilter {
@@ -42,7 +41,9 @@ func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Spec
 	}
 }
 
-func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
+// parseSpecsInDirs parses all the specs in list of dirs given.
+// It also merges the scenarios belonging to same spec which are passed as different arguments in `specDirs`
+func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
 	specsMap := make(map[string]*gauge.Specification)
 	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
@@ -65,7 +66,7 @@ func specsFromArgs(conceptDictionary *gauge.ConceptDictionary, specDirs []string
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*parser.ParseResult) {
-	specName, indexToFilter := GetIndexedSpecName(specSource)
+	specName, indexToFilter := getIndexedSpecName(specSource)
 	parsedSpecs, parseResult := parser.ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary)
 	return filterSpecsItems(parsedSpecs, newScenarioFilterBasedOnSpan(indexToFilter)), parseResult
 }

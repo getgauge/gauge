@@ -34,12 +34,12 @@ func (s *MySuite) TestToCheckIfItsIndexedSpec(c *C) {
 }
 
 func (s *MySuite) TestToObtainIndexedSpecName(c *C) {
-	specName, scenarioNum := GetIndexedSpecName("specs/hello_world.spec:67")
+	specName, scenarioNum := getIndexedSpecName("specs/hello_world.spec:67")
 	c.Assert(specName, Equals, "specs/hello_world.spec")
 	c.Assert(scenarioNum, Equals, 67)
 }
 func (s *MySuite) TestToObtainIndexedSpecName1(c *C) {
-	specName, scenarioNum := GetIndexedSpecName("hello_world.spec:67342")
+	specName, scenarioNum := getIndexedSpecName("hello_world.spec:67342")
 	c.Assert(specName, Equals, "hello_world.spec")
 	c.Assert(scenarioNum, Equals, 67342)
 }

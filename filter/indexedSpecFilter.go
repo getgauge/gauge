@@ -28,7 +28,7 @@ func isIndexedSpec(specSource string) bool {
 	return getIndex(specSource) != nil
 }
 
-func GetIndexedSpecName(IndexedSpec string) (string, int) {
+func getIndexedSpecName(IndexedSpec string) (string, int) {
 	var specName, scenarioNum string
 	index := getIndex(IndexedSpec)
 	for i := 0; i < index[0]; i++ {
