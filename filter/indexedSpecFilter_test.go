@@ -43,3 +43,14 @@ func (s *MySuite) TestToObtainIndexedSpecName1(c *C) {
 	c.Assert(specName, Equals, "hello_world.spec")
 	c.Assert(scenarioNum, Equals, 67342)
 }
+
+func (s *MySuite) TestGetIndex(c *C) {
+	c.Assert(getIndex("hello.spec:67"), Equals, 10)
+	c.Assert(getIndex("specs/hello.spec:67"), Equals, 16)
+	c.Assert(getIndex("specs\\hello.spec:67"), Equals, 16)
+	c.Assert(getIndex(":67"), Equals, 0)
+	c.Assert(getIndex(""), Equals, 0)
+	c.Assert(getIndex("foo"), Equals, 0)
+	c.Assert(getIndex(":"), Equals, 0)
+	c.Assert(getIndex("f:7a.spec:9"), Equals, 9)
+}

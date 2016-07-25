@@ -20,45 +20,25 @@ package filter
 import (
 	"regexp"
 	"strconv"
-
-	"github.com/getgauge/gauge/util"
 )
 
 func isIndexedSpec(specSource string) bool {
-	return getIndex(specSource) != nil
+	return getIndex(specSource) != 0
 }
 
-func getIndexedSpecName(IndexedSpec string) (string, int) {
-	var specName, scenarioNum string
-	index := getIndex(IndexedSpec)
-	for i := 0; i < index[0]; i++ {
-		specName += string(IndexedSpec[i])
-	}
-	typeOfSpec := getTypeOfSpecFile(IndexedSpec)
-	for i := index[0] + len(typeOfSpec) + 1; i < index[1]; i++ {
-		scenarioNum += string(IndexedSpec[i])
-	}
+func getIndexedSpecName(indexedSpec string) (string, int) {
+	index := getIndex(indexedSpec)
+	specName := indexedSpec[:index]
+	scenarioNum := indexedSpec[index+1:]
 	scenarioNumber, _ := strconv.Atoi(scenarioNum)
-	return specName + typeOfSpec, scenarioNumber
+	return specName, scenarioNumber
 }
 
-func getIndex(specSource string) []int {
-	re, _ := regexp.Compile(getTypeOfSpecFile(specSource) + ":[0-9]+$")
+func getIndex(specSource string) int {
+	re, _ := regexp.Compile(":[0-9]+$")
 	index := re.FindStringSubmatchIndex(specSource)
 	if index != nil {
-		return index
+		return index[0]
 	}
-	return nil
-}
-
-func getTypeOfSpecFile(specSource string) string {
-	for ext, accepted := range util.AcceptedExtensions {
-		if accepted {
-			re, _ := regexp.Compile(ext)
-			if re.FindStringSubmatchIndex(specSource) != nil {
-				return ext
-			}
-		}
-	}
-	return ""
+	return 0
 }
