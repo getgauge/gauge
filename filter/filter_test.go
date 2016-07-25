@@ -26,15 +26,18 @@ import (
 
 func (s *MySuite) TestAddSpecsToMapPopulatesScenarioInExistingSpec(c *C) {
 	specsMap := make(map[string]*gauge.Specification)
-	scenario1 := &gauge.Scenario{Heading: &gauge.Heading{Value: "someting"}}
-	scenario2 := &gauge.Scenario{Heading: &gauge.Heading{Value: "someting else"}}
-	spec1 := &gauge.Specification{FileName: "foo.spec", Scenarios: []*gauge.Scenario{scenario1}}
-	spec2 := &gauge.Specification{FileName: "foo.spec", Scenarios: []*gauge.Scenario{scenario2}}
-	specsMap["foo.spec"] = spec1
+	scenario1 := &gauge.Scenario{Heading: &gauge.Heading{Value: "scenario1"}}
+	scenario2 := &gauge.Scenario{Heading: &gauge.Heading{Value: "scenario2"}}
+	heading := &gauge.Heading{Value: "spec heading"}
+	specName := "foo.spec"
+	spec1 := &gauge.Specification{Heading: heading, FileName: specName, Scenarios: []*gauge.Scenario{scenario1}, Items: []gauge.Item{heading, scenario1}}
+	spec2 := &gauge.Specification{Heading: heading, FileName: specName, Scenarios: []*gauge.Scenario{scenario2}, Items: []gauge.Item{heading, scenario2}}
+	specsMap[specName] = spec1
 	addSpecsToMap([]*gauge.Specification{spec2}, specsMap)
 
 	c.Assert(len(specsMap), Equals, 1)
-	c.Assert(len(specsMap["foo.spec"].Scenarios), Equals, 2)
+	c.Assert(len(specsMap[specName].Scenarios), Equals, 2)
+	c.Assert(len(specsMap[specName].Items), Equals, 3)
 }
 
 func (s *MySuite) TestSpecsFormArgsForMultipleIndexedArgsForOneSpec(c *C) {

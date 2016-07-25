@@ -33,6 +33,9 @@ func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Spec
 	for _, spec := range specs {
 		if _, ok := specsMap[spec.FileName]; ok {
 			specsMap[spec.FileName].Scenarios = append(specsMap[spec.FileName].Scenarios, spec.Scenarios...)
+			for _, sce := range spec.Scenarios {
+				specsMap[spec.FileName].Items = append(specsMap[spec.FileName].Items, sce)
+			}
 			continue
 		}
 		specsMap[spec.FileName] = spec
