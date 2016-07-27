@@ -92,6 +92,15 @@ func getTemplateLangauge(templateName string) string {
 	return strings.Split(templateName, "_")[0]
 }
 
+func isGaugeProject() bool {
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		logger.Debug("Gauge manifest file doesn't exist. %s", err.Error())
+		return false
+	}
+	return m.Language != ""
+}
+
 // InitializeProject initializes a Gauge project with specified template
 func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
@@ -99,6 +108,9 @@ func InitializeProject(templateName string) {
 		logger.Fatalf("Failed to find working directory. %s", err.Error())
 	}
 	config.ProjectRoot = wd
+	if isGaugeProject() {
+		logger.Fatalf("This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
+	}
 
 	exists, _ := common.UrlExists(getTemplateURL(templateName))
 
@@ -176,14 +188,14 @@ func createProjectTemplate(language string) error {
 		showMessage("skip", common.ManifestFile)
 	}
 	manifest := &manifest.Manifest{Language: language, Plugins: defaultPlugins}
-	if err := manifest.Save(); err != nil {
+	if err = manifest.Save(); err != nil {
 		return err
 	}
 
 	// creating the spec directory
 	showMessage("create", specsDirName)
 	if !common.DirExists(specsDirName) {
-		err := os.Mkdir(specsDirName, common.NewDirectoryPermissions)
+		err = os.Mkdir(specsDirName, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
 		}

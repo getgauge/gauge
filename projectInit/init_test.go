@@ -18,8 +18,10 @@
 package projectInit
 
 import (
+	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/config"
 	. "gopkg.in/check.v1"
 )
 
@@ -60,4 +62,22 @@ func (s *MySuite) TestGetTemplateLanguage(c *C) {
 	c.Assert(getTemplateLangauge("java"), Equals, "java")
 	c.Assert(getTemplateLangauge("java_maven"), Equals, "java")
 	c.Assert(getTemplateLangauge("java_maven_selenium"), Equals, "java")
+}
+
+func (s *MySuite) TestIfGaugeProjectGivenEmptyDir(c *C) {
+	path, _ := filepath.Abs("_testdata")
+	config.ProjectRoot = path
+	c.Assert(isGaugeProject(), Equals, false)
+}
+
+func (s *MySuite) TestIfGaugeProject(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "gaugeProject"))
+	config.ProjectRoot = path
+	c.Assert(isGaugeProject(), Equals, true)
+}
+
+func (s *MySuite) TestIfGaugeProjectGivenDirWithNonGaugeManifest(c *C) {
+	path, _ := filepath.Abs(filepath.Join("_testdata", "foo"))
+	config.ProjectRoot = path
+	c.Assert(isGaugeProject(), Equals, false)
 }
