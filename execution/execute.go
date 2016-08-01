@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"time"
 
+	"fmt"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
@@ -72,7 +74,10 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handl
 }
 
 func ExecuteSpecs(specDirs []string) int {
-	validateFlags()
+	err := validateFlags()
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
 	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}
 		i.BufferUpdateDetails()
@@ -144,14 +149,15 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	return 0
 }
 
-func validateFlags() {
+func validateFlags() error {
 	if !InParallel {
-		return
+		return nil
 	}
 	if NumberOfExecutionStreams < 1 {
-		logger.Fatalf("Invalid input(%s) to --n flag.", strconv.Itoa(NumberOfExecutionStreams))
+		return fmt.Errorf("Invalid input(%s) to --n flag.", strconv.Itoa(NumberOfExecutionStreams))
 	}
 	if !isValidStrategy(Strategy) {
-		logger.Fatalf("Invalid input(%s) to --strategy flag.", Strategy)
+		return fmt.Errorf("Invalid input(%s) to --strategy flag.", Strategy)
 	}
+	return nil
 }

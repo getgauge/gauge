@@ -19,9 +19,6 @@ package execution
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"strings"
 
 	"github.com/getgauge/gauge/gauge"
 
@@ -57,78 +54,38 @@ func createSpecsList(number int) []*gauge.Specification {
 }
 
 func (s *MySuite) TestValidateFlagsIfNotParallel(c *C) {
-	if os.Getenv("EXIT_VALIDATE") == "1" {
-		InParallel = false
-		validateFlags()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsIfNotParallel")
-	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
-	err := cmd.Run()
+	InParallel = false
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
 func (s *MySuite) TestValidateFlagsWithStartegyEager(c *C) {
-	if os.Getenv("EXIT_VALIDATE") == "1" {
-		InParallel = true
-		Strategy = "eager"
-		NumberOfExecutionStreams = 1
-		validateFlags()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithStartegyEager")
-	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
-	err := cmd.Run()
+	InParallel = true
+	Strategy = "eager"
+	NumberOfExecutionStreams = 1
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
 func (s *MySuite) TestValidateFlagsWithStartegyLazy(c *C) {
-	if os.Getenv("EXIT_VALIDATE") == "1" {
-		InParallel = true
-		Strategy = "lazy"
-		NumberOfExecutionStreams = 1
-		validateFlags()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithStartegyLazy")
-	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
-	err := cmd.Run()
+	InParallel = true
+	Strategy = "lazy"
+	NumberOfExecutionStreams = 1
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
 func (s *MySuite) TestValidateFlagsWithInvalidStrategy(c *C) {
-	if os.Getenv("EXIT_VALIDATE") == "1" {
-		InParallel = true
-		Strategy = "sdf"
-		NumberOfExecutionStreams = 1
-		validateFlags()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithInvalidStrategy")
-	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
-	logger := &testLogger{}
-	cmd.Stdout = logger
-	err := cmd.Run()
-	e, ok := err.(*exec.ExitError)
-	c.Assert(ok, Equals, true)
-	c.Assert(e.Success(), Equals, false)
-	c.Assert(strings.TrimSpace(logger.output), Equals, "Invalid input(sdf) to --strategy flag.")
+	InParallel = true
+	Strategy = "sdf"
+	NumberOfExecutionStreams = 1
+	err := validateFlags()
+	c.Assert(err.Error(), Equals, "Invalid input(sdf) to --strategy flag.")
 }
 
 func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
-	if os.Getenv("EXIT_VALIDATE") == "1" {
-		InParallel = true
-		NumberOfExecutionStreams = -1
-		validateFlags()
-		return
-	}
-	cmd := exec.Command(os.Args[0], "-check.f=MySuite.TestValidateFlagsWithInvalidStream")
-	cmd.Env = append(os.Environ(), "EXIT_VALIDATE=1")
-	logger := &testLogger{}
-	cmd.Stdout = logger
-	err := cmd.Run()
-	e, ok := err.(*exec.ExitError)
-	c.Assert(ok, Equals, true)
-	c.Assert(e.Success(), Equals, false)
-	c.Assert(strings.TrimSpace(logger.output), Equals, "Invalid input(-1) to --n flag.")
+	InParallel = true
+	NumberOfExecutionStreams = -1
+	err := validateFlags()
+	c.Assert(err.Error(), Equals, "Invalid input(-1) to --n flag.")
 }
