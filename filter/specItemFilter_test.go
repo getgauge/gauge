@@ -1,28 +1,29 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
-
+//// Copyright 2015 ThoughtWorks, Inc.
+//
+//// This file is part of Gauge.
+//
+//// Gauge is free software: you can redistribute it and/or modify
+//// it under the terms of the GNU General Public License as published by
+//// the Free Software Foundation, either version 3 of the License, or
+//// (at your option) any later version.
+//
+//// Gauge is distributed in the hope that it will be useful,
+//// but WITHOUT ANY WARRANTY; without even the implied warranty of
+//// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//// GNU General Public License for more details.
+//
+//// You should have received a copy of the GNU General Public License
+//// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+//
 package filter
 
+import "fmt"
+
+//
 import (
-	"fmt"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 )
 
@@ -99,93 +100,6 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", comment))
 	return specBuilder
 }
-
-func (s *MySuite) TestScenarioSpanFilter(c *C) {
-	specText := SpecBuilder().specHeading("spec heading").
-		scenarioHeading("First scenario").
-		step("a step").
-		scenarioHeading("Second scenario").
-		step("second step").
-		scenarioHeading("Third scenario").
-		step("third user").
-		scenarioHeading("Fourth scenario").
-		step("Fourth user").String()
-
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	c.Assert(parseResult.Ok, Equals, true)
-
-	spec.Filter(newScenarioFilterBasedOnSpan(6))
-	c.Assert(len(spec.Scenarios), Equals, 1)
-	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "Third scenario")
-
-}
-
-func (s *MySuite) TestScenarioSpanFilterLastScenario(c *C) {
-	specText := SpecBuilder().specHeading("spec heading").
-		scenarioHeading("First scenario").
-		step("a step").
-		scenarioHeading("Second scenario").
-		step("second step").
-		scenarioHeading("Third scenario").
-		step("third user").
-		scenarioHeading("Fourth scenario").
-		step("Fourth user").String()
-
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	c.Assert(parseResult.Ok, Equals, true)
-
-	spec.Filter(newScenarioFilterBasedOnSpan(8))
-	c.Assert(len(spec.Scenarios), Equals, 1)
-	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "Fourth scenario")
-
-}
-
-func (s *MySuite) TestScenarioSpanFilterFirstScenario(c *C) {
-	specText := SpecBuilder().specHeading("spec heading").
-		scenarioHeading("First scenario").
-		step("a step").
-		scenarioHeading("Second scenario").
-		step("second step").
-		scenarioHeading("Third scenario").
-		step("third user").
-		scenarioHeading("Fourth scenario").
-		step("Fourth user").String()
-
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	c.Assert(parseResult.Ok, Equals, true)
-
-	spec.Filter(newScenarioFilterBasedOnSpan(2))
-
-	c.Assert(len(spec.Scenarios), Equals, 1)
-	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "First scenario")
-
-}
-
-func (s *MySuite) TestScenarioSpanFilterForSingleScenarioSpec(c *C) {
-	specText := SpecBuilder().specHeading("spec heading").
-		scenarioHeading("First scenario").
-		step("a step").String()
-
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	c.Assert(parseResult.Ok, Equals, true)
-
-	spec.Filter(newScenarioFilterBasedOnSpan(3))
-	c.Assert(len(spec.Scenarios), Equals, 1)
-	c.Assert(spec.Scenarios[0].Heading.Value, Equals, "First scenario")
-}
-
-func (s *MySuite) TestScenarioSpanFilterWithWrongScenarioIndex(c *C) {
-	specText := SpecBuilder().specHeading("spec heading").
-		scenarioHeading("First scenario").
-		step("a step").String()
-
-	spec, parseResult := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-	c.Assert(parseResult.Ok, Equals, true)
-
-	spec.Filter(newScenarioFilterBasedOnSpan(1))
-	c.Assert(len(spec.Scenarios), Equals, 0)
-}
-
 func (s *MySuite) TestToEvaluateTagExpressionWithTwoTags(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag1 & tag3"}
 	c.Assert(filter.filterTags([]string{"tag1", "tag2"}), Equals, false)
@@ -237,338 +151,20 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingCommaGivesTrue(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag 1 , tag3"}
 	c.Assert(filter.filterTags([]string{"tag1", "tag3"}), Equals, true)
 }
+
 func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagNames(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "true , false"}
 	c.Assert(filter.filterTags([]string{"true", "false"}), Equals, true)
 }
+
 func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagSDFNames(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "!true"}
 	c.Assert(filter.filterTags(nil), Equals, true)
 }
+
 func (s *MySuite) TestToEvaluateTagExpressionConsistingSpecialCharacters(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "a && b || c | b & b"}
 	c.Assert(filter.filterTags([]string{"a", "b"}), Equals, true)
-}
-
-func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading1", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	tokens1 := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading2", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
-	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-
-	c.Assert(specs[0].Tags.Values[0], Equals, myTags[0])
-	c.Assert(specs[0].Tags.Values[1], Equals, myTags[1])
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs), Equals, 1)
-}
-
-func (s *MySuite) TestToEvaluateTagExpression(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading1", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 01", LineNo: 2},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1"}, LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 02", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag3"}, LineNo: 5},
-	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	tokens1 := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading2", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-
-	specs = filterSpecsByTags(specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
-	c.Assert(len(specs), Equals, 1)
-	c.Assert(len(specs[0].Scenarios), Equals, 2)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 1")
-	c.Assert(specs[0].Scenarios[1].Heading.Value, Equals, "Scenario Heading 2")
-}
-
-func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading1", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	tokens1 := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading2", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
-	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-
-	c.Assert(specs[0].Tags.Values[0], Equals, myTags[0])
-	c.Assert(specs[0].Tags.Values[1], Equals, myTags[1])
-	specs = filterSpecsByTags(specs, "(tag1 & tag2")
-	c.Assert(len(specs), Equals, 0)
-}
-
-func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1"}, LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 5},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 6},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 7},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 4", LineNo: 8},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"prod", "tag7", "tag1", "tag2"}, LineNo: 9},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-
-	c.Assert(len(specs[0].Scenarios), Equals, 4)
-	c.Assert(len(specs[0].Scenarios[0].Tags.Values), Equals, 1)
-	c.Assert(len(specs[0].Scenarios[1].Tags.Values), Equals, 2)
-	c.Assert(len(specs[0].Scenarios[2].Tags.Values), Equals, 2)
-	c.Assert(len(specs[0].Scenarios[3].Tags.Values), Equals, 4)
-
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 2")
-	c.Assert(specs[0].Scenarios[1].Heading.Value, Equals, "Scenario Heading 3")
-	c.Assert(specs[0].Scenarios[2].Heading.Value, Equals, "Scenario Heading 4")
-}
-
-func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-
-	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	c.Assert(len(specs[0].Tags.Values), Equals, 2)
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 1")
-	c.Assert(specs[0].Scenarios[1].Heading.Value, Equals, "Scenario Heading 2")
-	c.Assert(specs[0].Scenarios[2].Heading.Value, Equals, "Scenario Heading 3")
-}
-
-func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
-	myTags := []string{"tag1", "tag12"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 3},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1"}, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag12"}, LineNo: 2},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-	c.Assert(len(specs), Equals, 1)
-
-	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	specs = filterSpecsByTags(specs, "tag1 & tag12")
-	c.Assert(len(specs[0].Scenarios), Equals, 1)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 1")
-}
-
-func (s *MySuite) TestFilterTags(c *C) {
-	specTags := []string{"abcd", "foo", "bar", "foo bar"}
-	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
-	evaluateTrue := tagFilter.filterTags(specTags)
-	c.Assert(evaluateTrue, Equals, true)
-}
-
-func (s *MySuite) TestToFilterSpecsByTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading1", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
-	}
-	spec1, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	tokens1 := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading2", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 2},
-	}
-	spec2, result := new(parser.SpecParser).CreateSpecification(tokens1, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	tokens2 := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading3", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 3},
-	}
-	spec3, result := new(parser.SpecParser).CreateSpecification(tokens2, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec1.Scenarios), Equals, 2)
-	c.Assert(len(spec1.Scenarios[0].Tags.Values), Equals, 2)
-	c.Assert(len(spec2.Scenarios), Equals, 2)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-	specs = append(specs, spec3)
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs), Equals, 2)
-	c.Assert(len(specs[0].Scenarios), Equals, 1)
-	c.Assert(len(specs[1].Scenarios), Equals, 1)
-	c.Assert(specs[0].Heading.Value, Equals, "Spec Heading1")
-	c.Assert(specs[1].Heading.Value, Equals, "Spec Heading3")
-}
-
-func (s *MySuite) TestToFilterScenariosByTag(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec.Scenarios), Equals, 3)
-	c.Assert(len(spec.Scenarios[1].Tags.Values), Equals, 2)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs[0].Scenarios), Equals, 1)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 2")
-}
-
-func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1"}, LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 5},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 6},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 7},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	c.Assert(len(specs[0].Scenarios[0].Tags.Values), Equals, 1)
-	c.Assert(len(specs[0].Scenarios[1].Tags.Values), Equals, 2)
-	specs = filterSpecsByTags(specs, "tag1 & tag2")
-	c.Assert(len(specs[0].Scenarios), Equals, 2)
-	c.Assert(specs[0].Scenarios[0].Heading.Value, Equals, "Scenario Heading 2")
-	c.Assert(specs[0].Scenarios[1].Heading.Value, Equals, "Scenario Heading 3")
-}
-
-func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 1", LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 2", LineNo: 4},
-		&parser.Token{Kind: gauge.TagKind, Args: myTags, LineNo: 3},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading 3", LineNo: 5},
-	}
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec.Scenarios), Equals, 3)
-	c.Assert(len(spec.Scenarios[1].Tags.Values), Equals, 2)
-
-	var specs []*gauge.Specification
-	specs = append(specs, spec)
-	specs = filterSpecsByTags(specs, "tag3")
-	c.Assert(len(specs), Equals, 0)
-}
-
-func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
-	}
-
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
-	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec.Tags.Values), Equals, 2)
-	c.Assert(spec.Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Tags.Values[1], Equals, "tag2")
-}
-
-func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
-	tokens := []*parser.Token{
-		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 3},
-	}
-
-	spec, result := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
-	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
-	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestToSortSpecs(c *C) {
@@ -585,4 +181,482 @@ func (s *MySuite) TestToSortSpecs(c *C) {
 	c.Assert(specs[0].FileName, Equals, spec1.FileName)
 	c.Assert(specs[1].FileName, Equals, spec2.FileName)
 	c.Assert(specs[2].FileName, Equals, spec3.FileName)
+}
+
+func (s *MySuite) TestScenarioSpanFilter(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 7, End: 10},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 11, End: 15},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan(8))
+
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	c.Assert(spec.Scenarios[0], Equals, scenario3)
+}
+
+func (s *MySuite) TestScenarioSpanFilterLastScenario(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 7, End: 10},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 11, End: 15},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan(13))
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	c.Assert(spec.Scenarios[0], Equals, scenario4)
+
+}
+
+func (s *MySuite) TestScenarioSpanFilterFirstScenario(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 7, End: 10},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 11, End: 15},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan(2))
+
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	c.Assert(spec.Scenarios[0], Equals, scenario1)
+
+}
+
+func (s *MySuite) TestScenarioSpanFilterForSingleScenarioSpec(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1},
+		Scenarios: []*gauge.Scenario{scenario1},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan(3))
+	c.Assert(len(spec.Scenarios), Equals, 1)
+	c.Assert(spec.Scenarios[0], Equals, scenario1)
+}
+
+func (s *MySuite) TestScenarioSpanFilterWithWrongScenarioIndex(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1},
+		Scenarios: []*gauge.Scenario{scenario1},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan(5))
+	c.Assert(len(spec.Scenarios), Equals, 0)
+}
+
+func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+		Tags:      &gauge.Tags{Values: myTags},
+	}
+
+	spec2 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	c.Assert(specs[0].Tags.Values[0], Equals, myTags[0])
+	c.Assert(specs[0].Tags.Values[1], Equals, myTags[1])
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(specs), Equals, 1)
+}
+
+func (s *MySuite) TestToEvaluateTagExpression(c *C) {
+	myTags := []string{"tag1", "tag2"}
+
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: []string{myTags[0]}},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: []string{"tag3"}},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+
+	spec2 := &gauge.Specification{
+		Items:     []gauge.Item{scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario3, scenario4},
+		Tags:      &gauge.Tags{Values: myTags},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	specs = filterSpecsByTags(specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
+	c.Assert(len(specs), Equals, 1)
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario3)
+	c.Assert(specs[0].Scenarios[1], Equals, scenario4)
+}
+
+func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+		Tags:      &gauge.Tags{Values: myTags},
+	}
+
+	spec2 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+
+	c.Assert(specs[0].Tags.Values[0], Equals, myTags[0])
+	c.Assert(specs[0].Tags.Values[1], Equals, myTags[1])
+	specs = filterSpecsByTags(specs, "(tag1 & tag2")
+	c.Assert(len(specs), Equals, 0)
+}
+
+func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: []string{"tag1"}},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: []string{"prod", "tag7", "tag1", "tag2"}},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 4)
+	c.Assert(len(specs[0].Scenarios[0].Tags.Values), Equals, 1)
+	c.Assert(len(specs[0].Scenarios[1].Tags.Values), Equals, 2)
+	c.Assert(len(specs[0].Scenarios[2].Tags.Values), Equals, 2)
+	c.Assert(len(specs[0].Scenarios[3].Tags.Values), Equals, 4)
+
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(specs[0].Scenarios), Equals, 3)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario2)
+	c.Assert(specs[0].Scenarios[1], Equals, scenario3)
+	c.Assert(specs[0].Scenarios[2], Equals, scenario4)
+}
+
+func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
+	myTags := []string{"tag1", "tag2"}
+
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+		Tags:      &gauge.Tags{Values: myTags},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 3)
+	c.Assert(len(specs[0].Tags.Values), Equals, 2)
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(specs[0].Scenarios), Equals, 3)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario1)
+	c.Assert(specs[0].Scenarios[1], Equals, scenario2)
+	c.Assert(specs[0].Scenarios[2], Equals, scenario3)
+}
+
+func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
+	myTags := []string{"tag1", "tag12"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: []string{"tag1"}},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: []string{"tag12"}},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	c.Assert(len(specs), Equals, 1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 3)
+	specs = filterSpecsByTags(specs, "tag1 & tag12")
+	c.Assert(len(specs[0].Scenarios), Equals, 1)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario1)
+}
+
+func (s *MySuite) TestFilterTags(c *C) {
+	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
+	evaluateTrue := tagFilter.filterTags(specTags)
+	c.Assert(evaluateTrue, Equals, true)
+}
+
+func (s *MySuite) TestToFilterSpecsByTags(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	spec2 := &gauge.Specification{
+		Items:     []gauge.Item{scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario2, scenario3},
+	}
+
+	spec3 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	specs = append(specs, spec2)
+	specs = append(specs, spec3)
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(specs), Equals, 2)
+	c.Assert(len(specs[0].Scenarios), Equals, 1)
+	c.Assert(len(specs[1].Scenarios), Equals, 1)
+	c.Assert(specs[0], Equals, spec1)
+	c.Assert(specs[1], Equals, spec3)
+}
+
+func (s *MySuite) TestToFilterScenariosByTag(c *C) {
+	myTags := []string{"tag1", "tag2"}
+
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(specs[0].Scenarios), Equals, 1)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario2)
+}
+
+func (s *MySuite) TestToFilterMultipleScenariosByTags(c *C) {
+	myTags := []string{"tag1", "tag2"}
+
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{Values: []string{"tag1"}},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	specs = filterSpecsByTags(specs, "tag1 & tag2")
+
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario2)
+	c.Assert(specs[0].Scenarios[1], Equals, scenario3)
+}
+
+func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
+	myTags := []string{"tag1", "tag2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{Values: myTags},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	specs = filterSpecsByTags(specs, "tag3")
+
+	c.Assert(len(specs), Equals, 0)
 }

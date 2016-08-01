@@ -23,6 +23,10 @@ import (
 
 	"fmt"
 
+	"os"
+
+	"strings"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
@@ -84,13 +88,21 @@ func ExecuteSpecs(specDirs []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 
-	specs, errMap, runner := validation.ValidateSpecs(specDirs)
+	res := validation.ValidateSpecs(specDirs)
+	if len(res.Errs) > 0 {
+		os.Exit(1)
+	}
+	if res.SpecCollection.Size() < 1 {
+		logger.Info("No specifications found in %s.", strings.Join(specDirs, ", "))
+		res.Runner.Kill()
+		os.Exit(0)
+	}
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
 	rerun.ListenFailedScenarios()
-	ei := newExecutionInfo(specs, runner, nil, errMap, InParallel, 0)
+	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
-	return printExecutionStatus(e.run(), errMap)
+	return printExecutionStatus(e.run(), res.ErrMap)
 }
 
 func newExecution(executionInfo *executionInfo) execution {

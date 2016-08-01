@@ -28,7 +28,6 @@ import (
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
-	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -66,6 +65,14 @@ type StepValidationError struct {
 	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
+func NewValidationErrMaps() *ValidationErrMaps {
+	return &ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
+		ScenarioErrs: make(map[*gauge.Scenario][]*StepValidationError),
+		StepErrs:     make(map[*gauge.Step]*StepValidationError),
+	}
+}
+
 func (s *StepValidationError) Error() string {
 	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
 }
@@ -74,9 +81,17 @@ func Validate(args []string) {
 	if len(args) == 0 {
 		args = append(args, common.SpecsDirectoryName)
 	}
-	_, errMap, runner := ValidateSpecs(args)
-	runner.Kill()
-	if len(errMap.StepErrs) > 0 {
+	res := ValidateSpecs(args)
+	if len(res.Errs) > 0 {
+		os.Exit(1)
+	}
+	if res.SpecCollection.Size() < 1 {
+		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
+		res.Runner.Kill()
+		os.Exit(0)
+	}
+	res.Runner.Kill()
+	if len(res.ErrMap.StepErrs) > 0 {
 		os.Exit(1)
 	}
 	logger.Info("No error found.")
@@ -94,44 +109,41 @@ func startAPI() runner.Runner {
 	return nil
 }
 
-func ValidateSpecs(args []string) (*gauge.SpecCollection, *ValidationErrMaps, runner.Runner) {
-	s, c, f := parseSpecs(args)
+type ValidationResult struct {
+	SpecCollection *gauge.SpecCollection
+	ErrMap         *ValidationErrMaps
+	Runner         runner.Runner
+	Errs           []error
+}
+
+func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, e []error) *ValidationResult {
+	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, Errs: e}
+}
+
+func ValidateSpecs(args []string) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		logger.Errorf(err.Error())
+		return NewValidationResult(nil, nil, nil, []error{errors.New(err.Error())})
 	}
+	conceptDict, conceptsFailed := parser.ParseConcepts()
+	s, specsFailed := parser.ParseSpecs(args, conceptDict)
 	r := startAPI()
-	v := newValidator(manifest, s, r, c)
-	vErrs := v.validate()
-	errMap := &ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
-		ScenarioErrs: make(map[*gauge.Scenario][]*StepValidationError),
-		StepErrs:     make(map[*gauge.Step]*StepValidationError),
-	}
+	vErrs := newValidator(manifest, s, r, conceptDict).validate()
+	errMap := NewValidationErrMaps()
 	if len(vErrs) > 0 {
 		printValidationFailures(vErrs)
-		fillErrors(errMap, vErrs)
+		errMap = getErrMap(vErrs)
 	}
-	if f {
+	if specsFailed || conceptsFailed {
 		r.Kill()
-		os.Exit(1)
+		return NewValidationResult(nil, nil, nil, []error{errors.New("Parsing failed.")})
 	}
-	if len(s) == 0 {
-		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
-		r.Kill()
-		os.Exit(0)
-	}
-	return gauge.NewSpecCollection(s), errMap, r
+	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, []error{})
 }
 
-func parseSpecs(args []string) ([]*gauge.Specification, *gauge.ConceptDictionary, bool) {
-	conceptsDictionary, conceptParseResult := parser.CreateConceptsDictionary()
-	conceptFailed := parser.HandleParseResult(conceptParseResult)
-	specsToExecute, specFailed := filter.GetSpecsToExecute(conceptsDictionary, args)
-	return specsToExecute, conceptsDictionary, conceptFailed || specFailed
-}
-
-func fillErrors(errMap *ValidationErrMaps, validationErrors validationErrors) {
+func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
+	errMap := NewValidationErrMaps()
 	for spec, errors := range validationErrors {
 		for _, err := range errors {
 			errMap.StepErrs[err.step] = err
@@ -148,6 +160,7 @@ func fillErrors(errMap *ValidationErrMaps, validationErrors validationErrors) {
 		}
 		fillSpecErrors(spec, errMap, append(spec.Contexts, spec.TearDownSteps...))
 	}
+	return errMap
 }
 
 func fillScenarioErrors(scenario *gauge.Scenario, errMap *ValidationErrMaps, steps []*gauge.Step) {

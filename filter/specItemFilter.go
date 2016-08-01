@@ -39,7 +39,7 @@ type ScenarioFilterBasedOnTags struct {
 	tagExpression string
 }
 
-func newScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
+func NewScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
 	return &scenarioFilterBasedOnSpan{lineNumber}
 }
 
@@ -173,7 +173,7 @@ func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []
 	return listOfOperators, listOfTags
 }
 
-func filterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
+func FilterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
 	filteredSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {
 		spec.Filter(filter)

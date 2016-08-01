@@ -561,6 +561,38 @@ func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
 
 }
 
+func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
+	tokens := []*Token{
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+	}
+
+	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+
+	c.Assert(result.Ok, Equals, true)
+
+	c.Assert(len(spec.Tags.Values), Equals, 2)
+	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values[1], Equals, "tag2")
+}
+
+func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
+	tokens := []*Token{
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 3},
+	}
+
+	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+
+	c.Assert(result.Ok, Equals, true)
+
+	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "tag1")
+	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "tag2")
+}
+
 func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("A spec heading").
