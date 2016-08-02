@@ -27,7 +27,6 @@ import (
 
 	"strings"
 
-	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/rerun"
@@ -110,17 +109,6 @@ func newExecution(executionInfo *executionInfo) execution {
 		return newParallelExecution(executionInfo)
 	}
 	return newSimpleExecution(executionInfo)
-}
-
-func startAPI() runner.Runner {
-	sc := api.StartAPI()
-	select {
-	case runner := <-sc.RunnerChan:
-		return runner
-	case err := <-sc.ErrorChan:
-		logger.Fatalf("Failed to start gauge API: %s", err.Error())
-	}
-	return nil
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps) int {
