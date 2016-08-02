@@ -20,9 +20,13 @@ package execution
 import (
 	"errors"
 
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/metadata"
 	. "gopkg.in/check.v1"
 )
 
@@ -167,6 +171,122 @@ func (s *MySuite) TestGetErrorsWithStepAndConceptFailures(c *C) {
 	c.Assert(errors, DeepEquals, expected)
 }
 
+func (s *MySuite) TestListenSuiteStartExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
+	defer sendSuiteEnd(actual)
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type: gauge_messages.ExecutionResponse_SuiteStart.Enum(),
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+
+}
+
+func (s *MySuite) TestListenSpecStartExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	ei := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{FileName: proto.String("example.spec")},
+	}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	defer sendSuiteEnd(actual)
+	event.Notify(event.NewExecutionEvent(event.SpecStart, nil, nil, 0, ei))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type: gauge_messages.ExecutionResponse_SpecStart.Enum(),
+		ID:   proto.String("example.spec"),
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestListenScenarioStartExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	ei := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{FileName: proto.String("example.spec")},
+	}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	defer sendSuiteEnd(actual)
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, nil, 0, ei))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type: gauge_messages.ExecutionResponse_ScenarioStart.Enum(),
+		ID:   proto.String("example.spec:1"),
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestListenSpecEndExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	ei := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{FileName: proto.String("example.spec")},
+	}
+	hookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("err msg")}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	defer sendSuiteEnd(actual)
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &result.SpecResult{
+		ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: hookFailure, PostHookFailure: hookFailure},
+	}, 0, ei))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type:            gauge_messages.ExecutionResponse_SpecEnd.Enum(),
+		ID:              proto.String("example.spec"),
+		PreHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		PostHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestListenSuiteEndExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	hookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: proto.String("err msg")}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{PreSuite: hookFailure, PostSuite: hookFailure}, 0, gauge_messages.ExecutionInfo{}))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type:            gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
+		PreHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		PostHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+type dummyServer struct {
+	response chan *gauge_messages.ExecutionResponse
+}
+
+func (d *dummyServer) Send(r *gauge_messages.ExecutionResponse) error {
+	d.response <- r
+	return nil
+}
+
+func (d *dummyServer) Context() context.Context {
+	return nil
+}
+func (d *dummyServer) SendMsg(m interface{}) error {
+	return nil
+}
+func (d *dummyServer) RecvMsg(m interface{}) error {
+	return nil
+}
+
+func (d *dummyServer) SendHeader(metadata.MD) error {
+	return nil
+}
+func (d *dummyServer) SetTrailer(metadata.MD) {
+
+}
+
 func newFailedStep(msg string) *gauge_messages.ProtoItem {
 	return &gauge_messages.ProtoItem{
 		ItemType: gauge_messages.ProtoItem_Step.Enum(),
@@ -179,4 +299,9 @@ func newFailedStep(msg string) *gauge_messages.ProtoItem {
 			},
 		},
 	}
+}
+
+func sendSuiteEnd(actual chan *gauge_messages.ExecutionResponse) {
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{PreSuite: nil, PostSuite: nil}, 0, gauge_messages.ExecutionInfo{}))
+	<-actual
 }

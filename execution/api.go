@@ -103,6 +103,7 @@ func listenExecutionEvents(stream gauge_messages.Execution_ExecuteServer) {
 					PreHookFailure:  getHookFailure(e.Result.GetPreHook()),
 					PostHookFailure: getHookFailure(e.Result.GetPostHook()),
 				})
+				return
 			}
 		}
 	}()
