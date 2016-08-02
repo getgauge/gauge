@@ -58,10 +58,12 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 	SimpleConsoleOutput = true
 	event.InitRegistry()
 	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}}
+	sceHeading := "My scenario heading"
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(dw.output, Equals, "  ## My Scenario Heading\n")
 }
 
@@ -74,10 +76,12 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 	dataTable.AddHeaders([]string{"foo", "bar"})
 	dataTable.AddRowValues([]string{"one", "two"})
 	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}, DataTableRow: dataTable}
+	sceHeading := "My scenario heading"
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
 
 	ListenExecutionEvents()
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
 	table := `
      |foo|bar|
      |---|---|
