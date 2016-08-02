@@ -124,6 +124,9 @@ func ListenExecutionEvents() {
 			case event.SpecStart:
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
 			case event.ScenarioStart:
+				if e.Result.(*result.ScenarioResult).ProtoScenario.GetSkipped() {
+					continue
+				}
 				sce := e.Item.(*gauge.Scenario)
 				// if it is datatable driven execution
 				if sce.DataTableRow.GetRowCount() != 0 {
@@ -139,6 +142,9 @@ func ListenExecutionEvents() {
 			case event.ConceptEnd:
 				r.ConceptEnd(e.Result)
 			case event.ScenarioEnd:
+				if e.Result.(*result.ScenarioResult).ProtoScenario.GetSkipped() {
+					continue
+				}
 				r.ScenarioEnd(e.Result)
 			case event.SpecEnd:
 				r.SpecEnd(e.Result)

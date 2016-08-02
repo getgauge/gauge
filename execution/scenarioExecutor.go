@@ -57,10 +57,11 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	}
 	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+		event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
 		return
 	}
-
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, nil, e.stream, *e.currentExecutionInfo))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
 	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
 
 	res := e.initScenarioDataStore()
