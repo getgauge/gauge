@@ -756,15 +756,19 @@ func (token *Token) String() string {
 }
 
 type ParseResult struct {
-	ParseErrors []*ParseError
-	Warnings    []*Warning
-	Ok          bool
-	FileName    string
+	ParseErrors    []*ParseError
+	CriticalErrors []*ParseError
+	Warnings       []*Warning
+	Ok             bool
+	FileName       string
 }
 
 func (result *ParseResult) Errors() []string {
 	var errors []string
 	for _, err := range result.ParseErrors {
+		errors = append(errors, fmt.Sprintf("[ParseError] %s", err.Error()))
+	}
+	for _, err := range result.CriticalErrors {
 		errors = append(errors, fmt.Sprintf("[ParseError] %s", err.Error()))
 	}
 	return errors

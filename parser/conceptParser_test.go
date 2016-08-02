@@ -479,8 +479,8 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 
 	res := validateConcepts(cd)
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+	c.Assert(len(res.CriticalErrors), Not(Equals), 0)
+	c.Assert(containsAny(res.CriticalErrors, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
@@ -489,8 +489,8 @@ func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 
 	res := validateConcepts(cd)
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+	c.Assert(len(res.CriticalErrors), Not(Equals), 0)
+	c.Assert(containsAny(res.CriticalErrors, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {

@@ -22,6 +22,8 @@ import (
 	"path/filepath"
 	"sync"
 
+	"os"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -381,6 +383,9 @@ func handleParseFailures(parseResults []*parser.ParseResult) {
 	for _, result := range parseResults {
 		if !result.Ok {
 			logger.APILog.Error("Spec Parse failure: %s", result.Errors())
+			if len(result.CriticalErrors) > 0 {
+				os.Exit(1)
+			}
 		}
 	}
 }

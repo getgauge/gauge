@@ -116,7 +116,7 @@ type ValidationResult struct {
 	Errs           []error
 }
 
-func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, e []error) *ValidationResult {
+func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, e ...error) *ValidationResult {
 	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, Errs: e}
 }
 
@@ -124,9 +124,16 @@ func ValidateSpecs(args []string) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Errorf(err.Error())
-		return NewValidationResult(nil, nil, nil, []error{errors.New(err.Error())})
+		return NewValidationResult(nil, nil, nil, err)
 	}
-	conceptDict, conceptsFailed := parser.ParseConcepts()
+	conceptDict, res := parser.ParseConcepts()
+	if len(res.CriticalErrors) > 0 {
+		var errs []error
+		for _, err := range res.CriticalErrors {
+			errs = append(errs, err)
+		}
+		return NewValidationResult(nil, nil, nil, errs...)
+	}
 	s, specsFailed := parser.ParseSpecs(args, conceptDict)
 	r := startAPI()
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
@@ -135,11 +142,11 @@ func ValidateSpecs(args []string) *ValidationResult {
 		printValidationFailures(vErrs)
 		errMap = getErrMap(vErrs)
 	}
-	if specsFailed || conceptsFailed {
+	if specsFailed || !res.Ok {
 		r.Kill()
-		return NewValidationResult(nil, nil, nil, []error{errors.New("Parsing failed.")})
+		return NewValidationResult(nil, nil, nil, errors.New("Parsing failed."))
 	}
-	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, []error{})
+	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r)
 }
 
 func getErrMap(validationErrors validationErrors) *ValidationErrMaps {

@@ -19,7 +19,6 @@ package parser
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -227,14 +226,9 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 		}
 	}
 	vRes := validateConcepts(conceptsDictionary)
-	if len(vRes.ParseErrors) > 0 {
-		for _, err := range res.ParseErrors {
-			logger.Errorf(err.Error())
-		}
-		for _, err := range vRes.ParseErrors {
-			logger.Errorf("%s:%s", vRes.FileName, err.Error())
-		}
-		os.Exit(1)
+	if len(vRes.CriticalErrors) > 0 {
+		res.Ok = false
+		res.CriticalErrors = append(res.CriticalErrors, vRes.CriticalErrors...)
 	}
 	return conceptsDictionary, res
 }
@@ -261,7 +255,7 @@ func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	for _, concept := range conceptDictionary.ConceptsMap {
 		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
 		if err != nil {
-			return &ParseResult{ParseErrors: []*ParseError{err}, FileName: concept.FileName}
+			return &ParseResult{CriticalErrors: []*ParseError{err}, FileName: concept.FileName}
 		}
 	}
 	return &ParseResult{ParseErrors: []*ParseError{}}

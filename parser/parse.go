@@ -55,9 +55,10 @@ func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary) ([]*
 	return specsToExecute, failed
 }
 
-func ParseConcepts() (*gauge.ConceptDictionary, bool) {
+func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult) {
 	conceptsDictionary, conceptParseResult := CreateConceptsDictionary()
-	return conceptsDictionary, HandleParseResult(conceptParseResult)
+	HandleParseResult(conceptParseResult)
+	return conceptsDictionary, conceptParseResult
 }
 
 func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
