@@ -45,12 +45,12 @@ func (e *executionServer) Execute(req *gauge_messages.ExecutionRequest, stream g
 func execute(specDirs []string, stream gauge_messages.Execution_ExecuteServer) {
 	err := validateFlags()
 	if err != nil {
-		stream.Send(getErrorResponse(err))
+		stream.Send(getErrorExecutionResponse(err))
 		return
 	}
 	res := validation.ValidateSpecs(specDirs)
 	if len(res.Errs) > 0 {
-		stream.Send(getErrorResponse(res.Errs...))
+		stream.Send(getErrorExecutionResponse(res.Errs...))
 		return
 	}
 	event.InitRegistry()
@@ -109,7 +109,7 @@ func listenExecutionEvents(stream gauge_messages.Execution_ExecuteServer) {
 	}()
 }
 
-func getErrorResponse(errs ...error) *gauge_messages.ExecutionResponse {
+func getErrorExecutionResponse(errs ...error) *gauge_messages.ExecutionResponse {
 	var e []*gauge_messages.ExecutionResponse_ExecutionError
 	for _, err := range errs {
 		e = append(e, &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String(err.Error())})

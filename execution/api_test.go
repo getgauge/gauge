@@ -64,7 +64,7 @@ func (s *MySuite) TestGetStatusForSkippedScenario(c *C) {
 }
 
 func (s *MySuite) TestGetErrorResponse(c *C) {
-	errs := getErrorResponse(errors.New("error1"), errors.New("error2"))
+	errs := getErrorExecutionResponse(errors.New("error1"), errors.New("error2"))
 
 	expected := &gauge_messages.ExecutionResponse{Type: gauge_messages.ExecutionResponse_ErrorResult.Enum(), Errors: []*gauge_messages.ExecutionResponse_ExecutionError{
 		{ErrorMessage: proto.String("error1")}, {ErrorMessage: proto.String("error2")},
@@ -257,6 +257,62 @@ func (s *MySuite) TestListenSuiteEndExecutionEvent(c *C) {
 		Type:              gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
 		BeforeHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
 		AfterHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestListenScenarioEndExecutionEvent(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	ei := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{FileName: proto.String("example.spec")},
+	}
+	scn := &gauge_messages.ProtoScenario{
+		ScenarioItems: []*gauge_messages.ProtoItem{},
+		ExecutionTime: proto.Int64(1),
+	}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	defer sendSuiteEnd(actual)
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type:          gauge_messages.ExecutionResponse_ScenarioEnd.Enum(),
+		ExecutionTime: proto.Int64(1),
+		Status:        gauge_messages.ExecutionResponse_PASSED.Enum(),
+		ID:            proto.String("example.spec:1"),
+	}
+	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestListenScenarioEndExecutionEventForFailedScenario(c *C) {
+	event.InitRegistry()
+	actual := make(chan *gauge_messages.ExecutionResponse)
+	ei := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{FileName: proto.String("example.spec")},
+	}
+	scn := &gauge_messages.ProtoScenario{
+		ScenarioItems: []*gauge_messages.ProtoItem{
+			newFailedStep("error message"),
+		},
+		ExecutionTime: proto.Int64(1),
+		Failed:        proto.Bool(true),
+	}
+
+	listenExecutionEvents(&dummyServer{response: actual})
+	defer sendSuiteEnd(actual)
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
+
+	expected := &gauge_messages.ExecutionResponse{
+		Type:          gauge_messages.ExecutionResponse_ScenarioEnd.Enum(),
+		ExecutionTime: proto.Int64(1),
+		Status:        gauge_messages.ExecutionResponse_FAILED.Enum(),
+		ID:            proto.String("example.spec:1"),
+		Errors: []*gauge_messages.ExecutionResponse_ExecutionError{
+			&gauge_messages.ExecutionResponse_ExecutionError{
+				ErrorMessage: proto.String("error message"),
+			},
+		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }
