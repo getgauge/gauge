@@ -237,10 +237,10 @@ func (s *MySuite) TestListenSpecEndExecutionEvent(c *C) {
 	}, 0, ei))
 
 	expected := &gauge_messages.ExecutionResponse{
-		Type:            gauge_messages.ExecutionResponse_SpecEnd.Enum(),
-		ID:              proto.String("example.spec"),
-		PreHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
-		PostHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		Type:              gauge_messages.ExecutionResponse_SpecEnd.Enum(),
+		ID:                proto.String("example.spec"),
+		BeforeHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		AfterHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }
@@ -254,9 +254,9 @@ func (s *MySuite) TestListenSuiteEndExecutionEvent(c *C) {
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{PreSuite: hookFailure, PostSuite: hookFailure}, 0, gauge_messages.ExecutionInfo{}))
 
 	expected := &gauge_messages.ExecutionResponse{
-		Type:            gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
-		PreHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
-		PostHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		Type:              gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
+		BeforeHookFailure: &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
+		AfterHookFailure:  &gauge_messages.ExecutionResponse_ExecutionError{ErrorMessage: proto.String("err msg")},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }

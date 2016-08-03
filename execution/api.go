@@ -82,26 +82,26 @@ func listenExecutionEvents(stream gauge_messages.Execution_ExecuteServer) {
 				})
 			case event.ScenarioEnd:
 				stream.Send(&gauge_messages.ExecutionResponse{
-					Type:            gauge_messages.ExecutionResponse_ScenarioEnd.Enum(),
-					ID:              proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
-					Status:          getStatus(e.Result.(*result.ScenarioResult)),
-					ExecutionTime:   proto.Int64(e.Result.ExecTime()),
-					Errors:          getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
-					PreHookFailure:  getHookFailure(e.Result.GetPreHook()),
-					PostHookFailure: getHookFailure(e.Result.GetPostHook()),
+					Type:              gauge_messages.ExecutionResponse_ScenarioEnd.Enum(),
+					ID:                proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
+					Status:            getStatus(e.Result.(*result.ScenarioResult)),
+					ExecutionTime:     proto.Int64(e.Result.ExecTime()),
+					Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
+					BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+					AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
 				})
 			case event.SpecEnd:
 				stream.Send(&gauge_messages.ExecutionResponse{
-					Type:            gauge_messages.ExecutionResponse_SpecEnd.Enum(),
-					ID:              proto.String(fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName())),
-					PreHookFailure:  getHookFailure(e.Result.GetPreHook()),
-					PostHookFailure: getHookFailure(e.Result.GetPostHook()),
+					Type:              gauge_messages.ExecutionResponse_SpecEnd.Enum(),
+					ID:                proto.String(fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName())),
+					BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+					AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
 				})
 			case event.SuiteEnd:
 				stream.Send(&gauge_messages.ExecutionResponse{
-					Type:            gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
-					PreHookFailure:  getHookFailure(e.Result.GetPreHook()),
-					PostHookFailure: getHookFailure(e.Result.GetPostHook()),
+					Type:              gauge_messages.ExecutionResponse_SuiteEnd.Enum(),
+					BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+					AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
 				})
 				return
 			}
@@ -120,7 +120,7 @@ func getErrorResponse(errs ...error) *gauge_messages.ExecutionResponse {
 func getHookFailure(hookFailure **gauge_messages.ProtoHookFailure) *gauge_messages.ExecutionResponse_ExecutionError {
 	if hookFailure != nil && *hookFailure != nil {
 		return &gauge_messages.ExecutionResponse_ExecutionError{
-			ScreenShot:   (**hookFailure).ScreenShot,
+			Screenshot:   (**hookFailure).ScreenShot,
 			ErrorMessage: (**hookFailure).ErrorMessage,
 			StackTrace:   (**hookFailure).StackTrace,
 		}
@@ -141,7 +141,7 @@ func getErrors(items []*gauge_messages.ProtoItem) []*gauge_messages.ExecutionRes
 				errors = append(errors, &gauge_messages.ExecutionResponse_ExecutionError{
 					StackTrace:   res.StackTrace,
 					ErrorMessage: res.ErrorMessage,
-					ScreenShot:   res.ScreenShot,
+					Screenshot:   res.ScreenShot,
 				})
 			}
 		case gauge_messages.ProtoItem_Concept:
