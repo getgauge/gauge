@@ -82,6 +82,92 @@ func (s *MySuite) TestNewProtoScenario(c *C) {
 	c.Assert(*protoSce.Span.End, Equals, int64(4))
 }
 
+func (s *MySuite) TestConvertToProtoSpecWithDataTable(c *C) {
+	spec := &Specification{
+		Heading: &Heading{
+			Value: "Spec Heading",
+		},
+		FileName:  "example.spec",
+		DataTable: DataTable{Table: Table{headerIndexMap: make(map[string]int)}},
+	}
+	protoSpec := ConvertToProtoSpec(spec)
+
+	c.Assert(protoSpec.GetIsTableDriven(), Equals, true)
+}
+
+func (s *MySuite) TestConvertToProtoSpecWithoutDataTable(c *C) {
+	spec := &Specification{
+		Heading: &Heading{
+			Value: "Spec Heading",
+		},
+		FileName: "example.spec",
+	}
+	protoSpec := ConvertToProtoSpec(spec)
+
+	c.Assert(protoSpec.GetIsTableDriven(), Equals, false)
+}
+
+func (s *MySuite) TestConvertToProtoStep(c *C) {
+	step := &Step{
+		LineText: "line text",
+		Value:    "value",
+	}
+	actual := convertToProtoStep(step)
+
+	expected := &gauge_messages.ProtoStep{ActualText: proto.String(step.LineText), ParsedText: proto.String(step.Value), Fragments: []*gauge_messages.Fragment{}}
+	c.Assert(actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestConvertToProtoConcept(c *C) {
+	step := &Step{
+		LineText:  "line text",
+		Value:     "value",
+		IsConcept: true,
+		ConceptSteps: []*Step{
+			{LineText: "line text1", Value: "value1", ConceptSteps: []*Step{}},
+			{LineText: "line text2", Value: "value2", IsConcept: true,
+				ConceptSteps: []*Step{{LineText: "line text3", Value: "value3", ConceptSteps: []*Step{}}},
+			},
+		},
+	}
+	actual := convertToProtoConcept(step)
+
+	expected := &gauge_messages.ProtoItem{
+		ItemType: gauge_messages.ProtoItem_Concept.Enum(),
+		Concept: &gauge_messages.ProtoConcept{
+			ConceptStep: newProtoStep("line text", "value"),
+			Steps: []*gauge_messages.ProtoItem{
+				newStepItem("line text1", "value1"),
+				{
+					ItemType: gauge_messages.ProtoItem_Concept.Enum(),
+					Concept: &gauge_messages.ProtoConcept{
+						ConceptStep: newProtoStep("line text2", "value2"),
+						Steps:       []*gauge_messages.ProtoItem{newStepItem("line text3", "value3")},
+					},
+				},
+			},
+		},
+	}
+
+	c.Assert(actual, DeepEquals, expected)
+}
+
+func newStepItem(lineText, value string) *gauge_messages.ProtoItem {
+	return &gauge_messages.ProtoItem{
+		ItemType: gauge_messages.ProtoItem_Step.Enum(),
+		Step:     newProtoStep(lineText, value),
+	}
+
+}
+
+func newProtoStep(lineText, value string) *gauge_messages.ProtoStep {
+	return &gauge_messages.ProtoStep{
+		ActualText: proto.String(lineText),
+		ParsedText: proto.String(value),
+		Fragments:  []*gauge_messages.Fragment{},
+	}
+}
+
 func compareFragments(fragmentList1 []*gauge_messages.Fragment, fragmentList2 []*gauge_messages.Fragment, c *C) {
 	c.Assert(len(fragmentList1), Equals, len(fragmentList2))
 	for i, _ := range fragmentList1 {

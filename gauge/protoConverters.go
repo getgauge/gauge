@@ -89,7 +89,7 @@ func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
 func getAllTags(tags *Tags) []string {
 	allTags := make([]string, 0)
 	for _, tag := range tags.Values {
-		allTags = append(allTags, *proto.String(tag))
+		allTags = append(allTags, tag)
 	}
 	return allTags
 }
@@ -221,6 +221,9 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 
 func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
+	if spec.DataTable.IsInitialized() {
+		protoSpec.IsTableDriven = proto.Bool(true)
+	}
 	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range spec.Items {
 		protoItems = append(protoItems, ConvertToProtoItem(item))
