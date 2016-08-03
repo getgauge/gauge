@@ -171,7 +171,9 @@ func (m *ExecutionRequestFlag) GetValue() string {
 // ExecutionResponse defines the structure of response for ExecutionRequest message
 type ExecutionResponse struct {
 	Type *ExecutionResponse_ExecutionResponseType `protobuf:"varint,1,req,name=type,enum=gauge.messages.ExecutionResponse_ExecutionResponseType" json:"type,omitempty"`
-	// An identifier for the current execution result
+	// An identifier for the current execution result. This field is populated only for spec/scenario result.
+	// For spec, the value will be the filename.
+	// For scenario, the value will be filename:scenario_heading_line_num.
 	ID     *string                   `protobuf:"bytes,2,opt,name=ID,json=iD" json:"ID,omitempty"`
 	Status *ExecutionResponse_Status `protobuf:"varint,3,opt,name=status,enum=gauge.messages.ExecutionResponse_Status" json:"status,omitempty"`
 	// Contains the Execution errors and its details
