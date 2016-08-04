@@ -40,6 +40,7 @@ It has these top-level messages:
 	UnsupportedApiMessageResponse
 	APIMessage
 	ExecutionRequest
+	Result
 	ExecutionResponse
 	KillProcessRequest
 	ExecutionStatusResponse
