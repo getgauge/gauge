@@ -65,22 +65,23 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 	event.Register(ch, event.SuiteStart, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.SuiteEnd)
 	go func() {
 		for {
+			var err error
 			e := <-ch
 			switch e.Topic {
 			case event.SuiteStart:
-				stream.Send(&gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart})
+				err = stream.Send(&gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart})
 			case event.SpecStart:
-				stream.Send(&gm.ExecutionResponse{
+				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_SpecStart,
 					ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
 				})
 			case event.ScenarioStart:
-				stream.Send(&gm.ExecutionResponse{
+				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_ScenarioStart,
 					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
 				})
 			case event.ScenarioEnd:
-				stream.Send(&gm.ExecutionResponse{
+				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_ScenarioEnd,
 					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
 					Result: &gm.Result{
@@ -92,7 +93,7 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 					},
 				})
 			case event.SpecEnd:
-				stream.Send(&gm.ExecutionResponse{
+				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_SpecEnd,
 					ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
 					Result: &gm.Result{
@@ -101,13 +102,16 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 					},
 				})
 			case event.SuiteEnd:
-				stream.Send(&gm.ExecutionResponse{
+				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_SuiteEnd,
 					Result: &gm.Result{
 						BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 						AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
 					},
 				})
+				return
+			}
+			if err != nil {
 				return
 			}
 		}
