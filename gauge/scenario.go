@@ -18,13 +18,14 @@
 package gauge
 
 type Scenario struct {
-	Heading      *Heading
-	Steps        []*Step
-	Comments     []*Comment
-	Tags         *Tags
-	Items        []Item
-	DataTableRow Table
-	Span         *Span
+	Heading           *Heading
+	Steps             []*Step
+	Comments          []*Comment
+	Tags              *Tags
+	Items             []Item
+	DataTableRow      Table
+	DataTableRowIndex int
+	Span              *Span
 }
 
 // Span represents scope of Scenario based on line number

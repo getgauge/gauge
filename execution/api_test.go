@@ -218,6 +218,9 @@ func (s *MySuite) TestListenScenarioStartExecutionEvent(c *C) {
 	expected := &gm.ExecutionResponse{
 		Type: gm.ExecutionResponse_ScenarioStart,
 		ID:   "example.spec:1",
+		Result: &gm.Result{
+			TableRowNumber: 0,
+		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }
@@ -283,8 +286,9 @@ func (s *MySuite) TestListenScenarioEndExecutionEvent(c *C) {
 	expected := &gm.ExecutionResponse{
 		Type: gm.ExecutionResponse_ScenarioEnd,
 		Result: &gm.Result{
-			ExecutionTime: 1,
-			Status:        gm.Result_PASSED,
+			ExecutionTime:  1,
+			Status:         gm.Result_PASSED,
+			TableRowNumber: 0,
 		},
 		ID: "example.spec:1",
 	}
@@ -320,9 +324,30 @@ func (s *MySuite) TestListenScenarioEndExecutionEventForFailedScenario(c *C) {
 					ErrorMessage: "error message",
 				},
 			},
+			TableRowNumber: 0,
 		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
+}
+
+func (s *MySuite) TestGetDataTableRowNumberWhenDataTableIsNotPresent(c *C) {
+	scn := &gauge.Scenario{}
+
+	number := getDataTableRowNumber(scn)
+
+	c.Assert(number, Equals, 0)
+}
+
+func (s *MySuite) TestGetDataTableRowNumberWhenDataTableIsPresent(c *C) {
+	scn := &gauge.Scenario{
+		DataTableRow:      gauge.Table{},
+		DataTableRowIndex: 2,
+	}
+	scn.DataTableRow.AddHeaders([]string{})
+
+	number := getDataTableRowNumber(scn)
+
+	c.Assert(number, Equals, 3)
 }
 
 type dummyServer struct {

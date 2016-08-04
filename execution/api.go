@@ -79,17 +79,22 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_ScenarioStart,
 					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
+					Result: &gm.Result{
+						TableRowNumber: int64(getDataTableRowNumber(e.Item.(*gauge.Scenario))),
+					},
 				})
 			case event.ScenarioEnd:
+				scn := e.Item.(*gauge.Scenario)
 				err = stream.Send(&gm.ExecutionResponse{
 					Type: gm.ExecutionResponse_ScenarioEnd,
-					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
+					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo),
 					Result: &gm.Result{
 						Status:            getStatus(e.Result.(*result.ScenarioResult)),
 						ExecutionTime:     e.Result.ExecTime(),
 						Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
 						BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 						AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
+						TableRowNumber:    int64(getDataTableRowNumber(scn)),
 					},
 				})
 			case event.SpecEnd:
@@ -116,6 +121,14 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 			}
 		}
 	}()
+}
+
+func getDataTableRowNumber(scn *gauge.Scenario) int {
+	index := scn.DataTableRowIndex
+	if scn.DataTableRow.IsInitialized() {
+		index++
+	}
+	return index
 }
 
 func getErrorExecutionResponse(errs ...error) *gm.ExecutionResponse {

@@ -104,11 +104,11 @@ func (e *specExecutor) execute() *result.SpecResult {
 }
 
 func (e *specExecutor) executeTableDrivenSpec() {
-	var dataTableScenarioExecutionResult [][]result.Result
+	var res [][]result.Result
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
-		dataTableScenarioExecutionResult = append(dataTableScenarioExecutionResult, e.executeScenarios())
+		res = append(res, e.executeScenarios())
 	}
-	e.specResult.AddTableDrivenScenarioResult(dataTableScenarioExecutionResult)
+	e.specResult.AddTableDrivenScenarioResult(res)
 }
 
 func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
@@ -272,6 +272,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
 		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])
 		scenario.DataTableRow = dataTable
+		scenario.DataTableRowIndex = e.currentTableRow
 	}
 
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
