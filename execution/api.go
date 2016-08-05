@@ -42,8 +42,7 @@ func (e *executionServer) Execute(req *gm.ExecutionRequest, stream gm.Execution_
 }
 
 func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
-	err := validateFlags()
-	if err != nil {
+	if err := validateFlags(); err != nil {
 		stream.Send(getErrorExecutionResponse(err))
 		return
 	}
@@ -65,62 +64,65 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 	event.Register(ch, event.SuiteStart, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.SuiteEnd)
 	go func() {
 		for {
-			var err error
 			e := <-ch
-			switch e.Topic {
-			case event.SuiteStart:
-				err = stream.Send(&gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart})
-			case event.SpecStart:
-				err = stream.Send(&gm.ExecutionResponse{
-					Type: gm.ExecutionResponse_SpecStart,
-					ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
-				})
-			case event.ScenarioStart:
-				err = stream.Send(&gm.ExecutionResponse{
-					Type: gm.ExecutionResponse_ScenarioStart,
-					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
-					Result: &gm.Result{
-						TableRowNumber: int64(getDataTableRowNumber(e.Item.(*gauge.Scenario))),
-					},
-				})
-			case event.ScenarioEnd:
-				scn := e.Item.(*gauge.Scenario)
-				err = stream.Send(&gm.ExecutionResponse{
-					Type: gm.ExecutionResponse_ScenarioEnd,
-					ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo),
-					Result: &gm.Result{
-						Status:            getStatus(e.Result.(*result.ScenarioResult)),
-						ExecutionTime:     e.Result.ExecTime(),
-						Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
-						BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
-						AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
-						TableRowNumber:    int64(getDataTableRowNumber(scn)),
-					},
-				})
-			case event.SpecEnd:
-				err = stream.Send(&gm.ExecutionResponse{
-					Type: gm.ExecutionResponse_SpecEnd,
-					ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
-					Result: &gm.Result{
-						BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
-						AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
-					},
-				})
-			case event.SuiteEnd:
-				err = stream.Send(&gm.ExecutionResponse{
-					Type: gm.ExecutionResponse_SuiteEnd,
-					Result: &gm.Result{
-						BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
-						AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
-					},
-				})
-				return
-			}
-			if err != nil {
+			res := getResponse(e)
+			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd {
 				return
 			}
 		}
 	}()
+}
+
+func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
+	switch e.Topic {
+	case event.SuiteStart:
+		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart}
+	case event.SpecStart:
+		return &gm.ExecutionResponse{
+			Type: gm.ExecutionResponse_SpecStart,
+			ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
+		}
+	case event.ScenarioStart:
+		return &gm.ExecutionResponse{
+			Type: gm.ExecutionResponse_ScenarioStart,
+			ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
+			Result: &gm.Result{
+				TableRowNumber: int64(getDataTableRowNumber(e.Item.(*gauge.Scenario))),
+			},
+		}
+	case event.ScenarioEnd:
+		scn := e.Item.(*gauge.Scenario)
+		return &gm.ExecutionResponse{
+			Type: gm.ExecutionResponse_ScenarioEnd,
+			ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo),
+			Result: &gm.Result{
+				Status:            getStatus(e.Result.(*result.ScenarioResult)),
+				ExecutionTime:     e.Result.ExecTime(),
+				Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
+				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
+				TableRowNumber:    int64(getDataTableRowNumber(scn)),
+			},
+		}
+	case event.SpecEnd:
+		return &gm.ExecutionResponse{
+			Type: gm.ExecutionResponse_SpecEnd,
+			ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
+			Result: &gm.Result{
+				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
+			},
+		}
+	case event.SuiteEnd:
+		return &gm.ExecutionResponse{
+			Type: gm.ExecutionResponse_SuiteEnd,
+			Result: &gm.Result{
+				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
+				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
+			},
+		}
+	}
+	return nil
 }
 
 func getDataTableRowNumber(scn *gauge.Scenario) int {
