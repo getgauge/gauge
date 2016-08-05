@@ -38,7 +38,7 @@ func (s *MySuite) TestGetStatusForFailedScenario(c *C) {
 
 	status := getStatus(res)
 
-	c.Assert(status, Equals, gm.Result_FAILED)
+	c.Assert(*status, Equals, gm.Result_FAILED)
 }
 
 func (s *MySuite) TestGetStatusForPassedScenario(c *C) {
@@ -49,7 +49,7 @@ func (s *MySuite) TestGetStatusForPassedScenario(c *C) {
 
 	status := getStatus(res)
 
-	c.Assert(status, Equals, gm.Result_PASSED)
+	c.Assert(*status, Equals, gm.Result_PASSED)
 }
 
 func (s *MySuite) TestGetStatusForSkippedScenario(c *C) {
@@ -60,16 +60,21 @@ func (s *MySuite) TestGetStatusForSkippedScenario(c *C) {
 
 	status := getStatus(res)
 
-	c.Assert(status, Equals, gm.Result_SKIPPED)
+	c.Assert(*status, Equals, gm.Result_SKIPPED)
 }
 
 func (s *MySuite) TestGetErrorResponse(c *C) {
 	errs := getErrorExecutionResponse(errors.New("error1"), errors.New("error2"))
 
-	expected := &gm.ExecutionResponse{Type: gm.ExecutionResponse_ErrorResult, Result: &gm.Result{Errors: []*gm.Result_ExecutionError{
-		{ErrorMessage: "error1"}, {ErrorMessage: "error2"},
-	}}}
-
+	expected := &gm.ExecutionResponse{
+		Type: gm.ExecutionResponse_ErrorResult.Enum(),
+		Result: &gm.Result{
+			Errors: []*gm.Result_ExecutionError{
+				{ErrorMessage: proto.String("error1")},
+				{ErrorMessage: proto.String("error2")},
+			},
+		},
+	}
 	c.Assert(errs, DeepEquals, expected)
 }
 
@@ -84,7 +89,7 @@ func (s *MySuite) TestGetHookFailureWhenHookFailure(c *C) {
 	hookFailure := &gm.ProtoHookFailure{ErrorMessage: proto.String("err msg")}
 	failure := getHookFailure(&hookFailure)
 
-	expected := &gm.Result_ExecutionError{ErrorMessage: "err msg"}
+	expected := &gm.Result_ExecutionError{ErrorMessage: proto.String("err msg")}
 	c.Assert(failure, DeepEquals, expected)
 }
 
@@ -92,7 +97,7 @@ func (s *MySuite) TestGetErrors(c *C) {
 	items := []*gm.ProtoItem{newFailedStep("msg1")}
 	errors := getErrors(items)
 
-	expected := []*gm.Result_ExecutionError{{ErrorMessage: "msg1"}}
+	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}}
 	c.Assert(errors, DeepEquals, expected)
 }
 
@@ -103,7 +108,7 @@ func (s *MySuite) TestGetErrorsWithMultipleStepFailures(c *C) {
 	}
 	errors := getErrors(items)
 
-	expected := []*gm.Result_ExecutionError{{ErrorMessage: "msg1"}, {ErrorMessage: "msg2"}}
+	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}}
 	c.Assert(errors, DeepEquals, expected)
 }
 
@@ -118,7 +123,7 @@ func (s *MySuite) TestGetErrorsWithConceptFailures(c *C) {
 	}
 	errors := getErrors(items)
 
-	expected := []*gm.Result_ExecutionError{{ErrorMessage: "msg1"}}
+	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}}
 	c.Assert(errors, DeepEquals, expected)
 }
 
@@ -143,7 +148,7 @@ func (s *MySuite) TestGetErrorsWithNestedConceptFailures(c *C) {
 	}
 	errors := getErrors(items)
 
-	expected := []*gm.Result_ExecutionError{{ErrorMessage: "msg1"}, {ErrorMessage: "msg2"}}
+	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}}
 	c.Assert(errors, DeepEquals, expected)
 }
 
@@ -167,7 +172,7 @@ func (s *MySuite) TestGetErrorsWithStepAndConceptFailures(c *C) {
 	}
 	errors := getErrors(items)
 
-	expected := []*gm.Result_ExecutionError{{ErrorMessage: "msg1"}, {ErrorMessage: "msg2"}, {ErrorMessage: "msg3"}}
+	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}, {ErrorMessage: proto.String("msg3")}}
 	c.Assert(errors, DeepEquals, expected)
 }
 
@@ -180,7 +185,7 @@ func (s *MySuite) TestListenSuiteStartExecutionEvent(c *C) {
 	defer sendSuiteEnd(actual)
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_SuiteStart,
+		Type: gm.ExecutionResponse_SuiteStart.Enum(),
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 
@@ -198,8 +203,8 @@ func (s *MySuite) TestListenSpecStartExecutionEvent(c *C) {
 	event.Notify(event.NewExecutionEvent(event.SpecStart, nil, nil, 0, ei))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_SpecStart,
-		ID:   "example.spec",
+		Type: gm.ExecutionResponse_SpecStart.Enum(),
+		ID:   proto.String("example.spec"),
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }
@@ -216,10 +221,10 @@ func (s *MySuite) TestListenScenarioStartExecutionEvent(c *C) {
 	event.Notify(event.NewExecutionEvent(event.ScenarioStart, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, nil, 0, ei))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_ScenarioStart,
-		ID:   "example.spec:1",
+		Type: gm.ExecutionResponse_ScenarioStart.Enum(),
+		ID:   proto.String("example.spec:1"),
 		Result: &gm.Result{
-			TableRowNumber: 0,
+			TableRowNumber: proto.Int64(0),
 		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
@@ -240,11 +245,11 @@ func (s *MySuite) TestListenSpecEndExecutionEvent(c *C) {
 	}, 0, ei))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_SpecEnd,
-		ID:   "example.spec",
+		Type: gm.ExecutionResponse_SpecEnd.Enum(),
+		ID:   proto.String("example.spec"),
 		Result: &gm.Result{
-			BeforeHookFailure: &gm.Result_ExecutionError{ErrorMessage: "err msg"},
-			AfterHookFailure:  &gm.Result_ExecutionError{ErrorMessage: "err msg"},
+			BeforeHookFailure: &gm.Result_ExecutionError{ErrorMessage: proto.String("err msg")},
+			AfterHookFailure:  &gm.Result_ExecutionError{ErrorMessage: proto.String("err msg")},
 		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
@@ -259,10 +264,10 @@ func (s *MySuite) TestListenSuiteEndExecutionEvent(c *C) {
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{PreSuite: hookFailure, PostSuite: hookFailure}, 0, gm.ExecutionInfo{}))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_SuiteEnd,
+		Type: gm.ExecutionResponse_SuiteEnd.Enum(),
 		Result: &gm.Result{
-			BeforeHookFailure: &gm.Result_ExecutionError{ErrorMessage: "err msg"},
-			AfterHookFailure:  &gm.Result_ExecutionError{ErrorMessage: "err msg"},
+			BeforeHookFailure: &gm.Result_ExecutionError{ErrorMessage: proto.String("err msg")},
+			AfterHookFailure:  &gm.Result_ExecutionError{ErrorMessage: proto.String("err msg")},
 		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)
@@ -284,13 +289,13 @@ func (s *MySuite) TestListenScenarioEndExecutionEvent(c *C) {
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_ScenarioEnd,
+		Type: gm.ExecutionResponse_ScenarioEnd.Enum(),
 		Result: &gm.Result{
-			ExecutionTime:  1,
-			Status:         gm.Result_PASSED,
-			TableRowNumber: 0,
+			ExecutionTime:  proto.Int64(1),
+			Status:         gm.Result_PASSED.Enum(),
+			TableRowNumber: proto.Int64(0),
 		},
-		ID: "example.spec:1",
+		ID: proto.String("example.spec:1"),
 	}
 	c.Assert(<-actual, DeepEquals, expected)
 }
@@ -314,17 +319,17 @@ func (s *MySuite) TestListenScenarioEndExecutionEventForFailedScenario(c *C) {
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
 
 	expected := &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_ScenarioEnd,
-		ID:   "example.spec:1",
+		Type: gm.ExecutionResponse_ScenarioEnd.Enum(),
+		ID:   proto.String("example.spec:1"),
 		Result: &gm.Result{
-			ExecutionTime: 1,
-			Status:        gm.Result_FAILED,
+			ExecutionTime: proto.Int64(1),
+			Status:        gm.Result_FAILED.Enum(),
 			Errors: []*gm.Result_ExecutionError{
 				{
-					ErrorMessage: "error message",
+					ErrorMessage: proto.String("error message"),
 				},
 			},
-			TableRowNumber: 0,
+			TableRowNumber: proto.Int64(0),
 		},
 	}
 	c.Assert(<-actual, DeepEquals, expected)

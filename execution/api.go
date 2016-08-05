@@ -15,6 +15,7 @@ import (
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/validation"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 
@@ -66,7 +67,7 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 		for {
 			e := <-ch
 			res := getResponse(e)
-			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd {
+			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd.Enum() {
 				return
 			}
 		}
@@ -76,38 +77,38 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
 	switch e.Topic {
 	case event.SuiteStart:
-		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart}
+		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart.Enum()}
 	case event.SpecStart:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SpecStart,
-			ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
+			Type: gm.ExecutionResponse_SpecStart.Enum(),
+			ID:   e.ExecutionInfo.CurrentSpec.FileName,
 		}
 	case event.ScenarioStart:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_ScenarioStart,
-			ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
+			Type: gm.ExecutionResponse_ScenarioStart.Enum(),
+			ID:   proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
 			Result: &gm.Result{
-				TableRowNumber: int64(getDataTableRowNumber(e.Item.(*gauge.Scenario))),
+				TableRowNumber: proto.Int64(int64(getDataTableRowNumber(e.Item.(*gauge.Scenario)))),
 			},
 		}
 	case event.ScenarioEnd:
 		scn := e.Item.(*gauge.Scenario)
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_ScenarioEnd,
-			ID:   fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo),
+			Type: gm.ExecutionResponse_ScenarioEnd.Enum(),
+			ID:   proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo)),
 			Result: &gm.Result{
 				Status:            getStatus(e.Result.(*result.ScenarioResult)),
-				ExecutionTime:     e.Result.ExecTime(),
+				ExecutionTime:     proto.Int64(e.Result.ExecTime()),
 				Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
-				TableRowNumber:    int64(getDataTableRowNumber(scn)),
+				TableRowNumber:    proto.Int64(int64(getDataTableRowNumber(scn))),
 			},
 		}
 	case event.SpecEnd:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SpecEnd,
-			ID:   fmt.Sprintf(e.ExecutionInfo.CurrentSpec.GetFileName()),
+			Type: gm.ExecutionResponse_SpecEnd.Enum(),
+			ID:   e.ExecutionInfo.CurrentSpec.FileName,
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -115,7 +116,7 @@ func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
 		}
 	case event.SuiteEnd:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SuiteEnd,
+			Type: gm.ExecutionResponse_SuiteEnd.Enum(),
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -136,10 +137,10 @@ func getDataTableRowNumber(scn *gauge.Scenario) int {
 func getErrorExecutionResponse(errs ...error) *gm.ExecutionResponse {
 	var e []*gm.Result_ExecutionError
 	for _, err := range errs {
-		e = append(e, &gm.Result_ExecutionError{ErrorMessage: err.Error()})
+		e = append(e, &gm.Result_ExecutionError{ErrorMessage: proto.String(err.Error())})
 	}
 	return &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_ErrorResult,
+		Type: gm.ExecutionResponse_ErrorResult.Enum(),
 		Result: &gm.Result{
 			Errors: e,
 		},
@@ -149,9 +150,9 @@ func getErrorExecutionResponse(errs ...error) *gm.ExecutionResponse {
 func getHookFailure(hookFailure **gm.ProtoHookFailure) *gm.Result_ExecutionError {
 	if hookFailure != nil && *hookFailure != nil {
 		return &gm.Result_ExecutionError{
-			Screenshot:   (**hookFailure).GetScreenShot(),
-			ErrorMessage: (**hookFailure).GetErrorMessage(),
-			StackTrace:   (**hookFailure).GetStackTrace(),
+			Screenshot:   (**hookFailure).ScreenShot,
+			ErrorMessage: (**hookFailure).ErrorMessage,
+			StackTrace:   (**hookFailure).StackTrace,
 		}
 	}
 	return nil
@@ -165,12 +166,12 @@ func getErrors(items []*gm.ProtoItem) []*gm.Result_ExecutionError {
 		switch item.GetItemType() {
 		case gm.ProtoItem_Step:
 			if executionResult.GetSkipped() {
-				errors = append(errors, &gm.Result_ExecutionError{ErrorMessage: executionResult.GetSkippedReason()})
+				errors = append(errors, &gm.Result_ExecutionError{ErrorMessage: executionResult.SkippedReason})
 			} else if res.GetFailed() {
 				errors = append(errors, &gm.Result_ExecutionError{
-					StackTrace:   res.GetStackTrace(),
-					ErrorMessage: res.GetErrorMessage(),
-					Screenshot:   res.GetScreenShot(),
+					StackTrace:   res.StackTrace,
+					ErrorMessage: res.ErrorMessage,
+					Screenshot:   res.ScreenShot,
 				})
 			}
 		case gm.ProtoItem_Concept:
@@ -180,12 +181,12 @@ func getErrors(items []*gm.ProtoItem) []*gm.Result_ExecutionError {
 	return errors
 }
 
-func getStatus(result *result.ScenarioResult) gm.Result_Status {
+func getStatus(result *result.ScenarioResult) *gm.Result_Status {
 	if result.GetFailed() {
-		return gm.Result_FAILED
+		return gm.Result_FAILED.Enum()
 	}
 	if result.ProtoScenario.GetSkipped() {
-		return gm.Result_SKIPPED
+		return gm.Result_SKIPPED.Enum()
 	}
-	return gm.Result_PASSED
+	return gm.Result_PASSED.Enum()
 }
