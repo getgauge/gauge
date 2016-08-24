@@ -274,13 +274,14 @@ func createWindowsDistro() {
 }
 
 func createWindowsInstaller() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
-	distroDir, err := filepath.Abs(filepath.Join(deploy, packageName))
-	installerFileName := filepath.Join(filepath.Dir(distroDir), packageName)
+	pName := packageName()
+	distroDir, err := filepath.Abs(filepath.Join(deploy, pName))
+	installerFileName := filepath.Join(filepath.Dir(distroDir), pName)
 	if err != nil {
 		panic(err)
 	}
 	copyGaugeFiles(distroDir)
+	createZipFromUtil(deploy, pName)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
@@ -293,17 +294,21 @@ func createWindowsInstaller() {
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeFiles(distroDir)
+	createZipFromUtil(deploy, packageName())
 	runProcess(packagesBuild, "-v", darwinPackageProject)
 	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
 	os.RemoveAll(distroDir)
 }
 
 func createLinuxPackage() {
-	packageName := fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
-	distroDir := filepath.Join(deploy, packageName)
+	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeFiles(distroDir)
-	createZipFromUtil(deploy, packageName)
+	createZipFromUtil(deploy, packageName())
 	os.RemoveAll(distroDir)
+}
+
+func packageName() string {
+	return fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
 }
 
 func createZipFromUtil(dir, name string) {
