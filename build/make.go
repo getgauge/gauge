@@ -281,7 +281,7 @@ func createWindowsInstaller() {
 		panic(err)
 	}
 	copyGaugeFiles(distroDir)
-	createZipFromUtil(deploy, gauge, pName)
+	createZipFromUtil(deploy, pName, pName)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
