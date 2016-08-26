@@ -316,11 +316,25 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	if err != nil {
 		panic(err)
 	}
+	absdir, err := filepath.Abs(dir)
+	if err != nil {
+		panic(err)
+	}
+
+	windowsZipScript := filepath.Join(wd, "build", "create_windows_zipfile.ps1")
+
 	err = os.Chdir(filepath.Join(dir, zipDir))
 	if err != nil {
 		panic(fmt.Sprintf("Failed to change directory: %s", err))
 	}
-	output, err := runCommand("zip", "-r", filepath.Join("..", pkgName+".zip"), ".")
+
+	zipcmd := "zip"
+	zipargs := []string{"-r", filepath.Join("..", pkgName+".zip"), "."}
+	if getGOOS() == "windows" {
+		zipcmd = "powershell.exe"
+		zipargs = []string{"-noprofile", "-executionpolicy", "bypass", "-file", windowsZipScript, filepath.Join(absdir, zipDir), filepath.Join(absdir, pkgName+".zip")}
+	}
+	output, err := runCommand(zipcmd, zipargs...)
 	fmt.Println(output)
 	if err != nil {
 		panic(fmt.Sprintf("Failed to zip: %s", err))
