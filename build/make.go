@@ -311,6 +311,30 @@ func packageName() string {
 	return fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
 }
 
+func removeUnwatedFiles(dir, currentOS string) error {
+	fileList := []string{
+		".DS_STORE",
+		".localized",
+		"$RECYCLE.BIN",
+	}
+	if currentOS == "windows" {
+		fileList = append(fileList, []string{
+			"backup_properties_file.bat",
+			"plugin-install.bat",
+			"set_timestamp.bat",
+			"desktop.ini",
+			"Thumbs.db",
+		}...)
+	}
+	for _, f := range fileList {
+		err := os.RemoveAll(filepath.Join(dir, f))
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+	}
+	return nil
+}
+
 func createZipFromUtil(dir, zipDir, pkgName string) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -320,8 +344,15 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	if err != nil {
 		panic(err)
 	}
+	currentOS := getGOOS()
 
 	windowsZipScript := filepath.Join(wd, "build", "create_windows_zipfile.ps1")
+
+	err = removeUnwatedFiles(filepath.Join(dir, zipDir), currentOS)
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to cleanup unwanted file(s): %s", err))
+	}
 
 	err = os.Chdir(filepath.Join(dir, zipDir))
 	if err != nil {
@@ -330,7 +361,7 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 
 	zipcmd := "zip"
 	zipargs := []string{"-r", filepath.Join("..", pkgName+".zip"), "."}
-	if getGOOS() == "windows" {
+	if currentOS == "windows" {
 		zipcmd = "powershell.exe"
 		zipargs = []string{"-noprofile", "-executionpolicy", "bypass", "-file", windowsZipScript, filepath.Join(absdir, zipDir), filepath.Join(absdir, pkgName+".zip")}
 	}
