@@ -27,7 +27,10 @@ fi
 
 go get -v -u github.com/aktau/github-release
 
-version=$(ls $repoName-*-linux.x86.zip | sed "s/^$repoName-\([^;]*\)-linux.x86.zip/\1/")
+version=$(ls $repoName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$repoName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+echo "------------------------------"
+echo "Releasing $repoName v$version"
+echo "------------------------------"
 
 release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" $repoName)
 
