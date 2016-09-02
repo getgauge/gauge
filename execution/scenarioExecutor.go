@@ -69,16 +69,15 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		e.handleScenarioDataStoreFailure(scenarioResult, scenario, fmt.Errorf("Failed to initialize scenario datastore. Error: %s", res.GetErrorMessage()))
 		return
 	}
-
 	e.notifyBeforeScenarioHook(scenarioResult)
+
 	if !scenarioResult.GetFailed() {
-		allSteps := append(contexts, append(scenario.Steps, teardowns...)...)
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
-		protoTeardowns := scenarioResult.ProtoScenario.GetTearDownSteps()
-		allItems := append(protoContexts, append(protoScenItems, protoTeardowns...)...)
-		e.executeItems(allSteps, allItems, scenarioResult)
+		e.executeItems(append(contexts, scenario.Steps...), append(protoContexts, protoScenItems...), scenarioResult)
+		e.executeItems(teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
 	}
+
 	e.notifyAfterScenarioHook(scenarioResult)
 	scenarioResult.UpdateExecutionTime()
 }
