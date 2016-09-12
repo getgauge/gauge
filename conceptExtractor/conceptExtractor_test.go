@@ -20,6 +20,10 @@ package conceptExtractor
 import (
 	"testing"
 
+	"os"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
@@ -29,6 +33,10 @@ func Test(t *testing.T) { TestingT(t) }
 type MySuite struct{}
 
 var _ = Suite(&MySuite{})
+
+func (s *MySuite) SetUpTest(c *C) {
+	config.ProjectRoot, _ = os.Getwd()
+}
 
 func (s *MySuite) TestExtractConceptWithoutParameters(c *C) {
 	STEP := "step that takes a table"
@@ -228,4 +236,24 @@ func (s *MySuite) TestReplaceText(c *C) {
 
 	You should have received a copy of the GNU General Public License
 	along with Gauge.  If not, see <http://www.gnu.org/licenses/>.`)
+}
+
+func (s *MySuite) TestIsDuplicateConcept(c *C) {
+	concept := &gauge.Concept{ConceptStep: &gauge.Step{Value: "concept", IsConcept: true}, FileName: "sdfsdf.cpt"}
+	dictionary := gauge.NewConceptDictionary()
+	dictionary.ConceptsMap["sdfsdf.cpt"] = concept
+
+	isDuplicate := isDuplicateConcept(&gauge.Step{Value: "concept"}, dictionary)
+
+	c.Assert(isDuplicate, Equals, true)
+}
+
+func (s *MySuite) TestIsDuplicateConceptWithUniqueConcepts(c *C) {
+	concept := &gauge.Concept{ConceptStep: &gauge.Step{Value: "concept", IsConcept: true}, FileName: "sdfsdf.cpt"}
+	dictionary := gauge.NewConceptDictionary()
+	dictionary.ConceptsMap["sdfsdf.cpt"] = concept
+
+	isDuplicate := isDuplicateConcept(&gauge.Step{Value: "concept1"}, dictionary)
+
+	c.Assert(isDuplicate, Equals, false)
 }

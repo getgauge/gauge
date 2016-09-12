@@ -94,6 +94,10 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string, cptFileName string) (string, string, error) {
 	tokens, _ := new(parser.SpecParser).GenerateTokens("* "+conceptName.GetName(), cptFileName)
 	conceptStep, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
+	cptDict, _ := parser.ParseConcepts()
+	if isDuplicateConcept(conceptStep, cptDict) {
+		return "", "", fmt.Errorf("Concept `%s` already present", conceptName.GetName())
+	}
 	specText, err := getContentWithDataTable(content, cptFileName)
 	if err != nil {
 		return "", "", err
@@ -129,6 +133,15 @@ func getContentWithDataTable(content, cptFileName string) (string, error) {
 		newSpec = &gauge.Specification{Items: []gauge.Item{&spec.DataTable}, Heading: &gauge.Heading{Value: "SPECHEADING"}}
 	}
 	return formatter.FormatSpecification(newSpec) + "\n##hello \n* step \n", nil
+}
+
+func isDuplicateConcept(concept *gauge.Step, cptDict *gauge.ConceptDictionary) bool {
+	for _, cpt := range cptDict.ConceptsMap {
+		if strings.TrimSpace(cpt.ConceptStep.Value) == strings.TrimSpace(concept.Value) {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *extractor) extractSteps(cptFileName string) {
