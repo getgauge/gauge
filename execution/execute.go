@@ -77,7 +77,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handl
 }
 
 func ExecuteSpecs(specDirs []string) int {
-	err := validateFlags()
+	err := ValidateFlags()
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
@@ -149,7 +149,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	return 0
 }
 
-func validateFlags() error {
+func ValidateFlags() error {
 	if !InParallel {
 		return nil
 	}
@@ -160,4 +160,8 @@ func validateFlags() error {
 		return fmt.Errorf("Invalid input(%s) to --strategy flag.", Strategy)
 	}
 	return nil
+}
+
+func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, n int) {
+	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
 }

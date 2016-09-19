@@ -1,4 +1,4 @@
-package execution
+package stream
 
 import (
 	"log"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/execution/result"
@@ -38,15 +39,16 @@ type executionServer struct {
 }
 
 func (e *executionServer) Execute(req *gm.ExecutionRequest, stream gm.Execution_ExecuteServer) error {
+	errs := setFlags(req.Flags)
+	if len(errs) > 0 {
+		stream.Send(getErrorExecutionResponse(errs...))
+		return nil
+	}
 	execute(req.Specs, stream)
 	return nil
 }
 
 func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
-	if err := validateFlags(); err != nil {
-		stream.Send(getErrorExecutionResponse(err))
-		return
-	}
 	res := validation.ValidateSpecs(specDirs)
 	if len(res.Errs) > 0 {
 		stream.Send(getErrorExecutionResponse(res.Errs...))
@@ -55,9 +57,7 @@ func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
 	event.InitRegistry()
 	listenExecutionEvents(stream)
 	rerun.ListenFailedScenarios()
-	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
-	e := newExecution(ei)
-	e.run()
+	execution.Execute(res.SpecCollection, res.Runner, nil, res.ErrMap, execution.InParallel, 0)
 }
 
 func listenExecutionEvents(stream gm.Execution_ExecuteServer) {

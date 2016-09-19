@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
+	"github.com/getgauge/gauge/execution/stream"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
@@ -93,7 +94,9 @@ func main() {
 		fmt.Println(rerunErr)
 		os.Exit(0)
 	}
-	env.LoadEnv(*currentEnv)
+	if e := env.LoadEnv(*currentEnv); e != nil {
+		logger.Fatalf(e.Error())
+	}
 	logger.Initialize(*logLevel)
 	if *gaugeVersion && *machineReadable {
 		printJSONVersion()
@@ -135,7 +138,7 @@ func main() {
 		if *refactorSteps != "" {
 			refactorInit(flag.Args())
 		} else if *daemonize {
-			execution.Start()
+			stream.Start()
 			api.RunInBackground(*apiPort, specDirs)
 		} else if *specFilesToFormat != "" {
 			formatter.FormatSpecFilesIn(*specFilesToFormat)

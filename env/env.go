@@ -25,7 +25,6 @@ import (
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/logger"
 )
 
 const (
@@ -43,19 +42,19 @@ var currentEnv = "default"
 // but are not present in the map.
 //
 // Finally, all the env vars present in the map are actually set in the shell.
-func LoadEnv(envName string) {
+func LoadEnv(envName string) error {
 	envVars = make(map[string]string)
 	currentEnv = envName
 
 	err := loadEnvDir(currentEnv)
 	if err != nil {
-		logger.Fatalf("Failed to load env. %s", err.Error())
+		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
 
 	if currentEnv != "default" {
 		err := loadEnvDir("default")
 		if err != nil {
-			logger.Fatalf("Failed to load env. %s", err.Error())
+			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
 	}
 
@@ -63,8 +62,9 @@ func LoadEnv(envName string) {
 
 	err = setEnvVars()
 	if err != nil {
-		logger.Fatalf("Failed to load env. %s", err.Error())
+		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
+	return nil
 }
 
 func loadDefaultEnvVars() {

@@ -15,10 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package execution
+package stream
 
 import (
 	"errors"
+
+	"testing"
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -29,6 +31,12 @@ import (
 	"google.golang.org/grpc/metadata"
 	. "gopkg.in/check.v1"
 )
+
+func Test(t *testing.T) { TestingT(t) }
+
+type MySuite struct{}
+
+var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestGetStatusForFailedScenario(c *C) {
 	sce := &gm.ProtoScenario{

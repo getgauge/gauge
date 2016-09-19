@@ -19,7 +19,6 @@ package env
 
 import (
 	"os"
-	"os/exec"
 	"testing"
 
 	"github.com/getgauge/gauge/config"
@@ -36,8 +35,9 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	LoadEnv("default")
+	e := LoadEnv("default")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
@@ -50,8 +50,9 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	LoadEnv("foo")
+	e := LoadEnv("foo")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
@@ -65,8 +66,9 @@ func (s *MySuite) TestLoadDefaultEnvFromDirAndOverwritePassedEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	LoadEnv("bar")
+	e := LoadEnv("bar")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
@@ -77,8 +79,9 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = ""
 
-	LoadEnv("default")
+	e := LoadEnv("default")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
@@ -91,8 +94,9 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	os.Setenv("logs_directory", "custom_logs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
-	LoadEnv("default")
+	e := LoadEnv("default")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("foo"), Equals, "bar")
 	c.Assert(os.Getenv("property1"), Equals, "value1")
 	c.Assert(os.Getenv("logs_directory"), Equals, "custom_logs_dir")
@@ -102,8 +106,9 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	LoadEnv("default")
+	e := LoadEnv("default")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("property1"), Equals, "value1")
 }
 
@@ -111,8 +116,9 @@ func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	LoadEnv("foo")
+	e := LoadEnv("foo")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
@@ -124,8 +130,9 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	os.Setenv("gauge_reports_dir", "custom_reports_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
-	LoadEnv("foo")
+	e := LoadEnv("foo")
 
+	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "custom_reports_dir")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
@@ -149,21 +156,10 @@ func (s *MySuite) TestEnvPropertyIsNotSet(c *C) {
 	c.Assert(actual, Equals, false)
 }
 
-// If env passed by user is not found, Gauge should exit non-zero error code.
-func TestFatalErrorIsThrownIfEnvNotFound(t *testing.T) {
-	if os.Getenv("NO_ENV") == "1" {
-		os.Clearenv()
-		config.ProjectRoot = "_testdata/proj1"
+func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj1"
 
-		LoadEnv("bar")
-		return
-	}
-
-	cmd := exec.Command(os.Args[0], "-test.run=TestFatalErrorIsThrownIfEnvNotFound")
-	cmd.Env = append(os.Environ(), "NO_ENV=1")
-	err := cmd.Run()
-	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
-		return
-	}
-	t.Fatalf("Expected: Fatal Error\nGot: Error %v ", err)
+	e := LoadEnv("bar")
+	c.Assert(e.Error(), Equals, "Failed to load env. bar environment does not exist")
 }
