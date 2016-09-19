@@ -103,10 +103,10 @@ func (s *MySuite) TestGetHookFailureWhenHookFailure(c *C) {
 
 func (s *MySuite) TestGetErrors(c *C) {
 	items := []*gm.ProtoItem{newFailedStep("msg1")}
-	errors := getErrors(items)
+	errs := getErrors(items)
 
 	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}}
-	c.Assert(errors, DeepEquals, expected)
+	c.Assert(errs, DeepEquals, expected)
 }
 
 func (s *MySuite) TestGetErrorsWithMultipleStepFailures(c *C) {
@@ -114,10 +114,10 @@ func (s *MySuite) TestGetErrorsWithMultipleStepFailures(c *C) {
 		newFailedStep("msg1"),
 		newFailedStep("msg2"),
 	}
-	errors := getErrors(items)
+	errs := getErrors(items)
 
 	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}}
-	c.Assert(errors, DeepEquals, expected)
+	c.Assert(errs, DeepEquals, expected)
 }
 
 func (s *MySuite) TestGetErrorsWithConceptFailures(c *C) {
@@ -129,10 +129,10 @@ func (s *MySuite) TestGetErrorsWithConceptFailures(c *C) {
 			},
 		},
 	}
-	errors := getErrors(items)
+	errs := getErrors(items)
 
 	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}}
-	c.Assert(errors, DeepEquals, expected)
+	c.Assert(errs, DeepEquals, expected)
 }
 
 func (s *MySuite) TestGetErrorsWithNestedConceptFailures(c *C) {
@@ -154,10 +154,10 @@ func (s *MySuite) TestGetErrorsWithNestedConceptFailures(c *C) {
 			},
 		},
 	}
-	errors := getErrors(items)
+	errs := getErrors(items)
 
 	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}}
-	c.Assert(errors, DeepEquals, expected)
+	c.Assert(errs, DeepEquals, expected)
 }
 
 func (s *MySuite) TestGetErrorsWithStepAndConceptFailures(c *C) {
@@ -178,10 +178,10 @@ func (s *MySuite) TestGetErrorsWithStepAndConceptFailures(c *C) {
 		},
 		newFailedStep("msg3"),
 	}
-	errors := getErrors(items)
+	errs := getErrors(items)
 
 	expected := []*gm.Result_ExecutionError{{ErrorMessage: proto.String("msg1")}, {ErrorMessage: proto.String("msg2")}, {ErrorMessage: proto.String("msg3")}}
-	c.Assert(errors, DeepEquals, expected)
+	c.Assert(errs, DeepEquals, expected)
 }
 
 func (s *MySuite) TestListenSuiteStartExecutionEvent(c *C) {
