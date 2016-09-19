@@ -18,8 +18,6 @@
 package reporter
 
 import (
-	"fmt"
-
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -27,35 +25,35 @@ import (
 	. "gopkg.in/check.v1"
 )
 
+var dataTableEvent = event.Topic(100)
+
 func (s *MySuite) TestSubscribeSpecEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	SimpleConsoleOutput = true
 	event.InitRegistry()
 
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &DummyResult{}, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "\n")
+	c.Assert(<-e, Equals, event.SpecEnd)
 }
 
 func (s *MySuite) TestSubscribeSpecStart(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	spec := &gauge.Specification{Heading: &gauge.Heading{Value: "My Spec Heading"}}
 
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "# My Spec Heading\n")
+	c.Assert(<-e, Equals, event.SpecStart)
 }
 
 func (s *MySuite) TestSubscribeScenarioStart(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}}
 	sceHeading := "My scenario heading"
@@ -64,13 +62,12 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "  ## My Scenario Heading\n")
+	c.Assert(<-e, Equals, event.ScenarioStart)
 }
 
 func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	dataTable := gauge.Table{}
 	dataTable.AddHeaders([]string{"foo", "bar"})
@@ -82,18 +79,13 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
-	table := `
-     |foo|bar|
-     |---|---|
-     |one|two|`
-	c.Assert(dw.output, Equals, table+newline+"  ## My Scenario Heading\n")
+	c.Assert(<-e, Equals, dataTableEvent)
+	c.Assert(<-e, Equals, event.ScenarioStart)
 }
 
 func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = scenarioIndentation
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	sceHeading := "My scenario heading"
 	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
@@ -101,15 +93,12 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "")
-	c.Assert(sc.indentation, Equals, 0)
+	c.Assert(<-e, Equals, event.ScenarioEnd)
 }
 
 func (s *MySuite) TestSubscribeStepStart(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
-	SimpleConsoleOutput = true
-	Verbose = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	stepText := "My first step"
 	step := &gauge.Step{Value: stepText}
@@ -117,14 +106,12 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+stepText+newline)
+	c.Assert(<-e, Equals, event.StepStart)
 }
 
 func (s *MySuite) TestSubscribeStepEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = stepIndentation
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	failed := false
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
@@ -133,45 +120,12 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "")
-	c.Assert(sc.indentation, Equals, 0)
-}
-
-func (s *MySuite) TestSubscribeFailedStepEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = 0
-	currentReporter = sc
-	SimpleConsoleOutput = true
-	event.InitRegistry()
-	failed := true
-	stepText := "* say hello"
-	errMsg := "failure message"
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
-	stacktrace := `StepImplementation.implementation4(StepImplementation.java:77)
-sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)`
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, ErrorMessage: &errMsg, StackTrace: &stacktrace}}
-	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
-	stepRes.SetStepFailure()
-
-	ListenExecutionEvents()
-
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{LineText: stepText}, stepRes, 0, specInfo))
-	want := spaces(errorIndentation) + newline +
-		`  Failed Step: * say hello
-  Specification: hello.spec:0
-  Error Message: failure message
-  Stacktrace:` + spaces(1) +
-		`
-  StepImplementation.implementation4(StepImplementation.java:77)
-  sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-`
-	c.Assert(dw.output, Equals, want)
+	c.Assert(<-e, Equals, event.StepEnd)
 }
 
 func (s *MySuite) TestSubscribeConceptStart(c *C) {
-	dw, sc := setupSimpleConsole()
-	currentReporter = sc
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	SimpleConsoleOutput = true
 	event.InitRegistry()
 	Verbose = true
@@ -181,14 +135,12 @@ func (s *MySuite) TestSubscribeConceptStart(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, spaces(stepIndentation)+"* "+cptText+newline)
+	c.Assert(<-e, Equals, event.ConceptStart)
 }
 
 func (s *MySuite) TestSubscribeConceptEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = stepIndentation
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
 	failed := true
 	cptExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
@@ -197,20 +149,68 @@ func (s *MySuite) TestSubscribeConceptEnd(c *C) {
 	ListenExecutionEvents()
 
 	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes, 0, gauge_messages.ExecutionInfo{}))
-	c.Assert(dw.output, Equals, "")
-	c.Assert(sc.indentation, Equals, 0)
+	c.Assert(<-e, Equals, event.ConceptEnd)
 }
 
 func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
-	dw, sc := setupSimpleConsole()
-	sc.indentation = 0
-	currentReporter = sc
-	SimpleConsoleOutput = true
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
-	suiteRes := &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("failure 1"), fmt.Errorf("failure 2")}}
+	suiteRes := &result.SuiteResult{UnhandledErrors: []error{}}
 
 	ListenExecutionEvents()
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 0, gauge_messages.ExecutionInfo{}))
 
-	c.Assert(dw.output, Equals, spaces(errorIndentation)+"failure 1\n"+spaces(errorIndentation)+"failure 2\n")
+	c.Assert(<-e, Equals, event.SuiteEnd)
+}
+
+type dummyConsole struct {
+	event chan event.Topic
+}
+
+func (dc *dummyConsole) SpecStart(heading string) {
+	dc.event <- event.SpecStart
+}
+
+func (dc *dummyConsole) SpecEnd(res result.Result) {
+	dc.event <- event.SpecEnd
+}
+
+func (dc *dummyConsole) ScenarioStart(heading string) {
+	dc.event <- event.ScenarioStart
+}
+
+func (dc *dummyConsole) ScenarioEnd(res result.Result) {
+	dc.event <- event.ScenarioEnd
+}
+
+func (dc *dummyConsole) StepStart(stepText string) {
+	dc.event <- event.StepStart
+}
+
+func (dc *dummyConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+	dc.event <- event.StepEnd
+}
+
+func (dc *dummyConsole) ConceptStart(conceptHeading string) {
+	dc.event <- event.ConceptStart
+}
+
+func (dc *dummyConsole) ConceptEnd(res result.Result) {
+	dc.event <- event.ConceptEnd
+}
+
+func (dc *dummyConsole) SuiteEnd(res result.Result) {
+	dc.event <- event.SuiteEnd
+}
+
+func (dc *dummyConsole) DataTable(table string) {
+	dc.event <- dataTableEvent
+}
+
+func (dc *dummyConsole) Errorf(err string, args ...interface{}) {
+}
+
+func (dc *dummyConsole) Write(b []byte) (int, error) {
+	return len(b), nil
 }
