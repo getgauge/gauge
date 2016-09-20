@@ -55,7 +55,7 @@ func createSpecsList(number int) []*gauge.Specification {
 
 func (s *MySuite) TestValidateFlagsIfNotParallel(c *C) {
 	InParallel = false
-	err := ValidateFlags()
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
@@ -63,7 +63,7 @@ func (s *MySuite) TestValidateFlagsWithStartegyEager(c *C) {
 	InParallel = true
 	Strategy = "eager"
 	NumberOfExecutionStreams = 1
-	err := ValidateFlags()
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
@@ -71,7 +71,7 @@ func (s *MySuite) TestValidateFlagsWithStartegyLazy(c *C) {
 	InParallel = true
 	Strategy = "lazy"
 	NumberOfExecutionStreams = 1
-	err := ValidateFlags()
+	err := validateFlags()
 	c.Assert(err, Equals, nil)
 }
 
@@ -79,13 +79,13 @@ func (s *MySuite) TestValidateFlagsWithInvalidStrategy(c *C) {
 	InParallel = true
 	Strategy = "sdf"
 	NumberOfExecutionStreams = 1
-	err := ValidateFlags()
+	err := validateFlags()
 	c.Assert(err.Error(), Equals, "Invalid input(sdf) to --strategy flag.")
 }
 
 func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 	InParallel = true
 	NumberOfExecutionStreams = -1
-	err := ValidateFlags()
+	err := validateFlags()
 	c.Assert(err.Error(), Equals, "Invalid input(-1) to --n flag.")
 }
