@@ -214,7 +214,9 @@ func setFlags(req *gm.ExecutionRequest) []error {
 	filter.DoNotRandomize = req.GetSort()
 	reporter.Verbose = true
 	logger.Initialize(strings.ToLower(req.GetLogLevel().String()))
-	util.SetWorkingDir(req.GetWorkingDir())
+	if req.GetWorkingDir() != "" {
+		util.SetWorkingDir(req.GetWorkingDir())
+	}
 	var errs []error
 	if req.GetEnv() != "" {
 		if err := env.LoadEnv(req.GetEnv()); err != nil {
