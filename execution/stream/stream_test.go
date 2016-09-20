@@ -22,10 +22,14 @@ import (
 
 	"testing"
 
+	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
@@ -361,6 +365,71 @@ func (s *MySuite) TestGetDataTableRowNumberWhenDataTableIsPresent(c *C) {
 	number := getDataTableRowNumber(scn)
 
 	c.Assert(number, Equals, 3)
+}
+
+func (s *MySuite) TestSetFlags(c *C) {
+	req := &gm.ExecutionRequest{
+		IsParallel:      proto.Bool(true),
+		Sort:            proto.Bool(true),
+		ParallelStreams: proto.Int32(3),
+		Strategy:        gm.ExecutionRequest_EAGER.Enum(),
+		LogLevel:        gm.ExecutionRequest_DEBUG.Enum(),
+		TableRows:       proto.String("1-2"),
+		Tags:            proto.String("tag1 & tag2"),
+	}
+	errs := setFlags(req)
+
+	c.Assert(len(errs), Equals, 0)
+	c.Assert(execution.Strategy, Equals, "eager")
+	c.Assert(execution.NumberOfExecutionStreams, Equals, 3)
+	c.Assert(reporter.NumberOfExecutionStreams, Equals, 3)
+	c.Assert(filter.NumberOfExecutionStreams, Equals, 3)
+	c.Assert(filter.DoNotRandomize, Equals, true)
+	c.Assert(execution.TableRows, Equals, "1-2")
+	c.Assert(filter.ExecuteTags, Equals, "tag1 & tag2")
+	c.Assert(reporter.Verbose, Equals, true)
+	c.Assert(reporter.IsParallel, Equals, true)
+	c.Assert(execution.InParallel, Equals, true)
+}
+
+func (s *MySuite) TestSetFlagsWithInvalidNumberOfExecStreams(c *C) {
+	req := &gm.ExecutionRequest{
+		ParallelStreams: proto.Int32(-3),
+	}
+	nCores := util.NumberOfCores()
+	errs := setFlags(req)
+
+	c.Assert(len(errs), Equals, 0)
+	c.Assert(execution.NumberOfExecutionStreams, Equals, nCores)
+	c.Assert(reporter.NumberOfExecutionStreams, Equals, nCores)
+	c.Assert(filter.NumberOfExecutionStreams, Equals, nCores)
+}
+
+func (s *MySuite) TestResetFlags(c *C) {
+	execution.Strategy = "HAHAH"
+	reporter.IsParallel = true
+	execution.InParallel = false
+	reporter.Verbose = true
+	filter.ExecuteTags = "sdfdsf"
+	execution.TableRows = "1323"
+	execution.NumberOfExecutionStreams = 1
+	reporter.NumberOfExecutionStreams = 2
+	filter.NumberOfExecutionStreams = 3
+	filter.DoNotRandomize = true
+	resetFlags()
+
+	cores := util.NumberOfCores()
+
+	c.Assert(execution.Strategy, Equals, "lazy")
+	c.Assert(execution.NumberOfExecutionStreams, Equals, cores)
+	c.Assert(reporter.NumberOfExecutionStreams, Equals, cores)
+	c.Assert(filter.NumberOfExecutionStreams, Equals, cores)
+	c.Assert(filter.DoNotRandomize, Equals, false)
+	c.Assert(execution.TableRows, Equals, "")
+	c.Assert(filter.ExecuteTags, Equals, "")
+	c.Assert(reporter.Verbose, Equals, false)
+	c.Assert(reporter.IsParallel, Equals, false)
+	c.Assert(execution.InParallel, Equals, false)
 }
 
 type dummyServer struct {

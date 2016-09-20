@@ -6,15 +6,21 @@ import (
 
 	"fmt"
 
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
@@ -39,7 +45,7 @@ type executionServer struct {
 }
 
 func (e *executionServer) Execute(req *gm.ExecutionRequest, stream gm.Execution_ExecuteServer) error {
-	errs := setFlags(req.Flags)
+	errs := setFlags(req)
 	if len(errs) > 0 {
 		stream.Send(getErrorExecutionResponse(errs...))
 		return nil
@@ -189,4 +195,45 @@ func getStatus(result *result.ScenarioResult) *gm.Result_Status {
 		return gm.Result_SKIPPED.Enum()
 	}
 	return gm.Result_PASSED.Enum()
+}
+
+func setFlags(req *gm.ExecutionRequest) []error {
+	resetFlags()
+	reporter.IsParallel = req.GetIsParallel()
+	execution.InParallel = req.GetIsParallel()
+	filter.ExecuteTags = req.GetTags()
+	execution.TableRows = req.GetTableRows()
+	streams := int(req.GetParallelStreams())
+	if streams < 1 {
+		streams = util.NumberOfCores()
+	}
+	execution.NumberOfExecutionStreams = streams
+	reporter.NumberOfExecutionStreams = streams
+	filter.NumberOfExecutionStreams = streams
+	execution.Strategy = strings.ToLower(req.GetStrategy().String())
+	filter.DoNotRandomize = req.GetSort()
+	reporter.Verbose = true
+	logger.Initialize(strings.ToLower(req.GetLogLevel().String()))
+	util.SetWorkingDir(req.GetWorkingDir())
+	var errs []error
+	if req.GetEnv() != "" {
+		if err := env.LoadEnv(req.GetEnv()); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errs
+}
+
+func resetFlags() {
+	cores := util.NumberOfCores()
+	reporter.IsParallel = false
+	execution.InParallel = false
+	reporter.Verbose = false
+	filter.ExecuteTags = ""
+	execution.TableRows = ""
+	execution.NumberOfExecutionStreams = cores
+	reporter.NumberOfExecutionStreams = cores
+	filter.NumberOfExecutionStreams = cores
+	execution.Strategy = "lazy"
+	filter.DoNotRandomize = false
 }
