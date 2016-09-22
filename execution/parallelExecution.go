@@ -137,7 +137,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	runner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
+	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
 	if err != nil {
 		logger.Errorf("Failed to start runner. %s", err.Error())
 		resChan <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
@@ -148,7 +148,7 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *r
 
 func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	runner, err := runner.StartRunnerAndMakeConnection(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
+	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
 	if err != nil {
 		logger.Errorf("Failed to start runner. %s", err.Error())
 		logger.Debug("Skipping %d specifications", s.Size())
