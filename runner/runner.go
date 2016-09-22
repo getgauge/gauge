@@ -295,29 +295,31 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func StartRunnerAndMakeConnection(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (Runner, error) {
+func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (Runner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
 	}
-	gaugeConnectionHandler, connHandlerErr := conn.NewGaugeConnectionHandler(port, nil)
-	if connHandlerErr != nil {
-		return nil, connHandlerErr
-	}
-	testRunner, err := startRunner(manifest, strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber()), reporter, killChannel)
+	handler, err := conn.NewGaugeConnectionHandler(port, nil)
 	if err != nil {
 		return nil, err
 	}
+	runner, err := startRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), reporter, killChannel)
+	if err != nil {
+		return nil, err
+	}
+	return connect(handler, runner)
+}
 
-	runnerConnection, connectionError := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), testRunner.errorChannel)
-	testRunner.connection = runnerConnection
-	if connectionError != nil {
-		logger.Debug("Runner connection error: %s", connectionError)
-		err := testRunner.killRunner()
-		if err != nil {
+func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) (Runner, error) {
+	connection, connErr := h.AcceptConnection(config.RunnerConnectionTimeout(), runner.errorChannel)
+	if connErr != nil {
+		logger.Debug("Runner connection error: %s", connErr)
+		if err := runner.killRunner(); err != nil {
 			logger.Debug("Error while killing runner: %s", err)
 		}
-		return nil, connectionError
+		return nil, connErr
 	}
-	return testRunner, nil
+	runner.connection = connection
+	return runner, nil
 }
