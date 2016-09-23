@@ -280,7 +280,7 @@ func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
 	if r.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
-			msg := getMessage(res.ErrorType.String())
+			msg := getMessage(res.GetErrorType().String())
 			if s.Parent == nil {
 				return NewValidationError(s, msg, v.specification.FileName, res.ErrorType)
 			}
