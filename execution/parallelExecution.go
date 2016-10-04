@@ -24,6 +24,11 @@ import (
 	"sync"
 	"time"
 
+	"os"
+
+	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
@@ -101,7 +106,9 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
 	resChan := make(chan *result.SuiteResult)
-	if isLazy() {
+	if e.runner.IsMultithreaded() {
+		go e.executeMultithreaded(nStreams, resChan)
+	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
 	} else {
 		go e.executeEagerly(nStreams, resChan)
@@ -123,6 +130,46 @@ func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result
 	}
 	e.wg.Wait()
 	close(resChan)
+}
+
+func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
+	e.wg.Add(totalStreams)
+	handlers := make([]*conn.GaugeConnectionHandler, 0)
+	var ports []string
+	for i := 0; i < totalStreams; i++ {
+		port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
+		if err != nil {
+			port = 0
+		}
+		handler, err := conn.NewGaugeConnectionHandler(port, nil)
+		if err != nil {
+			fmt.Println(err)
+		}
+		ports = append(ports, strconv.Itoa(handler.ConnectionPortNumber()))
+		handlers = append(handlers, handler)
+	}
+	os.Setenv("GAUGE_API_PORTS", strings.Join(ports, ","))
+	r, err := runner.Start(e.manifest, reporter.ParallelReporter(0), make(chan bool))
+	if err != nil {
+		fmt.Println(err)
+	}
+	for i := 0; i < totalStreams; i++ {
+		connection, err := handlers[i].AcceptConnection(config.RunnerConnectionTimeout(), make(chan error))
+		if err != nil {
+			fmt.Println(err)
+		}
+		crapRunner := &runner.MultithreadedRunner{}
+		crapRunner.SetConnection(connection)
+		go e.startMultithreaded(crapRunner, resChan, i+1)
+	}
+	e.wg.Wait()
+	r.Kill()
+	close(resChan)
+}
+
+func (e *parallelExecution) startMultithreaded(r runner.Runner, resChan chan *result.SuiteResult, stream int) {
+	defer e.wg.Done()
+	e.startSpecsExecutionWithRunner(e.specCollection, resChan, r, stream)
 }
 
 func (e *parallelExecution) executeEagerly(distributions int, resChan chan *result.SuiteResult) {

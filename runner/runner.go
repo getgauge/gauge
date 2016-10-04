@@ -48,13 +48,47 @@ type Runner interface {
 	IsProcessRunning() bool
 	Kill() error
 	Connection() net.Conn
+	IsMultithreaded() bool
 }
 
 type LanguageRunner struct {
-	mutex        *sync.Mutex
-	Cmd          *exec.Cmd
-	connection   net.Conn
-	errorChannel chan error
+	mutex         *sync.Mutex
+	Cmd           *exec.Cmd
+	connection    net.Conn
+	errorChannel  chan error
+	multiThreaded bool
+}
+
+type MultithreadedRunner struct {
+	r *LanguageRunner
+}
+
+func (r *MultithreadedRunner) IsProcessRunning() bool {
+	return false
+}
+
+func (r *MultithreadedRunner) IsMultithreaded() bool {
+	return false
+}
+
+func (r *MultithreadedRunner) SetConnection(c net.Conn) {
+	r.r = &LanguageRunner{connection: c}
+}
+
+func (r *MultithreadedRunner) Kill() error {
+	return nil
+}
+
+func (r *MultithreadedRunner) Connection() net.Conn {
+	return r.r.connection
+}
+
+func (r *MultithreadedRunner) killRunner() error {
+	return nil
+}
+
+func (r *MultithreadedRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	return r.r.ExecuteAndGetStatus(message)
 }
 
 type RunnerInfo struct {
@@ -73,6 +107,7 @@ type RunnerInfo struct {
 		Darwin  []string
 	}
 	Lib                 string
+	Multithreaded       bool
 	GaugeVersionSupport version.VersionSupport
 }
 
@@ -131,6 +166,10 @@ func (r *LanguageRunner) IsProcessRunning() bool {
 	ps := r.Cmd.ProcessState
 	r.mutex.Unlock()
 	return ps == nil || !ps.Exited()
+}
+
+func (r *LanguageRunner) IsMultithreaded() bool {
+	return r.multiThreaded
 }
 
 func (r *LanguageRunner) Kill() error {
@@ -221,7 +260,7 @@ func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)
-	testRunner := &LanguageRunner{Cmd: cmd, errorChannel: errChannel, mutex: &sync.Mutex{}}
+	testRunner := &LanguageRunner{Cmd: cmd, errorChannel: errChannel, mutex: &sync.Mutex{}, multiThreaded: r.Multithreaded}
 	testRunner.waitAndGetErrorMessage()
 	return testRunner, nil
 }
