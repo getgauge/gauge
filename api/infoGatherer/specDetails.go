@@ -39,7 +39,7 @@ type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
 	mutex             sync.Mutex
 	conceptDictionary *gauge.ConceptDictionary
-	specsCache        map[string][]*gauge.Specification
+	specsCache        map[string]*gauge.Specification
 	conceptsCache     map[string][]*gauge.Concept
 	stepsCache        map[string]*gauge.StepValue
 	SpecDirs          []string
@@ -61,7 +61,7 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 	defer s.waitGroup.Done()
 
 	var specFiles []string
-	s.specsCache = make(map[string][]*gauge.Specification, 0)
+	s.specsCache = make(map[string]*gauge.Specification, 0)
 
 	for _, dir := range s.SpecDirs {
 		specFiles = append(specFiles, util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, dir))...)
@@ -104,10 +104,7 @@ func (s *SpecInfoGatherer) initStepsCache() {
 
 func (s *SpecInfoGatherer) addToSpecsCache(key string, value *gauge.Specification) {
 	s.mutex.Lock()
-	if s.specsCache[key] == nil {
-		s.specsCache[key] = make([]*gauge.Specification, 0)
-	}
-	s.specsCache[key] = append(s.specsCache[key], value)
+	s.specsCache[key] = value
 	s.mutex.Unlock()
 }
 
@@ -149,10 +146,8 @@ func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
 	var stepValues []*gauge.StepValue
 	s.mutex.Lock()
-	for _, specList := range s.specsCache {
-		for _, spec := range specList {
-			stepValues = append(stepValues, getStepsFromSpec(spec)...)
-		}
+	for _, spec := range s.specsCache {
+		stepValues = append(stepValues, getStepsFromSpec(spec)...)
 	}
 	s.mutex.Unlock()
 	return stepValues
@@ -320,8 +315,8 @@ func (s *SpecInfoGatherer) GetAvailableSpecs() []*gauge.Specification {
 
 	var allSpecs []*gauge.Specification
 	s.mutex.Lock()
-	for _, specs := range s.specsCache {
-		allSpecs = append(allSpecs, specs...)
+	for _, spec := range s.specsCache {
+		allSpecs = append(allSpecs, spec)
 	}
 	s.mutex.Unlock()
 	return allSpecs
