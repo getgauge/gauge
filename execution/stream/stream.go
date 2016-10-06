@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
@@ -74,6 +75,7 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
 			e := <-ch
 			res := getResponse(e)
 			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd.Enum() {
+				util.SetWorkingDir(config.ProjectRoot)
 				return
 			}
 		}
@@ -238,4 +240,5 @@ func resetFlags() {
 	filter.NumberOfExecutionStreams = cores
 	execution.Strategy = "lazy"
 	filter.DoNotRandomize = false
+	util.SetWorkingDir(config.ProjectRoot)
 }

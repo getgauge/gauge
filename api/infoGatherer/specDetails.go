@@ -24,6 +24,7 @@ import (
 
 	"os"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -39,10 +40,19 @@ type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
 	mutex             sync.Mutex
 	conceptDictionary *gauge.ConceptDictionary
-	specsCache        map[string]*gauge.Specification
+	specsCache        map[string]*SpecDetail
 	conceptsCache     map[string][]*gauge.Concept
 	stepsCache        map[string]*gauge.StepValue
 	SpecDirs          []string
+}
+
+type SpecDetail struct {
+	Spec *gauge.Specification
+	Errs []*parser.ParseError
+}
+
+func (d *SpecDetail) HasSpec() bool {
+	return d.Spec != nil && d.Spec.Heading != nil
 }
 
 // MakeListOfAvailableSteps initializes all the SpecInfoGatherer caches
@@ -60,20 +70,22 @@ func (s *SpecInfoGatherer) MakeListOfAvailableSteps() {
 func (s *SpecInfoGatherer) initSpecsCache() {
 	defer s.waitGroup.Done()
 
+	s.specsCache = make(map[string]*SpecDetail, 0)
+	details := s.getParsedSpecs(getSpecFiles(s.SpecDirs))
+
+	logger.APILog.Info("Initializing specs cache with %d specs", len(details))
+	for _, d := range details {
+		logger.APILog.Debug("Adding specs from %s", d.Spec.FileName)
+		s.addToSpecsCache(d.Spec.FileName, d)
+	}
+}
+
+func getSpecFiles(specs []string) []string {
 	var specFiles []string
-	s.specsCache = make(map[string]*gauge.Specification, 0)
-
-	for _, dir := range s.SpecDirs {
-		specFiles = append(specFiles, util.FindSpecFilesIn(filepath.Join(config.ProjectRoot, dir))...)
+	for _, dir := range specs {
+		specFiles = append(specFiles, util.FindSpecFilesIn(dir)...)
 	}
-
-	parsedSpecs := s.getParsedSpecs(specFiles)
-
-	logger.APILog.Info("Initializing specs cache with %d specs", len(parsedSpecs))
-	for _, spec := range parsedSpecs {
-		logger.APILog.Debug("Adding specs from %s", spec.FileName)
-		s.addToSpecsCache(spec.FileName, spec)
-	}
+	return specFiles
 }
 
 func (s *SpecInfoGatherer) initConceptsCache() {
@@ -102,7 +114,7 @@ func (s *SpecInfoGatherer) initStepsCache() {
 	s.addToStepsCache(allSteps)
 }
 
-func (s *SpecInfoGatherer) addToSpecsCache(key string, value *gauge.Specification) {
+func (s *SpecInfoGatherer) addToSpecsCache(key string, value *SpecDetail) {
 	s.mutex.Lock()
 	s.specsCache[key] = value
 	s.mutex.Unlock()
@@ -127,13 +139,28 @@ func (s *SpecInfoGatherer) addToStepsCache(allSteps []*gauge.StepValue) {
 	s.mutex.Unlock()
 }
 
-func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*gauge.Specification {
+func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 	if s.conceptDictionary == nil {
 		s.conceptDictionary = gauge.NewConceptDictionary()
 	}
 	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary)
-	handleParseFailures(parseResults)
-	return parsedSpecs
+	specs := make(map[string]*SpecDetail)
+
+	for _, spec := range parsedSpecs {
+		specs[spec.FileName] = &SpecDetail{Spec: spec}
+	}
+	for _, v := range parseResults {
+		_, ok := specs[v.FileName]
+		if !ok {
+			specs[v.FileName] = &SpecDetail{Spec: &gauge.Specification{FileName: v.FileName}}
+		}
+		specs[v.FileName].Errs = append(v.CriticalErrors, v.ParseErrors...)
+	}
+	details := make([]*SpecDetail, 0)
+	for _, d := range specs {
+		details = append(details, d)
+	}
+	return details
 }
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
@@ -146,8 +173,8 @@ func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
 	var stepValues []*gauge.StepValue
 	s.mutex.Lock()
-	for _, spec := range s.specsCache {
-		stepValues = append(stepValues, getStepsFromSpec(spec)...)
+	for _, detail := range s.specsCache {
+		stepValues = append(stepValues, getStepsFromSpec(detail.Spec)...)
 	}
 	s.mutex.Unlock()
 	return stepValues
@@ -170,13 +197,10 @@ func (s *SpecInfoGatherer) onSpecFileModify(file string) {
 	defer s.waitGroup.Done()
 
 	logger.APILog.Info("Spec file added / modified: %s", file)
-	parsedSpecs := s.getParsedSpecs([]string{file})
-	if len(parsedSpecs) != 0 {
-		parsedSpec := parsedSpecs[0]
-		s.addToSpecsCache(file, parsedSpec)
-		stepsFromSpec := getStepsFromSpec(parsedSpec)
-		s.addToStepsCache(stepsFromSpec)
-	}
+	details := s.getParsedSpecs([]string{file})
+	s.addToSpecsCache(file, details[0])
+	stepsFromSpec := getStepsFromSpec(details[0].Spec)
+	s.addToStepsCache(stepsFromSpec)
 }
 
 func (s *SpecInfoGatherer) onConceptFileModify(file string) {
@@ -310,16 +334,21 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 }
 
 // GetAvailableSpecs returns the list of all the specs in the gauge project
-func (s *SpecInfoGatherer) GetAvailableSpecs() []*gauge.Specification {
+func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail {
+	if len(specs) < 1 {
+		specs = []string{common.SpecsDirectoryName}
+	}
+	specFiles := getSpecFiles(specs)
 	s.waitGroup.Wait()
-
-	var allSpecs []*gauge.Specification
+	var details []*SpecDetail
 	s.mutex.Lock()
-	for _, spec := range s.specsCache {
-		allSpecs = append(allSpecs, spec)
+	for _, f := range specFiles {
+		if d, ok := s.specsCache[f]; ok {
+			details = append(details, d)
+		}
 	}
 	s.mutex.Unlock()
-	return allSpecs
+	return details
 }
 
 // GetAvailableSteps returns the list of all the steps in the gauge project

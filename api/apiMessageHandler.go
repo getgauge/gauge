@@ -62,8 +62,8 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 		case gauge_messages.APIMessage_GetAllStepsRequest:
 			responseMessage = handler.getAllStepsRequestResponse(apiMessage)
 			break
-		case gauge_messages.APIMessage_GetAllSpecsRequest:
-			responseMessage = handler.getAllSpecsRequestResponse(apiMessage)
+		case gauge_messages.APIMessage_SpecsRequest:
+			responseMessage = handler.getSpecsRequestResponse(apiMessage)
 			break
 		case gauge_messages.APIMessage_GetStepValueRequest:
 			responseMessage = handler.getStepValueRequestResponse(apiMessage)
@@ -126,9 +126,9 @@ func (handler *gaugeAPIMessageHandler) getAllStepsRequestResponse(message *gauge
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
-func (handler *gaugeAPIMessageHandler) getAllSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	getAllSpecsResponse := handler.createGetAllSpecsResponseMessageFor(handler.specInfoGatherer.GetAvailableSpecs())
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllSpecsResponse.Enum(), MessageId: message.MessageId, AllSpecsResponse: getAllSpecsResponse}
+func (handler *gaugeAPIMessageHandler) getSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
+	getAllSpecsResponse := handler.createSpecsResponseMessageFor(handler.specInfoGatherer.GetAvailableSpecDetails(message.SpecsRequest.Specs))
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_SpecsResponse.Enum(), MessageId: message.MessageId, SpecsResponse: getAllSpecsResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) getStepValueRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -179,12 +179,19 @@ func (handler *gaugeAPIMessageHandler) getErrorMessage(err error) *gauge_message
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
 }
 
-func (handler *gaugeAPIMessageHandler) createGetAllSpecsResponseMessageFor(specs []*gauge.Specification) *gauge_messages.GetAllSpecsResponse {
-	var protoSpecs []*gauge_messages.ProtoSpec
-	for _, spec := range specs {
-		protoSpecs = append(protoSpecs, gauge.ConvertToProtoSpec(spec))
+func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*infoGatherer.SpecDetail) *gauge_messages.SpecsResponse {
+	specDetails := make([]*gauge_messages.SpecsResponse_SpecDetail, 0)
+	for _, d := range details {
+		detail := &gauge_messages.SpecsResponse_SpecDetail{}
+		if d.HasSpec() {
+			detail.Spec = gauge.ConvertToProtoSpec(d.Spec)
+		}
+		for _, e := range d.Errs {
+			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Filename: proto.String(e.FileName), Message: proto.String(e.Message), LineNumber: proto.Int32(int32(e.LineNo))})
+		}
+		specDetails = append(specDetails, detail)
 	}
-	return &gauge_messages.GetAllSpecsResponse{Specs: protoSpecs}
+	return &gauge_messages.SpecsResponse{Details: specDetails}
 }
 
 func (handler *gaugeAPIMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*gauge_messages.ConceptInfo) *gauge_messages.GetAllConceptsResponse {
