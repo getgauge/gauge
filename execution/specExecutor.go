@@ -228,7 +228,7 @@ func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *ga
 	protoStep.StepExecutionResult.Skipped = proto.Bool(false)
 	if _, ok := e.errMap.StepErrs[step]; ok {
 		protoStep.StepExecutionResult.Skipped = proto.Bool(true)
-		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implemenatation not found")
+		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implementation not found")
 	}
 }
 
