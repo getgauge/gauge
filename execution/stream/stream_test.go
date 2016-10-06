@@ -22,6 +22,9 @@ import (
 
 	"testing"
 
+	"os"
+
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -41,6 +44,11 @@ func Test(t *testing.T) { TestingT(t) }
 type MySuite struct{}
 
 var _ = Suite(&MySuite{})
+
+func (s *MySuite) SetUpTest(c *C) {
+	wd, _ := os.Getwd()
+	config.ProjectRoot = wd
+}
 
 func (s *MySuite) TestGetStatusForFailedScenario(c *C) {
 	sce := &gm.ProtoScenario{
