@@ -236,7 +236,7 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func startRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*LanguageRunner, error) {
+func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*LanguageRunner, error) {
 	var r RunnerInfo
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -343,7 +343,7 @@ func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel 
 	if err != nil {
 		return nil, err
 	}
-	runner, err := startRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), reporter, killChannel)
+	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), reporter, killChannel)
 	if err != nil {
 		return nil, err
 	}

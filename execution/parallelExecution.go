@@ -149,9 +149,10 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 		handlers = append(handlers, handler)
 	}
 	os.Setenv("GAUGE_API_PORTS", strings.Join(ports, ","))
-	r, err := runner.Start(e.manifest, reporter.ParallelReporter(0), make(chan bool))
+	r, err := runner.StartRunner(e.manifest, "0", reporter.ParallelReporter(0), make(chan bool))
 	if err != nil {
 		fmt.Println(err)
+		return
 	}
 	for i := 0; i < totalStreams; i++ {
 		connection, err := handlers[i].AcceptConnection(config.RunnerConnectionTimeout(), make(chan error))
@@ -163,7 +164,7 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 		go e.startMultithreaded(crapRunner, resChan, i+1)
 	}
 	e.wg.Wait()
-	r.Kill()
+	r.Cmd.Process.Kill()
 	close(resChan)
 }
 
