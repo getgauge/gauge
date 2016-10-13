@@ -252,6 +252,9 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 			logger.Debug("Runner exited with error: %s", err)
 			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
+		if !pState.Success() {
+			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s).", pState.Pid(), pState.String())
+		}
 	}()
 }
 
