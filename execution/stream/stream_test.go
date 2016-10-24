@@ -52,7 +52,7 @@ func (s *MySuite) SetUpTest(c *C) {
 
 func (s *MySuite) TestGetStatusForFailedScenario(c *C) {
 	sce := &gm.ProtoScenario{
-		Failed: proto.Bool(true),
+		ExecutionStatus: gm.ExecutionStatus_FAILED.Enum(),
 	}
 	res := result.NewScenarioResult(sce)
 
@@ -63,7 +63,7 @@ func (s *MySuite) TestGetStatusForFailedScenario(c *C) {
 
 func (s *MySuite) TestGetStatusForPassedScenario(c *C) {
 	sce := &gm.ProtoScenario{
-		Failed: proto.Bool(false),
+		ExecutionStatus: gm.ExecutionStatus_PASSED.Enum(),
 	}
 	res := result.NewScenarioResult(sce)
 
@@ -74,7 +74,7 @@ func (s *MySuite) TestGetStatusForPassedScenario(c *C) {
 
 func (s *MySuite) TestGetStatusForSkippedScenario(c *C) {
 	sce := &gm.ProtoScenario{
-		Skipped: proto.Bool(true),
+		ExecutionStatus: gm.ExecutionStatus_SKIPPED.Enum(),
 	}
 	res := result.NewScenarioResult(sce)
 
@@ -330,8 +330,8 @@ func (s *MySuite) TestListenScenarioEndExecutionEventForFailedScenario(c *C) {
 		ScenarioItems: []*gm.ProtoItem{
 			newFailedStep("error message"),
 		},
-		ExecutionTime: proto.Int64(1),
-		Failed:        proto.Bool(true),
+		ExecutionTime:   proto.Int64(1),
+		ExecutionStatus: gm.ExecutionStatus_FAILED.Enum(),
 	}
 
 	listenExecutionEvents(&dummyServer{response: actual})

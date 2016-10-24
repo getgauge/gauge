@@ -190,10 +190,10 @@ func getErrors(items []*gm.ProtoItem) []*gm.Result_ExecutionError {
 }
 
 func getStatus(result *result.ScenarioResult) *gm.Result_Status {
-	if result.GetFailed() {
+	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_FAILED {
 		return gm.Result_FAILED.Enum()
 	}
-	if result.ProtoScenario.GetSkipped() {
+	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_SKIPPED {
 		return gm.Result_SKIPPED.Enum()
 	}
 	return gm.Result_PASSED.Enum()

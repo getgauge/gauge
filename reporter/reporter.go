@@ -124,7 +124,7 @@ func ListenExecutionEvents() {
 			case event.SpecStart:
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
 			case event.ScenarioStart:
-				if e.Result.(*result.ScenarioResult).ProtoScenario.GetSkipped() {
+				if e.Result.(*result.ScenarioResult).ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 					continue
 				}
 				sce := e.Item.(*gauge.Scenario)
@@ -142,7 +142,7 @@ func ListenExecutionEvents() {
 			case event.ConceptEnd:
 				r.ConceptEnd(e.Result)
 			case event.ScenarioEnd:
-				if e.Result.(*result.ScenarioResult).ProtoScenario.GetSkipped() {
+				if e.Result.(*result.ScenarioResult).ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 					continue
 				}
 				r.ScenarioEnd(e.Result)

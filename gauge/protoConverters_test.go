@@ -76,8 +76,7 @@ func (s *MySuite) TestNewProtoScenario(c *C) {
 	protoSce := NewProtoScenario(sce)
 
 	c.Assert(protoSce.GetScenarioHeading(), Equals, sceHeading)
-	c.Assert(*protoSce.Failed, Equals, false)
-	c.Assert(*protoSce.Skipped, Equals, false)
+	c.Assert(protoSce.GetExecutionStatus(), Equals, gauge_messages.ExecutionStatus_NOTEXECUTED)
 	c.Assert(*protoSce.Span.Start, Equals, int64(1))
 	c.Assert(*protoSce.Span.End, Equals, int64(4))
 }

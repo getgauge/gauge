@@ -31,11 +31,11 @@ func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
 }
 
 func (s *ScenarioResult) SetFailure() {
-	s.ProtoScenario.Failed = proto.Bool(true)
+	s.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED.Enum()
 }
 
 func (s *ScenarioResult) GetFailed() bool {
-	return s.ProtoScenario.GetFailed()
+	return s.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED
 }
 
 func (s *ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {

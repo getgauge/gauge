@@ -66,9 +66,8 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
-	failed := true
 	sce := &gauge.Scenario{Span: &gauge.Span{Start: 2}}
-	sr1 := &result.ScenarioResult{ProtoScenario: &gauge_messages.ProtoScenario{Failed: &failed}}
+	sr1 := &result.ScenarioResult{ProtoScenario: &gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED.Enum()}}
 
 	prepareScenarioFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &spec1Abs}})
 

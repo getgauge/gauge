@@ -67,7 +67,7 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]R
 			protoScenario := eachRow[scenarioIndex].Item().(*gauge_messages.ProtoScenario)
 			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), protoScenario)
 			specResult.AddExecTime(protoScenario.GetExecutionTime())
-			if protoScenario.GetFailed() {
+			if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 				scenarioFailed = true
 				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(rowIndex))
 			}
