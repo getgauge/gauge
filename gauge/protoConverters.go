@@ -261,6 +261,8 @@ func NewSpecResult(specification *Specification) *result.SpecResult {
 func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
 		ScenarioHeading: proto.String(scenario.Heading.Value),
+		Failed:          proto.Bool(false),
+		Skipped:         proto.Bool(false),
 		Tags:            getTags(scenario.Tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
