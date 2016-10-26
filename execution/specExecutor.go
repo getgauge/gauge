@@ -108,7 +108,7 @@ func (e *specExecutor) executeTableDrivenSpec() {
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
 		res = append(res, e.executeScenarios())
 	}
-	e.specResult.AddTableDrivenScenarioResult(res)
+	e.specResult.AddTableDrivenScenarioResult(res, e.dataTableIndex.start)
 }
 
 func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
