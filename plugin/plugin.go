@@ -47,6 +47,7 @@ const (
 	executionScope          = "execution"
 	docScope                = "documentation"
 	pluginConnectionPortEnv = "plugin_connection_port"
+	debugEnv                = "debugging"
 )
 
 type pluginDescriptor struct {
@@ -232,7 +233,7 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) {
+func startPluginsForExecution(manifest *manifest.Manifest, debug bool) (*Handler, []string) {
 	var warnings []string
 	handler := &Handler{}
 	envProperties := make(map[string]string)
@@ -255,6 +256,9 @@ func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) 
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
+			if debug {
+				envProperties[debugEnv] = "true"
+			}
 			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
@@ -370,8 +374,8 @@ func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func StartPlugins(manifest *manifest.Manifest) *Handler {
-	pluginHandler, warnings := startPluginsForExecution(manifest)
+func StartPlugins(manifest *manifest.Manifest, debug bool) *Handler {
+	pluginHandler, warnings := startPluginsForExecution(manifest, debug)
 	logger.HandleWarningMessages(warnings)
 	return pluginHandler
 }

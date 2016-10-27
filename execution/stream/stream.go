@@ -51,11 +51,11 @@ func (e *executionServer) Execute(req *gm.ExecutionRequest, stream gm.Execution_
 		stream.Send(getErrorExecutionResponse(errs...))
 		return nil
 	}
-	execute(req.Specs, stream)
+	execute(req.Specs, stream, req.GetDebug())
 	return nil
 }
 
-func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
+func execute(specDirs []string, stream gm.Execution_ExecuteServer, debug bool) {
 	res := validation.ValidateSpecs(specDirs)
 	if len(res.Errs) > 0 {
 		stream.Send(getErrorExecutionResponse(res.Errs...))
@@ -64,7 +64,7 @@ func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
 	event.InitRegistry()
 	listenExecutionEvents(stream)
 	rerun.ListenFailedScenarios()
-	execution.Execute(res.SpecCollection, res.Runner, nil, res.ErrMap, execution.InParallel, 0)
+	execution.Execute(res.SpecCollection, res.Runner, nil, res.ErrMap, execution.InParallel, 0, debug)
 }
 
 func listenExecutionEvents(stream gm.Execution_ExecuteServer) {

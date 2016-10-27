@@ -57,9 +57,10 @@ type executionInfo struct {
 	inParallel      bool
 	numberOfStreams int
 	stream          int
+	debug           bool
 }
 
-func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, stream int) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, stream int, debug bool) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -73,6 +74,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handl
 		inParallel:      p,
 		numberOfStreams: NumberOfExecutionStreams,
 		stream:          stream,
+		debug:           debug,
 	}
 }
 
@@ -99,13 +101,13 @@ func ExecuteSpecs(specDirs []string) int {
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
 	rerun.ListenFailedScenarios()
-	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
+	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0, false)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ErrMap)
 }
 
-func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, n int) {
-	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
+func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, n int, d bool) {
+	newExecution(newExecutionInfo(s, r, ph, e, p, n, d)).run()
 }
 
 func newExecution(executionInfo *executionInfo) execution {
