@@ -48,6 +48,7 @@ type Runner interface {
 	IsProcessRunning() bool
 	Kill() error
 	Connection() net.Conn
+	Pid() int
 }
 
 type LanguageRunner struct {
@@ -169,6 +170,10 @@ func (r *LanguageRunner) Connection() net.Conn {
 
 func (r *LanguageRunner) killRunner() error {
 	return r.Cmd.Process.Kill()
+}
+
+func (r *LanguageRunner) Pid() int {
+	return r.Cmd.Process.Pid
 }
 
 func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {

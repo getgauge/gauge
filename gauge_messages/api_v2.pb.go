@@ -408,7 +408,7 @@ type ExecutionResponse struct {
 	ID *string `protobuf:"bytes,2,opt,name=ID" json:"ID,omitempty"`
 	// Contains all the result details. This field is populated only for ScenarioStart, ScenaioEnd, SpecEnd, SuiteEnd, ErrorResult
 	Result *Result `protobuf:"bytes,3,opt,name=result" json:"result,omitempty"`
-	// Contains the processId of the language runner used for execution. This field is populated only for SuiteStart
+	// Contains the processId of the language runner used for execution.
 	RunnerProcessId  *int32 `protobuf:"varint,4,opt,name=RunnerProcessId" json:"RunnerProcessId,omitempty"`
 	XXX_unrecognized []byte `json:"-"`
 }
