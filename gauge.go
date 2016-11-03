@@ -164,7 +164,7 @@ func refactorInit(args []string) {
 	if len(args) > 1 {
 		specDirs = args[1:]
 	}
-	startChan := api.StartAPI()
+	startChan := api.StartAPI(false)
 	refactor.RefactorSteps(*refactorSteps, args[0], startChan, specDirs)
 }
 

@@ -46,7 +46,6 @@ type simpleExecution struct {
 	errMaps              *validation.ValidationErrMaps
 	startTime            time.Time
 	stream               int
-	debug                bool
 }
 
 func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
@@ -57,7 +56,6 @@ func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
 		pluginHandler:  executionInfo.pluginHandler,
 		errMaps:        executionInfo.errMaps,
 		stream:         executionInfo.stream,
-		debug:          executionInfo.debug,
 	}
 }
 
@@ -95,7 +93,7 @@ func (e *simpleExecution) execute() {
 func (e *simpleExecution) start() {
 	e.startTime = time.Now()
 	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
-	e.pluginHandler = plugin.StartPlugins(e.manifest, e.debug)
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) finish() {

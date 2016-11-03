@@ -35,15 +35,15 @@ import (
 )
 
 // StartAPI calls StartAPIService and returns the channels
-func StartAPI() *runner.StartChannels {
+func StartAPI(debug bool) *runner.StartChannels {
 	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
-	go startAPIService(0, startChan, sig)
+	go startAPIService(0, startChan, sig, debug)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer) {
+func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
@@ -58,7 +58,7 @@ func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGat
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
 
-	runner, err := connectToRunner(startChannels.KillChan)
+	runner, err := connectToRunner(startChannels.KillChan, debug)
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
@@ -66,13 +66,13 @@ func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGat
 	startChannels.RunnerChan <- runner
 }
 
-func connectToRunner(killChannel chan bool) (runner.Runner, error) {
+func connectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		return nil, err
 	}
 
-	runner, connErr := runner.Start(manifest, reporter.Current(), killChannel)
+	runner, connErr := runner.Start(manifest, reporter.Current(), killChannel, debug)
 	if connErr != nil {
 		return nil, connErr
 	}
@@ -85,7 +85,7 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.MakeListOfAvailableSteps()
-	go startAPIService(port, startChan, sig)
+	go startAPIService(port, startChan, sig, false)
 	go checkParentIsAlive(startChan)
 
 	for {

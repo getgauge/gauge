@@ -81,7 +81,7 @@ func Validate(args []string) {
 	if len(args) == 0 {
 		args = append(args, common.SpecsDirectoryName)
 	}
-	res := ValidateSpecs(args)
+	res := ValidateSpecs(args, false)
 	if len(res.Errs) > 0 {
 		os.Exit(1)
 	}
@@ -98,8 +98,8 @@ func Validate(args []string) {
 }
 
 //TODO : duplicate in execute.go. Need to fix runner init.
-func startAPI() runner.Runner {
-	sc := api.StartAPI()
+func startAPI(debug bool) runner.Runner {
+	sc := api.StartAPI(debug)
 	select {
 	case runner := <-sc.RunnerChan:
 		return runner
@@ -120,7 +120,7 @@ func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r r
 	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, Errs: e}
 }
 
-func ValidateSpecs(args []string) *ValidationResult {
+func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Errorf(err.Error())
@@ -135,7 +135,7 @@ func ValidateSpecs(args []string) *ValidationResult {
 		return NewValidationResult(nil, nil, nil, errs...)
 	}
 	s, specsFailed := parser.ParseSpecs(args, conceptDict)
-	r := startAPI()
+	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
 	errMap := NewValidationErrMaps()
 	if len(vErrs) > 0 {

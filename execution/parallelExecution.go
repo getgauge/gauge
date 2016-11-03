@@ -91,7 +91,7 @@ func (e *parallelExecution) numberOfStreams() int {
 func (e *parallelExecution) start() {
 	e.startTime = time.Now()
 	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
-	e.pluginHandler = plugin.StartPlugins(e.manifest, false)
+	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *parallelExecution) run() *result.SuiteResult {
@@ -137,7 +137,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
+	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
 		logger.Errorf("Failed to start runner. %s", err.Error())
 		resChan <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
@@ -148,7 +148,7 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *r
 
 func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool))
+	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
 		logger.Errorf("Failed to start runner. %s", err.Error())
 		logger.Debug("Skipping %d specifications", s.Size())
@@ -159,7 +159,7 @@ func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan
 }
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner runner.Runner, stream int) {
-	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream, false)
+	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream)
 	se := newSimpleExecution(executionInfo)
 	se.execute()
 	runner.Kill()

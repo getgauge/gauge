@@ -200,7 +200,7 @@ func (handler *gaugeAPIMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	startChan := StartAPI()
+	startChan := StartAPI(false)
 	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), startChan, handler.specInfoGatherer.SpecDirs)
 	if refactoringResult.Success {
 		logger.APILog.Info("%s", refactoringResult.String())
