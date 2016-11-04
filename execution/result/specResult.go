@@ -57,20 +57,19 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
-func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result, rowIndexStart int) {
+func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
 		scenarioFailed := false
-		for _, eachRow := range scenarioResults {
+		for rowIndx, eachRow := range scenarioResults {
 			protoScenario := eachRow[scenarioIndex].Item().(*gauge_messages.ProtoScenario)
 			specResult.AddExecTime(protoScenario.GetExecutionTime())
 			if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 				scenarioFailed = true
-				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(rowIndexStart))
+				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(rowIndx))
 			}
-			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenario: protoScenario, TableRowIndex: proto.Int32(int32(rowIndexStart))}
-			rowIndexStart++
+			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenario: protoScenario, TableRowIndex: proto.Int32(int32(rowIndx))}
 			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario.Enum(), TableDrivenScenario: protoTableDrivenScenario}
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}
