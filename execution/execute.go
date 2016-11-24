@@ -147,7 +147,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
-	if suiteResult.IsFailed || (nSkippedSpecs+nSkippedScenarios) > 0 {
+	if suiteResult.IsFailed {
 		return 1
 	}
 	return 0
