@@ -70,7 +70,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 	}
 
 	if e.dataTableIndex.start < 0 {
-		e.skipSpecForError(fmt.Errorf("Data Table doesn't match the given range in spec: %s\n", e.specification.FileName))
+		e.skipSpecForError(fmt.Errorf("Skipping spec %s as given data table range is invalid.\n", e.specification.FileName))
 		return e.specResult
 	}
 
@@ -105,10 +105,12 @@ func (e *specExecutor) execute() *result.SpecResult {
 
 func (e *specExecutor) executeTableDrivenSpec() {
 	var res [][]result.Result
+	var executedRowIndexes []int
 	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
 		res = append(res, e.executeScenarios())
+		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 	}
-	e.specResult.AddTableDrivenScenarioResult(res)
+	e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
 }
 
 func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
