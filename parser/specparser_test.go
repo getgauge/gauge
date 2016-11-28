@@ -861,6 +861,43 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	c.Assert(spec.DataTable.Table.Get("name")[1].CellType, Equals, gauge.Static)
 }
 
+func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
+	tokens := []*Token{
+		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		&Token{Kind: gauge.TableRow, Args: []string{"", ""}},
+		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+	}
+
+	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+
+	c.Assert(len(spec.Items), Equals, 3)
+	c.Assert(spec.Items[0], Equals, spec.Comments[0])
+	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable)
+	c.Assert(spec.Items[2], Equals, spec.Comments[1])
+
+	c.Assert(result.Ok, Equals, true)
+	c.Assert(spec.DataTable, NotNil)
+	c.Assert(spec.DataTable.Table.GetRowCount(), Equals, 3)
+	c.Assert(len(spec.DataTable.Table.Get("id")), Equals, 3)
+	c.Assert(len(spec.DataTable.Table.Get("name")), Equals, 3)
+	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
+	c.Assert(spec.DataTable.Table.Get("id")[0].CellType, Equals, gauge.Static)
+	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "")
+	c.Assert(spec.DataTable.Table.Get("id")[1].CellType, Equals, gauge.Static)
+	c.Assert(spec.DataTable.Table.Get("id")[2].Value, Equals, "2")
+	c.Assert(spec.DataTable.Table.Get("id")[2].CellType, Equals, gauge.Static)
+	c.Assert(spec.DataTable.Table.Get("name")[0].Value, Equals, "foo")
+	c.Assert(spec.DataTable.Table.Get("name")[0].CellType, Equals, gauge.Static)
+	c.Assert(spec.DataTable.Table.Get("name")[1].Value, Equals, "")
+	c.Assert(spec.DataTable.Table.Get("name")[1].CellType, Equals, gauge.Static)
+	c.Assert(spec.DataTable.Table.Get("name")[2].Value, Equals, "bar")
+	c.Assert(spec.DataTable.Table.Get("name")[2].CellType, Equals, gauge.Static)
+}
+
 func (s *MySuite) TestStepWithInlineTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
