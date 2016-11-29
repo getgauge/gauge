@@ -18,9 +18,7 @@
 package execution
 
 import (
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -36,7 +34,7 @@ import (
 
 type specExecutor struct {
 	specification        *gauge.Specification
-	dataTableIndex       indexRange
+	dataTableIndexes     []int
 	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
@@ -46,13 +44,8 @@ type specExecutor struct {
 	stream               int
 }
 
-type indexRange struct {
-	start int
-	end   int
-}
-
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, tr indexRange, e *validation.ValidationErrMaps, stream int) *specExecutor {
-	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndex: tr, errMap: e, stream: stream}
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, dti []int, e *validation.ValidationErrMaps, stream int) *specExecutor {
+	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndexes: dti, errMap: e, stream: stream}
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
@@ -69,7 +62,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 		return e.specResult
 	}
 
-	if e.dataTableIndex.start < 0 {
+	if e.dataTableIndexes == nil {
 		e.skipSpecForError(fmt.Errorf("Skipping spec %s as given data table range is invalid.\n", e.specification.FileName))
 		return e.specResult
 	}
@@ -106,7 +99,8 @@ func (e *specExecutor) execute() *result.SpecResult {
 func (e *specExecutor) executeTableDrivenSpec() {
 	var res [][]result.Result
 	var executedRowIndexes []int
-	for e.currentTableRow = e.dataTableIndex.start; e.currentTableRow <= e.dataTableIndex.end; e.currentTableRow++ {
+	for _, tableRowIndex := range e.dataTableIndexes {
+		e.currentTableRow = tableRowIndex
 		res = append(res, e.executeScenarios())
 		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 	}
@@ -321,21 +315,4 @@ func getTagValue(tags *gauge.Tags) []string {
 
 func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentSpec.IsFailed = proto.Bool(true)
-}
-
-func getDataTableRowsRange(tableRows string, rowCount int) (indexRange, error) {
-	var startIndex, endIndex int
-	var err error
-	indexRanges := strings.Split(tableRows, "-")
-	if len(indexRanges) == 2 {
-		startIndex, endIndex, err = validation.ValidateTableRowsRange(indexRanges[0], indexRanges[1], rowCount)
-	} else if len(indexRanges) == 1 {
-		startIndex, endIndex, err = validation.ValidateTableRowsRange(tableRows, tableRows, rowCount)
-	} else {
-		return indexRange{start: 0, end: 0}, errors.New("Table rows range validation failed.")
-	}
-	if err != nil {
-		return indexRange{start: 0, end: 0}, err
-	}
-	return indexRange{start: startIndex, end: endIndex}, nil
 }

@@ -333,18 +333,13 @@ func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
 }
 
-func ValidateTableRowsRange(start string, end string, rowCount int) (int, int, error) {
-	message := "Table rows range validation failed."
-	startRow, err := strconv.Atoi(start)
+func ValidateTableRow(rowNumber string, rowCount int) (int, error) {
+	row, err := strconv.Atoi(strings.TrimSpace(rowNumber))
 	if err != nil {
-		return 0, 0, errors.New(message)
+		return 0, fmt.Errorf("Table rows range validation failed: Failed to parse %s to row number", rowNumber)
 	}
-	endRow, err := strconv.Atoi(end)
-	if err != nil {
-		return 0, 0, errors.New(message)
+	if row < 1 || row > rowCount {
+		return 0, fmt.Errorf("Table rows range validation failed: Table row number %d is out of range", row)
 	}
-	if startRow > endRow || endRow > rowCount || startRow < 1 || endRow < 1 {
-		return 0, 0, errors.New(message)
-	}
-	return startRow - 1, endRow - 1, nil
+	return row - 1, nil
 }
