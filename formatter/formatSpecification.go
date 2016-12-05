@@ -29,6 +29,9 @@ type formatter struct {
 	buffer bytes.Buffer
 }
 
+func (formatter *formatter) Specification(specification *gauge.Specification) {
+}
+
 func (formatter *formatter) SpecHeading(specHeading *gauge.Heading) {
 	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "="))
 }

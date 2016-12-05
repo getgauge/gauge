@@ -353,9 +353,9 @@ func anySpec() *gauge.Specification {
 
 func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 	errMap := &validation.ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]*validation.StepValidationError),
-		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
-		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
 	}
 	se := newSpecExecutor(anySpec(), nil, nil, nil, errMap, 0)
 

@@ -48,9 +48,9 @@ Scenario 2
 	p := new(parser.SpecParser)
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
-	errs := validationErrors{spec: []*StepValidationError{
-		{message: "", fileName: "", step: spec.Scenarios[0].Steps[0]},
-		{message: "", fileName: "", step: spec.Scenarios[1].Steps[0]},
+	errs := validationErrors{spec: []error{
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
+		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
 	}}
 
 	errMap := getErrMap(errs)
@@ -74,8 +74,8 @@ Scenario 2
 	p := new(parser.SpecParser)
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
-	errs := validationErrors{spec: []*StepValidationError{
-		{message: "", fileName: "", step: spec.Scenarios[0].Steps[0]},
+	errs := validationErrors{spec: []error{
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
 	}}
 
 	errMap := getErrMap(errs)
@@ -94,7 +94,7 @@ func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
 	p := new(parser.SpecParser)
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
-	errs := validationErrors{spec: []*StepValidationError{}}
+	errs := validationErrors{spec: []error{}}
 
 	errMap := getErrMap(errs)
 

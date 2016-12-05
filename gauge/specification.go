@@ -223,6 +223,8 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 	traverser.SpecHeading(spec.Heading)
 	for _, item := range spec.Items {
 		switch item.Kind() {
+		case SpecKind:
+			traverser.Specification(item.(*Specification))
 		case ScenarioKind:
 			item.(*Scenario).Traverse(traverser)
 			traverser.Scenario(item.(*Scenario))

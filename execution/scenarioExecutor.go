@@ -91,18 +91,18 @@ func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutio
 
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
 	logger.Errorf(err.Error())
-	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
-	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
+	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 }
 
 func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
 	errMsg := fmt.Sprintf("%s:%d No steps found in scenario", e.currentExecutionInfo.GetCurrentSpec().GetFileName(), scenario.Heading.LineNo)
 	logger.Errorf(errMsg)
-	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		errMsg, e.currentExecutionInfo.GetCurrentSpec().GetFileName(), nil)
-	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
+	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 }
 
 func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *validation.ValidationErrMaps) {

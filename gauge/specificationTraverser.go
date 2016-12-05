@@ -18,6 +18,7 @@
 package gauge
 
 type SpecTraverser interface {
+	Specification(*Specification)
 	SpecHeading(*Heading)
 	SpecTags(*Tags)
 	DataTable(*Table)
