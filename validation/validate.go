@@ -37,6 +37,8 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+var TableRows = ""
+
 type ValidationErrMaps struct {
 	SpecErrs     map[*gauge.Specification][]error
 	ScenarioErrs map[*gauge.Scenario][]error
@@ -65,6 +67,11 @@ type StepValidationError struct {
 	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
+type SpecValidationError struct {
+	message  string
+	fileName string
+}
+
 func NewValidationErrMaps() *ValidationErrMaps {
 	return &ValidationErrMaps{
 		SpecErrs:     make(map[*gauge.Specification][]error),
@@ -75,6 +82,14 @@ func NewValidationErrMaps() *ValidationErrMaps {
 
 func (s StepValidationError) Error() string {
 	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+}
+
+func (s SpecValidationError) Error() string {
+	return fmt.Sprintf("%s: %s", s.fileName, s.message)
+}
+
+func NewSpecValidationError(m string, f string) *SpecValidationError {
+	return &SpecValidationError{message: m, fileName: f}
 }
 
 func Validate(args []string) {
@@ -137,11 +152,8 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	s, specsFailed := parser.ParseSpecs(args, conceptDict)
 	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
-	errMap := NewValidationErrMaps()
-	if len(vErrs) > 0 {
-		printValidationFailures(vErrs)
-		errMap = getErrMap(vErrs)
-	}
+	errMap := getErrMap(vErrs)
+	printValidationFailures(vErrs)
 	if specsFailed || !res.Ok {
 		r.Kill()
 		return NewValidationResult(nil, nil, nil, errors.New("Parsing failed."))
@@ -151,9 +163,14 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 
 func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
 	errMap := NewValidationErrMaps()
-	for spec, errors := range validationErrors {
-		for _, err := range errors {
-			errMap.StepErrs[err.(*StepValidationError).step] = err
+	for spec, valErrors := range validationErrors {
+		for _, err := range valErrors {
+			switch err.(type) {
+			case *StepValidationError:
+				errMap.StepErrs[err.(*StepValidationError).step] = err
+			case *SpecValidationError:
+				errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], err.(*SpecValidationError))
+			}
 		}
 		skippedScnInSpec := 0
 		for _, scenario := range spec.Scenarios {
@@ -309,9 +326,6 @@ func (v *specValidator) SpecHeading(heading *gauge.Heading) {
 	v.validationErrors = make([]error, 0)
 }
 
-func (v *specValidator) Specification(specification *gauge.Specification) {
-}
-
 func (v *specValidator) SpecTags(tags *gauge.Tags) {
 }
 
@@ -337,13 +351,46 @@ func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
 }
 
-func ValidateTableRow(rowNumber string, rowCount int) (int, error) {
-	row, err := strconv.Atoi(strings.TrimSpace(rowNumber))
+func (v *specValidator) Specification(specification *gauge.Specification) {
+	err := validateDataTableRange(specification.DataTable.Table.GetRowCount())
 	if err != nil {
-		return 0, fmt.Errorf("Table rows range validation failed: Failed to parse %s to row number", rowNumber)
+		v.validationErrors = append(v.validationErrors, NewSpecValidationError(err.Error(), specification.FileName))
+	}
+}
+
+func validateDataTableRange(rowCount int) error {
+	if strings.Contains(TableRows, "-") {
+		indexes := strings.Split(TableRows, "-")
+		if len(indexes) > 2 {
+			return fmt.Errorf("Table rows range '%s' is invalid: Table rows range should be of format rowNumber-rowNumber", TableRows)
+		}
+		if err := validateTableRow(indexes[0], rowCount); err != nil {
+			return err
+		}
+		if err := validateTableRow(indexes[1], rowCount); err != nil {
+			return err
+		}
+	} else {
+		indexes := strings.Split(TableRows, ",")
+		for _, i := range indexes {
+			if err := validateTableRow(i, rowCount); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func validateTableRow(rowNumber string, rowCount int) error {
+	if rowNumber = strings.TrimSpace(rowNumber); rowNumber == "" {
+		return nil
+	}
+	row, err := strconv.Atoi(rowNumber)
+	if err != nil {
+		return fmt.Errorf("Table rows range validation failed: Failed to parse '%s' to row number", rowNumber)
 	}
 	if row < 1 || row > rowCount {
-		return 0, fmt.Errorf("Table rows range validation failed: Table row number %d is out of range", row)
+		return fmt.Errorf("Table rows range validation failed: Table row number '%d' is out of range", row)
 	}
-	return row - 1, nil
+	return nil
 }

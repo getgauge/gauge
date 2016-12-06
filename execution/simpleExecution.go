@@ -28,8 +28,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/validation"
 
-	"strings"
-
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
@@ -115,7 +113,7 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.Sp
 	var results []*result.SpecResult
 	for specs.HasNext() {
 		s := specs.Next()
-		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.errMaps, e.stream)
+		ex := newSpecExecutor(s, e.runner, e.pluginHandler, e.errMaps, e.stream)
 		results = append(results, ex.execute())
 	}
 	return results
@@ -165,45 +163,4 @@ func (e *simpleExecution) notifyExecutionStop() {
 
 func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult)) {
 	f(result, execResult)
-}
-
-func getDataTableRows(rowCount int) []int {
-	var tableRowIndexes []int
-	if rowCount == 0 && TableRows == "" {
-		tableRowIndexes = []int{}
-	} else if TableRows == "" {
-		for i := 0; i < rowCount; i++ {
-			tableRowIndexes = append(tableRowIndexes, i)
-		}
-	} else if strings.Contains(TableRows, "-") {
-		indexes := strings.Split(TableRows, "-")
-		if len(indexes) > 2 {
-			logger.Errorf(fmt.Sprintf("Table rows range %s is invalid. Table rows range should be of format rowNumber-rowNumber", TableRows))
-			return nil
-		}
-		startIndex, err := validation.ValidateTableRow(indexes[0], rowCount)
-		if err != nil {
-			logger.Errorf(err.Error())
-			return nil
-		}
-		endIndex, err := validation.ValidateTableRow(indexes[1], rowCount)
-		if err != nil {
-			logger.Errorf(err.Error())
-			return nil
-		}
-		for i := startIndex; i <= endIndex; i++ {
-			tableRowIndexes = append(tableRowIndexes, i)
-		}
-	} else {
-		indexes := strings.Split(TableRows, ",")
-		for _, i := range indexes {
-			rowIndex, err := validation.ValidateTableRow(i, rowCount)
-			if err != nil {
-				logger.Errorf(err.Error())
-				return nil
-			}
-			tableRowIndexes = append(tableRowIndexes, rowIndex)
-		}
-	}
-	return tableRowIndexes
 }

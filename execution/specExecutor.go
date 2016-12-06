@@ -20,6 +20,9 @@ package execution
 import (
 	"fmt"
 
+	"strconv"
+	"strings"
+
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -44,8 +47,8 @@ type specExecutor struct {
 	stream               int
 }
 
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, dti []int, e *validation.ValidationErrMaps, stream int) *specExecutor {
-	return &specExecutor{specification: s, runner: r, pluginHandler: ph, dataTableIndexes: dti, errMap: e, stream: stream}
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, stream int) *specExecutor {
+	return &specExecutor{specification: s, runner: r, pluginHandler: ph, errMap: e, stream: stream}
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
@@ -61,11 +64,7 @@ func (e *specExecutor) execute() *result.SpecResult {
 		e.skipSpec()
 		return e.specResult
 	}
-
-	if e.dataTableIndexes == nil {
-		e.skipSpecForError(fmt.Errorf("Skipping spec %s as given data table range is invalid.\n", e.specification.FileName))
-		return e.specResult
-	}
+	e.dataTableIndexes = getDataTableRows(e.specification.DataTable.Table.GetRowCount())
 
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("%s: No scenarios found in spec\n", e.specification.FileName))
@@ -315,4 +314,29 @@ func getTagValue(tags *gauge.Tags) []string {
 
 func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentSpec.IsFailed = proto.Bool(true)
+}
+
+func getDataTableRows(rowCount int) []int {
+	var tableRowIndexes []int
+	if rowCount == 0 && TableRows == "" {
+		tableRowIndexes = []int{}
+	} else if TableRows == "" {
+		for i := 0; i < rowCount; i++ {
+			tableRowIndexes = append(tableRowIndexes, i)
+		}
+	} else if strings.Contains(TableRows, "-") {
+		indexes := strings.Split(TableRows, "-")
+		startRow, _ := strconv.Atoi(strings.TrimSpace(indexes[0]))
+		endRow, _ := strconv.Atoi(strings.TrimSpace(indexes[1]))
+		for i := startRow - 1; i < endRow; i++ {
+			tableRowIndexes = append(tableRowIndexes, i)
+		}
+	} else {
+		indexes := strings.Split(TableRows, ",")
+		for _, i := range indexes {
+			rowNumber, _ := strconv.Atoi(strings.TrimSpace(i))
+			tableRowIndexes = append(tableRowIndexes, rowNumber-1)
+		}
+	}
+	return tableRowIndexes
 }

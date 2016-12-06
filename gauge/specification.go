@@ -220,11 +220,11 @@ func (spec *Specification) GetSpecItems() []Item {
 }
 
 func (spec *Specification) Traverse(traverser SpecTraverser) {
+	traverser.Specification(spec)
 	traverser.SpecHeading(spec.Heading)
+
 	for _, item := range spec.Items {
 		switch item.Kind() {
-		case SpecKind:
-			traverser.Specification(item.(*Specification))
 		case ScenarioKind:
 			item.(*Scenario).Traverse(traverser)
 			traverser.Scenario(item.(*Scenario))
