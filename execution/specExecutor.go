@@ -215,6 +215,11 @@ func (e *specExecutor) skipSpec() {
 		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
 	e.specResult.AddScenarioResults(scenarioResults)
+	var skipErrors []string
+	for _, err := range e.errMap.SpecErrs[e.specification] {
+		skipErrors = append(skipErrors, err.Error())
+	}
+	e.specResult.SkipErrors = skipErrors
 	e.specResult.Skipped = true
 }
 

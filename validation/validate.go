@@ -92,6 +92,10 @@ func NewSpecValidationError(m string, f string) *SpecValidationError {
 	return &SpecValidationError{message: m, fileName: f}
 }
 
+func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
+	return &StepValidationError{step: s, message: m, fileName: f, errorType: e}
+}
+
 func Validate(args []string) {
 	if len(args) == 0 {
 		args = append(args, common.SpecsDirectoryName)
@@ -222,10 +226,6 @@ func printValidationFailures(validationErrors validationErrors) {
 	}
 }
 
-func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
-	return &StepValidationError{step: s, message: m, fileName: f, errorType: e}
-}
-
 type validationErrors map[*gauge.Specification][]error
 
 func newValidator(m *manifest.Manifest, s []*gauge.Specification, r runner.Runner, c *gauge.ConceptDictionary) *validator {
@@ -323,7 +323,6 @@ func (v *specValidator) TearDown(step *gauge.TearDown) {
 }
 
 func (v *specValidator) SpecHeading(heading *gauge.Heading) {
-	v.validationErrors = make([]error, 0)
 }
 
 func (v *specValidator) SpecTags(tags *gauge.Tags) {
@@ -352,6 +351,7 @@ func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 }
 
 func (v *specValidator) Specification(specification *gauge.Specification) {
+	v.validationErrors = make([]error, 0)
 	err := validateDataTableRange(specification.DataTable.Table.GetRowCount())
 	if err != nil {
 		v.validationErrors = append(v.validationErrors, NewSpecValidationError(err.Error(), specification.FileName))

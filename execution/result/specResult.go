@@ -31,6 +31,7 @@ type SpecResult struct {
 	ExecutionTime        int64
 	Skipped              bool
 	ScenarioSkippedCount int
+	SkipErrors           []string //TODO: Add this corresponding field in ProtoSpecResult
 }
 
 func (specResult *SpecResult) SetFailure() {
