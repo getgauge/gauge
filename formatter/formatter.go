@@ -48,6 +48,8 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 		}
 		if err := formatAndSave(spec); err != nil {
 			result.ParseErrors = []*parser.ParseError{&parser.ParseError{Message: err.Error()}}
+		} else {
+			logger.Debug("Successfully formatted spec: %s", util.RelPathToProjectRoot(spec.FileName))
 		}
 	}
 	if len(filesSkipped) > 0 {
