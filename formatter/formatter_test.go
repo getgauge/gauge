@@ -61,6 +61,25 @@ Scenario Heading
 `)
 }
 
+func (s *MySuite) TestFormatTable(c *C) {
+	cell1 := gauge.TableCell{"john", gauge.Static}
+	cell2 := gauge.TableCell{"doe", gauge.Static}
+
+	headers := []string{"name1", "name2"}
+	cols := [][]gauge.TableCell{{cell1}, {cell2}}
+
+	table := gauge.NewTable(headers, cols, 10)
+
+	got := FormatTable(table)
+	want := `
+     |name1|name2|
+     |-----|-----|
+     |john |doe  |
+`
+
+	c.Assert(got, Equals, want)
+}
+
 func (s *MySuite) TestFormatConcepts(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	step1 := &gauge.Step{Value: "sdsf", LineText: "sdsf", IsConcept: true, LineNo: 1, PreComments: []*gauge.Comment{&gauge.Comment{Value: "COMMENT", LineNo: 1}}}

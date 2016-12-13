@@ -41,6 +41,20 @@ type TableCell struct {
 	CellType ArgType
 }
 
+func NewTable(headers []string, cols [][]TableCell, lineNo int) *Table {
+	headerIndx := make(map[string]int, 0)
+	for i, h := range headers {
+		headerIndx[h] = i
+	}
+
+	return &Table{
+		headerIndexMap: headerIndx,
+		Columns:        cols,
+		Headers:        headers,
+		LineNo:         lineNo,
+	}
+}
+
 func (table *Table) IsInitialized() bool {
 	return table.headerIndexMap != nil
 }

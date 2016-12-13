@@ -30,17 +30,23 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetCleanEnvGivesRemovesGAUGE_INTERNAL_PORTAndSetsPortNumber(c *C) {
+func (s *MySuite) TestGetCleanEnvRemovesGAUGE_INTERNAL_PORTAndSetsPortNumber(c *C) {
 	HELLO := "HELLO"
 	portVariable := common.GaugeInternalPortEnvName + "=1234"
 	PORT_NAME_WITH_EXTRA_WORD := "b" + common.GaugeInternalPortEnvName
 	PORT_NAME_WITH_SPACES := "      " + common.GaugeInternalPortEnvName + "         "
 	env := getCleanEnv("1234", []string{HELLO, common.GaugeInternalPortEnvName + "=", common.GaugeInternalPortEnvName,
-		PORT_NAME_WITH_SPACES, PORT_NAME_WITH_EXTRA_WORD})
+		PORT_NAME_WITH_SPACES, PORT_NAME_WITH_EXTRA_WORD}, false)
 
 	c.Assert(env[0], Equals, HELLO)
 	c.Assert(env[1], Equals, portVariable)
 	c.Assert(env[2], Equals, portVariable)
 	c.Assert(env[3], Equals, portVariable)
 	c.Assert(env[4], Equals, PORT_NAME_WITH_EXTRA_WORD)
+}
+
+func (s *MySuite) TestGetCleanEnvWithDebugging(c *C) {
+	env := getCleanEnv("1234", []string{}, true)
+
+	c.Assert(env[1], Equals, "debugging=true")
 }

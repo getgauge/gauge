@@ -49,6 +49,7 @@ type Runner interface {
 	Kill() error
 	Connection() net.Conn
 	IsMultithreaded() bool
+	Pid() int
 }
 
 type LanguageRunner struct {
@@ -85,6 +86,10 @@ func (r *MultithreadedRunner) Connection() net.Conn {
 
 func (r *MultithreadedRunner) killRunner() error {
 	return nil
+}
+
+func (r *MultithreadedRunner) Pid() int {
+	return -1
 }
 
 func (r *MultithreadedRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
@@ -210,6 +215,10 @@ func (r *LanguageRunner) killRunner() error {
 	return r.Cmd.Process.Kill()
 }
 
+func (r *LanguageRunner) Pid() int {
+	return r.Cmd.Process.Pid
+}
+
 func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	response, err := conn.GetResponseForGaugeMessage(message, r.connection)
 	if err != nil {
@@ -236,7 +245,7 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool) (*LanguageRunner, error) {
+func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Reporter, killChannel chan bool, debug bool) (*LanguageRunner, error) {
 	var r RunnerInfo
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -247,7 +256,7 @@ func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 		return nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
 	command := getOsSpecificCommand(r)
-	env := getCleanEnv(port, os.Environ())
+	env := getCleanEnv(port, os.Environ(), debug)
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, reporter, reporter, env)
 	if err != nil {
 		return nil, err
@@ -291,10 +300,13 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 			logger.Debug("Runner exited with error: %s", err)
 			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
+		if !pState.Success() {
+			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s).", pState.Pid(), pState.String())
+		}
 	}()
 }
 
-func getCleanEnv(port string, env []string) []string {
+func getCleanEnv(port string, env []string, debug bool) []string {
 	//clear environment variable common.GaugeInternalPortEnvName
 	isPresent := false
 	for i, k := range env {
@@ -305,6 +317,9 @@ func getCleanEnv(port string, env []string) []string {
 	}
 	if !isPresent {
 		env = append(env, common.GaugeInternalPortEnvName+"="+port)
+	}
+	if debug {
+		env = append(env, "debugging=true")
 	}
 	return env
 }
@@ -334,7 +349,7 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool) (Runner, error) {
+func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel chan bool, debug bool) (Runner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -343,7 +358,7 @@ func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel 
 	if err != nil {
 		return nil, err
 	}
-	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), reporter, killChannel)
+	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), reporter, killChannel, debug)
 	if err != nil {
 		return nil, err
 	}

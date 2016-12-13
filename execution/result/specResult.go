@@ -57,27 +57,26 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
-func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result) {
+func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result, executedRowIndexes []int) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
-		protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenarios: make([]*gauge_messages.ProtoScenario, 0)}
 		scenarioFailed := false
-		for rowIndex, eachRow := range scenarioResults {
+		for rowIndx, eachRow := range scenarioResults {
 			protoScenario := eachRow[scenarioIndex].Item().(*gauge_messages.ProtoScenario)
-			protoTableDrivenScenario.Scenarios = append(protoTableDrivenScenario.GetScenarios(), protoScenario)
 			specResult.AddExecTime(protoScenario.GetExecutionTime())
-			if protoScenario.GetFailed() {
+			if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 				scenarioFailed = true
-				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(rowIndex))
+				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(executedRowIndexes[rowIndx]))
 			}
+			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenario: protoScenario, TableRowIndex: proto.Int32(int32(executedRowIndexes[rowIndx]))}
+			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario.Enum(), TableDrivenScenario: protoTableDrivenScenario}
+			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}
 		if scenarioFailed {
 			specResult.ScenarioFailedCount++
 			specResult.IsFailed = true
 		}
-		protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario.Enum(), TableDrivenScenario: protoTableDrivenScenario}
-		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 	}
 	specResult.ProtoSpec.IsTableDriven = proto.Bool(true)
 	specResult.ScenarioCount += numberOfScenarios

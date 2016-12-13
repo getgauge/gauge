@@ -68,15 +68,17 @@ func areUnderlined(values []string) bool {
 	if len(values) == 0 {
 		return false
 	}
+	isValuesNonEmpty := false
 	for _, value := range values {
 		if len(value) == 0 {
 			continue
 		}
+		isValuesNonEmpty = true
 		if !isUnderline(value, rune('-')) {
 			return false
 		}
 	}
-	return true
+	return isValuesNonEmpty
 }
 
 func arrayContains(array []string, toFind string) bool {

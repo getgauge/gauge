@@ -64,7 +64,7 @@ var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non
 var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
 var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
 var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
-var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
+var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,3,4. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
 var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
 var refactorSteps = flag.String([]string{"-refactor"}, "", "Refactor steps. Eg: gauge --refactor <old step> <new step> [[spec directories]]")
 var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
@@ -164,7 +164,7 @@ func refactorInit(args []string) {
 	if len(args) > 1 {
 		specDirs = args[1:]
 	}
-	startChan := api.StartAPI()
+	startChan := api.StartAPI(false)
 	refactor.RefactorSteps(*refactorSteps, args[0], startChan, specDirs)
 }
 

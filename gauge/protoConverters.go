@@ -262,13 +262,14 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
 		ScenarioHeading: proto.String(scenario.Heading.Value),
 		Failed:          proto.Bool(false),
+		Skipped:         proto.Bool(false),
 		Tags:            getTags(scenario.Tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
 		ExecutionTime:   proto.Int64(0),
-		Skipped:         proto.Bool(false),
 		TearDownSteps:   make([]*gauge_messages.ProtoItem, 0),
 		SkipErrors:      make([]string, 0),
 		Span:            &gauge_messages.Span{Start: proto.Int64(int64(scenario.Span.Start)), End: proto.Int64(int64(scenario.Span.End))},
+		ExecutionStatus: gauge_messages.ExecutionStatus_NOTEXECUTED.Enum(),
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
@@ -50,49 +51,52 @@ func (e *executionServer) Execute(req *gm.ExecutionRequest, stream gm.Execution_
 		stream.Send(getErrorExecutionResponse(errs...))
 		return nil
 	}
-	execute(req.Specs, stream)
+	execute(req.Specs, stream, req.GetDebug())
 	return nil
 }
 
-func execute(specDirs []string, stream gm.Execution_ExecuteServer) {
-	res := validation.ValidateSpecs(specDirs)
+func execute(specDirs []string, stream gm.Execution_ExecuteServer, debug bool) {
+	res := validation.ValidateSpecs(specDirs, debug)
 	if len(res.Errs) > 0 {
 		stream.Send(getErrorExecutionResponse(res.Errs...))
 		return
 	}
 	event.InitRegistry()
-	listenExecutionEvents(stream)
+	listenExecutionEvents(stream, res.Runner.Pid())
 	rerun.ListenFailedScenarios()
 	execution.Execute(res.SpecCollection, res.Runner, nil, res.ErrMap, execution.InParallel, 0)
 }
 
-func listenExecutionEvents(stream gm.Execution_ExecuteServer) {
+func listenExecutionEvents(stream gm.Execution_ExecuteServer, pid int) {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.SuiteStart, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.SuiteEnd)
 	go func() {
 		for {
 			e := <-ch
-			res := getResponse(e)
+			res := getResponse(e, pid)
 			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd.Enum() {
+				util.SetWorkingDir(config.ProjectRoot)
 				return
 			}
 		}
 	}()
 }
 
-func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
+func getResponse(e event.ExecutionEvent, pid int) *gm.ExecutionResponse {
 	switch e.Topic {
 	case event.SuiteStart:
-		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart.Enum()}
+		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart.Enum(), RunnerProcessId: proto.Int32(int32(pid))}
 	case event.SpecStart:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SpecStart.Enum(),
-			ID:   e.ExecutionInfo.CurrentSpec.FileName,
+			Type:            gm.ExecutionResponse_SpecStart.Enum(),
+			ID:              e.ExecutionInfo.CurrentSpec.FileName,
+			RunnerProcessId: proto.Int32(int32(pid)),
 		}
 	case event.ScenarioStart:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_ScenarioStart.Enum(),
-			ID:   proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
+			Type:            gm.ExecutionResponse_ScenarioStart.Enum(),
+			ID:              proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
+			RunnerProcessId: proto.Int32(int32(pid)),
 			Result: &gm.Result{
 				TableRowNumber: proto.Int64(int64(getDataTableRowNumber(e.Item.(*gauge.Scenario)))),
 			},
@@ -100,8 +104,9 @@ func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
 	case event.ScenarioEnd:
 		scn := e.Item.(*gauge.Scenario)
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_ScenarioEnd.Enum(),
-			ID:   proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo)),
+			Type:            gm.ExecutionResponse_ScenarioEnd.Enum(),
+			ID:              proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo)),
+			RunnerProcessId: proto.Int32(int32(pid)),
 			Result: &gm.Result{
 				Status:            getStatus(e.Result.(*result.ScenarioResult)),
 				ExecutionTime:     proto.Int64(e.Result.ExecTime()),
@@ -113,8 +118,9 @@ func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
 		}
 	case event.SpecEnd:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SpecEnd.Enum(),
-			ID:   e.ExecutionInfo.CurrentSpec.FileName,
+			Type:            gm.ExecutionResponse_SpecEnd.Enum(),
+			ID:              e.ExecutionInfo.CurrentSpec.FileName,
+			RunnerProcessId: proto.Int32(int32(pid)),
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -122,7 +128,8 @@ func getResponse(e event.ExecutionEvent) *gm.ExecutionResponse {
 		}
 	case event.SuiteEnd:
 		return &gm.ExecutionResponse{
-			Type: gm.ExecutionResponse_SuiteEnd.Enum(),
+			Type:            gm.ExecutionResponse_SuiteEnd.Enum(),
+			RunnerProcessId: proto.Int32(int32(pid)),
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -188,10 +195,10 @@ func getErrors(items []*gm.ProtoItem) []*gm.Result_ExecutionError {
 }
 
 func getStatus(result *result.ScenarioResult) *gm.Result_Status {
-	if result.GetFailed() {
+	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_FAILED {
 		return gm.Result_FAILED.Enum()
 	}
-	if result.ProtoScenario.GetSkipped() {
+	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_SKIPPED {
 		return gm.Result_SKIPPED.Enum()
 	}
 	return gm.Result_PASSED.Enum()
@@ -238,4 +245,5 @@ func resetFlags() {
 	filter.NumberOfExecutionStreams = cores
 	execution.Strategy = "lazy"
 	filter.DoNotRandomize = false
+	util.SetWorkingDir(config.ProjectRoot)
 }

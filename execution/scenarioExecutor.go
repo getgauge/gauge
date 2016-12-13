@@ -51,6 +51,7 @@ func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages
 }
 
 func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, contexts []*gauge.Step, teardowns []*gauge.Step) {
+	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED.Enum()
 	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
 	if len(scenario.Steps) == 0 {
 		e.skipSceForError(scenario, scenarioResult)
@@ -105,6 +106,7 @@ func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioRes
 }
 
 func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *validation.ValidationErrMaps) {
+	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED.Enum()
 	result.ProtoScenario.Skipped = proto.Bool(true)
 	var errors []string
 	for _, err := range errMap.ScenarioErrs[scenario] {

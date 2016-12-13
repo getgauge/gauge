@@ -47,6 +47,7 @@ const (
 	executionScope          = "execution"
 	docScope                = "documentation"
 	pluginConnectionPortEnv = "plugin_connection_port"
+	debugEnv                = "debugging"
 )
 
 type pluginDescriptor struct {

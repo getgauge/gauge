@@ -109,7 +109,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
@@ -147,7 +147,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -194,7 +194,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
 
 	// For first row
 	specExecutor.currentTableRow = 0
@@ -261,51 +261,49 @@ func checkConceptParameterValuesInOrder(c *C, concept *gauge_messages.ProtoConce
 
 }
 
+type tableRow struct {
+	name           string
+	input          string // input by user for data table rows
+	output         []int  // data table indexes to be executed
+	tableRowsCount int    // total rows in given data table
+}
+
+var tableRowTests = []*tableRow{
+	{"Valid single row number", "2", []int{1}, 5},
+	{"Invalid single row number", "2", nil, 1},
+	{"Valid row numbers list", "2,3,4", []int{1, 2, 3}, 4},
+	{"Invalid row numbers list", "2,3,4", nil, 3},
+	{"Invalid row numbers list with special chars", "2*&", nil, 3},
+	{"Valid table rows range", "2-5", []int{1, 2, 3, 4}, 5},
+	{"Invalid table rows range", "2-5", nil, 4},
+	{"Invalid table rows range", "2-2", []int{1}, 4},
+	{"Invalid table rows with character", "a", nil, 4},
+	{"Invalid table rows range with character", "a-5", nil, 4},
+	{"Invalid table rows range with string", "a-qwerty", nil, 4},
+	{"Invalid table rows range with string", "a-qwerty", nil, 4},
+	{"Empty table rows range", "", []int{0, 1, 2, 3}, 4},
+	{"Table rows range with multiple -", "2-3-4", nil, 4},
+	{"Table rows range with different separator", "2:4", nil, 4},
+	{"Table rows list with spaces", "2, 4 ", []int{1, 3}, 4},
+	{"Row count is zero with empty input", "", []int{}, 0},
+	{"Row count is zero with non empty input", "1", nil, 0},
+	{"Row count is non-zero with empty input", "", []int{0, 1}, 2},
+	{"Row count is non-zero with non-empty input", "2", []int{1}, 2},
+}
+
 func (s *MySuite) TestToGetDataTableRowsRangeFromInputFlag(c *C) {
-	rowsRange, err := getDataTableRowsRange("5-6", 7)
-	c.Assert(err, Equals, nil)
-	c.Assert(rowsRange.start, Equals, 4)
-	c.Assert(rowsRange.end, Equals, 5)
-}
-
-func (s *MySuite) TestToGetDataTableRow(c *C) {
-	rowsRange, err := getDataTableRowsRange("5", 7)
-	c.Assert(err, Equals, nil)
-	c.Assert(rowsRange.start, Equals, 4)
-	c.Assert(rowsRange.end, Equals, 4)
-}
-
-func (s *MySuite) TestToGetDataTableRowFromInvalidInput(c *C) {
-	_, err := getDataTableRowsRange("a", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("a-5", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("a-qwerty", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("aas-helloo", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("apoorva", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("8-9", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("12-9", 7)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("4:5", 6)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("4-5-8", 6)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("4", 3)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("0", 3)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
-	_, err = getDataTableRowsRange("", 3)
-	c.Assert(err.Error(), Equals, "Table rows range validation failed.")
+	for _, test := range tableRowTests {
+		TableRows = test.input
+		got := getDataTableRows(test.tableRowsCount)
+		want := test.output
+		c.Assert(got, DeepEquals, want, Commentf(test.name))
+	}
 }
 
 func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 
-	se := newSpecExecutor(spec, nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, []int{}, nil, 0)
 	se.errMap = getValidationErrorMap()
 	se.specResult = &result.SpecResult{}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
@@ -321,7 +319,7 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 }
 
 func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
-	se := newSpecExecutor(anySpec(), nil, nil, indexRange{start: 0, end: 0}, nil, 0)
+	se := newSpecExecutor(anySpec(), nil, nil, []int{}, nil, 0)
 	se.errMap = getValidationErrorMap()
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
@@ -359,7 +357,7 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
 		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
 	}
-	se := newSpecExecutor(anySpec(), nil, nil, indexRange{start: -1, end: -1}, errMap, 0)
+	se := newSpecExecutor(anySpec(), nil, nil, nil, errMap, 0)
 
 	result := se.execute()
 	c.Assert(result.Skipped, Equals, true)

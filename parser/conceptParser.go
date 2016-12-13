@@ -99,7 +99,9 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText})
 			continue
 		} else if parser.isTableDataRow(token) {
-			if isInState(parser.currentState, stepScope) {
+			if areUnderlined(token.Args) && !isInState(parser.currentState, tableSeparatorScope) {
+				addStates(&parser.currentState, tableSeparatorScope)
+			} else if isInState(parser.currentState, stepScope) {
 				parser.processTableDataRow(token, &parser.currentConcept.Lookup, fileName)
 			}
 		} else {
