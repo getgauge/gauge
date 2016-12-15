@@ -246,8 +246,8 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
 			parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
 		}
-		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
+		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 	}
 	conceptDictionary.UpdateLookupForNestedConcepts()
 	return parseRes.ParseErrors

@@ -483,6 +483,22 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 	c.Assert(containsAny(res.CriticalErrors, "Circular reference found"), Equals, true)
 }
 
+func (s *MySuite) TestReplaceNestedConceptsWithCircularReference(c *C) {
+	lookup := gauge.ArgLookup{}
+	lookup.AddArgName("a")
+	lookup.AddArgValue("a", &gauge.StepArg{Name: "", Value: "a", ArgType: gauge.Static})
+	lookup.ParamIndexMap = make(map[string]int)
+	lookup.ParamIndexMap["a"] = 0
+
+	cd := gauge.NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "circular_concept.cpt"))
+
+	AddConcepts(path, cd)
+	concept := cd.Search("concept1 {}")
+
+	c.Assert(concept.ConceptStep.ConceptSteps[0].Lookup, DeepEquals, lookup)
+}
+
 func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 	cd := gauge.NewConceptDictionary()
 	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: false}}}, FileName: "filename.cpt"}
