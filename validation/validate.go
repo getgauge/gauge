@@ -359,6 +359,9 @@ func (v *specValidator) Specification(specification *gauge.Specification) {
 }
 
 func validateDataTableRange(rowCount int) error {
+	if TableRows == "" {
+		return nil
+	}
 	if strings.Contains(TableRows, "-") {
 		indexes := strings.Split(TableRows, "-")
 		if len(indexes) > 2 {
@@ -383,7 +386,7 @@ func validateDataTableRange(rowCount int) error {
 
 func validateTableRow(rowNumber string, rowCount int) error {
 	if rowNumber = strings.TrimSpace(rowNumber); rowNumber == "" {
-		return nil
+		return fmt.Errorf("Table rows range validation failed: Row number cannot be empty")
 	}
 	row, err := strconv.Atoi(rowNumber)
 	if err != nil {

@@ -170,6 +170,7 @@ var tableRowTests = []*tableRow{
 	{"Valid single row number", "3", 5, nil},
 	{"Invalid single row number", "2", 1, errors.New("Table rows range validation failed: Table row number '2' is out of range")},
 	{"Valid row numbers list", "2,3,4", 4, nil},
+	{"Invalid list with empty value", ",3,4", 4, errors.New("Table rows range validation failed: Row number cannot be empty")},
 	{"Invalid row numbers list", "2,3,4", 3, errors.New("Table rows range validation failed: Table row number '4' is out of range")},
 	{"Invalid row numbers list with special chars", "2*&", 3, errors.New("Table rows range validation failed: Failed to parse '2*&' to row number")},
 	{"Valid table rows range", "2-5", 5, nil},
