@@ -81,11 +81,11 @@ func NewValidationErrMaps() *ValidationErrMaps {
 }
 
 func (s StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
 }
 
 func (s SpecValidationError) Error() string {
-	return fmt.Sprintf("%s: %s", s.fileName, s.message)
+	return fmt.Sprintf("%s %s", s.fileName, s.message)
 }
 
 func NewSpecValidationError(m string, f string) *SpecValidationError {
