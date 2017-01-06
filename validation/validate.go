@@ -365,7 +365,7 @@ func validateDataTableRange(rowCount int) error {
 	if strings.Contains(TableRows, "-") {
 		indexes := strings.Split(TableRows, "-")
 		if len(indexes) > 2 {
-			return fmt.Errorf("Table rows range '%s' is invalid: Table rows range should be of format rowNumber-rowNumber", TableRows)
+			return fmt.Errorf("Table rows range '%s' is invalid => Table rows range should be of format rowNumber-rowNumber", TableRows)
 		}
 		if err := validateTableRow(indexes[0], rowCount); err != nil {
 			return err
@@ -386,14 +386,14 @@ func validateDataTableRange(rowCount int) error {
 
 func validateTableRow(rowNumber string, rowCount int) error {
 	if rowNumber = strings.TrimSpace(rowNumber); rowNumber == "" {
-		return fmt.Errorf("Table rows range validation failed: Row number cannot be empty")
+		return fmt.Errorf("Table rows range validation failed => Row number cannot be empty")
 	}
 	row, err := strconv.Atoi(rowNumber)
 	if err != nil {
-		return fmt.Errorf("Table rows range validation failed: Failed to parse '%s' to row number", rowNumber)
+		return fmt.Errorf("Table rows range validation failed => Failed to parse '%s' to row number", rowNumber)
 	}
 	if row < 1 || row > rowCount {
-		return fmt.Errorf("Table rows range validation failed: Table row number '%d' is out of range", row)
+		return fmt.Errorf("Table rows range validation failed => Table row number '%d' is out of range", row)
 	}
 	return nil
 }
