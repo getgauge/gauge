@@ -140,7 +140,7 @@ func (s *MySuite) TestValidateStep(c *C) {
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
-	c.Assert(valErr.Error(), Equals, "foo.spec:3: Step implementation not found => 'my step'")
+	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'")
 }
 
 func (s *MySuite) TestValidateStepInConcept(c *C) {
@@ -156,7 +156,7 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
-	c.Assert(valErr.Error(), Equals, "concept.cpt:3: Step implementation not found => 'my step'")
+	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'")
 }
 
 type tableRow struct {
