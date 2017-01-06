@@ -105,8 +105,8 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 			if done {
 				logger.Debug("Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
 			}
-		case <-time.After(config.PluginConnectionTimeout()):
-			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginConnectionTimeout().Seconds())
+		case <-time.After(config.PluginKillTimeout()):
+			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
 			err := p.pluginCmd.Process.Kill()
 			if err != nil {
 				logger.Warning("Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
