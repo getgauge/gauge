@@ -209,12 +209,27 @@ func (e *specExecutor) skipSpecForError(err error) {
 	e.skipSpec()
 }
 
-func (e *specExecutor) skipSpec() {
+func (e *specExecutor) accumulateSkippedScenarioResults() []result.Result {
 	var scenarioResults []result.Result
 	for _, scenario := range e.specification.Scenarios {
 		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
-	e.specResult.AddScenarioResults(scenarioResults)
+	return scenarioResults
+}
+
+func (e *specExecutor) skipSpec() {
+	if e.specResult.ProtoSpec.GetIsTableDriven() {
+		res := make([][]result.Result, 0)
+		executedRowIndexes := make([]int, 0)
+		for i := 0; i < e.specification.DataTable.Table.GetRowCount(); i++ {
+			e.currentTableRow = i
+			res = append(res, e.accumulateSkippedScenarioResults())
+			executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
+		}
+		e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
+	} else {
+		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
+	}
 	var skipErrors []string
 	for _, err := range e.errMap.SpecErrs[e.specification] {
 		skipErrors = append(skipErrors, err.Error())

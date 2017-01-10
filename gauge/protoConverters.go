@@ -244,7 +244,7 @@ func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 	return &gauge_messages.ProtoSpec{
 		Items:         make([]*gauge_messages.ProtoItem, 0),
 		SpecHeading:   proto.String(specification.Heading.Value),
-		IsTableDriven: proto.Bool(false),
+		IsTableDriven: proto.Bool(specification.DataTable.IsInitialized()),
 		FileName:      proto.String(specification.FileName),
 		Tags:          getTags(specification.Tags),
 	}

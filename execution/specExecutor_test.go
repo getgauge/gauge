@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/validation"
+	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
@@ -327,6 +328,43 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineText, Equals, "A spec heading")
 }
 
+func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
+	stepText := "Unimplememted step"
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableRow("123", "foo", "8800").
+		tableRow("666", "bar", "9900").
+		scenarioHeading("First scenario").
+		step(stepText).
+		step("create user <id> <name> and <phone>").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errMap := &validation.ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
+	}
+
+	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
+	se := newSpecExecutor(spec, nil, nil, errMap, 0)
+	specInfo := &gauge_messages.SpecInfo{Name: proto.String(se.specification.Heading.Value),
+		FileName: proto.String(se.specification.FileName),
+		IsFailed: proto.Bool(false), Tags: getTagValue(se.specification.Tags)}
+	se.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
+	se.specResult = gauge.NewSpecResult(se.specification)
+	resolvedSpecItems := se.resolveItems(se.specification.GetSpecItems())
+	se.specResult.AddSpecItems(resolvedSpecItems)
+
+	se.skipSpec()
+
+	c.Assert(se.specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
+	c.Assert(len(se.specResult.ProtoSpec.GetItems()), Equals, 3)
+
+}
+
 func anySpec() *gauge.Specification {
 
 	specText := SpecBuilder().specHeading("A spec heading").
@@ -349,6 +387,34 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Table row number out of range", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
-	result := se.execute()
-	c.Assert(result.Skipped, Equals, true)
+	specResult := se.execute()
+	c.Assert(specResult.Skipped, Equals, true)
+}
+
+func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
+	stepText := "Unimplememted step"
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableRow("123", "foo", "8800").
+		tableRow("666", "bar", "9900").
+		scenarioHeading("First scenario").
+		step(stepText).
+		step("create user <id> <name> and <phone>").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errMap := &validation.ValidationErrMaps{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
+	}
+
+	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
+	se := newSpecExecutor(spec, nil, nil, errMap, 0)
+
+	specResult := se.execute()
+	c.Assert(specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
+	c.Assert(specResult.Skipped, Equals, true)
 }
