@@ -32,7 +32,7 @@
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
-			"Rev": "0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0"
+			"Rev": "8ee79997227bf9b34611aee7946ae64735e6fd93"
 		},
 		{
 			"ImportPath": "github.com/op/go-logging",
@@ -48,7 +48,7 @@
 		},
 		{
 			"ImportPath": "google.golang.org/grpc",
-			"Rev": "0eb7c5dcd059d77bde1eb5bc7d953940170d0d18"
+			"Rev": "50955793b0183f9de69bd78e2ec251cf20aab121"
 		},
 		{
       			"ImportPath": "gopkg.in/check.v1",
