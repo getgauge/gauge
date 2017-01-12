@@ -31,7 +31,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
-	"github.com/golang/protobuf/proto"
 	fsnotify "gopkg.in/fsnotify.v1"
 )
 
@@ -373,7 +372,7 @@ func (s *SpecInfoGatherer) GetConceptInfos() []*gauge_messages.ConceptInfo {
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
 			stepValue := parser.CreateStepValue(concept.ConceptStep)
-			conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: gauge.ConvertToProtoStepValue(&stepValue), Filepath: proto.String(concept.FileName), LineNumber: proto.Int(concept.ConceptStep.LineNo)})
+			conceptInfos = append(conceptInfos, &gauge_messages.ConceptInfo{StepValue: gauge.ConvertToProtoStepValue(&stepValue), Filepath: concept.FileName, LineNumber: int32(concept.ConceptStep.LineNo)})
 		}
 	}
 	s.mutex.Unlock()

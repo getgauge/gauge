@@ -34,7 +34,6 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
-	"github.com/golang/protobuf/proto"
 )
 
 var TableRows = ""
@@ -289,8 +288,8 @@ var getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*
 }
 
 func (v *specValidator) validateStep(s *gauge.Step) error {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(s.Value), NumberOfParameters: proto.Int(len(s.Args))}}
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest,
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args))}}
 	r, err := getResponseFromRunner(m, v)
 	if err != nil {
 		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil)
@@ -300,10 +299,10 @@ func (v *specValidator) validateStep(s *gauge.Step) error {
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
 			if s.Parent == nil {
-				return NewStepValidationError(s, msg, v.specification.FileName, res.ErrorType)
+				return NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			return NewStepValidationError(s, msg, cpt.FileName, res.ErrorType)
+			return NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
 		}
 		return nil
 	}

@@ -23,7 +23,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
-	"github.com/golang/protobuf/proto"
 
 	"errors"
 
@@ -49,10 +48,10 @@ Scenario 2
 `
 	p := new(parser.SpecParser)
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
-
+	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 	errs := validationErrors{spec: []error{
-		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
-		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err),
+		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", &err),
 	}}
 
 	errMap := getErrMap(errs)
@@ -75,9 +74,10 @@ Scenario 2
 `
 	p := new(parser.SpecParser)
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 
 	errs := validationErrors{spec: []error{
-		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()),
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err),
 	}}
 
 	errMap := getErrMap(errs)
@@ -133,8 +133,8 @@ Scenario 2
 func (s *MySuite) TestValidateStep(c *C) {
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: proto.Bool(false), ErrorMessage: proto.String("my err msg"), ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse.Enum(), StepValidateResponse: res}, nil
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
 	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
 	valErr := specVal.validateStep(myStep)
@@ -147,8 +147,8 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: proto.Bool(false), ErrorMessage: proto.String("my err msg"), ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND.Enum()}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse.Enum(), StepValidateResponse: res}, nil
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
 	cptDict := gauge.NewConceptDictionary()
 	cptDict.ConceptsMap["my concept"] = &gauge.Concept{ConceptStep: parentStep, FileName: "concept.cpt"}

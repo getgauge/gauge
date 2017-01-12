@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
-	"github.com/golang/protobuf/proto"
 )
 
 type invalidSpecialParamError struct {
@@ -49,10 +48,10 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
-		parameter.Name = proto.String(arg.Name)
+		parameter.Name = arg.Name
 		if arg.ArgType == gauge.Static {
-			parameter.ParameterType = gauge_messages.Parameter_Static.Enum()
-			parameter.Value = proto.String(arg.Value)
+			parameter.ParameterType = gauge_messages.Parameter_Static
+			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.Dynamic {
 			var resolvedArg *gauge.StepArg
 			if parent != nil {
@@ -61,22 +60,22 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 				resolvedArg = dataTableLookup.GetArg(arg.Value)
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
-			parameter.Name = proto.String(resolvedArg.Name)
+			parameter.Name = resolvedArg.Name
 			if resolvedArg.Table.IsInitialized() {
-				parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
+				parameter.ParameterType = gauge_messages.Parameter_Special_Table
 				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.Table, dataTableLookup)
 			} else {
-				parameter.ParameterType = gauge_messages.Parameter_Dynamic.Enum()
-				parameter.Value = proto.String(resolvedArg.Value)
+				parameter.ParameterType = gauge_messages.Parameter_Dynamic
+				parameter.Value = resolvedArg.Value
 			}
 		} else if arg.ArgType == gauge.SpecialString {
-			parameter.ParameterType = gauge_messages.Parameter_Special_String.Enum()
-			parameter.Value = proto.String(arg.Value)
+			parameter.ParameterType = gauge_messages.Parameter_Special_String
+			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.SpecialTable {
-			parameter.ParameterType = gauge_messages.Parameter_Special_Table.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Special_Table
 			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, dataTableLookup)
 		} else {
-			parameter.ParameterType = gauge_messages.Parameter_Table.Enum()
+			parameter.ParameterType = gauge_messages.Parameter_Table
 			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, dataTableLookup)
 
 		}

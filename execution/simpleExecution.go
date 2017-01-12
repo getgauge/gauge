@@ -120,7 +120,7 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.Sp
 }
 
 func (e *simpleExecution) notifyBeforeSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
@@ -129,7 +129,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 }
 
 func (e *simpleExecution) notifyAfterSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
@@ -138,7 +138,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 }
 
 func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit,
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	return e.runner.ExecuteAndGetStatus(m)
 }
@@ -149,13 +149,13 @@ func (e *simpleExecution) executeHook(m *gauge_messages.Message) *(gauge_message
 }
 
 func (e *simpleExecution) notifyExecutionResult() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult,
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *simpleExecution) notifyExecutionStop() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest,
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 	e.pluginHandler.NotifyPlugins(m)
 	e.pluginHandler.GracefullyKillPlugins()

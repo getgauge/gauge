@@ -359,7 +359,7 @@ func (handler *Handler) GracefullyKillPlugins() {
 
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	messageID := common.GetUniqueID()
-	message.MessageId = &messageID
+	message.MessageId = messageID
 	messageBytes, err := proto.Marshal(message)
 	if err != nil {
 		return err

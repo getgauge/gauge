@@ -24,7 +24,6 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
-	"github.com/golang/protobuf/proto"
 )
 
 type stepExecutor struct {
@@ -37,14 +36,14 @@ type stepExecutor struct {
 // TODO: stepExecutor should not consume both gauge.Step and gauge_messages.ProtoStep. The usage of ProtoStep should be eliminated.
 func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.ProtoStep) *result.StepResult {
 	stepRequest := e.createStepRequest(protoStep)
-	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: proto.Bool(false)}
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
 	stepResult := result.NewStepResult(protoStep)
 
 	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, *e.currentExecutionInfo))
 
 	e.notifyBeforeStepHook(stepResult)
 	if !stepResult.GetFailed() {
-		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep.Enum(), ExecuteStepRequest: stepRequest}
+		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep, ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		if stepExecutionStatus.GetFailed() {
 			setStepFailure(e.currentExecutionInfo)
@@ -59,14 +58,14 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 }
 
 func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
-	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: proto.String(protoStep.GetParsedText()), ActualStepText: proto.String(protoStep.GetActualText())}
+	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: protoStep.GetParsedText(), ActualStepText: protoStep.GetActualText()}
 	stepRequest.Parameters = getParameters(protoStep.GetFragments())
 	return stepRequest
 }
 
 func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	m := &gauge_messages.Message{
-		MessageType:                  gauge_messages.Message_StepExecutionStarting.Enum(),
+		MessageType:                  gauge_messages.Message_StepExecutionStarting,
 		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
 	}
 
@@ -79,7 +78,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 
 func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	m := &gauge_messages.Message{
-		MessageType:                gauge_messages.Message_StepExecutionEnding.Enum(),
+		MessageType:                gauge_messages.Message_StepExecutionEnding,
 		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
 	}
 

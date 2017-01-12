@@ -55,9 +55,9 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 	e := make(chan event.Topic)
 	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
-	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}}
 	sceHeading := "My scenario heading"
-	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
+	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}}
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: sceHeading})
 
 	ListenExecutionEvents()
 
@@ -72,9 +72,9 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 	dataTable := gauge.Table{}
 	dataTable.AddHeaders([]string{"foo", "bar"})
 	dataTable.AddRowValues([]string{"one", "two"})
-	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: "My Scenario Heading"}, DataTableRow: dataTable}
 	sceHeading := "My scenario heading"
-	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
+	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}, DataTableRow: dataTable}
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: sceHeading})
 
 	ListenExecutionEvents()
 
@@ -87,8 +87,7 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 	e := make(chan event.Topic)
 	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
-	sceHeading := "My scenario heading"
-	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: &sceHeading})
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: "My scenario heading"})
 
 	ListenExecutionEvents()
 
@@ -113,8 +112,7 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 	e := make(chan event.Topic)
 	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
-	failed := false
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: false}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
 	ListenExecutionEvents()
@@ -142,8 +140,7 @@ func (s *MySuite) TestSubscribeConceptEnd(c *C) {
 	e := make(chan event.Topic)
 	currentReporter = &dummyConsole{event: e}
 	event.InitRegistry()
-	failed := true
-	cptExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	cptExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: true}}
 	cptRes := result.NewConceptResult(&gauge_messages.ProtoConcept{ConceptExecutionResult: cptExeRes})
 
 	ListenExecutionEvents()

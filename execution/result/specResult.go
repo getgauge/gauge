@@ -17,10 +17,7 @@
 
 package result
 
-import (
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
-)
+import "github.com/getgauge/gauge/gauge_messages"
 
 type SpecResult struct {
 	ProtoSpec            *gauge_messages.ProtoSpec
@@ -53,7 +50,7 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 			specResult.ScenarioFailedCount++
 		}
 		specResult.AddExecTime(scenarioResult.ExecTime())
-		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: scenarioResult.Item().(*gauge_messages.ProtoScenario)})
+		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario, Scenario: scenarioResult.Item().(*gauge_messages.ProtoScenario)})
 	}
 	specResult.ScenarioCount += len(scenarioResults)
 }
@@ -70,8 +67,8 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]R
 				scenarioFailed = true
 				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(executedRowIndexes[rowIndx]))
 			}
-			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenario: protoScenario, TableRowIndex: proto.Int32(int32(executedRowIndexes[rowIndx]))}
-			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario.Enum(), TableDrivenScenario: protoTableDrivenScenario}
+			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{Scenario: protoScenario, TableRowIndex: int32(executedRowIndexes[rowIndx])}
+			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario}
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}
 		if scenarioFailed {
@@ -79,7 +76,7 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]R
 			specResult.IsFailed = true
 		}
 	}
-	specResult.ProtoSpec.IsTableDriven = proto.Bool(true)
+	specResult.ProtoSpec.IsTableDriven = true
 	specResult.ScenarioCount += numberOfScenarios
 }
 
@@ -96,7 +93,7 @@ func (specResult *SpecResult) GetPostHook() **(gauge_messages.ProtoHookFailure) 
 }
 
 func (specResult *SpecResult) setFileName(fileName string) {
-	specResult.ProtoSpec.FileName = proto.String(fileName)
+	specResult.ProtoSpec.FileName = fileName
 }
 
 func (specResult *SpecResult) ExecTime() int64 {

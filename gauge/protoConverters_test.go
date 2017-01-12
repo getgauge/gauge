@@ -19,23 +19,22 @@ package gauge
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestCopyingFragments(c *C) {
-	text1 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String("step with")}
-	staticParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String("param0")}}
-	text2 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String("and")}
-	dynamicParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String("param1")}}
+	text1 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: "step with"}
+	staticParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static, Value: "param0"}}
+	text2 := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: "and"}
+	dynamicParam := &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic, Value: "param1"}}
 	fragments := []*gauge_messages.Fragment{text1, staticParam, text2, dynamicParam}
 
 	copiedFragments := makeFragmentsCopy(fragments)
 
 	compareFragments(fragments, copiedFragments, c)
 
-	fragments[1].Parameter.Value = proto.String("changedParam")
-	fragments[2].Text = proto.String("changed text")
+	fragments[1].Parameter.Value = "changedParam"
+	fragments[2].Text = "changed text"
 
 	c.Assert(copiedFragments[1].Parameter.GetValue(), Equals, "param0")
 	c.Assert(copiedFragments[2].GetText(), Equals, "and")
@@ -77,8 +76,8 @@ func (s *MySuite) TestNewProtoScenario(c *C) {
 
 	c.Assert(protoSce.GetScenarioHeading(), Equals, sceHeading)
 	c.Assert(protoSce.GetExecutionStatus(), Equals, gauge_messages.ExecutionStatus_NOTEXECUTED)
-	c.Assert(*protoSce.Span.Start, Equals, int64(1))
-	c.Assert(*protoSce.Span.End, Equals, int64(4))
+	c.Assert(protoSce.Span.Start, Equals, int64(1))
+	c.Assert(protoSce.Span.End, Equals, int64(4))
 }
 
 func (s *MySuite) TestConvertToProtoSpecWithDataTable(c *C) {
@@ -113,7 +112,7 @@ func (s *MySuite) TestConvertToProtoStep(c *C) {
 	}
 	actual := convertToProtoStep(step)
 
-	expected := &gauge_messages.ProtoStep{ActualText: proto.String(step.LineText), ParsedText: proto.String(step.Value), Fragments: []*gauge_messages.Fragment{}}
+	expected := &gauge_messages.ProtoStep{ActualText: step.LineText, ParsedText: step.Value, Fragments: []*gauge_messages.Fragment{}}
 	c.Assert(actual, DeepEquals, expected)
 }
 
@@ -132,13 +131,13 @@ func (s *MySuite) TestConvertToProtoConcept(c *C) {
 	actual := convertToProtoConcept(step)
 
 	expected := &gauge_messages.ProtoItem{
-		ItemType: gauge_messages.ProtoItem_Concept.Enum(),
+		ItemType: gauge_messages.ProtoItem_Concept,
 		Concept: &gauge_messages.ProtoConcept{
 			ConceptStep: newProtoStep("line text", "value"),
 			Steps: []*gauge_messages.ProtoItem{
 				newStepItem("line text1", "value1"),
 				{
-					ItemType: gauge_messages.ProtoItem_Concept.Enum(),
+					ItemType: gauge_messages.ProtoItem_Concept,
 					Concept: &gauge_messages.ProtoConcept{
 						ConceptStep: newProtoStep("line text2", "value2"),
 						Steps:       []*gauge_messages.ProtoItem{newStepItem("line text3", "value3")},
@@ -153,7 +152,7 @@ func (s *MySuite) TestConvertToProtoConcept(c *C) {
 
 func newStepItem(lineText, value string) *gauge_messages.ProtoItem {
 	return &gauge_messages.ProtoItem{
-		ItemType: gauge_messages.ProtoItem_Step.Enum(),
+		ItemType: gauge_messages.ProtoItem_Step,
 		Step:     newProtoStep(lineText, value),
 	}
 
@@ -161,8 +160,8 @@ func newStepItem(lineText, value string) *gauge_messages.ProtoItem {
 
 func newProtoStep(lineText, value string) *gauge_messages.ProtoStep {
 	return &gauge_messages.ProtoStep{
-		ActualText: proto.String(lineText),
-		ParsedText: proto.String(value),
+		ActualText: lineText,
+		ParsedText: value,
 		Fragments:  []*gauge_messages.Fragment{},
 	}
 }

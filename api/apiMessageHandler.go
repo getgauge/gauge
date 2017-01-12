@@ -102,8 +102,8 @@ func (handler *gaugeAPIMessageHandler) sendMessage(message *gauge_messages.APIMe
 }
 
 func (handler *gaugeAPIMessageHandler) projectRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: proto.String(config.ProjectRoot)}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetProjectRootResponse.Enum(), MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
+	projectRootResponse := &gauge_messages.GetProjectRootResponse{ProjectRoot: config.ProjectRoot}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetProjectRootResponse, MessageId: message.MessageId, ProjectRootResponse: projectRootResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) installationRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -112,8 +112,8 @@ func (handler *gaugeAPIMessageHandler) installationRootRequestResponse(message *
 		logger.APILog.Error("Failed to find installation root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
-	installationRootResponse := &gauge_messages.GetInstallationRootResponse{InstallationRoot: proto.String(root)}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetInstallationRootResponse.Enum(), MessageId: message.MessageId, InstallationRootResponse: installationRootResponse}
+	installationRootResponse := &gauge_messages.GetInstallationRootResponse{InstallationRoot: root}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetInstallationRootResponse, MessageId: message.MessageId, InstallationRootResponse: installationRootResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) getAllStepsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -123,12 +123,12 @@ func (handler *gaugeAPIMessageHandler) getAllStepsRequestResponse(message *gauge
 		stepValueResponses = append(stepValueResponses, gauge.ConvertToProtoStepValue(stepValue))
 	}
 	getAllStepsResponse := &gauge_messages.GetAllStepsResponse{AllSteps: stepValueResponses}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse.Enum(), MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllStepResponse, MessageId: message.MessageId, AllStepsResponse: getAllStepsResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) getSpecsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	getAllSpecsResponse := handler.createSpecsResponseMessageFor(handler.specInfoGatherer.GetAvailableSpecDetails(message.SpecsRequest.Specs))
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_SpecsResponse.Enum(), MessageId: message.MessageId, SpecsResponse: getAllSpecsResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_SpecsResponse, MessageId: message.MessageId, SpecsResponse: getAllSpecsResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) getStepValueRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -141,13 +141,13 @@ func (handler *gaugeAPIMessageHandler) getStepValueRequestResponse(message *gaug
 		return handler.getErrorResponse(message, err)
 	}
 	stepValueResponse := &gauge_messages.GetStepValueResponse{StepValue: gauge.ConvertToProtoStepValue(stepValue)}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetStepValueResponse.Enum(), MessageId: message.MessageId, StepValueResponse: stepValueResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetStepValueResponse, MessageId: message.MessageId, StepValueResponse: stepValueResponse}
 
 }
 
 func (handler *gaugeAPIMessageHandler) getAllConceptsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.GetConceptInfos())
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse.Enum(), MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse, MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) getLanguagePluginLibPath(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -163,20 +163,20 @@ func (handler *gaugeAPIMessageHandler) getLanguagePluginLibPath(message *gauge_m
 	}
 	relativeLibPath := runnerInfo.Lib
 	libPath := filepath.Join(languageInstallDir, relativeLibPath)
-	response := &gauge_messages.GetLanguagePluginLibPathResponse{Path: proto.String(libPath)}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetLanguagePluginLibPathResponse.Enum(), MessageId: message.MessageId, LibPathResponse: response}
+	response := &gauge_messages.GetLanguagePluginLibPathResponse{Path: libPath}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetLanguagePluginLibPathResponse, MessageId: message.MessageId, LibPathResponse: response}
 }
 
 func (handler *gaugeAPIMessageHandler) getErrorResponse(message *gauge_messages.APIMessage, err error) *gauge_messages.APIMessage {
-	errorResponse := &gauge_messages.ErrorResponse{Error: proto.String(err.Error())}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: message.MessageId, Error: errorResponse}
+	errorResponse := &gauge_messages.ErrorResponse{Error: err.Error()}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse, MessageId: message.MessageId, Error: errorResponse}
 
 }
 
 func (handler *gaugeAPIMessageHandler) getErrorMessage(err error) *gauge_messages.APIMessage {
 	id := common.GetUniqueID()
-	errorResponse := &gauge_messages.ErrorResponse{Error: proto.String(err.Error())}
-	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse.Enum(), MessageId: &id, Error: errorResponse}
+	errorResponse := &gauge_messages.ErrorResponse{Error: err.Error()}
+	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_ErrorResponse, MessageId: id, Error: errorResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*infoGatherer.SpecDetail) *gauge_messages.SpecsResponse {
@@ -187,7 +187,7 @@ func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*
 			detail.Spec = gauge.ConvertToProtoSpec(d.Spec)
 		}
 		for _, e := range d.Errs {
-			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Filename: proto.String(e.FileName), Message: proto.String(e.Message), LineNumber: proto.Int32(int32(e.LineNo))})
+			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Filename: e.FileName, Message: e.Message, LineNumber: int32(e.LineNo)})
 		}
 		specDetails = append(specDetails, detail)
 	}
@@ -207,15 +207,15 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	} else {
 		logger.APILog.Error("Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
 	}
-	response := &gauge_messages.PerformRefactoringResponse{Success: proto.Bool(refactoringResult.Success), Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse.Enum(), PerformRefactoringResponse: response}
+	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
 }
 
 func (handler *gaugeAPIMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetExtractConceptRequest()
 	success, err, filesChanged := conceptExtractor.ExtractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
-	response := &gauge_messages.ExtractConceptResponse{IsSuccess: proto.Bool(success), Error: proto.String(err.Error()), FilesChanged: filesChanged}
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse.Enum(), ExtractConceptResponse: response}
+	response := &gauge_messages.ExtractConceptResponse{IsSuccess: success, Error: err.Error(), FilesChanged: filesChanged}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse, ExtractConceptResponse: response}
 }
 
 func (handler *gaugeAPIMessageHandler) formatSpecs(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
@@ -238,11 +238,11 @@ func (handler *gaugeAPIMessageHandler) formatSpecs(message *gauge_messages.APIMe
 		}
 	}
 	formatResponse := &gauge_messages.FormatSpecsResponse{Errors: errors, Warnings: warnings}
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_FormatSpecsResponse.Enum(), FormatSpecsResponse: formatResponse}
+	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_FormatSpecsResponse, FormatSpecsResponse: formatResponse}
 }
 
 func (handler *gaugeAPIMessageHandler) createUnsupportedAPIMessageResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	return &gauge_messages.APIMessage{MessageId: message.MessageId,
-		MessageType:                   gauge_messages.APIMessage_UnsupportedApiMessageResponse.Enum(),
+		MessageType:                   gauge_messages.APIMessage_UnsupportedApiMessageResponse,
 		UnsupportedApiMessageResponse: &gauge_messages.UnsupportedApiMessageResponse{}}
 }

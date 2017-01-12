@@ -32,7 +32,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/validation"
-	"github.com/golang/protobuf/proto"
 )
 
 type specExecutor struct {
@@ -52,9 +51,9 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
-	specInfo := &gauge_messages.SpecInfo{Name: proto.String(e.specification.Heading.Value),
-		FileName: proto.String(e.specification.FileName),
-		IsFailed: proto.Bool(false), Tags: getTagValue(e.specification.Tags)}
+	specInfo := &gauge_messages.SpecInfo{Name: e.specification.Heading.Value,
+		FileName: e.specification.FileName,
+		IsFailed: false, Tags: getTagValue(e.specification.Tags)}
 	e.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 	e.specResult = gauge.NewSpecResult(e.specification)
 
@@ -152,7 +151,7 @@ func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step) *gauge_mess
 			e.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
 	}
-	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
+	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = false
 	return protoConceptItem
 }
 
@@ -166,13 +165,13 @@ func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.
 }
 
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
-	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit.Enum(),
+	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit,
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
 	return e.runner.ExecuteAndGetStatus(initSpecDataStoreMessage)
 }
 
 func (e *specExecutor) notifyBeforeSpecHook() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting,
 		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
@@ -182,7 +181,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 }
 
 func (e *specExecutor) notifyAfterSpecHook() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding,
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
@@ -240,10 +239,10 @@ func (e *specExecutor) skipSpec() {
 
 func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *gauge.Step) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
-	protoStep.StepExecutionResult.Skipped = proto.Bool(false)
+	protoStep.StepExecutionResult.Skipped = false
 	if _, ok := e.errMap.StepErrs[step]; ok {
-		protoStep.StepExecutionResult.Skipped = proto.Bool(true)
-		protoStep.StepExecutionResult.SkippedReason = proto.String("Step implementation not found")
+		protoStep.StepExecutionResult.Skipped = true
+		protoStep.StepExecutionResult.SkippedReason = "Step implementation not found"
 	}
 }
 
@@ -273,9 +272,9 @@ func (e *specExecutor) executeScenarios() []result.Result {
 
 func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
 	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
-		Name:     proto.String(scenario.Heading.Value),
+		Name:     scenario.Heading.Value,
 		Tags:     getTagValue(scenario.Tags),
-		IsFailed: proto.Bool(false),
+		IsFailed: false,
 	}
 
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
@@ -333,7 +332,7 @@ func getTagValue(tags *gauge.Tags) []string {
 }
 
 func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {
-	executionInfo.CurrentSpec.IsFailed = proto.Bool(true)
+	executionInfo.CurrentSpec.IsFailed = true
 }
 
 func getDataTableRows(rowCount int) []int {

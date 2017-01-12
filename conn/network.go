@@ -67,7 +67,7 @@ func Write(conn net.Conn, messageBytes []byte) error {
 
 func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 	messageId := common.GetUniqueID()
-	message.MessageId = &messageId
+	message.MessageId = messageId
 
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -78,7 +78,7 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 
 func GetResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) (*gauge_messages.Message, error) {
 	messageId := common.GetUniqueID()
-	message.MessageId = &messageId
+	message.MessageId = messageId
 
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -146,7 +146,7 @@ func GetPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 // SendProcessKillMessage sends a KillProcessRequest message through the connection.
 func SendProcessKillMessage(connection net.Conn) {
 	id := common.GetUniqueID()
-	message := &gauge_messages.Message{MessageId: &id, MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+	message := &gauge_messages.Message{MessageId: id, MessageType: gauge_messages.Message_KillProcessRequest,
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
 	WriteGaugeMessage(message, connection)

@@ -17,10 +17,7 @@
 
 package result
 
-import (
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
-)
+import "github.com/getgauge/gauge/gauge_messages"
 
 type ScenarioResult struct {
 	ProtoScenario *gauge_messages.ProtoScenario
@@ -31,8 +28,8 @@ func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
 }
 
 func (s *ScenarioResult) SetFailure() {
-	s.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED.Enum()
-	s.ProtoScenario.Failed = proto.Bool(true)
+	s.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED
+	s.ProtoScenario.Failed = true
 }
 
 func (s *ScenarioResult) GetFailed() bool {
@@ -58,11 +55,11 @@ func (s *ScenarioResult) UpdateExecutionTime() {
 
 func (s *ScenarioResult) AddExecTime(execTime int64) {
 	currentScenarioExecTime := s.ProtoScenario.GetExecutionTime()
-	s.ProtoScenario.ExecutionTime = proto.Int64(currentScenarioExecTime + execTime)
+	s.ProtoScenario.ExecutionTime = currentScenarioExecTime + execTime
 }
 
 func (s *ScenarioResult) ExecTime() int64 {
-	return *s.ProtoScenario.ExecutionTime
+	return s.ProtoScenario.ExecutionTime
 }
 
 func (s *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messages.ProtoItem) {

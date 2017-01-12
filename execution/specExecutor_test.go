@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/validation"
-	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
@@ -350,9 +349,9 @@ func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
 
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
-	specInfo := &gauge_messages.SpecInfo{Name: proto.String(se.specification.Heading.Value),
-		FileName: proto.String(se.specification.FileName),
-		IsFailed: proto.Bool(false), Tags: getTagValue(se.specification.Tags)}
+	specInfo := &gauge_messages.SpecInfo{Name: se.specification.Heading.Value,
+		FileName: se.specification.FileName,
+		IsFailed: false, Tags: getTagValue(se.specification.Tags)}
 	se.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 	se.specResult = gauge.NewSpecResult(se.specification)
 	resolvedSpecItems := se.resolveItems(se.specification.GetSpecItems())

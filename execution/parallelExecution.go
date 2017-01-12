@@ -169,7 +169,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 func (e *parallelExecution) finish() {
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
 	message := &gauge_messages.Message{
-		MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+		MessageType: gauge_messages.Message_SuiteExecutionResult,
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{
 			SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult),
 		},

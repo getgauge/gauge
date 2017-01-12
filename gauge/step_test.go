@@ -19,7 +19,6 @@ package gauge
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 	. "gopkg.in/check.v1"
 )
 
@@ -111,7 +110,7 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 
 func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
 	argsInStep := []*StepArg{&StepArg{Name: "arg1", Value: "arg value", ArgType: Dynamic}}
-	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: proto.String("foo")}}
+	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: "foo"}}
 	originalStep := &Step{LineNo: 12,
 		Value:          "foo {}",
 		LineText:       "foo <bar>",
@@ -131,7 +130,7 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 	argLookup := new(ArgLookup)
 	argLookup.AddArgName("name")
 	argLookup.AddArgName("id")
-	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: proto.String("foo")}}
+	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: "foo"}}
 	conceptSteps := []*Step{&Step{Value: "step 1"}}
 	originalConcept := &Step{
 		LineNo:         12,

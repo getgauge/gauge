@@ -42,8 +42,8 @@ func (s *MySuite) TestFailingStepEnd_NonVerbose(c *C) {
 	errMsg := "pre hook failure message"
 	stacktrace := "my stacktrace"
 	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: &errMsg, StackTrace: &stacktrace}}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: specName}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{ErrorMessage: errMsg, StackTrace: stacktrace}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
 	cc.StepStart(stepText)
@@ -61,7 +61,7 @@ func (s *MySuite) TestPassingStepEndInNonVerbose_ColoredConsole(c *C) {
 	dw.output = ""
 
 	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: specName}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 
 	cc.StepEnd(gauge.Step{LineText: "* say hello"}, stepRes, specInfo)

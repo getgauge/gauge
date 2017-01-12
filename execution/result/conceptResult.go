@@ -17,10 +17,7 @@
 
 package result
 
-import (
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
-)
+import "github.com/getgauge/gauge/gauge_messages"
 
 // ConceptResult represents result of a concept execution
 type ConceptResult struct {
@@ -34,7 +31,7 @@ func NewConceptResult(con *gauge_messages.ProtoConcept) *ConceptResult {
 
 // SetFailure sets the conceptResult as failed
 func (conceptResult *ConceptResult) SetFailure() {
-	conceptResult.ProtoConcept.ConceptExecutionResult.ExecutionResult.Failed = proto.Bool(true)
+	conceptResult.ProtoConcept.ConceptExecutionResult.ExecutionResult.Failed = true
 }
 
 // GetFailed returns the state of the concept result
@@ -69,8 +66,8 @@ func (conceptResult *ConceptResult) UpdateConceptExecResult() {
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetFailed() {
 				failed = true
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
+				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: step.GetConcept().GetConceptExecutionResult().GetExecutionResult(), Skipped: false}
+				conceptExecutionResult.ExecutionResult.ExecutionTime = conceptExecutionTime
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
 				recoverable = step.GetConcept().GetConceptExecutionResult().GetExecutionResult().GetRecoverableError()
@@ -83,8 +80,8 @@ func (conceptResult *ConceptResult) UpdateConceptExecResult() {
 			conceptExecutionTime += stepExecResult.GetExecutionTime()
 			if stepExecResult.GetFailed() {
 				failed = true
-				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: proto.Bool(false)}
-				conceptExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(conceptExecutionTime)
+				conceptExecutionResult := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: stepExecResult, Skipped: false}
+				conceptExecutionResult.ExecutionResult.ExecutionTime = conceptExecutionTime
 				protoConcept.ConceptExecutionResult = conceptExecutionResult
 				protoConcept.ConceptStep.StepExecutionResult = conceptExecutionResult
 				recoverable = step.GetStep().GetStepExecutionResult().GetExecutionResult().GetRecoverableError()
@@ -95,8 +92,8 @@ func (conceptResult *ConceptResult) UpdateConceptExecResult() {
 		}
 	}
 
-	conceptResult.SetConceptExecResult(&gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{RecoverableError: proto.Bool(recoverable), Failed: proto.Bool(failed), ExecutionTime: proto.Int64(conceptExecutionTime)}})
-	protoConcept.ConceptStep.StepExecutionResult.Skipped = proto.Bool(false)
+	conceptResult.SetConceptExecResult(&gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{RecoverableError: recoverable, Failed: failed, ExecutionTime: conceptExecutionTime}})
+	protoConcept.ConceptStep.StepExecutionResult.Skipped = false
 }
 
 func (conceptResult *ConceptResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {

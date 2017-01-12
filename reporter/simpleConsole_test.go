@@ -99,8 +99,7 @@ func (s *MySuite) TestStepStartInNonVerboseMode_SimpleConsole(c *C) {
 func (s *MySuite) TestStepEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 6
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: &specName}}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 	sc.StepEnd(gauge.Step{LineText: ""}, stepRes, specInfo)
 
@@ -225,10 +224,8 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	sc.StepStart("* do foo bar")
 	sc.Write([]byte("doing foo bar"))
 	res := &DummyResult{IsFailed: false}
-	failed := false
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: &specName}}
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed}}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: false}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
 	sc.StepEnd(gauge.Step{LineText: "* do foo bar"}, stepRes, specInfo)
@@ -249,9 +246,8 @@ func (s *MySuite) TestStepEndWithPreHookFailure_SimpleConsole(c *C) {
 	sc.indentation = 6
 	errMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: &specName}}
-	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PreHookFailure: preHookFailure}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
@@ -266,9 +262,8 @@ func (s *MySuite) TestStepEndWithPostHookFailure_SimpleConsole(c *C) {
 	sc.indentation = 6
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: &specName}}
-	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
@@ -284,10 +279,9 @@ func (s *MySuite) TestStepEndWithPreAndPostHookFailure_SimpleConsole(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	postHookErrMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
-	specName := "hello.spec"
-	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: &specName}}
-	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
-	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &postHookErrMsg, StackTrace: &stackTrace}
+	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: postHookErrMsg, StackTrace: stackTrace}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{PostHookFailure: postHookFailure, PreHookFailure: preHookFailure}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
@@ -305,7 +299,7 @@ func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
 	currentReporter = sc
 	preHookErrMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
-	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &preHookErrMsg, StackTrace: &stackTrace}
+	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
 	res := &DummyResult{PreHookFailure: &preHookFailure}
 
 	sc.ScenarioEnd(res)
@@ -321,7 +315,7 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
 	sc.indentation = 0
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
-	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
 	res := &DummyResult{PostHookFailure: &postHookFailure}
 
 	sc.SpecEnd(res)
@@ -338,7 +332,7 @@ func (s *MySuite) TestSuiteEndWithPostHookFailure_SimpleConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	res := result.NewSuiteResult("", time.Now())
-	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: &errMsg, StackTrace: &stackTrace}
+	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
 	res.PostSuite = postHookFailure
 
 	sc.SuiteEnd(res)
@@ -358,8 +352,8 @@ func (s *MySuite) TestExcludeLineNoForFailedStepInConcept(c *C) {
 	specName := "hello.spec"
 	stepText := "* my Step"
 	parentStep := gauge.Step{LineText: "* parent step"}
-	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, StackTrace: &stackTrace, ErrorMessage: &errMsg}}
+	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: specName}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: failed, StackTrace: stackTrace, ErrorMessage: errMsg}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
 
@@ -379,8 +373,8 @@ func (s *MySuite) TestIncludeLineNoForFailedStep(c *C) {
 	failed := true
 	specName := "hello.spec"
 	stepText := "* my Step"
-	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: &specName}}
-	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: &failed, StackTrace: &stackTrace, ErrorMessage: &errMsg}}
+	exeInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: specName}}
+	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: failed, StackTrace: stackTrace, ErrorMessage: errMsg}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 	stepRes.SetStepFailure()
 

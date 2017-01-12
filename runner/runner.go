@@ -40,7 +40,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
-	"github.com/golang/protobuf/proto"
 )
 
 type Runner interface {
@@ -179,7 +178,7 @@ func (r *LanguageRunner) Pid() int {
 func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	response, err := conn.GetResponseForGaugeMessage(message, r.connection)
 	if err != nil {
-		return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(err.Error())}
+		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
 
 	if response.GetMessageType() == gauge_messages.Message_ExecutionStatusResponse {
@@ -197,7 +196,7 @@ func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *g
 }
 
 func errorResult(message string) *gauge_messages.ProtoExecutionResult {
-	return &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(true), ErrorMessage: proto.String(message), RecoverableError: proto.Bool(false)}
+	return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, RecoverableError: false}
 }
 
 // Looks for a runner configuration inside the runner directory
