@@ -45,7 +45,7 @@ func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *Parse
 func (parser *ConceptParser) ParseFile(file string) ([]*gauge.Step, *ParseResult) {
 	fileText, fileReadErr := common.ReadFileContents(file)
 	if fileReadErr != nil {
-		return nil, &ParseResult{ParseErrors: []*ParseError{&ParseError{Message: fmt.Sprintf("failed to read concept file %s", file)}}}
+		return nil, &ParseResult{ParseErrors: []*ParseError{{Message: fmt.Sprintf("failed to read concept file %s", file)}}}
 	}
 	return parser.Parse(fileText, file)
 }
@@ -105,6 +105,8 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 				parser.processTableDataRow(token, &parser.currentConcept.Lookup, fileName)
 			}
 		} else {
+			retainStates(&parser.currentState, conceptScope)
+			addStates(&parser.currentState, commentScope)
 			comment := &gauge.Comment{Value: token.Value, LineNo: token.LineNo}
 			if parser.currentConcept == nil {
 				preComments = append(preComments, comment)
@@ -114,7 +116,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			parser.currentConcept.Items = append(parser.currentConcept.Items, comment)
 		}
 	}
-	if !isInState(parser.currentState, stepScope) && parser.currentState != initial {
+	if parser.currentConcept != nil && len(parser.currentConcept.ConceptSteps) < 1 {
 		parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
 		return nil, parseRes
 	}
