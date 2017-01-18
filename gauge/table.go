@@ -17,10 +17,7 @@
 
 package gauge
 
-import (
-	"fmt"
-	"strings"
-)
+import "fmt"
 
 type Table struct {
 	headerIndexMap map[string]int
@@ -104,9 +101,8 @@ func (table *Table) AddHeaders(columnNames []string) {
 	table.Headers = make([]string, len(columnNames))
 	table.Columns = make([][]TableCell, len(columnNames))
 	for i, column := range columnNames {
-		trimmedHeader := strings.TrimSpace(column)
-		table.Headers[i] = trimmedHeader
-		table.headerIndexMap[trimmedHeader] = i
+		table.Headers[i] = column
+		table.headerIndexMap[column] = i
 		table.Columns[i] = make([]TableCell, 0)
 	}
 }
@@ -168,9 +164,8 @@ func (table *Table) Rows() [][]string {
 func (table *Table) GetRowCount() int {
 	if table.IsInitialized() {
 		return len(table.Columns[0])
-	} else {
-		return 0
 	}
+	return 0
 }
 
 func (table *Table) Kind() TokenKind {
