@@ -119,7 +119,7 @@ func (table *Table) AddRowValues(rowValues []string) {
 func (table *Table) createTableCells(rowValues []string) []TableCell {
 	tableCells := make([]TableCell, 0)
 	for _, value := range rowValues {
-		tableCells = append(tableCells, GetTableCell(strings.TrimSpace(value)))
+		tableCells = append(tableCells, GetTableCell(value))
 	}
 	return tableCells
 }

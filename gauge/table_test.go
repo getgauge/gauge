@@ -175,3 +175,12 @@ func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
 	c.Assert(thirdRow[0].Value, Equals, "789")
 	c.Assert(thirdRow[1].Value, Equals, "")
 }
+
+func (s *MySuite) TestCreateTableCells(c *C) {
+	var table Table
+	table.AddHeaders([]string{"id", "name"})
+	table.AddRowValues([]string{"cell 1", "cell 2   "})
+
+	c.Assert(table.Columns[0][0].Value, Equals, "cell 1")
+	c.Assert(table.Columns[1][0].Value, Equals, "cell 2   ")
+}
