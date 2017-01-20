@@ -166,9 +166,9 @@ function updateRepo () {
         exit 1
     fi
 
-    json=`cat $INSTALL_PLUGIN_JSON-install.json | jq ".versions=$versionInfo" $INSTALL_PLUGIN_JSON-install.json`
-    echo $json | jq . > "$INSTALL_PLUGIN_JSON-install.json"
-    git add "$INSTALL_PLUGIN_JSON-install.json"
+    json=`cat $INSTALL_PLUGIN_JSON | jq ".versions=$versionInfo" $INSTALL_PLUGIN_JSON`
+    echo $json | jq . > "$INSTALL_PLUGIN_JSON"
+    git add "$INSTALL_PLUGIN_JSON"
     git commit -m "Updating nightly version for $INSTALL_PLUGIN_JSON"
     git push origin master
 }
