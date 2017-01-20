@@ -90,6 +90,13 @@ function bintrayUpload () {
             exit 1
         fi
         echo "HTTP response code: $RESPONSE_CODE"
+        if [[ $PLATFORM == "" ]]; then
+            eval "PLATFORM_INDEPENDENT_FILE=https://dl.bintray.com/gauge/$PACKAGE/$i"
+        elif [[ $i == *"x86_64"* ]]; then
+            eval "${PLATFORM:0:${#PLATFORM}-1}_x86_64=https://dl.bintray.com/gauge/$PACKAGE/$PLATFORM$i"
+        else
+            eval "${PLATFORM:0:${#PLATFORM}-1}_x86=https://dl.bintray.com/gauge/$PACKAGE/$PLATFORM$i"
+        fi
     done;
 }
 
@@ -137,6 +144,35 @@ function printMeta () {
     echo "Version to be uploaded: $VERSION"
 }
 
+function updateRepo () {
+    if [ "$UPDATE_INSTALL_JSON" != "1" ]; then
+        return 0
+    fi
+
+    git clone git@github.com:getgauge/gauge-nightly-repository.git
+    cd gauge-nightly-repository
+    if [[ $PLATFORM_INDEPENDENT_FILE != "" ]]; then
+            windows_x86=$PLATFORM_INDEPENDENT_FILE
+            windows_x86_64=$PLATFORM_INDEPENDENT_FILE
+            linux_x86=$PLATFORM_INDEPENDENT_FILE
+            linux_x86_64=$PLATFORM_INDEPENDENT_FILE
+            darwin_x86=$PLATFORM_INDEPENDENT_FILE
+            darwin_x86_64=$PLATFORM_INDEPENDENT_FILE
+    fi
+    versionInfo="[{\"version\": \"$VERSION\",\"gaugeVersionSupport\": {\"minimum\": \"0.6.1\",\"maximum\": \"\"},\"install\": {\"windows\": [],\"linux\": [],\"darwin\": []},\"DownloadUrls\": {\"x86\":
+{\"windows\": "\"$windows_x86\"", \"linux\": "\"$linux_x86\"",\"darwin\": "\"$darwin_x86\""},\"x64\": {\"windows\": "\"$windows_x86_64\"",\"linux\": "\"$linux_x86_64\"",\"darwin\": "\"$darwin_x86_64\""}}}]"
+    if [ -z "$INSTALL_PLUGIN_JSON" ]; then
+        echo "INSTALL_PLUGIN_JSON is not set"
+        exit 1
+    fi
+
+    json=`cat $INSTALL_PLUGIN_JSON.json | jq ".versions=$versionInfo" $INSTALL_PLUGIN_JSON.json` 
+    echo $json | jq . > $INSTALL_PLUGIN_JSON.json
+    git add $INSTALL_PLUGIN_JSON.json
+    git commit -m "Updating nightly version for $INSTALL_PLUGIN_JSON"
+    git push
+}
+
 renameToLowerCase
 setVersion
 renameNoVersion
@@ -144,6 +180,7 @@ renameWithTimestamp
 setVersion
 printMeta
 bintrayUpload
+updateRepo
 snooze
 bintraySetDownloads
 cleanOldNightlyVersions
