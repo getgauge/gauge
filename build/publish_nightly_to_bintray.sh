@@ -170,7 +170,7 @@ function updateRepo () {
     echo $json | jq . > "$INSTALL_PLUGIN_JSON-install.json"
     git add "$INSTALL_PLUGIN_JSON-install.json"
     git commit -m "Updating nightly version for $INSTALL_PLUGIN_JSON"
-    git push
+    git push origin master
 }
 
 renameToLowerCase
