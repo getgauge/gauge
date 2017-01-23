@@ -172,6 +172,7 @@ function updateRepo () {
     git commit -m "Updating nightly version for $INSTALL_PLUGIN_JSON"
     git push origin master
     cd ../
+    rm -rf gauge-nightly-repository
 }
 
 renameToLowerCase
