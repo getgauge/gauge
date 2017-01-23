@@ -171,6 +171,7 @@ function updateRepo () {
     git add "$INSTALL_PLUGIN_JSON"
     git commit -m "Updating nightly version for $INSTALL_PLUGIN_JSON"
     git push origin master
+    cd ../
 }
 
 renameToLowerCase
