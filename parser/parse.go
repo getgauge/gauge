@@ -49,10 +49,10 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 	return specs, parseResults
 }
 
-func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, bool) {
-	specs, failed := parseSpecsInDirs(conceptsDictionary, args)
+func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary) []*gauge.Specification {
+	specs := parseSpecsInDirs(conceptsDictionary, args)
 	specsToExecute := filter.FilterSpecs(specs)
-	return specsToExecute, failed
+	return specsToExecute
 }
 
 func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult) {
@@ -88,26 +88,34 @@ func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Spec
 
 // parseSpecsInDirs parses all the specs in list of dirs given.
 // It also merges the scenarios belonging to same spec which are passed as different arguments in `specDirs`
-func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
+func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) []*gauge.Specification {
 	specsMap := make(map[string]*gauge.Specification)
-	var specs []*gauge.Specification
-	var specParseResults []*ParseResult
-	passed := true
-	for _, arg := range specDirs {
-		specSource := arg
+	for _, specSource := range specDirs {
+		var specs []*gauge.Specification
+		var specParseResults []*ParseResult
 		if isIndexedSpec(specSource) {
 			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)
 		} else {
 			specs, specParseResults = ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary)
 		}
-		passed = !HandleParseResult(specParseResults...) && passed
-		addSpecsToMap(specs, specsMap)
+		HandleParseResult(specParseResults...)
+		var specsToAdd []*gauge.Specification
+		for _, res := range  specParseResults {
+			if len(res.Errors()) == 0 {
+				for _, s := range specs {
+					if s.FileName == res.FileName {
+						specsToAdd = append(specsToAdd, s)
+					}
+				}
+			}
+		}
+		addSpecsToMap(specsToAdd, specsMap)
 	}
 	var allSpecs []*gauge.Specification
 	for _, spec := range specsMap {
 		allSpecs = append(allSpecs, spec)
 	}
-	return allSpecs, !passed
+	return allSpecs
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {

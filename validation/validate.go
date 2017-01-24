@@ -152,12 +152,12 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		}
 		return NewValidationResult(nil, nil, nil, errs...)
 	}
-	s, specsFailed := parser.ParseSpecs(args, conceptDict)
+	s := parser.ParseSpecs(args, conceptDict)
 	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
 	errMap := getErrMap(vErrs)
 	printValidationFailures(vErrs)
-	if specsFailed || !res.Ok {
+	if !res.Ok {
 		r.Kill()
 		return NewValidationResult(nil, nil, nil, errors.New("Parsing failed."))
 	}
