@@ -133,8 +133,14 @@ func checkPluginUpdates() []UpdateInfo {
 
 func createPluginUpdateDetail(currentVersion string, latestVersionDetails installDescription) []UpdateInfo {
 	var updateInfo []UpdateInfo
-	v, _ := version.ParseVersion(currentVersion)
-	v1, _ := version.ParseVersion(latestVersionDetails.Versions[0].Version)
+	v, err := version.ParseVersion(currentVersion)
+	if err != nil {
+		return updateInfo
+	}
+	v1, err := version.ParseVersion(latestVersionDetails.Versions[0].Version)
+	if err != nil {
+		return updateInfo
+	}
 	if v.IsLesserThan(v1) {
 		versionDesc, err := latestVersionDetails.getLatestCompatibleVersionTo(version.CurrentGaugeVersion)
 		if err != nil {
