@@ -518,6 +518,14 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) *Pars
 	if dataTable.IsInitialized() && dataTable.GetRowCount() == 0 {
 		return &ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
+	if len(specification.Scenarios) == 0 {
+		return &ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec should have atleast one scenario"}
+	}
+	for _, sce := range specification.Scenarios {
+		if len(sce.Steps) == 0 {
+			return &ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, Message: "Scenario should have atleast one step"}
+		}
+	}
 	return nil
 }
 
