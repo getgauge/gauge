@@ -106,7 +106,10 @@ func Validate(args []string) {
 	if res.SpecCollection.Size() < 1 {
 		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
 		res.Runner.Kill()
-		os.Exit(0)
+		if res.ParseOk {
+			os.Exit(0)
+		}
+		os.Exit(1)
 	}
 	res.Runner.Kill()
 	if len(res.ErrMap.StepErrs) > 0 {
@@ -132,17 +135,18 @@ type ValidationResult struct {
 	ErrMap         *ValidationErrMaps
 	Runner         runner.Runner
 	Errs           []error
+	ParseOk bool
 }
 
-func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, e ...error) *ValidationResult {
-	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, Errs: e}
+func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
+	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, ParseOk: parseOk, Errs: e}
 }
 
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Errorf(err.Error())
-		return NewValidationResult(nil, nil, nil, err)
+		return NewValidationResult(nil, nil, nil, false, err)
 	}
 	conceptDict, res := parser.ParseConcepts()
 	if len(res.CriticalErrors) > 0 {
@@ -150,18 +154,21 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		for _, err := range res.CriticalErrors {
 			errs = append(errs, err)
 		}
-		return NewValidationResult(nil, nil, nil, errs...)
+		return NewValidationResult(nil, nil, nil, false, errs...)
 	}
-	s := parser.ParseSpecs(args, conceptDict)
+	s, specsFailed := parser.ParseSpecs(args, conceptDict)
 	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
 	errMap := getErrMap(vErrs)
 	printValidationFailures(vErrs)
 	if !res.Ok {
 		r.Kill()
-		return NewValidationResult(nil, nil, nil, errors.New("Parsing failed."))
+		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))
 	}
-	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r)
+	if specsFailed {
+		return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, false)
+	}
+	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, true)
 }
 
 func getErrMap(validationErrors validationErrors) *ValidationErrMaps {

@@ -23,8 +23,6 @@ import (
 
 	"fmt"
 
-	"os"
-
 	"strings"
 
 	"github.com/getgauge/gauge/config"
@@ -89,19 +87,22 @@ func ExecuteSpecs(specDirs []string) int {
 
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
-		os.Exit(1)
+		return 1
 	}
 	if res.SpecCollection.Size() < 1 {
 		logger.Info("No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
-		os.Exit(0)
+		if res.ParseOk {
+			return 0
+		}
+		return 1
 	}
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
 	rerun.ListenFailedScenarios()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
-	return printExecutionStatus(e.run(), res.ErrMap)
+	return printExecutionStatus(e.run(), res.ErrMap, res.ParseOk)
 }
 
 func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, n int) {
@@ -115,7 +116,7 @@ func newExecution(executionInfo *executionInfo) execution {
 	return newSimpleExecution(executionInfo)
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps) int {
+func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps, isParsingOk bool) int {
 	nSkippedScenarios := len(errMap.ScenarioErrs)
 	nSkippedSpecs := suiteResult.SpecsSkippedCount
 	var nExecutedSpecs int
@@ -147,7 +148,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
-	if suiteResult.IsFailed {
+	if suiteResult.IsFailed || !isParsingOk{
 		return 1
 	}
 	return 0
