@@ -47,7 +47,7 @@ type SpecInfoGatherer struct {
 
 type SpecDetail struct {
 	Spec *gauge.Specification
-	Errs []*parser.ParseError
+	Errs []parser.ParseError
 }
 
 func (d *SpecDetail) HasSpec() bool {
@@ -142,7 +142,7 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 	if s.conceptDictionary == nil {
 		s.conceptDictionary = gauge.NewConceptDictionary()
 	}
-	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary)
+	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary, gauge.NewBuildErrors())
 	specs := make(map[string]*SpecDetail)
 
 	for _, spec := range parsedSpecs {

@@ -34,7 +34,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/validation"
 )
 
 var Strategy string
@@ -51,7 +50,7 @@ type parallelExecution struct {
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
-	errMaps                  *validation.ValidationErrMaps
+	errMaps                  *gauge.BuildErrors
 	startTime                time.Time
 }
 

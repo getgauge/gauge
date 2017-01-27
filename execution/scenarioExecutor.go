@@ -35,11 +35,11 @@ type scenarioExecutor struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	stepExecutor         *stepExecutor
-	errMap               *validation.ValidationErrMaps
+	errMap               *gauge.BuildErrors
 	stream               int
 }
 
-func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *validation.ValidationErrMaps, stream int) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, stream int) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,
@@ -104,7 +104,7 @@ func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioRes
 	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 }
 
-func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *validation.ValidationErrMaps) {
+func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
 	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
 	result.ProtoScenario.Skipped = true
 	var errors []string

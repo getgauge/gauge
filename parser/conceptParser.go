@@ -45,7 +45,7 @@ func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *Parse
 func (parser *ConceptParser) ParseFile(file string) ([]*gauge.Step, *ParseResult) {
 	fileText, fileReadErr := common.ReadFileContents(file)
 	if fileReadErr != nil {
-		return nil, &ParseResult{ParseErrors: []*ParseError{{Message: fmt.Sprintf("failed to read concept file %s", file)}}}
+		return nil, &ParseResult{ParseErrors: []ParseError{{Message: fmt.Sprintf("failed to read concept file %s", file)}}}
 	}
 	return parser.Parse(fileText, file)
 }
@@ -58,7 +58,7 @@ func (parser *ConceptParser) resetState() {
 func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([]*gauge.Step, *ParseResult) {
 	parser.currentState = initial
 	var concepts []*gauge.Step
-	parseRes := &ParseResult{ParseErrors: make([]*ParseError, 0)}
+	parseRes := &ParseResult{ParseErrors: make([]ParseError, 0)}
 	var preComments []*gauge.Comment
 	addPreComments := false
 	for _, token := range tokens {
@@ -80,7 +80,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			addStates(&parser.currentState, conceptScope)
 		} else if parser.isStep(token) {
 			if !isInState(parser.currentState, conceptScope) {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText})
+				parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Step is not defined inside a concept heading", LineText: token.LineText})
 				continue
 			}
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
@@ -90,13 +90,13 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText})
+				parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Table doesn't belong to any step", LineText: token.LineText})
 				continue
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
 		} else if parser.isScenarioHeading(token) {
-			parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText})
+			parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText})
 			continue
 		} else if parser.isTableDataRow(token) {
 			if areUnderlined(token.Args) && !isInState(parser.currentState, tableSeparatorScope) {
@@ -117,7 +117,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 		}
 	}
 	if parser.currentConcept != nil && len(parser.currentConcept.ConceptSteps) < 1 {
-		parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
+		parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
 		return nil, parseRes
 	}
 
@@ -157,7 +157,7 @@ func (parser *ConceptParser) processConceptHeading(token *Token, fileName string
 		return nil, parseRes
 	}
 	if !parser.hasOnlyDynamicParams(concept) {
-		parseRes.ParseErrors = []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters", LineText: token.LineText}}
+		parseRes.ParseErrors = []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: "Concept heading can have only Dynamic Parameters", LineText: token.LineText}}
 		return nil, parseRes
 	}
 
@@ -167,7 +167,7 @@ func (parser *ConceptParser) processConceptHeading(token *Token, fileName string
 	return concept, parseRes
 }
 
-func (parser *ConceptParser) processConceptStep(token *Token, fileName string) []*ParseError {
+func (parser *ConceptParser) processConceptStep(token *Token, fileName string) []ParseError {
 	processStep(new(SpecParser), token)
 	conceptStep, parseRes := CreateStepUsingLookup(token, &parser.currentConcept.Lookup, fileName)
 	if parseRes != nil && len(parseRes.ParseErrors) > 0 {
@@ -237,7 +237,7 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	return conceptsDictionary, res
 }
 
-func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary) []*ParseError {
+func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
 	concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 	if parseRes != nil && parseRes.Warnings != nil {
 		for _, warning := range parseRes.Warnings {
@@ -246,7 +246,7 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 	}
 	for _, conceptStep := range concepts {
 		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-			parseRes.ParseErrors = append(parseRes.ParseErrors, &ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
+			parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
 		}
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
 		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
@@ -259,13 +259,13 @@ func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	for _, concept := range conceptDictionary.ConceptsMap {
 		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
 		if err != nil {
-			return &ParseResult{CriticalErrors: []*ParseError{err}, FileName: concept.FileName}
+			return &ParseResult{CriticalErrors: []ParseError{err.(ParseError)}, FileName: concept.FileName}
 		}
 	}
-	return &ParseResult{ParseErrors: []*ParseError{}}
+	return &ParseResult{ParseErrors: []ParseError{}}
 }
 
-func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) *ParseError {
+func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) error {
 	if traversedSteps == nil {
 		traversedSteps = make(map[string]string, 0)
 	}
@@ -273,7 +273,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
 		if fileName, exists := traversedSteps[step.Value]; exists {
-			return &ParseError{
+			return ParseError{
 				FileName: fileName,
 				LineText: step.LineText,
 				LineNo:   concept.LineNo,

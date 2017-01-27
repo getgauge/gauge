@@ -42,12 +42,22 @@ type specExecutor struct {
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	currentTableRow      int
-	errMap               *validation.ValidationErrMaps
+	errMap               *gauge.BuildErrors
 	stream               int
 }
 
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, stream int) *specExecutor {
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, stream int) *specExecutor {
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, errMap: e, stream: stream}
+}
+
+func hasParseError(errs []error) bool {
+	for _, e := range errs {
+		switch e.(type) {
+		case parser.ParseError:
+			return true
+		}
+	}
+	return false
 }
 
 func (e *specExecutor) execute() *result.SpecResult {
@@ -56,6 +66,12 @@ func (e *specExecutor) execute() *result.SpecResult {
 		IsFailed: false, Tags: getTagValue(e.specification.Tags)}
 	e.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 	e.specResult = gauge.NewSpecResult(e.specification)
+	if errs, ok := e.errMap.SpecErrs[e.specification]; ok {
+		if hasParseError(errs) {
+			e.failSpec()
+			return e.specResult
+		}
+	}
 
 	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
 	e.specResult.AddSpecItems(resolvedSpecItems)
@@ -214,6 +230,10 @@ func (e *specExecutor) accumulateSkippedScenarioResults() []result.Result {
 		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
 	}
 	return scenarioResults
+}
+
+func (e *specExecutor) failSpec() {
+	e.specResult.SetFailure()
 }
 
 func (e *specExecutor) skipSpec() {

@@ -38,11 +38,11 @@ func (s *MySuite) TestCreateSpecsResponseMessageFor(c *C) {
 	m := h.createSpecsResponseMessageFor([]*infoGatherer.SpecDetail{
 		{
 			Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Spec heading 1"}},
-			Errs: []*parser.ParseError{{Message: "Scenario1 not found"}, {Message: "Scenario2 not found"}},
+			Errs: []parser.ParseError{{Message: "Scenario1 not found"}, {Message: "Scenario2 not found"}},
 		},
 		{
 			Spec: &gauge.Specification{},
-			Errs: []*parser.ParseError{{Message: "Scenarios not found"}},
+			Errs: []parser.ParseError{{Message: "Scenarios not found"}},
 		},
 		{
 			Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Spec heading 2"}},

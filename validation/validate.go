@@ -38,12 +38,6 @@ import (
 
 var TableRows = ""
 
-type ValidationErrMaps struct {
-	SpecErrs     map[*gauge.Specification][]error
-	ScenarioErrs map[*gauge.Scenario][]error
-	StepErrs     map[*gauge.Step]error
-}
-
 type validator struct {
 	manifest           *manifest.Manifest
 	specsToExecute     []*gauge.Specification
@@ -71,14 +65,6 @@ type SpecValidationError struct {
 	fileName string
 }
 
-func NewValidationErrMaps() *ValidationErrMaps {
-	return &ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]error),
-		ScenarioErrs: make(map[*gauge.Scenario][]error),
-		StepErrs:     make(map[*gauge.Step]error),
-	}
-}
-
 func (s StepValidationError) Error() string {
 	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
 }
@@ -87,12 +73,12 @@ func (s SpecValidationError) Error() string {
 	return fmt.Sprintf("%s %s", s.fileName, s.message)
 }
 
-func NewSpecValidationError(m string, f string) *SpecValidationError {
-	return &SpecValidationError{message: m, fileName: f}
+func NewSpecValidationError(m string, f string) SpecValidationError {
+	return SpecValidationError{message: m, fileName: f}
 }
 
-func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
-	return &StepValidationError{step: s, message: m, fileName: f, errorType: e}
+func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) StepValidationError {
+	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
 }
 
 func Validate(args []string) {
@@ -132,13 +118,13 @@ func startAPI(debug bool) runner.Runner {
 
 type ValidationResult struct {
 	SpecCollection *gauge.SpecCollection
-	ErrMap         *ValidationErrMaps
+	ErrMap         *gauge.BuildErrors
 	Runner         runner.Runner
 	Errs           []error
-	ParseOk bool
+	ParseOk        bool
 }
 
-func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
+func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
 	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, ParseOk: parseOk, Errs: e}
 }
 
@@ -156,10 +142,11 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		}
 		return NewValidationResult(nil, nil, nil, false, errs...)
 	}
-	s, specsFailed := parser.ParseSpecs(args, conceptDict)
+	errMap := gauge.NewBuildErrors()
+	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
 	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
-	errMap := getErrMap(vErrs)
+	errMap = getErrMap(errMap, vErrs)
 	printValidationFailures(vErrs)
 	if !res.Ok {
 		r.Kill()
@@ -171,15 +158,14 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, true)
 }
 
-func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
-	errMap := NewValidationErrMaps()
+func getErrMap(errMap *gauge.BuildErrors, validationErrors validationErrors) *gauge.BuildErrors {
 	for spec, valErrors := range validationErrors {
 		for _, err := range valErrors {
 			switch err.(type) {
-			case *StepValidationError:
-				errMap.StepErrs[err.(*StepValidationError).step] = err
-			case *SpecValidationError:
-				errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], err.(*SpecValidationError))
+			case StepValidationError:
+				errMap.StepErrs[err.(StepValidationError).step] = err.(StepValidationError)
+			case SpecValidationError:
+				errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], err.(SpecValidationError))
 			}
 		}
 		skippedScnInSpec := 0
@@ -197,7 +183,7 @@ func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
 	return errMap
 }
 
-func fillScenarioErrors(scenario *gauge.Scenario, errMap *ValidationErrMaps, steps []*gauge.Step) {
+func fillScenarioErrors(scenario *gauge.Scenario, errMap *gauge.BuildErrors, steps []*gauge.Step) {
 	for _, step := range steps {
 		if step.IsConcept {
 			fillScenarioErrors(scenario, errMap, step.ConceptSteps)
@@ -208,7 +194,7 @@ func fillScenarioErrors(scenario *gauge.Scenario, errMap *ValidationErrMaps, ste
 	}
 }
 
-func fillSpecErrors(spec *gauge.Specification, errMap *ValidationErrMaps, steps []*gauge.Step) {
+func fillSpecErrors(spec *gauge.Specification, errMap *gauge.BuildErrors, steps []*gauge.Step) {
 	for _, context := range steps {
 		if context.IsConcept {
 			fillSpecErrors(spec, errMap, context.ConceptSteps)
@@ -276,7 +262,7 @@ func (v *specValidator) Step(s *gauge.Step) {
 		return
 	}
 	if val != nil {
-		valErr := val.(*StepValidationError)
+		valErr := val.(StepValidationError)
 		if s.Parent == nil {
 			v.validationErrors = append(v.validationErrors,
 				NewStepValidationError(s, valErr.message, v.specification.FileName, valErr.errorType))

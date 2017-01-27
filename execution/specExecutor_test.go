@@ -198,7 +198,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	// For first row
 	specExecutor.currentTableRow = 0
-	specExecutor.errMap = getValidationErrorMap()
+	specExecutor.errMap = gauge.NewBuildErrors()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
@@ -341,7 +341,7 @@ func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 
-	errMap := &validation.ValidationErrMaps{
+	errMap := &gauge.BuildErrors{
 		SpecErrs:     make(map[*gauge.Specification][]error),
 		ScenarioErrs: make(map[*gauge.Scenario][]error),
 		StepErrs:     make(map[*gauge.Step]error),
@@ -377,7 +377,7 @@ func anySpec() *gauge.Specification {
 }
 
 func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
-	errMap := &validation.ValidationErrMaps{
+	errMap := &gauge.BuildErrors{
 		SpecErrs:     make(map[*gauge.Specification][]error),
 		ScenarioErrs: make(map[*gauge.Scenario][]error),
 		StepErrs:     make(map[*gauge.Step]error),
@@ -404,7 +404,7 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 
-	errMap := &validation.ValidationErrMaps{
+	errMap := &gauge.BuildErrors{
 		SpecErrs:     make(map[*gauge.Specification][]error),
 		ScenarioErrs: make(map[*gauge.Scenario][]error),
 		StepErrs:     make(map[*gauge.Step]error),

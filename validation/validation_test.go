@@ -54,7 +54,7 @@ Scenario 2
 		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", &err),
 	}}
 
-	errMap := getErrMap(errs)
+	errMap := getErrMap(gauge.NewBuildErrors(), errs)
 
 	c.Assert(len(errMap.SpecErrs), Equals, 1)
 	c.Assert(len(errMap.ScenarioErrs), Equals, 2)
@@ -80,7 +80,7 @@ Scenario 2
 		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err),
 	}}
 
-	errMap := getErrMap(errs)
+	errMap := getErrMap(gauge.NewBuildErrors(), errs)
 
 	c.Assert(len(errMap.SpecErrs), Equals, 0)
 	c.Assert(len(errMap.ScenarioErrs), Equals, 1)
@@ -98,7 +98,7 @@ func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
 
 	errs := validationErrors{spec: []error{}}
 
-	errMap := getErrMap(errs)
+	errMap := getErrMap(gauge.NewBuildErrors(), errs)
 
 	c.Assert(len(errMap.SpecErrs), Equals, 0)
 	c.Assert(len(errMap.ScenarioErrs), Equals, 0)
@@ -123,7 +123,7 @@ Scenario 2
 		NewSpecValidationError("Table row out of range", spec.FileName),
 	}}
 
-	errMap := getErrMap(errs)
+	errMap := getErrMap(gauge.NewBuildErrors(), errs)
 
 	c.Assert(len(errMap.SpecErrs), Equals, 1)
 	c.Assert(len(errMap.ScenarioErrs), Equals, 0)

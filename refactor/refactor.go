@@ -82,7 +82,7 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 
 	for _, dir := range specDirs {
 		specFiles := util.GetSpecFiles(filepath.Join(config.ProjectRoot, dir))
-		specSlice, specParseResultsSlice := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
+		specSlice, specParseResultsSlice := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{}, gauge.NewBuildErrors())
 		specs = append(specs, specSlice...)
 		specParseResults = append(specParseResults, specParseResultsSlice...)
 	}
@@ -198,7 +198,7 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, []*parser.ParseError) {
+func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartChannels) (*rephraseRefactorer, []parser.ParseError) {
 	specParser := new(parser.SpecParser)
 	stepTokens, errs := specParser.GenerateTokens("* "+oldStepText+"\n"+"*"+newStepText, "")
 	if len(errs) > 0 {
@@ -213,7 +213,7 @@ func getRefactorAgent(oldStepText, newStepText string, startChan *runner.StartCh
 		}
 		steps = append(steps, step)
 	}
-	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, []*parser.ParseError{}
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], startChan: startChan}, []parser.ParseError{}
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string) ([]string, error) {

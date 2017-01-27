@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/validation"
 
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
@@ -43,7 +42,7 @@ type simpleExecution struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	errMaps              *validation.ValidationErrMaps
+	errMaps              *gauge.BuildErrors
 	startTime            time.Time
 	stream               int
 }

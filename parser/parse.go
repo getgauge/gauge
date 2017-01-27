@@ -30,7 +30,8 @@ import (
 	"github.com/getgauge/gauge/util"
 )
 
-func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
+// TODO: Use single channel instead of one for spec and another for result, so that mapping is consistent
+func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
 	parseResultsChan := make(chan *ParseResult, len(specFiles))
 	specsChan := make(chan *gauge.Specification, len(specFiles))
 	var parseResults []*ParseResult
@@ -40,17 +41,28 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
 	}
 	for _ = range specFiles {
-		parseResults = append(parseResults, <-parseResultsChan)
+		parseRes := <-parseResultsChan
 		spec := <-specsChan
 		if spec != nil {
 			specs = append(specs, spec)
+			var parseErrs []error
+			for _, e := range parseRes.CriticalErrors {
+				parseErrs = append(parseErrs, e)
+			}
+			for _, e := range parseRes.ParseErrors {
+				parseErrs = append(parseErrs, e)
+			}
+			if len(parseErrs) != 0 {
+				buildErrors.SpecErrs[spec] = parseErrs
+			}
 		}
+		parseResults = append(parseResults, parseRes)
 	}
 	return specs, parseResults
 }
 
-func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, bool) {
-	specs, failed := parseSpecsInDirs(conceptsDictionary, args)
+func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
+	specs, failed := parseSpecsInDirs(conceptsDictionary, args, buildErrors)
 	specsToExecute := filter.FilterSpecs(specs)
 	return specsToExecute, failed
 }
@@ -65,7 +77,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
 		specChannel <- nil
-		parseResultChan <- &ParseResult{ParseErrors: []*ParseError{&ParseError{FileName: specFile, Message: err.Error()}}, Ok: false}
+		parseResultChan <- &ParseResult{ParseErrors: []ParseError{ParseError{FileName: specFile, Message: err.Error()}}, Ok: false}
 		return
 	}
 	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
@@ -88,29 +100,19 @@ func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Spec
 
 // parseSpecsInDirs parses all the specs in list of dirs given.
 // It also merges the scenarios belonging to same spec which are passed as different arguments in `specDirs`
-func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string) ([]*gauge.Specification, bool) {
+func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
 	specsMap := make(map[string]*gauge.Specification)
 	passed := true
 	for _, specSource := range specDirs {
 		var specs []*gauge.Specification
 		var specParseResults []*ParseResult
 		if isIndexedSpec(specSource) {
-			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary)
+			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary, buildErrors)
 		} else {
-			specs, specParseResults = ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary)
+			specs, specParseResults = ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary, buildErrors)
 		}
 		passed = !HandleParseResult(specParseResults...) && passed
-		var specsToAdd []*gauge.Specification
-		for _, res := range  specParseResults {
-			if len(res.Errors()) == 0 {
-				for _, s := range specs {
-					if s.FileName == res.FileName {
-						specsToAdd = append(specsToAdd, s)
-					}
-				}
-			}
-		}
-		addSpecsToMap(specsToAdd, specsMap)
+		addSpecsToMap(specs, specsMap)
 	}
 	var allSpecs []*gauge.Specification
 	for _, spec := range specsMap {
@@ -119,9 +121,9 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 	return allSpecs, !passed
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Specification, []*ParseResult) {
+func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
 	specName, indexToFilter := getIndexedSpecName(specSource)
-	parsedSpecs, parseResult := ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary)
+	parsedSpecs, parseResult := ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary, buildErrors)
 	return filter.FilterSpecsItems(parsedSpecs, filter.NewScenarioFilterBasedOnSpan(indexToFilter)), parseResult
 }
 

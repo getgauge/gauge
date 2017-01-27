@@ -51,13 +51,13 @@ type executionInfo struct {
 	specs           *gauge.SpecCollection
 	runner          runner.Runner
 	pluginHandler   *plugin.Handler
-	errMaps         *validation.ValidationErrMaps
+	errMaps         *gauge.BuildErrors
 	inParallel      bool
 	numberOfStreams int
 	stream          int
 }
 
-func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, stream int) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -102,10 +102,10 @@ func ExecuteSpecs(specDirs []string) int {
 	rerun.ListenFailedScenarios()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
-	return printExecutionStatus(e.run(), res.ErrMap, res.ParseOk)
+	return printExecutionStatus(e.run(), res.ParseOk)
 }
 
-func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *validation.ValidationErrMaps, p bool, n int) {
+func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, p bool, n int) {
 	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
 }
 
@@ -116,8 +116,7 @@ func newExecution(executionInfo *executionInfo) execution {
 	return newSimpleExecution(executionInfo)
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.ValidationErrMaps, isParsingOk bool) int {
-	nSkippedScenarios := len(errMap.ScenarioErrs)
+func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int {
 	nSkippedSpecs := suiteResult.SpecsSkippedCount
 	var nExecutedSpecs int
 	if len(suiteResult.SpecResults) != 0 {
@@ -129,9 +128,11 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	nExecutedScenarios := 0
 	nFailedScenarios := 0
 	nPassedScenarios := 0
+	nSkippedScenarios := 0
 	for _, specResult := range suiteResult.SpecResults {
 		nExecutedScenarios += specResult.ScenarioCount
 		nFailedScenarios += specResult.ScenarioFailedCount
+		nSkippedScenarios += specResult.ScenarioSkippedCount
 	}
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
@@ -148,7 +149,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, errMap *validation.Va
 	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
-	if suiteResult.IsFailed || !isParsingOk{
+	if suiteResult.IsFailed || !isParsingOk {
 		return 1
 	}
 	return 0

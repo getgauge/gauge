@@ -628,7 +628,7 @@ func (s *MySuite) TestConceptParserShouldNotAddTableAsArgIfCommentsArePresentBet
 	c.Assert(steps[0].ConceptSteps[0].GetLineText(), Equals, "a step")
 }
 
-func containsAny(errs []*ParseError, msg string) bool {
+func containsAny(errs []ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {
 			return true
