@@ -417,3 +417,47 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 	c.Assert(specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
 	c.Assert(specResult.Skipped, Equals, true)
 }
+
+func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
+	e := parser.ParseError{Message: "Message", LineNo: 5, FileName: "filename"}
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:       gauge_messages.Error_PARSE_ERROR,
+		Message:    "filename:5 Message => ''",
+		LineNumber: 5,
+		Filename:   "filename",
+	}
+
+	c.Assert(*(errs[0]), DeepEquals, expected)
+}
+
+func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
+	e := validation.NewSpecValidationError("Message", "filename")
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:    gauge_messages.Error_VALIDATION_ERROR,
+		Message: "filename Message",
+	}
+
+	c.Assert(*(errs[0]), DeepEquals, expected)
+}
+
+func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
+	e := validation.NewStepValidationError(&gauge.Step{LineText: "step", LineNo: 3}, "Step Message", "filename", nil)
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:    gauge_messages.Error_VALIDATION_ERROR,
+		Message: "filename:3 Step Message => 'step'",
+	}
+
+	c.Assert(*(errs[0]), DeepEquals, expected)
+}

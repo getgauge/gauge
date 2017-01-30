@@ -249,12 +249,31 @@ func (e *specExecutor) skipSpec() {
 	} else {
 		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
 	}
-	var skipErrors []string
-	for _, err := range e.errMap.SpecErrs[e.specification] {
-		skipErrors = append(skipErrors, err.Error())
-	}
-	e.specResult.SkipErrors = skipErrors
+	e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
 	e.specResult.Skipped = true
+}
+
+func (e *specExecutor) convertErrors(specErrors []error) []*gauge_messages.Error {
+	var errors []*gauge_messages.Error
+	for _, e := range specErrors {
+		switch e.(type) {
+		case parser.ParseError:
+			err := e.(parser.ParseError)
+			errors = append(errors, &gauge_messages.Error{
+				Message:    err.Error(),
+				LineNumber: int32(err.LineNo),
+				Filename:   err.FileName,
+				Type:       gauge_messages.Error_PARSE_ERROR,
+			})
+		case validation.StepValidationError, validation.SpecValidationError:
+			errors = append(errors, &gauge_messages.Error{
+				Message: e.Error(),
+				Type:    gauge_messages.Error_VALIDATION_ERROR,
+			})
+		}
+		errors = append(errors, &gauge_messages.Error{Message: e.Error()})
+	}
+	return errors
 }
 
 func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *gauge.Step) {

@@ -17,7 +17,9 @@
 
 package result
 
-import "github.com/getgauge/gauge/gauge_messages"
+import (
+	"github.com/getgauge/gauge/gauge_messages"
+)
 
 type SpecResult struct {
 	ProtoSpec            *gauge_messages.ProtoSpec
@@ -28,7 +30,7 @@ type SpecResult struct {
 	ExecutionTime        int64
 	Skipped              bool
 	ScenarioSkippedCount int
-	SkipErrors           []string //TODO: Add this corresponding field in ProtoSpecResult
+	Errors               []*gauge_messages.Error
 }
 
 func (specResult *SpecResult) SetFailure() {

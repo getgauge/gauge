@@ -212,6 +212,7 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 			ExecutionTime:        specResult.ExecutionTime,
 			Skipped:              specResult.Skipped,
 			ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
+			Errors:               specResult.Errors,
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}
