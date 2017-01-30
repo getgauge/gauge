@@ -187,7 +187,7 @@ func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*
 			detail.Spec = gauge.ConvertToProtoSpec(d.Spec)
 		}
 		for _, e := range d.Errs {
-			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Filename: e.FileName, Message: e.Message, LineNumber: int32(e.LineNo)})
+			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Type: gauge_messages.Error_PARSE_ERROR, Filename: e.FileName, Message: e.Message, LineNumber: int32(e.LineNo)})
 		}
 		specDetails = append(specDetails, detail)
 	}
