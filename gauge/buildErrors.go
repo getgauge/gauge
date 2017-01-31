@@ -23,6 +23,10 @@ type BuildErrors struct {
 	StepErrs     map[*Step]error
 }
 
+func (e *BuildErrors) HasErrors() bool {
+	return (len(e.SpecErrs) + len(e.ScenarioErrs) + len(e.StepErrs)) > 0
+}
+
 func NewBuildErrors() *BuildErrors {
 	return &BuildErrors{
 		SpecErrs:     make(map[*Specification][]error),

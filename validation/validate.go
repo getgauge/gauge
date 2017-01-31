@@ -98,7 +98,7 @@ func Validate(args []string) {
 		os.Exit(1)
 	}
 	res.Runner.Kill()
-	if len(res.ErrMap.StepErrs) > 0 {
+	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
 	logger.Info("No error found.")
