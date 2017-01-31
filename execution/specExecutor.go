@@ -233,6 +233,7 @@ func (e *specExecutor) accumulateSkippedScenarioResults() []result.Result {
 }
 
 func (e *specExecutor) failSpec() {
+	e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
 	e.specResult.SetFailure()
 }
 
@@ -271,7 +272,6 @@ func (e *specExecutor) convertErrors(specErrors []error) []*gauge_messages.Error
 				Type:    gauge_messages.Error_VALIDATION_ERROR,
 			})
 		}
-		errors = append(errors, &gauge_messages.Error{Message: e.Error()})
 	}
 	return errors
 }

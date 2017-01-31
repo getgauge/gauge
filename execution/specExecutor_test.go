@@ -431,6 +431,7 @@ func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
 		Filename:   "filename",
 	}
 
+	c.Assert(len(errs), DeepEquals, 1)
 	c.Assert(*(errs[0]), DeepEquals, expected)
 }
 
@@ -445,6 +446,7 @@ func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
 		Message: "filename Message",
 	}
 
+	c.Assert(len(errs), DeepEquals, 1)
 	c.Assert(*(errs[0]), DeepEquals, expected)
 }
 
@@ -459,5 +461,6 @@ func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
 		Message: "filename:3 Step Message => 'step'",
 	}
 
+	c.Assert(len(errs), DeepEquals, 1)
 	c.Assert(*(errs[0]), DeepEquals, expected)
 }
