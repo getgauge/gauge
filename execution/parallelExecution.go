@@ -39,12 +39,14 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 )
 
 var Strategy string
 
 const Eager string = "eager"
 const Lazy string = "lazy"
+const enableMultithreadingEnv = "enable_multithreading"
 
 type parallelExecution struct {
 	wg                       sync.WaitGroup
@@ -105,7 +107,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	logger.Info("Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
 	resChan := make(chan *result.SuiteResult)
-	if e.runner.IsMultithreaded() {
+	if e.isMultithreaded() {
 		go e.executeMultithreaded(nStreams, resChan)
 	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
@@ -122,6 +124,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	e.finish()
 	return e.suiteResult
 }
+
 func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
@@ -255,4 +258,16 @@ func isLazy() bool {
 func isValidStrategy(strategy string) bool {
 	strategy = strings.ToLower(strategy)
 	return strategy == Lazy || strategy == Eager
+}
+
+func (e *parallelExecution) isMultithreaded() bool {
+	value := util.ConvertToBool(os.Getenv(enableMultithreadingEnv), enableMultithreadingEnv, false)
+	if !value {
+		return false
+	}
+	if !e.runner.IsMultithreaded() {
+		logger.Warning("Runner doesn't support mutithreading, using multiprocess parallel execution.")
+		return false
+	}
+	return true
 }

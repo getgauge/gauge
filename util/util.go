@@ -24,6 +24,9 @@ import (
 	"runtime"
 	"syscall"
 
+	"strconv"
+	"strings"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
 )
@@ -103,4 +106,13 @@ func SetWorkingDir(workingDir string) {
 	if err != nil {
 		logger.Fatalf("Unable to set working directory : %s", err.Error())
 	}
+}
+
+func ConvertToBool(value, property string, defaultValue bool) bool {
+	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
+	if err != nil {
+		logger.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		return defaultValue
+	}
+	return boolValue
 }
