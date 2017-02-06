@@ -34,14 +34,9 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
-	"github.com/golang/protobuf/proto"
 )
 
-type ValidationErrMaps struct {
-	SpecErrs     map[*gauge.Specification][]*StepValidationError
-	ScenarioErrs map[*gauge.Scenario][]*StepValidationError
-	StepErrs     map[*gauge.Step]*StepValidationError
-}
+var TableRows = ""
 
 type validator struct {
 	manifest           *manifest.Manifest
@@ -51,11 +46,11 @@ type validator struct {
 }
 
 type specValidator struct {
-	specification        *gauge.Specification
-	runner               runner.Runner
-	conceptsDictionary   *gauge.ConceptDictionary
-	stepValidationErrors []*StepValidationError
-	stepValidationCache  map[string]*StepValidationError
+	specification       *gauge.Specification
+	runner              runner.Runner
+	conceptsDictionary  *gauge.ConceptDictionary
+	validationErrors    []error
+	stepValidationCache map[string]error
 }
 
 type StepValidationError struct {
@@ -65,16 +60,25 @@ type StepValidationError struct {
 	errorType *gauge_messages.StepValidateResponse_ErrorType
 }
 
-func NewValidationErrMaps() *ValidationErrMaps {
-	return &ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]*StepValidationError),
-		ScenarioErrs: make(map[*gauge.Scenario][]*StepValidationError),
-		StepErrs:     make(map[*gauge.Step]*StepValidationError),
-	}
+type SpecValidationError struct {
+	message  string
+	fileName string
 }
 
-func (s *StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d: %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+func (s StepValidationError) Error() string {
+	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+}
+
+func (s SpecValidationError) Error() string {
+	return fmt.Sprintf("%s %s", s.fileName, s.message)
+}
+
+func NewSpecValidationError(m string, f string) SpecValidationError {
+	return SpecValidationError{message: m, fileName: f}
+}
+
+func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) StepValidationError {
+	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
 }
 
 func Validate(args []string) {
@@ -88,10 +92,13 @@ func Validate(args []string) {
 	if res.SpecCollection.Size() < 1 {
 		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
 		res.Runner.Kill()
-		os.Exit(0)
+		if res.ParseOk {
+			os.Exit(0)
+		}
+		os.Exit(1)
 	}
 	res.Runner.Kill()
-	if len(res.ErrMap.StepErrs) > 0 {
+	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
 	logger.Info("No error found.")
@@ -111,20 +118,21 @@ func startAPI(debug bool) runner.Runner {
 
 type ValidationResult struct {
 	SpecCollection *gauge.SpecCollection
-	ErrMap         *ValidationErrMaps
+	ErrMap         *gauge.BuildErrors
 	Runner         runner.Runner
 	Errs           []error
+	ParseOk        bool
 }
 
-func NewValidationResult(s *gauge.SpecCollection, errMap *ValidationErrMaps, r runner.Runner, e ...error) *ValidationResult {
-	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, Errs: e}
+func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
+	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, ParseOk: parseOk, Errs: e}
 }
 
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Errorf(err.Error())
-		return NewValidationResult(nil, nil, nil, err)
+		return NewValidationResult(nil, nil, nil, false, err)
 	}
 	conceptDict, res := parser.ParseConcepts()
 	if len(res.CriticalErrors) > 0 {
@@ -132,28 +140,33 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		for _, err := range res.CriticalErrors {
 			errs = append(errs, err)
 		}
-		return NewValidationResult(nil, nil, nil, errs...)
+		return NewValidationResult(nil, nil, nil, false, errs...)
 	}
-	s, specsFailed := parser.ParseSpecs(args, conceptDict)
+	errMap := gauge.NewBuildErrors()
+	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
 	r := startAPI(debug)
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
-	errMap := NewValidationErrMaps()
-	if len(vErrs) > 0 {
-		printValidationFailures(vErrs)
-		errMap = getErrMap(vErrs)
-	}
-	if specsFailed || !res.Ok {
+	errMap = getErrMap(errMap, vErrs)
+	printValidationFailures(vErrs)
+	if !res.Ok {
 		r.Kill()
-		return NewValidationResult(nil, nil, nil, errors.New("Parsing failed."))
+		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))
 	}
-	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r)
+	if specsFailed {
+		return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, false)
+	}
+	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, true)
 }
 
-func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
-	errMap := NewValidationErrMaps()
-	for spec, errors := range validationErrors {
-		for _, err := range errors {
-			errMap.StepErrs[err.step] = err
+func getErrMap(errMap *gauge.BuildErrors, validationErrors validationErrors) *gauge.BuildErrors {
+	for spec, valErrors := range validationErrors {
+		for _, err := range valErrors {
+			switch err.(type) {
+			case StepValidationError:
+				errMap.StepErrs[err.(StepValidationError).step] = err.(StepValidationError)
+			case SpecValidationError:
+				errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], err.(SpecValidationError))
+			}
 		}
 		skippedScnInSpec := 0
 		for _, scenario := range spec.Scenarios {
@@ -170,7 +183,7 @@ func getErrMap(validationErrors validationErrors) *ValidationErrMaps {
 	return errMap
 }
 
-func fillScenarioErrors(scenario *gauge.Scenario, errMap *ValidationErrMaps, steps []*gauge.Step) {
+func fillScenarioErrors(scenario *gauge.Scenario, errMap *gauge.BuildErrors, steps []*gauge.Step) {
 	for _, step := range steps {
 		if step.IsConcept {
 			fillScenarioErrors(scenario, errMap, step.ConceptSteps)
@@ -181,7 +194,7 @@ func fillScenarioErrors(scenario *gauge.Scenario, errMap *ValidationErrMaps, ste
 	}
 }
 
-func fillSpecErrors(spec *gauge.Specification, errMap *ValidationErrMaps, steps []*gauge.Step) {
+func fillSpecErrors(spec *gauge.Specification, errMap *gauge.BuildErrors, steps []*gauge.Step) {
 	for _, context := range steps {
 		if context.IsConcept {
 			fillSpecErrors(spec, errMap, context.ConceptSteps)
@@ -205,11 +218,7 @@ func printValidationFailures(validationErrors validationErrors) {
 	}
 }
 
-func NewValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) *StepValidationError {
-	return &StepValidationError{step: s, message: m, fileName: f, errorType: e}
-}
-
-type validationErrors map[*gauge.Specification][]*StepValidationError
+type validationErrors map[*gauge.Specification][]error
 
 func newValidator(m *manifest.Manifest, s []*gauge.Specification, r runner.Runner, c *gauge.ConceptDictionary) *validator {
 	return &validator{manifest: m, specsToExecute: s, runner: r, conceptsDictionary: c}
@@ -217,7 +226,7 @@ func newValidator(m *manifest.Manifest, s []*gauge.Specification, r runner.Runne
 
 func (v *validator) validate() validationErrors {
 	validationStatus := make(validationErrors)
-	specValidator := &specValidator{runner: v.runner, conceptsDictionary: v.conceptsDictionary, stepValidationCache: make(map[string]*StepValidationError)}
+	specValidator := &specValidator{runner: v.runner, conceptsDictionary: v.conceptsDictionary, stepValidationCache: make(map[string]error)}
 	for _, spec := range v.specsToExecute {
 		specValidator.specification = spec
 		validationErrors := specValidator.validate()
@@ -231,9 +240,9 @@ func (v *validator) validate() validationErrors {
 	return nil
 }
 
-func (v *specValidator) validate() []*StepValidationError {
+func (v *specValidator) validate() []error {
 	v.specification.Traverse(v)
-	return v.stepValidationErrors
+	return v.validationErrors
 }
 
 func (v *specValidator) Step(s *gauge.Step) {
@@ -247,19 +256,20 @@ func (v *specValidator) Step(s *gauge.Step) {
 	if !ok {
 		err := v.validateStep(s)
 		if err != nil {
-			v.stepValidationErrors = append(v.stepValidationErrors, err)
+			v.validationErrors = append(v.validationErrors, err)
 		}
 		v.stepValidationCache[s.Value] = err
 		return
 	}
 	if val != nil {
+		valErr := val.(StepValidationError)
 		if s.Parent == nil {
-			v.stepValidationErrors = append(v.stepValidationErrors,
-				NewValidationError(s, val.message, v.specification.FileName, val.errorType))
+			v.validationErrors = append(v.validationErrors,
+				NewStepValidationError(s, valErr.message, v.specification.FileName, valErr.errorType))
 		} else {
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			v.stepValidationErrors = append(v.stepValidationErrors,
-				NewValidationError(s, val.message, cpt.FileName, val.errorType))
+			v.validationErrors = append(v.validationErrors,
+				NewStepValidationError(s, valErr.message, cpt.FileName, valErr.errorType))
 		}
 	}
 }
@@ -270,26 +280,26 @@ var getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*
 	return conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
 }
 
-func (v *specValidator) validateStep(s *gauge.Step) *StepValidationError {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest.Enum(),
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: proto.String(s.Value), NumberOfParameters: proto.Int(len(s.Args))}}
+func (v *specValidator) validateStep(s *gauge.Step) error {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest,
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args))}}
 	r, err := getResponseFromRunner(m, v)
 	if err != nil {
-		return NewValidationError(s, err.Error(), v.specification.FileName, nil)
+		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil)
 	}
 	if r.GetMessageType() == gauge_messages.Message_StepValidateResponse {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
 			if s.Parent == nil {
-				return NewValidationError(s, msg, v.specification.FileName, res.ErrorType)
+				return NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			return NewValidationError(s, msg, cpt.FileName, res.ErrorType)
+			return NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
 		}
 		return nil
 	}
-	return NewValidationError(s, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
+	return NewStepValidationError(s, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
 }
 
 func getMessage(message string) string {
@@ -305,7 +315,6 @@ func (v *specValidator) TearDown(step *gauge.TearDown) {
 }
 
 func (v *specValidator) SpecHeading(heading *gauge.Heading) {
-	v.stepValidationErrors = make([]*StepValidationError, 0)
 }
 
 func (v *specValidator) SpecTags(tags *gauge.Tags) {
@@ -333,13 +342,50 @@ func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
 
 }
 
-func ValidateTableRow(rowNumber string, rowCount int) (int, error) {
-	row, err := strconv.Atoi(strings.TrimSpace(rowNumber))
+func (v *specValidator) Specification(specification *gauge.Specification) {
+	v.validationErrors = make([]error, 0)
+	err := validateDataTableRange(specification.DataTable.Table.GetRowCount())
 	if err != nil {
-		return 0, fmt.Errorf("Table rows range validation failed: Failed to parse %s to row number", rowNumber)
+		v.validationErrors = append(v.validationErrors, NewSpecValidationError(err.Error(), specification.FileName))
+	}
+}
+
+func validateDataTableRange(rowCount int) error {
+	if TableRows == "" {
+		return nil
+	}
+	if strings.Contains(TableRows, "-") {
+		indexes := strings.Split(TableRows, "-")
+		if len(indexes) > 2 {
+			return fmt.Errorf("Table rows range '%s' is invalid => Table rows range should be of format rowNumber-rowNumber", TableRows)
+		}
+		if err := validateTableRow(indexes[0], rowCount); err != nil {
+			return err
+		}
+		if err := validateTableRow(indexes[1], rowCount); err != nil {
+			return err
+		}
+	} else {
+		indexes := strings.Split(TableRows, ",")
+		for _, i := range indexes {
+			if err := validateTableRow(i, rowCount); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func validateTableRow(rowNumber string, rowCount int) error {
+	if rowNumber = strings.TrimSpace(rowNumber); rowNumber == "" {
+		return fmt.Errorf("Table rows range validation failed => Row number cannot be empty")
+	}
+	row, err := strconv.Atoi(rowNumber)
+	if err != nil {
+		return fmt.Errorf("Table rows range validation failed => Failed to parse '%s' to row number", rowNumber)
 	}
 	if row < 1 || row > rowCount {
-		return 0, fmt.Errorf("Table rows range validation failed: Table row number %d is out of range", row)
+		return fmt.Errorf("Table rows range validation failed => Table row number '%d' is out of range", row)
 	}
-	return row - 1, nil
+	return nil
 }

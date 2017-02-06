@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 )
 
 type StepValue struct {
@@ -151,21 +150,21 @@ func (step *Step) PopulateFragments() {
 	argSplitIndices := r.FindAllStringSubmatchIndex(step.Value, -1)
 	step.Fragments = make([]*gauge_messages.Fragment, 0)
 	if len(step.Args) == 0 {
-		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value)})
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: step.Value})
 		return
 	}
 
 	textStartIndex := 0
 	for argIndex, argIndices := range argSplitIndices {
 		if textStartIndex < argIndices[0] {
-			step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value[textStartIndex:argIndices[0]])})
+			step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: step.Value[textStartIndex:argIndices[0]]})
 		}
 		parameter := convertToProtoParameter(step.Args[argIndex])
-		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: parameter})
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: parameter})
 		textStartIndex = argIndices[1]
 	}
 	if textStartIndex < len(step.Value) {
-		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(step.Value[textStartIndex:len(step.Value)])})
+		step.Fragments = append(step.Fragments, &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: step.Value[textStartIndex:len(step.Value)]})
 	}
 
 }

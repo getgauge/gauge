@@ -17,10 +17,7 @@
 
 package result
 
-import (
-	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
-)
+import "github.com/getgauge/gauge/gauge_messages"
 
 // StepResult represents the result of step execution
 type StepResult struct {
@@ -43,7 +40,7 @@ func (s *StepResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
 
 // SetFailure sets the result to failed
 func (s *StepResult) SetFailure() {
-	s.protoStep.StepExecutionResult.ExecutionResult.Failed = proto.Bool(true)
+	s.protoStep.StepExecutionResult.ExecutionResult.Failed = true
 }
 
 // GetFailed returns the state of the result
@@ -89,10 +86,10 @@ func (s *StepResult) ExecTime() int64 {
 func (s *StepResult) AddExecTime(t int64) {
 	currentTime := s.protoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
 	if s.protoStep.StepExecutionResult.ExecutionResult == nil {
-		s.protoStep.StepExecutionResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: proto.Bool(false)}
+		s.protoStep.StepExecutionResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: false}
 	}
 
-	s.protoStep.StepExecutionResult.ExecutionResult.ExecutionTime = proto.Int64(currentTime + t)
+	s.protoStep.StepExecutionResult.ExecutionResult.ExecutionTime = currentTime + t
 }
 
 // ProtoStepExecResult returns the step execution result used at the proto layer

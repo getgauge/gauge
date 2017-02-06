@@ -23,7 +23,6 @@ import (
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 
@@ -74,7 +73,7 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer, pid int) {
 		for {
 			e := <-ch
 			res := getResponse(e, pid)
-			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd.Enum() {
+			if stream.Send(res) != nil || res.Type == gm.ExecutionResponse_SuiteEnd {
 				util.SetWorkingDir(config.ProjectRoot)
 				return
 			}
@@ -85,42 +84,42 @@ func listenExecutionEvents(stream gm.Execution_ExecuteServer, pid int) {
 func getResponse(e event.ExecutionEvent, pid int) *gm.ExecutionResponse {
 	switch e.Topic {
 	case event.SuiteStart:
-		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart.Enum(), RunnerProcessId: proto.Int32(int32(pid))}
+		return &gm.ExecutionResponse{Type: gm.ExecutionResponse_SuiteStart, RunnerProcessId: int32(pid)}
 	case event.SpecStart:
 		return &gm.ExecutionResponse{
-			Type:            gm.ExecutionResponse_SpecStart.Enum(),
+			Type:            gm.ExecutionResponse_SpecStart,
 			ID:              e.ExecutionInfo.CurrentSpec.FileName,
-			RunnerProcessId: proto.Int32(int32(pid)),
+			RunnerProcessId: int32(pid),
 		}
 	case event.ScenarioStart:
 		return &gm.ExecutionResponse{
-			Type:            gm.ExecutionResponse_ScenarioStart.Enum(),
-			ID:              proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo)),
-			RunnerProcessId: proto.Int32(int32(pid)),
+			Type:            gm.ExecutionResponse_ScenarioStart,
+			ID:              fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), e.Item.(*gauge.Scenario).Heading.LineNo),
+			RunnerProcessId: int32(pid),
 			Result: &gm.Result{
-				TableRowNumber: proto.Int64(int64(getDataTableRowNumber(e.Item.(*gauge.Scenario)))),
+				TableRowNumber: int64(getDataTableRowNumber(e.Item.(*gauge.Scenario))),
 			},
 		}
 	case event.ScenarioEnd:
 		scn := e.Item.(*gauge.Scenario)
 		return &gm.ExecutionResponse{
-			Type:            gm.ExecutionResponse_ScenarioEnd.Enum(),
-			ID:              proto.String(fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo)),
-			RunnerProcessId: proto.Int32(int32(pid)),
+			Type:            gm.ExecutionResponse_ScenarioEnd,
+			ID:              fmt.Sprintf("%s:%d", e.ExecutionInfo.CurrentSpec.GetFileName(), scn.Heading.LineNo),
+			RunnerProcessId: int32(pid),
 			Result: &gm.Result{
 				Status:            getStatus(e.Result.(*result.ScenarioResult)),
-				ExecutionTime:     proto.Int64(e.Result.ExecTime()),
+				ExecutionTime:     e.Result.ExecTime(),
 				Errors:            getErrors(e.Result.(*result.ScenarioResult).ProtoScenario.GetScenarioItems()),
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
-				TableRowNumber:    proto.Int64(int64(getDataTableRowNumber(scn))),
+				TableRowNumber:    int64(getDataTableRowNumber(scn)),
 			},
 		}
 	case event.SpecEnd:
 		return &gm.ExecutionResponse{
-			Type:            gm.ExecutionResponse_SpecEnd.Enum(),
+			Type:            gm.ExecutionResponse_SpecEnd,
 			ID:              e.ExecutionInfo.CurrentSpec.FileName,
-			RunnerProcessId: proto.Int32(int32(pid)),
+			RunnerProcessId: int32(pid),
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -128,8 +127,8 @@ func getResponse(e event.ExecutionEvent, pid int) *gm.ExecutionResponse {
 		}
 	case event.SuiteEnd:
 		return &gm.ExecutionResponse{
-			Type:            gm.ExecutionResponse_SuiteEnd.Enum(),
-			RunnerProcessId: proto.Int32(int32(pid)),
+			Type:            gm.ExecutionResponse_SuiteEnd,
+			RunnerProcessId: int32(pid),
 			Result: &gm.Result{
 				BeforeHookFailure: getHookFailure(e.Result.GetPreHook()),
 				AfterHookFailure:  getHookFailure(e.Result.GetPostHook()),
@@ -150,10 +149,10 @@ func getDataTableRowNumber(scn *gauge.Scenario) int {
 func getErrorExecutionResponse(errs ...error) *gm.ExecutionResponse {
 	var e []*gm.Result_ExecutionError
 	for _, err := range errs {
-		e = append(e, &gm.Result_ExecutionError{ErrorMessage: proto.String(err.Error())})
+		e = append(e, &gm.Result_ExecutionError{ErrorMessage: err.Error()})
 	}
 	return &gm.ExecutionResponse{
-		Type: gm.ExecutionResponse_ErrorResult.Enum(),
+		Type: gm.ExecutionResponse_ErrorResult,
 		Result: &gm.Result{
 			Errors: e,
 		},
@@ -194,14 +193,14 @@ func getErrors(items []*gm.ProtoItem) []*gm.Result_ExecutionError {
 	return errors
 }
 
-func getStatus(result *result.ScenarioResult) *gm.Result_Status {
+func getStatus(result *result.ScenarioResult) gm.Result_Status {
 	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_FAILED {
-		return gm.Result_FAILED.Enum()
+		return gm.Result_FAILED
 	}
 	if result.ProtoScenario.GetExecutionStatus() == gm.ExecutionStatus_SKIPPED {
-		return gm.Result_SKIPPED.Enum()
+		return gm.Result_SKIPPED
 	}
-	return gm.Result_PASSED.Enum()
+	return gm.Result_PASSED
 }
 
 func setFlags(req *gm.ExecutionRequest) []error {

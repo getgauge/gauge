@@ -26,9 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/validation"
-
-	"strings"
 
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
@@ -45,7 +42,7 @@ type simpleExecution struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
-	errMaps              *validation.ValidationErrMaps
+	errMaps              *gauge.BuildErrors
 	startTime            time.Time
 	stream               int
 }
@@ -115,14 +112,14 @@ func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.Sp
 	var results []*result.SpecResult
 	for specs.HasNext() {
 		s := specs.Next()
-		ex := newSpecExecutor(s, e.runner, e.pluginHandler, getDataTableRows(s.DataTable.Table.GetRowCount()), e.errMaps, e.stream)
+		ex := newSpecExecutor(s, e.runner, e.pluginHandler, e.errMaps, e.stream)
 		results = append(results, ex.execute())
 	}
 	return results
 }
 
 func (e *simpleExecution) notifyBeforeSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
@@ -131,7 +128,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 }
 
 func (e *simpleExecution) notifyAfterSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
 	if res.GetFailed() {
@@ -140,7 +137,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 }
 
 func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit,
 		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
 	return e.runner.ExecuteAndGetStatus(m)
 }
@@ -151,13 +148,13 @@ func (e *simpleExecution) executeHook(m *gauge_messages.Message) *(gauge_message
 }
 
 func (e *simpleExecution) notifyExecutionResult() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResult,
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{SuiteResult: gauge.ConvertToProtoSuiteResult(e.suiteResult)}}
 	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *simpleExecution) notifyExecutionStop() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest.Enum(),
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_KillProcessRequest,
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 	e.pluginHandler.NotifyPlugins(m)
 	e.pluginHandler.GracefullyKillPlugins()
@@ -165,45 +162,4 @@ func (e *simpleExecution) notifyExecutionStop() {
 
 func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult)) {
 	f(result, execResult)
-}
-
-func getDataTableRows(rowCount int) []int {
-	var tableRowIndexes []int
-	if rowCount == 0 && TableRows == "" {
-		tableRowIndexes = []int{}
-	} else if TableRows == "" {
-		for i := 0; i < rowCount; i++ {
-			tableRowIndexes = append(tableRowIndexes, i)
-		}
-	} else if strings.Contains(TableRows, "-") {
-		indexes := strings.Split(TableRows, "-")
-		if len(indexes) > 2 {
-			logger.Errorf(fmt.Sprintf("Table rows range %s is invalid. Table rows range should be of format rowNumber-rowNumber", TableRows))
-			return nil
-		}
-		startIndex, err := validation.ValidateTableRow(indexes[0], rowCount)
-		if err != nil {
-			logger.Errorf(err.Error())
-			return nil
-		}
-		endIndex, err := validation.ValidateTableRow(indexes[1], rowCount)
-		if err != nil {
-			logger.Errorf(err.Error())
-			return nil
-		}
-		for i := startIndex; i <= endIndex; i++ {
-			tableRowIndexes = append(tableRowIndexes, i)
-		}
-	} else {
-		indexes := strings.Split(TableRows, ",")
-		for _, i := range indexes {
-			rowIndex, err := validation.ValidateTableRow(i, rowCount)
-			if err != nil {
-				logger.Errorf(err.Error())
-				return nil
-			}
-			tableRowIndexes = append(tableRowIndexes, rowIndex)
-		}
-	}
-	return tableRowIndexes
 }

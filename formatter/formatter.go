@@ -37,7 +37,7 @@ const (
 )
 
 func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
-	specs, results := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{})
+	specs, results := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{}, gauge.NewBuildErrors())
 	resultsMap := getParseResult(results)
 	filesSkipped := make([]string, 0)
 	for _, spec := range specs {
@@ -47,7 +47,7 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 			continue
 		}
 		if err := formatAndSave(spec); err != nil {
-			result.ParseErrors = []*parser.ParseError{&parser.ParseError{Message: err.Error()}}
+			result.ParseErrors = []parser.ParseError{parser.ParseError{Message: err.Error()}}
 		} else {
 			logger.Debug("Successfully formatted spec: %s", util.RelPathToProjectRoot(spec.FileName))
 		}

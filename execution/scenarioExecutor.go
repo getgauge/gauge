@@ -28,7 +28,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/validation"
-	"github.com/golang/protobuf/proto"
 )
 
 type scenarioExecutor struct {
@@ -36,11 +35,11 @@ type scenarioExecutor struct {
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	stepExecutor         *stepExecutor
-	errMap               *validation.ValidationErrMaps
+	errMap               *gauge.BuildErrors
 	stream               int
 }
 
-func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *validation.ValidationErrMaps, stream int) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, stream int) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,
@@ -51,8 +50,8 @@ func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages
 }
 
 func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, contexts []*gauge.Step, teardowns []*gauge.Step) {
-	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED.Enum()
-	scenarioResult.ProtoScenario.Skipped = proto.Bool(false)
+	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
+	scenarioResult.ProtoScenario.Skipped = false
 	if len(scenario.Steps) == 0 {
 		e.skipSceForError(scenario, scenarioResult)
 	}
@@ -84,30 +83,30 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 }
 
 func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
-	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit.Enum(),
+	initScenarioDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit,
 		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
 	return e.runner.ExecuteAndGetStatus(initScenarioDataStoreMessage)
 }
 
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
 	logger.Errorf(err.Error())
-	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
-	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
+	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 }
 
 func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
 	errMsg := fmt.Sprintf("%s:%d No steps found in scenario", e.currentExecutionInfo.GetCurrentSpec().GetFileName(), scenario.Heading.LineNo)
 	logger.Errorf(errMsg)
-	validationError := validation.NewValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
+	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		errMsg, e.currentExecutionInfo.GetCurrentSpec().GetFileName(), nil)
-	e.errMap.ScenarioErrs[scenario] = []*validation.StepValidationError{validationError}
+	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 }
 
-func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *validation.ValidationErrMaps) {
-	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED.Enum()
-	result.ProtoScenario.Skipped = proto.Bool(true)
+func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
+	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
+	result.ProtoScenario.Skipped = true
 	var errors []string
 	for _, err := range errMap.ScenarioErrs[scenario] {
 		errors = append(errors, err.Error())
@@ -116,7 +115,7 @@ func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario
 }
 
 func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.ScenarioResult) {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting.Enum(),
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting,
 		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(message, scenarioResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
@@ -126,7 +125,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 }
 
 func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.ScenarioResult) {
-	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding.Enum(),
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding,
 		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(message, scenarioResult, e.runner, e.pluginHandler)
 	if res.GetFailed() {
@@ -195,7 +194,7 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 
 func setStepFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setScenarioFailure(executionInfo)
-	executionInfo.CurrentStep.IsFailed = proto.Bool(true)
+	executionInfo.CurrentStep.IsFailed = true
 }
 
 func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Parameter {
@@ -210,5 +209,5 @@ func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Param
 
 func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setSpecFailure(executionInfo)
-	executionInfo.CurrentScenario.IsFailed = proto.Bool(true)
+	executionInfo.CurrentScenario.IsFailed = true
 }

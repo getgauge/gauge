@@ -17,24 +17,20 @@
 
 package gauge
 
-type SpecTraverser interface {
-	Specification(*Specification)
-	SpecHeading(*Heading)
-	SpecTags(*Tags)
-	DataTable(*Table)
-	ExternalDataTable(*DataTable)
-	ContextStep(*Step)
-	Scenario(*Scenario)
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
-	Step(*Step)
-	TearDown(*TearDown)
-	Comment(*Comment)
+type BuildErrors struct {
+	SpecErrs     map[*Specification][]error
+	ScenarioErrs map[*Scenario][]error
+	StepErrs     map[*Step]error
 }
 
-type ScenarioTraverser interface {
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
-	Step(*Step)
-	Comment(*Comment)
+func (e *BuildErrors) HasErrors() bool {
+	return (len(e.SpecErrs) + len(e.ScenarioErrs) + len(e.StepErrs)) > 0
+}
+
+func NewBuildErrors() *BuildErrors {
+	return &BuildErrors{
+		SpecErrs:     make(map[*Specification][]error),
+		ScenarioErrs: make(map[*Scenario][]error),
+		StepErrs:     make(map[*Step]error),
+	}
 }

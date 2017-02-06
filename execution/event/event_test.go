@@ -98,7 +98,7 @@ func (s *MySuite) TestNotify(c *C) {
 	Register(ch2, StepStart, StepEnd)
 
 	stepText := "Hello World"
-	protoStep := &gauge_messages.ProtoStep{ActualText: &stepText}
+	protoStep := &gauge_messages.ProtoStep{ActualText: stepText}
 	stepRes := result.NewStepResult(protoStep)
 
 	step := &gauge.Step{Value: stepText}

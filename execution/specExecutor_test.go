@@ -109,7 +109,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 
@@ -147,7 +147,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -194,11 +194,11 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
-	specExecutor := newSpecExecutor(spec, nil, nil, nil, nil, 0)
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	// For first row
 	specExecutor.currentTableRow = 0
-	specExecutor.errMap = getValidationErrorMap()
+	specExecutor.errMap = gauge.NewBuildErrors()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
@@ -270,23 +270,11 @@ type tableRow struct {
 
 var tableRowTests = []*tableRow{
 	{"Valid single row number", "2", []int{1}, 5},
-	{"Invalid single row number", "2", nil, 1},
 	{"Valid row numbers list", "2,3,4", []int{1, 2, 3}, 4},
-	{"Invalid row numbers list", "2,3,4", nil, 3},
-	{"Invalid row numbers list with special chars", "2*&", nil, 3},
 	{"Valid table rows range", "2-5", []int{1, 2, 3, 4}, 5},
-	{"Invalid table rows range", "2-5", nil, 4},
-	{"Invalid table rows range", "2-2", []int{1}, 4},
-	{"Invalid table rows with character", "a", nil, 4},
-	{"Invalid table rows range with character", "a-5", nil, 4},
-	{"Invalid table rows range with string", "a-qwerty", nil, 4},
-	{"Invalid table rows range with string", "a-qwerty", nil, 4},
 	{"Empty table rows range", "", []int{0, 1, 2, 3}, 4},
-	{"Table rows range with multiple -", "2-3-4", nil, 4},
-	{"Table rows range with different separator", "2:4", nil, 4},
 	{"Table rows list with spaces", "2, 4 ", []int{1, 3}, 4},
 	{"Row count is zero with empty input", "", []int{}, 0},
-	{"Row count is zero with non empty input", "1", nil, 0},
 	{"Row count is non-zero with empty input", "", []int{0, 1}, 2},
 	{"Row count is non-zero with non-empty input", "2", []int{1}, 2},
 }
@@ -303,7 +291,7 @@ func (s *MySuite) TestToGetDataTableRowsRangeFromInputFlag(c *C) {
 func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 
-	se := newSpecExecutor(spec, nil, nil, []int{}, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 	se.errMap = getValidationErrorMap()
 	se.specResult = &result.SpecResult{}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
@@ -319,7 +307,7 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 }
 
 func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
-	se := newSpecExecutor(anySpec(), nil, nil, []int{}, nil, 0)
+	se := newSpecExecutor(anySpec(), nil, nil, nil, 0)
 	se.errMap = getValidationErrorMap()
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
@@ -339,6 +327,43 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineText, Equals, "A spec heading")
 }
 
+func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
+	stepText := "Unimplememted step"
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableRow("123", "foo", "8800").
+		tableRow("666", "bar", "9900").
+		scenarioHeading("First scenario").
+		step(stepText).
+		step("create user <id> <name> and <phone>").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errMap := &gauge.BuildErrors{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
+	}
+
+	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
+	se := newSpecExecutor(spec, nil, nil, errMap, 0)
+	specInfo := &gauge_messages.SpecInfo{Name: se.specification.Heading.Value,
+		FileName: se.specification.FileName,
+		IsFailed: false, Tags: getTagValue(se.specification.Tags)}
+	se.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
+	se.specResult = gauge.NewSpecResult(se.specification)
+	resolvedSpecItems := se.resolveItems(se.specification.GetSpecItems())
+	se.specResult.AddSpecItems(resolvedSpecItems)
+
+	se.skipSpec()
+
+	c.Assert(se.specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
+	c.Assert(len(se.specResult.ProtoSpec.GetItems()), Equals, 3)
+
+}
+
 func anySpec() *gauge.Specification {
 
 	specText := SpecBuilder().specHeading("A spec heading").
@@ -352,13 +377,90 @@ func anySpec() *gauge.Specification {
 }
 
 func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
-	errMap := &validation.ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]*validation.StepValidationError),
-		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
-		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
+	errMap := &gauge.BuildErrors{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
 	}
-	se := newSpecExecutor(anySpec(), nil, nil, nil, errMap, 0)
+	spec := anySpec()
+	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Table row number out of range", spec.FileName)}
+	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
-	result := se.execute()
-	c.Assert(result.Skipped, Equals, true)
+	specResult := se.execute()
+	c.Assert(specResult.Skipped, Equals, true)
+}
+
+func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
+	stepText := "Unimplememted step"
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		tableHeader("id", "name", "phone").
+		tableRow("123", "foo", "8800").
+		tableRow("666", "bar", "9900").
+		scenarioHeading("First scenario").
+		step(stepText).
+		step("create user <id> <name> and <phone>").
+		String()
+
+	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errMap := &gauge.BuildErrors{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
+	}
+
+	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
+	se := newSpecExecutor(spec, nil, nil, errMap, 0)
+
+	specResult := se.execute()
+	c.Assert(specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
+	c.Assert(specResult.Skipped, Equals, true)
+}
+
+func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
+	e := parser.ParseError{Message: "Message", LineNo: 5, FileName: "filename"}
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:       gauge_messages.Error_PARSE_ERROR,
+		Message:    "filename:5 Message => ''",
+		LineNumber: 5,
+		Filename:   "filename",
+	}
+
+	c.Assert(len(errs), DeepEquals, 1)
+	c.Assert(*(errs[0]), DeepEquals, expected)
+}
+
+func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
+	e := validation.NewSpecValidationError("Message", "filename")
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:    gauge_messages.Error_VALIDATION_ERROR,
+		Message: "filename Message",
+	}
+
+	c.Assert(len(errs), DeepEquals, 1)
+	c.Assert(*(errs[0]), DeepEquals, expected)
+}
+
+func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
+	e := validation.NewStepValidationError(&gauge.Step{LineText: "step", LineNo: 3}, "Step Message", "filename", nil)
+	se := newSpecExecutor(nil, nil, nil, nil, 0)
+
+	errs := se.convertErrors([]error{e})
+
+	expected := gauge_messages.Error{
+		Type:    gauge_messages.Error_VALIDATION_ERROR,
+		Message: "filename:3 Step Message => 'step'",
+	}
+
+	c.Assert(len(errs), DeepEquals, 1)
+	c.Assert(*(errs[0]), DeepEquals, expected)
 }

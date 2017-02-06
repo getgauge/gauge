@@ -614,7 +614,21 @@ func (s *MySuite) TestConceptFileHavingItemsWithDuplicateTableHeaders(c *C) {
 	c.Assert(concept1, Not(Equals), nil)
 }
 
-func containsAny(errs []*ParseError, msg string) bool {
+func (s *MySuite) TestConceptParserShouldNotAddTableAsArgIfCommentsArePresentBetweenStepAndTable(c *C) {
+	conceptText := SpecBuilder().
+		specHeading("create user").
+		step("a step").
+		text("adasdasd\n\n").
+		text("|sdfsdf|").
+		text("|----|").
+		text("|wer|").
+		step("a step1").
+		String()
+	steps, _ := new(ConceptParser).Parse(conceptText, "")
+	c.Assert(steps[0].ConceptSteps[0].GetLineText(), Equals, "a step")
+}
+
+func containsAny(errs []ParseError, msg string) bool {
 	for _, err := range errs {
 		if strings.Contains(err.Message, msg) {
 			return true

@@ -139,7 +139,7 @@ func (s *MySuite) TestAddSpecsToMapPopulatesScenarioInExistingSpec(c *C) {
 }
 
 func (s *MySuite) TestSpecsFormArgsForMultipleIndexedArgsForOneSpec(c *C) {
-	specs, _ := parseSpecsInDirs(gauge.NewConceptDictionary(), []string{filepath.Join("testdata", "sample.spec:3"), filepath.Join("testdata", "sample.spec:6")})
+	specs, _ := parseSpecsInDirs(gauge.NewConceptDictionary(), []string{filepath.Join("testdata", "sample.spec:3"), filepath.Join("testdata", "sample.spec:6")}, gauge.NewBuildErrors())
 
 	c.Assert(len(specs), Equals, 1)
 	c.Assert(len(specs[0].Scenarios), Equals, 2)

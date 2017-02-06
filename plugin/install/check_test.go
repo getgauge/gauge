@@ -79,3 +79,11 @@ windows86_64: a70281e005d97216a2535b6def57ef38df38b767`
 	c.Assert(err, Equals, nil)
 	c.Assert(v, Equals, "0.3.2")
 }
+
+func (s *MySuite) TestCreatePluginUpdateDetailForNightly(c *C) {
+	version.CurrentGaugeVersion = &version.Version{0, 1, 1}
+	ruby := "ruby"
+	i := installDescription{Name: ruby, Versions: []versionInstallDescription{versionInstallDescription{Version: "0.1.1.nightly.2050-02-01", GaugeVersionSupport: version.VersionSupport{Minimum: "0.1.0", Maximum: "0.1.2"}}}}
+	updateDetails := createPluginUpdateDetail("0.1.0", i)
+	c.Assert(len(updateDetails), Equals, 0)
+}

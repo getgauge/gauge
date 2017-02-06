@@ -15,26 +15,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package gauge
+package parser
 
-type SpecTraverser interface {
-	Specification(*Specification)
-	SpecHeading(*Heading)
-	SpecTags(*Tags)
-	DataTable(*Table)
-	ExternalDataTable(*DataTable)
-	ContextStep(*Step)
-	Scenario(*Scenario)
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
-	Step(*Step)
-	TearDown(*TearDown)
-	Comment(*Comment)
-}
+import (
+	"github.com/getgauge/gauge/gauge"
+	. "gopkg.in/check.v1"
+)
 
-type ScenarioTraverser interface {
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
-	Step(*Step)
-	Comment(*Comment)
+func (s *MySuite) TestProcessTable(c *C) {
+	t := &Token{Kind: gauge.TableRow, Value: "|first second third    |"}
+	errors, _ := processTable(new(SpecParser), t)
+
+	c.Assert(len(errors), Equals, 0)
+	c.Assert(t.Args[0], Equals, "first second third")
 }

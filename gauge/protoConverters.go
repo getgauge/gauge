@@ -20,7 +20,6 @@ package gauge
 import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/golang/protobuf/proto"
 )
 
 func ConvertToProtoItem(item Item) *gauge_messages.ProtoItem {
@@ -43,14 +42,14 @@ func ConvertToProtoItem(item Item) *gauge_messages.ProtoItem {
 }
 
 func convertToProtoTagItem(tags *Tags) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Tags.Enum(), Tags: convertToProtoTags(tags)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Tags, Tags: convertToProtoTags(tags)}
 }
 
 func convertToProtoStepItem(step *Step) *gauge_messages.ProtoItem {
 	if step.IsConcept {
 		return convertToProtoConcept(step)
 	}
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Step.Enum(), Step: convertToProtoStep(step)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Step, Step: convertToProtoStep(step)}
 }
 
 func convertToProtoStepItems(steps []*Step) []*gauge_messages.ProtoItem {
@@ -68,17 +67,17 @@ func convertToProtoScenarioItem(scenario *Scenario) *gauge_messages.ProtoItem {
 	}
 	protoScenario := NewProtoScenario(scenario)
 	protoScenario.ScenarioItems = scenarioItems
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario.Enum(), Scenario: protoScenario}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario, Scenario: protoScenario}
 }
 
 func convertToProtoConcept(concept *Step) *gauge_messages.ProtoItem {
 	protoConcept := &gauge_messages.ProtoConcept{ConceptStep: convertToProtoStep(concept), Steps: convertToProtoStepItems(concept.ConceptSteps)}
-	protoConceptItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Concept.Enum(), Concept: protoConcept}
+	protoConceptItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Concept, Concept: protoConcept}
 	return protoConceptItem
 }
 
 func convertToProtoStep(step *Step) *gauge_messages.ProtoStep {
-	return &gauge_messages.ProtoStep{ActualText: proto.String(step.LineText), ParsedText: proto.String(step.Value), Fragments: makeFragmentsCopy(step.Fragments)}
+	return &gauge_messages.ProtoStep{ActualText: step.LineText, ParsedText: step.Value, Fragments: makeFragmentsCopy(step.Fragments)}
 }
 
 func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
@@ -104,24 +103,24 @@ func makeFragmentsCopy(fragments []*gauge_messages.Fragment) []*gauge_messages.F
 
 func makeFragmentCopy(fragment *gauge_messages.Fragment) *gauge_messages.Fragment {
 	if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
-		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text.Enum(), Text: proto.String(fragment.GetText())}
+		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Text, Text: fragment.GetText()}
 	} else {
-		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter.Enum(), Parameter: makeParameterCopy(fragment.Parameter)}
+		return &gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: makeParameterCopy(fragment.Parameter)}
 	}
 }
 
 func makeParameterCopy(parameter *gauge_messages.Parameter) *gauge_messages.Parameter {
 	switch parameter.GetParameterType() {
 	case gauge_messages.Parameter_Static:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static, Value: parameter.GetValue(), Name: parameter.GetName()}
 	case gauge_messages.Parameter_Dynamic:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic, Value: parameter.GetValue(), Name: parameter.GetName()}
 	case gauge_messages.Parameter_Table:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table, Table: makeTableCopy(parameter.GetTable()), Name: parameter.GetName()}
 	case gauge_messages.Parameter_Special_String:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(parameter.GetValue()), Name: proto.String(parameter.GetName())}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String, Value: parameter.GetValue(), Name: parameter.GetName()}
 	case gauge_messages.Parameter_Special_Table:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: makeTableCopy(parameter.GetTable()), Name: proto.String(parameter.GetName())}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table, Table: makeTableCopy(parameter.GetTable()), Name: parameter.GetName()}
 	}
 	return parameter
 }
@@ -144,25 +143,25 @@ func makeProtoTableRowCopy(tableRow *gauge_messages.ProtoTableRow) *gauge_messag
 }
 
 func convertToProtoCommentItem(comment *Comment) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment.Enum(), Comment: &gauge_messages.ProtoComment{Text: proto.String(comment.Value)}}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Comment, Comment: &gauge_messages.ProtoComment{Text: comment.Value}}
 }
 
 func convertToProtoDataTableItem(dataTable *DataTable) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table.Enum(), Table: convertToProtoTableParam(&dataTable.Table)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: convertToProtoTableParam(&dataTable.Table)}
 }
 
 func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
 	switch arg.ArgType {
 	case Static:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Static, Value: arg.Value, Name: arg.Name}
 	case Dynamic:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic, Value: arg.Value, Name: arg.Name}
 	case TableArg:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table.Enum(), Table: convertToProtoTableParam(&arg.Table), Name: proto.String(arg.Name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table, Table: convertToProtoTableParam(&arg.Table), Name: arg.Name}
 	case SpecialString:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String.Enum(), Value: proto.String(arg.Value), Name: proto.String(arg.Name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String, Value: arg.Value, Name: arg.Name}
 	case SpecialTable:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table.Enum(), Table: convertToProtoTableParam(&arg.Table), Name: proto.String(arg.Name)}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table, Table: convertToProtoTableParam(&arg.Table), Name: arg.Name}
 	}
 	return nil
 }
@@ -180,16 +179,16 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
 		PreHookFailure:    suiteResult.PreSuite,
 		PostHookFailure:   suiteResult.PostSuite,
-		Failed:            proto.Bool(suiteResult.IsFailed),
-		SpecsFailedCount:  proto.Int32(int32(suiteResult.SpecsFailedCount)),
-		ExecutionTime:     proto.Int64(suiteResult.ExecutionTime),
+		Failed:            suiteResult.IsFailed,
+		SpecsFailedCount:  int32(suiteResult.SpecsFailedCount),
+		ExecutionTime:     suiteResult.ExecutionTime,
 		SpecResults:       convertToProtoSpecResult(suiteResult.SpecResults),
-		SuccessRate:       proto.Float32(getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount)),
-		Environment:       proto.String(suiteResult.Environment),
-		Tags:              proto.String(suiteResult.Tags),
-		ProjectName:       proto.String(suiteResult.ProjectName),
-		Timestamp:         proto.String(suiteResult.Timestamp),
-		SpecsSkippedCount: proto.Int32(int32(suiteResult.SpecsSkippedCount)),
+		SuccessRate:       getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
+		Environment:       suiteResult.Environment,
+		Tags:              suiteResult.Tags,
+		ProjectName:       suiteResult.ProjectName,
+		Timestamp:         suiteResult.Timestamp,
+		SpecsSkippedCount: int32(suiteResult.SpecsSkippedCount),
 	}
 	return protoSuiteResult
 }
@@ -206,13 +205,14 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 	for _, specResult := range specResults {
 		protoSpecResult := &gauge_messages.ProtoSpecResult{
 			ProtoSpec:            specResult.ProtoSpec,
-			ScenarioCount:        proto.Int32(int32(specResult.ScenarioCount)),
-			ScenarioFailedCount:  proto.Int32(int32(specResult.ScenarioFailedCount)),
-			Failed:               proto.Bool(specResult.IsFailed),
+			ScenarioCount:        int32(specResult.ScenarioCount),
+			ScenarioFailedCount:  int32(specResult.ScenarioFailedCount),
+			Failed:               specResult.IsFailed,
 			FailedDataTableRows:  specResult.FailedDataTableRows,
-			ExecutionTime:        proto.Int64(specResult.ExecutionTime),
-			Skipped:              proto.Bool(specResult.Skipped),
-			ScenarioSkippedCount: proto.Int32(int32(specResult.ScenarioSkippedCount)),
+			ExecutionTime:        specResult.ExecutionTime,
+			Skipped:              specResult.Skipped,
+			ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
+			Errors:               specResult.Errors,
 		}
 		protoSpecResults = append(protoSpecResults, protoSpecResult)
 	}
@@ -222,7 +222,7 @@ func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_message
 func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 	protoSpec := newProtoSpec(spec)
 	if spec.DataTable.IsInitialized() {
-		protoSpec.IsTableDriven = proto.Bool(true)
+		protoSpec.IsTableDriven = true
 	}
 	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range spec.Items {
@@ -234,8 +234,8 @@ func ConvertToProtoSpec(spec *Specification) *gauge_messages.ProtoSpec {
 
 func ConvertToProtoStepValue(stepValue *StepValue) *gauge_messages.ProtoStepValue {
 	return &gauge_messages.ProtoStepValue{
-		StepValue:              proto.String(stepValue.StepValue),
-		ParameterizedStepValue: proto.String(stepValue.ParameterizedStepValue),
+		StepValue:              stepValue.StepValue,
+		ParameterizedStepValue: stepValue.ParameterizedStepValue,
 		Parameters:             stepValue.Args,
 	}
 }
@@ -243,9 +243,9 @@ func ConvertToProtoStepValue(stepValue *StepValue) *gauge_messages.ProtoStepValu
 func newProtoSpec(specification *Specification) *gauge_messages.ProtoSpec {
 	return &gauge_messages.ProtoSpec{
 		Items:         make([]*gauge_messages.ProtoItem, 0),
-		SpecHeading:   proto.String(specification.Heading.Value),
-		IsTableDriven: proto.Bool(false),
-		FileName:      proto.String(specification.FileName),
+		SpecHeading:   specification.Heading.Value,
+		IsTableDriven: specification.DataTable.IsInitialized(),
+		FileName:      specification.FileName,
 		Tags:          getTags(specification.Tags),
 	}
 
@@ -260,16 +260,16 @@ func NewSpecResult(specification *Specification) *result.SpecResult {
 
 func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 	return &gauge_messages.ProtoScenario{
-		ScenarioHeading: proto.String(scenario.Heading.Value),
-		Failed:          proto.Bool(false),
-		Skipped:         proto.Bool(false),
+		ScenarioHeading: scenario.Heading.Value,
+		Failed:          false,
+		Skipped:         false,
 		Tags:            getTags(scenario.Tags),
 		Contexts:        make([]*gauge_messages.ProtoItem, 0),
-		ExecutionTime:   proto.Int64(0),
+		ExecutionTime:   0,
 		TearDownSteps:   make([]*gauge_messages.ProtoItem, 0),
 		SkipErrors:      make([]string, 0),
-		Span:            &gauge_messages.Span{Start: proto.Int64(int64(scenario.Span.Start)), End: proto.Int64(int64(scenario.Span.End))},
-		ExecutionStatus: gauge_messages.ExecutionStatus_NOTEXECUTED.Enum(),
+		Span:            &gauge_messages.Span{Start: int64(scenario.Span.Start), End: int64(scenario.Span.End)},
+		ExecutionStatus: gauge_messages.ExecutionStatus_NOTEXECUTED,
 	}
 }
 

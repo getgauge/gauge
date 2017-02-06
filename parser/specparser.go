@@ -76,11 +76,11 @@ func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.Concep
 	return spec, res
 }
 
-func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []*ParseError) {
+func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
 	parser.currentState = initial
-	var errors []*ParseError
+	var errors []ParseError
 	var newToken *Token
 	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
 		trimmedLine := strings.TrimSpace(line)
@@ -199,12 +199,12 @@ func isConceptHeader(lookup *gauge.ArgLookup) bool {
 	return lookup == nil
 }
 
-func (parser *SpecParser) accept(token *Token, fileName string) []*ParseError {
+func (parser *SpecParser) accept(token *Token, fileName string) []ParseError {
 	errs, _ := parser.processors[token.Kind](parser, token)
 	parser.tokens = append(parser.tokens, token)
-	var parseErrs []*ParseError
+	var parseErrs []ParseError
 	for _, err := range errs {
-		parseErrs = append(parseErrs, &ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value})
+		parseErrs = append(parseErrs, ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value})
 	}
 	return parseErrs
 }
@@ -230,7 +230,7 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	parser.conceptDictionary = conceptDictionary
 	converters := parser.initializeConverters()
 	specification := &gauge.Specification{FileName: specFile}
-	finalResult := &ParseResult{ParseErrors: make([]*ParseError, 0), Ok: true}
+	finalResult := &ParseResult{ParseErrors: make([]ParseError, 0), Ok: true}
 	state := initial
 	for _, token := range tokens {
 		for _, converter := range converters {
@@ -253,10 +253,10 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 		specification.LatestScenario().Span.End = tokens[len(tokens)-1].LineNo
 	}
 	specification.ProcessConceptStepsFrom(conceptDictionary)
-	validationError := parser.validateSpec(specification)
-	if validationError != nil {
+	err := parser.validateSpec(specification)
+	if err != nil {
 		finalResult.Ok = false
-		finalResult.ParseErrors = append([]*ParseError{validationError}, finalResult.ParseErrors...)
+		finalResult.ParseErrors = append([]ParseError{err.(ParseError)}, finalResult.ParseErrors...)
 	}
 	return specification, finalResult
 }
@@ -266,7 +266,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.SpecKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading != nil {
-			return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{spec.FileName, token.LineNo, "Multiple spec headings found in same file", token.LineText}}}
+			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Multiple spec headings found in same file", token.LineText}}}
 		}
 
 		spec.AddHeading(&gauge.Heading{LineNo: token.LineNo, Value: token.Value})
@@ -278,11 +278,11 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.ScenarioKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading == nil {
-			return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{spec.FileName, token.LineNo, "Scenario should be defined after the spec heading", token.LineText}}}
+			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Scenario should be defined after the spec heading", token.LineText}}}
 		}
 		for _, scenario := range spec.Scenarios {
 			if strings.ToLower(scenario.Heading.Value) == strings.ToLower(token.Value) {
-				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{spec.FileName, token.LineNo, "Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
+				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
 			}
 		}
 		scenario := &gauge.Scenario{Span: &gauge.Span{Start: token.LineNo, End: token.LineNo}}
@@ -377,8 +377,8 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
 		if resolvedArg == nil || err != nil {
-			e := &ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
-			return ParseResult{ParseErrors: []*ParseError{e}, Ok: false}
+			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
+			return ParseResult{ParseErrors: []ParseError{e}, Ok: false}
 		}
 		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
 			externalTable := &gauge.DataTable{}
@@ -484,12 +484,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		tags := &gauge.Tags{Values: token.Args}
 		if isInState(*state, scenarioScope) {
 			if spec.LatestScenario().NTags() != 0 {
-				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
+				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
 			}
 			spec.LatestScenario().AddTags(tags)
 		} else {
 			if spec.NTags() != 0 {
-				return ParseResult{Ok: false, ParseErrors: []*ParseError{&ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
+				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
 			}
 			spec.AddTags(tags)
 		}
@@ -503,20 +503,28 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	return converter
 }
 
-func (parser *SpecParser) validateSpec(specification *gauge.Specification) *ParseError {
+func (parser *SpecParser) validateSpec(specification *gauge.Specification) error {
 	if len(specification.Items) == 0 {
-		return &ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec does not have any elements"}
+		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec does not have any elements"}
 	}
 	if specification.Heading == nil {
-		return &ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec heading not found"}
+		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec heading not found"}
 	}
 	if len(strings.TrimSpace(specification.Heading.Value)) < 1 {
-		return &ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec heading should have at least one character"}
+		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec heading should have at least one character"}
 	}
 
 	dataTable := specification.DataTable.Table
 	if dataTable.IsInitialized() && dataTable.GetRowCount() == 0 {
-		return &ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
+		return ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
+	}
+	if len(specification.Scenarios) == 0 {
+		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec should have atleast one scenario"}
+	}
+	for _, sce := range specification.Scenarios {
+		if len(sce.Steps) == 0 {
+			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, Message: "Scenario should have atleast one step"}
+		}
 	}
 	return nil
 }
@@ -578,7 +586,7 @@ func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *Pars
 func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileName string) (*gauge.Step, *ParseResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
-		return nil, &ParseResult{ParseErrors: []*ParseError{&ParseError{specFileName, stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}}, Warnings: nil}
+		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{specFileName, stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}}, Warnings: nil}
 	}
 	step := &gauge.Step{LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
 	arguments := make([]*gauge.StepArg, 0)
@@ -645,7 +653,7 @@ func createStepArg(argValue string, typeOfArg string, token *Token, lookup *gaug
 			case invalidSpecialParamError:
 				return treatArgAsDynamic(argValue, token, lookup, fileName)
 			default:
-				return nil, &ParseResult{ParseErrors: []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
+				return nil, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
 			}
 		}
 		return resolvedArgValue, nil
@@ -674,7 +682,7 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *gauge.ArgLookup, f
 
 func validateDynamicArg(argValue string, token *Token, lookup *gauge.ArgLookup, fileName string) (*gauge.StepArg, *ParseResult) {
 	if !isConceptHeader(lookup) && !lookup.ContainsArg(argValue) {
-		return nil, &ParseResult{ParseErrors: []*ParseError{&ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
+		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
 	}
 	stepArgument := &gauge.StepArg{ArgType: gauge.Dynamic, Value: argValue, Name: argValue}
 	return stepArgument, nil
@@ -747,7 +755,7 @@ type ParseError struct {
 	LineText string
 }
 
-func (se *ParseError) Error() string {
+func (se ParseError) Error() string {
 	return fmt.Sprintf("%s:%d %s => '%s'", se.FileName, se.LineNo, se.Message, se.LineText)
 }
 
@@ -756,8 +764,8 @@ func (token *Token) String() string {
 }
 
 type ParseResult struct {
-	ParseErrors    []*ParseError
-	CriticalErrors []*ParseError
+	ParseErrors    []ParseError
+	CriticalErrors []ParseError
 	Warnings       []*Warning
 	Ok             bool
 	FileName       string

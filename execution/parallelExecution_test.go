@@ -23,7 +23,6 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/validation"
 	. "gopkg.in/check.v1"
 )
 
@@ -47,11 +46,11 @@ func (s *MySuite) TestNumberOfStreams(c *C) {
 	c.Assert(e.numberOfStreams(), Equals, 0)
 }
 
-func getValidationErrorMap() *validation.ValidationErrMaps {
-	return &validation.ValidationErrMaps{
-		SpecErrs:     make(map[*gauge.Specification][]*validation.StepValidationError),
-		ScenarioErrs: make(map[*gauge.Scenario][]*validation.StepValidationError),
-		StepErrs:     make(map[*gauge.Step]*validation.StepValidationError),
+func getValidationErrorMap() *gauge.BuildErrors {
+	return &gauge.BuildErrors{
+		SpecErrs:     make(map[*gauge.Specification][]error),
+		ScenarioErrs: make(map[*gauge.Scenario][]error),
+		StepErrs:     make(map[*gauge.Step]error),
 	}
 }
 
