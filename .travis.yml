@@ -5,8 +5,6 @@ language: go
 go:
   - 1.7.3
   - tip
-install:
- - godep restore  
 script:
   - go run build/make.go
   - go test ./...
