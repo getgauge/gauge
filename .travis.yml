@@ -1,11 +1,14 @@
 os:
   - linux
   - osx
- language: go
- script:
+language: go
+go:
+  - 1.7.x
+  - master
+script:
   - go run build/make.go
   - go test ./...
-  - echo "gauge_repository_url = https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/" >> skel/gauge.properties    
+  - echo "gauge_repository_url = https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/" >> skel/gauge.properties
   - go run build/make.go -install
   - git clone --depth=1 https://github.com/getgauge/gauge-tests
   - cd gauge-tests
