@@ -5,6 +5,10 @@ language: go
 go:
   - 1.7.3
   - tip
+before_install:
+ - go get github.com/tools/godep
+install:
+ - godep restore
 script:
   - go run build/make.go
   - go test ./...
