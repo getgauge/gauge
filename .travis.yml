@@ -5,6 +5,13 @@ language: go
 go:
   - 1.7.3
   - tip
+addons:
+  apt:
+    packages:
+      - oracle-java8-set-default
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask install java; fi
 env:
   - GAUGE_ROOT="/tmp/gauge"
 before_install:
@@ -19,4 +26,5 @@ script:
   - git clone --depth=1 https://github.com/getgauge/gauge-tests
   - cd gauge-tests
   - $GAUGE_ROOT/bin/gauge --install-all
+  - java -version
   - ./starttests.sh java
