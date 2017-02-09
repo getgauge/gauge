@@ -27,4 +27,5 @@ script:
   - cd gauge-tests
   - $GAUGE_ROOT/bin/gauge --install-all
   - java -version
+  - echo $JAVA_HOME
   - ./starttests.sh java
