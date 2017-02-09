@@ -9,14 +9,11 @@ addons:
   apt:
     packages:
       - oracle-java8-set-default
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask install java; fi
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 env:
   - GAUGE_ROOT="/tmp/gauge"
 before_install:
   - go get github.com/tools/godep
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 install:
   - godep restore
 script:
