@@ -64,6 +64,9 @@ type MultithreadedRunner struct {
 }
 
 func (r *MultithreadedRunner) IsProcessRunning() bool {
+	if r.r.mutex != nil && r.r.Cmd != nil {
+		return r.r.IsProcessRunning()
+	}
 	return false
 }
 
@@ -76,6 +79,29 @@ func (r *MultithreadedRunner) SetConnection(c net.Conn) {
 }
 
 func (r *MultithreadedRunner) Kill() error {
+	defer r.r.connection.Close()
+	conn.SendProcessKillMessage(r.r.connection)
+
+	exited := make(chan bool, 1)
+	go func() {
+		for {
+			if r.IsProcessRunning() {
+				time.Sleep(100 * time.Millisecond)
+			} else {
+				exited <- true
+				return
+			}
+		}
+	}()
+
+	select {
+	case done := <-exited:
+		if done {
+			return nil
+		}
+	case <-time.After(config.PluginKillTimeout()):
+		return r.killRunner()
+	}
 	return nil
 }
 
@@ -84,6 +110,10 @@ func (r *MultithreadedRunner) Connection() net.Conn {
 }
 
 func (r *MultithreadedRunner) killRunner() error {
+	if r.r.Cmd != nil && r.r.Cmd.Process != nil {
+		logger.Warning("Killing runner with PID:%d forcefully", r.r.Cmd.Process.Pid)
+		return r.r.Cmd.Process.Kill()
+	}
 	return nil
 }
 
