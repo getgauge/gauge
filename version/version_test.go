@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 func Test(t *testing.T) { TestingT(t) }

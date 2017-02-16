@@ -17,7 +17,7 @@
 
 package gauge
 
-import . "gopkg.in/check.v1"
+import . "github.com/go-check/check"
 
 func (s *MySuite) TestDeepCopyOfConcept(c *C) {
 	step := &Step{Value: "test concept step 1",

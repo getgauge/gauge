@@ -19,7 +19,7 @@ package parser
 
 import (
 	"github.com/getgauge/gauge/gauge"
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 func (s *MySuite) TestParsingSimpleStep(c *C) {

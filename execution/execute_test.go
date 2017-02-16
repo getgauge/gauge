@@ -22,7 +22,7 @@ import (
 
 	"github.com/getgauge/gauge/gauge"
 
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 type testLogger struct {

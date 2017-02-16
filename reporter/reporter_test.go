@@ -22,7 +22,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 var dataTableEvent = event.Topic(100)

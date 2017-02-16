@@ -22,8 +22,8 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/config"
+	. "github.com/go-check/check"
 	"github.com/op/go-logging"
-	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }

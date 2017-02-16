@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/version"
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 var _ = Suite(&MySuite{})
