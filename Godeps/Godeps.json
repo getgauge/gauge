@@ -28,11 +28,19 @@
         },
         {
             "ImportPath": "github.com/go-check/check",
-            "Rev": "163297374fe15df72fc217b2bdfabb5894c73059"
+            "Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
         },
         {
             "ImportPath": "github.com/mattn/go-isatty",
             "Rev": "56b76bdf51f7708750eac80fa38b952bb9f32639"
+        },
+        {
+            "ImportPath": "github.com/fsnotify/fsnotify",
+            "Rev": "629574ca2a5df945712d3079857300b5e4da0236"
+        },
+        {
+            "ImportPath": "github.com/natefinch/lumberjack",
+            "Rev": "dd45e6a67c53f673bb49ca8a001fd3a63ceb640e"
         },
         {
             "ImportPath": "github.com/op/go-logging",

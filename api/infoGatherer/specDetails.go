@@ -24,6 +24,7 @@ import (
 
 	"os"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
@@ -31,7 +32,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
-	fsnotify "gopkg.in/fsnotify.v1"
 )
 
 // SpecInfoGatherer contains the caches for specs, concepts, and steps

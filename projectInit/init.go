@@ -101,7 +101,7 @@ func isGaugeProject() bool {
 	return m.Language != ""
 }
 
-func installRunner(templateName string){
+func installRunner(templateName string) {
 	language := getTemplateLangauge(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
 		logger.Info("Compatible langauge plugin %s is not installed. Installing plugin...", language)
@@ -133,8 +133,6 @@ func InitializeProject(templateName string) {
 		logger.Fatalf("Failed to initialize project. %s", err.Error())
 	}
 }
-
-
 
 // ListTemplates lists all the Gauge templates available in GaugeTemplatesURL
 func ListTemplates() {
