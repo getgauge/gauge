@@ -19,7 +19,7 @@ package gauge
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 func (s *MySuite) TestCopyingFragments(c *C) {

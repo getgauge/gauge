@@ -27,8 +27,8 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/natefinch/lumberjack"
 	"github.com/op/go-logging"
-	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 const (

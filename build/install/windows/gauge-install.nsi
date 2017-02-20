@@ -11,6 +11,8 @@
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gauge.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
+!define MUI_FINISHPAGE_LINK "Click here to read the Gauge Reference Documentation"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://docs.getgauge.io"
 
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
@@ -22,8 +24,8 @@
 
 ; MUI Settings
 !define MUI_ABORTWARNING
-!define MUI_ICON "gauge-install.ico"
-!define MUI_UNICON "gauge-install.ico"
+!define MUI_ICON "gauge.ico"
+!define MUI_UNICON "gauge.ico"
 !define env_hklm 'HKLM "SYSTEM\CurrentControlSet\Control\Session Manager\Environment"'
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
@@ -63,7 +65,7 @@ function .onInit
   ${EndIf}
 functionEnd
 
-Section "Gauge" SEC01
+Section "Gauge" SEC_GAUGE
   IfFileExists "$INSTDIR\share\gauge\gauge.properties" 0 +3
   CreateDirectory $%temp%\Gauge
   CopyFiles "$INSTDIR\share\gauge\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
@@ -73,14 +75,22 @@ Section "Gauge" SEC01
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\*"
 SectionEnd
 
-SectionGroup /e "Language Plugins"
-  Section "Java" SEC_JAVA
+SectionGroup /e "Language Plugins" SEC_LANGUAGES
+  Section /o "Java" SEC_JAVA
   SectionEnd
   Section /o "C#" SEC_CSHARP
   SectionEnd
   Section /o "Ruby" SEC_RUBY
   SectionEnd
 SectionGroupEnd
+
+!insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_GAUGE} "Will install Gauge Core (gauge.exe)."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_LANGUAGES} "Check to install language runners that needs to be installed. You need at least one language runner to run Gauge specs."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVA} "Java language runner, enables writing implementations using Java."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CSHARP} "C# language runner, enables writing implementations using C#."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_RUBY} "Ruby language runner, enables writing implementations using Ruby."
+!insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section -AdditionalIcons
   SetOutPath $INSTDIR
@@ -105,8 +115,6 @@ Section -Post
   CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$INSTDIR\share\gauge"
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
-  IfSilent +2 0
-    ExecShell "open" "http://getgauge.io/documentation/user/current"
   ExecWait '"$INSTDIR\plugin-install.bat" "html-report"'
 
   SectionGetFlags ${SEC_JAVA} $R0

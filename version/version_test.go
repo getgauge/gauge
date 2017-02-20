@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	. "github.com/go-check/check"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -48,13 +48,13 @@ func (s *MySuite) TestParsingErrorForIncorrectNumberOfDotCharacters(c *C) {
 
 func (s *MySuite) TestParsingErrorForNonIntegerVersion(c *C) {
 	_, err := ParseVersion("a.9.0")
-	c.Assert(err, ErrorMatches, `Error parsing major Version a to integer. strconv.ParseInt: parsing "a": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing major Version a to integer. strconv.*: parsing "a": invalid syntax`)
 
 	_, err = ParseVersion("0.ffhj.78")
-	c.Assert(err, ErrorMatches, `Error parsing minor Version ffhj to integer. strconv.ParseInt: parsing "ffhj": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing minor Version ffhj to integer. strconv.*: parsing "ffhj": invalid syntax`)
 
 	_, err = ParseVersion("8.9.opl")
-	c.Assert(err, ErrorMatches, `Error parsing patch Version opl to integer. strconv.ParseInt: parsing "opl": invalid syntax`)
+	c.Assert(err, ErrorMatches, `Error parsing patch Version opl to integer. strconv.*: parsing "opl": invalid syntax`)
 }
 
 func (s *MySuite) TestVersionComparisonGreaterLesser(c *C) {

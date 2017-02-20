@@ -33,9 +33,9 @@ import (
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/util"
+	. "github.com/go-check/check"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/metadata"
-	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }

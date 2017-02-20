@@ -101,6 +101,15 @@ func isGaugeProject() bool {
 	return m.Language != ""
 }
 
+func installRunner(templateName string) {
+	language := getTemplateLangauge(templateName)
+	if !install.IsCompatiblePluginInstalled(language, true) {
+		logger.Info("Compatible langauge plugin %s is not installed. Installing plugin...", language)
+
+		install.HandleInstallResult(install.InstallPlugin(language, ""), language, true)
+	}
+}
+
 // InitializeProject initializes a Gauge project with specified template
 func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
@@ -113,22 +122,15 @@ func InitializeProject(templateName string) {
 	}
 
 	exists, _ := common.UrlExists(getTemplateURL(templateName))
-
 	if exists {
 		err = initializeTemplate(templateName)
+		installRunner(templateName)
 	} else {
+		installRunner(templateName)
 		err = createProjectTemplate(templateName)
 	}
-
 	if err != nil {
 		logger.Fatalf("Failed to initialize project. %s", err.Error())
-	}
-
-	language := getTemplateLangauge(templateName)
-	if !install.IsCompatiblePluginInstalled(language, true) {
-		logger.Info("Compatible langauge plugin %s is not installed. Installing plugin...", language)
-
-		install.HandleInstallResult(install.InstallPlugin(language, ""), language, true)
 	}
 }
 
