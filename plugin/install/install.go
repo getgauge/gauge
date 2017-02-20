@@ -42,6 +42,7 @@ import (
 const (
 	pluginJSON = "plugin.json"
 	jsonExt    = ".json"
+	x86        = "386"
 )
 
 type installDescription struct {
@@ -126,6 +127,20 @@ type GaugePlugin struct {
 	GaugeVersionSupport version.VersionSupport
 }
 
+func getGoArch() string {
+	arch := runtime.GOARCH
+	if arch == x86 {
+		return "x86"
+	}
+	return "x86_64"
+}
+
+func iosOSCompatible(zipfile, pluginName string) bool {
+	os := runtime.GOOS
+	arch := getGoArch()
+	return strings.Contains(zipfile, fmt.Sprintf("%s.%s", os, arch))
+}
+
 // InstallPluginFromZipFile installs plugin from given zip file
 func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	tempDir := common.GetTempDir()
@@ -134,7 +149,10 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if err != nil {
 		return installError(err)
 	}
-
+	if !iosOSCompatible(zipFile, pluginName) {
+		err := fmt.Errorf("Provided plugin is not compatible with OS %s_%s.", runtime.GOOS, runtime.GOARCH)
+		return installError(err)
+	}
 	gp, err := parsePluginJSON(unzippedPluginDir, pluginName)
 	if err != nil || gp.ID != pluginName {
 		err := fmt.Errorf("Provided zip file is not a valid plugin of %s.", pluginName)
