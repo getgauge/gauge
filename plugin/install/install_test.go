@@ -171,14 +171,14 @@ func (s *MySuite) TestMatchesUninstallVersionIfUninstallPluginVersionDoesntMatch
 	c.Assert(matchesUninstallVersion(dirPath, uninstallVersion), Equals, false)
 }
 
-func (s *MySuite) TestIsPlateformIndependentZipFile(c * C) {
+func (s *MySuite) TestIsPlatformIndependentZipFile(c *C) {
 	javaReleased := "java-3.1.0.nightly-2017-02-08-darwin.x86_64.zip"
 	csharpReleased := "gauge-csharp-0.10.1.zip"
 	javaNightly := "gauge-java-3.1.0.nightly-2017-02-08-darwin.x86_64.zip"
 	csharpNightly := "gauge-csharp-0.10.1.nightly-2017-02-17.zip"
 
-	c.Assert(isPlateformIndependent(javaReleased), Equals, false)
-	c.Assert(isPlateformIndependent(csharpReleased), Equals, true)
-	c.Assert(isPlateformIndependent(javaNightly), Equals, false)
-	c.Assert(isPlateformIndependent(csharpNightly), Equals, true)
+	c.Assert(isPlatformIndependent(javaReleased), Equals, false)
+	c.Assert(isPlatformIndependent(csharpReleased), Equals, true)
+	c.Assert(isPlatformIndependent(javaNightly), Equals, false)
+	c.Assert(isPlatformIndependent(csharpNightly), Equals, true)
 }

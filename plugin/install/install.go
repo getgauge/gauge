@@ -135,7 +135,7 @@ func getGoArch() string {
 	return "x86_64"
 }
 
-func isPlateformIndependent(zipfile string) bool{
+func isPlatformIndependent(zipfile string) bool {
 	re, _ := regexp.Compile("-([a-z]*)\\.")
 	return !re.MatchString(zipfile)
 }
@@ -154,7 +154,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if err != nil {
 		return installError(err)
 	}
-	if !isPlateformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
+	if !isPlatformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
 		err := fmt.Errorf("Provided plugin is not compatible with OS %s_%s.", runtime.GOOS, runtime.GOARCH)
 		return installError(err)
 	}
