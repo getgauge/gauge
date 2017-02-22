@@ -20,13 +20,26 @@
 set -e
 
 install_plugin() {
-    echo "Installing plugin - $1..."
-    $prefix/bin/gauge --install $1
+    oldIFS="$IFS"
+    IFS=","
+    IFS=${IFS:0:1} # this is useful to format your code with tabs
+    pluginsList=( $plugins )
+    IFS="$oldIFS"
+
+    for plugin in "${pluginsList[@]}"
+    do
+        echo "Installing plugin $plugin ..."
+        $prefix/bin/gauge --install $plugin
+    done
 }
 
 display_usage() {
-	echo "On Linux, this script takes an optional install path."
-	echo -e "\nUsage:\n$0 [path] \n"
+	echo -e "On Linux, this script installs gauge and it's plugins.\n\nUsage:\n./install.sh\n\nSet PREFIX env to install gauge at custom location.
+Set PLUGINS env to install plugins alogn with gauge.
+Exp:-
+    PREFIX=my/custom/path ./install.sh
+    PLUGINS=java,ruby,spectacle ./install.sh
+    PREFIX=my/custom/path PLUGINS=xml-report,java ./install.sh"
 }
 
 set_gaugeroot() {
@@ -39,7 +52,7 @@ set_gaugeroot() {
     # ensure GAUGE_ROOT is set
     if [ -z "$GAUGE_ROOT" ]; then
         echo "Adding GAUGE_ROOT to environment..."
-        echo "export GAUGE_ROOT=$prefix"  >> ~/.profile
+        echo "export GAUGE_ROOT=$config"  >> ~/.profile
         updated_profile=1
     fi
     if [ $updated_profile ] ; then
@@ -47,62 +60,94 @@ set_gaugeroot() {
     fi
 }
 
-install_gauge() {
-    echo "Installing gauge at $prefix"
-    echo "Creating $prefix if it doesn't exist"
-    [ -d $prefix ] || mkdir $prefix
+create_prefix_if_doesnt_exist() {
+    if [ "$prefix" == "$config" ]; then 
+        echo "Creating $prefix if it doesn't exist"
+        [ -d $prefix ] || mkdir $prefix
+    else
+        echo "Creating $prefix if it doesn't exist"
+        [ -d $prefix ] || mkdir $prefix
+        echo "Creating $config if it doesn't exist"
+        [ -d $config ] || mkdir -p $config
+    fi
+}
 
-    # check for write permissions
+copy_gauge_binaries() {
+    # check for write permissions and Install gauge, asks for sudo access if not permitted
     if [ ! -w "$prefix" -a "$prefix" = "/usr/local" ]; then
         echo
-        echo "Installation failed..."
         echo "You do not have write permissions for $prefix"
-        echo "Please run this script as sudo or pass a custom location where you want to install Gauge."
-        echo "Example: ./install.sh /home/gauge/local/gauge_install_dir"
-        echo
-        exit 1
+        echo "Running script as sudo "
+        sudo cp -rf bin $prefix
+        echo "Installed gauge binaries at $prefix"
+        sudo -k
+    else
+        cp -rf bin $prefix
+        echo "Installed gauge binaries at $prefix"
     fi
+}
 
-    # do the installation
-    echo "Copying files to $prefix"
-    gaugePropertiesFile=$prefix/share/gauge/gauge.properties
-    if [ -f $prefix/share/gauge/timestamp.txt ] ; then
+# copy gauge configuration at $config
+copy_gauge_configuration_files() {
+    gaugePropertiesFile=$config/share/gauge/gauge.properties
+    if [ -f $config/share/gauge/timestamp.txt ] ; then
         currentTimeStamp=`date +%s -r $gaugePropertiesFile`
-        oldTimeStamp=`cat $prefix/share/gauge/timestamp.txt`
+        oldTimeStamp=`cat $config/share/gauge/timestamp.txt`
         if [ $currentTimeStamp != $oldTimeStamp ] ; then
-            backupFile=$prefix/share/gauge/gauge.properties.bak
+            backupFile=$config/share/gauge/gauge.properties.bak
             echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at GAUGE_INSTALL_LOCATION\share\gauge\gauge.properties.bak. You can restore these configurations later."
             rm -rf $backupFile
             cat $gaugePropertiesFile > $backupFile
         fi
     fi
+    cp -rf share $config
+    date +%s -r $gaugePropertiesFile > $config/share/gauge/timestamp.txt
+}
 
-    cp -rf bin share $prefix
-    date +%s -r $gaugePropertiesFile > $prefix/share/gauge/timestamp.txt
-
+install_gauge() {
+    config="$HOME/.gauge/config"
+    if [ "$prefix" != "/usr/local" ]; then
+        config=$prefix
+    fi
+    echo "Installing gauge at $prefix/bin"
+    if tty -s; then
+        echo -e "Provide a custom location or press ENTER :-"
+        read -e installLocatioan
+        prefix=$installLocatioan
+        config=$installLocatioan
+    fi
+    create_prefix_if_doesnt_exist
+    copy_gauge_binaries
+    copy_gauge_configuration_files
     set_gaugeroot
     echo "Gauge core successfully installed.\n"
 }
 
-if [ -z "$1" ]; then
+if [ -z "$PREFIX" ]; then
     prefix=/usr/local
 else
-    prefix=$1
+    prefix=$PREFIX
 fi
 
-# if more than one arguments supplied, display usage
-if [ $# -gt 1 ]
-then
-    display_usage
-    exit 1
+if [ -z "$PLUGINS" ]; then
+    plugins=html-report
+else
+    plugins=$PLUGINS
 fi
 
 # check whether user has supplied -h or --help . If yes display usage
-if [[ ( $@ == "--help") || $@ == "-h" ]]
-then
-    display_usage
-    exit 0
+
+if [[$# != 0 ]]; then
+    if [[ ( $@ == "--help") || $@ == "-h" ]]
+    then
+        display_usage
+        exit 0
+    else
+        echo -e "unknown option $@. \n"
+        display_usage
+        exit 1
+    fi
 fi
 
 install_gauge $prefix
-install_plugin html-report
+install_plugin $plugins
