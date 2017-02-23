@@ -55,6 +55,8 @@
 
 SpaceTexts none
 
+BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
+
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
 InstallDir "$PROGRAMFILES\Gauge"
