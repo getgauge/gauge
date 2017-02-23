@@ -31,33 +31,6 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetTemplateRegexMatches(c *C) {
-	input := `<html>
-<head>
-<script>
-//1452251363769
-function navi(e){
-	location.href = e.target.href.replace('/:','/'); e.preventDefault();
-}
-</script>
-</head>
-<body>
-<pre><a onclick="navi(event)" href=":java.zip" rel="nofollow">java.zip</a></pre>
-<pre><a onclick="navi(event)" href=":java_maven_selenium.zip" rel="nofollow">maven_123.zip</a></pre>
-<pre><a onclick="navi(event)" href=":java_maven.zip" rel="nofollow">java_maven.zip</a></pre>
-<pre><a onclick="navi(event)" href=":java_maven_selenium.zip" rel="nofollow">java_m@#_selenium.zip</a></pre>
-<pre><a onclick="navi(event)" href=":java_maven_selenium.zip" rel="nofollow">java_maven_selenium.zip</a></pre>
-</body>
-</html>
-`
-	names := getTemplateNames(input)
-	c.Assert(names[0], Equals, "csharp")
-	c.Assert(names[1], Equals, "java")
-	c.Assert(names[2], Equals, "java_maven")
-	c.Assert(names[3], Equals, "java_maven_selenium")
-	c.Assert(names[4], Equals, "maven_123")
-}
-
 func (s *MySuite) TestGetTemplateLanguage(c *C) {
 	c.Assert(getTemplateLangauge("java"), Equals, "java")
 	c.Assert(getTemplateLangauge("java_maven"), Equals, "java")
