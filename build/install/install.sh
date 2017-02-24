@@ -61,23 +61,20 @@ set_gaugeroot() {
     # ensure GAUGE_ROOT is set
     if [ -z "$GAUGE_ROOT" ]; then
         echo "Adding GAUGE_ROOT to environment..."
-        echo "export GAUGE_ROOT=$config"  >> ~/.profile
+        echo "export GAUGE_ROOT=$configPrefix"  >> ~/.profile
         updated_profile=1
     fi
     if [ $updated_profile ] ; then
         source ~/.profile
     fi
+    echo -e "GAUGE_ROOT has been set. If you face errors, run '$ source ~/.profile'\n"
 }
 
 
 # Creates installation prefix and configuration dirs if doesn't exist
 create_prefix_if_does_not_exist() {
-    if [ "$prefix" == "$config" ]; then
-        [ -d $prefix ] || echo "Creating $prefix if it doesn't exist" && mkdir -p $prefix
-    else
-        [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
-        [ -d $config ] || echo "Creating $config ..." && mkdir -p $config
-    fi
+      [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
+      [ -d $config ] || echo "Creating $config ..." && mkdir -p $config
 }
 
 
@@ -99,26 +96,26 @@ copy_gauge_binaries() {
 
 # copy gauge configuration at $config
 copy_gauge_configuration_files() {
-    gaugePropertiesFile=$config/share/gauge/gauge.properties
-    if [ -f $config/share/gauge/timestamp.txt ] ; then
+    gaugePropertiesFile=$config/gauge.properties
+    if [ -f $config/timestamp.txt ] ; then
         currentTimeStamp=`date +%s -r $gaugePropertiesFile`
-        oldTimeStamp=`cat $config/share/gauge/timestamp.txt`
+        oldTimeStamp=`cat $config/timestamp.txt`
         if [ $currentTimeStamp != $oldTimeStamp ] ; then
-            backupFile=$config/share/gauge/gauge.properties.bak
+            backupFile=$config/gauge.properties.bak
             echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at GAUGE_INSTALL_LOCATION\share\gauge\gauge.properties.bak. You can restore these configurations later."
             rm -rf $backupFile
             cat $gaugePropertiesFile > $backupFile
         fi
     fi
-    cp -rf share $config
-    date +%s -r $gaugePropertiesFile > $config/share/gauge/timestamp.txt
+    cp -rf share/gauge/* $config
+    date +%s -r $gaugePropertiesFile > $config/timestamp.txt
 }
 
 # Do the installation
 install_gauge() {
-    config="$HOME/.gauge/config"
+    configPrefix="$HOME/.gauge"
     if [ "$prefix" != "/usr/local" ]; then
-        config=$prefix
+        configPrefix=$prefix
     fi
     echo "Installing gauge at $prefix/bin"
     if tty -s; then
@@ -126,9 +123,11 @@ install_gauge() {
         read -e installLocation
         if [[ ! -z $installLocation ]]; then
           prefix=$(get_absolute_path ${installLocation/\~/$HOME})
-          config=$prefix
+          configPrefix=$prefix
         fi
     fi
+
+    config=$configPrefix/config
     create_prefix_if_does_not_exist
     copy_gauge_binaries
     copy_gauge_configuration_files
