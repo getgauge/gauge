@@ -93,17 +93,17 @@ function clean_stage() {
 
 function prep_deb() {
     echo "Preparing .deb data..."
-    mkdir -m $FILE_MODE -p "$TARGET/usr"
+    mkdir -m $FILE_MODE -p "$TARGET/usr/local"
 
-    cp -r "$PKG_SRC/bin" "$TARGET/usr/"
-    cp -r "$PKG_SRC/share" "$TARGET/usr/"
+    cp -r "$PKG_SRC/bin" "$TARGET/usr/local"
+    cp -r "$PKG_SRC/share" "$TARGET/usr/local"
 
     mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
     cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
-    cp "$GAUGE_SETUP_FILE" "$TARGET/usr/bin/gauge_setup"
+    cp "$GAUGE_SETUP_FILE" "$TARGET/usr/local/bin/gauge_setup"
 
-    chmod +x $TARGET/usr/bin/*
+    chmod +x $TARGET/usr/local/bin/*
 
     sync
 
