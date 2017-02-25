@@ -105,8 +105,8 @@ function prep_rpm() {
     echo "$SPEC_DATA" | sed "s/<version>/$RPM_VERSION/g" | sed "s/<release>/$RELEASE/g" > "$TARGET/SPECS/gauge.spec"
     cat $TARGET/SPECS/gauge.spec
     # Copy generated LICENSE.md to /usr/share/doc/gauge/copyright
-    mkdir -m $FILE_MODE -p "$TARGET/BUILD/usr/share/doc/$NAME"
-    cp "$ROOT/LICENSE" "$TARGET/BUILD/usr/share/doc/$NAME/copyright"
+    mkdir -m $FILE_MODE -p "$TARGET/BUILD/usr/local/share/doc/$NAME"
+    cp "$ROOT/LICENSE" "$TARGET/BUILD/usr/local/share/doc/$NAME/copyright"
 }
 
 function create_rpm() {
