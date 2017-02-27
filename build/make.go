@@ -34,8 +34,11 @@ import (
 
 const (
 	CGO_ENABLED        = "CGO_ENABLED"
+	config             = "config"
+	dotgauge           = ".gauge"
 	GOARCH             = "GOARCH"
 	GOOS               = "GOOS"
+	home               = "HOME"
 	X86                = "386"
 	X86_64             = "amd64"
 	darwin             = "darwin"
@@ -51,6 +54,8 @@ const (
 	packagesBuild      = "packagesbuild"
 	nightlyDatelayout  = "2006-01-02"
 )
+
+var gaugeConfigDir string
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
@@ -143,15 +148,20 @@ func installFiles(files map[string]string, installDir string) {
 	}
 }
 
-func copyGaugeFiles(installPath string) {
+func copyGaugeConfigFiles(installPath string) {
+	files := make(map[string]string)
+	files[filepath.Join("skel", "example.spec")] = filepath.Join(config, "skel")
+	files[filepath.Join("skel", "default.properties")] = filepath.Join(config, "skel", "env")
+	files[filepath.Join("skel", "gauge.properties")] = config
+	files[filepath.Join("notice.md")] = config
+	files = addInstallScripts(files)
+	installFiles(files, installPath)
+}
+
+func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
 	files[getGaugeExecutablePath(gauge)] = bin
 	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
-	files[filepath.Join("skel", "example.spec")] = filepath.Join("share", gauge, "skel")
-	files[filepath.Join("skel", "default.properties")] = filepath.Join("share", gauge, "skel", "env")
-	files[filepath.Join("skel", "gauge.properties")] = filepath.Join("share", gauge)
-	files[filepath.Join("notice.md")] = filepath.Join("share", gauge)
-	files = addInstallScripts(files)
 	installFiles(files, installPath)
 }
 
@@ -243,9 +253,13 @@ func crossCompileGauge() {
 
 func installGauge() {
 	updateGaugeInstallPrefix()
-	copyGaugeFiles(deployDir)
-	if _, err := common.MirrorDir(deployDir, *gaugeInstallPrefix); err != nil {
+	copyGaugeBinaries(deployDir)
+	if _, err := common.MirrorDir(filepath.Join(deployDir, bin), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
+	}
+	copyGaugeConfigFiles(deployDir)
+	if _, err := common.MirrorDir(filepath.Join(deployDir, config), gaugeConfigDir); err != nil {
+		panic(fmt.Sprintf("Could not copy gauge configuration files: %s", err))
 	}
 }
 
@@ -280,7 +294,7 @@ func createWindowsInstaller() {
 	if err != nil {
 		panic(err)
 	}
-	copyGaugeFiles(distroDir)
+	copyGaugeBinaries(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
@@ -293,7 +307,7 @@ func createWindowsInstaller() {
 
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
-	copyGaugeFiles(distroDir)
+	copyGaugeBinaries(distroDir)
 	createZipFromUtil(deploy, gauge, packageName())
 	runProcess(packagesBuild, "-v", darwinPackageProject)
 	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
@@ -302,7 +316,7 @@ func createDarwinPackage() {
 
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
-	copyGaugeFiles(distroDir)
+	copyGaugeBinaries(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
 	os.RemoveAll(distroDir)
 }
@@ -377,13 +391,17 @@ func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {
 		if runtime.GOOS == "windows" {
 			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
+			gaugeConfigDir = filepath.Join(os.Getenv("APPDATA"), gauge, config)
 			if *gaugeInstallPrefix == "" {
 				panic(fmt.Errorf("Failed to find programfiles"))
 			}
 			*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, gauge)
 		} else {
 			*gaugeInstallPrefix = "/usr/local"
+			gaugeConfigDir = filepath.Join(os.Getenv(home), dotgauge, config)
 		}
+	} else {
+		gaugeConfigDir = filepath.Join(*gaugeInstallPrefix, config)
 	}
 }
 
