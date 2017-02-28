@@ -1,7 +1,7 @@
 @ECHO OFF
 
-set GAUGE_PROPERTIES_FILE=%~1\share\gauge\gauge.properties
-set TIMESTAMP_FILE=%~1\share\gauge\timestamp.txt
+set GAUGE_PROPERTIES_FILE=%~1\gauge.properties
+set TIMESTAMP_FILE=%~1\timestamp.txt
 
 IF EXIST "%TIMESTAMP_FILE%" (
   del "%TIMESTAMP_FILE%"
