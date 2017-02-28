@@ -13,6 +13,8 @@
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 !define MUI_FINISHPAGE_LINK "Click here to read the Gauge Reference Documentation"
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.getgauge.io"
+!define MUI_FINISHPAGE_NOAUTOCLOSE
+!define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge --install <plugin>'"
 
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
@@ -51,12 +53,15 @@
 
 ; MUI end ------
 
+SpaceTexts none
+
+BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
+
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
 InstallDir "$PROGRAMFILES\Gauge"
 Var ConfigPrefix
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
-ShowInstDetails show
 ShowUnInstDetails show
 
 function .onInit
@@ -90,12 +95,27 @@ SectionGroup /e "Language Plugins" SEC_LANGUAGES
   SectionEnd
 SectionGroupEnd
 
+SectionGroup /e "Reporting Plugins" SEC_REPORTS
+  Section "HTML" SEC_HTML
+    SectionIn RO
+  SectionEnd
+  Section /o "XML" SEC_XML
+  SectionEnd
+  Section /o "Spectacle" SEC_SPECTACLE
+  SectionEnd
+SectionGroupEnd
+
+
 !insertmacro MUI_FUNCTION_DESCRIPTION_BEGIN
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_GAUGE} "Will install Gauge Core (gauge.exe)."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_LANGUAGES} "Check to install language runners that needs to be installed. You need at least one language runner to run Gauge specs."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVA} "Java language runner, enables writing implementations using Java."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CSHARP} "C# language runner, enables writing implementations using C#."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_RUBY} "Ruby language runner, enables writing implementations using Ruby."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_REPORTS} "Check to install reporting plugins. HTML report plugin is installed by default."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_HTML} "Generates HTML report of Gauge spec run."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_XML} "Generates JUnit style XML report of Gauge spec run."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_SPECTACLE} "Generates static HTML from Spec files, allows filtering/navigation of Specifications."
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 Section -AdditionalIcons
@@ -121,22 +141,45 @@ Section -Post
   CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$CONFIGPREFIX\config"
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
-  ExecWait '"$INSTDIR\plugin-install.bat" "html-report"'
+  Dialer::GetConnectedState
+  Pop $R0
 
-  SectionGetFlags ${SEC_JAVA} $R0
-  SectionGetFlags ${SEC_CSHARP} $R1
-  SectionGetFlags ${SEC_RUBY} $R2
+  ${If} $R0 == 'online'
+    DetailPrint "Installing plugin : html-report"
+    nsExec::ExecToLog 'gauge --install html-report'
 
-  ${If} $R0 == 1
-    ExecWait '"$INSTDIR\plugin-install.bat" "java"'
-  ${EndIf}
+    SectionGetFlags ${SEC_JAVA} $R0
+    SectionGetFlags ${SEC_CSHARP} $R1
+    SectionGetFlags ${SEC_RUBY} $R2
+    SectionGetFlags ${SEC_XML} $R3
+    SectionGetFlags ${SEC_SPECTACLE} $R4
 
-  ${If} $R1 == 1
-    ExecWait '"$INSTDIR\plugin-install.bat" "csharp"'
-  ${EndIf}
+    ${If} $R0 == 1
+      DetailPrint "Installing plugin : java"
+      nsExec::ExecToLog 'gauge --install java'
+    ${EndIf}
 
-  ${If} $R2 == 1
-    ExecWait '"$INSTDIR\plugin-install.bat" "ruby"'
+    ${If} $R1 == 1
+      DetailPrint "Installing plugin : csharp"
+      nsExec::ExecToLog 'gauge --install csharp'
+    ${EndIf}
+
+    ${If} $R2 == 1
+      DetailPrint "Installing plugin : ruby"
+      nsExec::ExecToLog 'gauge --install ruby'
+    ${EndIf}
+
+    ${If} $R3 == 1
+      DetailPrint "Installing plugin : xml-report"
+      nsExec::ExecToLog 'gauge --install xml-report'
+    ${EndIf}
+
+    ${If} $R4 == 1
+      DetailPrint "Installing plugin : spectacle"
+      nsExec::ExecToLog 'gauge --install spectacle'
+    ${EndIf}
+  ${Else}
+    DetailPrint "[WARNING] Internet connection unavailable. Skipping plugins installation"
   ${EndIf}
 SectionEnd
 
