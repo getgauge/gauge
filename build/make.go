@@ -295,6 +295,7 @@ func createWindowsInstaller() {
 		panic(err)
 	}
 	copyGaugeBinaries(distroDir)
+	copyGaugeConfigFiles(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
@@ -308,6 +309,7 @@ func createWindowsInstaller() {
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeBinaries(distroDir)
+	copyGaugeConfigFiles(distroDir)
 	createZipFromUtil(deploy, gauge, packageName())
 	runProcess(packagesBuild, "-v", darwinPackageProject)
 	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
@@ -317,6 +319,7 @@ func createDarwinPackage() {
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
+	copyGaugeConfigFiles(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
 	os.RemoveAll(distroDir)
 }

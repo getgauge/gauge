@@ -54,6 +54,7 @@
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
 InstallDir "$PROGRAMFILES\Gauge"
+Var ConfigPrefix
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowInstDetails show
 ShowUnInstDetails show
@@ -63,16 +64,21 @@ function .onInit
     SetRegView 64
     StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
+  StrCpy $CONFIGPREFIX "$APPDATA\Gauge"
 functionEnd
 
 Section "Gauge" SEC_GAUGE
-  IfFileExists "$INSTDIR\share\gauge\gauge.properties" 0 +3
+  IfFileExists "$CONFIGPREFIX\config\gauge.properties" 0 +3
   CreateDirectory $%temp%\Gauge
-  CopyFiles "$INSTDIR\share\gauge\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
+  CopyFiles "$CONFIGPREFIX\config\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
   SectionIn RO
-  SetOutPath "$INSTDIR"
+  SetOutPath "$INSTDIR\bin"
   SetOverwrite on
-  File /r "${GAUGE_DISTRIBUTABLES_DIR}\*"
+  File /r "${GAUGE_DISTRIBUTABLES_DIR}\bin\*"
+  SectionIn RO
+  SetOutPath "$CONFIGPREFIX\config"
+  SetOverwrite on
+  File /r "${GAUGE_DISTRIBUTABLES_DIR}\config\*"
 SectionEnd
 
 SectionGroup /e "Language Plugins" SEC_LANGUAGES
@@ -108,11 +114,11 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
-  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $INSTDIR
+  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $CONFIGPREFIX
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  ExecWait '"$INSTDIR\set_timestamp.bat" "$INSTDIR"'
+  ExecWait '"$INSTDIR\set_timestamp.bat" "$CONFIGPREFIX\config"'
   IfFileExists "$%temp%\Gauge\gauge.properties.bak" 0 +3
-  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$INSTDIR\share\gauge"
+  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$CONFIGPREFIX\config"
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
   ExecWait '"$INSTDIR\plugin-install.bat" "html-report"'
@@ -150,7 +156,7 @@ Section Uninstall
   Delete "$INSTDIR\uninst.exe"
   Delete "$INSTDIR\plugin-install.bat"
   RMDir /r "$INSTDIR\bin"
-  RMDir /r "$INSTDIR\share"
+  RMDir /r "$CONFIGPREFIX"
   Delete "$SMPROGRAMS\Gauge\Uninstall.lnk"
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"
