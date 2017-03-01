@@ -1,6 +1,6 @@
 @ECHO OFF
-set GAUGE_PROPERTIES_FILE=%GAUGE_ROOT%\share\gauge\gauge.properties
-set TIMESTAMP_FILE=%GAUGE_ROOT%\share\gauge\timestamp.txt
+set GAUGE_PROPERTIES_FILE=%GAUGE_ROOT%\gauge.properties
+set TIMESTAMP_FILE=%GAUGE_ROOT%\timestamp.txt
 
 
 IF EXIST "%TIMESTAMP_FILE%" (

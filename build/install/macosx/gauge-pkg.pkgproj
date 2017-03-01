@@ -478,7 +478,7 @@
 											<key>GID</key>
 											<integer>80</integer>
 											<key>PATH</key>
-											<string>../../../deploy/gauge/share</string>
+											<string>../../../deploy/gauge/config</string>
 											<key>PATH_TYPE</key>
 											<integer>1</integer>
 											<key>PERMISSIONS</key>

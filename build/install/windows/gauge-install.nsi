@@ -60,7 +60,7 @@ BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
 InstallDir "$PROGRAMFILES\Gauge"
-Var ConfigPrefix
+Var ConfigDir
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowUnInstDetails show
 
@@ -69,19 +69,19 @@ function .onInit
     SetRegView 64
     StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
-  StrCpy $CONFIGPREFIX "$APPDATA\Gauge"
+  StrCpy $CONFIGDIR "$APPDATA\Gauge\config"
 functionEnd
 
 Section "Gauge" SEC_GAUGE
-  IfFileExists "$CONFIGPREFIX\config\gauge.properties" 0 +3
+  IfFileExists "$CONFIGDIR\gauge.properties" 0 +3
   CreateDirectory $%temp%\Gauge
-  CopyFiles "$CONFIGPREFIX\config\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
+  CopyFiles "$CONFIGDIR\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
   SectionIn RO
   SetOutPath "$INSTDIR\bin"
   SetOverwrite on
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\bin\*"
   SectionIn RO
-  SetOutPath "$CONFIGPREFIX\config"
+  SetOutPath "$CONFIGDIR"
   SetOverwrite on
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\config\*"
 SectionEnd
@@ -134,11 +134,11 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
-  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $CONFIGPREFIX
+  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $CONFIGDIR
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  ExecWait '"$INSTDIR\set_timestamp.bat" "$CONFIGPREFIX\config"'
+  ExecWait '"$INSTDIR\set_timestamp.bat" "$CONFIGDIR"'
   IfFileExists "$%temp%\Gauge\gauge.properties.bak" 0 +3
-  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$CONFIGPREFIX\config"
+  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$CONFIGDIR"
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
   Dialer::GetConnectedState
