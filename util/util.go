@@ -112,6 +112,7 @@ func ConvertToBool(value, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
 		logger.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		logger.Warning("Using default value %v for property %s.", defaultValue, property)
 		return defaultValue
 	}
 	return boolValue

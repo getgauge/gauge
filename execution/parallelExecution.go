@@ -108,6 +108,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 
 	resChan := make(chan *result.SuiteResult)
 	if e.isMultithreaded() {
+		logger.Debug("Using multithreading for parallel execution.")
 		go e.executeMultithreaded(nStreams, resChan)
 	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
