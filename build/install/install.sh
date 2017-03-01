@@ -19,15 +19,34 @@
 set -e
 
 
-# Install all the plugins mentioned in $PLUGINS
-install_plugin() {
-    oldIFS="$IFS"
+# converts a ',' separated string into list.
+convert_to_list() {
+    old_iFS="$IFS"
     IFS=","
     IFS=${IFS:0:1} # this is useful to format your code with tabs
-    pluginsList=( $plugins )
-    IFS="$oldIFS"
+    list=( $1 )
+    IFS="$old_iFS"
+}
 
-    for plugin in "${pluginsList[@]}"
+# Install all the plugins mentioned in $PLUGINS
+install_plugins() {
+    plugins_list=( html-report )
+    if [ -z "$GAUGE_PLUGINS" ]; then
+        if tty -s; then
+            echo "Enter comma(',') separated list of plugins which you would like to install :- "
+            read -e plugins
+            if [[ ! -z $plugins ]]; then
+                convert_to_list $plugins
+                plugins_list=( ${list[@]} ${plugins_list[@]} )
+                plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+            fi
+        fi
+    else
+        convert_to_list $GAUGE_PLUGINS
+        plugins_list=( ${list[@]} ${plugins_list[@]} )
+        plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+    fi
+    for plugin in "${plugins_list[@]}"
     do
         echo "Installing plugin $plugin ..."
         gauge --install $plugin
@@ -36,12 +55,12 @@ install_plugin() {
 
 # Print usage of this script
 display_usage() {
-	echo -e "On Linux, this script installs gauge and it's plugins.\n\nUsage:\n./install.sh\n\nSet PREFIX env to install gauge at custom location.
-Set PLUGINS env to install plugins alogn with gauge.
+	echo -e "On Linux, this script installs gauge and it's plugins.\n\nUsage:\n./install.sh\n\nSet GAUGE_PREFIX env to install gauge at custom location.
+Set GAUGE_PLUGINS env to install plugins along with gauge.
 Exp:-
-    PREFIX=my/custom/path ./install.sh
-    PLUGINS=java,ruby,spectacle ./install.sh
-    PREFIX=my/custom/path PLUGINS=xml-report,java ./install.sh"
+    GAUGE_PREFIX=my/custom/path ./install.sh
+    GAUGE_PLUGINS=java,ruby,spectacle ./install.sh
+    GAUGE_PREFIX=my/custom/path GAUGE_PLUGINS=xml-report,java ./install.sh"
 }
 
 # Find absolute path
@@ -61,7 +80,7 @@ set_gaugeroot() {
     # ensure GAUGE_ROOT is set
     if [ -z "$GAUGE_ROOT" ]; then
         echo "Adding GAUGE_ROOT to environment..."
-        echo "export GAUGE_ROOT=$configPrefix"  >> ~/.profile
+        echo "export GAUGE_ROOT=$config"  >> ~/.profile
         updated_profile=1
     fi
     if [ $updated_profile ] ; then
@@ -73,8 +92,8 @@ set_gaugeroot() {
 
 # Creates installation prefix and configuration dirs if doesn't exist
 create_prefix_if_does_not_exist() {
-      [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
-      [ -d $config ] || echo "Creating $config ..." && mkdir -p $config
+    [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
+    [ -d $config ] || echo "Creating $config ..." && mkdir -p $config
 }
 
 
@@ -87,7 +106,6 @@ copy_gauge_binaries() {
         echo "Running script as sudo "
         sudo cp -rf bin $prefix
         echo "Installed gauge binaries at $prefix"
-        sudo -k
     else
         cp -rf bin $prefix
         echo "Installed gauge binaries at $prefix"
@@ -96,61 +114,45 @@ copy_gauge_binaries() {
 
 # copy gauge configuration at $config
 copy_gauge_configuration_files() {
-    gaugePropertiesFile=$config/gauge.properties
+    gauge_properties_file=$config/gauge.properties
     if [ -f $config/timestamp.txt ] ; then
-        currentTimeStamp=`date +%s -r $gaugePropertiesFile`
-        oldTimeStamp=`cat $config/timestamp.txt`
-        if [ $currentTimeStamp != $oldTimeStamp ] ; then
-            backupFile=$config/gauge.properties.bak
-            echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at GAUGE_INSTALL_LOCATION\share\gauge\gauge.properties.bak. You can restore these configurations later."
-            rm -rf $backupFile
-            cat $gaugePropertiesFile > $backupFile
+        current_time_stamp=`date +%s -r $gauge_properties_file`
+        old_time_stamp=`cat $config/timestamp.txt`
+        if [ $current_time_stamp != $old_time_stamp ] ; then
+            backup_file=$config/gauge.properties.bak
+            echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at HOME/.gauge/config/gauge.properties.bak. You can restore these configurations later."
+            rm -rf $backup_file
+            cat $gauge_properties_file > $backup_file
         fi
     fi
-    cp -rf share/gauge/* $config
-    date +%s -r $gaugePropertiesFile > $config/timestamp.txt
+    cp -rf config/* $config
+    date +%s -r $gauge_properties_file > $config/timestamp.txt
 }
 
 # Do the installation
 install_gauge() {
-    configPrefix="$HOME/.gauge"
-    if [ "$prefix" != "/usr/local" ]; then
-        configPrefix=$prefix
-    fi
-    echo "Installing gauge at $prefix/bin"
-    if tty -s; then
-        echo -e "Press [ENTER] to continue or provide a custom location to install gauge at that location:-"
-        read -e installLocation
-        if [[ ! -z $installLocation ]]; then
-          prefix=$(get_absolute_path ${installLocation/\~/$HOME})
-          configPrefix=$prefix
+    if [ -z "$GAUGE_PREFIX" ]; then
+        prefix=/usr/local
+        echo "Installing gauge at $prefix/bin"
+        if tty -s; then
+            echo -e "Enter custom install location :-"
+            read -e install_location
+            if [[ ! -z $install_location ]]; then
+            prefix=$(get_absolute_path ${install_location/\~/$HOME})
+            fi
         fi
+    else
+        prefix=$GAUGE_PREFIX
     fi
 
-    config=$configPrefix/config
+    config=$HOME/.gauge/config
     create_prefix_if_does_not_exist
     copy_gauge_binaries
     copy_gauge_configuration_files
     set_gaugeroot
     source ~/.profile
-    echo "Gauge core successfully installed.\n"
+    echo -e "Gauge core successfully installed.\n"
 }
-
-
-# Set install location to /usr/local/bin if $PREFIX is not set.
-if [ -z "$PREFIX" ]; then
-    prefix=/usr/local
-else
-    prefix=$PREFIX
-fi
-
-
-# Set html-report as default plugin in plugin list if $PLUGINS is not set.
-if [ -z "$PLUGINS" ]; then
-    plugins=html-report
-else
-    plugins=$PLUGINS
-fi
 
 # check whether user has supplied -h or --help . If yes display usage if no diplay usage with an error
 if [[ $# != 0 ]]; then
@@ -165,5 +167,5 @@ if [[ $# != 0 ]]; then
     fi
 fi
 
-install_gauge $prefix
-install_plugin $plugins
+install_gauge
+install_plugins

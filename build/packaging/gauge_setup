@@ -3,7 +3,7 @@
 PREFIX=/usr/local
 CONFIG=$HOME/.gauge/config
 
-function set_gaugeroot() {
+function copy_configs() {
     echo "Creatgin $CONFIG"
     mkdir -p $CONFIG
     echo "Copying gauge configuration files to $CONFIG"
@@ -14,5 +14,5 @@ function install_default_plugins() {
     $PREFIX/bin/gauge --install html-report
 }
 
-set_gaugeroot
+copy_configs
 install_default_plugins

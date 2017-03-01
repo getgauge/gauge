@@ -15,7 +15,7 @@ config=$HOME/.gauge/config
 gaugePropertiesFile=$config/gauge.properties
 timestamp_file=$config/timestamp.txt
 
-rm $prefix/share/gauge/timestamp.txt
+rm $config/timestamp.txt
 stat -f "%m" $gaugePropertiesFile > $config/timestamp.txt
 
 # install default gauge plugins
