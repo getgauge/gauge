@@ -3797,7 +3797,14 @@
 						<array>
 							<dict>
 								<key>DESCRIPTION</key>
-								<array/>
+								<array>
+									<dict>
+										<key>LANGUAGE</key>
+										<string>English</string>
+										<key>VALUE</key>
+										<string>Will install Gauge Core.</string>
+									</dict>
+								</array>
 								<key>OPTIONS</key>
 								<dict>
 									<key>HIDDEN</key>
@@ -3823,7 +3830,14 @@
 								<array>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>Java language runner, enables writing implementations using Java.</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3846,7 +3860,14 @@
 									</dict>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>C# language runner, enables writing implementations using C#.</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3869,7 +3890,14 @@
 									</dict>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>Ruby language runner, enables writing implementations using Ruby</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3892,7 +3920,14 @@
 									</dict>
 								</array>
 								<key>DESCRIPTION</key>
-								<array/>
+								<array>
+									<dict>
+										<key>LANGUAGE</key>
+										<string>English</string>
+										<key>VALUE</key>
+										<string>Check to install language runners that needs to be installed. You need at least one language runner to run Gauge specs.</string>
+									</dict>
+								</array>
 								<key>OPTIONS</key>
 								<dict>
 									<key>HIDDEN</key>
@@ -3921,7 +3956,14 @@
 								<array>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>Generates HTML report of Gauge spec run.</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3944,7 +3986,14 @@
 									</dict>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>Generates JUnit style XML report of Gauge spec run.</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3967,7 +4016,14 @@
 									</dict>
 									<dict>
 										<key>DESCRIPTION</key>
-										<array/>
+										<array>
+											<dict>
+												<key>LANGUAGE</key>
+												<string>English</string>
+												<key>VALUE</key>
+												<string>Generates static HTML from Spec files, allows filtering/navigation of Specifications.</string>
+											</dict>
+										</array>
 										<key>OPTIONS</key>
 										<dict>
 											<key>HIDDEN</key>
@@ -3990,7 +4046,14 @@
 									</dict>
 								</array>
 								<key>DESCRIPTION</key>
-								<array/>
+								<array>
+									<dict>
+										<key>LANGUAGE</key>
+										<string>English</string>
+										<key>VALUE</key>
+										<string>Check to install reporting plugins. HTML report plugin is installed by default.</string>
+									</dict>
+								</array>
 								<key>OPTIONS</key>
 								<dict>
 									<key>HIDDEN</key>
