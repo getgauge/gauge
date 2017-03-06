@@ -474,17 +474,34 @@
 										</dict>
 										<dict>
 											<key>CHILDREN</key>
-											<array/>
+											<array>
+												<dict>
+													<key>CHILDREN</key>
+													<array/>
+													<key>GID</key>
+													<integer>80</integer>
+													<key>PATH</key>
+													<string>../../../deploy/gauge/config</string>
+													<key>PATH_TYPE</key>
+													<integer>1</integer>
+													<key>PERMISSIONS</key>
+													<integer>493</integer>
+													<key>TYPE</key>
+													<integer>3</integer>
+													<key>UID</key>
+													<integer>502</integer>
+												</dict>
+											</array>
 											<key>GID</key>
 											<integer>80</integer>
 											<key>PATH</key>
-											<string>../../../deploy/gauge/config</string>
+											<string>gauge</string>
 											<key>PATH_TYPE</key>
-											<integer>1</integer>
+											<integer>0</integer>
 											<key>PERMISSIONS</key>
 											<integer>493</integer>
 											<key>TYPE</key>
-											<integer>3</integer>
+											<integer>2</integer>
 											<key>UID</key>
 											<integer>502</integer>
 										</dict>

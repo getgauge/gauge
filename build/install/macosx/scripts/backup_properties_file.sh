@@ -1,6 +1,6 @@
 #!/bin/sh
 
-config=$HOME/gauge/config
+config=$HOME/.gauge/config
 gauge_properties_file=$config/gauge.properties
 timestamp_file=$config/timestamp.txt
 
