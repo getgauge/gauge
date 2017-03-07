@@ -3,8 +3,7 @@ os:
   - osx
 language: go
 go:
-  - 1.7.3
-  - tip
+  - 1.8
 addons:
   apt:
     packages:
