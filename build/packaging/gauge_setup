@@ -4,10 +4,10 @@ PREFIX=/usr/local
 CONFIG=$HOME/.gauge/config
 
 function copy_configs() {
-    echo "Creatgin $CONFIG"
+    echo "Creating $CONFIG"
     mkdir -p $CONFIG
     echo "Copying gauge configuration files to $CONFIG"
-    cp -r $PREFIX/share/gauge/* $CONFIG
+    cp -r $PREFIX/gauge/config/* $CONFIG
 }
 
 function install_default_plugins() {

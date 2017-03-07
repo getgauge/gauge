@@ -582,7 +582,7 @@
 				<key>IDENTIFIER</key>
 				<string>com.thoughtworks.gauge.pkg</string>
 				<key>NAME</key>
-				<string>gauge</string>
+				<string>Gauge</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
