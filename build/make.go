@@ -38,6 +38,7 @@ const (
 	dotgauge           = ".gauge"
 	GOARCH             = "GOARCH"
 	GOOS               = "GOOS"
+	GAUGE_ROOT         = "GAUGE_ROOT"
 	home               = "HOME"
 	X86                = "386"
 	X86_64             = "amd64"
@@ -257,6 +258,7 @@ func installGauge() {
 	if _, err := common.MirrorDir(filepath.Join(deployDir, bin), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
+	updateConfigDir()
 	copyGaugeConfigFiles(deployDir)
 	if _, err := common.MirrorDir(filepath.Join(deployDir, config), gaugeConfigDir); err != nil {
 		panic(fmt.Sprintf("Could not copy gauge configuration files: %s", err))
@@ -390,21 +392,31 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	os.Chdir(wd)
 }
 
+func updateConfigDir() {
+	if os.Getenv(GAUGE_ROOT) != "" {
+		gaugeConfigDir = os.Getenv(GAUGE_ROOT)
+	} else {
+		if runtime.GOOS == "windows" {
+			appdata := os.Getenv("APPDATA")
+			gaugeConfigDir = filepath.Join(appdata, gauge, config)
+		} else {
+			home := os.Getenv("HOME")
+			gaugeConfigDir = filepath.Join(home, dotgauge, config)
+		}
+	}
+}
+
 func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {
 		if runtime.GOOS == "windows" {
 			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
-			gaugeConfigDir = filepath.Join(os.Getenv("APPDATA"), gauge, config)
 			if *gaugeInstallPrefix == "" {
 				panic(fmt.Errorf("Failed to find programfiles"))
 			}
 			*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, gauge)
 		} else {
 			*gaugeInstallPrefix = "/usr/local"
-			gaugeConfigDir = filepath.Join(os.Getenv(home), dotgauge, config)
 		}
-	} else {
-		gaugeConfigDir = filepath.Join(*gaugeInstallPrefix, config)
 	}
 }
 
