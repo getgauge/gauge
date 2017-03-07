@@ -16,8 +16,8 @@ It provides the ability to author test cases in the
 business language.
 
 %install
-mkdir -p %{buildroot}/usr/local/share/gauge/
-cp -r %{_builddir}/share/gauge/* %{buildroot}/usr/local/share/gauge/
+mkdir -p %{buildroot}/usr/local/gauge/
+cp -r %{_builddir}/config/* %{buildroot}/usr/local/gauge/config
 mkdir -p %{buildroot}/usr/local/bin/
 cp %{_builddir}/bin/* %{buildroot}/usr/local/bin/
 chmod +x %{buildroot}/usr/local/bin/*
@@ -26,10 +26,10 @@ chmod +x %{buildroot}/usr/local/bin/*
 /usr/local/bin/gauge
 /usr/local/bin/gauge_screenshot
 /usr/local/bin/gauge_setup
-/usr/local/share/gauge/gauge.properties
-/usr/local/share/gauge/notice.md
-/usr/local/share/gauge/skel/env/default.properties
-/usr/local/share/gauge/skel/example.spec
+/usr/local/gauge/config/gauge.properties
+/usr/local/gauge/config/notice.md
+/usr/local/gauge/config/skel/env/default.properties
+/usr/local/gauge/config/skel/example.spec
 
 %post
 echo -e "\n\nPlease run the 'gauge_setup' command to complete installation.\n"
