@@ -47,6 +47,16 @@ type Step struct {
 	Suffix         string
 }
 
+func (step *Step) GetDynamicParamas() []string {
+	var parameters []string
+	for _, fragment := range step.GetFragments() {
+		if fragment.Parameter.GetParameterType() == gauge_messages.Parameter_Dynamic {
+			parameters = append(parameters, fragment.Parameter.GetName())
+		}
+	}
+	return parameters
+}
+
 func (step *Step) GetArg(name string) *StepArg {
 	arg := step.Lookup.GetArg(name)
 	// Return static values

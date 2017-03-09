@@ -57,9 +57,27 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
+func (specResult *SpecResult) AddNonTableDrivenScenarioResult(results []Result) {
+	for _, result := range results {
+		scenarioFailed := false
+		protoScenario := result.Item().(*gauge_messages.ProtoScenario)
+		specResult.AddExecTime(protoScenario.GetExecutionTime())
+		if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
+			scenarioFailed = true
+		}
+		protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario}
+		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
+		if scenarioFailed {
+			specResult.ScenarioFailedCount++
+			specResult.IsFailed = true
+		}
+		specResult.ScenarioCount++
+
+	}
+}
+
 func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result, executedRowIndexes []int) {
 	numberOfScenarios := len(scenarioResults[0])
-
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
 		scenarioFailed := false
 		for rowIndx, eachRow := range scenarioResults {

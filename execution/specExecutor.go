@@ -34,6 +34,8 @@ import (
 	"github.com/getgauge/gauge/validation"
 )
 
+type executeMethod func(*gauge.Scenario) *result.ScenarioResult
+
 type specExecutor struct {
 	specification        *gauge.Specification
 	dataTableIndexes     []int
@@ -111,11 +113,13 @@ func (e *specExecutor) execute() *result.SpecResult {
 }
 
 func (e *specExecutor) executeTableDrivenSpec() {
+	sr := executeNonTableDrivenScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers, e.executeScenario)
+	e.specResult.AddNonTableDrivenScenarioResult(sr)
 	var res [][]result.Result
 	var executedRowIndexes []int
 	for _, tableRowIndex := range e.dataTableIndexes {
 		e.currentTableRow = tableRowIndex
-		res = append(res, e.executeScenarios())
+		res = append(res, executeTableDrivenScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers, e.executeScenario))
 		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 	}
 	e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
@@ -299,6 +303,26 @@ func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
 
 func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
+}
+
+func executeNonTableDrivenScenarios(scenarios []*gauge.Scenario, headers []string, execute executeMethod) []result.Result {
+	var scenarioResults []result.Result
+	for _, scenario := range scenarios {
+		if !scenario.IsDynamicParamFromDataTable(headers) {
+			scenarioResults = append(scenarioResults, execute(scenario))
+		}
+	}
+	return scenarioResults
+}
+
+func executeTableDrivenScenarios(scenarios []*gauge.Scenario, headers []string, execute executeMethod) []result.Result {
+	var scenarioResults []result.Result
+	for _, scenario := range scenarios {
+		if scenario.IsDynamicParamFromDataTable(headers) {
+			scenarioResults = append(scenarioResults, execute(scenario))
+		}
+	}
+	return scenarioResults
 }
 
 func (e *specExecutor) executeScenarios() []result.Result {

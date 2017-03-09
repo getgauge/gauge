@@ -38,6 +38,25 @@ func (s *Span) isInRange(lineNumber int) bool {
 	return s.Start <= lineNumber && s.End >= lineNumber
 }
 
+func (scenario *Scenario) IsDynamicParamFromDataTable(headers []string) bool {
+	for _, header := range headers {
+		for _, param := range scenario.GetAllDynamicParams() {
+			if param == header {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (scenario *Scenario) GetAllDynamicParams() []string {
+	var parameters []string
+	for _, step := range scenario.Steps {
+		parameters = append(parameters, step.GetDynamicParamas()...)
+	}
+	return parameters
+}
+
 func (scenario *Scenario) AddHeading(heading *Heading) {
 	heading.HeadingType = ScenarioHeading
 	scenario.Heading = heading
