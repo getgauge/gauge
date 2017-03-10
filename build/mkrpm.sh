@@ -98,7 +98,7 @@ function prep_rpm() {
     rpmdev-setuptree
 
     cp -r "$PKG_SRC/bin" "$TARGET/BUILD/"
-    cp -r "$PKG_SRC/share" "$TARGET/BUILD/"
+    cp -r "$PKG_SRC/config" "$TARGET/BUILD/"
     cp "$GAUGE_SETUP_FILE" "$TARGET/BUILD/bin/gauge_setup"
 
     SPEC_DATA=`cat "$SPEC_FILE"`
