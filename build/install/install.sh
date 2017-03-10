@@ -112,11 +112,19 @@ copy_gauge_binaries() {
     fi
 }
 
+get_time_stamp() {
+    if [[ `uname` != "Linux" ]]; then
+        time_stamp=$(stat -f "%m" $1)
+    else
+        time_stamp=$(date +%s -r $1)
+    fi
+}
+
 # copy gauge configuration at $config
 copy_gauge_configuration_files() {
     gauge_properties_file=$config/gauge.properties
     if [ -f $config/timestamp.txt ] ; then
-        current_time_stamp=`date +%s -r $gauge_properties_file`
+        current_time_stamp=`get_time_stamp $gauge_properties_file`
         old_time_stamp=`cat $config/timestamp.txt`
         if [ $current_time_stamp != $old_time_stamp ] ; then
             backup_file=$config/gauge.properties.bak
@@ -126,7 +134,7 @@ copy_gauge_configuration_files() {
         fi
     fi
     cp -rf config/* $config
-    date +%s -r $gauge_properties_file > $config/timestamp.txt
+    get_time_stamp $gauge_properties_file > $config/timestamp.txt
 }
 
 # Do the installation
