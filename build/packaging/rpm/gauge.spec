@@ -16,7 +16,7 @@ It provides the ability to author test cases in the
 business language.
 
 %install
-mkdir -p %{buildroot}/usr/local/gauge/
+mkdir -p %{buildroot}/usr/local/gauge/config
 cp -r %{_builddir}/config/* %{buildroot}/usr/local/gauge/config
 mkdir -p %{buildroot}/usr/local/bin/
 cp %{_builddir}/bin/* %{buildroot}/usr/local/bin/
