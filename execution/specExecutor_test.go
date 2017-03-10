@@ -473,75 +473,162 @@ func dummyExecutor(scenario *gauge.Scenario) *result.ScenarioResult {
 	return result.NewScenarioResult(protScenario)
 }
 
-func (s *MySuite) TestExecuteNonTableDrivenScenarios(c *C) {
+//func (s *MySuite) TestExecuteNonTableDrivenScenarios(c *C) {
+//
+//	heading1 := &gauge.Heading{
+//		HeadingType: gauge.ScenarioHeading,
+//		LineNo:      1,
+//		Value:       "Heading One",
+//	}
+//
+//	heading2 := &gauge.Heading{
+//		HeadingType: gauge.ScenarioHeading,
+//		LineNo:      1,
+//		Value:       "Heading Two",
+//	}
+//
+//	fragment1 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Text:         "print ",
+//	}
+//
+//	fragment2 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Parameter: &gauge_messages.Parameter{
+//			ParameterType: gauge_messages.Parameter_Static,
+//			Value:         "shyam",
+//		},
+//	}
+//
+//	fragment3 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Parameter: &gauge_messages.Parameter{
+//			ParameterType: gauge_messages.Parameter_Dynamic,
+//			Name:          "name",
+//		},
+//	}
+//
+//	fragments := []*gauge_messages.Fragment{fragment1, fragment2}
+//
+//	step1 := &gauge.Step{
+//		Fragments: []*gauge_messages.Fragment{fragment1, fragment3},
+//	}
+//
+//	step2 := &gauge.Step{
+//		Fragments: fragments,
+//	}
+//
+//	steps := []*gauge.Step{step1}
+//
+//	scenario1 := &gauge.Scenario{
+//		Heading: heading1,
+//		Steps:   steps,
+//	}
+//	scenario2 := &gauge.Scenario{
+//		Heading: heading2,
+//		Steps:   []*gauge.Step{step2},
+//	}
+//	scenarios := []*gauge.Scenario{scenario1, scenario2}
+//
+//	headers := []string{"name"}
+//	contextAndTearDowns := []*gauge.Step{}
+//
+//	results := executeNonTableDrivenScenarios(scenarios, contextAndTearDowns, headers, dummyExecutor)
+//
+//	c.Assert(len(results), Equals, 1)
+//	c.Assert(results[0].GetFailed(), Equals, false)
+//	executedScenario := results[0].(*result.ScenarioResult).ProtoScenario.ScenarioHeading
+//	c.Assert(executedScenario, Equals, scenario2.Heading.Value)
+//}
+//
+//func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
+//
+//	heading1 := &gauge.Heading{
+//		HeadingType: gauge.ScenarioHeading,
+//		LineNo:      1,
+//		Value:       "Heading One",
+//	}
+//
+//	heading2 := &gauge.Heading{
+//		HeadingType: gauge.ScenarioHeading,
+//		LineNo:      1,
+//		Value:       "Heading Two",
+//	}
+//
+//	fragment1 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Text:         "print ",
+//	}
+//
+//	fragment2 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Parameter: &gauge_messages.Parameter{
+//			ParameterType: gauge_messages.Parameter_Static,
+//			Value:         "shyam",
+//		},
+//	}
+//
+//	fragment3 := &gauge_messages.Fragment{
+//		FragmentType: gauge_messages.Fragment_Text,
+//		Parameter: &gauge_messages.Parameter{
+//			ParameterType: gauge_messages.Parameter_Dynamic,
+//			Name:          "name",
+//		},
+//	}
+//
+//	step1 := &gauge.Step{
+//		Fragments: []*gauge_messages.Fragment{fragment1, fragment3},
+//	}
+//
+//	step2 := &gauge.Step{
+//		Fragments: []*gauge_messages.Fragment{fragment1, fragment2},
+//	}
+//
+//	scenario1 := &gauge.Scenario{
+//		Heading: heading1,
+//		Steps:   []*gauge.Step{step1},
+//	}
+//	scenario2 := &gauge.Scenario{
+//		Heading: heading2,
+//		Steps:   []*gauge.Step{step2},
+//	}
+//	scenarios := []*gauge.Scenario{scenario1, scenario2}
+//
+//	headers := []string{"name"}
+//	contextAndTearDowns := []*gauge.Step{}
+//
+//	results := executeTableDrivenScenarios(scenarios, contextAndTearDowns, headers, dummyExecutor)
+//
+//	c.Assert(len(results), Equals, 1)
+//	c.Assert(results[0].GetFailed(), Equals, false)
+//	executedScenario := results[0].(*result.ScenarioResult).ProtoScenario.ScenarioHeading
+//	c.Assert(executedScenario, Equals, scenario1.Heading.Value)
+//}
 
-	heading1 := &gauge.Heading{
-		HeadingType: gauge.ScenarioHeading,
-		LineNo:      1,
-		Value:       "Heading One",
-	}
 
-	heading2 := &gauge.Heading{
-		HeadingType: gauge.ScenarioHeading,
-		LineNo:      1,
-		Value:       "Heading Two",
-	}
-
-	fragment1 := &gauge_messages.Fragment{
-		FragmentType: gauge_messages.Fragment_Text,
-		Text:         "print ",
-	}
-
-	fragment2 := &gauge_messages.Fragment{
-		FragmentType: gauge_messages.Fragment_Text,
-		Parameter: &gauge_messages.Parameter{
-			ParameterType: gauge_messages.Parameter_Static,
-			Value:         "shyam",
-		},
-	}
-
-	fragment3 := &gauge_messages.Fragment{
-		FragmentType: gauge_messages.Fragment_Text,
-		Parameter: &gauge_messages.Parameter{
-			ParameterType: gauge_messages.Parameter_Dynamic,
-			Name:          "name",
-		},
-	}
-
-	fragments := []*gauge_messages.Fragment{fragment1, fragment2}
-
-	step1 := &gauge.Step{
-		Fragments: []*gauge_messages.Fragment{fragment1, fragment3},
-	}
-
-	step2 := &gauge.Step{
-		Fragments: fragments,
-	}
-
-	steps := []*gauge.Step{step1}
-
-	scenario1 := &gauge.Scenario{
-		Heading: heading1,
-		Steps:   steps,
-	}
-	scenario2 := &gauge.Scenario{
-		Heading: heading2,
-		Steps:   []*gauge.Step{step2},
-	}
-	scenarios := []*gauge.Scenario{scenario1, scenario2}
+func (s *MySuite) TestIsUsingDynamicParamsReturnsTrue(c *C) {
+	parameters := []string{"name"}
 
 	headers := []string{"name"}
 
-	results := executeNonTableDrivenScenarios(scenarios, headers, dummyExecutor)
+	res := isUsingDynamicParam(parameters, headers)
 
-	c.Assert(len(results), Equals, 1)
-	c.Assert(results[0].GetFailed(), Equals, false)
-	executedScenario := results[0].(*result.ScenarioResult).ProtoScenario.ScenarioHeading
-	c.Assert(executedScenario, Equals, scenario2.Heading.Value)
+	c.Assert(res, Equals, true)
+
 }
 
-func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
+func (s *MySuite) TestIsUsingDynamicParamsReturnsFalse(c *C) {
+	parameters := []string{"id"}
 
+	headers := []string{"name"}
+
+	res := isUsingDynamicParam(parameters, headers)
+
+	c.Assert(res, Equals, false)
+
+}
+
+func (s *MySuite) TestFilterTableRelatedScenariosAndNonTableRalatedScenarios(c *C) {
 	heading1 := &gauge.Heading{
 		HeadingType: gauge.ScenarioHeading,
 		LineNo:      1,
@@ -552,6 +639,12 @@ func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
 		HeadingType: gauge.ScenarioHeading,
 		LineNo:      1,
 		Value:       "Heading Two",
+	}
+
+	heading3 := &gauge.Heading{
+		HeadingType: gauge.ScenarioHeading,
+		LineNo:      1,
+		Value:       "Heading Three",
 	}
 
 	fragment1 := &gauge_messages.Fragment{
@@ -572,6 +665,14 @@ func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
 		Parameter: &gauge_messages.Parameter{
 			ParameterType: gauge_messages.Parameter_Dynamic,
 			Name:          "name",
+		},
+	}
+
+	fragment4 := &gauge_messages.Fragment{
+		FragmentType: gauge_messages.Fragment_Text,
+		Parameter: &gauge_messages.Parameter{
+			ParameterType: gauge_messages.Parameter_Dynamic,
+			Name:          "id",
 		},
 	}
 
@@ -583,6 +684,10 @@ func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
 		Fragments: []*gauge_messages.Fragment{fragment1, fragment2},
 	}
 
+	step3 := &gauge.Step{
+		Fragments: []*gauge_messages.Fragment{fragment4},
+	}
+
 	scenario1 := &gauge.Scenario{
 		Heading: heading1,
 		Steps:   []*gauge.Step{step1},
@@ -591,14 +696,24 @@ func (s *MySuite) TestExecuteTableDrivenScenarios(c *C) {
 		Heading: heading2,
 		Steps:   []*gauge.Step{step2},
 	}
-	scenarios := []*gauge.Scenario{scenario1, scenario2}
+	scenario3 := &gauge.Scenario{
+		Heading: heading3,
+		Steps:   []*gauge.Step{step3},
+	}
+	scenarios := []*gauge.Scenario{scenario1, scenario2, scenario3}
 
-	headers := []string{"name"}
+	headers := []string{"name", "id"}
 
-	results := executeTableDrivenScenarios(scenarios, headers, dummyExecutor)
 
-	c.Assert(len(results), Equals, 1)
-	c.Assert(results[0].GetFailed(), Equals, false)
-	executedScenario := results[0].(*result.ScenarioResult).ProtoScenario.ScenarioHeading
-	c.Assert(executedScenario, Equals, scenario1.Heading.Value)
+	otherScenarios, tableDrivenScenarios := filterTableRelatedScenarios(scenarios, headers)
+
+	c.Assert(len(tableDrivenScenarios), Equals, 2)
+	c.Assert(len(otherScenarios), Equals, 1)
+	c.Assert(tableDrivenScenarios[0], Equals, scenario1)
+	c.Assert(tableDrivenScenarios[1], Equals, scenario3)
+	c.Assert(otherScenarios[0], Equals, scenario2)
+
 }
+
+
+

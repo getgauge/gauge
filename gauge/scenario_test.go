@@ -39,8 +39,9 @@ func (s *MySuite) TestIfScenarioUsesDynamicParaFromTable(c *C) {
 	}
 
 	headers := []string{"name"}
+	contextAndTearDowns := []*Step{}
 
-	c.Assert(scenario.IsDynamicParamFromDataTable(headers), Equals, true)
+	c.Assert(scenario.IsDynamicParamFromDataTable(contextAndTearDowns, headers), Equals, true)
 
 }
 
@@ -78,8 +79,9 @@ func (s *MySuite) TestIfScenarioDoesNotUsesDynamicParaFromTable(c *C) {
 	}
 
 	headers := []string{"name"}
+	contextAndTearDowns := []*Step{}
 
-	c.Assert(scenario.IsDynamicParamFromDataTable(headers), Equals, false)
+	c.Assert(scenario.IsDynamicParamFromDataTable(contextAndTearDowns, headers), Equals, false)
 
 }
 
@@ -137,7 +139,9 @@ func (s *MySuite) TestGetAllDynamicParams(c *C) {
 		Steps:   steps,
 	}
 
-	dynamicParams := scenario.GetAllDynamicParams()
+	contextAndTearDowns := []*Step{}
+
+	dynamicParams := scenario.GetAllDynamicParams(contextAndTearDowns)
 
 	c.Assert(2, Equals, len(dynamicParams))
 	c.Assert(dynamicParams[0], Equals, "name")

@@ -100,10 +100,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 	e.notifyBeforeSpecHook()
 	if !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
-			scenarioResults := e.executeScenarios()
+			scenarioResults := e.executeScenarios(e.specification.Scenarios)
 			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
-			e.executeTableDrivenSpec()
+			e.executeTableRelatedSpec()
 		}
 	}
 	e.notifyAfterSpecHook()
@@ -112,17 +112,51 @@ func (e *specExecutor) execute() *result.SpecResult {
 	return e.specResult
 }
 
-func (e *specExecutor) executeTableDrivenSpec() {
-	sr := executeNonTableDrivenScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers, e.executeScenario)
-	e.specResult.AddNonTableDrivenScenarioResult(sr)
-	var res [][]result.Result
-	var executedRowIndexes []int
-	for _, tableRowIndex := range e.dataTableIndexes {
-		e.currentTableRow = tableRowIndex
-		res = append(res, executeTableDrivenScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers, e.executeScenario))
-		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
+func getAllDynamicParams(steps []*gauge.Step) []string {
+	var parameters []string
+	for _, step := range steps {
+		parameters = append(parameters, step.GetDynamicParamas()...)
 	}
-	e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
+	return parameters
+}
+
+func isUsingDynamicParam(parameters, tableHeaders []string) bool {
+	for _, header := range tableHeaders {
+		for _, param := range parameters {
+			if param == header {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tablRelatedScenarios []*gauge.Scenario) {
+	for _, scenario := range scenarios {
+		if isUsingDynamicParam(scenario.GetAllDynamicParams(), headers) {
+			tablRelatedScenarios = append(tablRelatedScenarios, scenario)
+		} else {
+			otherScenarios = append(otherScenarios, scenario)
+		}
+	}
+	return
+
+}
+
+func (e *specExecutor) executeTableRelatedSpec() {
+	contextAndTearDowns := make([]*gauge.Step, 0)
+	contextAndTearDowns = append(contextAndTearDowns, e.specification.Contexts...)
+	contextAndTearDowns = append(contextAndTearDowns, e.specification.TearDownSteps...)
+	if isUsingDynamicParam(getAllDynamicParams(contextAndTearDowns), e.specification.DataTable.Table.Headers) {
+		res, executedRowIndexes := e.executeTableRelatedScenarios(e.specification.Scenarios)
+		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
+	} else {
+		s1, s2 := filterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
+		res := e.executeNonTableRelatedScenarios(s1)
+		e.specResult.AddNonTableRelatedScenarioResult(res)
+		tableDrivenRes, executedRowIndexes := e.executeTableRelatedScenarios(s2)
+		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, executedRowIndexes)
+	}
 }
 
 func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
@@ -250,7 +284,7 @@ func (e *specExecutor) skipSpec() {
 			res = append(res, e.accumulateSkippedScenarioResults())
 			executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 		}
-		e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
+		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
 	} else {
 		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
 	}
@@ -305,29 +339,26 @@ func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
 }
 
-func executeNonTableDrivenScenarios(scenarios []*gauge.Scenario, headers []string, execute executeMethod) []result.Result {
-	var scenarioResults []result.Result
+func (e *specExecutor) executeNonTableRelatedScenarios(scenarios []*gauge.Scenario) (scenarioResults []result.Result){
 	for _, scenario := range scenarios {
-		if !scenario.IsDynamicParamFromDataTable(headers) {
-			scenarioResults = append(scenarioResults, execute(scenario))
-		}
+		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
 	}
-	return scenarioResults
+	return
 }
 
-func executeTableDrivenScenarios(scenarios []*gauge.Scenario, headers []string, execute executeMethod) []result.Result {
-	var scenarioResults []result.Result
-	for _, scenario := range scenarios {
-		if scenario.IsDynamicParamFromDataTable(headers) {
-			scenarioResults = append(scenarioResults, execute(scenario))
-		}
+func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) (result [][]result.Result, executedRowIndexes []int) {
+	for _, tableRowIndex := range e.dataTableIndexes {
+		e.currentTableRow = tableRowIndex
+		result = append(result, e.executeScenarios(scenarios))
+		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 	}
-	return scenarioResults
+	return
+
 }
 
-func (e *specExecutor) executeScenarios() []result.Result {
+func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {
 	var scenarioResults []result.Result
-	for _, scenario := range e.specification.Scenarios {
+	for _, scenario := range scenarios {
 		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
 	}
 	return scenarioResults
