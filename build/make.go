@@ -18,6 +18,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -214,7 +215,13 @@ func main() {
 	flag.Parse()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
+	} else {
+		stat, _ := os.Stdin.Stat()
+		if (stat.Mode() & os.ModeCharDevice) != 0 {
+			buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
+		}
 	}
+	fmt.Println("Build: " + buildMetadata)
 	if *test {
 		runTests(*coverage)
 	} else if *install {
@@ -228,6 +235,24 @@ func main() {
 			compileGauge()
 		}
 	}
+}
+
+func revParseHead() string {
+	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
+	var hash bytes.Buffer
+	cmd.Stdout = &hash
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
+	var branch bytes.Buffer
+	cmd.Stdout = &branch
+	err = cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return fmt.Sprintf("%s-%s", strings.TrimSpace(hash.String()), strings.TrimSpace(branch.String()))
 }
 
 func filteredPlatforms() []map[string]string {
