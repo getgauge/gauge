@@ -125,7 +125,7 @@ function .onInit
     SetRegView 64
     StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
-
+  StrCpy $CONFIGDIR "$APPDATA\Gauge\config"
   ;See if PLUGINS to install are specified via cmd line arg
   ;Only if it is silent install
   ${If} ${Silent}
