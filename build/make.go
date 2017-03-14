@@ -31,6 +31,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -215,11 +216,8 @@ func main() {
 	flag.Parse()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
-	} else {
-		stat, _ := os.Stdin.Stat()
-		if (stat.Mode() & os.ModeCharDevice) != 0 {
-			buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
-		}
+	} else if terminal.IsTerminal(int(os.Stdout.Fd())) {
+		buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
 	}
 	fmt.Println("Build: " + buildMetadata)
 	if *test {
