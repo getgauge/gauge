@@ -3843,6 +3843,36 @@
 								<string>2120A8C5-B617-4AF8-9881-13B3BC4F1346</string>
 							</dict>
 							<dict>
+								<key>DESCRIPTION</key>
+								<array>
+									<dict>
+										<key>LANGUAGE</key>
+										<string>English</string>
+										<key>VALUE</key>
+										<string>Generates HTML report of Gauge spec run.</string>
+									</dict>
+								</array>
+								<key>OPTIONS</key>
+								<dict>
+									<key>HIDDEN</key>
+									<false/>
+									<key>STATE</key>
+									<integer>0</integer>
+								</dict>
+								<key>PACKAGE_UUID</key>
+								<string>448532C9-443E-4930-A337-5B7006C00CF9</string>
+								<key>REQUIREMENTS</key>
+								<array/>
+								<key>TITLE</key>
+								<array/>
+								<key>TOOLTIP</key>
+								<array/>
+								<key>TYPE</key>
+								<integer>0</integer>
+								<key>UUID</key>
+								<string>0CE0F5BF-22C0-4FA5-A9A9-72130E8E31DD</string>
+							</dict>
+							<dict>
 								<key>CHILDREN</key>
 								<array>
 									<dict>
@@ -3971,36 +4001,6 @@
 							<dict>
 								<key>CHILDREN</key>
 								<array>
-									<dict>
-										<key>DESCRIPTION</key>
-										<array>
-											<dict>
-												<key>LANGUAGE</key>
-												<string>English</string>
-												<key>VALUE</key>
-												<string>Generates HTML report of Gauge spec run.</string>
-											</dict>
-										</array>
-										<key>OPTIONS</key>
-										<dict>
-											<key>HIDDEN</key>
-											<false/>
-											<key>STATE</key>
-											<integer>0</integer>
-										</dict>
-										<key>PACKAGE_UUID</key>
-										<string>448532C9-443E-4930-A337-5B7006C00CF9</string>
-										<key>REQUIREMENTS</key>
-										<array/>
-										<key>TITLE</key>
-										<array/>
-										<key>TOOLTIP</key>
-										<array/>
-										<key>TYPE</key>
-										<integer>0</integer>
-										<key>UUID</key>
-										<string>0CE0F5BF-22C0-4FA5-A9A9-72130E8E31DD</string>
-									</dict>
 									<dict>
 										<key>DESCRIPTION</key>
 										<array>
