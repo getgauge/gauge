@@ -28,18 +28,16 @@ convert_to_list() {
     IFS="$old_iFS"
 }
 
-# Install all the plugins mentioned in $PLUGINS
-install_plugins() {
+# Install all the plugins in interactive mode.
+install_plugins_interactively() {
     plugins_list=( html-report )
     if [ -z "$GAUGE_PLUGINS" ]; then
-        if tty -s; then
-            echo "Enter comma(',') separated list of plugins which you would like to install :- "
-            read -e plugins
-            if [[ ! -z $plugins ]]; then
-                convert_to_list $plugins
-                plugins_list=( ${list[@]} ${plugins_list[@]} )
-                plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
-            fi
+        echo "Enter comma(',') separated list of plugins which you would like to install :- "
+        read -e plugins
+        if [[ ! -z $plugins ]]; then
+            convert_to_list $plugins
+            plugins_list=( ${list[@]} ${plugins_list[@]} )
+            plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
         fi
     else
         convert_to_list $GAUGE_PLUGINS
@@ -93,9 +91,49 @@ set_gaugeroot() {
 # Creates installation prefix and configuration dirs if doesn't exist
 create_prefix_if_does_not_exist() {
     [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
-    [ -d $config ] || echo "Creating $config ..." && mkdir -p $config
 }
 
+
+change_permission_if_needed() {
+    if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
+        echo "The dir .gauge already exist but was created with eleveted permision."
+        echo "Enter [1] to change permissions or Enter [2] to delete the dir (By default it will change the permissions)"
+        read -e choice
+        case $choice in
+            1)
+                sudo chown -R $USER:$USER $HOME/.gauge ;;
+            2)
+                sudo rm -rf ~/.gauge ;;
+            *)
+                sudo chown -R $USER:$USER $HOME/.gauge ;;
+        esac
+    fi
+}
+
+# Creates configuration dirs in interactive mode if doesn't exist
+create_config_interactively_if_does_not_exist() {
+    if [ ! -d $config ]; then
+         echo "Creating $config ..."
+        change_permission_if_needed
+        mkdir -p $config
+    fi
+}
+
+check_permissions() {
+    if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
+            echo "The dir .gauge already exist but was created with eleveted permission. Please change paermissions for $HOME/.gauge dir or delete it."
+            exit 1
+    fi
+}
+
+# Creates installation prefix and configuration dirs if doesn't exist. Exits if not able to create.
+create_config_if_does_not_exist() {
+    if [ ! -d $config ]; then
+        echo "Creating $config ..."
+        check_permissions
+        mkdir -p $config
+    fi
+}
 
 # Copy gauge binaries in $prefix dir
 copy_gauge_binaries() {
@@ -138,17 +176,34 @@ copy_gauge_configuration_files() {
 }
 
 # Do the installation
-install_gauge() {
+install_gauge_interactively() {
     if [ -z "$GAUGE_PREFIX" ]; then
         prefix=/usr/local
         echo "Installing gauge at $prefix/bin"
-        if tty -s; then
-            echo -e "Enter custom install location :-"
-            read -e install_location
-            if [[ ! -z $install_location ]]; then
+        echo -e "Enter custom install location :-"
+        read -e install_location
+        if [[ ! -z $install_location ]]; then
             prefix=$(get_absolute_path ${install_location/\~/$HOME})
-            fi
         fi
+    else
+        prefix=$GAUGE_PREFIX
+    fi
+
+    config=$HOME/.gauge/config
+
+    create_prefix_if_does_not_exist
+    copy_gauge_binaries
+    create_config_interactively_if_does_not_exist
+    copy_gauge_configuration_files
+    set_gaugeroot
+    source ~/.profile
+    echo -e "Gauge core successfully installed.\n"
+}
+
+install_gauge_noninteractively() {
+    if [ -z "$GAUGE_PREFIX" ]; then
+        prefix=/usr/local
+        echo "Installing gauge at $prefix/bin"
     else
         prefix=$GAUGE_PREFIX
     fi
@@ -156,11 +211,41 @@ install_gauge() {
     config=$HOME/.gauge/config
     create_prefix_if_does_not_exist
     copy_gauge_binaries
+    create_config_if_does_not_exist
     copy_gauge_configuration_files
     set_gaugeroot
     source ~/.profile
     echo -e "Gauge core successfully installed.\n"
 }
+
+install_plugins_noninteractively() {
+    plugins_list=( html-report )
+    if [ ! -z "$GAUGE_PLUGINS" ]; then
+        convert_to_list $GAUGE_PLUGINS
+        plugins_list=( ${list[@]} ${plugins_list[@]} )
+        plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+    fi
+    for plugin in "${plugins_list[@]}"
+    do
+        echo "Installing plugin $plugin ..."
+        gauge --install $plugin
+    done
+}
+
+
+# perform gauge installation in interactives mode
+do_interactive_installation() {
+    install_gauge_interactively
+    install_plugins_interactively
+}
+
+
+# perform gauge installation in non tty mode
+do_noninteractive_installation() {
+    install_gauge_noninteractively
+    install_plugins_noninteractively
+}
+
 
 # check whether user has supplied -h or --help . If yes display usage if no diplay usage with an error
 if [[ $# != 0 ]]; then
@@ -175,5 +260,10 @@ if [[ $# != 0 ]]; then
     fi
 fi
 
-install_gauge
-install_plugins
+
+# If tty then perform installation in interactive mode.
+if tty -s; then
+    do_interactive_installation
+else
+    do_noninteractive_installation
+fi
