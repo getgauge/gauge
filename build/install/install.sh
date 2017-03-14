@@ -31,7 +31,7 @@ convert_to_list() {
 # Install all the plugins in interactive mode.
 install_plugins_interactively() {
     plugins_list=( html-report )
-    if [ -z "$GAUGE_PLUGINS" ]; then
+    if [[ -z "$GAUGE_PLUGINS" ]]; then
         echo "Enter comma(',') separated list of plugins which you would like to install :- "
         read -e plugins
         if [[ ! -z $plugins ]]; then
@@ -70,18 +70,18 @@ get_absolute_path (){
 # Set GAUGE_ROOT environment variable
 set_gaugeroot() {
     # ensure gauge is on PATH
-    if [ -z "$(which gauge)" ]; then
+    if [[ -z "$(which gauge)" ]]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
         updated_profile=1
     fi
     # ensure GAUGE_ROOT is set
-    if [ -z "$GAUGE_ROOT" ]; then
+    if [[ -z "$GAUGE_ROOT" ]]; then
         echo "Adding GAUGE_ROOT to environment..."
         echo "export GAUGE_ROOT=$config"  >> ~/.profile
         updated_profile=1
     fi
-    if [ $updated_profile ] ; then
+    if [[ $updated_profile ]] ; then
         source ~/.profile
     fi
     echo -e "GAUGE_ROOT has been set. If you face errors, run '$ source ~/.profile'\n"
@@ -90,7 +90,7 @@ set_gaugeroot() {
 
 # Creates installation prefix and configuration dirs if doesn't exist
 create_prefix_if_does_not_exist() {
-    [ -d $prefix ] || echo "Creating $prefix ..." && mkdir -p $prefix
+    [[ -d $prefix ]] || echo "Creating $prefix ..." && mkdir -p $prefix
 }
 
 
@@ -99,21 +99,22 @@ change_permission_if_needed() {
         echo "The dir .gauge already exist but was created with eleveted permision."
         echo "Enter [1] to change permissions or Enter [2] to delete the dir (By default it will change the permissions)"
         read -e choice
+        group=`id -ng`
         case $choice in
             1)
-                sudo chown -R $USER:$USER $HOME/.gauge ;;
+                sudo chown -R $USER:$group $HOME/.gauge ;;
             2)
                 sudo rm -rf ~/.gauge ;;
             *)
-                sudo chown -R $USER:$USER $HOME/.gauge ;;
+                sudo chown -R $USER:$group $HOME/.gauge ;;
         esac
     fi
 }
 
 # Creates configuration dirs in interactive mode if doesn't exist
 create_config_interactively_if_does_not_exist() {
-    if [ ! -d $config ]; then
-         echo "Creating $config ..."
+    if [[ ! -d $config ]]; then
+        echo "Creating $config ..."
         change_permission_if_needed
         mkdir -p $config
     fi
@@ -128,7 +129,7 @@ check_permissions() {
 
 # Creates installation prefix and configuration dirs if doesn't exist. Exits if not able to create.
 create_config_if_does_not_exist() {
-    if [ ! -d $config ]; then
+    if [[ ! -d $config ]]; then
         echo "Creating $config ..."
         check_permissions
         mkdir -p $config
@@ -138,7 +139,7 @@ create_config_if_does_not_exist() {
 # Copy gauge binaries in $prefix dir
 copy_gauge_binaries() {
     # check for write permissions and Install gauge, asks for sudo access if not permitted
-    if [ ! -w "$prefix" -a "$prefix" = "/usr/local" ]; then
+    if [ ! -w $prefix -a $prefix = "/usr/local" ]; then
         echo
         echo "You do not have write permissions for $prefix"
         echo "Running script as sudo "
@@ -161,10 +162,10 @@ get_time_stamp() {
 # copy gauge configuration at $config
 copy_gauge_configuration_files() {
     gauge_properties_file=$config/gauge.properties
-    if [ -f $config/timestamp.txt ] ; then
+    if [[ -f $config/timestamp.txt ]]; then
         current_time_stamp=`get_time_stamp $gauge_properties_file`
         old_time_stamp=`cat $config/timestamp.txt`
-        if [ $current_time_stamp != $old_time_stamp ] ; then
+        if [[ $current_time_stamp != $old_time_stamp ]]; then
             backup_file=$config/gauge.properties.bak
             echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at HOME/.gauge/config/gauge.properties.bak. You can restore these configurations later."
             rm -rf $backup_file
@@ -177,7 +178,7 @@ copy_gauge_configuration_files() {
 
 # Do the installation
 install_gauge_interactively() {
-    if [ -z "$GAUGE_PREFIX" ]; then
+    if [[ -z "$GAUGE_PREFIX" ]]; then
         prefix=/usr/local
         echo "Installing gauge at $prefix/bin"
         echo -e "Enter custom install location :-"
@@ -201,7 +202,7 @@ install_gauge_interactively() {
 }
 
 install_gauge_noninteractively() {
-    if [ -z "$GAUGE_PREFIX" ]; then
+    if [[ -z "$GAUGE_PREFIX" ]]; then
         prefix=/usr/local
         echo "Installing gauge at $prefix/bin"
     else
@@ -220,7 +221,7 @@ install_gauge_noninteractively() {
 
 install_plugins_noninteractively() {
     plugins_list=( html-report )
-    if [ ! -z "$GAUGE_PLUGINS" ]; then
+    if [[ ! -z "$GAUGE_PLUGINS" ]]; then
         convert_to_list $GAUGE_PLUGINS
         plugins_list=( ${list[@]} ${plugins_list[@]} )
         plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
