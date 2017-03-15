@@ -31,7 +31,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
-	"github.com/mattn/go-isatty"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 const (
@@ -216,7 +216,7 @@ func main() {
 	flag.Parse()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
-	} else if isatty.IsTerminal(os.Stdout.Fd()) {
+	} else if terminal.IsTerminal(int(os.Stdout.Fd())) {
 		buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
 	}
 	fmt.Println("Build: " + buildMetadata)
