@@ -32,7 +32,7 @@ var _ = Suite(&MySuite{})
 
 func (s *MySuite) TestParsingVersion(c *C) {
 	Version, err := ParseVersion("1.5.9")
-	c.Assert(err, IsNil)
+	c.Assert(err, Equals, nil)
 	c.Assert(Version.Major, Equals, 1)
 	c.Assert(Version.Minor, Equals, 5)
 	c.Assert(Version.Patch, Equals, 9)
