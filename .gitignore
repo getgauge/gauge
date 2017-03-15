@@ -37,3 +37,5 @@ gauge.iml
 /manifest.json
 /specs/
 /step_implementations/
+
+vendor/*/
