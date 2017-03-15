@@ -31,6 +31,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
+	"github.com/mattn/go-isatty"
 )
 
 const (
@@ -215,15 +216,9 @@ func main() {
 	flag.Parse()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
-	} 
-	// disabled this temporarily.
-	// dependency on external package breaks vendoring, since make.go is in a different package, i.e. not in gauge
-	// os.Stdin.Stat is the way to go, but it doesnt work on windows. Fix tentatively in go1.9
-	// ref: https://github.com/golang/go/issues/14853
-
-	// else if isatty.IsTerminal(os.Stdout.Fd()) {
-	// 	buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
-	// }
+	} else if isatty.IsTerminal(os.Stdout.Fd()) {
+		buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
+	}
 	fmt.Println("Build: " + buildMetadata)
 	if *test {
 		runTests(*coverage)
