@@ -23,7 +23,7 @@ import (
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func assertStepEqual(c *C, expected, actual *gauge.Step) {

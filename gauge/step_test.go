@@ -19,7 +19,7 @@ package gauge
 
 import (
 	"github.com/getgauge/gauge/gauge_messages"
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {

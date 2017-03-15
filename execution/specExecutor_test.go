@@ -26,7 +26,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/validation"
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 type specBuilder struct {

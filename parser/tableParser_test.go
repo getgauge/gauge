@@ -18,7 +18,7 @@
 package parser
 
 import (
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestIgnoreCommentLines(c *C) {

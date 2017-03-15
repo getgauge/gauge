@@ -22,7 +22,7 @@ import (
 
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }
