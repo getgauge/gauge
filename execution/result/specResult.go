@@ -65,7 +65,7 @@ func (specResult *SpecResult) AddNonTableRelatedScenarioResult(results []Result)
 		if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 			scenarioFailed = true
 		}
-		protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario}
+		protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Scenario, Scenario: protoScenario}
 		specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		if scenarioFailed {
 			specResult.ScenarioFailedCount++
