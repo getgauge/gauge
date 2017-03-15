@@ -2,6 +2,9 @@
 	"ImportPath": "github.com/getgauge/gauge",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
+	"Packages": [
+		"./..."
+	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/apoorvam/goterminal",
@@ -72,10 +75,6 @@
 			"Rev": "833a04a10549a95dc34458c195cbad61bbb6cb4d"
 		},
 		{
-			"ImportPath": "golang.org/x/crypto/ssh/terminal",
-			"Rev": "728b753d0135da6801d45a38e6f43ff55779c5c2"
-		},
-		{
 			"ImportPath": "google.golang.org/grpc",
 			"Rev": "50955793b0183f9de69bd78e2ec251cf20aab121"
 		},
@@ -128,6 +127,10 @@
 			"ImportPath": "google.golang.org/grpc/transport",
 			"Comment": "v1.0.5-14-g5095579",
 			"Rev": "50955793b0183f9de69bd78e2ec251cf20aab121"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
 		}
 	]
 }
