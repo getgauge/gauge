@@ -11,10 +11,7 @@ addons:
 env:
   - GAUGE_ROOT="/tmp/gauge"
 before_install:
-  - go get -u github.com/kardianos/govendor
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
-install:
-  - govendor sync
 script:
   - go run build/make.go
   - go test ./...
