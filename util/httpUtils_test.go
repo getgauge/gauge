@@ -26,7 +26,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestDownloadFailureIfFileNotFound(c *C) {

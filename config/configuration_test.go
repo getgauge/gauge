@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 func Test(t *testing.T) { TestingT(t) }

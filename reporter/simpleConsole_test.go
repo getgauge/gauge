@@ -25,7 +25,7 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 type dummyWriter struct {

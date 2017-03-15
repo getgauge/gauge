@@ -20,7 +20,7 @@ package parser
 import (
 	"fmt"
 
-	. "github.com/go-check/check"
+	. "gopkg.in/check.v1"
 )
 
 type specBuilder struct {
