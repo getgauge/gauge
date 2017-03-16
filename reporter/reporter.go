@@ -105,23 +105,13 @@ func initParallelReporters() {
 	}
 }
 
-func isUsingDynamicParam(parameters, tableHeaders []string) bool {
-	for _, header := range tableHeaders {
-		for _, param := range parameters {
-			if param == header {
-				return true
-			}
+func getAllDynamicParams(steps []*gauge.Step, tableHeaders []string) bool {
+	for _, step := range steps {
+		if step.IsUsingDynamicParamInStep(tableHeaders){
+			return true
 		}
 	}
 	return false
-}
-
-func getAllDynamicParams(steps []*gauge.Step) []string {
-	var parameters []string
-	for _, step := range steps {
-		parameters = append(parameters, step.GetDynamicParamas()...)
-	}
-	return parameters
 }
 
 // ListenExecutionEvents listens to all execution events for reporting on console
@@ -146,7 +136,7 @@ func ListenExecutionEvents() {
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
 				contextAndTearDowns = append(contextAndTearDowns, e.Item.(*gauge.Specification).Contexts...)
 				contextAndTearDowns = append(contextAndTearDowns, e.Item.(*gauge.Specification).TearDownSteps...)
-				if isUsingDynamicParam(getAllDynamicParams(contextAndTearDowns), e.Item.(*gauge.Specification).DataTable.Table.Headers){
+				if getAllDynamicParams(contextAndTearDowns, e.Item.(*gauge.Specification).DataTable.Table.Headers){
 					contextAndTearDownUseDynamicParams = true
 				}else {
 					contextAndTearDownUseDynamicParams = false
@@ -161,7 +151,7 @@ func ListenExecutionEvents() {
 					if contextAndTearDownUseDynamicParams{
 						r.DataTable(formatter.FormatTable(&sce.DataTableRow))
 					}else {
-						if isUsingDynamicParam(sce.GetAllDynamicParams(), sce.DataTableRow.Headers) {
+						if sce.IsUsingDynamicParamInScenario(sce.DataTableRow.Headers) {
 							r.DataTable(formatter.FormatTable(&sce.DataTableRow))
 						}
 					}

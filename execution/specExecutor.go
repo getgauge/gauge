@@ -112,20 +112,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 	return e.specResult
 }
 
-func getAllDynamicParams(steps []*gauge.Step) []string {
-	var parameters []string
+func isUsingDynamicParam(steps []*gauge.Step, tableHeaders []string ) bool {
 	for _, step := range steps {
-		parameters = append(parameters, step.GetDynamicParamas()...)
-	}
-	return parameters
-}
-
-func isUsingDynamicParam(parameters, tableHeaders []string) bool {
-	for _, header := range tableHeaders {
-		for _, param := range parameters {
-			if param == header {
-				return true
-			}
+		if step.IsUsingDynamicParamInStep(tableHeaders) {
+			return true
 		}
 	}
 	return false
@@ -133,7 +123,7 @@ func isUsingDynamicParam(parameters, tableHeaders []string) bool {
 
 func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tablRelatedScenarios []*gauge.Scenario) {
 	for _, scenario := range scenarios {
-		if isUsingDynamicParam(scenario.GetAllDynamicParams(), headers) {
+		if scenario.IsUsingDynamicParamInScenario(headers) {
 			tablRelatedScenarios = append(tablRelatedScenarios, scenario)
 		} else {
 			otherScenarios = append(otherScenarios, scenario)
@@ -147,7 +137,7 @@ func (e *specExecutor) executeTableRelatedSpec() {
 	contextAndTearDowns := make([]*gauge.Step, 0)
 	contextAndTearDowns = append(contextAndTearDowns, e.specification.Contexts...)
 	contextAndTearDowns = append(contextAndTearDowns, e.specification.TearDownSteps...)
-	if isUsingDynamicParam(getAllDynamicParams(contextAndTearDowns), e.specification.DataTable.Table.Headers) {
+	if isUsingDynamicParam(contextAndTearDowns, e.specification.DataTable.Table.Headers) {
 		res, executedRowIndexes := e.executeTableRelatedScenarios(e.specification.Scenarios)
 		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
 	} else {

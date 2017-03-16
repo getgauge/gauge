@@ -59,7 +59,7 @@ func (s *MySuite) TestGetAllDynamicParams(c *C) {
 		Steps:   steps,
 	}
 
-	dynamicParams := scenario.GetAllDynamicParams()
+	dynamicParams := scenario.IsUsingDynamicParamInScenario()
 
 	c.Assert(2, Equals, len(dynamicParams))
 	c.Assert(dynamicParams[0], Equals, "name")

@@ -38,12 +38,13 @@ func (s *Span) isInRange(lineNumber int) bool {
 	return s.Start <= lineNumber && s.End >= lineNumber
 }
 
-func (scenario *Scenario) GetAllDynamicParams() []string {
-	var parameters []string
+func (scenario *Scenario) IsUsingDynamicParamInScenario(tableheaders []string) bool {
 	for _, step := range scenario.Steps {
-		parameters = append(parameters, step.GetDynamicParamas()...)
+		if step.IsUsingDynamicParamInStep(tableheaders){
+			return true
+		}
 	}
-	return parameters
+	return false
 }
 
 func (scenario *Scenario) AddHeading(heading *Heading) {

@@ -255,7 +255,7 @@ func (s *MySuite) TestGetDynamicParameters(c *C) {
 		Fragments: fragments,
 	}
 
-	dynamicParams := step.GetDynamicParamas()
+	dynamicParams := step.IsUsingDynamicParamInStep()
 	c.Assert(2, Equals, len(dynamicParams))
 	c.Assert(dynamicParams[0], Equals, "name")
 	c.Assert(dynamicParams[1], Equals, "id")

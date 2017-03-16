@@ -248,6 +248,10 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 	}
 }
 
+func (spec *Specification) UsesArgsInContextTeardown(args []string) bool{
+	return false
+}
+
 type SpecItemFilter interface {
 	Filter(Item) bool
 }
