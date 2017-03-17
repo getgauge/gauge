@@ -40,6 +40,7 @@ import (
 	"github.com/getgauge/gauge/validation"
 	"github.com/getgauge/gauge/version"
 
+	"github.com/getgauge/gauge/debug"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
 	"github.com/getgauge/gauge/util"
@@ -80,6 +81,7 @@ var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the
 var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
 var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios failed in previous run. Eg: gauge --failed")
 var docs = flag.String([]string{"-docs"}, "", "Generate documenation using specified plugin. Eg: gauge --docs <plugin name> specs/")
+var debugApi = flag.Bool([]string{"-debug-api"}, false, "Starts a local web server to debug gauge API's started by IDE's. Eg: gauge --debug-api")
 
 func main() {
 	flag.Parse()
@@ -130,6 +132,8 @@ func main() {
 	} else if flag.NFlag() == 0 && len(flag.Args()) == 0 {
 		printUsage()
 		os.Exit(0)
+	} else if *debugApi {
+		debug.Start()
 	} else if validGaugeProject {
 		var specDirs = []string{common.SpecsDirectoryName}
 		if len(flag.Args()) > 0 {

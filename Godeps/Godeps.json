@@ -131,6 +131,10 @@
 		{
 			"ImportPath": "gopkg.in/check.v1",
 			"Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
+		},
+		{
+			"ImportPath": "github.com/shirou/gopsutil",
+			"Rev": "98d5de7ce9acd16b430be82ef4448ca578537a4a"
 		}
 	]
 }
