@@ -13,7 +13,8 @@ sudo rm -rf /usr/local/gauge
 
 # save timestamp of gauge.properties file
 gauge_properties_file=$config/gauge.properties
-timestamp_file=$config/timestamp.txt
+time_stamp=`stat -f "%m" $gauge_properties_file`
 
+# remove older timestamp create new timestamp of gauge.properties file.
 rm $timestamp_file
-stat -f "%m" $gauge_properties_file > $timestamp_file
+sudo -u $USER sh -c "echo $time_stamp > $config/timestamp.txt"
