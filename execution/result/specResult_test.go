@@ -1,9 +1,8 @@
 package result
 
 import (
-
-	gc "github.com/go-check/check"
 	"github.com/getgauge/gauge/gauge_messages"
+	gc "gopkg.in/check.v1"
 )
 
 func (s *MySuite) TestAddNonTableRelatedScenarioResult(c *gc.C) {
