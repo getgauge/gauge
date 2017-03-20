@@ -98,10 +98,10 @@ func (e *specExecutor) execute() *result.SpecResult {
 	e.notifyBeforeSpecHook()
 	if !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
-			scenarioResults := e.executeScenarios()
+			scenarioResults := e.executeScenarios(e.specification.Scenarios)
 			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
-			e.executeTableDrivenSpec()
+			e.executeTableRelatedSpec()
 		}
 	}
 	e.notifyAfterSpecHook()
@@ -110,15 +110,45 @@ func (e *specExecutor) execute() *result.SpecResult {
 	return e.specResult
 }
 
-func (e *specExecutor) executeTableDrivenSpec() {
-	var res [][]result.Result
-	var executedRowIndexes []int
+func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) (result [][]result.Result, executedRowIndexes []int) {
 	for _, tableRowIndex := range e.dataTableIndexes {
 		e.currentTableRow = tableRowIndex
-		res = append(res, e.executeScenarios())
+		result = append(result, e.executeScenarios(scenarios))
 		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 	}
-	e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
+	return
+}
+
+func (e *specExecutor) executeNonTableRelatedScenarios(scenarios []*gauge.Scenario) (scenarioResults []result.Result){
+	for _, scenario := range scenarios {
+		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
+	}
+	return
+}
+
+func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tablRelatedScenarios []*gauge.Scenario) {
+	for _, scenario := range scenarios {
+		if scenario.UsesArgsInSteps(headers...) {
+			tablRelatedScenarios = append(tablRelatedScenarios, scenario)
+		} else {
+			otherScenarios = append(otherScenarios, scenario)
+		}
+	}
+	return
+}
+
+func (e *specExecutor) executeTableRelatedSpec() {
+	if e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...){
+		res, executedRowIndexes := e.executeTableRelatedScenarios(e.specification.Scenarios)
+		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
+
+	}else {
+		nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
+		res := e.executeNonTableRelatedScenarios(nonTableRelatedScenarios)
+		e.specResult.AddNonTableRelatedScenarioResult(res)
+		tableDrivenRes, executedRowIndexes := e.executeTableRelatedScenarios(tableRelatedScenarios)
+		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, executedRowIndexes)
+	}
 }
 
 func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
@@ -246,7 +276,7 @@ func (e *specExecutor) skipSpec() {
 			res = append(res, e.accumulateSkippedScenarioResults())
 			executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 		}
-		e.specResult.AddTableDrivenScenarioResult(res, executedRowIndexes)
+		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
 	} else {
 		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
 	}
@@ -301,9 +331,9 @@ func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
 	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
 }
 
-func (e *specExecutor) executeScenarios() []result.Result {
+func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {
 	var scenarioResults []result.Result
-	for _, scenario := range e.specification.Scenarios {
+	for _, scenario := range scenarios {
 		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
 	}
 	return scenarioResults
