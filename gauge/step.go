@@ -83,6 +83,22 @@ func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap
 	return true
 }
 
+func (step *Step) UsesDynamicArgs(args ...string) bool{
+	return step.containsAtLeastOneDynamicArgsInStep(args...)
+
+}
+
+func (step *Step)containsAtLeastOneDynamicArgsInStep(args ...string)bool{
+	for _, arg := range args {
+		for _, stepArg := range step.Args {
+			if stepArg.Value == arg && stepArg.ArgType == Dynamic {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg {
 	args := make([]*StepArg, len(newStep.Args))
 	for key, value := range orderMap {
