@@ -16,8 +16,11 @@
 
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 set -e
 
+YELLOW='\033[1;33m'
+NC='\033[0m'
 
 # converts a ',' separated string into list.
 convert_to_list() {
@@ -26,6 +29,16 @@ convert_to_list() {
     IFS=${IFS:0:1} # this is useful to format your code with tabs
     list=( $1 )
     IFS="$old_iFS"
+}
+
+# Execute gauge --iplugins=$@nstall <plugin> for a provided list
+install_plugins() {
+    for plugin in $@
+    do
+        echo "Installing plugin $plugin ..."
+        $prefix/bin/gauge --install $plugin
+    done
+    echo -e "${YELLOW}GAUGE_ROOT has been set in ~/.profile. If you face errors, run '$ source ~/.profile'\n${NC}"
 }
 
 # Install all the plugins in interactive mode.
@@ -44,21 +57,18 @@ install_plugins_interactively() {
         plugins_list=( ${list[@]} ${plugins_list[@]} )
         plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
     fi
-    for plugin in "${plugins_list[@]}"
-    do
-        echo "Installing plugin $plugin ..."
-        gauge --install $plugin
-    done
+    install_plugins "${plugins_list[@]}"
 }
 
-# Print usage of this script
-display_usage() {
-	echo -e "On Linux, this script installs gauge and it's plugins.\n\nUsage:\n./install.sh\n\nSet GAUGE_PREFIX env to install gauge at custom location.
-Set GAUGE_PLUGINS env to install plugins along with gauge.
-Exp:-
-    GAUGE_PREFIX=my/custom/path ./install.sh
-    GAUGE_PLUGINS=java,ruby,spectacle ./install.sh
-    GAUGE_PREFIX=my/custom/path GAUGE_PLUGINS=xml-report,java ./install.sh"
+# Install plugins mentioned in $GAUGE_PLUGINS
+install_plugins_noninteractively() {
+    plugins_list=( html-report )
+    if [[ ! -z "$GAUGE_PLUGINS" ]]; then
+        convert_to_list $GAUGE_PLUGINS
+        plugins_list=( ${list[@]} ${plugins_list[@]} )
+        plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+    fi
+    install_plugins $plugins_list
 }
 
 # Find absolute path
@@ -67,33 +77,54 @@ get_absolute_path (){
     { cd "$(dirname "$1")" || exit 1; echo "$(pwd -P)/$(basename "$1")"; }
 }
 
-# Set GAUGE_ROOT environment variable
+# Set GAUGE_ROOT and GAUGE binaries to environment variable
 set_gaugeroot() {
     # ensure gauge is on PATH
-    if [[ -z "$(which gauge)" ]]; then
+    if [[ "$(which gauge)" != $prefix/bin ]]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
-        updated_profile=1
     fi
+
     # ensure GAUGE_ROOT is set
-    if [[ -z "$GAUGE_ROOT" ]]; then
-        echo "Adding GAUGE_ROOT to environment..."
-        echo "export GAUGE_ROOT=$config"  >> ~/.profile
-        updated_profile=1
+    echo "Adding GAUGE_ROOT to environment..."
+    if [[ ! -z "$GAUGE_ROOT" && $config != "$GAUGE_ROOT" ]]; then
+        echo "Coppying Gauge configuration at $config. Your older configurations will be at $GAUGE_ROOT/share/gauge."
     fi
-    if [[ $updated_profile ]] ; then
-        source ~/.profile
-    fi
-    echo -e "GAUGE_ROOT has been set. If you face errors, run '$ source ~/.profile'\n"
+    echo "export GAUGE_ROOT=$config"  >> ~/.profile
+    source ~/.profile
 }
+
+# check permission for nested dir in reverse order and create non existing dir
+create_nested_repo() {
+    parent=$(dirname "$1")
+    if [[ -d $parent ]]; then
+        echo "Creating $1"
+        if [[ -w $parent ]]; then
+            mkdir -p $1
+        else
+            echo "You do not have write paermisions for '$parent ."
+            sudo mkdir -p $1
+        fi
+    else
+        create_nested_repo $parent
+    fi
+}
+
 
 
 # Creates installation prefix and configuration dirs if doesn't exist
-create_prefix_if_does_not_exist() {
-    [[ -d $prefix ]] || echo "Creating $prefix ..." && mkdir -p $prefix
+create_prefix_interactively() {
+    if  [[ ! -d $prefix ]]; then
+        create_nested_repo $prefix
+    fi
 }
 
+# Creates installation prefix and configuration dirs if doesn't exist in non tty mode
+create_prefix_noninteractively(){
+     [[ -d $prefix ]] || echo "Creating $prefix ..." && mkdir -p $prefix
+}
 
+# Give option to change the permission or delete the dir if needed
 change_permission_if_needed() {
     if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
         echo "The dir .gauge already exist but was created with eleveted permision."
@@ -120,27 +151,22 @@ create_config_interactively_if_does_not_exist() {
     fi
 }
 
-check_permissions() {
-    if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
-            echo "The dir .gauge already exist but was created with eleveted permission. Please change paermissions for $HOME/.gauge dir or delete it."
-            exit 1
-    fi
-}
-
 # Creates installation prefix and configuration dirs if doesn't exist. Exits if not able to create.
 create_config_if_does_not_exist() {
     if [[ ! -d $config ]]; then
         echo "Creating $config ..."
-        check_permissions
+        if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
+            echo "The directory .gauge already exist but was created with eleveted permission. Please change paermissions for $HOME/.gauge dir or delete it."
+            exit 1
+        fi
         mkdir -p $config
     fi
 }
 
 # Copy gauge binaries in $prefix dir
-copy_gauge_binaries() {
+copy_gauge_binaries_interactively() {
     # check for write permissions and Install gauge, asks for sudo access if not permitted
-    if [ ! -w $prefix -a $prefix = "/usr/local" ]; then
-        echo
+    if [[ ! -w $prefix || $prefix == "/usr/local" ]]; then
         echo "You do not have write permissions for $prefix"
         echo "Running script as sudo "
         sudo cp -rf bin $prefix
@@ -151,6 +177,13 @@ copy_gauge_binaries() {
     fi
 }
 
+# Copy gauge binaries in $prefix dir
+copy_gauge_binaries_noninteractively() {
+    cp -rf bin $prefix
+    echo "Installed gauge binaries at $prefix"
+}
+
+# Get last modified timestamp of the file
 get_time_stamp() {
     if [[ `uname` != "Linux" ]]; then
         time_stamp=$(stat -f "%m" $1)
@@ -176,8 +209,8 @@ copy_gauge_configuration_files() {
     get_time_stamp $gauge_properties_file > $config/timestamp.txt
 }
 
-# Do the installation
-install_gauge_interactively() {
+# Set prefix for installion in interactive mode
+set_prefix_interavctively() {
     if [[ -z "$GAUGE_PREFIX" ]]; then
         prefix=/usr/local
         echo "Installing gauge at $prefix/bin"
@@ -187,13 +220,48 @@ install_gauge_interactively() {
             prefix=$(get_absolute_path ${install_location/\~/$HOME})
         fi
     else
-        prefix=$GAUGE_PREFIX
+        if [[ "$GAUGE_ROOT" != "" && "$GAUGE_ROOT" != "$GAUGE_PREFIX" && "$GAUGE_ROOT" != "$config" ]]; then
+            echo "Previous installation was at $GAUGE_ROOT/bin. Enter [1] to use the same location or [2] to use $GAUGE_PREFIX for installation (By default it will be $GAUGE_PREFIX):-"
+            read -e choice
+            case $choice in
+                1)
+                    prefix=$GAUGE_ROOT ;;
+                2)
+                    prefix=$GAUGE_PREFIX ;;
+                *)
+                    prefix=$GAUGE_PREFIX ;;
+            esac
+        else
+            prefix=$GAUGE_PREFIX
+        fi
+        echo "Installing gauge at $prefix/bin"
     fi
+}
 
+# Set prefix for installion in noninteractive mode
+set_prefix_noninteravctively() {
+    if [[ -z $GAUGE_PREFIX ]]; then
+        prefix=/usr/local
+    else
+        if [[ $ForceInstall ]]; then
+            prefix=$GAUGE_PREFIX
+        else
+            if [[ "$GAUGE_ROOT" != "" && "$GAUGE_ROOT" != "/usr/local" && "$GAUGE_ROOT" != "$config" && "$GAUGE_ROOT" != "$GAUGE_PREFIX" ]]; then
+                echo "Previous installation was at  $GAUGE_ROOT. Cannot proceed with installation use --force to install."
+                exit 1
+            else
+                prefix=$GAUGE_PREFIX
+            fi
+        fi
+    fi
+}
+
+# Install Gauge interactively
+install_gauge_interactively() {
     config=$HOME/.gauge/config
-
-    create_prefix_if_does_not_exist
-    copy_gauge_binaries
+    set_prefix_interavctively
+    create_prefix_interactively
+    copy_gauge_binaries_interactively
     create_config_interactively_if_does_not_exist
     copy_gauge_configuration_files
     set_gaugeroot
@@ -201,36 +269,17 @@ install_gauge_interactively() {
     echo -e "Gauge core successfully installed.\n"
 }
 
+# Install gauge noninteractively
 install_gauge_noninteractively() {
-    if [[ -z "$GAUGE_PREFIX" ]]; then
-        prefix=/usr/local
-        echo "Installing gauge at $prefix/bin"
-    else
-        prefix=$GAUGE_PREFIX
-    fi
-
     config=$HOME/.gauge/config
-    create_prefix_if_does_not_exist
-    copy_gauge_binaries
+    set_prefix_noninteravctively
+    create_prefix_noninteractively
+    copy_gauge_binaries_noninteractively
     create_config_if_does_not_exist
     copy_gauge_configuration_files
     set_gaugeroot
     source ~/.profile
     echo -e "Gauge core successfully installed.\n"
-}
-
-install_plugins_noninteractively() {
-    plugins_list=( html-report )
-    if [[ ! -z "$GAUGE_PLUGINS" ]]; then
-        convert_to_list $GAUGE_PLUGINS
-        plugins_list=( ${list[@]} ${plugins_list[@]} )
-        plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
-    fi
-    for plugin in "${plugins_list[@]}"
-    do
-        echo "Installing plugin $plugin ..."
-        gauge --install $plugin
-    done
 }
 
 
@@ -248,19 +297,33 @@ do_noninteractive_installation() {
 }
 
 
+# Print usage of this script
+display_usage() {
+	echo -e "On Linux, this script installs gauge and it's plugins.\n\nUsage:\n./install.sh\n\nSet GAUGE_PREFIX env to install gauge at custom location.
+Set GAUGE_PLUGINS env to install plugins along with gauge.
+Exp:-
+    GAUGE_PREFIX=my/custom/path ./install.sh
+    GAUGE_PLUGINS=java,ruby,spectacle ./install.sh
+    GAUGE_PREFIX=my/custom/path GAUGE_PLUGINS=xml-report,java ./install.sh"
+}
+
 # check whether user has supplied -h or --help . If yes display usage if no diplay usage with an error
 if [[ $# != 0 ]]; then
-    if [[ ( $@ == "--help") || $@ == "-h" ]]
-    then
-        display_usage
-        exit 0
-    else
-        echo -e "unknown option $@. \n"
-        display_usage
-        exit 1
-    fi
+    case $@ in
+        "-h")
+            display_usage
+            exit 0 ;;
+        "--help")
+            display_usage
+            exit 0 ;;
+        "--force")
+            ForceInstall=true ;;
+        *)
+            echo -e "unknown option $@. \n"
+            display_usage
+            exit 1 ;;
+    esac
 fi
-
 
 # If tty then perform installation in interactive mode.
 if tty -s; then
