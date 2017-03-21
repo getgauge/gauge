@@ -239,7 +239,7 @@ set_prefix_interavctively() {
 }
 
 # Set prefix for installion in noninteractive mode
-set_prefix_noninteravctively() {
+set_prefix_noninteractively() {
     if [[ -z $GAUGE_PREFIX ]]; then
         prefix=/usr/local
     else
@@ -272,7 +272,7 @@ install_gauge_interactively() {
 # Install gauge noninteractively
 install_gauge_noninteractively() {
     config=$HOME/.gauge/config
-    set_prefix_noninteravctively
+    set_prefix_noninteractively
     create_prefix_noninteractively
     copy_gauge_binaries_noninteractively
     create_config_if_does_not_exist
