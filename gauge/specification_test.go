@@ -8,21 +8,20 @@ func (s *MySuite) TestUsesArgsInContext(c *C) {
 			&Step{Value: "some ",
 				LineText:  "sfd <foo>",
 				IsConcept: false,
-				Args: []* StepArg{
+				Args: []*StepArg{
 					&StepArg{
-						Value: "foo",
+						Value:   "foo",
 						ArgType: Dynamic,
-						},
 					},
 				},
 			},
+		},
 
 		TearDownSteps: []*Step{},
-		}
+	}
 
 	c.Assert(spec.UsesArgsInContextTeardown("foo"), Equals, true)
 }
-
 
 func (s *MySuite) TestDoesNotUseDynamicArgsInContext(c *C) {
 	spec := &Specification{
@@ -30,9 +29,9 @@ func (s *MySuite) TestDoesNotUseDynamicArgsInContext(c *C) {
 			&Step{Value: "some ",
 				LineText:  "sfd <foo>",
 				IsConcept: false,
-				Args: []* StepArg{
+				Args: []*StepArg{
 					&StepArg{
-						Value: "foo",
+						Value:   "foo",
 						ArgType: Static,
 					},
 				},
@@ -53,9 +52,9 @@ func (s *MySuite) TestDoesNotUseArgsInTeardown(c *C) {
 			&Step{Value: "some ",
 				LineText:  "sfd <foo>",
 				IsConcept: false,
-				Args: []* StepArg{
+				Args: []*StepArg{
 					&StepArg{
-						Value: "foo",
+						Value:   "foo",
 						ArgType: Static,
 					},
 				},

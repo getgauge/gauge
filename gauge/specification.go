@@ -248,13 +248,8 @@ func (spec *Specification) Traverse(traverser SpecTraverser) {
 	}
 }
 
-func (spec *Specification) UsesArgsInContextTeardown(args ...string) bool{
-	for _,s := range append(spec.Contexts, spec.TearDownSteps...){
-		if s.UsesDynamicArgs(args...) {
-			return true
-		}
-	}
-	return false
+func (spec *Specification) UsesArgsInContextTeardown(args ...string) bool {
+	return UsesArgs(append(spec.Contexts, spec.TearDownSteps...), args...)
 }
 
 type SpecItemFilter interface {

@@ -215,7 +215,7 @@ func main() {
 	flag.Parse()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
-	} 
+	}
 	// disabled this temporarily.
 	// dependency on external package breaks vendoring, since make.go is in a different package, i.e. not in gauge
 	// os.Stdin.Stat is the way to go, but it doesnt work on windows. Fix tentatively in go1.9

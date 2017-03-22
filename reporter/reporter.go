@@ -107,7 +107,6 @@ func initParallelReporters() {
 
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents() {
-	var contextAndTearDownUseDynamicParams bool
 	ch := make(chan event.ExecutionEvent, 0)
 	initParallelReporters()
 	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
@@ -124,12 +123,6 @@ func ListenExecutionEvents() {
 			switch e.Topic {
 			case event.SpecStart:
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
-				if e.Item.(*gauge.Specification).UsesArgsInContextTeardown(e.Item.(*gauge.Specification).DataTable.Table.Headers...){
-					contextAndTearDownUseDynamicParams = true
-				}else {
-					contextAndTearDownUseDynamicParams = false
-				}
-
 			case event.ScenarioStart:
 				if e.Result.(*result.ScenarioResult).ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 					continue
@@ -137,13 +130,7 @@ func ListenExecutionEvents() {
 				sce := e.Item.(*gauge.Scenario)
 				// if it is datatable driven execution
 				if sce.DataTableRow.GetRowCount() != 0 {
-					if contextAndTearDownUseDynamicParams{
-						r.DataTable(formatter.FormatTable(&sce.DataTableRow))
-					}else {
-						if sce.UsesArgsInSteps(sce.DataTableRow.Headers...){
-							r.DataTable(formatter.FormatTable(&sce.DataTableRow))
-						}
-					}
+					r.DataTable(formatter.FormatTable(&sce.DataTableRow))
 
 				}
 				r.ScenarioStart(sce.Heading.Value)

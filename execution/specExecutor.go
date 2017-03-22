@@ -119,17 +119,10 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 	return
 }
 
-func (e *specExecutor) executeNonTableRelatedScenarios(scenarios []*gauge.Scenario) (scenarioResults []result.Result){
-	for _, scenario := range scenarios {
-		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
-	}
-	return
-}
-
-func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tablRelatedScenarios []*gauge.Scenario) {
+func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tableRelatedScenarios []*gauge.Scenario) {
 	for _, scenario := range scenarios {
 		if scenario.UsesArgsInSteps(headers...) {
-			tablRelatedScenarios = append(tablRelatedScenarios, scenario)
+			tableRelatedScenarios = append(tableRelatedScenarios, scenario)
 		} else {
 			otherScenarios = append(otherScenarios, scenario)
 		}
@@ -138,14 +131,14 @@ func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) 
 }
 
 func (e *specExecutor) executeTableRelatedSpec() {
-	if e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...){
+	if e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...) {
 		res, executedRowIndexes := e.executeTableRelatedScenarios(e.specification.Scenarios)
 		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
 
-	}else {
+	} else {
 		nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
-		res := e.executeNonTableRelatedScenarios(nonTableRelatedScenarios)
-		e.specResult.AddNonTableRelatedScenarioResult(res)
+		res := e.executeScenarios(nonTableRelatedScenarios)
+		e.specResult.AddScenarioResults(res)
 		tableDrivenRes, executedRowIndexes := e.executeTableRelatedScenarios(tableRelatedScenarios)
 		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, executedRowIndexes)
 	}
@@ -350,7 +343,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 
 	// TODO: During data driven execution, scenario holds the last row of datatable in scenario.DataTableRow.
 	// This can be eliminated by creating a new scenario instance for each of the table row execution.
-	if e.specification.DataTable.Table.GetRowCount() != 0 {
+	if scenario.UsesArgsInSteps(e.specification.DataTable.Table.Headers...) || e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...) {
 		var dataTable gauge.Table
 		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
 		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])

@@ -5,72 +5,67 @@ import . "gopkg.in/check.v1"
 func (s *MySuite) TestUsesArgsInStep(c *C) {
 
 	stepArg := &StepArg{
-		Value: "foo",
+		Value:   "foo",
 		ArgType: Dynamic}
 
 	step1 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc <foo>",
-		Args: []*StepArg{stepArg},
+		Args:     []*StepArg{stepArg},
 	}
 	step2 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc",
-		Args: []*StepArg{},
+		Args:     []*StepArg{},
 	}
 	scenario := &Scenario{
-		Steps:[]*Step{step1, step2},
-
+		Steps: []*Step{step1, step2},
 	}
 
 	c.Assert(scenario.UsesArgsInSteps("foo"), Equals, true)
 }
 
-
 func (s *MySuite) TestDoesNotUseDynamicArgsInStep(c *C) {
 
 	stepArg := &StepArg{
-		Value: "foo",
+		Value:   "foo",
 		ArgType: Static}
 
 	step1 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc <foo>",
-		Args: []*StepArg{stepArg},
+		Args:     []*StepArg{stepArg},
 	}
 	step2 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc",
-		Args: []*StepArg{},
+		Args:     []*StepArg{},
 	}
 	scenario := &Scenario{
-		Steps:[]*Step{step1, step2},
-
+		Steps: []*Step{step1, step2},
 	}
 
 	c.Assert(scenario.UsesArgsInSteps("foo"), Equals, false)
 }
 
-
 func (s *MySuite) TestDoesNotUseArgsInStep(c *C) {
 
 	stepArg := &StepArg{
-		Value: "abc",
+		Value:   "abc",
 		ArgType: Dynamic}
 
 	step1 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc <foo>",
-		Args: []*StepArg{stepArg},
+		Args:     []*StepArg{stepArg},
 	}
 	step2 := &Step{
-		Value:"Some Step",
+		Value:    "Some Step",
 		LineText: "abc",
-		Args: []*StepArg{},
+		Args:     []*StepArg{},
 	}
 	scenario := &Scenario{
-		Steps:[]*Step{step1, step2},
-
+		Steps: []*Step{step1, step2},
 	}
 
 	c.Assert(scenario.UsesArgsInSteps("foo"), Equals, false)
