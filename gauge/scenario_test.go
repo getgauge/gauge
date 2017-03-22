@@ -3,11 +3,10 @@ package gauge
 import . "gopkg.in/check.v1"
 
 func (s *MySuite) TestUsesArgsInStep(c *C) {
-
 	stepArg := &StepArg{
 		Value:   "foo",
-		ArgType: Dynamic}
-
+		ArgType: Dynamic,
+	}
 	step1 := &Step{
 		Value:    "Some Step",
 		LineText: "abc <foo>",
@@ -26,10 +25,10 @@ func (s *MySuite) TestUsesArgsInStep(c *C) {
 }
 
 func (s *MySuite) TestDoesNotUseDynamicArgsInStep(c *C) {
-
 	stepArg := &StepArg{
 		Value:   "foo",
-		ArgType: Static}
+		ArgType: Static,
+	}
 
 	step1 := &Step{
 		Value:    "Some Step",
@@ -49,11 +48,10 @@ func (s *MySuite) TestDoesNotUseDynamicArgsInStep(c *C) {
 }
 
 func (s *MySuite) TestDoesNotUseArgsInStep(c *C) {
-
 	stepArg := &StepArg{
 		Value:   "abc",
-		ArgType: Dynamic}
-
+		ArgType: Dynamic,
+	}
 	step1 := &Step{
 		Value:    "Some Step",
 		LineText: "abc <foo>",

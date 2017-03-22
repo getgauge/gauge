@@ -16,7 +16,6 @@ func (s *MySuite) TestUsesArgsInContext(c *C) {
 				},
 			},
 		},
-
 		TearDownSteps: []*Step{},
 	}
 
@@ -37,7 +36,6 @@ func (s *MySuite) TestDoesNotUseDynamicArgsInContext(c *C) {
 				},
 			},
 		},
-
 		TearDownSteps: []*Step{},
 	}
 
@@ -47,7 +45,6 @@ func (s *MySuite) TestDoesNotUseDynamicArgsInContext(c *C) {
 func (s *MySuite) TestDoesNotUseArgsInTeardown(c *C) {
 	spec := &Specification{
 		Contexts: []*Step{},
-
 		TearDownSteps: []*Step{
 			&Step{Value: "some ",
 				LineText:  "sfd <foo>",
