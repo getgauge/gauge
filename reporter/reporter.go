@@ -131,7 +131,6 @@ func ListenExecutionEvents() {
 				// if it is datatable driven execution
 				if sce.DataTableRow.GetRowCount() != 0 {
 					r.DataTable(formatter.FormatTable(&sce.DataTableRow))
-
 				}
 				r.ScenarioStart(sce.Heading.Value)
 			case event.ConceptStart:
