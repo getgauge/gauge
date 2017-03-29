@@ -126,7 +126,11 @@ func processStepText(text string) (string, []string, error) {
 	for _, element := range text {
 		if currentState == inEscape {
 			currentState = lastState
-			element = getEscapedRuneIfValid(element)
+			if _, isReservedChar := reservedChars[element]; currentState == inDefault && !isReservedChar {
+				curBuffer(currentState).WriteRune(escape)
+			}else {
+				element = getEscapedRuneIfValid(element)
+			}
 		} else if element == escape {
 			lastState = currentState
 			currentState = inEscape
