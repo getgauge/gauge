@@ -37,3 +37,4 @@ gauge.iml
 /manifest.json
 /specs/
 /step_implementations/
+skel/skel.go

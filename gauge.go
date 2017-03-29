@@ -42,6 +42,7 @@ import (
 
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
+	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/util"
 	flag "github.com/getgauge/mflag"
 )
@@ -82,6 +83,7 @@ var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios fa
 var docs = flag.String([]string{"-docs"}, "", "Generate documenation using specified plugin. Eg: gauge --docs <plugin name> specs/")
 
 func main() {
+	skel.CreateSkelFilesIfRequired()
 	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
