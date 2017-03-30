@@ -104,7 +104,6 @@ func getBuildVersion() string {
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	runProcess("go", "generate", "./...")
 	runProcess("go", "build", "-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata="+buildMetadata, "-o", executablePath)
 	compileGaugeScreenshot()
 }
@@ -120,7 +119,6 @@ func getGaugeScreenshot() {
 }
 
 func runTests(coverage bool) {
-	runProcess("go", "generate", "./...")
 	if coverage {
 		runProcess("go", "test", "-covermode=count", "-coverprofile=count.out")
 		if coverage {
@@ -227,6 +225,7 @@ func main() {
 	//      buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
 	// }
 	fmt.Println("Build: " + buildMetadata)
+	runProcess("go", "generate", "./...")
 	if *test {
 		runTests(*coverage)
 	} else if *install {
