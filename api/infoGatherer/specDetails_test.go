@@ -179,12 +179,12 @@ func (s *MySuite) TestGetAvailableSpecDetails(c *C) {
 func (s *MySuite) TestGetAvailableSpecDetailsInDefaultDir(c *C) {
 	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
-	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}, specsCache: make(map[string]*SpecDetail)}
-	specFiles := util.FindSpecFilesIn(s.specsDir)
-	sig.specsCache[specFiles[0]] = &SpecDetail{Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Specification Heading"}}}
 	wd, _ := os.Getwd()
 	os.Chdir(s.projectDir)
 	defer os.Chdir(wd)
+	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}, specsCache: make(map[string]*SpecDetail)}
+	specFiles := util.FindSpecFilesIn(specDir)
+	sig.specsCache[specFiles[0]] = &SpecDetail{Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Specification Heading"}}}
 
 	details := sig.GetAvailableSpecDetails([]string{})
 
