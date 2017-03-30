@@ -17,7 +17,8 @@ func main() {
 		"notice":            {"notice.md"},
 		"gaugeProperties":   {"skel", "gauge.properties"},
 	}
-	outF := filepath.Join("..", "..", "skel", "skel.go")
+	goPath := os.Getenv("GOPATH")
+	outF := filepath.Join(goPath, "src", "github.com", "getgauge", "gauge", "skel", "skel.go")
 	out, err := os.Create(outF)
 	if err != nil {
 		log.Fatalf("Error creating %s\n", outF)
