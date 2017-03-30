@@ -120,6 +120,7 @@ func getGaugeScreenshot() {
 }
 
 func runTests(coverage bool) {
+	runProcess("go", "generate", "./...")
 	if coverage {
 		runProcess("go", "test", "-covermode=count", "-coverprofile=count.out")
 		if coverage {
