@@ -464,3 +464,115 @@ func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
 	c.Assert(len(errs), DeepEquals, 1)
 	c.Assert(*(errs[0]), DeepEquals, expected)
 }
+
+func (s *MySuite) TestIsUsingDynamicParamsReturnsTrue(c *C) {
+	parameters := []string{"name"}
+
+	headers := []string{"name"}
+
+	res := isUsingDynamicParam(parameters, headers)
+
+	c.Assert(res, Equals, true)
+
+}
+
+func (s *MySuite) TestIsUsingDynamicParamsReturnsFalse(c *C) {
+	parameters := []string{"id"}
+
+	headers := []string{"name"}
+
+	res := isUsingDynamicParam(parameters, headers)
+
+	c.Assert(res, Equals, false)
+
+}
+
+func (s *MySuite) TestFilterTableRelatedScenariosAndNonTableRalatedScenarios(c *C) {
+	heading1 := &gauge.Heading{
+		HeadingType: gauge.ScenarioHeading,
+		LineNo:      1,
+		Value:       "Heading One",
+	}
+
+	heading2 := &gauge.Heading{
+		HeadingType: gauge.ScenarioHeading,
+		LineNo:      1,
+		Value:       "Heading Two",
+	}
+
+	heading3 := &gauge.Heading{
+		HeadingType: gauge.ScenarioHeading,
+		LineNo:      1,
+		Value:       "Heading Three",
+	}
+
+	fragment1 := &gauge_messages.Fragment{
+		FragmentType: gauge_messages.Fragment_Text,
+		Text:         "print ",
+	}
+
+	fragment2 := &gauge_messages.Fragment{
+		FragmentType: gauge_messages.Fragment_Text,
+		Parameter: &gauge_messages.Parameter{
+			ParameterType: gauge_messages.Parameter_Static,
+			Value:         "shyam",
+		},
+	}
+
+	fragment3 := &gauge_messages.Fragment{
+		FragmentType: gauge_messages.Fragment_Text,
+		Parameter: &gauge_messages.Parameter{
+			ParameterType: gauge_messages.Parameter_Dynamic,
+			Name:          "name",
+		},
+	}
+
+	fragment4 := &gauge_messages.Fragment{
+		FragmentType: gauge_messages.Fragment_Text,
+		Parameter: &gauge_messages.Parameter{
+			ParameterType: gauge_messages.Parameter_Dynamic,
+			Name:          "id",
+		},
+	}
+
+	step1 := &gauge.Step{
+		Fragments: []*gauge_messages.Fragment{fragment1, fragment3},
+	}
+
+	step2 := &gauge.Step{
+		Fragments: []*gauge_messages.Fragment{fragment1, fragment2},
+	}
+
+	step3 := &gauge.Step{
+		Fragments: []*gauge_messages.Fragment{fragment4},
+	}
+
+	scenario1 := &gauge.Scenario{
+		Heading: heading1,
+		Steps:   []*gauge.Step{step1},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: heading2,
+		Steps:   []*gauge.Step{step2},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: heading3,
+		Steps:   []*gauge.Step{step3},
+	}
+	scenarios := []*gauge.Scenario{scenario1, scenario2, scenario3}
+
+	headers := []string{"name", "id"}
+
+
+	otherScenarios, tableDrivenScenarios := filterTableRelatedScenarios(scenarios, headers)
+
+	c.Assert(len(tableDrivenScenarios), Equals, 2)
+	c.Assert(len(otherScenarios), Equals, 1)
+	c.Assert(tableDrivenScenarios[0], Equals, scenario1)
+	c.Assert(tableDrivenScenarios[1], Equals, scenario3)
+	c.Assert(otherScenarios[0], Equals, scenario2)
+
+}
+
+
+

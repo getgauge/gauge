@@ -47,6 +47,15 @@ type Step struct {
 	Suffix         string
 }
 
+func (step *Step) IsUsingDynamicParamInStep(tableHeaders []string) bool {
+	for _, tableHeader := range tableHeaders{
+		if step.Lookup.ContainsDynamicArgValue(tableHeader) {
+			return true
+		}
+	}
+	return false
+}
+
 func (step *Step) GetArg(name string) *StepArg {
 	arg := step.Lookup.GetArg(name)
 	// Return static values

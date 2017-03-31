@@ -62,6 +62,15 @@ func (lookup *ArgLookup) ContainsArg(param string) bool {
 	return ok
 }
 
+func (lookup *ArgLookup) ContainsDynamicArgValue(param string) bool {
+	for _,v := range lookup.paramValue {
+		if v.stepArg.ArgType==Dynamic && v.stepArg.Value == param {
+			return true
+		}
+	}
+	return false
+}
+
 func (lookup *ArgLookup) GetArg(param string) *StepArg {
 	paramIndex, ok := lookup.ParamIndexMap[param]
 	if !ok {

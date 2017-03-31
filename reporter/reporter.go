@@ -105,8 +105,19 @@ func initParallelReporters() {
 	}
 }
 
+func getAllDynamicParams(steps []*gauge.Step, tableHeaders []string) bool {
+	for _, step := range steps {
+		if step.IsUsingDynamicParamInStep(tableHeaders){
+			return true
+		}
+	}
+	return false
+}
+
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents() {
+	var contextAndTearDownUseDynamicParams bool
+	contextAndTearDowns := make([]*gauge.Step, 0)
 	ch := make(chan event.ExecutionEvent, 0)
 	initParallelReporters()
 	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
@@ -123,6 +134,13 @@ func ListenExecutionEvents() {
 			switch e.Topic {
 			case event.SpecStart:
 				r.SpecStart(e.Item.(*gauge.Specification).Heading.Value)
+				contextAndTearDowns = append(contextAndTearDowns, e.Item.(*gauge.Specification).Contexts...)
+				contextAndTearDowns = append(contextAndTearDowns, e.Item.(*gauge.Specification).TearDownSteps...)
+				if getAllDynamicParams(contextAndTearDowns, e.Item.(*gauge.Specification).DataTable.Table.Headers){
+					contextAndTearDownUseDynamicParams = true
+				}else {
+					contextAndTearDownUseDynamicParams = false
+				}
 			case event.ScenarioStart:
 				if e.Result.(*result.ScenarioResult).ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 					continue
@@ -130,7 +148,14 @@ func ListenExecutionEvents() {
 				sce := e.Item.(*gauge.Scenario)
 				// if it is datatable driven execution
 				if sce.DataTableRow.GetRowCount() != 0 {
-					r.DataTable(formatter.FormatTable(&sce.DataTableRow))
+					if contextAndTearDownUseDynamicParams{
+						r.DataTable(formatter.FormatTable(&sce.DataTableRow))
+					}else {
+						if sce.IsUsingDynamicParamInScenario(sce.DataTableRow.Headers) {
+							r.DataTable(formatter.FormatTable(&sce.DataTableRow))
+						}
+					}
+
 				}
 				r.ScenarioStart(sce.Heading.Value)
 			case event.ConceptStart:
