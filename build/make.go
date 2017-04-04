@@ -225,6 +225,7 @@ func main() {
 	//      buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
 	// }
 	fmt.Println("Build: " + buildMetadata)
+	runProcess("go", "generate", "./...")
 	if *test {
 		runTests(*coverage)
 	} else if *install {
