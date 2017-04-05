@@ -21,24 +21,24 @@ Refer our [Troubleshooting](http://getgauge.io/documentation/user/current/troubl
 
 ## Find out more
 
-| **[User Docs] [userdocs]**     | **[Setup Guide] [setup]**     | **[Roadmap] [roadmap]**           | **[Contributing] [contributing]**           |
+| **[User Docs][userdocs]**     | **[Setup Guide][setup]**     | **[Roadmap][roadmap]**           | **[Contributing][contributing]**           |
 |:-------------------------------------:|:-------------------------------:|:-----------------------------------:|:---------------------------------------------:|
-| [![i1] [userdocs-image]] [userdocs]<br>Learn more about using Gauge | [![i2] [setup-image]] [setup]<br> Getting started with Gauge | [![i3] [roadmap-image]] [roadmap]<br>Roadmap of Gauge Project | [![i4] [contributing-image]] [contributing]<br>How can you contribute to Gauge? |
+| [![i1][userdocs-image]][userdocs]<br>Learn more about using Gauge | [![i2][setup-image]][setup]<br> Getting started with Gauge | [![i3][roadmap-image]][roadmap]<br>Roadmap of Gauge Project | [![i4][contributing-image]][contributing]<br>How can you contribute to Gauge? |
 
 
 ## Questions or need help?
 
-Check out the **[Talk to us] (http://github.com/getgauge/gauge/wiki/Talk-to-us)** page on our wiki.
+Check out the **[Talk to us](http://github.com/getgauge/gauge/wiki/Talk-to-us)** page on our wiki.
 
 [userdocs-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/techdocs.png
 [setup-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
 [roadmap-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[userdocs]:http://getgauge.io/documentation/user/current/index.html
+[userdocs]:http://docs.getgauge.io
 [setup]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
 [roadmap]:http://github.com/getgauge/gauge/wiki/Product-Roadmap
-[contributing]:CONTRIBUTING.md
+[contributing]:https://github.com/getgauge/gauge/wiki/Contributing
 
 ## Add your Badge!
 Copy the text below and add it to the README.md of your project using Gauge.
