@@ -235,3 +235,17 @@ func (s *MySuite) TestParsingStepWithStaticParamHavingNestedEscapeSequences(c *C
 	c.Assert(args[0], Equals, "foo \t tab \n \"a\"dd r \\n")
 	c.Assert(tokenValue, Equals, "step {static} only")
 }
+
+func (s *MySuite) TestParsingStepWithSlash(c *C) {
+	tokenValue, args, err := processStepText(`step foo \ only`)
+	c.Assert(err, IsNil)
+	c.Assert(len(args), Equals, 0)
+	c.Assert(tokenValue, Equals, "step foo \\ only")
+}
+
+func (s *MySuite) TestParsingStepWithTab(c *C) {
+	tokenValue, args, err := processStepText("step foo \t only")
+	c.Assert(err, IsNil)
+	c.Assert(len(args), Equals, 0)
+	c.Assert(tokenValue, Equals, "step foo \t only")
+}
