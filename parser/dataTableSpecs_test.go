@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package execution
+package parser
 
 import (
 	"testing"
@@ -77,7 +77,7 @@ var tests = []DataTableSpecTest{
 
 func TestGetSpecsForDataTableRows(t *testing.T) {
 	for _, test := range tests {
-		got := getSpecsForDataTableRows(gauge.NewSpecCollection(test.specs))
+		got := getSpecsForDataTableRows(test.specs)
 
 		if len(got) != test.want {
 			t.Errorf("Failed: %s. Wanted: %d specs, Got: %d specs", test.message, test.want, len(got))
