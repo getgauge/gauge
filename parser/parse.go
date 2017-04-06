@@ -40,7 +40,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 	for _, specFile := range specFiles {
 		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
 	}
-	for _ = range specFiles {
+	for range specFiles {
 		parseRes := <-parseResultsChan
 		spec := <-specsChan
 		if spec != nil {
@@ -58,7 +58,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 		}
 		parseResults = append(parseResults, parseRes)
 	}
-	return specs, parseResults
+	return getSpecsForDataTableRows(specs), parseResults
 }
 
 func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {

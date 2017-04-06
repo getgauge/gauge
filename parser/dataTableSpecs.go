@@ -15,15 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package execution
+package parser
 
-import (
-	"github.com/getgauge/gauge/gauge"
-)
+import "github.com/getgauge/gauge/gauge"
 
 // Creates a spec for each data table row
-func getSpecsForDataTableRows(s *gauge.SpecCollection) (specs []*gauge.Specification) {
-	for _, spec := range s.Specs() {
+func getSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specification) {
+	for _, spec := range s {
 		if spec.DataTable.IsInitialized() {
 			if spec.UsesArgsInContextTeardown(spec.DataTable.Table.Headers...) {
 				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios)...)
@@ -85,3 +83,15 @@ func getTableWith1Row(t gauge.Table, i int) *gauge.Table {
 	}
 	return gauge.NewTable(t.Headers, row, t.LineNo)
 }
+
+func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tableRelatedScenarios []*gauge.Scenario) {
+	for _, scenario := range scenarios {
+		if scenario.UsesArgsInSteps(headers...) {
+			tableRelatedScenarios = append(tableRelatedScenarios, scenario)
+		} else {
+			otherScenarios = append(otherScenarios, scenario)
+		}
+	}
+	return
+}
+

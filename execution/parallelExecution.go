@@ -64,7 +64,7 @@ type parallelExecution struct {
 func newParallelExecution(e *executionInfo) *parallelExecution {
 	return &parallelExecution{
 		manifest:                 e.manifest,
-		specCollection:           gauge.NewSpecCollection(getSpecsForDataTableRows(e.specs)),
+		specCollection:           e.specs,
 		runner:                   e.runner,
 		pluginHandler:            e.pluginHandler,
 		numberOfExecutionStreams: e.numberOfStreams,
