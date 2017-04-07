@@ -218,6 +218,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 }
 
 func (e *parallelExecution) finish() {
+	e.suiteResult = mergeDataTableSpecResults(e.suiteResult)
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_SuiteExecutionResult,

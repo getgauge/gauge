@@ -32,7 +32,7 @@ func getSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specific
 					s[0].Scenarios = append(s[0].Scenarios, nonTableRelatedScenarios...)
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}), spec.Heading, spec.FileName, &gauge.Table{}))
+					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0), spec.Heading, spec.FileName, &gauge.Table{}))
 				}
 			}
 		} else {
@@ -45,7 +45,7 @@ func getSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specific
 func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
 		t := getTableWith1Row(spec.DataTable.Table, i)
-		specs = append(specs, createSpec(copyScenarios(scns, *t), spec.Heading, spec.FileName, t))
+		specs = append(specs, createSpec(copyScenarios(scns, *t, i), spec.Heading, spec.FileName, t))
 	}
 	return
 }
@@ -60,14 +60,14 @@ func createSpec(scns []*gauge.Scenario, heading *gauge.Heading, fileName string,
 	return s
 }
 
-func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table) (scns []*gauge.Scenario) {
+func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int) (scns []*gauge.Scenario) {
 	for _, scn := range scenarios {
 		scns = append(scns, &gauge.Scenario{
 			Steps:             scn.Steps,
 			Items:             scn.Items,
 			Heading:           scn.Heading,
 			DataTableRow:      table,
-			DataTableRowIndex: 0,
+			DataTableRowIndex: i,
 			Tags:              scn.Tags,
 			Comments:          scn.Comments,
 			Span:              scn.Span,

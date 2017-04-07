@@ -99,6 +99,7 @@ func (e *simpleExecution) start() {
 }
 
 func (e *simpleExecution) finish() {
+	e.suiteResult = mergeDataTableSpecResults(e.suiteResult)
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
 	e.notifyExecutionResult()
 	e.stopAllPlugins()
