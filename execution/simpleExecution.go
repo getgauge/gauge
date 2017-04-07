@@ -119,7 +119,8 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 			var before, after bool
 			if i == 0 {
 				before = true
-			} else if i == len(specs)-1 {
+			}
+			if i == len(specs)-1 {
 				after = true
 			}
 			results = append(results, newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(before, after))
