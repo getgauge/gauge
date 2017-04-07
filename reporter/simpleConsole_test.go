@@ -300,7 +300,7 @@ func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
-	res := &DummyResult{PreHookFailure: &preHookFailure}
+	res := &DummyResult{PreHookFailure: preHookFailure}
 
 	sc.ScenarioEnd(res)
 
@@ -316,7 +316,7 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
-	res := &DummyResult{PostHookFailure: &postHookFailure}
+	res := &DummyResult{PostHookFailure: postHookFailure}
 
 	sc.SpecEnd(res)
 

@@ -87,12 +87,20 @@ func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
 	}
 }
 
-func (sr *SuiteResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &sr.PreSuite
+func (sr *SuiteResult) GetPreHook() *gauge_messages.ProtoHookFailure {
+	return sr.PreSuite
 }
 
-func (sr *SuiteResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &sr.PostSuite
+func (sr *SuiteResult) GetPostHook() *gauge_messages.ProtoHookFailure {
+	return sr.PostSuite
+}
+
+func (sr *SuiteResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+	sr.PreSuite = f
+}
+
+func (sr *SuiteResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+	sr.PostSuite = f
 }
 
 func (sr *SuiteResult) ExecTime() int64 {

@@ -96,12 +96,18 @@ func (conceptResult *ConceptResult) UpdateConceptExecResult() {
 	protoConcept.ConceptStep.StepExecutionResult.Skipped = false
 }
 
-func (conceptResult *ConceptResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
+func (conceptResult *ConceptResult) GetPreHook() *gauge_messages.ProtoHookFailure {
 	return nil
 }
 
-func (conceptResult *ConceptResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
+func (conceptResult *ConceptResult) GetPostHook() *gauge_messages.ProtoHookFailure {
 	return nil
+}
+
+func (conceptResult *ConceptResult) SetPreHook(_ *gauge_messages.ProtoHookFailure) {
+}
+
+func (conceptResult *ConceptResult) SetPostHook(_ *gauge_messages.ProtoHookFailure) {
 }
 
 func (conceptResult *ConceptResult) Item() interface{} {

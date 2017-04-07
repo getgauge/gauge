@@ -157,11 +157,11 @@ func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
 	c.writer.Print()
 }
 
-func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
-	if hookFailure() != nil && *hookFailure() != nil {
-		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
+func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() *gauge_messages.ProtoHookFailure) bool {
+	if hookFailure() != nil {
+		errMsg := prepErrorMessage(hookFailure().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
-		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
+		stacktrace := prepStacktrace(hookFailure().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 		c.displayMessage(newline+formatErrorFragment(errMsg, c.indentation)+formatErrorFragment(stacktrace, c.indentation), ct.Red)
 		return false

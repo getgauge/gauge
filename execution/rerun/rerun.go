@@ -142,7 +142,7 @@ func addSuiteFailedMetadata(res result.Result) {
 }
 
 func addFailedMetadata(res result.Result, add func(res result.Result)) {
-	if (res.GetPostHook() != nil && *res.GetPostHook() != nil) || (res.GetPreHook() != nil && *res.GetPreHook() != nil) {
+	if res.GetPostHook() != nil || res.GetPreHook() != nil {
 		add(res)
 	}
 }
