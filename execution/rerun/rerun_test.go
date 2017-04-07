@@ -77,7 +77,7 @@ func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
-	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: "error"}, FileName: spec1Abs}}
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
 
 	addFailedMetadata(spec1, addSpecFailedMetadata)
 
@@ -88,7 +88,7 @@ func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
 func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
-	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: "error"}, FileName: spec1Abs}}
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
 
 	addFailedMetadata(spec1, addSpecFailedMetadata)
 
@@ -99,7 +99,7 @@ func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
 func (s *MySuite) TestAddSpecFailedMetadataOverwritesPreviouslyAddedValues(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
-	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailure: &gauge_messages.ProtoHookFailure{ErrorMessage: "error"}, FileName: spec1Abs}}
+	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
 	failedMeta.failedItemsMap[spec1Rel] = make(map[string]bool)
 	failedMeta.failedItemsMap[spec1Rel]["scn1"] = true
 	failedMeta.failedItemsMap[spec1Rel]["scn2"] = true

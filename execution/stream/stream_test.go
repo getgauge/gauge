@@ -258,12 +258,12 @@ func (s *MySuite) TestListenSpecEndExecutionEvent(c *C) {
 	ei := gm.ExecutionInfo{
 		CurrentSpec: &gm.SpecInfo{FileName: "example.spec"},
 	}
-	hookFailure := &gm.ProtoHookFailure{ErrorMessage: "err msg"}
+	hookFailure := []*gm.ProtoHookFailure{{ErrorMessage: "err msg"}}
 
 	listenExecutionEvents(&dummyServer{response: actual}, 1234)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &result.SpecResult{
-		ProtoSpec: &gm.ProtoSpec{PreHookFailure: hookFailure, PostHookFailure: hookFailure},
+		ProtoSpec: &gm.ProtoSpec{PreHookFailures: hookFailure, PostHookFailures: hookFailure},
 	}, 0, ei))
 
 	expected := &gm.ExecutionResponse{

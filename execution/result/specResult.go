@@ -87,11 +87,17 @@ func (specResult *SpecResult) AddExecTime(execTime int64) {
 }
 
 func (specResult *SpecResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &specResult.ProtoSpec.PreHookFailure
+	if len(specResult.ProtoSpec.PreHookFailures) < 1 {
+		return nil
+	}
+	return &specResult.ProtoSpec.PreHookFailures[0]
 }
 
 func (specResult *SpecResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &specResult.ProtoSpec.PostHookFailure
+	if len(specResult.ProtoSpec.PostHookFailures) < 1 {
+		return nil
+	}
+	return &specResult.ProtoSpec.PostHookFailures[0]
 }
 
 func (specResult *SpecResult) setFileName(fileName string) {
