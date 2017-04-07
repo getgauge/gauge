@@ -177,11 +177,11 @@ func (c *verboseColoredConsole) resetBuffers() {
 	c.errorMessagesBuffer.Reset()
 }
 
-func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
+func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() *gauge_messages.ProtoHookFailure) bool {
 	if hookFailed(hookFailure) {
-		errMsg := prepErrorMessage((*hookFailure()).GetErrorMessage())
+		errMsg := prepErrorMessage(hookFailure().GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
-		stacktrace := prepStacktrace((*hookFailure()).GetStackTrace())
+		stacktrace := prepStacktrace(hookFailure().GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 		c.displayMessage(formatErrorFragment(errMsg, c.indentation)+formatErrorFragment(stacktrace, c.indentation), ct.Red)
 		return false
@@ -189,6 +189,6 @@ func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailur
 	return true
 }
 
-func hookFailed(hookFailure func() **(gauge_messages.ProtoHookFailure)) bool {
-	return hookFailure() != nil && *hookFailure() != nil
+func hookFailed(hookFailure func() *gauge_messages.ProtoHookFailure) bool {
+	return hookFailure() != nil
 }

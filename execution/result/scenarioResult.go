@@ -74,12 +74,20 @@ func (s *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messag
 	}
 }
 
-func (s *ScenarioResult) GetPreHook() **(gauge_messages.ProtoHookFailure) {
-	return &s.ProtoScenario.PreHookFailure
+func (s *ScenarioResult) GetPreHook() *gauge_messages.ProtoHookFailure {
+	return s.ProtoScenario.PreHookFailure
 }
 
-func (s *ScenarioResult) GetPostHook() **(gauge_messages.ProtoHookFailure) {
-	return &s.ProtoScenario.PostHookFailure
+func (s *ScenarioResult) GetPostHook() *gauge_messages.ProtoHookFailure {
+	return s.ProtoScenario.PostHookFailure
+}
+
+func (s *ScenarioResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+	s.ProtoScenario.PreHookFailure = f
+}
+
+func (s *ScenarioResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+	s.ProtoScenario.PostHookFailure = f
 }
 
 func (s *ScenarioResult) Item() interface{} {
