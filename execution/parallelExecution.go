@@ -211,7 +211,7 @@ func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner runner.Runner, stream int) {
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream)
-	se := newSimpleExecution(executionInfo)
+	se := newSimpleExecution(executionInfo, false)
 	se.execute()
 	runner.Kill()
 	resChan <- se.suiteResult

@@ -113,7 +113,7 @@ func newExecution(executionInfo *executionInfo) execution {
 	if executionInfo.inParallel {
 		return newParallelExecution(executionInfo)
 	}
-	return newSimpleExecution(executionInfo)
+	return newSimpleExecution(executionInfo, true)
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int {

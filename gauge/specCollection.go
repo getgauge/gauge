@@ -22,19 +22,45 @@ import "sync"
 type SpecCollection struct {
 	mutex sync.Mutex
 	index int
-	specs []*Specification
+	specs [][]*Specification
 }
 
-func NewSpecCollection(s []*Specification) *SpecCollection {
-	return &SpecCollection{specs: s}
+func NewSpecCollection(s []*Specification, groupDataTableSpecs bool) *SpecCollection {
+	if groupDataTableSpecs == false {
+		var specs [][]*Specification
+		for _, spec := range s {
+			specs = append(specs, []*Specification{spec})
+		}
+		return &SpecCollection{specs: specs}
+	}
+	return &SpecCollection{specs: combineDataTableSpecs(s)}
+}
+
+func combineDataTableSpecs(s []*Specification) (specs [][]*Specification) {
+	combinedSpecs := make(map[string][]*Specification)
+	for _, spec := range s {
+		if _, ok := combinedSpecs[spec.FileName]; !ok {
+			combinedSpecs[spec.FileName] = make([]*Specification, 0)
+		}
+		combinedSpecs[spec.FileName] = append(combinedSpecs[spec.FileName], spec)
+	}
+	for _, v := range combinedSpecs {
+		specs = append(specs, v)
+	}
+	return
 }
 
 func (s *SpecCollection) Add(spec *Specification) {
-	s.specs = append(s.specs, spec)
+	s.specs = append(s.specs, []*Specification{spec})
 }
 
-func (s *SpecCollection) Specs() []*Specification {
-	return s.specs
+func (s *SpecCollection) Specs() (specs []*Specification) {
+	for _, subSpecs := range s.specs {
+		for _, spec := range subSpecs {
+			specs = append(specs, spec)
+		}
+	}
+	return specs
 }
 
 func (s *SpecCollection) HasNext() bool {
@@ -43,7 +69,7 @@ func (s *SpecCollection) HasNext() bool {
 	return s.index < len(s.specs)
 }
 
-func (s *SpecCollection) Next() *Specification {
+func (s *SpecCollection) Next() []*Specification {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	spec := s.specs[s.index]
@@ -60,8 +86,10 @@ func (s *SpecCollection) Size() int {
 
 func (s *SpecCollection) SpecNames() []string {
 	specNames := make([]string, 0)
-	for _, spec := range s.specs {
-		specNames = append(specNames, spec.FileName)
+	for _, specs := range s.specs {
+		for _, subSpec := range specs {
+			specNames = append(specNames, subSpec.FileName)
+		}
 	}
 	return specNames
 }
