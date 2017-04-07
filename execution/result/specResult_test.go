@@ -54,9 +54,8 @@ func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	results := make([][]Result, 0)
 	results = append(results, scenarioResultsForIndex0)
 	results = append(results, scenarioResultsForIndex1)
-	executedRowIndexes := []int{0, 1}
 
-	specResult.AddTableRelatedScenarioResult(results, executedRowIndexes)
+	specResult.AddTableRelatedScenarioResult(results, 1)
 
 	c.Assert(specResult.GetFailed(), gc.Equals, false)
 	c.Assert(specResult.ScenarioCount, gc.Equals, 2)

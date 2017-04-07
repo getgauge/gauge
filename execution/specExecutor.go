@@ -133,16 +133,17 @@ func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) 
 }
 
 func (e *specExecutor) executeTableRelatedSpec() {
+	index := e.specification.Scenarios[0].DataTableRowIndex
 	if e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...) {
-		res, executedRowIndexes := e.executeTableRelatedScenarios(e.specification.Scenarios)
-		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
+		res, _ := e.executeTableRelatedScenarios(e.specification.Scenarios)
+		e.specResult.AddTableRelatedScenarioResult(res, index)
 
 	} else {
 		nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
 		res := e.executeScenarios(nonTableRelatedScenarios)
 		e.specResult.AddScenarioResults(res)
-		tableDrivenRes, executedRowIndexes := e.executeTableRelatedScenarios(tableRelatedScenarios)
-		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, executedRowIndexes)
+		tableDrivenRes, _ := e.executeTableRelatedScenarios(tableRelatedScenarios)
+		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, index)
 	}
 }
 
@@ -265,13 +266,11 @@ func (e *specExecutor) failSpec() {
 func (e *specExecutor) skipSpec() {
 	if e.specResult.ProtoSpec.GetIsTableDriven() {
 		res := make([][]result.Result, 0)
-		executedRowIndexes := make([]int, 0)
 		for i := 0; i < e.specification.DataTable.Table.GetRowCount(); i++ {
 			e.currentTableRow = i
 			res = append(res, e.accumulateSkippedScenarioResults())
-			executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
 		}
-		e.specResult.AddTableRelatedScenarioResult(res, executedRowIndexes)
+		e.specResult.AddTableRelatedScenarioResult(res, e.specification.Scenarios[0].DataTableRowIndex)
 	} else {
 		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
 	}
