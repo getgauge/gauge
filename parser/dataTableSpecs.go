@@ -94,4 +94,3 @@ func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) 
 	}
 	return
 }
-

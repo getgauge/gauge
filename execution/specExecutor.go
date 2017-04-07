@@ -60,7 +60,7 @@ func hasParseError(errs []error) bool {
 	return false
 }
 
-func (e *specExecutor) execute() *result.SpecResult {
+func (e *specExecutor) execute(executeBefore, executeAfter bool) *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: e.specification.Heading.Value,
 		FileName: e.specification.FileName,
 		IsFailed: false, Tags: getTagValue(e.specification.Tags)}
@@ -94,8 +94,9 @@ func (e *specExecutor) execute() *result.SpecResult {
 		e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
 		return e.specResult
 	}
-
-	e.notifyBeforeSpecHook()
+	if executeBefore {
+		e.notifyBeforeSpecHook()
+	}
 	if !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
 			scenarioResults := e.executeScenarios(e.specification.Scenarios)
@@ -104,8 +105,9 @@ func (e *specExecutor) execute() *result.SpecResult {
 			e.executeTableRelatedSpec()
 		}
 	}
-	e.notifyAfterSpecHook()
-
+	if executeAfter {
+		e.notifyAfterSpecHook()
+	}
 	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
 	return e.specResult
 }

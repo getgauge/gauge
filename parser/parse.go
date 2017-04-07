@@ -58,7 +58,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 		}
 		parseResults = append(parseResults, parseRes)
 	}
-	return getSpecsForDataTableRows(specs), parseResults
+	return specs, parseResults
 }
 
 func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
@@ -118,7 +118,7 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 	for _, spec := range specsMap {
 		allSpecs = append(allSpecs, spec)
 	}
-	return allSpecs, !passed
+	return getSpecsForDataTableRows(allSpecs), !passed
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {

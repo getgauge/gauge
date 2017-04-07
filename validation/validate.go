@@ -153,9 +153,9 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))
 	}
 	if specsFailed {
-		return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, false)
+		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
-	return NewValidationResult(gauge.NewSpecCollection(s), errMap, r, true)
+	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 
 func getErrMap(errMap *gauge.BuildErrors, validationErrors validationErrors) *gauge.BuildErrors {

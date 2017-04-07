@@ -71,7 +71,7 @@ func DistributeSpecs(specifications []*gauge.Specification, distributions int) [
 	for i := 0; i < len(specifications); i++ {
 		mod := i % distributions
 		if s[mod] == nil {
-			s[mod] = gauge.NewSpecCollection(make([]*gauge.Specification, 0))
+			s[mod] = gauge.NewSpecCollection(make([]*gauge.Specification, 0), false)
 		}
 		s[mod].Add(specifications[i])
 	}

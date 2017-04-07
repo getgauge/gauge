@@ -47,7 +47,10 @@ type simpleExecution struct {
 	stream               int
 }
 
-func newSimpleExecution(executionInfo *executionInfo) *simpleExecution {
+func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs bool) *simpleExecution {
+	if combineDataTableSpecs {
+		executionInfo.specs = gauge.NewSpecCollection(executionInfo.specs.Specs(), true)
+	}
 	return &simpleExecution{
 		manifest:       executionInfo.manifest,
 		specCollection: executionInfo.specs,
@@ -108,12 +111,18 @@ func (e *simpleExecution) stopAllPlugins() {
 	}
 }
 
-func (e *simpleExecution) executeSpecs(specs *gauge.SpecCollection) []*result.SpecResult {
-	var results []*result.SpecResult
-	for specs.HasNext() {
-		s := specs.Next()
-		ex := newSpecExecutor(s, e.runner, e.pluginHandler, e.errMaps, e.stream)
-		results = append(results, ex.execute())
+func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*result.SpecResult) {
+	for sc.HasNext() {
+		specs := sc.Next()
+		for i, spec := range specs {
+			var before, after bool
+			if i == 0 {
+				before = true
+			} else if i == len(specs)-1 {
+				after = true
+			}
+			results = append(results, newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(before, after))
+		}
 	}
 	return results
 }
