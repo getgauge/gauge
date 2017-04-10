@@ -196,8 +196,6 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
-	// For first row
-	specExecutor.currentTableRow = 0
 	specExecutor.errMap = gauge.NewBuildErrors()
 	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
@@ -223,33 +221,6 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	c.Assert(1, Equals, len(params))
 	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "8800")
-
-	// For second row
-	specExecutor.currentTableRow = 1
-	protoConcept = specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
-	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
-	checkConceptParameterValuesInOrder(c, protoConcept, "666", "bar", "9900")
-
-	nestedConcept = protoConcept.GetSteps()[0].GetConcept()
-	checkConceptParameterValuesInOrder(c, nestedConcept, "666", "bar")
-	firstNestedStep = nestedConcept.GetSteps()[0].GetStep()
-	params = getParameters(firstNestedStep.GetFragments())
-	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
-	c.Assert(params[0].GetValue(), Equals, "666")
-
-	secondNestedStep = nestedConcept.GetSteps()[1].GetStep()
-	params = getParameters(secondNestedStep.GetFragments())
-	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
-	c.Assert(params[0].GetValue(), Equals, "bar")
-
-	c.Assert(protoConcept.GetSteps()[1].GetItemType(), Equals, gauge_messages.ProtoItem_Step)
-	secondStepInConcept = protoConcept.GetSteps()[1].GetStep()
-	params = getParameters(secondStepInConcept.GetFragments())
-	c.Assert(1, Equals, len(params))
-	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
-	c.Assert(params[0].GetValue(), Equals, "9900")
 }
 
 func checkConceptParameterValuesInOrder(c *C, concept *gauge_messages.ProtoConcept, paramValues ...string) {
@@ -258,31 +229,25 @@ func checkConceptParameterValuesInOrder(c *C, concept *gauge_messages.ProtoConce
 	for i, param := range params {
 		c.Assert(param.GetValue(), Equals, paramValues[i])
 	}
-
 }
 
 type tableRow struct {
-	name           string
-	input          string // input by user for data table rows
-	output         []int  // data table indexes to be executed
-	tableRowsCount int    // total rows in given data table
+	name   string
+	input  string // input by user for data table rows
+	output []int  // data table indexes to be executed
 }
 
 var tableRowTests = []*tableRow{
-	{"Valid single row number", "2", []int{1}, 5},
-	{"Valid row numbers list", "2,3,4", []int{1, 2, 3}, 4},
-	{"Valid table rows range", "2-5", []int{1, 2, 3, 4}, 5},
-	{"Empty table rows range", "", []int{0, 1, 2, 3}, 4},
-	{"Table rows list with spaces", "2, 4 ", []int{1, 3}, 4},
-	{"Row count is zero with empty input", "", []int{}, 0},
-	{"Row count is non-zero with empty input", "", []int{0, 1}, 2},
-	{"Row count is non-zero with non-empty input", "2", []int{1}, 2},
+	{"Valid single row number", "2", []int{1}},
+	{"Valid row numbers list", "2,3,4", []int{1, 2, 3}},
+	{"Valid table rows range", "2-5", []int{1, 2, 3, 4}},
+	{"Empty table rows range", "", []int(nil)},
+	{"Table rows list with spaces", "2, 4 ", []int{1, 3}},
 }
 
 func (s *MySuite) TestToGetDataTableRowsRangeFromInputFlag(c *C) {
 	for _, test := range tableRowTests {
-		TableRows = test.input
-		got := getDataTableRows(test.tableRowsCount)
+		got := getDataTableRows(test.input)
 		want := test.output
 		c.Assert(got, DeepEquals, want, Commentf(test.name))
 	}

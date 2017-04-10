@@ -223,7 +223,7 @@ func initPackageFlags() {
 	reporter.SimpleConsoleOutput = *simpleConsoleOutput
 	reporter.Verbose = *verbosity
 	execution.ExecuteTags = *executeTags
-	execution.TableRows = *tableRows
+	execution.SetTableRows(*tableRows)
 	validation.TableRows = *tableRows
 	execution.NumberOfExecutionStreams = *numberOfExecutionStreams
 	execution.InParallel = *parallel

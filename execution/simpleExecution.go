@@ -33,7 +33,11 @@ import (
 )
 
 var ExecuteTags = ""
-var TableRows = ""
+var tableRowsIndexes []int
+
+func SetTableRows(tableRows string) {
+	tableRowsIndexes = getDataTableRows(tableRows)
+}
 
 type simpleExecution struct {
 	manifest             *manifest.Manifest

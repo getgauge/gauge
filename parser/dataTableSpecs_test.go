@@ -77,7 +77,7 @@ var tests = []DataTableSpecTest{
 
 func TestGetSpecsForDataTableRows(t *testing.T) {
 	for _, test := range tests {
-		got := getSpecsForDataTableRows(test.specs)
+		got := GetSpecsForDataTableRows(test.specs)
 
 		if len(got) != test.want {
 			t.Errorf("Failed: %s. Wanted: %d specs, Got: %d specs", test.message, test.want, len(got))

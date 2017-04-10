@@ -20,7 +20,7 @@ package parser
 import "github.com/getgauge/gauge/gauge"
 
 // Creates a spec for each data table row
-func getSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specification) {
+func GetSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specification) {
 	for _, spec := range s {
 		if spec.DataTable.IsInitialized() {
 			if spec.UsesArgsInContextTeardown(spec.DataTable.Table.Headers...) {
