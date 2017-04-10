@@ -386,7 +386,7 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Table row number out of range", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
-	specResult := se.execute(true, true)
+	specResult := se.execute(true, true, true)
 	c.Assert(specResult.Skipped, Equals, true)
 }
 
@@ -413,7 +413,7 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
-	specResult := se.execute(true, true)
+	specResult := se.execute(true, true, true)
 	c.Assert(specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
 	c.Assert(specResult.Skipped, Equals, true)
 }

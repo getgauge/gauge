@@ -104,10 +104,10 @@ func (conceptResult *ConceptResult) GetPostHook() []*gauge_messages.ProtoHookFai
 	return nil
 }
 
-func (conceptResult *ConceptResult) AddPreHook(_ *gauge_messages.ProtoHookFailure) {
+func (conceptResult *ConceptResult) AddPreHook(_ ...*gauge_messages.ProtoHookFailure) {
 }
 
-func (conceptResult *ConceptResult) AddPostHook(_ *gauge_messages.ProtoHookFailure) {
+func (conceptResult *ConceptResult) AddPostHook(_ ...*gauge_messages.ProtoHookFailure) {
 }
 
 func (conceptResult *ConceptResult) Item() interface{} {

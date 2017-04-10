@@ -94,12 +94,12 @@ func (specResult *SpecResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return specResult.ProtoSpec.PostHookFailures
 }
 
-func (specResult *SpecResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
-	specResult.ProtoSpec.PreHookFailures = append(specResult.ProtoSpec.PreHookFailures, f)
+func (specResult *SpecResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
+	specResult.ProtoSpec.PreHookFailures = append(specResult.ProtoSpec.PreHookFailures, f...)
 }
 
-func (specResult *SpecResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
-	specResult.ProtoSpec.PostHookFailures = append(specResult.ProtoSpec.PostHookFailures, f)
+func (specResult *SpecResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
+	specResult.ProtoSpec.PostHookFailures = append(specResult.ProtoSpec.PostHookFailures, f...)
 }
 
 func (specResult *SpecResult) setFileName(fileName string) {

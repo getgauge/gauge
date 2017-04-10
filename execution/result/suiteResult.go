@@ -101,12 +101,12 @@ func (sr *SuiteResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return []*gauge_messages.ProtoHookFailure{sr.PostSuite}
 }
 
-func (sr *SuiteResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
-	sr.PreSuite = f
+func (sr *SuiteResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
+	sr.PreSuite = f[0]
 }
 
-func (sr *SuiteResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
-	sr.PostSuite = f
+func (sr *SuiteResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
+	sr.PostSuite = f[0]
 }
 
 func (sr *SuiteResult) ExecTime() int64 {

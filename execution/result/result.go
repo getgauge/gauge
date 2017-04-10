@@ -25,8 +25,8 @@ type Result interface {
 	GetPostHook() []*gauge_messages.ProtoHookFailure
 	GetFailed() bool
 
-	AddPreHook(*gauge_messages.ProtoHookFailure)
-	AddPostHook(*gauge_messages.ProtoHookFailure)
+	AddPreHook(...*gauge_messages.ProtoHookFailure)
+	AddPostHook(...*gauge_messages.ProtoHookFailure)
 	SetFailure()
 
 	Item() interface{}

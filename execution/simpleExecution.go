@@ -115,15 +115,23 @@ func (e *simpleExecution) stopAllPlugins() {
 func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*result.SpecResult) {
 	for sc.HasNext() {
 		specs := sc.Next()
+		var preHookFailures, postHookFailures []*gauge_messages.ProtoHookFailure
+		var specResults []*result.SpecResult
+		var before, after = true, false
 		for i, spec := range specs {
-			var before, after bool
-			if i == 0 {
-				before = true
-			}
 			if i == len(specs)-1 {
 				after = true
 			}
-			results = append(results, newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(before, after))
+			res := newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(before, preHookFailures == nil, after)
+			before = false
+			specResults = append(specResults, res)
+			preHookFailures = append(preHookFailures, res.GetPreHook()...)
+			postHookFailures = append(postHookFailures, res.GetPostHook()...)
+		}
+		for _, res := range specResults {
+			res.AddPreHook(postHookFailures...)
+			res.AddPostHook(preHookFailures...)
+			results = append(results, res)
 		}
 	}
 	return results
