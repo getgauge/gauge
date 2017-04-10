@@ -20,6 +20,8 @@ package execution
 import (
 	"fmt"
 
+	"errors"
+
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -53,7 +55,12 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
 	scenarioResult.ProtoScenario.Skipped = false
 	if len(scenario.Steps) == 0 {
-		e.skipSceForError(scenario, scenarioResult)
+		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+	}
+	if scenario.DataTableRow.IsInitialized() && !shouldExecuteForRow(scenario.DataTableRowIndex) {
+		e.errMap.ScenarioErrs[scenario] = append(e.errMap.ScenarioErrs[scenario], errors.New("Skipped Reason: Doesn't satisfy --table-rows flag condition."))
+		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+		return
 	}
 	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)

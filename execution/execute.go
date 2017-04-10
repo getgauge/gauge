@@ -136,7 +136,6 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	}
 	nExecutedScenarios -= nSkippedScenarios
 	nPassedScenarios = nExecutedScenarios - nFailedScenarios
-
 	if nExecutedScenarios < 0 {
 		nExecutedScenarios = 0
 	}

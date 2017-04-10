@@ -208,7 +208,7 @@ func setFlags(req *gm.ExecutionRequest) []error {
 	reporter.IsParallel = req.GetIsParallel()
 	execution.InParallel = req.GetIsParallel()
 	filter.ExecuteTags = req.GetTags()
-	execution.TableRows = req.GetTableRows()
+	execution.SetTableRows(req.GetTableRows())
 	streams := int(req.GetParallelStreams())
 	if streams < 1 {
 		streams = util.NumberOfCores()
@@ -238,7 +238,7 @@ func resetFlags() {
 	execution.InParallel = false
 	reporter.Verbose = false
 	filter.ExecuteTags = ""
-	execution.TableRows = ""
+	execution.SetTableRows("")
 	execution.NumberOfExecutionStreams = cores
 	reporter.NumberOfExecutionStreams = cores
 	filter.NumberOfExecutionStreams = cores

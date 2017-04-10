@@ -118,7 +118,7 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 	for _, spec := range specsMap {
 		allSpecs = append(allSpecs, spec)
 	}
-	return getSpecsForDataTableRows(allSpecs), !passed
+	return allSpecs, !passed
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {

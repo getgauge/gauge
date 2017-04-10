@@ -59,11 +59,11 @@ func modifySuiteStats(res *result.SpecResult, suiteRes *result.SuiteResult) {
 	}
 }
 func modifySpecStats(scn *gauge_messages.ProtoScenario, specRes *result.SpecResult) {
-	if scn.Skipped {
+	switch scn.ExecutionStatus {
+	case gauge_messages.ExecutionStatus_SKIPPED:
 		specRes.ScenarioSkippedCount++
 		return
-	}
-	if scn.GetFailed() {
+	case gauge_messages.ExecutionStatus_FAILED:
 		specRes.ScenarioFailedCount++
 	}
 	specRes.ScenarioCount++
@@ -119,18 +119,12 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	}
 	for _, dResult := range dataTableScnResults {
 		isFailed := false
-		isSkipped := false
 		for _, res := range dResult {
-			if res.Scenario.Failed {
+			if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_FAILED {
 				isFailed = true
-			} else if res.Scenario.Skipped {
-				isSkipped = true
 			}
 		}
-		if isSkipped {
-			specResult.ScenarioSkippedCount++
-			continue
-		} else if isFailed {
+		if isFailed {
 			specResult.ScenarioFailedCount++
 		}
 		specResult.ScenarioCount++

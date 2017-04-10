@@ -148,6 +148,7 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	vErrs := newValidator(manifest, s, r, conceptDict).validate()
 	errMap = getErrMap(errMap, vErrs)
 	printValidationFailures(vErrs)
+	s = parser.GetSpecsForDataTableRows(s)
 	if !res.Ok {
 		r.Kill()
 		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))

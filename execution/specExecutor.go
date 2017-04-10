@@ -36,12 +36,10 @@ import (
 
 type specExecutor struct {
 	specification        *gauge.Specification
-	dataTableIndexes     []int
 	runner               runner.Runner
 	pluginHandler        *plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
-	currentTableRow      int
 	errMap               *gauge.BuildErrors
 	stream               int
 }
@@ -79,8 +77,6 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 		e.skipSpec()
 		return e.specResult
 	}
-	e.dataTableIndexes = getDataTableRows(e.specification.DataTable.Table.GetRowCount())
-
 	if len(e.specification.Scenarios) == 0 {
 		e.skipSpecForError(fmt.Errorf("%s: No scenarios found in spec\n", e.specification.FileName))
 		return e.specResult
@@ -111,12 +107,8 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	return e.specResult
 }
 
-func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) (result [][]result.Result, executedRowIndexes []int) {
-	for _, tableRowIndex := range e.dataTableIndexes {
-		e.currentTableRow = tableRowIndex
-		result = append(result, e.executeScenarios(scenarios))
-		executedRowIndexes = append(executedRowIndexes, e.currentTableRow)
-	}
+func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) (result [][]result.Result) {
+	result = append(result, e.executeScenarios(scenarios))
 	return
 }
 
@@ -134,14 +126,14 @@ func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) 
 func (e *specExecutor) executeTableRelatedSpec() {
 	index := e.specification.Scenarios[0].DataTableRowIndex
 	if e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...) {
-		res, _ := e.executeTableRelatedScenarios(e.specification.Scenarios)
+		res := e.executeTableRelatedScenarios(e.specification.Scenarios)
 		e.specResult.AddTableRelatedScenarioResult(res, index)
 
 	} else {
 		nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
 		res := e.executeScenarios(nonTableRelatedScenarios)
 		e.specResult.AddScenarioResults(res)
-		tableDrivenRes, _ := e.executeTableRelatedScenarios(tableRelatedScenarios)
+		tableDrivenRes := e.executeTableRelatedScenarios(tableRelatedScenarios)
 		e.specResult.AddTableRelatedScenarioResult(tableDrivenRes, index)
 	}
 }
@@ -266,7 +258,6 @@ func (e *specExecutor) skipSpec() {
 	if e.specResult.ProtoSpec.GetIsTableDriven() {
 		res := make([][]result.Result, 0)
 		for i := 0; i < e.specification.DataTable.Table.GetRowCount(); i++ {
-			e.currentTableRow = i
 			res = append(res, e.accumulateSkippedScenarioResults())
 		}
 		e.specResult.AddTableRelatedScenarioResult(res, e.specification.Scenarios[0].DataTableRowIndex)
@@ -317,11 +308,11 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) []*gaug
 }
 
 func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
-	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, e.currentTableRow)
+	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
 }
 
 func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return e.specification.DataTable.Table.Get(columnName)[e.currentTableRow].Value
+	return e.specification.DataTable.Table.Get(columnName)[0].Value
 }
 
 func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {
@@ -340,17 +331,6 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	}
 
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
-
-	// TODO: During data driven execution, scenario holds the last row of datatable in scenario.DataTableRow.
-	// This can be eliminated by creating a new scenario instance for each of the table row execution.
-	if scenario.UsesArgsInSteps(e.specification.DataTable.Table.Headers...) || e.specification.UsesArgsInContextTeardown(e.specification.DataTable.Table.Headers...) {
-		var dataTable gauge.Table
-		dataTable.AddHeaders(e.specification.DataTable.Table.Headers)
-		dataTable.AddRowValues(e.specification.DataTable.Table.Rows()[e.currentTableRow])
-		scenario.DataTableRow = dataTable
-		scenario.DataTableRowIndex = e.currentTableRow
-	}
-
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
 	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.errMap, e.stream)
@@ -397,27 +377,34 @@ func setSpecFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentSpec.IsFailed = true
 }
 
-func getDataTableRows(rowCount int) []int {
-	var tableRowIndexes []int
-	if rowCount == 0 && TableRows == "" {
-		tableRowIndexes = []int{}
-	} else if TableRows == "" {
-		for i := 0; i < rowCount; i++ {
-			tableRowIndexes = append(tableRowIndexes, i)
+func shouldExecuteForRow(i int) bool {
+	if len(tableRowsIndexes) < 1 {
+		return true
+	}
+	for _, index := range tableRowsIndexes {
+		if index == i {
+			return true
 		}
-	} else if strings.Contains(TableRows, "-") {
-		indexes := strings.Split(TableRows, "-")
+	}
+	return false
+}
+
+func getDataTableRows(tableRows string) (tableRowIndexes []int) {
+	if strings.TrimSpace(tableRows) == "" {
+		return
+	} else if strings.Contains(tableRows, "-") {
+		indexes := strings.Split(tableRows, "-")
 		startRow, _ := strconv.Atoi(strings.TrimSpace(indexes[0]))
 		endRow, _ := strconv.Atoi(strings.TrimSpace(indexes[1]))
 		for i := startRow - 1; i < endRow; i++ {
 			tableRowIndexes = append(tableRowIndexes, i)
 		}
 	} else {
-		indexes := strings.Split(TableRows, ",")
+		indexes := strings.Split(tableRows, ",")
 		for _, i := range indexes {
 			rowNumber, _ := strconv.Atoi(strings.TrimSpace(i))
 			tableRowIndexes = append(tableRowIndexes, rowNumber-1)
 		}
 	}
-	return tableRowIndexes
+	return
 }
