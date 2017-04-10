@@ -58,7 +58,7 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 	if scenario.DataTableRow.IsInitialized() && !shouldExecuteForRow(scenario.DataTableRowIndex) {
-		e.errMap.ScenarioErrs[scenario] = append(e.errMap.ScenarioErrs[scenario], errors.New("Skipped Reason: Doesn't satisfy --table-rows flag condition."))
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("Skipped Reason: Doesn't satisfy --table-rows flag condition.")}, e.errMap.ScenarioErrs[scenario]...)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 		return
 	}

@@ -20,19 +20,19 @@ package parser
 import "github.com/getgauge/gauge/gauge"
 
 // Creates a spec for each data table row
-func GetSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specification) {
+func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for _, spec := range s {
 		if spec.DataTable.IsInitialized() {
 			if spec.UsesArgsInContextTeardown(spec.DataTable.Table.Headers...) {
-				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios)...)
+				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios, errMap)...)
 			} else {
 				nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(spec.Scenarios, spec.DataTable.Table.Headers)
 				if len(tableRelatedScenarios) > 0 {
-					s := createSpecsForTableRows(spec, tableRelatedScenarios)
+					s := createSpecsForTableRows(spec, tableRelatedScenarios, errMap)
 					s[0].Scenarios = append(s[0].Scenarios, nonTableRelatedScenarios...)
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0), spec.Heading, spec.FileName, &gauge.Table{}))
+					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), spec.Heading, spec.FileName, &gauge.Table{}))
 				}
 			}
 		} else {
@@ -42,10 +42,14 @@ func GetSpecsForDataTableRows(s []*gauge.Specification) (specs []*gauge.Specific
 	return
 }
 
-func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario) (specs []*gauge.Specification) {
+func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
 		t := getTableWith1Row(spec.DataTable.Table, i)
-		specs = append(specs, createSpec(copyScenarios(scns, *t, i), spec.Heading, spec.FileName, t))
+		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), spec.Heading, spec.FileName, t)
+		if len(errMap.SpecErrs[spec]) > 0 {
+			errMap.SpecErrs[newSpec] = errMap.SpecErrs[spec]
+		}
+		specs = append(specs, newSpec)
 	}
 	return
 }
@@ -60,9 +64,9 @@ func createSpec(scns []*gauge.Scenario, heading *gauge.Heading, fileName string,
 	return s
 }
 
-func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int) (scns []*gauge.Scenario) {
+func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap *gauge.BuildErrors) (scns []*gauge.Scenario) {
 	for _, scn := range scenarios {
-		scns = append(scns, &gauge.Scenario{
+		newScn := &gauge.Scenario{
 			Steps:             scn.Steps,
 			Items:             scn.Items,
 			Heading:           scn.Heading,
@@ -71,7 +75,11 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int) (scns 
 			Tags:              scn.Tags,
 			Comments:          scn.Comments,
 			Span:              scn.Span,
-		})
+		}
+		if len(errMap.ScenarioErrs[scn]) > 0 {
+			errMap.ScenarioErrs[newScn] = errMap.ScenarioErrs[scn]
+		}
+		scns = append(scns, newScn)
 	}
 	return
 }

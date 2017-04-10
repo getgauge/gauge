@@ -77,7 +77,7 @@ var tests = []DataTableSpecTest{
 
 func TestGetSpecsForDataTableRows(t *testing.T) {
 	for _, test := range tests {
-		got := GetSpecsForDataTableRows(test.specs)
+		got := GetSpecsForDataTableRows(test.specs, gauge.NewBuildErrors())
 
 		if len(got) != test.want {
 			t.Errorf("Failed: %s. Wanted: %d specs, Got: %d specs", test.message, test.want, len(got))
@@ -145,7 +145,7 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 		},
 	}
 
-	got := createSpecsForTableRows(spec, spec.Scenarios)
+	got := createSpecsForTableRows(spec, spec.Scenarios, gauge.NewBuildErrors())
 
 	if !reflect.DeepEqual(want, got) {
 		gotJson, _ := json.Marshal(got)
