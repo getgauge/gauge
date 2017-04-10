@@ -20,6 +20,8 @@ package execution
 import (
 	"time"
 
+	"strings"
+
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 )
@@ -119,13 +121,19 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	}
 	for _, dResult := range dataTableScnResults {
 		isFailed := false
+		isSkipped := false
 		for _, res := range dResult {
 			if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_FAILED {
 				isFailed = true
+			} else if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED &&
+				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
+				isSkipped = true
 			}
 		}
 		if isFailed {
 			specResult.ScenarioFailedCount++
+		} else if isSkipped {
+			specResult.ScenarioSkippedCount++
 		}
 		specResult.ScenarioCount++
 	}
