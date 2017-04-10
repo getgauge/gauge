@@ -60,7 +60,7 @@ func hasParseError(errs []error) bool {
 	return false
 }
 
-func (e *specExecutor) execute(executeBefore, executeAfter bool) *result.SpecResult {
+func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *result.SpecResult {
 	specInfo := &gauge_messages.SpecInfo{Name: e.specification.Heading.Value,
 		FileName: e.specification.FileName,
 		IsFailed: false, Tags: getTagValue(e.specification.Tags)}
@@ -86,18 +86,16 @@ func (e *specExecutor) execute(executeBefore, executeAfter bool) *result.SpecRes
 		return e.specResult
 	}
 
-	event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream, *e.currentExecutionInfo))
-	defer event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream, *e.currentExecutionInfo))
-
 	res := e.initSpecDataStore()
 	if res.GetFailed() {
 		e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
 		return e.specResult
 	}
 	if executeBefore {
+		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream, *e.currentExecutionInfo))
 		e.notifyBeforeSpecHook()
 	}
-	if !e.specResult.GetFailed() {
+	if execute && !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
 			scenarioResults := e.executeScenarios(e.specification.Scenarios)
 			e.specResult.AddScenarioResults(scenarioResults)
@@ -105,10 +103,11 @@ func (e *specExecutor) execute(executeBefore, executeAfter bool) *result.SpecRes
 			e.executeTableRelatedSpec()
 		}
 	}
+	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
 	if executeAfter {
 		e.notifyAfterSpecHook()
+		event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream, *e.currentExecutionInfo))
 	}
-	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
 	return e.specResult
 }
 

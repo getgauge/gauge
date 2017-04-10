@@ -44,12 +44,12 @@ func (s *StepResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return []*gauge_messages.ProtoHookFailure{s.protoStep.StepExecutionResult.PostHookFailure}
 }
 
-func (s *StepResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
-	s.protoStep.StepExecutionResult.PreHookFailure = f
+func (s *StepResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
+	s.protoStep.StepExecutionResult.PreHookFailure = f[0]
 }
 
-func (s *StepResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
-	s.protoStep.StepExecutionResult.PostHookFailure = f
+func (s *StepResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
+	s.protoStep.StepExecutionResult.PostHookFailure = f[0]
 }
 
 // SetFailure sets the result to failed

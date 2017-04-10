@@ -88,12 +88,12 @@ func (s *ScenarioResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return []*gauge_messages.ProtoHookFailure{s.ProtoScenario.PostHookFailure}
 }
 
-func (s *ScenarioResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
-	s.ProtoScenario.PreHookFailure = f
+func (s *ScenarioResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
+	s.ProtoScenario.PreHookFailure = f[0]
 }
 
-func (s *ScenarioResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
-	s.ProtoScenario.PostHookFailure = f
+func (s *ScenarioResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
+	s.ProtoScenario.PostHookFailure = f[0]
 }
 
 func (s *ScenarioResult) Item() interface{} {

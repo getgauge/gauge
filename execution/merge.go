@@ -68,6 +68,7 @@ func modifySpecStats(scn *gauge_messages.ProtoScenario, specRes *result.SpecResu
 	}
 	specRes.ScenarioCount++
 }
+
 func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	specResult := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{IsTableDriven: true}}
 	var scnResults []*gauge_messages.ProtoItem

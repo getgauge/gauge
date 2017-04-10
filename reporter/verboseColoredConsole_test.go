@@ -44,9 +44,9 @@ func (r *DummyResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
 func (r *DummyResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return r.PostHookFailure
 }
-func (r *DummyResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
+func (r *DummyResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
 }
-func (r *DummyResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
+func (r *DummyResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
 }
 func (r *DummyResult) SetFailure() {
 	r.IsFailed = true
