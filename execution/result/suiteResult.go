@@ -87,19 +87,25 @@ func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
 	}
 }
 
-func (sr *SuiteResult) GetPreHook() *gauge_messages.ProtoHookFailure {
-	return sr.PreSuite
+func (sr *SuiteResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
+	if sr.PreSuite == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{sr.PreSuite}
 }
 
-func (sr *SuiteResult) GetPostHook() *gauge_messages.ProtoHookFailure {
-	return sr.PostSuite
+func (sr *SuiteResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
+	if sr.PostSuite == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{sr.PostSuite}
 }
 
-func (sr *SuiteResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+func (sr *SuiteResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
 	sr.PreSuite = f
 }
 
-func (sr *SuiteResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+func (sr *SuiteResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
 	sr.PostSuite = f
 }
 

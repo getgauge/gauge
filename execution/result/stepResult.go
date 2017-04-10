@@ -30,19 +30,25 @@ func NewStepResult(ps *gauge_messages.ProtoStep) *StepResult {
 	return &StepResult{protoStep: ps}
 }
 
-func (s *StepResult) GetPreHook() *gauge_messages.ProtoHookFailure {
-	return s.protoStep.StepExecutionResult.PreHookFailure
+func (s *StepResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
+	if s.protoStep.StepExecutionResult.PreHookFailure == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{s.protoStep.StepExecutionResult.PreHookFailure}
 }
 
-func (s *StepResult) GetPostHook() *gauge_messages.ProtoHookFailure {
-	return s.protoStep.StepExecutionResult.PostHookFailure
+func (s *StepResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
+	if s.protoStep.StepExecutionResult.PostHookFailure == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{s.protoStep.StepExecutionResult.PostHookFailure}
 }
 
-func (s *StepResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+func (s *StepResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
 	s.protoStep.StepExecutionResult.PreHookFailure = f
 }
 
-func (s *StepResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+func (s *StepResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
 	s.protoStep.StepExecutionResult.PostHookFailure = f
 }
 

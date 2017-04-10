@@ -33,20 +33,20 @@ var (
 )
 
 type DummyResult struct {
-	PreHookFailure  *gauge_messages.ProtoHookFailure
-	PostHookFailure *gauge_messages.ProtoHookFailure
+	PreHookFailure  []*gauge_messages.ProtoHookFailure
+	PostHookFailure []*gauge_messages.ProtoHookFailure
 	IsFailed        bool
 }
 
-func (r *DummyResult) GetPreHook() *gauge_messages.ProtoHookFailure {
+func (r *DummyResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
 	return r.PreHookFailure
 }
-func (r *DummyResult) GetPostHook() *gauge_messages.ProtoHookFailure {
+func (r *DummyResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
 	return r.PostHookFailure
 }
-func (r *DummyResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+func (r *DummyResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
 }
-func (r *DummyResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+func (r *DummyResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
 }
 func (r *DummyResult) SetFailure() {
 	r.IsFailed = true
@@ -356,7 +356,7 @@ func (s *MySuite) TestSubscribeScenarioEndPreHookFailure_ColoredConsole(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
-	res := &DummyResult{PreHookFailure: preHookFailure}
+	res := &DummyResult{PreHookFailure: []*gauge_messages.ProtoHookFailure{preHookFailure}}
 
 	cc.ScenarioEnd(res)
 
@@ -372,7 +372,7 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_ColoredConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
-	res := &DummyResult{PostHookFailure: postHookFailure}
+	res := &DummyResult{PostHookFailure: []*gauge_messages.ProtoHookFailure{postHookFailure}}
 
 	cc.SpecEnd(res)
 
