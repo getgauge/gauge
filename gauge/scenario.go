@@ -103,6 +103,10 @@ func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
 	}
 }
 
+func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
+	return UsesArgs(scenario.Steps, args...)
+}
+
 func (scenario Scenario) Kind() TokenKind {
 	return ScenarioKind
 }

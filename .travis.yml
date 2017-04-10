@@ -25,4 +25,4 @@ script:
   - $GAUGE_ROOT/bin/gauge --install-all
   - java -version
   - echo $JAVA_HOME
-  - TAGS="!unimplemented" ./starttests.sh java
+  - TAGS="\!unimplemented" ./starttests.sh java

@@ -57,7 +57,7 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
-func (specResult *SpecResult) AddTableDrivenScenarioResult(scenarioResults [][]Result, executedRowIndexes []int) {
+func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, executedRowIndexes []int) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
