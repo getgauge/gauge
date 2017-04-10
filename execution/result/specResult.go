@@ -86,25 +86,19 @@ func (specResult *SpecResult) AddExecTime(execTime int64) {
 	specResult.ExecutionTime += execTime
 }
 
-func (specResult *SpecResult) GetPreHook() *gauge_messages.ProtoHookFailure {
-	if len(specResult.ProtoSpec.PreHookFailures) < 1 {
-		return nil
-	}
-	return specResult.ProtoSpec.PreHookFailures[0]
+func (specResult *SpecResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
+	return specResult.ProtoSpec.PreHookFailures
 }
 
-func (specResult *SpecResult) GetPostHook() *gauge_messages.ProtoHookFailure {
-	if len(specResult.ProtoSpec.PostHookFailures) < 1 {
-		return nil
-	}
-	return specResult.ProtoSpec.PostHookFailures[0]
+func (specResult *SpecResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
+	return specResult.ProtoSpec.PostHookFailures
 }
 
-func (specResult *SpecResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+func (specResult *SpecResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
 	specResult.ProtoSpec.PreHookFailures = append(specResult.ProtoSpec.PreHookFailures, f)
 }
 
-func (specResult *SpecResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+func (specResult *SpecResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
 	specResult.ProtoSpec.PostHookFailures = append(specResult.ProtoSpec.PostHookFailures, f)
 }
 

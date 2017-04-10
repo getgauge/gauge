@@ -74,19 +74,25 @@ func (s *ScenarioResult) updateExecutionTimeFromItems(protoItems []*gauge_messag
 	}
 }
 
-func (s *ScenarioResult) GetPreHook() *gauge_messages.ProtoHookFailure {
-	return s.ProtoScenario.PreHookFailure
+func (s *ScenarioResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
+	if s.ProtoScenario.PreHookFailure == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{s.ProtoScenario.PreHookFailure}
 }
 
-func (s *ScenarioResult) GetPostHook() *gauge_messages.ProtoHookFailure {
-	return s.ProtoScenario.PostHookFailure
+func (s *ScenarioResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
+	if s.ProtoScenario.PostHookFailure == nil {
+		return []*gauge_messages.ProtoHookFailure{}
+	}
+	return []*gauge_messages.ProtoHookFailure{s.ProtoScenario.PostHookFailure}
 }
 
-func (s *ScenarioResult) SetPreHook(f *gauge_messages.ProtoHookFailure) {
+func (s *ScenarioResult) AddPreHook(f *gauge_messages.ProtoHookFailure) {
 	s.ProtoScenario.PreHookFailure = f
 }
 
-func (s *ScenarioResult) SetPostHook(f *gauge_messages.ProtoHookFailure) {
+func (s *ScenarioResult) AddPostHook(f *gauge_messages.ProtoHookFailure) {
 	s.ProtoScenario.PostHookFailure = f
 }
 

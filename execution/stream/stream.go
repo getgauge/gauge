@@ -159,12 +159,12 @@ func getErrorExecutionResponse(errs ...error) *gm.ExecutionResponse {
 	}
 }
 
-func getHookFailure(hookFailure *gm.ProtoHookFailure) *gm.Result_ExecutionError {
-	if hookFailure != nil {
+func getHookFailure(hookFailure []*gm.ProtoHookFailure) *gm.Result_ExecutionError {
+	if len(hookFailure) > 0 {
 		return &gm.Result_ExecutionError{
-			Screenshot:   hookFailure.ScreenShot,
-			ErrorMessage: hookFailure.ErrorMessage,
-			StackTrace:   hookFailure.StackTrace,
+			Screenshot:   hookFailure[0].ScreenShot,
+			ErrorMessage: hookFailure[0].ErrorMessage,
+			StackTrace:   hookFailure[0].StackTrace,
 		}
 	}
 	return nil

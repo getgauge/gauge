@@ -105,7 +105,7 @@ func (s *MySuite) TestGetHookFailureWhenNoFailure(c *C) {
 }
 
 func (s *MySuite) TestGetHookFailureWhenHookFailure(c *C) {
-	hookFailure := &gm.ProtoHookFailure{ErrorMessage: "err msg"}
+	hookFailure := []*gm.ProtoHookFailure{{ErrorMessage: "err msg"}}
 	failure := getHookFailure(hookFailure)
 
 	expected := &gm.Result_ExecutionError{ErrorMessage: "err msg"}

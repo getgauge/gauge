@@ -76,7 +76,11 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	dataTableScnResults := make(map[string][]*gauge_messages.ProtoTableDrivenScenario)
 
 	sortResults := make([]*result.SpecResult, len(results))
-	for _, res := range results {
+	for i, res := range results {
+		if len(res.GetPreHook()) > 0 {
+			sortResults[i] = res
+			continue
+		}
 		for _, item := range res.ProtoSpec.Items {
 			if item.ItemType == gauge_messages.ProtoItem_TableDrivenScenario {
 				sortResults[item.TableDrivenScenario.TableRowIndex] = res
@@ -91,6 +95,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
+		if len(res.GetPreHook()) > 0 {
+			specResult.AddPreHook(res.GetPreHook()[0])
+		}
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case gauge_messages.ProtoItem_Scenario:
@@ -104,6 +111,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 				table.Headers = item.Table.Headers
 				table.Rows = append(table.Rows, item.Table.Rows...)
 			}
+		}
+		if len(res.GetPostHook()) > 0 {
+			specResult.AddPostHook(res.GetPostHook()[0])
 		}
 	}
 	for _, dResult := range dataTableScnResults {

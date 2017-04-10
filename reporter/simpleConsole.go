@@ -157,11 +157,11 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func printHookFailureSC(sc *simpleConsole, res result.Result, hookFailure func() *gauge_messages.ProtoHookFailure) {
-	if hookFailure() != nil {
-		errMsg := prepErrorMessage(hookFailure().GetErrorMessage())
+func printHookFailureSC(sc *simpleConsole, res result.Result, hookFailure func() []*gauge_messages.ProtoHookFailure) {
+	if len(hookFailure()) > 0 {
+		errMsg := prepErrorMessage(hookFailure()[0].GetErrorMessage())
 		logger.GaugeLog.Error(errMsg)
-		stacktrace := prepStacktrace(hookFailure().GetStackTrace())
+		stacktrace := prepStacktrace(hookFailure()[0].GetStackTrace())
 		logger.GaugeLog.Error(stacktrace)
 		fmt.Fprint(sc.writer, formatErrorFragment(errMsg, sc.indentation), formatErrorFragment(stacktrace, sc.indentation))
 	}
