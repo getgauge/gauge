@@ -106,6 +106,12 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 		DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 			{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 		}, 0)},
+		Items: []gauge.Item{
+			&gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
+			}, 0)},
+			&gauge.Scenario{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}},
+		},
 	}
 
 	want := []*gauge.Specification{

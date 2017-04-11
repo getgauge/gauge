@@ -211,3 +211,26 @@ func TestMergeDataTableSpecResults(t *testing.T) {
 		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
 	}
 }
+
+func TestGetItems(t *testing.T) {
+	table := &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}}
+	res := []*result.SpecResult{{
+		ProtoSpec: &gm.ProtoSpec{
+			Items: []*gm.ProtoItem{
+				{ItemType: gm.ProtoItem_Table},
+				{ItemType: gm.ProtoItem_Scenario},
+				{ItemType: gm.ProtoItem_TableDrivenScenario},
+			},
+		},
+	}}
+	scnRes := []*gm.ProtoItem{
+		{ItemType: gm.ProtoItem_Scenario}, {ItemType: gm.ProtoItem_TableDrivenScenario}, {ItemType: gm.ProtoItem_Scenario},
+	}
+	got := getItems(table, scnRes, res)
+
+	want := []*gm.ProtoItem{{ItemType: gm.ProtoItem_Table, Table: table}, {ItemType: gm.ProtoItem_Scenario}, {ItemType: gm.ProtoItem_TableDrivenScenario}, {ItemType: gm.ProtoItem_Scenario}}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
