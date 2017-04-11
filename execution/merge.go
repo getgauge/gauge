@@ -63,7 +63,12 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	var scnResults []*gauge_messages.ProtoItem
 	table := &gauge_messages.ProtoTable{}
 	dataTableScnResults := make(map[string][]*gauge_messages.ProtoTableDrivenScenario)
+	max := results[0].ExecutionTime
 	for _, res := range results {
+		specResult.ExecutionTime += res.ExecutionTime
+		if res.ExecutionTime > max {
+			max = res.ExecutionTime
+		}
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
@@ -83,6 +88,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 			}
 		}
 		specResult.AddPostHook(res.GetPostHook()...)
+	}
+	if InParallel {
+		specResult.ExecutionTime = max
 	}
 	aggregateDataTableScnStats(dataTableScnResults, specResult)
 	specResult.ProtoSpec.FileName = results[0].ProtoSpec.FileName
