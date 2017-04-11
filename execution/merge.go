@@ -34,6 +34,9 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 	suiteRes.PreSuite = sResult.PreSuite
 	suiteRes.UnhandledErrors = sResult.UnhandledErrors
 	suiteRes.Timestamp = sResult.Timestamp
+	suiteRes.ProjectName = sResult.ProjectName
+	suiteRes.Environment = sResult.Environment
+	suiteRes.Tags = sResult.Tags
 
 	combinedResults := make(map[string][]*result.SpecResult)
 	for _, res := range sResult.SpecResults {
@@ -45,59 +48,26 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 		if len(res) > 1 {
 			mergedRes = mergeResults(res)
 		}
-		modifySuiteStats(mergedRes, suiteRes)
+		if mergedRes.GetFailed() {
+			suiteRes.SpecsFailedCount++
+		} else if mergedRes.Skipped {
+			suiteRes.SpecsSkippedCount++
+		}
 		suiteRes.SpecResults = append(suiteRes.SpecResults, mergedRes)
 	}
 	return suiteRes
-}
-func modifySuiteStats(res *result.SpecResult, suiteRes *result.SuiteResult) {
-	if res.GetFailed() {
-		suiteRes.SpecsFailedCount++
-	} else if res.Skipped {
-		suiteRes.SpecsSkippedCount++
-	}
-}
-func modifySpecStats(scn *gauge_messages.ProtoScenario, specRes *result.SpecResult) {
-	switch scn.ExecutionStatus {
-	case gauge_messages.ExecutionStatus_SKIPPED:
-		specRes.ScenarioSkippedCount++
-		return
-	case gauge_messages.ExecutionStatus_FAILED:
-		specRes.ScenarioFailedCount++
-	}
-	specRes.ScenarioCount++
 }
 
 func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	specResult := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{IsTableDriven: true}}
 	var scnResults []*gauge_messages.ProtoItem
 	table := &gauge_messages.ProtoTable{}
-
 	dataTableScnResults := make(map[string][]*gauge_messages.ProtoTableDrivenScenario)
-
-	sortResults := make([]*result.SpecResult, len(results))
-	for i, res := range results {
-		if len(res.GetPreHook()) > 0 {
-			sortResults[i] = res
-			continue
-		}
-		for _, item := range res.ProtoSpec.Items {
-			if item.ItemType == gauge_messages.ProtoItem_TableDrivenScenario {
-				sortResults[item.TableDrivenScenario.TableRowIndex] = res
-			}
-		}
-	}
-
-	specResult.ProtoSpec.FileName = results[0].ProtoSpec.FileName
-	specResult.ProtoSpec.SpecHeading = results[0].ProtoSpec.SpecHeading
-
-	for _, res := range sortResults {
+	for _, res := range results {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
-		if len(res.GetPreHook()) > 0 {
-			specResult.AddPreHook(res.GetPreHook()[0])
-		}
+		specResult.AddPreHook(res.GetPreHook()...)
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case gauge_messages.ProtoItem_Scenario:
@@ -112,29 +82,42 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 				table.Rows = append(table.Rows, item.Table.Rows...)
 			}
 		}
-		if len(res.GetPostHook()) > 0 {
-			specResult.AddPostHook(res.GetPostHook()[0])
-		}
+		specResult.AddPostHook(res.GetPostHook()...)
 	}
-	for _, dResult := range dataTableScnResults {
-		isFailed := false
-		isSkipped := false
-		for _, res := range dResult {
-			if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_FAILED {
-				isFailed = true
-			} else if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED &&
-				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
-				isSkipped = true
-			}
-		}
-		if isFailed {
-			specResult.ScenarioFailedCount++
-		} else if isSkipped {
-			specResult.ScenarioSkippedCount++
-		}
-		specResult.ScenarioCount++
-	}
+	aggregateDataTableScnStats(dataTableScnResults, specResult)
+	specResult.ProtoSpec.FileName = results[0].ProtoSpec.FileName
+	specResult.ProtoSpec.Tags = results[0].ProtoSpec.Tags
+	specResult.ProtoSpec.SpecHeading = results[0].ProtoSpec.SpecHeading
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: table})
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, scnResults...)
 	return specResult
+}
+
+func aggregateDataTableScnStats(results map[string][]*gauge_messages.ProtoTableDrivenScenario, specResult *result.SpecResult) {
+	for _, dResult := range results {
+		isFailed := 0
+		isSkipped := 0
+		for _, res := range dResult {
+			if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_FAILED {
+				isFailed = 1
+			} else if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED &&
+				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
+				isSkipped = 1
+			}
+		}
+		specResult.ScenarioFailedCount += isFailed
+		specResult.ScenarioSkippedCount += isSkipped
+		specResult.ScenarioCount++
+	}
+}
+
+func modifySpecStats(scn *gauge_messages.ProtoScenario, specRes *result.SpecResult) {
+	switch scn.ExecutionStatus {
+	case gauge_messages.ExecutionStatus_SKIPPED:
+		specRes.ScenarioSkippedCount++
+		return
+	case gauge_messages.ExecutionStatus_FAILED:
+		specRes.ScenarioFailedCount++
+	}
+	specRes.ScenarioCount++
 }
