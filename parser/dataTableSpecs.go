@@ -32,7 +32,7 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 					s[0].Scenarios = append(s[0].Scenarios, nonTableRelatedScenarios...)
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), spec.Heading, spec.FileName, &gauge.Table{}))
+					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec))
 				}
 			}
 		} else {
@@ -45,7 +45,7 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
 		t := getTableWith1Row(spec.DataTable.Table, i)
-		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), spec.Heading, spec.FileName, t)
+		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), t, spec)
 		if len(errMap.SpecErrs[spec]) > 0 {
 			errMap.SpecErrs[newSpec] = errMap.SpecErrs[spec]
 		}
@@ -54,12 +54,24 @@ func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, 
 	return
 }
 
-func createSpec(scns []*gauge.Scenario, heading *gauge.Heading, fileName string, table *gauge.Table) *gauge.Specification {
-	s := &gauge.Specification{DataTable: gauge.DataTable{}, FileName: fileName}
-	s.AddHeading(heading)
-	s.AddDataTable(table)
-	for _, scn := range scns {
-		s.AddScenario(scn)
+func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specification) *gauge.Specification {
+	dt := &gauge.DataTable{Table: *table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
+	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns}
+	index := 0
+	for _, item := range spec.Items {
+		if item.Kind() == gauge.DataTableKind {
+			item = dt
+		} else if item.Kind() == gauge.ScenarioKind {
+			if len(scns) <= index {
+				continue
+			}
+			item = scns[index]
+			index++
+		}
+		s.Items = append(s.Items, item)
+	}
+	for i := index; i < len(scns); i++ {
+		s.Items = append(s.Items, scns[i])
 	}
 	return s
 }

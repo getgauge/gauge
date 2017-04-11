@@ -96,9 +96,24 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	specResult.ProtoSpec.FileName = results[0].ProtoSpec.FileName
 	specResult.ProtoSpec.Tags = results[0].ProtoSpec.Tags
 	specResult.ProtoSpec.SpecHeading = results[0].ProtoSpec.SpecHeading
-	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: table})
-	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, scnResults...)
+	specResult.ProtoSpec.Items = getItems(table, scnResults, results)
 	return specResult
+}
+func getItems(table *gauge_messages.ProtoTable, scnResults []*gauge_messages.ProtoItem, results []*result.SpecResult) (items []*gauge_messages.ProtoItem) {
+	index := 0
+	for _, item := range results[0].ProtoSpec.Items {
+		switch item.ItemType {
+		case gauge_messages.ProtoItem_Scenario, gauge_messages.ProtoItem_TableDrivenScenario:
+			items = append(items, scnResults[index])
+			index++
+		case gauge_messages.ProtoItem_Table:
+			items = append(items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: table})
+		default:
+			items = append(items, item)
+		}
+	}
+	items = append(items, scnResults[index:]...)
+	return
 }
 
 func aggregateDataTableScnStats(results map[string][]*gauge_messages.ProtoTableDrivenScenario, specResult *result.SpecResult) {
