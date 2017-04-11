@@ -25,7 +25,7 @@ func CreateSkelFilesIfRequired() {
 	}
 	WriteFile(filepath.Join(p, "gauge.properties"), gaugeProperties)
 	WriteFile(filepath.Join(p, "notice.md"), notice)
-	WriteFile(filepath.Join(p, "skel", "specs", "example.spec"), exampleSpec)
+	WriteFile(filepath.Join(p, "skel", "example.spec"), exampleSpec)
 	WriteFile(filepath.Join(p, "skel", "env", "default.properties"), defaultProperties)
 }
 
