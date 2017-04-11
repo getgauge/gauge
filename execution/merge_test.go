@@ -101,7 +101,7 @@ func TestMergeResults(t *testing.T) {
 						},
 					},
 				},
-			},
+			}, ExecutionTime: int64(1),
 		},
 		{
 			ProtoSpec: &gm.ProtoSpec{
@@ -117,7 +117,7 @@ func TestMergeResults(t *testing.T) {
 						},
 					},
 				},
-			},
+			}, ExecutionTime: int64(2),
 		},
 	})
 	want := &result.SpecResult{
@@ -142,11 +142,35 @@ func TestMergeResults(t *testing.T) {
 				},
 			}, IsTableDriven: true,
 		},
-		ScenarioCount: 2, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false,
+		ScenarioCount: 2, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
 	}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestMergeResultsExecutionTimeInParallel(t *testing.T) {
+	InParallel = true
+
+	got := mergeResults([]*result.SpecResult{
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
+			}, ExecutionTime: int64(1),
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
+			}, ExecutionTime: int64(2),
+		},
+	})
+
+	want := int64(2)
+	InParallel = false
+
+	if !reflect.DeepEqual(got.ExecutionTime, want) {
+		t.Errorf("Execution time in parallel data table spec results.\n\tWant: %v\n\tGot: %v", want, got.ExecutionTime)
 	}
 }
 

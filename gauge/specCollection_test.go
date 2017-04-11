@@ -29,8 +29,15 @@ func TestGroupSpecCollection(t *testing.T) {
 	got := [][]*Specification{collection.Next(), collection.Next()}
 	want := [][]*Specification{{s1}, {s3, s3}}
 
-	if !reflect.DeepEqual(want, got) {
+	if !reflect.DeepEqual(set(want), set(got)) {
 		t.Errorf("Spec Collection Failed\n\tWant: %v\n\t Got:%v", want, got)
 	}
+}
 
+func set(s [][]*Specification) map[int][]*Specification {
+	specs := make(map[int][]*Specification)
+	for _, sp := range s {
+		specs[len(sp)] = sp
+	}
+	return specs
 }
