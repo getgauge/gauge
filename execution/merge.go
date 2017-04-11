@@ -38,9 +38,6 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 	combinedResults := make(map[string][]*result.SpecResult)
 	for _, res := range sResult.SpecResults {
 		fileName := res.ProtoSpec.GetFileName()
-		if _, ok := combinedResults[fileName]; !ok {
-			combinedResults[fileName] = make([]*result.SpecResult, 0)
-		}
 		combinedResults[fileName] = append(combinedResults[fileName], res)
 	}
 	for _, res := range combinedResults {

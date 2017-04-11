@@ -39,9 +39,6 @@ func NewSpecCollection(s []*Specification, groupDataTableSpecs bool) *SpecCollec
 func combineDataTableSpecs(s []*Specification) (specs [][]*Specification) {
 	combinedSpecs := make(map[string][]*Specification)
 	for _, spec := range s {
-		if _, ok := combinedSpecs[spec.FileName]; !ok {
-			combinedSpecs[spec.FileName] = make([]*Specification, 0)
-		}
 		combinedSpecs[spec.FileName] = append(combinedSpecs[spec.FileName], spec)
 	}
 	for _, v := range combinedSpecs {
