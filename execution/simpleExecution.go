@@ -131,10 +131,11 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 			specResults = append(specResults, res)
 			preHookFailures = append(preHookFailures, res.GetPreHook()...)
 			postHookFailures = append(postHookFailures, res.GetPostHook()...)
+			res.ProtoSpec.PreHookFailures, res.ProtoSpec.PostHookFailures = []*gauge_messages.ProtoHookFailure{}, []*gauge_messages.ProtoHookFailure{}
 		}
 		for _, res := range specResults {
-			res.AddPreHook(postHookFailures...)
-			res.AddPostHook(preHookFailures...)
+			res.AddPreHook(preHookFailures...)
+			res.AddPostHook(postHookFailures...)
 			results = append(results, res)
 		}
 	}
