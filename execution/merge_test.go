@@ -122,9 +122,9 @@ func TestMergeResults(t *testing.T) {
 	})
 	want := &result.SpecResult{
 		ProtoSpec: &gm.ProtoSpec{
-			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1"}},
+			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1"}},
+			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			Items: []*gm.ProtoItem{
 				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"}},

@@ -72,7 +72,6 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
-		specResult.AddPreHook(res.GetPreHook()...)
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case gauge_messages.ProtoItem_Scenario:
@@ -81,13 +80,22 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 			case gauge_messages.ProtoItem_TableDrivenScenario:
 				scnResults = append(scnResults, item)
 				heading := item.TableDrivenScenario.Scenario.ScenarioHeading
+				item.TableDrivenScenario.TableRowIndex = int32(len(table.Rows) - 1)
 				dataTableScnResults[heading] = append(dataTableScnResults[heading], item.TableDrivenScenario)
 			case gauge_messages.ProtoItem_Table:
 				table.Headers = item.Table.Headers
 				table.Rows = append(table.Rows, item.Table.Rows...)
 			}
 		}
-		specResult.AddPostHook(res.GetPostHook()...)
+		if len(res.GetPreHook()) > 0 {
+			(res.GetPreHook()[0]).TableRowIndex = int32(len(table.Rows) - 1)
+			specResult.AddPreHook(res.GetPreHook()...)
+		}
+
+		if len(res.GetPostHook()) > 0 {
+			res.GetPostHook()[0].TableRowIndex = int32(len(table.Rows) - 1)
+			specResult.AddPostHook(res.GetPostHook()...)
+		}
 	}
 	if InParallel {
 		specResult.ExecutionTime = max
