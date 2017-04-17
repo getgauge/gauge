@@ -152,7 +152,7 @@ function updateRepo () {
         return 0
     fi
 
-    git clone https://github.com/getgauge/gauge-nightly-repository.git
+    git clone git@github.com:getgauge/gauge-nightly-repository.git
     cd gauge-nightly-repository
     if [[ $PLATFORM_INDEPENDENT_FILE != "" ]]; then
             windows_x86=$PLATFORM_INDEPENDENT_FILE
