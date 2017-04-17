@@ -64,7 +64,10 @@ function renameWithTimestamp () {
 
 function renameToLowerCase () {
     for f in `ls`; do
-        mv "$f" "`echo $f | tr '[:upper:]' '[:lower:]'`"
+        NEW_FILENAME=$(echo $f | tr '[:upper:]' '[:lower:]')
+        if [ "$f" != "$NEW_FILENAME" ]; then
+            mv "$f" "$NEW_FILENAME"
+        fi
     done
 }
 
