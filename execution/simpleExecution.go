@@ -135,10 +135,10 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 		}
 		for _, res := range specResults {
 			for _, preHook := range preHookFailures {
-				res.AddPreHook(&gauge_messages.ProtoHookFailure{StackTrace: preHook.StackTrace, ErrorMessage: preHook.ErrorMessage, ScreenShot: preHook.ScreenShot, TableRowIndex:preHook.TableRowIndex})
+				res.AddPreHook(&gauge_messages.ProtoHookFailure{StackTrace: preHook.StackTrace, ErrorMessage: preHook.ErrorMessage, ScreenShot: preHook.ScreenShot, TableRowIndex: preHook.TableRowIndex})
 			}
 			for _, postHook := range postHookFailures {
-				res.AddPostHook(&gauge_messages.ProtoHookFailure{StackTrace: postHook.StackTrace, ErrorMessage: postHook.ErrorMessage, ScreenShot: postHook.ScreenShot, TableRowIndex:postHook.TableRowIndex})
+				res.AddPostHook(&gauge_messages.ProtoHookFailure{StackTrace: postHook.StackTrace, ErrorMessage: postHook.ErrorMessage, ScreenShot: postHook.ScreenShot, TableRowIndex: postHook.TableRowIndex})
 			}
 			results = append(results, res)
 		}

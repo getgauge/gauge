@@ -23,7 +23,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/gauge_messages"
+	m "github.com/getgauge/gauge/gauge_messages"
 )
 
 func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult {
@@ -37,7 +37,6 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 	suiteRes.ProjectName = sResult.ProjectName
 	suiteRes.Environment = sResult.Environment
 	suiteRes.Tags = sResult.Tags
-
 	combinedResults := make(map[string][]*result.SpecResult)
 	for _, res := range sResult.SpecResults {
 		fileName := res.ProtoSpec.GetFileName()
@@ -59,10 +58,10 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 }
 
 func mergeResults(results []*result.SpecResult) *result.SpecResult {
-	specResult := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{IsTableDriven: true}}
-	var scnResults []*gauge_messages.ProtoItem
-	table := &gauge_messages.ProtoTable{}
-	dataTableScnResults := make(map[string][]*gauge_messages.ProtoTableDrivenScenario)
+	specResult := &result.SpecResult{ProtoSpec: &m.ProtoSpec{IsTableDriven: true}}
+	var scnResults []*m.ProtoItem
+	table := &m.ProtoTable{}
+	dataTableScnResults := make(map[string][]*m.ProtoTableDrivenScenario)
 	max := results[0].ExecutionTime
 	for _, res := range results {
 		specResult.ExecutionTime += res.ExecutionTime
@@ -74,28 +73,21 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		}
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
-			case gauge_messages.ProtoItem_Scenario:
+			case m.ProtoItem_Scenario:
 				scnResults = append(scnResults, item)
 				modifySpecStats(item.Scenario, specResult)
-			case gauge_messages.ProtoItem_TableDrivenScenario:
+			case m.ProtoItem_TableDrivenScenario:
 				scnResults = append(scnResults, item)
 				heading := item.TableDrivenScenario.Scenario.ScenarioHeading
 				item.TableDrivenScenario.TableRowIndex = int32(len(table.Rows) - 1)
 				dataTableScnResults[heading] = append(dataTableScnResults[heading], item.TableDrivenScenario)
-			case gauge_messages.ProtoItem_Table:
+			case m.ProtoItem_Table:
 				table.Headers = item.Table.Headers
 				table.Rows = append(table.Rows, item.Table.Rows...)
 			}
 		}
-		if len(res.GetPreHook()) > 0 {
-			(res.GetPreHook()[0]).TableRowIndex = int32(len(table.Rows) - 1)
-			specResult.AddPreHook(res.GetPreHook()...)
-		}
-
-		if len(res.GetPostHook()) > 0 {
-			res.GetPostHook()[0].TableRowIndex = int32(len(table.Rows) - 1)
-			specResult.AddPostHook(res.GetPostHook()...)
-		}
+		addHookFailure(table, res.GetPreHook(), specResult.AddPreHook)
+		addHookFailure(table, res.GetPostHook(), specResult.AddPostHook)
 	}
 	if InParallel {
 		specResult.ExecutionTime = max
@@ -107,15 +99,23 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	specResult.ProtoSpec.Items = getItems(table, scnResults, results)
 	return specResult
 }
-func getItems(table *gauge_messages.ProtoTable, scnResults []*gauge_messages.ProtoItem, results []*result.SpecResult) (items []*gauge_messages.ProtoItem) {
+
+func addHookFailure(table *m.ProtoTable, f []*m.ProtoHookFailure, add func(...*m.ProtoHookFailure)) {
+	for _, h := range f {
+		h.TableRowIndex = int32(len(table.Rows) - 1)
+	}
+	add(f...)
+}
+
+func getItems(table *m.ProtoTable, scnResults []*m.ProtoItem, results []*result.SpecResult) (items []*m.ProtoItem) {
 	index := 0
 	for _, item := range results[0].ProtoSpec.Items {
 		switch item.ItemType {
-		case gauge_messages.ProtoItem_Scenario, gauge_messages.ProtoItem_TableDrivenScenario:
+		case m.ProtoItem_Scenario, m.ProtoItem_TableDrivenScenario:
 			items = append(items, scnResults[index])
 			index++
-		case gauge_messages.ProtoItem_Table:
-			items = append(items, &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: table})
+		case m.ProtoItem_Table:
+			items = append(items, &m.ProtoItem{ItemType: m.ProtoItem_Table, Table: table})
 		default:
 			items = append(items, item)
 		}
@@ -124,14 +124,14 @@ func getItems(table *gauge_messages.ProtoTable, scnResults []*gauge_messages.Pro
 	return
 }
 
-func aggregateDataTableScnStats(results map[string][]*gauge_messages.ProtoTableDrivenScenario, specResult *result.SpecResult) {
+func aggregateDataTableScnStats(results map[string][]*m.ProtoTableDrivenScenario, specResult *result.SpecResult) {
 	for _, dResult := range results {
 		isFailed := 0
 		isSkipped := 0
 		for _, res := range dResult {
-			if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_FAILED {
+			if res.Scenario.ExecutionStatus == m.ExecutionStatus_FAILED {
 				isFailed = 1
-			} else if res.Scenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED &&
+			} else if res.Scenario.ExecutionStatus == m.ExecutionStatus_SKIPPED &&
 				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
 				isSkipped = 1
 			}
@@ -142,12 +142,12 @@ func aggregateDataTableScnStats(results map[string][]*gauge_messages.ProtoTableD
 	}
 }
 
-func modifySpecStats(scn *gauge_messages.ProtoScenario, specRes *result.SpecResult) {
+func modifySpecStats(scn *m.ProtoScenario, specRes *result.SpecResult) {
 	switch scn.ExecutionStatus {
-	case gauge_messages.ExecutionStatus_SKIPPED:
+	case m.ExecutionStatus_SKIPPED:
 		specRes.ScenarioSkippedCount++
 		return
-	case gauge_messages.ExecutionStatus_FAILED:
+	case m.ExecutionStatus_FAILED:
 		specRes.ScenarioFailedCount++
 	}
 	specRes.ScenarioCount++
