@@ -85,14 +85,14 @@ func TestGetSpecsForDataTableRows(t *testing.T) {
 	}
 }
 
-func TestGetTableWith1Row(t *testing.T) {
+func TestGetTableWithOneRow(t *testing.T) {
 	table := *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 		{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 	}, 0)
 
 	want := *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{{{Value: "row1", CellType: gauge.Static}}}, 0)
 
-	got := *getTableWith1Row(table, 0)
+	got := *getTableWithOneRow(table, 0)
 
 	if !reflect.DeepEqual(want, got) {
 		t.Errorf("Failed: Table with 1 row. Wanted: %v, Got: %v", want, got)
