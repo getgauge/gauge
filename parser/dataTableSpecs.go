@@ -44,7 +44,7 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 
 func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
-		t := getTableWith1Row(spec.DataTable.Table, i)
+		t := getTableWithOneRow(spec.DataTable.Table, i)
 		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), t, spec)
 		if len(errMap.SpecErrs[spec]) > 0 {
 			errMap.SpecErrs[newSpec] = errMap.SpecErrs[spec]
@@ -96,7 +96,7 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 	return
 }
 
-func getTableWith1Row(t gauge.Table, i int) *gauge.Table {
+func getTableWithOneRow(t gauge.Table, i int) *gauge.Table {
 	var row [][]gauge.TableCell
 	for _, c := range t.Columns {
 		row = append(row, []gauge.TableCell{c[i]})
