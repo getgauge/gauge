@@ -41,7 +41,7 @@ type SpecInfoGatherer struct {
 	conceptDictionary *gauge.ConceptDictionary
 	specsCache        map[string]*SpecDetail
 	conceptsCache     map[string][]*gauge.Concept
-	stepsCache        map[string]*gauge.StepValue
+	stepsCache        map[string][]*gauge.StepValue
 	SpecDirs          []string
 }
 
@@ -103,14 +103,17 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 func (s *SpecInfoGatherer) initStepsCache() {
 	defer s.waitGroup.Done()
 
-	s.stepsCache = make(map[string]*gauge.StepValue, 0)
-	stepsFromSpecs := s.getStepsFromCachedSpecs()
-	stepsFromConcepts := s.getStepsFromCachedConcepts()
+	s.stepsCache = make(map[string][]*gauge.StepValue, 0)
+	stepsFromSpecsMap := s.getStepsFromCachedSpecs()
+	stepsFromConceptsMap := s.getStepsFromCachedConcepts()
 
-	allSteps := append(stepsFromSpecs, stepsFromConcepts...)
-
-	logger.APILog.Info("Initializing steps cache with %d steps", len(allSteps))
-	s.addToStepsCache(allSteps)
+	for filename, steps := range stepsFromConceptsMap {
+		s.addToStepsCache(filename, steps)
+	}
+	for filename, steps := range stepsFromSpecsMap {
+		s.addToStepsCache(filename, steps)
+	}
+	logger.APILog.Info("Initializing steps cache with %d steps", len(stepsFromSpecsMap)+len(stepsFromConceptsMap))
 }
 
 func (s *SpecInfoGatherer) addToSpecsCache(key string, value *SpecDetail) {
@@ -128,13 +131,9 @@ func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) 
 	s.mutex.Unlock()
 }
 
-func (s *SpecInfoGatherer) addToStepsCache(allSteps []*gauge.StepValue) {
+func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.StepValue) {
 	s.mutex.Lock()
-	for _, step := range allSteps {
-		if _, ok := s.stepsCache[step.StepValue]; !ok {
-			s.stepsCache[step.StepValue] = step
-		}
-	}
+	s.stepsCache[fileName] = allSteps
 	s.mutex.Unlock()
 }
 
@@ -169,26 +168,26 @@ func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	return s.conceptDictionary.ConceptsMap
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedSpecs() []*gauge.StepValue {
-	var stepValues []*gauge.StepValue
+func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.StepValue {
+	var stepsFromSpecsMap = make(map[string][]*gauge.StepValue, 0)
 	s.mutex.Lock()
 	for _, detail := range s.specsCache {
-		stepValues = append(stepValues, getStepsFromSpec(detail.Spec)...)
+		stepsFromSpecsMap[detail.Spec.FileName] = append(stepsFromSpecsMap[detail.Spec.FileName], getStepsFromSpec(detail.Spec)...)
 	}
 	s.mutex.Unlock()
-	return stepValues
+	return stepsFromSpecsMap
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedConcepts() []*gauge.StepValue {
-	var stepValues []*gauge.StepValue
+func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.StepValue {
+	var stepsFromConceptMap = make(map[string][]*gauge.StepValue, 0)
 	s.mutex.Lock()
 	for _, conceptList := range s.conceptsCache {
 		for _, concept := range conceptList {
-			stepValues = append(stepValues, getStepsFromConcept(concept)...)
+			stepsFromConceptMap[concept.FileName] = append(stepsFromConceptMap[concept.FileName], getStepsFromConcept(concept)...)
 		}
 	}
 	s.mutex.Unlock()
-	return stepValues
+	return stepsFromConceptMap
 }
 
 func (s *SpecInfoGatherer) onSpecFileModify(file string) {
@@ -199,7 +198,7 @@ func (s *SpecInfoGatherer) onSpecFileModify(file string) {
 	details := s.getParsedSpecs([]string{file})
 	s.addToSpecsCache(file, details[0])
 	stepsFromSpec := getStepsFromSpec(details[0].Spec)
-	s.addToStepsCache(stepsFromSpec)
+	s.addToStepsCache(file, stepsFromSpec)
 }
 
 func (s *SpecInfoGatherer) onConceptFileModify(file string) {
@@ -220,7 +219,7 @@ func (s *SpecInfoGatherer) onConceptFileModify(file string) {
 		c := gauge.Concept{ConceptStep: concept, FileName: file}
 		s.addToConceptsCache(file, &c)
 		stepsFromConcept := getStepsFromConcept(&c)
-		s.addToStepsCache(stepsFromConcept)
+		s.addToStepsCache(file, stepsFromConcept)
 	}
 }
 
@@ -356,8 +355,8 @@ func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
 
 	var steps []*gauge.StepValue
 	s.mutex.Lock()
-	for _, stepValue := range s.stepsCache {
-		steps = append(steps, stepValue)
+	for _, stepValues := range s.stepsCache {
+		steps = append(steps, stepValues...)
 	}
 	s.mutex.Unlock()
 	return steps

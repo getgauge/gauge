@@ -157,6 +157,66 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 	c.Assert(len(specInfoGatherer.conceptsCache), Equals, 2)
 }
 
+func (s *MySuite) TestInitStepsCache(c *C) {
+	f, _ := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	f, _ = filepath.Abs(f)
+	f1, _ := util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
+	f1, _ = filepath.Abs(f1)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(3)
+
+	specInfoGatherer.initConceptsCache()
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+	c.Assert(len(specInfoGatherer.stepsCache[f]), Equals, 2)
+	c.Assert(len(specInfoGatherer.stepsCache[f1]), Equals, 3)
+
+}
+
+func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
+	var stepsFromSpecsMap = make(map[string][]*gauge.StepValue, 0)
+	f, _ := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	f, _ = filepath.Abs(f)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(3)
+	specInfoGatherer.initSpecsCache()
+
+	stepsFromSpecsMap = specInfoGatherer.getStepsFromCachedSpecs()
+	c.Assert(len(stepsFromSpecsMap[f]), Equals, 2)
+	c.Assert(stepsFromSpecsMap[f][0].StepValue, Equals, "say hello")
+	c.Assert(stepsFromSpecsMap[f][1].StepValue, Equals, "say {} to me")
+}
+
+func (s *MySuite) TestGetStepsFromCachedConcepts(c *C) {
+	var stepsFromConceptsMap = make(map[string][]*gauge.StepValue, 0)
+	f, _ := util.CreateFileIn(s.specsDir, "concept1.cpt", concept1)
+	f, _ = filepath.Abs(f)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(3)
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initConceptsCache()
+
+	stepsFromConceptsMap = specInfoGatherer.getStepsFromCachedConcepts()
+	c.Assert(len(stepsFromConceptsMap[f]), Equals, 3)
+	c.Assert(stepsFromConceptsMap[f][0].StepValue, Equals, "first step with {}")
+	c.Assert(stepsFromConceptsMap[f][1].StepValue, Equals, "say {} to me")
+	c.Assert(stepsFromConceptsMap[f][2].StepValue, Equals, "a {} step")
+}
+
+func (s *MySuite) TestGetAvailableSteps(c *C) {
+	var stepValues []*gauge.StepValue
+	util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+
+	stepValues = specInfoGatherer.GetAvailableSteps()
+	c.Assert(len(stepValues), Equals, 2)
+	c.Assert(stepValues[0].StepValue, Equals, "say hello")
+	c.Assert(stepValues[1].StepValue, Equals, "say {} to me")
+}
+
 func (s *MySuite) TestHasSpecForSpecDetail(c *C) {
 	c.Assert((&SpecDetail{}).HasSpec(), Equals, false)
 	c.Assert((&SpecDetail{Spec: &gauge.Specification{}}).HasSpec(), Equals, false)
