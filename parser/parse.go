@@ -103,6 +103,7 @@ func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Spec
 func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
 	specsMap := make(map[string]*gauge.Specification)
 	passed := true
+	var givenSpecs []*gauge.Specification
 	for _, specSource := range specDirs {
 		var specs []*gauge.Specification
 		var specParseResults []*ParseResult
@@ -112,13 +113,25 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 			specs, specParseResults = ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary, buildErrors)
 		}
 		passed = !HandleParseResult(specParseResults...) && passed
+		givenSpecs = append(givenSpecs, specs...)
 		addSpecsToMap(specs, specsMap)
 	}
 	var allSpecs []*gauge.Specification
-	for _, spec := range specsMap {
-		allSpecs = append(allSpecs, spec)
+	for _, spec := range givenSpecs {
+		if !hasSpec(allSpecs, spec.FileName) {
+			allSpecs = append(allSpecs, specsMap[spec.FileName])
+		}
 	}
 	return allSpecs, !passed
+}
+
+func hasSpec(specs []*gauge.Specification, fileName string) bool {
+	for _, spec := range specs {
+		if spec.FileName == fileName {
+			return true
+		}
+	}
+	return false
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
