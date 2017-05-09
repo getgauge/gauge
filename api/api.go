@@ -44,6 +44,17 @@ func StartAPI(debug bool) *runner.StartChannels {
 
 // StartAPIService starts the Gauge API service
 func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
+	startAPIServiceWithoutRunner(port, startChannels, sig)
+
+	runner, err := connectToRunner(startChannels.KillChan, debug)
+	if err != nil {
+		startChannels.ErrorChan <- err
+		return
+	}
+	startChannels.RunnerChan <- runner
+}
+
+func startAPIServiceWithoutRunner(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer) {
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
@@ -57,13 +68,6 @@ func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGat
 		}
 	}
 	go gaugeConnectionHandler.HandleMultipleConnections()
-
-	runner, err := connectToRunner(startChannels.KillChan, debug)
-	if err != nil {
-		startChannels.ErrorChan <- err
-		return
-	}
-	startChannels.RunnerChan <- runner
 }
 
 func connectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
@@ -85,7 +89,7 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.MakeListOfAvailableSteps()
-	go startAPIService(port, startChan, sig, false)
+	go startAPIServiceWithoutRunner(port, startChan, sig)
 	go checkParentIsAlive(startChan)
 
 	for {
