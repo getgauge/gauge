@@ -398,7 +398,7 @@ func (s *MySuite) TestSetFlags(c *C) {
 	c.Assert(execution.NumberOfExecutionStreams, Equals, 3)
 	c.Assert(reporter.NumberOfExecutionStreams, Equals, 3)
 	c.Assert(filter.NumberOfExecutionStreams, Equals, 3)
-	c.Assert(filter.DoNotRandomize, Equals, true)
+	c.Assert(filter.Order, Equals, "sort")
 	c.Assert(filter.ExecuteTags, Equals, "tag1 & tag2")
 	c.Assert(reporter.Verbose, Equals, true)
 	c.Assert(reporter.IsParallel, Equals, true)
@@ -427,7 +427,7 @@ func (s *MySuite) TestResetFlags(c *C) {
 	execution.NumberOfExecutionStreams = 1
 	reporter.NumberOfExecutionStreams = 2
 	filter.NumberOfExecutionStreams = 3
-	filter.DoNotRandomize = true
+	filter.Order = "sort"
 	resetFlags()
 
 	cores := util.NumberOfCores()
@@ -436,7 +436,7 @@ func (s *MySuite) TestResetFlags(c *C) {
 	c.Assert(execution.NumberOfExecutionStreams, Equals, cores)
 	c.Assert(reporter.NumberOfExecutionStreams, Equals, cores)
 	c.Assert(filter.NumberOfExecutionStreams, Equals, cores)
-	c.Assert(filter.DoNotRandomize, Equals, false)
+	c.Assert(filter.Order, Equals, "")
 	c.Assert(filter.ExecuteTags, Equals, "")
 	c.Assert(reporter.Verbose, Equals, false)
 	c.Assert(reporter.IsParallel, Equals, false)

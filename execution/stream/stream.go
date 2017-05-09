@@ -217,7 +217,10 @@ func setFlags(req *gm.ExecutionRequest) []error {
 	reporter.NumberOfExecutionStreams = streams
 	filter.NumberOfExecutionStreams = streams
 	execution.Strategy = strings.ToLower(req.GetStrategy().String())
-	filter.DoNotRandomize = req.GetSort()
+	//TODO: should be changed to use Order instead
+	if req.GetSort() {
+		filter.Order = "sort"
+	}
 	reporter.Verbose = true
 	logger.Initialize(strings.ToLower(req.GetLogLevel().String()))
 	if req.GetWorkingDir() != "" {
@@ -243,6 +246,6 @@ func resetFlags() {
 	reporter.NumberOfExecutionStreams = cores
 	filter.NumberOfExecutionStreams = cores
 	execution.Strategy = "lazy"
-	filter.DoNotRandomize = false
+	filter.Order = ""
 	util.SetWorkingDir(config.ProjectRoot)
 }
