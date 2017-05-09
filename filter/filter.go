@@ -12,7 +12,7 @@ var Distribute int
 var NumberOfExecutionStreams int
 
 func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
-	specs = sortSpecsList(applyFilters(specs, specsFilters()))
+	specs = applyFilters(specs, specsFilters())
 	if ExecuteTags != "" && len(specs) > 0 {
 		logger.Debug("The following specifications satisfy filter criteria:")
 		for _, s := range specs {

@@ -59,7 +59,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*gauge.Specification, 0)
 	}
-	group := DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1]
+	group := DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1]
 	if group == nil {
 		return make([]*gauge.Specification, 0)
 	}
