@@ -51,7 +51,7 @@ func combineDataTableSpecs(s []*Specification) (specs [][]*Specification) {
 
 func hasSpec(specs [][]*Specification, fileName string) bool {
 	for _, s := range specs {
-		if s[0].FileName == fileName {
+		if s[0] != nil && s[0].FileName == fileName {
 			return true
 		}
 	}

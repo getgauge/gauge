@@ -145,6 +145,16 @@ func (s *MySuite) TestSpecsFormArgsForMultipleIndexedArgsForOneSpec(c *C) {
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
 }
 
+func (s *MySuite) TestSpecsFormArgsMaintainsOrderOfSpecsPassed(c *C) {
+	sampleSpec := filepath.Join("testdata", "sample.spec")
+	sample2Spec := filepath.Join("testdata", "sample2.spec")
+	specs, _ := parseSpecsInDirs(gauge.NewConceptDictionary(), []string{sample2Spec, sampleSpec}, gauge.NewBuildErrors())
+
+	c.Assert(len(specs), Equals, 2)
+	c.Assert(specs[0].Heading.Value, Equals, "Sample 2")
+	c.Assert(specs[1].Heading.Value, Equals, "Sample")
+}
+
 func (s *MySuite) TestToCheckIfItsIndexedSpec(c *C) {
 	c.Assert(isIndexedSpec("specs/hello_world:as"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.spec:0"), Equals, true)
