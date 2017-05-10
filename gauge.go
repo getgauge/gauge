@@ -231,7 +231,7 @@ func initPackageFlags() {
 	execution.Strategy = *strategy
 	filter.ExecuteTags = *executeTags
 	if *doNotRandomize {
-		fmt.Println("This flag will be deprecated soon. Please user --order=sort instead")
+		fmt.Println("This flag will be deprecated soon. Please use --order=sort instead.")
 		filter.Order = "sort"
 	}
 	filter.Order = *order
