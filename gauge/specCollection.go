@@ -41,8 +41,11 @@ func combineDataTableSpecs(s []*Specification) (specs [][]*Specification) {
 	for _, spec := range s {
 		combinedSpecs[spec.FileName] = append(combinedSpecs[spec.FileName], spec)
 	}
-	for _, v := range combinedSpecs {
-		specs = append(specs, v)
+	for _, spec := range s {
+		if _, ok:= combinedSpecs[spec.FileName]; ok {
+			specs = append(specs, combinedSpecs[spec.FileName])
+			delete(combinedSpecs, spec.FileName)
+		}
 	}
 	return
 }

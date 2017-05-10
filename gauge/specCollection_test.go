@@ -32,6 +32,12 @@ func TestGroupSpecCollection(t *testing.T) {
 	if !reflect.DeepEqual(set(want), set(got)) {
 		t.Errorf("Spec Collection Failed\n\tWant: %v\n\t Got:%v", want, got)
 	}
+
+	for key, value := range got {
+		if value[0].FileName != want[key][0].FileName {
+			t.Errorf("Spec Collection order is not maintained\n\tWant: %v\n\t Got:%v", want[key], got[key])
+		}
+	}
 }
 
 func set(s [][]*Specification) map[int][]*Specification {

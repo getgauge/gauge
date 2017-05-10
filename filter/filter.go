@@ -7,12 +7,12 @@ import (
 )
 
 var ExecuteTags string
-var DoNotRandomize bool
 var Distribute int
 var NumberOfExecutionStreams int
+var Order string
 
 func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
-	specs = sortSpecsList(applyFilters(specs, specsFilters()))
+	specs = applyFilters(specs, specsFilters())
 	if ExecuteTags != "" && len(specs) > 0 {
 		logger.Debug("The following specifications satisfy filter criteria:")
 		for _, s := range specs {
@@ -23,7 +23,7 @@ func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 }
 
 func specsFilters() []specsFilter {
-	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}, &specRandomizer{DoNotRandomize}}
+	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}, &specOrder{Order}}
 }
 
 func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) []*gauge.Specification {

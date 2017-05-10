@@ -39,8 +39,8 @@ type specsGroupFilter struct {
 	execStreams int
 }
 
-type specRandomizer struct {
-	dontRandomize bool
+type specOrder struct {
+	order string
 }
 
 func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
@@ -59,7 +59,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*gauge.Specification, 0)
 	}
-	group := DistributeSpecs(sortSpecsList(specs), groupFilter.execStreams)[groupFilter.group-1]
+	group := DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1]
 	if group == nil {
 		return make([]*gauge.Specification, 0)
 	}
@@ -78,9 +78,11 @@ func DistributeSpecs(specifications []*gauge.Specification, distributions int) [
 	return s
 }
 
-func (randomizer *specRandomizer) filter(specs []*gauge.Specification) []*gauge.Specification {
-	if !randomizer.dontRandomize {
+func (specOrder *specOrder) filter(specs []*gauge.Specification) []*gauge.Specification {
+	if specOrder.order == "random" {
 		return shuffleSpecs(specs)
+	} else if specOrder.order == "sort" {
+		sortSpecsList(specs)
 	}
 	return specs
 }
