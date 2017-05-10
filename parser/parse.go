@@ -118,20 +118,12 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 	}
 	var allSpecs []*gauge.Specification
 	for _, spec := range givenSpecs {
-		if !hasSpec(allSpecs, spec.FileName) {
+		if _, ok := specsMap[spec.FileName]; ok {
 			allSpecs = append(allSpecs, specsMap[spec.FileName])
+			delete(specsMap, spec.FileName)
 		}
 	}
 	return allSpecs, !passed
-}
-
-func hasSpec(specs []*gauge.Specification, fileName string) bool {
-	for _, spec := range specs {
-		if spec.FileName == fileName {
-			return true
-		}
-	}
-	return false
 }
 
 func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
