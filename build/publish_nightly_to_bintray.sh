@@ -29,6 +29,11 @@ if [ -z "$RENAME" ]; then
     RENAME=0
 fi
 
+if [ -z "$GITHUB_SSH_PRIVATE_KEY" ]; then
+  echo "GITHUB_SSH_PRIVATE_KEY is not set"
+  exit 1
+fi
+
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is not installed, aborting."; exit 1; }
 
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
@@ -151,7 +156,7 @@ function updateRepo () {
     if [ "$UPDATE_INSTALL_JSON" != "1" ]; then
         return 0
     fi
-
+    eval $(ssh-agent) && echo -e \"$GITHUB_SSH_PRIVATE_KEY\" | ssh-add -
     git clone git@github.com:getgauge/gauge-nightly-repository.git
     cd gauge-nightly-repository
     if [[ $PLATFORM_INDEPENDENT_FILE != "" ]]; then
