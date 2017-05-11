@@ -65,6 +65,7 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	max := results[0].ExecutionTime
 	for _, res := range results {
 		specResult.ExecutionTime += res.ExecutionTime
+		specResult.Errors = res.Errors
 		if res.ExecutionTime > max {
 			max = res.ExecutionTime
 		}
