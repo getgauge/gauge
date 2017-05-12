@@ -30,7 +30,7 @@ if [ -z "$GITHUB_SSH_PRIVATE_KEY" ]; then
   exit 1
 fi
 
-eval $(ssh-agent) && echo -e "$GITHUB_SSH_PRIVATE_KEY" | ssh-add -
+eval $(ssh-agent) && echo "$GITHUB_SSH_PRIVATE_KEY" | ssh-add -
 
 go get -v -u github.com/aktau/github-release
 
