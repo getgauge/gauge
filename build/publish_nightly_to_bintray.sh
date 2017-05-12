@@ -155,7 +155,7 @@ function updateRepo () {
         echo "GITHUB_SSH_PRIVATE_KEY is not set"
         exit 1
     fi
-    eval $(ssh-agent) && echo "$GITHUB_SSH_PRIVATE_KEY" | ssh-add -
+    eval $(ssh-agent) && echo -e "$GITHUB_SSH_PRIVATE_KEY" | ssh-add -
     git clone git@github.com:getgauge/gauge-nightly-repository.git
     cd gauge-nightly-repository
     if [[ $PLATFORM_INDEPENDENT_FILE != "" ]]; then
