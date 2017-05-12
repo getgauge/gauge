@@ -25,13 +25,6 @@ if [ -z "$GITHUB_TOKEN" ]; then
   exit 1
 fi
 
-if [ -z "$GITHUB_SSH_PRIVATE_KEY" ]; then
-  echo "GITHUB_SSH_PRIVATE_KEY is not set"
-  exit 1
-fi
-
-eval $(ssh-agent) && echo "$GITHUB_SSH_PRIVATE_KEY" | ssh-add -
-
 go get -v -u github.com/aktau/github-release
 
 version=$(ls $repoName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$repoName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
