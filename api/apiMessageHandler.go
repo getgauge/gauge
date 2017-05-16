@@ -34,6 +34,7 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -76,6 +77,7 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 			break
 		case gauge_messages.APIMessage_PerformRefactoringRequest:
 			responseMessage = handler.performRefactoring(apiMessage)
+			handler.performRefresh(responseMessage.PerformRefactoringResponse.FilesChanged)
 			break
 		case gauge_messages.APIMessage_ExtractConceptRequest:
 			responseMessage = handler.extractConcept(apiMessage)
@@ -209,6 +211,19 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	}
 	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
+}
+
+func (handler *gaugeAPIMessageHandler) performRefresh(files []string) {
+	for _, file := range files {
+		if util.IsConcept(file) {
+			handler.specInfoGatherer.OnConceptFileModify(file)
+		}
+	}
+	for _, file := range files {
+		if util.IsSpec(file) {
+			handler.specInfoGatherer.OnSpecFileModify(file)
+		}
+	}
 }
 
 func (handler *gaugeAPIMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {

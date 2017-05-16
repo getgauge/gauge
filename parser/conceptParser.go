@@ -221,7 +221,7 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	conceptsDictionary := gauge.NewConceptDictionary()
 	res := &ParseResult{Ok: true}
 	for _, conceptFile := range conceptFiles {
-		if errs := AddConcepts(conceptFile, conceptsDictionary); len(errs) > 0 {
+		if _, errs := AddConcepts(conceptFile, conceptsDictionary); len(errs) > 0 {
 			for _, err := range errs {
 				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
 			}
@@ -237,7 +237,7 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	return conceptsDictionary, res
 }
 
-func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
+func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
 	concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 	if parseRes != nil && parseRes.Warnings != nil {
 		for _, warning := range parseRes.Warnings {
@@ -252,7 +252,7 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 	}
 	conceptDictionary.UpdateLookupForNestedConcepts()
-	return parseRes.ParseErrors
+	return concepts, parseRes.ParseErrors
 }
 
 func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {

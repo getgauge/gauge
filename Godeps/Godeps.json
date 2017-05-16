@@ -19,10 +19,6 @@
 			"Rev": "7cbffbaada472bc302cbaca51c1d5ed2682eb509"
 		},
 		{
-			"ImportPath": "github.com/fsnotify/fsnotify",
-			"Rev": "629574ca2a5df945712d3079857300b5e4da0236"
-		},
-		{
 			"ImportPath": "github.com/getgauge/common",
 			"Rev": "14899559ddf9dac49f712ddb6832591b972ad4cf"
 		},
