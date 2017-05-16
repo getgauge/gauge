@@ -44,8 +44,9 @@ func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	step2 := &gauge.Step{Value: step2Text, LineNo: 4, IsConcept: true, LineText: step2Text}
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 
-	errs := AddConcepts(path, dictionary)
+	steps, errs := AddConcepts(path, dictionary)
 
+	c.Assert(len(steps), Equals, 2)
 	c.Assert(len(errs), Equals, 0)
 	assertStepEqual(c, dictionary.ConceptsMap[step1Text].ConceptStep, step1)
 	c.Assert(dictionary.ConceptsMap[step1Text].FileName, Equals, path)
@@ -57,8 +58,9 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate_concept.cpt"))
 
-	errs := AddConcepts(path, dictionary)
+	steps, errs := AddConcepts(path, dictionary)
 
+	c.Assert(len(steps), Equals, 2)
 	c.Assert(len(errs) > 0, Equals, true)
 	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found")
 }
@@ -69,7 +71,9 @@ func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
 	cpt2, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate.cpt"))
 
 	AddConcepts(cpt1, dictionary)
-	errs := AddConcepts(cpt2, dictionary)
+	steps, errs := AddConcepts(cpt2, dictionary)
+
+	c.Assert(len(steps), Equals, 2)
 
 	c.Assert(len(errs), Equals, 2)
 
