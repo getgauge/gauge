@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/execution/result"
@@ -100,6 +101,9 @@ func ExecuteSpecs(specDirs []string) int {
 	event.InitRegistry()
 	reporter.ListenExecutionEvents()
 	rerun.ListenFailedScenarios()
+	if env.ShouldSaveExecutionResult() {
+		ListenSuiteEndAndSaveResult()
+	}
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ParseOk)

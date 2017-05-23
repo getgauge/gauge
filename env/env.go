@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
@@ -28,8 +29,9 @@ import (
 )
 
 const (
-	GaugeReportsDir = "gauge_reports_dir"
-	LogsDirectory   = "logs_directory"
+	GaugeReportsDir     = "gauge_reports_dir"
+	LogsDirectory       = "logs_directory"
+	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
 )
 
 var envVars map[string]string
@@ -132,4 +134,13 @@ func isPropertySet(property string) bool {
 // CurrentEnv returns the value of currentEnv
 func CurrentEnv() string {
 	return currentEnv
+}
+
+// ShouldSaveExecutionResult checks if execution result should be saved to file
+func ShouldSaveExecutionResult() bool {
+	envValue := os.Getenv(SaveExecutionResult)
+	if strings.ToLower(envValue) == "true" {
+		return true
+	}
+	return false
 }
