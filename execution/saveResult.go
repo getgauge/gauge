@@ -23,6 +23,8 @@ import (
 
 	"io/ioutil"
 
+	"sync"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
@@ -38,11 +40,13 @@ const (
 )
 
 // ListenSuiteEndAndSaveResult listens to execution events and writes the failed scenarios to JSON file
-func ListenSuiteEndAndSaveResult() {
+func ListenSuiteEndAndSaveResult(wg *sync.WaitGroup) {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.SuiteEnd)
 
 	go func() {
+		wg.Add(1)
+		defer wg.Done()
 		for {
 			e := <-ch
 			if e.Topic == event.SuiteEnd {
@@ -56,15 +60,15 @@ func writeResult(res *result.SuiteResult) {
 	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
 	resultFile := filepath.Join(config.ProjectRoot, dotGauge, lastRunResult)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Errorf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	r, err := proto.Marshal(gauge.ConvertToProtoSuiteResult(res))
 	if err != nil {
-		logger.Warning("Unable to marshal suite execution result, skipping save. %s", err.Error())
+		logger.Errorf("Unable to marshal suite execution result, skipping save. %s", err.Error())
 	}
 	err = ioutil.WriteFile(resultFile, r, common.NewFilePermissions)
 	if err != nil {
-		logger.Warning("Failed to write to %s. Reason: %s", resultFile, err.Error())
+		logger.Errorf("Failed to write to %s. Reason: %s", resultFile, err.Error())
 	} else {
 		logger.Debug("Last run result saved to %s", resultFile)
 	}
