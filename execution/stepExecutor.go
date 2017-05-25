@@ -45,7 +45,6 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	if !stepResult.GetFailed() {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep, ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
-		e.currentExecutionInfo.CurrentStep.StackTrace = ""
 		if stepExecutionStatus.GetFailed() {
 			e.currentExecutionInfo.CurrentStep.StackTrace = stepExecutionStatus.GetStackTrace()
 			setStepFailure(e.currentExecutionInfo)
