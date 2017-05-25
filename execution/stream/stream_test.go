@@ -24,6 +24,8 @@ import (
 
 	"os"
 
+	"sync"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/event"
@@ -198,8 +200,10 @@ func (s *MySuite) TestGetErrorsWithStepAndConceptFailures(c *C) {
 func (s *MySuite) TestListenSuiteStartExecutionEvent(c *C) {
 	event.InitRegistry()
 	actual := make(chan *gm.ExecutionResponse)
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gm.ExecutionInfo{}))
 	defer sendSuiteEnd(actual)
 
@@ -217,8 +221,10 @@ func (s *MySuite) TestListenSpecStartExecutionEvent(c *C) {
 	ei := gm.ExecutionInfo{
 		CurrentSpec: &gm.SpecInfo{FileName: "example.spec"},
 	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.SpecStart, nil, nil, 0, ei))
 
@@ -236,8 +242,10 @@ func (s *MySuite) TestListenScenarioStartExecutionEvent(c *C) {
 	ei := gm.ExecutionInfo{
 		CurrentSpec: &gm.SpecInfo{FileName: "example.spec"},
 	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.ScenarioStart, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, nil, 0, ei))
 
@@ -259,8 +267,10 @@ func (s *MySuite) TestListenSpecEndExecutionEvent(c *C) {
 		CurrentSpec: &gm.SpecInfo{FileName: "example.spec"},
 	}
 	hookFailure := []*gm.ProtoHookFailure{{ErrorMessage: "err msg"}}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &result.SpecResult{
 		ProtoSpec: &gm.ProtoSpec{PreHookFailures: hookFailure, PostHookFailures: hookFailure},
@@ -282,8 +292,10 @@ func (s *MySuite) TestListenSuiteEndExecutionEvent(c *C) {
 	event.InitRegistry()
 	actual := make(chan *gm.ExecutionResponse)
 	hookFailure := &gm.ProtoHookFailure{ErrorMessage: "err msg"}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, &result.SuiteResult{PreSuite: hookFailure, PostSuite: hookFailure}, 0, gm.ExecutionInfo{}))
 
 	expected := &gm.ExecutionResponse{
@@ -307,8 +319,10 @@ func (s *MySuite) TestListenScenarioEndExecutionEvent(c *C) {
 		ScenarioItems: []*gm.ProtoItem{},
 		ExecutionTime: 1,
 	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
 
@@ -338,8 +352,10 @@ func (s *MySuite) TestListenScenarioEndExecutionEventForFailedScenario(c *C) {
 		ExecutionTime:   1,
 		ExecutionStatus: gm.ExecutionStatus_FAILED,
 	}
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
 
-	listenExecutionEvents(&dummyServer{response: actual}, 1234)
+	listenExecutionEvents(&dummyServer{response: actual}, 1234, wg)
 	defer sendSuiteEnd(actual)
 	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{Heading: &gauge.Heading{LineNo: 1}}, result.NewScenarioResult(scn), 0, ei))
 

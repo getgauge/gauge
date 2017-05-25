@@ -25,6 +25,10 @@ import (
 
 	"strings"
 
+	"os"
+
+	"sync"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
@@ -37,6 +41,7 @@ import (
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 )
 
@@ -99,11 +104,14 @@ func ExecuteSpecs(specDirs []string) int {
 		return 1
 	}
 	event.InitRegistry()
+	wg := &sync.WaitGroup{}
 	reporter.ListenExecutionEvents()
-	rerun.ListenFailedScenarios()
-	if env.ShouldSaveExecutionResult() {
-		ListenSuiteEndAndSaveResult()
+	rerun.ListenFailedScenarios(wg)
+	if util.ConvertToBool(os.Getenv(env.SaveExecutionResult), env.SaveExecutionResult, false) {
+		wg.Add(1)
+		ListenSuiteEndAndSaveResult(wg)
 	}
+	defer wg.Wait()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ParseOk)
