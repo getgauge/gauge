@@ -22,6 +22,8 @@ import (
 	"io"
 	"os"
 
+	"sync"
+
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
@@ -106,11 +108,12 @@ func initParallelReporters() {
 }
 
 // ListenExecutionEvents listens to all execution events for reporting on console
-func ListenExecutionEvents() {
+func ListenExecutionEvents(wg *sync.WaitGroup) {
 	ch := make(chan event.ExecutionEvent, 0)
 	initParallelReporters()
 	event.Register(ch, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
 	var r Reporter
+	wg.Add(1)
 
 	go func() {
 		for {
@@ -150,6 +153,7 @@ func ListenExecutionEvents() {
 				r.SpecEnd(e.Result)
 			case event.SuiteEnd:
 				r.SuiteEnd(e.Result)
+				wg.Done()
 			}
 		}
 	}()
