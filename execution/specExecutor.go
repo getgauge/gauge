@@ -206,7 +206,8 @@ func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult 
 func (e *specExecutor) notifyBeforeSpecHook() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting,
 		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
+	e.pluginHandler.NotifyPlugins(m)
+	res := executeHook(m, e.specResult, e.runner)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook)
@@ -216,15 +217,15 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 func (e *specExecutor) notifyAfterSpecHook() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding,
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	res := executeHook(m, e.specResult, e.runner, e.pluginHandler)
+	res := executeHook(m, e.specResult, e.runner)
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook)
 	}
+	e.pluginHandler.NotifyPlugins(m)
 }
 
-func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r runner.Runner, ph *plugin.Handler) *gauge_messages.ProtoExecutionResult {
-	ph.NotifyPlugins(message)
+func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r runner.Runner) *gauge_messages.ProtoExecutionResult {
 	executionResult := r.ExecuteAndGetStatus(message)
 	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())
 	return executionResult
