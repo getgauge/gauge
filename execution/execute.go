@@ -105,10 +105,9 @@ func ExecuteSpecs(specDirs []string) int {
 	}
 	event.InitRegistry()
 	wg := &sync.WaitGroup{}
-	reporter.ListenExecutionEvents()
+	reporter.ListenExecutionEvents(wg)
 	rerun.ListenFailedScenarios(wg)
 	if util.ConvertToBool(os.Getenv(env.SaveExecutionResult), env.SaveExecutionResult, false) {
-		wg.Add(1)
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()

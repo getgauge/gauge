@@ -98,10 +98,9 @@ func ListenFailedScenarios(wg *sync.WaitGroup) {
 	event.Register(ch, event.ScenarioEnd)
 	event.Register(ch, event.SpecEnd)
 	event.Register(ch, event.SuiteEnd)
+	wg.Add(1)
 
 	go func() {
-		wg.Add(1)
-		defer wg.Done()
 		for {
 			e := <-ch
 			switch e.Topic {
@@ -113,6 +112,7 @@ func ListenFailedScenarios(wg *sync.WaitGroup) {
 				addFailedMetadata(e.Result, addSuiteFailedMetadata)
 				failedMeta.aggregateFailedItems()
 				writeFailedMeta(getJSON(failedMeta))
+				wg.Done()
 			}
 		}
 	}()

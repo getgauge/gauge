@@ -43,14 +43,14 @@ const (
 func ListenSuiteEndAndSaveResult(wg *sync.WaitGroup) {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.SuiteEnd)
+	wg.Add(1)
 
 	go func() {
-		wg.Add(1)
-		defer wg.Done()
 		for {
 			e := <-ch
 			if e.Topic == event.SuiteEnd {
 				writeResult(e.Result.(*result.SuiteResult))
+				wg.Done()
 			}
 		}
 	}()
