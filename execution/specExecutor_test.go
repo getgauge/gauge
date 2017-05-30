@@ -372,8 +372,9 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 }
 
 func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := parser.ParseError{Message: "Message", LineNo: 5, FileName: "filename"}
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
@@ -389,8 +390,9 @@ func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
 }
 
 func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := validation.NewSpecValidationError("Message", "filename")
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
@@ -404,8 +406,9 @@ func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
 }
 
 func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := validation.NewStepValidationError(&gauge.Step{LineText: "step", LineNo: 3}, "Step Message", "filename", nil)
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
@@ -470,6 +473,40 @@ var exampleSpecWithScenarios = &gauge.Specification{
 		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 2"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
 	},
 }
+
+// var exampleTableDrivenSpecWithScenarios = &gauge.Specification{
+// 	Heading:  &gauge.Heading{Value: "Example Spec"},
+// 	FileName: "example.spec",
+// 	DataTable: gauge.DataTable{
+// 		Table: *gauge.NewTable([]string{"foo", "bar"},
+// 			[][]gauge.TableCell{
+// 				[]gauge.TableCell{
+// 					gauge.TableCell{Value: "foo1", CellType: gauge.Static},
+// 					gauge.TableCell{Value: "foo2", CellType: gauge.Static},
+// 					gauge.TableCell{Value: "foo3", CellType: gauge.Static},
+// 				},
+// 				[]gauge.TableCell{
+// 					gauge.TableCell{Value: "bar1", CellType: gauge.Static},
+// 					gauge.TableCell{Value: "bar2", CellType: gauge.Static},
+// 					gauge.TableCell{Value: "bar3", CellType: gauge.Static},
+// 				},
+// 			},
+// 			0),
+// 	},
+// 	Tags: &gauge.Tags{},
+// 	Scenarios: []*gauge.Scenario{
+// 		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
+// 		&gauge.Scenario{
+// 			Heading: &gauge.Heading{Value: "Example Scenario 2 using <foo>"},
+// 			Items:   make([]gauge.Item, 0),
+// 			Tags:    &gauge.Tags{},
+// 			Span:    &gauge.Span{},
+// 			Steps: []*gauge.Step{
+// 				&gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "foo", Value: "foo", ArgType: gauge.Dynamic}}},
+// 			},
+// 		},
+// 	},
+// }
 
 func TestExecuteFailsWhenSpecHasParseErrors(t *testing.T) {
 	errs := gauge.NewBuildErrors()
@@ -684,9 +721,48 @@ func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 	}
 }
 
-// execute (non table driven)
-// execute ( table driven)
+type mockExecutor struct {
+	executeFunc func(i gauge.Item, r result.Result)
+}
 
-// result skip
-// notify after spec event
-// e.notifyAfterSpecHook
+func (e *mockExecutor) execute(i gauge.Item, r result.Result) {
+	e.executeFunc(i, r)
+}
+
+func TestExecuteScenario(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	se := newSpecExecutor(exampleSpecWithScenarios, nil, nil, errs, 0)
+	executedScenarios := make([]string, 0)
+	se.scenarioExecutor = &mockExecutor{
+		executeFunc: func(i gauge.Item, r result.Result) {
+			executedScenarios = append(executedScenarios, i.(*gauge.Scenario).Heading.Value)
+		},
+	}
+	se.execute(false, true, false)
+	got := len(executedScenarios)
+	if got != 2 {
+		t.Errorf("Expected 2 scenarios to be executed, got %d", got)
+	}
+
+	expected := []string{"Example Scenario 1", "Example Scenario 2"}
+	for i, s := range executedScenarios {
+		if s != expected[i] {
+			t.Errorf("Expected '%s' scenario to be executed. Got %s", s, executedScenarios)
+		}
+	}
+}
+
+func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	se := newSpecExecutor(exampleSpecWithScenarios, nil, nil, errs, 0)
+	se.scenarioExecutor = &mockExecutor{
+		executeFunc: func(i gauge.Item, r result.Result) {
+			r.(*result.ScenarioResult).ProtoScenario.Skipped = true
+			r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
+		},
+	}
+	res := se.execute(false, true, false)
+	if !res.Skipped {
+		t.Error("Expect SpecResult.Skipped = true, got false")
+	}
+}
