@@ -23,6 +23,9 @@ import (
 	"path/filepath"
 	"testing"
 
+	"sync"
+
+	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -443,6 +446,19 @@ func (r *mockRunner) Pid() int {
 	return -1
 }
 
+type mockPluginHandler struct {
+	NotifyPluginsfunc         func(*gauge_messages.Message)
+	GracefullyKillPluginsfunc func()
+}
+
+func (h *mockPluginHandler) NotifyPlugins(m *gauge_messages.Message) {
+	h.NotifyPluginsfunc(m)
+}
+
+func (h *mockPluginHandler) GracefullyKillPlugins() {
+	h.GracefullyKillPluginsfunc()
+}
+
 var exampleSpec = &gauge.Specification{Heading: &gauge.Heading{Value: "Example Spec"}, FileName: "example.spec", Tags: &gauge.Tags{}}
 
 var exampleSpecWithScenarios = &gauge.Specification{
@@ -494,15 +510,16 @@ func TestExecuteSkipsWhenSpecHasNoScenario(t *testing.T) {
 		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
 	}
 	e := res.Errors[0]
-	if e.Message != "example.spec: No scenarios found in spec" {
-		t.Error("Expected error with message : 'example.spec: No scenarios found in spec'")
+	expected := "example.spec:0 No scenarios found in spec => 'Example Spec'"
+	if e.Message != expected {
+		t.Errorf("Expected error with message : '%s', got '%s'", expected, e.Message)
 	}
 }
 
 func TestExecuteInitSpecDatastore(t *testing.T) {
 	errs := gauge.NewBuildErrors()
 	r := &mockRunner{}
-
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 	dataStoreInitCalled := false
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecDataStoreInit {
@@ -510,7 +527,7 @@ func TestExecuteInitSpecDatastore(t *testing.T) {
 		}
 		return &gauge_messages.ProtoExecutionResult{}
 	}
-	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
 	se.execute(true, false, false)
 
 	if !dataStoreInitCalled {
@@ -558,55 +575,114 @@ func TestExecuteSkipsWhenSpecDatastoreInitFails(t *testing.T) {
 	}
 }
 
-// func TestExecuteBeforeSpecHook(t *testing.T) {
-// 	errs := gauge.NewBuildErrors()
-// 	r := &mockRunner{}
+func TestExecuteBeforeSpecHook(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 
-// 	beforeSpecHookCalled := false
-// 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-// 		if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
-// 			beforeSpecHookCalled = true
-// 		}
-// 		return &gauge_messages.ProtoExecutionResult{}
-// 	}
-// 	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
-// 	se.execute(true, false, false)
+	beforeSpecHookCalled := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+			beforeSpecHookCalled = true
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
+	se.execute(true, false, false)
 
-// 	if !beforeSpecHookCalled {
-// 		t.Error("Expected runner to be called with SpecExecutionStarting")
-// 	}
-// }
+	if !beforeSpecHookCalled {
+		t.Error("Expected runner to be called with SpecExecutionStarting")
+	}
+}
 
-// func TestExecuteShouldNotifyEvents(t *testing.T) {
-// 	errs := gauge.NewBuildErrors()
-// 	r := &mockRunner{}
-// 	eventRaised := false
-// 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-// 		return &gauge_messages.ProtoExecutionResult{}
-// 	}
+func TestExecuteShouldNotifyBeforeSpecEvent(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 
-// 	ch := make(chan event.ExecutionEvent, 0)
-// 	event.InitRegistry()
-// 	event.Register(ch, event.ScenarioEnd)
-// 	go func() {
-// 		for {
-// 			e := <-ch
-// 			switch e.Topic {
-// 			case event.SpecStart:
-// 				eventRaised = true
-// 			}
-// 		}
-// 	}()
-// 	se := newSpecExecutor(exampleSpecWithScenarios, r, nil, errs, 0)
-// 	se.execute(true, false, false)
+	eventRaised := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		return &gauge_messages.ProtoExecutionResult{}
+	}
 
-// 	if !eventRaised {
-// 		t.Error("Expected SpecStart event to be raised")
-// 	}
-// }
+	ch := make(chan event.ExecutionEvent, 0)
+	event.InitRegistry()
+	event.Register(ch, event.SpecStart)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		for {
+			e := <-ch
+			t.Log(e.Topic)
+			switch e.Topic {
+			case event.SpecStart:
+				eventRaised = true
+				wg.Done()
+			}
+		}
+	}()
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
+	se.execute(true, false, false)
 
-// notify before spec event
-// e.notifyBeforeSpecHook
+	wg.Wait()
+	if !eventRaised {
+		t.Error("Expected SpecStart event to be raised")
+	}
+}
+func TestExecuteAfterSpecHook(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+
+	afterSpecHookCalled := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+			afterSpecHookCalled = true
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
+	se.execute(false, false, true)
+
+	if !afterSpecHookCalled {
+		t.Error("Expected runner to be called with SpecExecutionAfter")
+	}
+}
+
+func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+
+	eventRaised := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+
+	ch := make(chan event.ExecutionEvent, 0)
+	event.InitRegistry()
+	event.Register(ch, event.SpecEnd)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		for {
+			e := <-ch
+			t.Log(e.Topic)
+			switch e.Topic {
+			case event.SpecEnd:
+				eventRaised = true
+				wg.Done()
+			}
+		}
+	}()
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
+	se.execute(false, false, true)
+
+	wg.Wait()
+	if !eventRaised {
+		t.Error("Expected SpecEnd event to be raised")
+	}
+}
 
 // execute (non table driven)
 // execute ( table driven)
