@@ -37,14 +37,14 @@ import (
 type specExecutor struct {
 	specification        *gauge.Specification
 	runner               runner.Runner
-	pluginHandler        *plugin.Handler
+	pluginHandler        plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	specResult           *result.SpecResult
 	errMap               *gauge.BuildErrors
 	stream               int
 }
 
-func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, stream int) *specExecutor {
+func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, stream int) *specExecutor {
 	return &specExecutor{specification: s, runner: r, pluginHandler: ph, errMap: e, stream: stream}
 }
 

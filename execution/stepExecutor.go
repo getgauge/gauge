@@ -28,7 +28,7 @@ import (
 
 type stepExecutor struct {
 	runner               runner.Runner
-	pluginHandler        *plugin.Handler
+	pluginHandler        plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	stream               int
 }

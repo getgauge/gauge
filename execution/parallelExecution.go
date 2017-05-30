@@ -52,7 +52,7 @@ type parallelExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
 	specCollection           *gauge.SpecCollection
-	pluginHandler            *plugin.Handler
+	pluginHandler            plugin.Handler
 	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
