@@ -45,6 +45,24 @@ func (s *MySuite) TestParsingSpecHeading(c *C) {
 	c.Assert(tokens[0].Value, Equals, "Spec Heading")
 }
 
+func (s *MySuite) TestParsingAMultilineStep(c *C) {
+	parser := new(SpecParser)
+	tokens, err := parser.GenerateTokens("* test multiline step \"\"\narg\ncontinues\n\"\"")
+
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+}
+
+func (s *MySuite) TestParsingAMultilineWithArgumentStartingOnFirstLineStep(c *C) {
+	parser := new(SpecParser)
+	tokens, err := parser.GenerateTokens("* test multiline step \"\"arg\ncontinues\n\"\"")
+
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+}
+
 func (s *MySuite) TestParsingASingleStep(c *C) {
 	parser := new(SpecParser)
 	tokens, err := parser.GenerateTokens("* test step \"arg\" ", "")
