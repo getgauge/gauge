@@ -78,16 +78,16 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 		return e.specResult
 	}
 	if len(e.specification.Scenarios) == 0 {
-		e.skipSpecForError(fmt.Errorf("%s: No scenarios found in spec\n", e.specification.FileName))
+		e.skipSpecForError(fmt.Errorf("%s: No scenarios found in spec", e.specification.FileName))
 		return e.specResult
 	}
 
-	res := e.initSpecDataStore()
-	if res.GetFailed() {
-		e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
-		return e.specResult
-	}
 	if executeBefore {
+		res := e.initSpecDataStore()
+		if res.GetFailed() {
+			e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
+			return e.specResult
+		}
 		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream, *e.currentExecutionInfo))
 		e.notifyBeforeSpecHook()
 	}

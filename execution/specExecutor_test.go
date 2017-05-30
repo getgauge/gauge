@@ -19,7 +19,9 @@ package execution
 
 import (
 	"fmt"
+	"net"
 	"path/filepath"
+	"testing"
 
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -263,12 +265,6 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 
 	c.Assert(se.specResult.IsFailed, Equals, false)
 	c.Assert(se.specResult.Skipped, Equals, true)
-
-	// c.Assert(len(se.errMap.SpecErrs[spec]), Equals, 1)
-	// c.Assert(se.errMap.SpecErrs[spec][0].message, Equals, "ERROR")
-	// c.Assert(se.errMap.SpecErrs[spec][0].fileName, Equals, "FILE")
-	// c.Assert(se.errMap.SpecErrs[spec][0].step.LineNo, Equals, 0)
-	// c.Assert(se.errMap.SpecErrs[spec][0].step.LineText, Equals, "SPEC_HEADING")
 }
 
 func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
@@ -279,17 +275,6 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 
 	c.Assert(se.specResult.IsFailed, Equals, false)
 	c.Assert(se.specResult.Skipped, Equals, true)
-
-	// c.Assert(len(specExecutor.errMap.SpecErrs[spec]), Equals, 1)
-	// c.Assert(specExecutor.errMap.SpecErrs[spec][0].message, Equals, "ERROR")
-	// c.Assert(specExecutor.errMap.SpecErrs[spec][0].fileName, Equals, "FILE")
-	// c.Assert(specExecutor.errMap.SpecErrs[spec][0].step.LineNo, Equals, 1)
-	// c.Assert(specExecutor.errMap.SpecErrs[spec][0].step.LineText, Equals, "A spec heading")
-	// c.Assert(len(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]]), Equals, 1)
-	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].message, Equals, "ERROR")
-	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].fileName, Equals, "FILE")
-	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineNo, Equals, 1)
-	// c.Assert(specExecutor.errMap.ScenarioErrs[spec.Scenarios[0]][0].step.LineText, Equals, "A spec heading")
 }
 
 func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
@@ -429,3 +414,203 @@ func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
 	c.Assert(len(errs), DeepEquals, 1)
 	c.Assert(*(errs[0]), DeepEquals, expected)
 }
+
+type mockRunner struct {
+	ExecuteAndGetStatusFunc func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
+}
+
+func (r *mockRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	return r.ExecuteAndGetStatusFunc(m)
+}
+
+func (r *mockRunner) IsProcessRunning() bool {
+	return false
+}
+
+func (r *mockRunner) Kill() error {
+	return nil
+}
+
+func (r *mockRunner) Connection() net.Conn {
+	return nil
+}
+
+func (r *mockRunner) IsMultithreaded() bool {
+	return false
+}
+
+func (r *mockRunner) Pid() int {
+	return -1
+}
+
+var exampleSpec = &gauge.Specification{Heading: &gauge.Heading{Value: "Example Spec"}, FileName: "example.spec", Tags: &gauge.Tags{}}
+
+var exampleSpecWithScenarios = &gauge.Specification{
+	Heading:  &gauge.Heading{Value: "Example Spec"},
+	FileName: "example.spec",
+	Tags:     &gauge.Tags{},
+	Scenarios: []*gauge.Scenario{
+		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
+		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 2"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
+	},
+}
+
+func TestExecuteFailsWhenSpecHasParseErrors(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	errs.SpecErrs[exampleSpec] = append(errs.SpecErrs[exampleSpec], parser.ParseError{Message: "some error"})
+	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+
+	res := se.execute(false, true, false)
+
+	if !res.GetFailed() {
+		t.Errorf("Expected result.Failed=true, got %s", res.GetFailed())
+	}
+
+	c := len(res.Errors)
+	if c != 1 {
+		t.Errorf("Expected result to contain 1 error, got %d", c)
+	}
+}
+
+func TestExecuteSkipsWhenSpecHasErrors(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	errs.SpecErrs[exampleSpec] = append(errs.SpecErrs[exampleSpec], fmt.Errorf("some error"))
+	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+
+	res := se.execute(false, true, false)
+
+	if !res.Skipped {
+		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+	}
+}
+
+func TestExecuteSkipsWhenSpecHasNoScenario(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+
+	res := se.execute(false, true, false)
+
+	if !res.Skipped {
+		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+	}
+	e := res.Errors[0]
+	if e.Message != "example.spec: No scenarios found in spec" {
+		t.Error("Expected error with message : 'example.spec: No scenarios found in spec'")
+	}
+}
+
+func TestExecuteInitSpecDatastore(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+
+	dataStoreInitCalled := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecDataStoreInit {
+			dataStoreInitCalled = true
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+	se.execute(true, false, false)
+
+	if !dataStoreInitCalled {
+		t.Error("Expected runner to be called with SpecDataStoreInit")
+	}
+}
+
+func TestExecuteShouldNotInitSpecDatastoreWhenBeforeIsFalse(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+
+	dataStoreInitCalled := false
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecDataStoreInit {
+			dataStoreInitCalled = true
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+	se.execute(false, false, false)
+
+	if dataStoreInitCalled {
+		t.Error("Expected SpecDataStoreInit to not be called")
+	}
+}
+
+func TestExecuteSkipsWhenSpecDatastoreInitFails(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "datastore init error"}
+	}
+	se := newSpecExecutor(exampleSpecWithScenarios, r, nil, errs, 0)
+	res := se.execute(true, false, false)
+
+	if !res.Skipped {
+		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+	}
+
+	e := res.Errors[0]
+	expected := "example.spec:0 Failed to initialize spec datastore. Error: datastore init error => 'Example Spec'"
+	if e.Message != expected {
+		t.Errorf("Expected error = '%s', got '%s'", expected, e.Message)
+	}
+}
+
+// func TestExecuteBeforeSpecHook(t *testing.T) {
+// 	errs := gauge.NewBuildErrors()
+// 	r := &mockRunner{}
+
+// 	beforeSpecHookCalled := false
+// 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+// 		if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+// 			beforeSpecHookCalled = true
+// 		}
+// 		return &gauge_messages.ProtoExecutionResult{}
+// 	}
+// 	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
+// 	se.execute(true, false, false)
+
+// 	if !beforeSpecHookCalled {
+// 		t.Error("Expected runner to be called with SpecExecutionStarting")
+// 	}
+// }
+
+// func TestExecuteShouldNotifyEvents(t *testing.T) {
+// 	errs := gauge.NewBuildErrors()
+// 	r := &mockRunner{}
+// 	eventRaised := false
+// 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+// 		return &gauge_messages.ProtoExecutionResult{}
+// 	}
+
+// 	ch := make(chan event.ExecutionEvent, 0)
+// 	event.InitRegistry()
+// 	event.Register(ch, event.ScenarioEnd)
+// 	go func() {
+// 		for {
+// 			e := <-ch
+// 			switch e.Topic {
+// 			case event.SpecStart:
+// 				eventRaised = true
+// 			}
+// 		}
+// 	}()
+// 	se := newSpecExecutor(exampleSpecWithScenarios, r, nil, errs, 0)
+// 	se.execute(true, false, false)
+
+// 	if !eventRaised {
+// 		t.Error("Expected SpecStart event to be raised")
+// 	}
+// }
+
+// notify before spec event
+// e.notifyBeforeSpecHook
+
+// execute (non table driven)
+// execute ( table driven)
+
+// result skip
+// notify after spec event
+// e.notifyAfterSpecHook
