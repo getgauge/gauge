@@ -43,7 +43,7 @@ type simpleExecution struct {
 	manifest             *manifest.Manifest
 	runner               runner.Runner
 	specCollection       *gauge.SpecCollection
-	pluginHandler        *plugin.Handler
+	pluginHandler        plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	suiteResult          *result.SuiteResult
 	errMaps              *gauge.BuildErrors

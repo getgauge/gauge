@@ -56,14 +56,14 @@ type executionInfo struct {
 	manifest        *manifest.Manifest
 	specs           *gauge.SpecCollection
 	runner          runner.Runner
-	pluginHandler   *plugin.Handler
+	pluginHandler   plugin.Handler
 	errMaps         *gauge.BuildErrors
 	inParallel      bool
 	numberOfStreams int
 	stream          int
 }
 
-func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
+func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -116,7 +116,7 @@ func ExecuteSpecs(specDirs []string) int {
 	return printExecutionStatus(e.run(), res.ParseOk)
 }
 
-func Execute(s *gauge.SpecCollection, r runner.Runner, ph *plugin.Handler, e *gauge.BuildErrors, p bool, n int) {
+func Execute(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, n int) {
 	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
 }
 

@@ -65,10 +65,6 @@ type pluginDescriptor struct {
 	pluginPath          string
 }
 
-type Handler struct {
-	pluginsMap map[string]*plugin
-}
-
 type plugin struct {
 	mutex      *sync.Mutex
 	connection net.Conn
@@ -233,9 +229,9 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (*Handler, []string) {
+func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 	var warnings []string
-	handler := &Handler{}
+	handler := &GaugePlugins{}
 	envProperties := make(map[string]string)
 
 	for _, pluginID := range manifest.Plugins {
@@ -317,46 +313,6 @@ func isPluginValidFor(pd *pluginDescriptor, scope string) bool {
 	return false
 }
 
-func (handler *Handler) addPlugin(pluginID string, pluginToAdd *plugin) {
-	if handler.pluginsMap == nil {
-		handler.pluginsMap = make(map[string]*plugin)
-	}
-	handler.pluginsMap[pluginID] = pluginToAdd
-}
-
-func (handler *Handler) removePlugin(pluginID string) {
-	delete(handler.pluginsMap, pluginID)
-}
-
-func (handler *Handler) NotifyPlugins(message *gauge_messages.Message) {
-	for id, plugin := range handler.pluginsMap {
-		err := plugin.sendMessage(message)
-		if err != nil {
-			logger.Errorf("Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
-			handler.killPlugin(id)
-		}
-	}
-}
-
-func (handler *Handler) killPlugin(pluginID string) {
-	plugin := handler.pluginsMap[pluginID]
-	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
-	err := plugin.pluginCmd.Process.Kill()
-	if err != nil {
-		logger.Errorf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
-	}
-	handler.removePlugin(pluginID)
-}
-
-func (handler *Handler) GracefullyKillPlugins() {
-	var wg sync.WaitGroup
-	for _, plugin := range handler.pluginsMap {
-		wg.Add(1)
-		go plugin.kill(&wg)
-	}
-	wg.Wait()
-}
-
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	messageID := common.GetUniqueID()
 	message.MessageId = messageID
@@ -371,7 +327,7 @@ func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func StartPlugins(manifest *manifest.Manifest) *Handler {
+func StartPlugins(manifest *manifest.Manifest) Handler {
 	pluginHandler, warnings := startPluginsForExecution(manifest)
 	logger.HandleWarningMessages(warnings)
 	return pluginHandler

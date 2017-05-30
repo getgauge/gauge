@@ -34,14 +34,14 @@ import (
 
 type scenarioExecutor struct {
 	runner               runner.Runner
-	pluginHandler        *plugin.Handler
+	pluginHandler        plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
 	stepExecutor         *stepExecutor
 	errMap               *gauge.BuildErrors
 	stream               int
 }
 
-func newScenarioExecutor(r runner.Runner, ph *plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, stream int) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, stream int) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,
