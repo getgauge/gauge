@@ -42,10 +42,27 @@ type specExecutor struct {
 	specResult           *result.SpecResult
 	errMap               *gauge.BuildErrors
 	stream               int
+	scenarioExecutor     executor
 }
 
 func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, stream int) *specExecutor {
-	return &specExecutor{specification: s, runner: r, pluginHandler: ph, errMap: e, stream: stream}
+	ei := &gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{
+			Name:     s.Heading.Value,
+			FileName: s.FileName,
+			IsFailed: false,
+			Tags:     getTagValue(s.Tags)},
+	}
+
+	return &specExecutor{
+		specification:        s,
+		runner:               r,
+		pluginHandler:        ph,
+		errMap:               e,
+		stream:               stream,
+		currentExecutionInfo: ei,
+		scenarioExecutor:     newScenarioExecutor(r, ph, ei, e, s.Contexts, s.TearDownSteps, stream),
+	}
 }
 
 func hasParseError(errs []error) bool {
@@ -59,10 +76,6 @@ func hasParseError(errs []error) bool {
 }
 
 func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *result.SpecResult {
-	specInfo := &gauge_messages.SpecInfo{Name: e.specification.Heading.Value,
-		FileName: e.specification.FileName,
-		IsFailed: false, Tags: getTagValue(e.specification.Tags)}
-	e.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
 	e.specResult = gauge.NewSpecResult(e.specification)
 	if errs, ok := e.errMap.SpecErrs[e.specification]; ok {
 		if hasParseError(errs) {
@@ -334,8 +347,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
 
-	scenarioExec := newScenarioExecutor(e.runner, e.pluginHandler, e.currentExecutionInfo, e.errMap, e.stream)
-	scenarioExec.execute(scenarioResult, scenario, e.specification.Contexts, e.specification.TearDownSteps)
+	e.scenarioExecutor.execute(scenario, scenarioResult)
 	if scenarioResult.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 		e.specResult.ScenarioSkippedCount++
 	}

@@ -372,8 +372,9 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 }
 
 func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := parser.ParseError{Message: "Message", LineNo: 5, FileName: "filename"}
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
@@ -389,8 +390,9 @@ func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
 }
 
 func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := validation.NewSpecValidationError("Message", "filename")
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
@@ -404,8 +406,9 @@ func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
 }
 
 func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
+	spec := &gauge.Specification{Heading: &gauge.Heading{LineNo: 0, Value: "SPEC_HEADING"}, FileName: "FILE"}
 	e := validation.NewStepValidationError(&gauge.Step{LineText: "step", LineNo: 3}, "Step Message", "filename", nil)
-	se := newSpecExecutor(nil, nil, nil, nil, 0)
+	se := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	errs := se.convertErrors([]error{e})
 
