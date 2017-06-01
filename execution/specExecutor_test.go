@@ -474,40 +474,6 @@ var exampleSpecWithScenarios = &gauge.Specification{
 	},
 }
 
-// var exampleTableDrivenSpecWithScenarios = &gauge.Specification{
-// 	Heading:  &gauge.Heading{Value: "Example Spec"},
-// 	FileName: "example.spec",
-// 	DataTable: gauge.DataTable{
-// 		Table: *gauge.NewTable([]string{"foo", "bar"},
-// 			[][]gauge.TableCell{
-// 				[]gauge.TableCell{
-// 					gauge.TableCell{Value: "foo1", CellType: gauge.Static},
-// 					gauge.TableCell{Value: "foo2", CellType: gauge.Static},
-// 					gauge.TableCell{Value: "foo3", CellType: gauge.Static},
-// 				},
-// 				[]gauge.TableCell{
-// 					gauge.TableCell{Value: "bar1", CellType: gauge.Static},
-// 					gauge.TableCell{Value: "bar2", CellType: gauge.Static},
-// 					gauge.TableCell{Value: "bar3", CellType: gauge.Static},
-// 				},
-// 			},
-// 			0),
-// 	},
-// 	Tags: &gauge.Tags{},
-// 	Scenarios: []*gauge.Scenario{
-// 		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
-// 		&gauge.Scenario{
-// 			Heading: &gauge.Heading{Value: "Example Scenario 2 using <foo>"},
-// 			Items:   make([]gauge.Item, 0),
-// 			Tags:    &gauge.Tags{},
-// 			Span:    &gauge.Span{},
-// 			Steps: []*gauge.Step{
-// 				&gauge.Step{Args: []*gauge.StepArg{&gauge.StepArg{Name: "foo", Value: "foo", ArgType: gauge.Dynamic}}},
-// 			},
-// 		},
-// 	},
-// }
-
 func TestExecuteFailsWhenSpecHasParseErrors(t *testing.T) {
 	errs := gauge.NewBuildErrors()
 	errs.SpecErrs[exampleSpec] = append(errs.SpecErrs[exampleSpec], parser.ParseError{Message: "some error"})
