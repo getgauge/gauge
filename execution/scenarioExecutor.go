@@ -39,26 +39,32 @@ type scenarioExecutor struct {
 	stepExecutor         *stepExecutor
 	errMap               *gauge.BuildErrors
 	stream               int
+	contexts             []*gauge.Step
+	teardowns            []*gauge.Step
 }
 
-func newScenarioExecutor(r runner.Runner, ph plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, stream int) *scenarioExecutor {
+func newScenarioExecutor(r runner.Runner, ph plugin.Handler, ei *gauge_messages.ExecutionInfo, errMap *gauge.BuildErrors, contexts []*gauge.Step, teardowns []*gauge.Step, stream int) *scenarioExecutor {
 	return &scenarioExecutor{
 		runner:               r,
 		pluginHandler:        ph,
 		currentExecutionInfo: ei,
 		errMap:               errMap,
 		stream:               stream,
+		contexts:             contexts,
+		teardowns:            teardowns,
 	}
 }
 
-func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, contexts []*gauge.Step, teardowns []*gauge.Step) {
+func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
+	scenario := i.(*gauge.Scenario)
+	scenarioResult := r.(*result.ScenarioResult)
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
 	scenarioResult.ProtoScenario.Skipped = false
 	if len(scenario.Steps) == 0 {
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 	if scenario.DataTableRow.IsInitialized() && !shouldExecuteForRow(scenario.DataTableRowIndex) {
-		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("Skipped Reason: Doesn't satisfy --table-rows flag condition.")}, e.errMap.ScenarioErrs[scenario]...)
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("skipped Reason: Doesn't satisfy --table-rows flag condition")}, e.errMap.ScenarioErrs[scenario]...)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 		return
 	}
@@ -81,8 +87,8 @@ func (e *scenarioExecutor) execute(scenarioResult *result.ScenarioResult, scenar
 	if !scenarioResult.GetFailed() {
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
-		e.executeItems(append(contexts, scenario.Steps...), append(protoContexts, protoScenItems...), scenarioResult)
-		e.executeItems(teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
+		e.executeItems(append(e.contexts, scenario.Steps...), append(protoContexts, protoScenItems...), scenarioResult)
+		e.executeItems(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
 	}
 
 	e.notifyAfterScenarioHook(scenarioResult)
