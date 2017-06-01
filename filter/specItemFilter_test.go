@@ -19,7 +19,6 @@ package filter
 
 import "fmt"
 
-//
 import (
 	"testing"
 
@@ -165,22 +164,6 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagSDFNames
 func (s *MySuite) TestToEvaluateTagExpressionConsistingSpecialCharacters(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "a && b || c | b & b"}
 	c.Assert(filter.filterTags([]string{"a", "b"}), Equals, true)
-}
-
-func (s *MySuite) TestToSortSpecs(c *C) {
-	spec1 := &gauge.Specification{FileName: "ab"}
-	spec2 := &gauge.Specification{FileName: "b"}
-	spec3 := &gauge.Specification{FileName: "c"}
-	var specs []*gauge.Specification
-	specs = append(specs, spec3)
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-
-	specs = sortSpecsList(specs)
-
-	c.Assert(specs[0].FileName, Equals, spec1.FileName)
-	c.Assert(specs[1].FileName, Equals, spec2.FileName)
-	c.Assert(specs[2].FileName, Equals, spec3.FileName)
 }
 
 func (s *MySuite) TestScenarioSpanFilter(c *C) {

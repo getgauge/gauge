@@ -63,18 +63,6 @@ func createSpecsList(number int) []*gauge.Specification {
 	return specs
 }
 
-func (s *MySuite) TestToShuffleSpecsToRandomize(c *C) {
-	var specs []*gauge.Specification
-	specs = append(specs, &gauge.Specification{FileName: "a"}, &gauge.Specification{FileName: "b"}, &gauge.Specification{FileName: "c"}, &gauge.Specification{FileName: "d"},
-		&gauge.Specification{FileName: "e"}, &gauge.Specification{FileName: "f"}, &gauge.Specification{FileName: "g"}, &gauge.Specification{FileName: "h"})
-	shuffledSpecs := shuffleSpecs(specs)
-	for i, spec := range shuffledSpecs {
-		if spec.FileName != specs[i].FileName {
-			c.Succeed()
-		}
-	}
-}
-
 func (s *MySuite) TestToRunSpecificSetOfSpecs(c *C) {
 	var specs []*gauge.Specification
 	spec1 := &gauge.Specification{Heading: &gauge.Heading{Value: "SPECHEADING1"}}

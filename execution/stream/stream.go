@@ -39,6 +39,7 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
@@ -245,10 +246,7 @@ func setFlags(req *gm.ExecutionRequest) []error {
 	reporter.NumberOfExecutionStreams = streams
 	filter.NumberOfExecutionStreams = streams
 	execution.Strategy = strings.ToLower(req.GetStrategy().String())
-	//TODO: should be changed to use Order instead
-	if req.GetSort() {
-		filter.Order = "sort"
-	}
+	order.Sorted = req.GetSort()
 	reporter.Verbose = true
 	logger.Initialize(strings.ToLower(req.GetLogLevel().String()))
 	if req.GetWorkingDir() != "" {
@@ -274,6 +272,6 @@ func resetFlags() {
 	reporter.NumberOfExecutionStreams = cores
 	filter.NumberOfExecutionStreams = cores
 	execution.Strategy = "lazy"
-	filter.Order = ""
+	order.Sorted = false
 	util.SetWorkingDir(config.ProjectRoot)
 }
