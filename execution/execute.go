@@ -52,6 +52,10 @@ type execution interface {
 	run() *result.SuiteResult
 }
 
+type executor interface {
+	execute(i gauge.Item, r result.Result)
+}
+
 type executionInfo struct {
 	manifest        *manifest.Manifest
 	specs           *gauge.SpecCollection
