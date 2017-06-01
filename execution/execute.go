@@ -48,8 +48,12 @@ import (
 var NumberOfExecutionStreams int
 var InParallel bool
 
-type execution interface {
+type suiteExecutor interface {
 	run() *result.SuiteResult
+}
+
+type executor interface {
+	execute(i gauge.Item, r result.Result)
 }
 
 type executionInfo struct {
@@ -120,7 +124,7 @@ func Execute(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gau
 	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
 }
 
-func newExecution(executionInfo *executionInfo) execution {
+func newExecution(executionInfo *executionInfo) suiteExecutor {
 	if executionInfo.inParallel {
 		return newParallelExecution(executionInfo)
 	}
