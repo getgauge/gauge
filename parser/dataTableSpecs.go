@@ -26,7 +26,7 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 			if spec.UsesArgsInContextTeardown(spec.DataTable.Table.Headers...) {
 				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios, errMap)...)
 			} else {
-				nonTableRelatedScenarios, tableRelatedScenarios := filterTableRelatedScenarios(spec.Scenarios, spec.DataTable.Table.Headers)
+				nonTableRelatedScenarios, tableRelatedScenarios := FilterTableRelatedScenarios(spec.Scenarios, spec.DataTable.Table.Headers)
 				if len(tableRelatedScenarios) > 0 {
 					s := createSpecsForTableRows(spec, tableRelatedScenarios, errMap)
 					s[0].Scenarios = append(s[0].Scenarios, nonTableRelatedScenarios...)
@@ -104,7 +104,7 @@ func getTableWithOneRow(t gauge.Table, i int) *gauge.Table {
 	return gauge.NewTable(t.Headers, row, t.LineNo)
 }
 
-func filterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tableRelatedScenarios []*gauge.Scenario) {
+func FilterTableRelatedScenarios(scenarios []*gauge.Scenario, headers []string) (otherScenarios, tableRelatedScenarios []*gauge.Scenario) {
 	for _, scenario := range scenarios {
 		if scenario.UsesArgsInSteps(headers...) {
 			tableRelatedScenarios = append(tableRelatedScenarios, scenario)
