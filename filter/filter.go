@@ -9,7 +9,6 @@ import (
 var ExecuteTags string
 var Distribute int
 var NumberOfExecutionStreams int
-var Order string
 
 func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 	specs = applyFilters(specs, specsFilters())
@@ -23,7 +22,7 @@ func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 }
 
 func specsFilters() []specsFilter {
-	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}, &specOrder{Order}}
+	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}}
 }
 
 func applyFilters(specsToExecute []*gauge.Specification, filters []specsFilter) []*gauge.Specification {

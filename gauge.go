@@ -34,6 +34,7 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/reporter"
@@ -73,8 +74,7 @@ var numberOfExecutionStreams = flag.Int([]string{"n"}, util.NumberOfCores(), "Sp
 var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
 var strategy = flag.String([]string{"-strategy"}, "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`. Ex: gauge -p --strategy=\"eager\"")
-var doNotRandomize = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
-var order = flag.String([]string{"-order", "o"}, "", "Set the specs execution order. Possible options are: `random`, `sort`. Ex: gauge --order=\"random\"")
+var sort = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
 var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for validation and parse errors. Eg: gauge --validate specs")
 var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
 var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
@@ -230,11 +230,7 @@ func initPackageFlags() {
 	execution.InParallel = *parallel
 	execution.Strategy = *strategy
 	filter.ExecuteTags = *executeTags
-	if *doNotRandomize {
-		fmt.Println("This flag will be deprecated soon. Please use --order=sort instead.")
-		filter.Order = "sort"
-	}
-	filter.Order = *order
+	order.Sorted = *sort
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams

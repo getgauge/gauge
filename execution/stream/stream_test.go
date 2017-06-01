@@ -33,6 +33,7 @@ import (
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/util"
 	"golang.org/x/net/context"
@@ -414,7 +415,7 @@ func (s *MySuite) TestSetFlags(c *C) {
 	c.Assert(execution.NumberOfExecutionStreams, Equals, 3)
 	c.Assert(reporter.NumberOfExecutionStreams, Equals, 3)
 	c.Assert(filter.NumberOfExecutionStreams, Equals, 3)
-	c.Assert(filter.Order, Equals, "sort")
+	c.Assert(order.Sorted, Equals, true)
 	c.Assert(filter.ExecuteTags, Equals, "tag1 & tag2")
 	c.Assert(reporter.Verbose, Equals, true)
 	c.Assert(reporter.IsParallel, Equals, true)
@@ -443,7 +444,7 @@ func (s *MySuite) TestResetFlags(c *C) {
 	execution.NumberOfExecutionStreams = 1
 	reporter.NumberOfExecutionStreams = 2
 	filter.NumberOfExecutionStreams = 3
-	filter.Order = "sort"
+	order.Sorted = true
 	resetFlags()
 
 	cores := util.NumberOfCores()
@@ -452,7 +453,7 @@ func (s *MySuite) TestResetFlags(c *C) {
 	c.Assert(execution.NumberOfExecutionStreams, Equals, cores)
 	c.Assert(reporter.NumberOfExecutionStreams, Equals, cores)
 	c.Assert(filter.NumberOfExecutionStreams, Equals, cores)
-	c.Assert(filter.Order, Equals, "")
+	c.Assert(order.Sorted, Equals, false)
 	c.Assert(filter.ExecuteTags, Equals, "")
 	c.Assert(reporter.Verbose, Equals, false)
 	c.Assert(reporter.IsParallel, Equals, false)

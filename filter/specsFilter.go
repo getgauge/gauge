@@ -18,10 +18,6 @@
 package filter
 
 import (
-	"math/rand"
-	"sort"
-	"time"
-
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
@@ -37,10 +33,6 @@ type tagsFilter struct {
 type specsGroupFilter struct {
 	group       int
 	execStreams int
-}
-
-type specOrder struct {
-	order string
 }
 
 func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
@@ -76,42 +68,4 @@ func DistributeSpecs(specifications []*gauge.Specification, distributions int) [
 		s[mod].Add(specifications[i])
 	}
 	return s
-}
-
-func (specOrder *specOrder) filter(specs []*gauge.Specification) []*gauge.Specification {
-	if specOrder.order == "random" {
-		return shuffleSpecs(specs)
-	} else if specOrder.order == "sort" {
-		sortSpecsList(specs)
-	}
-	return specs
-}
-
-func shuffleSpecs(allSpecs []*gauge.Specification) []*gauge.Specification {
-	dest := make([]*gauge.Specification, len(allSpecs))
-	rand.Seed(int64(time.Now().Nanosecond()))
-	perm := rand.Perm(len(allSpecs))
-	for i, v := range perm {
-		dest[v] = allSpecs[i]
-	}
-	return dest
-}
-
-type ByFileName []*gauge.Specification
-
-func (s ByFileName) Len() int {
-	return len(s)
-}
-
-func (s ByFileName) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s ByFileName) Less(i, j int) bool {
-	return s[i].FileName < s[j].FileName
-}
-
-func sortSpecsList(allSpecs []*gauge.Specification) []*gauge.Specification {
-	sort.Sort(ByFileName(allSpecs))
-	return allSpecs
 }
