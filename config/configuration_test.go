@@ -18,17 +18,13 @@
 package config
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
-	. "gopkg.in/check.v1"
+	"github.com/getgauge/common"
 )
-
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
 
 func stubGetFromConfig(propertyName string) string {
 	return ""
@@ -46,27 +42,70 @@ func stub4GetFromConfig(propertyName string) string {
 	return "true	"
 }
 
-func (s *MySuite) TestRunnerRequestTimeout(c *C) {
+func TestRunnerRequestTimeout(t *testing.T) {
 	getFromConfig = stubGetFromConfig
-	c.Assert(RunnerRequestTimeout(), Equals, defaultRunnerRequestTimeout)
+	expected := defaultRunnerRequestTimeout
+	got := RunnerRequestTimeout()
+	if got != expected {
+		t.Errorf("Expected RunnerRequestTimeout == defaultRunnerRequestTimeout(%s), got %s", expected, got)
+	}
 
 	getFromConfig = stub2GetFromConfig
-	c.Assert(RunnerRequestTimeout().Seconds(), Equals, float64(10))
+	got1 := RunnerRequestTimeout().Seconds()
+	expected1 := float64(10)
+	if got1 != expected1 {
+		t.Errorf("Expected RunnerRequestTimeout == defaultRunnerRequestTimeout(%f), got %f", expected1, got1)
+	}
 
 	os.Setenv(runnerRequestTimeout, "1000")
-	c.Assert(RunnerRequestTimeout().Seconds(), Equals, float64(1))
+	got1 = RunnerRequestTimeout().Seconds()
+	expected1 = float64(1)
+	if got != expected {
+		t.Errorf("Expected RunnerRequestTimeout == defaultRunnerRequestTimeout(%f), got %f", expected1, got1)
+	}
 }
 
-func (s *MySuite) TestAllowUpdates(c *C) {
+func TestAllowUpdates(t *testing.T) {
 	getFromConfig = stubGetFromConfig
-	c.Assert(CheckUpdates(), Equals, true)
+	if !CheckUpdates() {
+		t.Error("Expected CheckUpdates=true, got false")
+	}
 
 	getFromConfig = stub2GetFromConfig
-	c.Assert(CheckUpdates(), Equals, true)
+	if !CheckUpdates() {
+		t.Error("Expected CheckUpdates=true, got false")
+	}
 
 	getFromConfig = stub3GetFromConfig
-	c.Assert(CheckUpdates(), Equals, false)
+	if CheckUpdates() {
+		t.Error("Expected CheckUpdates=true, got true")
+	}
 
 	getFromConfig = stub4GetFromConfig
-	c.Assert(CheckUpdates(), Equals, true)
+	if !CheckUpdates() {
+		t.Error("Expected CheckUpdates=true, got false")
+	}
+}
+
+func TestReadUniqueID(t *testing.T) {
+	expected := "foo"
+	idFile := filepath.Join("_testData", ".gauge_id")
+	ioutil.WriteFile(idFile, []byte(expected), common.NewFilePermissions)
+
+	s, err := filepath.Abs("_testData")
+	if err != nil {
+		t.Error(err)
+	}
+
+	os.Setenv("GAUGE_ROOT", s)
+	got := UniqueID()
+
+	if got != expected {
+		t.Errorf("Expected UniqueID=%s, got %s", expected, got)
+	}
+	os.Setenv("GAUGE_ROOT", "")
+	err = os.Remove(idFile)
+	if err != nil {
+		t.Error(err)
+	}
 }

@@ -101,6 +101,7 @@ func main() {
 		logger.Fatalf(e.Error())
 	}
 	logger.Initialize(*logLevel)
+	logger.Debug("Gauge Install ID: %s", config.UniqueID())
 	if *gaugeVersion && *machineReadable {
 		printJSONVersion()
 	} else if *machineReadable {
