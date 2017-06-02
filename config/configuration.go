@@ -28,14 +28,16 @@ import (
 )
 
 const (
-	gaugeRepositoryUrl      = "gauge_repository_url"
-	gaugeUpdateUrl          = "gauge_update_url"
-	gaugeTemplatesUrl       = "gauge_templates_url"
+	gaugeRepositoryURL      = "gauge_repository_url"
+	gaugeUpdateURL          = "gauge_update_url"
+	gaugeTemplatesURL       = "gauge_templates_url"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
 	checkUpdates            = "check_updates"
+	analyticsEnabled        = "gauge_analytics_enabled"
+	analyticsLoggingEnabled = "gauge_analytics_log_enabled"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -48,38 +50,31 @@ const (
 var APILog = logging.MustGetLogger("gauge-api")
 var ProjectRoot string
 
-// Timeout in milliseconds for making a connection to the language runner
+// RunnerConnectionTimeout gets timeout in milliseconds for making a connection to the language runner
 func RunnerConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(runnerConnectionTimeout)
 	return convertToTime(intervalString, defaultRunnerConnectionTimeout, runnerConnectionTimeout)
 }
 
-// Timeout in milliseconds for making a connection to plugins
+// PluginConnectionTimeout gets timeout in milliseconds for making a connection to plugins
 func PluginConnectionTimeout() time.Duration {
 	intervalString := getFromConfig(pluginConnectionTimeout)
 	return convertToTime(intervalString, defaultPluginConnectionTimeout, pluginConnectionTimeout)
 }
 
-// Timeout in milliseconds for a plugin to stop after a kill message has been sent
+// PluginKillTimeout gets timeout in milliseconds for a plugin to stop after a kill message has been sent
 func PluginKillTimeout() time.Duration {
 	intervalString := getFromConfig(pluginKillTimeOut)
 	return convertToTime(intervalString, defaultPluginKillTimeout, pluginKillTimeOut)
 }
 
+// CheckUpdates determines if update check is enabled
 func CheckUpdates() bool {
 	allow := getFromConfig(checkUpdates)
 	return convertToBool(allow, checkUpdates, true)
 }
 
-func convertToBool(value string, property string, defaultValue bool) bool {
-	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
-	if err != nil {
-		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
-		return defaultValue
-	}
-	return boolValue
-}
-
+// RefactorTimeout returns the default timeout value for a refactoring request.
 func RefactorTimeout() time.Duration {
 	return defaultRefactorTimeout
 }
@@ -93,18 +88,34 @@ func RunnerRequestTimeout() time.Duration {
 	return convertToTime(intervalString, defaultRunnerRequestTimeout, runnerRequestTimeout)
 }
 
+// GaugeRepositoryUrl fetches the repository URL to locate plugins
 func GaugeRepositoryUrl() string {
-	return getFromConfig(gaugeRepositoryUrl)
+	return getFromConfig(gaugeRepositoryURL)
 }
 
+// GaugeUpdateUrl fetches the URL to be used to check updates
 func GaugeUpdateUrl() string {
-	return getFromConfig(gaugeUpdateUrl)
+	return getFromConfig(gaugeUpdateURL)
 }
 
+// GaugeTemplatesUrl fetches the URL to be used to download project templates
 func GaugeTemplatesUrl() string {
-	return getFromConfig(gaugeTemplatesUrl)
+	return getFromConfig(gaugeTemplatesURL)
 }
 
+// AnalyticsEnabled determines if sending data to analytics is enabled
+func AnalyticsEnabled() bool {
+	e := getFromConfig(analyticsEnabled)
+	return convertToBool(e, checkUpdates, true)
+}
+
+// AnalyticsLogEnabled determines if requests to analytics have to be logged
+func AnalyticsLogEnabled() bool {
+	log := getFromConfig(analyticsLoggingEnabled)
+	return convertToBool(log, checkUpdates, true)
+}
+
+// SetProjectRoot sets project root location in ENV.
 func SetProjectRoot(args []string) error {
 	if ProjectRoot != "" {
 		return setCurrentProjectEnvVariable()
@@ -132,6 +143,15 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
+}
+
+func convertToBool(value string, property string, defaultValue bool) bool {
+	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
+	if err != nil {
+		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		return defaultValue
+	}
+	return boolValue
 }
 
 var getFromConfig = func(propertyName string) string {
