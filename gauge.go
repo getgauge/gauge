@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/analytics"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -112,24 +113,34 @@ func main() {
 	} else if *gaugeVersion {
 		printVersion()
 	} else if *initialize != "" {
+		track("project", "init", "")
 		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
+		track("plugins", "install-zip", *installPlugin)
 		install.HandleInstallResult(install.InstallPluginFromZipFile(*installZip, *installPlugin), *installPlugin, true)
 	} else if *installPlugin != "" {
+		track("plugins", "install", *installPlugin)
 		install.HandleInstallResult(install.InstallPlugin(*installPlugin, *pluginVersion), *installPlugin, true)
 	} else if *uninstallPlugin != "" {
+		track("plugins", "uninstall", *uninstallPlugin)
 		install.UninstallPlugin(*uninstallPlugin, *pluginVersion)
 	} else if *installAll {
+		track("plugins", "install-all", "")
 		install.InstallAllPlugins()
 	} else if *update != "" {
+		track("plugins", "update", *update)
 		install.HandleUpdateResult(install.InstallPlugin(*update, *pluginVersion), *update, true)
 	} else if *updateAll {
+		track("plugins", "update-all", "")
 		install.UpdatePlugins()
 	} else if *checkUpdates {
+		track("updates", "check", "")
 		install.PrintUpdateInfoWithDetails()
 	} else if *addPlugin != "" {
+		track("plugins", "add", *addPlugin)
 		install.AddPluginToProject(*addPlugin, *pluginArgs)
 	} else if *listTemplates {
+		track("templates", "list", "")
 		projectInit.ListTemplates()
 	} else if flag.NFlag() == 0 && len(flag.Args()) == 0 {
 		printUsage()
@@ -142,13 +153,17 @@ func main() {
 		if *refactorSteps != "" {
 			refactorInit(flag.Args())
 		} else if *daemonize {
+			track("execution", "daemon", "")
 			stream.Start()
 			api.RunInBackground(*apiPort, specDirs)
 		} else if *specFilesToFormat != "" {
+			track("formatting", "format", "")
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
+			track("validation", "validate", "")
 			validation.Validate(flag.Args())
 		} else if *docs != "" {
+			track("docs", "generate", *docs)
 			gaugeConnectionHandler := api.Start(specDirs)
 			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
@@ -238,5 +253,11 @@ func initPackageFlags() {
 	rerun.RunFailed = *runFailed
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager
+	}
+}
+
+func track(category, action, label string) {
+	if config.AnalyticsEnabled() {
+		go analytics.Send(category, action, label)
 	}
 }
