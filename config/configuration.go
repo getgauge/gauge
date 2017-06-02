@@ -23,6 +23,10 @@ import (
 	"strings"
 	"time"
 
+	"io/ioutil"
+
+	"path/filepath"
+
 	"github.com/getgauge/common"
 	"github.com/op/go-logging"
 )
@@ -130,6 +134,22 @@ func SetProjectRoot(args []string) error {
 	}
 	ProjectRoot = root
 	return setCurrentProjectEnvVariable()
+}
+
+// UniqueID gets the unique installation ID.
+func UniqueID() string {
+	configDir, err := common.GetConfigurationDir()
+	if err != nil {
+		APILog.Warning("Unable to read config dir, %s", err)
+		return ""
+	}
+	idFile := filepath.Join(configDir, ".gauge_id")
+	s, err := ioutil.ReadFile(idFile)
+	if err != nil {
+		APILog.Warning("Unable to read %s", idFile)
+		return ""
+	}
+	return string(s)
 }
 
 func setCurrentProjectEnvVariable() error {
