@@ -2,9 +2,6 @@
 	"ImportPath": "github.com/getgauge/gauge",
 	"GoVersion": "go1.8",
 	"GodepVersion": "v79",
-	"Packages": [
-		"./..."
-	],
 	"Deps": [
 		{
 			"ImportPath": "github.com/apoorvam/goterminal",
@@ -45,6 +42,11 @@
 		{
 			"ImportPath": "github.com/op/go-logging",
 			"Rev": "fb0230561a6ba1cab17beb95f1faedc16584fdb8"
+		},
+		{
+			"ImportPath": "github.com/satori/go.uuid",
+			"Comment": "v1.1.0-8-g5bf94b6",
+			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
