@@ -116,7 +116,7 @@ func AnalyticsEnabled() bool {
 // AnalyticsLogEnabled determines if requests to analytics have to be logged
 func AnalyticsLogEnabled() bool {
 	log := getFromConfig(analyticsLoggingEnabled)
-	return convertToBool(log, checkUpdates, true)
+	return convertToBool(log, checkUpdates, false)
 }
 
 // SetProjectRoot sets project root location in ENV.
