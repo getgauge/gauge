@@ -32,6 +32,7 @@ import (
 const (
 	gaTrackingID = "UA-54838477-1"
 	appName      = "Gauge Core"
+	medium       = "in-app"
 )
 
 // Send sends one event to ga, with category, action and label parameters.
@@ -42,6 +43,8 @@ func Send(category, action, label string) {
 	client.AnonymizeIP(true)
 	client.ApplicationName(appName)
 	client.ApplicationVersion(version.FullVersion())
+	client.CampaignMedium(medium)
+	client.CampaignSource(appName)
 
 	if config.AnalyticsLogEnabled() {
 		client.HttpClient = newlogEnabledHTTPClient()
@@ -77,6 +80,6 @@ func (r logEnabledRoundTripper) RoundTrip(req *http.Request) (*http.Response, er
 		logger.Warning("Unable to dump analytics request, %s", err)
 	}
 
-	logger.Debug(fmt.Sprintf("%q\n", dump))
+	logger.Debug(fmt.Sprintf("%q", dump))
 	return http.DefaultTransport.RoundTrip(req)
 }

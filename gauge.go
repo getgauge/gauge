@@ -167,6 +167,7 @@ func main() {
 			gaugeConnectionHandler := api.Start(specDirs)
 			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
+			trackExecution()
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)
 		}
@@ -259,5 +260,25 @@ func initPackageFlags() {
 func track(category, action, label string) {
 	if config.AnalyticsEnabled() {
 		go analytics.Send(category, action, label)
+	}
+}
+
+func trackExecution() {
+	if *parallel {
+		track("execution", "parallel", *strategy)
+	} else {
+		track("execution", "serial", "")
+	}
+	if *executeTags != "" {
+		track("execution", "tagged", "")
+	}
+	if *sort {
+		track("execution", "sorted", "")
+	}
+	if *simpleConsoleOutput {
+		track("execution", "report", "simple")
+	}
+	if *verbosity {
+		track("execution", "report", "verbose")
 	}
 }

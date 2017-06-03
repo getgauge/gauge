@@ -110,13 +110,13 @@ func GaugeTemplatesUrl() string {
 // AnalyticsEnabled determines if sending data to analytics is enabled
 func AnalyticsEnabled() bool {
 	e := getFromConfig(analyticsEnabled)
-	return convertToBool(e, checkUpdates, true)
+	return convertToBool(e, analyticsEnabled, true)
 }
 
 // AnalyticsLogEnabled determines if requests to analytics have to be logged
 func AnalyticsLogEnabled() bool {
 	log := getFromConfig(analyticsLoggingEnabled)
-	return convertToBool(log, checkUpdates, false)
+	return convertToBool(log, analyticsLoggingEnabled, false)
 }
 
 // SetProjectRoot sets project root location in ENV.

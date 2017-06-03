@@ -38,14 +38,14 @@ func CreateSkelFilesIfRequired() {
 
 func writeFile(path, text string) {
 	dirPath := filepath.Dir(path)
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		err = os.MkdirAll(dirPath, common.NewDirectoryPermissions)
+	if !common.DirExists(dirPath) {
+		err := os.MkdirAll(dirPath, common.NewDirectoryPermissions)
 		if err != nil {
 			logger.GaugeLog.Error("Unable to create dir `%s`. Error: %s", dirPath, err.Error())
 			return
 		}
 	}
-	if _, err := os.Stat(path); os.IsNotExist(err) {
+	if !common.FileExists(path) {
 		err := ioutil.WriteFile(path, []byte(text), common.NewFilePermissions)
 		if err != nil {
 			logger.GaugeLog.Error("Unable to create file `%s`. Error: %s", path, err.Error())
