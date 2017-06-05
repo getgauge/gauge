@@ -133,6 +133,10 @@
 			"ImportPath": "google.golang.org/grpc/transport",
 			"Comment": "v1.0.5-14-g5095579",
 			"Rev": "50955793b0183f9de69bd78e2ec251cf20aab121"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
 		}
 	]
 }
