@@ -16,6 +16,7 @@ func main() {
 		"exampleSpec":       {"skel", "example.spec"},
 		"notice":            {"notice.md"},
 		"gaugeProperties":   {"skel", "gauge.properties"},
+		"gitignore":         {"skel", ".gitignore"},
 	}
 	goPath := os.Getenv("GOPATH")
 	outF := filepath.Join(goPath, "src", "github.com", "getgauge", "gauge", "skel", "skel.go")
