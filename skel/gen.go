@@ -7,6 +7,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
+	"github.com/satori/go.uuid"
 )
 
 func CreateSkelFilesIfRequired() {
@@ -23,13 +24,18 @@ func CreateSkelFilesIfRequired() {
 			return
 		}
 	}
-	WriteFile(filepath.Join(p, "gauge.properties"), gaugeProperties)
-	WriteFile(filepath.Join(p, "notice.md"), notice)
-	WriteFile(filepath.Join(p, "skel", "example.spec"), exampleSpec)
-	WriteFile(filepath.Join(p, "skel", "env", "default.properties"), defaultProperties)
+	writeFile(filepath.Join(p, "gauge.properties"), gaugeProperties)
+	writeFile(filepath.Join(p, "notice.md"), notice)
+	writeFile(filepath.Join(p, "skel", "example.spec"), exampleSpec)
+	writeFile(filepath.Join(p, "skel", "env", "default.properties"), defaultProperties)
+
+	idFile := filepath.Join(p, ".gauge_id")
+	if !common.FileExists(idFile) {
+		writeFile(idFile, uuid.NewV4().String())
+	}
 }
 
-func WriteFile(path, text string) {
+func writeFile(path, text string) {
 	dirPath := filepath.Dir(path)
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		err = os.MkdirAll(dirPath, common.NewDirectoryPermissions)
