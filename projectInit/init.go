@@ -144,13 +144,13 @@ func createProjectTemplate(language string) error {
 	if err := createManifestFile(language); err != nil {
 		return err
 	}
-	if err:=createSpecDirectory(); err != nil {
+	if err := createSpecDirectory(); err != nil {
 		return err
 	}
-	if err:=createSkeletonFile(); err != nil {
+	if err := createSkeletonFile(); err != nil {
 		return err
 	}
-	if err:=createOrAppenGitignoreFile(); err != nil {
+	if err := createOrAppendGitignoreFile(); err != nil {
 		return err
 	}
 	if err := createEnvDirectory(); err != nil {
@@ -190,42 +190,17 @@ func createEnvDirectory() error {
 	return nil
 }
 
-func createOrAppenGitignoreFile() error {
+func createOrAppendGitignoreFile() error {
 	destFile := filepath.Join(gitignoreFileName)
-	showMessage("copying to ", destFile)
 	srcFile, err := common.GetSkeletonFilePath(gitignoreFileName)
-	showMessage("copying from ", srcFile)
 	if err != nil {
 		showMessage("error", fmt.Sprintf("Failed to read .gitignore file. %s", err.Error()))
 		return err
 	}
-	if common.FileExists(destFile) {
-		showMessage("append", destFile)
-		f, err := os.OpenFile(destFile, os.O_APPEND|os.O_WRONLY, 0666)
-		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to open %s. %s \n", destFile, err.Error()))
-			return err
-		}
-
-		defer f.Close()
-
-		srcFileContent, err := common.ReadFileContents(srcFile)
-		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to read %s. %s \n", srcFile, err.Error()))
-			return err
-		}
-
-		if _, err = f.WriteString(srcFileContent); err != nil {
-			showMessage("error", fmt.Sprintf("Failed to append from %s. %s \n", srcFile, err.Error()))
-			return err
-		}
-	} else {
-		showMessage("create", destFile)
-		err := common.CopyFile(srcFile, destFile)
-		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to copy %s. %s \n", srcFile, err.Error()))
-			return err
-		}
+	showMessage("create", destFile)
+	if err := common.AppendToFile(srcFile, destFile); err != nil {
+		showMessage("error", err.Error())
+		return err
 	}
 	return nil
 }
