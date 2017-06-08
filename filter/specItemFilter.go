@@ -23,7 +23,6 @@ import (
 	"go/token"
 	"go/types"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -77,25 +76,15 @@ func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
 }
 
 func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
-	_, tags := filter.getOperatorsAndOperands()
-	expToBeEvaluated := filter.tagExpression
-	sort.Sort(ByLength(tags))
+	tagExpressionParts, tags := filter.parseTagExpression()
 	for _, tag := range tags {
-		expToBeEvaluated = strings.Replace(expToBeEvaluated, strings.TrimSpace(tag), strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag))), -1)
+		for i, txp := range tagExpressionParts {
+			if strings.TrimSpace(txp) == strings.TrimSpace(tag) {
+				tagExpressionParts[i] = strconv.FormatBool(isTagQualified(tagsMap, strings.TrimSpace(tag)))
+			}
+		}
 	}
-	return filter.evaluateExp(filter.handleNegation(expToBeEvaluated))
-}
-
-type ByLength []string
-
-func (s ByLength) Len() int {
-	return len(s)
-}
-func (s ByLength) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-func (s ByLength) Less(i, j int) bool {
-	return len(s[i]) > len(s[j])
+	return filter.evaluateExp(filter.handleNegation(strings.Join(tagExpressionParts, "")))
 }
 
 func (filter *ScenarioFilterBasedOnTags) handleNegation(tagExpression string) string {
@@ -159,18 +148,27 @@ func (filter *ScenarioFilterBasedOnTags) isTagPresent(tagsMap map[string]bool, t
 	return ok
 }
 
-func (filter *ScenarioFilterBasedOnTags) getOperatorsAndOperands() ([]string, []string) {
-	listOfOperators := make([]string, 0)
-	listOfTags := strings.FieldsFunc(filter.tagExpression, func(r rune) bool {
-		isValidOperator := r == '&' || r == '|' || r == '(' || r == ')' || r == '!'
-		if isValidOperator {
-			operator, _ := strconv.Unquote(strconv.QuoteRuneToASCII(r))
-			listOfOperators = append(listOfOperators, operator)
-			return isValidOperator
+func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionParts []string, tags []string) {
+	isValidOperator := func(r rune) bool { return r == '&' || r == '|' || r == '(' || r == ')' || r == '!' }
+	var word string
+	for _, c := range filter.tagExpression {
+		c1, _ := strconv.Unquote(strconv.QuoteRuneToASCII(c))
+		if isValidOperator(c) {
+			if word != "" {
+				tagExpressionParts = append(tagExpressionParts, strings.TrimSpace(word))
+				tags = append(tags, strings.TrimSpace(word))
+			}
+			tagExpressionParts = append(tagExpressionParts, c1)
+			word = ""
+		} else {
+			word += c1
 		}
-		return false
-	})
-	return listOfOperators, listOfTags
+	}
+	if word != "" {
+		tagExpressionParts = append(tagExpressionParts, strings.TrimSpace(word))
+		tags = append(tags, strings.TrimSpace(word))
+	}
+	return
 }
 
 func FilterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
