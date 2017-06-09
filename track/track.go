@@ -32,13 +32,13 @@ import (
 )
 
 const (
-	gaTrackingID = "UA-100778536-1"
-	appName      = "Gauge Core"
-	medium       = "in-app"
+	gaTrackingID  = "UA-54838477-1"
+	appName       = "Gauge Core"
+	consoleMedium = "console"
+	apiMedium     = "api"
 )
 
-// Send sends one event to ga, with category, action and label parameters.
-func send(category, action, label string) {
+func send(category, action, label, medium string) {
 	if !config.AnalyticsEnabled() {
 		return
 	}
@@ -70,10 +70,18 @@ func send(category, action, label string) {
 	}
 }
 
+func trackConsole(category, action, label string) {
+	go send(category, action, label, consoleMedium)
+}
+
+func trackAPI(category, action, label string) {
+	go send(category, action, label, apiMedium)
+}
+
 func trackManifest() {
 	m, err := manifest.ProjectManifest()
 	if err == nil {
-		go send("manifest", "language", fmt.Sprintf("%s,%s", m.Language, strings.Join(m.Plugins, ",")))
+		trackConsole("manifest", "language", fmt.Sprintf("%s,%s", m.Language, strings.Join(m.Plugins, ",")))
 	}
 }
 
@@ -101,67 +109,79 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 	}
 
 	trackManifest()
-	go send("execution", action, label)
+	trackConsole("execution", action, label)
 }
 
 func Validation() {
-	go send("validation", "validate", "")
+	trackConsole("validation", "validate", "")
 }
 
 func Docs(docs string) {
-	go send("docs", "generate", docs)
+	trackConsole("docs", "generate", docs)
 }
 
 func Format() {
-	go send("formatting", "format", "")
+	trackConsole("formatting", "format", "")
 }
 
 func Refactor() {
-	go send("refactoring", "rephrase", "")
+	trackConsole("refactoring", "rephrase", "")
 }
 
 func ListTemplates() {
-	go send("templates", "list", "")
+	trackConsole("templates", "list", "")
 }
 
 func AddPlugins(plugin string) {
-	go send("plugins", "add", plugin)
+	trackConsole("plugins", "add", plugin)
 }
 
 func UninstallPlugin(plugin string) {
-	go send("plugins", "uninstall", plugin)
+	trackConsole("plugins", "uninstall", plugin)
 }
 
 func ProjectInit() {
-	go send("project", "init", "")
+	trackConsole("project", "init", "")
 }
 
 func Install(plugin string, zip bool) {
 	if zip {
-		go send("plugins", "install-zip", plugin)
+		trackConsole("plugins", "install-zip", plugin)
 	} else {
-		go send("plugins", "install", plugin)
+		trackConsole("plugins", "install", plugin)
 	}
 }
 
 func Update(plugin string) {
-	go send("plugins", "update", plugin)
+	trackConsole("plugins", "update", plugin)
 }
 
 func UpdateAll() {
-	go send("plugins", "update-all", "")
+	trackConsole("plugins", "update-all", "")
 }
 
 func InstallAll() {
-	go send("plugins", "install-all", "")
+	trackConsole("plugins", "install-all", "")
 }
 
 func CheckUpdates() {
-	go send("updates", "check", "")
+	trackConsole("updates", "check", "")
 }
 
 func Daemon() {
-	go send("execution", "daemon", "")
+	trackConsole("execution", "daemon", "")
+}
+
+func APIRefactoring() {
+	trackAPI("refactoring", "rephrase", "")
+}
+
+func APIExtractConcept() {
+	trackAPI("refactoring", "extract-concept", "")
+}
+
+func APIFormat() {
+	trackAPI("formatting", "format", "")
 }
 
 func newlogEnabledHTTPClient() *http.Client {
