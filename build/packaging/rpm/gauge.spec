@@ -30,6 +30,7 @@ chmod +x %{buildroot}/usr/local/bin/*
 /usr/local/gauge/config/notice.md
 /usr/local/gauge/config/skel/env/default.properties
 /usr/local/gauge/config/skel/example.spec
+/usr/local/gauge/config/skel/.gitignore
 
 %post
 echo -e "\n\nPlease run the 'gauge_setup' command to complete installation.\n"
