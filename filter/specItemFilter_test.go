@@ -166,6 +166,27 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingSpecialCharacters(c *C) {
 	c.Assert(filter.filterTags([]string{"a", "b"}), Equals, true)
 }
 
+func (s *MySuite) TestToEvaluateTagExpressionWhenTagIsSubsetOfTrueOrFalse(c *C) {
+	// https://github.com/getgauge/gauge/issues/667
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "b || c | b & b && a"}
+	c.Assert(filter.filterTags([]string{"a", "b"}), Equals, true)
+}
+
+func (s *MySuite) TestParseTagExpression(c *C) {
+	filter := &ScenarioFilterBasedOnTags{tagExpression: "b || c | b & b && a"}
+	txps, tags := filter.parseTagExpression()
+
+	expectedTxps := []string{"b", "|", "|", "c", "|", "b", "&", "b", "&", "&", "a"}
+	expectedTags := []string{"b", "c", "b", "b", "a"}
+
+	for i, t := range txps {
+		c.Assert(expectedTxps[i], Equals, t)
+	}
+	for i, t := range tags {
+		c.Assert(expectedTags[i], Equals, t)
+	}
+}
+
 func (s *MySuite) TestScenarioSpanFilter(c *C) {
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
