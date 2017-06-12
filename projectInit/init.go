@@ -20,6 +20,7 @@ import (
 const (
 	specsDirName      = "specs"
 	skelFileName      = "example.spec"
+	gitignoreFileName = ".gitignore"
 	envDefaultDirName = "default"
 	metadataFileName  = "metadata.json"
 )
@@ -137,51 +138,32 @@ func showMessage(action, filename string) {
 }
 
 func createProjectTemplate(language string) error {
-	err := runner.ExecuteInitHookForRunner(language)
-	if err != nil {
+	if err := runner.ExecuteInitHookForRunner(language); err != nil {
 		return err
 	}
-	// Create the project manifest
-	showMessage("create", common.ManifestFile)
-	if common.FileExists(common.ManifestFile) {
-		showMessage("skip", common.ManifestFile)
-	}
-	manifest := &manifest.Manifest{Language: language, Plugins: defaultPlugins}
-	if err = manifest.Save(); err != nil {
+	if err := createManifestFile(language); err != nil {
 		return err
 	}
-
-	// creating the spec directory
-	showMessage("create", specsDirName)
-	if !common.DirExists(specsDirName) {
-		err = os.Mkdir(specsDirName, common.NewDirectoryPermissions)
-		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
-		}
-	} else {
-		showMessage("skip", specsDirName)
-	}
-
-	// Copying the skeleton file
-	skelFile, err := common.GetSkeletonFilePath(skelFileName)
-	if err != nil {
+	if err := createSpecDirectory(); err != nil {
 		return err
 	}
-	specFile := filepath.Join(specsDirName, skelFileName)
-	showMessage("create", specFile)
-	if common.FileExists(specFile) {
-		showMessage("skip", specFile)
-	} else {
-		err = common.CopyFile(skelFile, specFile)
-		if err != nil {
-			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specFile, err.Error()))
-		}
+	if err := createSkeletonFile(); err != nil {
+		return err
 	}
+	if err := createOrAppendGitignoreFile(); err != nil {
+		return err
+	}
+	if err := createEnvDirectory(); err != nil {
+		return err
+	}
+	fmt.Printf("Successfully initialized the project. Run specifications with \"gauge specs/\".\n")
+	return nil
+}
 
-	// Creating the env directory
+func createEnvDirectory() error {
 	showMessage("create", common.EnvDirectoryName)
 	if !common.DirExists(common.EnvDirectoryName) {
-		err = os.Mkdir(common.EnvDirectoryName, common.NewDirectoryPermissions)
+		err := os.Mkdir(common.EnvDirectoryName, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", common.EnvDirectoryName, err.Error()))
 		}
@@ -189,7 +171,7 @@ func createProjectTemplate(language string) error {
 	defaultEnv := filepath.Join(common.EnvDirectoryName, envDefaultDirName)
 	showMessage("create", defaultEnv)
 	if !common.DirExists(defaultEnv) {
-		err = os.Mkdir(defaultEnv, common.NewDirectoryPermissions)
+		err := os.Mkdir(defaultEnv, common.NewDirectoryPermissions)
 		if err != nil {
 			showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultEnv, err.Error()))
 		}
@@ -203,7 +185,68 @@ func createProjectTemplate(language string) error {
 	err = common.CopyFile(defaultJSON, defaultJSONDest)
 	if err != nil {
 		showMessage("error", fmt.Sprintf("Failed to create %s. %s", defaultJSONDest, err.Error()))
+		return err
 	}
-	fmt.Printf("Successfully initialized the project. Run specifications with \"gauge specs/\".\n")
+	return nil
+}
+
+func createOrAppendGitignoreFile() error {
+	destFile := filepath.Join(gitignoreFileName)
+	srcFile, err := common.GetSkeletonFilePath(gitignoreFileName)
+	if err != nil {
+		showMessage("error", fmt.Sprintf("Failed to read .gitignore file. %s", err.Error()))
+		return err
+	}
+	showMessage("create", destFile)
+	if err := common.AppendToFile(srcFile, destFile); err != nil {
+		showMessage("error", err.Error())
+		return err
+	}
+	return nil
+}
+
+func createSkeletonFile() error {
+	skelFile, err := common.GetSkeletonFilePath(skelFileName)
+	if err != nil {
+		return err
+	}
+	specFile := filepath.Join(specsDirName, skelFileName)
+	showMessage("create", specFile)
+	if common.FileExists(specFile) {
+		showMessage("skip", specFile)
+		return err
+	} else {
+		err = common.CopyFile(skelFile, specFile)
+		if err != nil {
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specFile, err.Error()))
+			return err
+		}
+	}
+	return nil
+}
+
+func createSpecDirectory() error {
+	showMessage("create", specsDirName)
+	if !common.DirExists(specsDirName) {
+		err := os.Mkdir(specsDirName, common.NewDirectoryPermissions)
+		if err != nil {
+			showMessage("error", fmt.Sprintf("Failed to create %s. %s", specsDirName, err.Error()))
+			return err
+		}
+	} else {
+		showMessage("skip", specsDirName)
+	}
+	return nil
+}
+
+func createManifestFile(language string) error {
+	showMessage("create", common.ManifestFile)
+	if common.FileExists(common.ManifestFile) {
+		showMessage("skip", common.ManifestFile)
+	}
+	manifest := &manifest.Manifest{Language: language, Plugins: defaultPlugins}
+	if err := manifest.Save(); err != nil {
+		return err
+	}
 	return nil
 }

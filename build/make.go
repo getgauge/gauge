@@ -104,7 +104,13 @@ func getBuildVersion() string {
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	runProcess("go", "build", "-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata="+buildMetadata, "-o", executablePath)
+	args := []string{
+		"build",
+		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
+		fmt.Sprintf("-asmflags=-trimpath=%s", os.Getenv("GOPATH")),
+		"-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata=" + buildMetadata, "-o", executablePath,
+	}
+	runProcess("go", args...)
 	compileGaugeScreenshot()
 }
 
@@ -154,6 +160,7 @@ func copyGaugeConfigFiles(installPath string) {
 	files := make(map[string]string)
 	files[filepath.Join("skel", "example.spec")] = filepath.Join(config, "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join(config, "skel", "env")
+	files[filepath.Join("skel", ".gitignore")] = filepath.Join(config, "skel")
 	files[filepath.Join("skel", "gauge.properties")] = config
 	files[filepath.Join("notice.md")] = config
 	files = addInstallScripts(files)
