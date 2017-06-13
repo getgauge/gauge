@@ -143,7 +143,7 @@ func UniqueID() string {
 		APILog.Warning("Unable to read config dir, %s", err)
 		return ""
 	}
-	idFile := filepath.Join(configDir, ".gauge_id")
+	idFile := filepath.Join(configDir, "id")
 	s, err := ioutil.ReadFile(idFile)
 	if err != nil {
 		APILog.Warning("Unable to read %s", idFile)

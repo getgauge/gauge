@@ -30,7 +30,7 @@ func CreateSkelFilesIfRequired() {
 	writeFile(filepath.Join(p, "skel", "env", "default.properties"), defaultProperties)
 	writeFile(filepath.Join(p, "skel", ".gitignore"), gitignore)
 
-	idFile := filepath.Join(p, ".gauge_id")
+	idFile := filepath.Join(p, "id")
 	if !common.FileExists(idFile) {
 		writeFile(idFile, uuid.NewV4().String())
 	}
