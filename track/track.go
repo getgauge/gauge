@@ -90,26 +90,26 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 	if parallel {
 		action = "parallel"
 	}
+	flags := []string{action}
 
-	label := ""
 	if tagged {
-		label = "tagged,"
+		flags = append(flags, "tagged")
 	}
 
 	if sorted {
-		label += "sorted,"
+		flags = append(flags, "sorted")
 	}
 
 	if simpleConsole {
-		label += "simple-console,"
+		flags = append(flags, "simple-console")
 	}
 
 	if verbose {
-		label += "verbose"
+		flags = append(flags, "verbose")
 	}
 
 	trackManifest()
-	trackConsole("execution", action, label)
+	trackConsole("execution", action, strings.Join(flags, ","))
 }
 
 func Validation() {
