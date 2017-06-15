@@ -25,7 +25,7 @@ var (
 			if len(args) > 0 {
 				port = args[0]
 			}
-			api.RunInBackground(port, getSpecsDir(args))
+			api.RunInBackground(port, getSpecsDir(args[1:]))
 		},
 	}
 )
