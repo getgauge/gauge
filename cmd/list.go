@@ -7,7 +7,7 @@ import (
 )
 
 var listCmd = &cobra.Command{
-	Use:     "list-templates",
+	Use:     "list-templates [flags]",
 	Short:   "Lists all the Gauge templates available.",
 	Long:    "Lists all the Gauge templates available.",
 	Example: "  gauge list-templates",

@@ -8,7 +8,7 @@ import (
 )
 
 var uninstallCmd = &cobra.Command{
-	Use:     "uninstall",
+	Use:     "uninstall [flags] <plugin>",
 	Short:   "Uninstalls a plugin.",
 	Long:    "Uninstalls a plugin.",
 	Example: `  gauge uninstall java`,

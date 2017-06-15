@@ -9,10 +9,10 @@ import (
 )
 
 var docsCmd = &cobra.Command{
-	Use:     "docs",
+	Use:     "docs [flags] <plugin> [args]",
 	Short:   "Generate documenation using specified plugin.",
 	Long:    "Generate documenation using specified plugin.",
-	Example: "  gauge docs spectacle",
+	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
 		setGlobalFlags()
 		if err := isValidGaugeProject(args); err != nil {

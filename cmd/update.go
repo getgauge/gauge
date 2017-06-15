@@ -9,7 +9,7 @@ import (
 
 var (
 	updateCmd = &cobra.Command{
-		Use:   "update",
+		Use:   "update [flags] <plugin>",
 		Short: "Updates a plugin.",
 		Long:  "Updates a plugin.",
 		Example: `  gauge update java
