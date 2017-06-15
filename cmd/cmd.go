@@ -19,7 +19,7 @@ var (
 
 Complete documentation is available at https://docs.getgauge.io/.`,
 		Example: `  gauge run specs/
-  gauge run -p specs/`,
+  gauge run --parallel specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
 				cmd.Help()

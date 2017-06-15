@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/refactor"
@@ -33,10 +32,6 @@ func init() {
 }
 
 func refactorInit(args []string) {
-	var specDirs = []string{common.SpecsDirectoryName}
-	if len(args) > 1 {
-		specDirs = args[1:]
-	}
 	startChan := api.StartAPI(false)
-	refactor.RefactorSteps(args[0], args[1], startChan, specDirs)
+	refactor.RefactorSteps(args[0], args[1], startChan, getSpecsDir(args[2:]))
 }
