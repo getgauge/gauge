@@ -8,7 +8,7 @@ import (
 )
 
 var initCmd = &cobra.Command{
-	Use:     "init",
+	Use:     "init [flags] <template>",
 	Short:   "Initializes project structure in the current directory.",
 	Long:    "Initializes project structure in the current directory.",
 	Example: "  gauge init java",

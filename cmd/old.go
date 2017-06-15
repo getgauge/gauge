@@ -7,7 +7,7 @@ import (
 )
 
 var oldCmd = &cobra.Command{
-	Use:    "old-usage",
+	Use:    "old-help [flags]",
 	Short:  "Shows usage for old structure of gauge command",
 	Long:   `Shows usage for old structure of gauge command`,
 	Hidden: true,

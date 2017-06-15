@@ -9,7 +9,7 @@ import (
 
 var (
 	installCmd = &cobra.Command{
-		Use:   "install",
+		Use:   "install [flags] <plugin>",
 		Short: "Downloads and installs a plugin.",
 		Long:  "Downloads and installs a plugin.",
 		Example: `  gauge install java

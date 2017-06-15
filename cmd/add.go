@@ -9,7 +9,7 @@ import (
 
 var (
 	addCmd = &cobra.Command{
-		Use:     "add",
+		Use:     "add [flags] <plugin>",
 		Short:   "Adds the specified non-language plugin to the current project.",
 		Long:    `Adds the specified non-language plugin to the current project.`,
 		Example: "  gauge add xml-report",

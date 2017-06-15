@@ -8,7 +8,7 @@ import (
 )
 
 var validateCmd = &cobra.Command{
-	Use:     "validate",
+	Use:     "validate [flags] [args]",
 	Short:   "Check for validation and parse errors.",
 	Long:    "Check for validation and parse errors.",
 	Example: "  gauge validate specs/",

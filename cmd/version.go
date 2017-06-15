@@ -13,7 +13,7 @@ import (
 
 var (
 	versionCmd = &cobra.Command{
-		Use:   "version",
+		Use:   "version [flags]",
 		Short: "Print Gauge and plugin versions.",
 		Long:  "Print Gauge and plugin versions.",
 		Example: `  gauge version

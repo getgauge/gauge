@@ -20,7 +20,7 @@ import (
 
 var (
 	runCmd = &cobra.Command{
-		Use:   "run",
+		Use:   "run [flags] [args]",
 		Short: "Run specs.",
 		Long:  "Run specs.",
 		Example: `  gauge run specs/

@@ -8,7 +8,7 @@ import (
 )
 
 var formatCmd = &cobra.Command{
-	Use:     "format",
+	Use:     "format [flags] [args]",
 	Short:   "Formats the specified spec files.",
 	Long:    "Formats the specified spec files.",
 	Example: "  gauge format specs/",

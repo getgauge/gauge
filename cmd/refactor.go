@@ -10,7 +10,7 @@ import (
 )
 
 var refactorCmd = &cobra.Command{
-	Use:     "refactor",
+	Use:     "refactor [flags] <old step> <new step> [args]",
 	Short:   "Refactor steps.",
 	Long:    "Refactor steps.",
 	Example: `  gauge refactor "old step" "new step"`,
