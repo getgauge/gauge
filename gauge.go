@@ -18,90 +18,89 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/cmd"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
-	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/execution/stream"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/refactor"
-	"github.com/getgauge/gauge/reporter"
-	"github.com/getgauge/gauge/validation"
-	"github.com/getgauge/gauge/version"
-
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/projectInit"
+	"github.com/getgauge/gauge/refactor"
+	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/validation"
 	flag "github.com/getgauge/mflag"
 )
 
 // Command line flags
-var daemonize = flag.Bool([]string{"-daemonize"}, false, "Run as a daemon")
-var gaugeVersion = flag.Bool([]string{"v", "-version", "version"}, false, "Print the current version and exit. Eg: gauge --version")
-var verbosity = flag.Bool([]string{"-verbose"}, false, "Enable step level reporting on console, default being scenario level. Eg: gauge --verbose specs")
-var logLevel = flag.String([]string{"-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
-var simpleConsoleOutput = flag.Bool([]string{"-simple-console"}, false, "Removes colouring and simplifies from the console output")
-var initialize = flag.String([]string{"-init"}, "", "Initializes project structure in the current directory. Eg: gauge --init java")
-var installPlugin = flag.String([]string{"-install"}, "", "Downloads and installs a plugin. Eg: gauge --install java")
-var uninstallPlugin = flag.String([]string{"-uninstall"}, "", "Uninstalls a plugin. Eg: gauge --uninstall java")
-var installAll = flag.Bool([]string{"-install-all"}, false, "Installs all the plugins specified in project manifest, if not installed. Eg: gauge --install-all")
-var update = flag.String([]string{"-update"}, "", "Updates a plugin. Eg: gauge --update java")
-var pluginVersion = flag.String([]string{"-plugin-version"}, "", "Version of plugin to be installed. This is used with --install or --uninstall flag.")
-var installZip = flag.String([]string{"-file", "f"}, "", "Installs the plugin from zip file. This is used with --install. Eg: gauge --install java -f ZIP_FILE")
-var currentEnv = flag.String([]string{"-env"}, "default", "Specifies the environment. If not specified, default will be used")
-var addPlugin = flag.String([]string{"-add-plugin"}, "", "Adds the specified non-language plugin to the current project")
-var pluginArgs = flag.String([]string{"-plugin-args"}, "", "Specified additional arguments to the plugin. This is used together with --add-plugin")
-var specFilesToFormat = flag.String([]string{"-format"}, "", "Formats the specified spec files")
-var executeTags = flag.String([]string{"-tags"}, "", "Executes the specs and scenarios tagged with given tags. Eg: gauge --tags tag1,tag2 specs")
-var tableRows = flag.String([]string{"-table-rows"}, "", "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4. Eg: gauge --table-rows \"1-3\" specs/hello.spec")
-var apiPort = flag.String([]string{"-api-port"}, "", "Specifies the api port to be used. Eg: gauge --daemonize --api-port 7777")
-var refactorSteps = flag.String([]string{"-refactor"}, "", "Refactor steps. Eg: gauge --refactor <old step> <new step> [[spec directories]]")
-var parallel = flag.Bool([]string{"-parallel", "p"}, false, "Execute specs in parallel")
-var numberOfExecutionStreams = flag.Int([]string{"n"}, util.NumberOfCores(), "Specify number of parallel execution streams")
-var distribute = flag.Int([]string{"g", "-group"}, -1, "Specify which group of specification to execute based on -n flag")
-var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var strategy = flag.String([]string{"-strategy"}, "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`. Ex: gauge -p --strategy=\"eager\"")
-var sort = flag.Bool([]string{"-sort", "s"}, false, "Run specs in Alphabetical Order. Eg: gauge -s specs")
-var validate = flag.Bool([]string{"-validate", "#-check"}, false, "Check for validation and parse errors. Eg: gauge --validate specs")
-var updateAll = flag.Bool([]string{"-update-all"}, false, "Updates all the installed Gauge plugins. Eg: gauge --update-all")
-var checkUpdates = flag.Bool([]string{"-check-updates"}, false, "Checks for Gauge and plugins updates. Eg: gauge --check-updates")
-var listTemplates = flag.Bool([]string{"-list-templates"}, false, "Lists all the Gauge templates available. Eg: gauge --list-templates")
-var machineReadable = flag.Bool([]string{"-machine-readable"}, false, "Used with `--version` to produce JSON output of currently installed Gauge and plugin versions. e.g: gauge --version --machine-readable")
-var runFailed = flag.Bool([]string{"-failed"}, false, "Run only the scenarios failed in previous run. Eg: gauge --failed")
-var docs = flag.String([]string{"-docs"}, "", "Generate documenation using specified plugin. Eg: gauge --docs <plugin name> specs/")
+var daemonize = flag.Bool([]string{"#-daemonize"}, false, "[DEPRECATED] Use gauge daemon.")
+var gaugeVersion = flag.Bool([]string{"#v", "#-version", "#version"}, false, "[DEPRECATED] Use gauge version")
+var verbosity = flag.Bool([]string{"#-verbose"}, false, "[DEPRECATED] Use gauge run -v")
+var logLevel = flag.String([]string{"#-log-level"}, "", "Set level of logging to debug, info, warning, error or critical")
+var simpleConsoleOutput = flag.Bool([]string{"#-simple-console"}, false, "[DEPRECATED] gauge run --simple-console")
+var initialize = flag.String([]string{"#-init"}, "", "[DEPRECATED] gauge init <template name>")
+var installPlugin = flag.String([]string{"#-install"}, "", "[DEPRECATED] Use gauge install <plugin name>")
+var uninstallPlugin = flag.String([]string{"#-uninstall"}, "", "[DEPRECATED] Use gauge uninstall <plugin name>")
+var installAll = flag.Bool([]string{"#-install-all"}, false, "[DEPRECATED] Use gauge install --all")
+var update = flag.String([]string{"#-update"}, "", "[DEPRECATED] Use gauge update <plugin name>")
+var pluginVersion = flag.String([]string{"#-plugin-version"}, "", "[DEPRECATED] Use gauge [install|uninstall] <plugin name> -v <version>")
+var installZip = flag.String([]string{"#-file", "#f"}, "", "[DEPRECATED] Use gauge install <plugin name> -f <zip file>")
+var currentEnv = flag.String([]string{"#-env"}, "default", "[DEPRECATED] Use gauge run -e <env name>")
+var addPlugin = flag.String([]string{"#-add-plugin"}, "", "[DEPRECATED] Use gauge add <plugin name>")
+var pluginArgs = flag.String([]string{"#-plugin-args"}, "", "[DEPRECATED] Use gauge add <plugin name> --plugin-args <args>")
+var specFilesToFormat = flag.String([]string{"#-format"}, "", "[DEPRECATED] Use gauge format specs/")
+var executeTags = flag.String([]string{"#-tags"}, "", "[DEPRECATED] Use gauge run --tags tag1,tag2 specs")
+var tableRows = flag.String([]string{"#-table-rows"}, "", "[DEPRECATED] gauge run --table-rows <rows>")
+var apiPort = flag.String([]string{"#-api-port"}, "", "[DEPRECATED] Use gauge daemon 7777")
+var refactorSteps = flag.String([]string{"#-refactor"}, "", "[DEPRECATED] Use gauge refactor <old step> <new step>")
+var parallel = flag.Bool([]string{"#-parallel", "#p"}, false, "[DEPRECATED] guage run -p specs/")
+var numberOfExecutionStreams = flag.Int([]string{"#n"}, util.NumberOfCores(), "[DEPRECATED] Use guage run -p -n specs/")
+var distribute = flag.Int([]string{"#g", "#-group"}, -1, "[DEPRECATED] Use gauge -n 5 -g 1 specs/")
+var workingDir = flag.String([]string{"#-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
+var strategy = flag.String([]string{"#-strategy"}, "lazy", "[DEPRECATED] Use gauge run -p --strategy=\"eager\"")
+var sort = flag.Bool([]string{"#-sort", "#s"}, false, "[DEPRECATED] Use gauge run -s specs")
+var validate = flag.Bool([]string{"#-validate", "#-check"}, false, "[DEPRECATED] Use gauge validate specs")
+var updateAll = flag.Bool([]string{"#-update-all"}, false, "[DEPRECATED] Use gauge update -a")
+var checkUpdates = flag.Bool([]string{"#-check-updates"}, false, "[DEPRECATED] Use gauge update -c")
+var listTemplates = flag.Bool([]string{"#-list-templates"}, false, "[DEPRECATED] Use gauge list-templates")
+var machineReadable = flag.Bool([]string{"#-machine-readable"}, false, "[DEPRECATED] Use gauge version -m")
+var runFailed = flag.Bool([]string{"#-failed"}, false, "[DEPRECATED] Use gauge run --failed")
+var docs = flag.String([]string{"#-docs"}, "", "[DEPRECATED] Use gauge docs <plugin name> specs/")
 
 func main() {
 	skel.CreateSkelFilesIfRequired()
+	exit, err := cmd.Parse()
+	if err == nil {
+		os.Exit(exit)
+	}
+	logger.Initialize(*logLevel)
+	logger.Debug(err.Error())
 	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
-	err := config.SetProjectRoot(flag.Args())
+	err = config.SetProjectRoot(flag.Args())
 	if err != nil {
 		validGaugeProject = false
 	}
-	if rerunErr := rerun.Initialize(); rerunErr != nil {
-		fmt.Println(rerunErr)
-		os.Exit(0)
+	if *runFailed {
+		logger.Fatalf("Rerun is not supported via the old usage. Use 'gauge run -f'")
 	}
 	if e := env.LoadEnv(*currentEnv); e != nil {
 		logger.Fatalf(e.Error())
 	}
-	logger.Initialize(*logLevel)
 	logger.Debug("Gauge Install ID: %s", config.UniqueID())
 	if *gaugeVersion && *machineReadable {
 		printJSONVersion()
@@ -142,9 +141,6 @@ func main() {
 	} else if *listTemplates {
 		track.ListTemplates()
 		projectInit.ListTemplates()
-	} else if flag.NFlag() == 0 && len(flag.Args()) == 0 {
-		printUsage()
-		os.Exit(0)
 	} else if validGaugeProject {
 		var specDirs = []string{common.SpecsDirectoryName}
 		if len(flag.Args()) > 0 {
@@ -168,6 +164,7 @@ func main() {
 			gaugeConnectionHandler := api.Start(specDirs)
 			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
+			logger.Info("Warning: This usage of gauge command is deprecated, it will be removed soon. Use 'gauge run specs/'.")
 			track.Execution(*parallel, *executeTags != "", *sort, *simpleConsoleOutput, *verbosity, *strategy)
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)
@@ -190,48 +187,11 @@ func refactorInit(args []string) {
 }
 
 func printJSONVersion() {
-	type pluginJSON struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	}
-	type versionJSON struct {
-		Version string        `json:"version"`
-		Plugins []*pluginJSON `json:"plugins"`
-	}
-	gaugeVersion := versionJSON{version.FullVersion(), make([]*pluginJSON, 0)}
-	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
-	for _, pluginInfo := range allPluginsWithVersion {
-		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
-	}
-	b, err := json.MarshalIndent(gaugeVersion, "", "    ")
-	if err != nil {
-		fmt.Println("error:", err)
-	}
-	fmt.Println(fmt.Sprintf("%s\n", string(b)))
+	cmd.PrintJSONVersion()
 }
 
 func printVersion() {
-	fmt.Printf("Gauge version: %s\n\n", version.FullVersion())
-	fmt.Println("Plugins\n-------")
-	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
-	if err != nil {
-		fmt.Println("No plugins found")
-		fmt.Println("Plugins can be installed with `gauge --install {plugin-name}`")
-		os.Exit(0)
-	}
-	for _, pluginInfo := range allPluginsWithVersion {
-		fmt.Printf("%s (%s)\n", pluginInfo.Name, filepath.Base(pluginInfo.Path))
-	}
-}
-
-func printUsage() {
-	fmt.Printf("Gauge version %s\n", version.FullVersion())
-	fmt.Printf("Copyright %d ThoughtWorks, Inc.\n\n", time.Now().Year())
-	fmt.Println("Usage:")
-	fmt.Println("\tgauge specs/")
-	fmt.Println("\tgauge specs/spec_name.spec")
-	fmt.Println("\nOptions:")
-	flag.PrintDefaults()
+	cmd.PrintVersion()
 }
 
 func initPackageFlags() {
@@ -252,7 +212,6 @@ func initPackageFlags() {
 	filter.Distribute = *distribute
 	filter.NumberOfExecutionStreams = *numberOfExecutionStreams
 	reporter.NumberOfExecutionStreams = *numberOfExecutionStreams
-	rerun.RunFailed = *runFailed
 	if *distribute != -1 {
 		execution.Strategy = execution.Eager
 	}

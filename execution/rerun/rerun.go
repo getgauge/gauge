@@ -24,8 +24,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
-
 	"sync"
 
 	"github.com/getgauge/common"
@@ -39,9 +37,6 @@ import (
 	flag "github.com/getgauge/mflag"
 )
 
-// RunFailed represents if this is a re-run of only failed scenarios or a new run
-var RunFailed bool
-
 const (
 	dotGauge   = ".gauge"
 	failedFile = "failures.json"
@@ -54,17 +49,13 @@ func init() {
 }
 
 type failedMetadata struct {
-	Flags          map[string]string
+	Args           []string
 	failedItemsMap map[string]map[string]bool
 	FailedItems    []string
 }
 
-func (m *failedMetadata) String() string {
-	cmd := "gauge "
-	for flag, value := range m.Flags {
-		cmd += "-" + flag + "=" + value + " "
-	}
-	return cmd + strings.Join(m.FailedItems, " ")
+func (m *failedMetadata) args() []string {
+	return append(m.Args, m.FailedItems...)
 }
 
 func (m *failedMetadata) getFailedItems() []string {
@@ -82,7 +73,7 @@ func (m *failedMetadata) aggregateFailedItems() {
 }
 
 func newFailedMetaData() *failedMetadata {
-	return &failedMetadata{Flags: make(map[string]string), failedItemsMap: make(map[string]map[string]bool), FailedItems: []string{}}
+	return &failedMetadata{Args: make([]string, 0), failedItemsMap: make(map[string]map[string]bool), FailedItems: []string{}}
 }
 
 func (m *failedMetadata) addFailedItem(itemName string, item string) {
@@ -164,53 +155,46 @@ func writeFailedMeta(contents string) {
 }
 
 func getJSON(failedMeta *failedMetadata) string {
-	json, err := json.MarshalIndent(failedMeta, "", "\t")
+	j, err := json.MarshalIndent(failedMeta, "", "\t")
 	if err != nil {
 		logger.Warning("Failed to save run info. Reason: %s", err.Error())
 	}
-	return string(json)
+	return string(j)
 }
 
-func saveFlagState(f *flag.Flag) {
-	failedMeta.Flags[f.Names[0]] = f.Value.String()
+func GetLastState() ([]string, error) {
+	meta := readLastState()
+	util.SetWorkingDir(config.ProjectRoot)
+	if len(meta.FailedItems) == 0 {
+		return nil, errors.New("No failed tests found.")
+	}
+	return meta.args(), nil
 }
 
-func setDefault(f *flag.Flag) {
-	f.Value.Set(f.DefValue)
+func SaveState(args []string, specs []string) {
+	isPresent := func(values []string, value string) bool {
+		for _, v := range values {
+			if v == value {
+				return true
+			}
+		}
+		return false
+	}
+	for _, a := range args {
+		if !isPresent(specs, a) {
+			failedMeta.Args = append(failedMeta.Args, a)
+		}
+	}
 }
 
-// setFlags sets the flags if its a re-run of failed scenarios. Else, it will save the current execution run for next re-run.
-func setFlags(meta *failedMetadata) {
-	flag.VisitAll(setDefault)
+func readLastState() *failedMetadata {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, failedFile))
 	if err != nil {
 		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
 	}
-	if err = json.Unmarshal([]byte(contents), &meta); err != nil {
+	meta := newFailedMetaData()
+	if err = json.Unmarshal([]byte(contents), meta); err != nil {
 		logger.Fatalf("Invalid last run information. Reason: %s", err.Error())
 	}
-	failedMeta.Flags = meta.Flags
-	for k, v := range meta.Flags {
-		err = flag.Set(k, v)
-		if err != nil {
-			logger.Warning("Failed to set flag %v to %v. Reason: %v", k, v, err.Error())
-		}
-	}
-	flag.CommandLine.Parse(meta.FailedItems)
-}
-
-// Initialize sets up rerun and determines whether any failed tests will be executed or not
-func Initialize() error {
-	if !RunFailed {
-		flag.Visit(saveFlagState)
-		return nil
-	}
-	meta := new(failedMetadata)
-	setFlags(meta)
-	util.SetWorkingDir(config.ProjectRoot)
-	if RunFailed && len(meta.FailedItems) == 0 {
-		return errors.New("No failed tests found.")
-	}
-	fmt.Printf("Executing => %s\n", meta.String())
-	return nil
+	return meta
 }

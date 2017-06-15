@@ -137,6 +137,10 @@
 		{
 			"ImportPath": "gopkg.in/check.v1",
 			"Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra/cobra",
+			"Rev": "b4dbd37a01839e0653eec12aa4bbb2a2ce7b2a37"
 		}
 	]
 }
