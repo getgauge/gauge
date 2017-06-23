@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
@@ -61,9 +63,17 @@ func (filter *ScenarioFilterBasedOnTags) Filter(item gauge.Item) bool {
 	return false
 }
 
+func sanitize(tag string) string {
+	if _, err := strconv.ParseBool(tag); err == nil {
+		return fmt.Sprintf("{%s}", tag)
+	}
+	return tag
+}
+
 func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 	tagsMap := make(map[string]bool, 0)
 	for _, tag := range stags {
+		tag = sanitize(tag)
 		tagsMap[strings.Replace(tag, " ", "", -1)] = true
 	}
 	filter.replaceSpecialChar()
@@ -151,12 +161,15 @@ func (filter *ScenarioFilterBasedOnTags) isTagPresent(tagsMap map[string]bool, t
 func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionParts []string, tags []string) {
 	isValidOperator := func(r rune) bool { return r == '&' || r == '|' || r == '(' || r == ')' || r == '!' }
 	var word string
+	var wordValue = func() string {
+		return sanitize(strings.TrimSpace(word))
+	}
 	for _, c := range filter.tagExpression {
 		c1, _ := strconv.Unquote(strconv.QuoteRuneToASCII(c))
 		if isValidOperator(c) {
 			if word != "" {
-				tagExpressionParts = append(tagExpressionParts, strings.TrimSpace(word))
-				tags = append(tags, strings.TrimSpace(word))
+				tagExpressionParts = append(tagExpressionParts, wordValue())
+				tags = append(tags, wordValue())
 			}
 			tagExpressionParts = append(tagExpressionParts, c1)
 			word = ""
@@ -165,8 +178,8 @@ func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionPart
 		}
 	}
 	if word != "" {
-		tagExpressionParts = append(tagExpressionParts, strings.TrimSpace(word))
-		tags = append(tags, strings.TrimSpace(word))
+		tagExpressionParts = append(tagExpressionParts, wordValue())
+		tags = append(tags, wordValue())
 	}
 	return
 }
