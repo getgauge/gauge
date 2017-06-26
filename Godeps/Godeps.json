@@ -32,6 +32,10 @@
 			"Rev": "8ee79997227bf9b34611aee7946ae64735e6fd93"
 		},
 		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
 			"ImportPath": "github.com/jpillora/go-ogle-analytics",
 			"Rev": "14b04e0594ef6a9fd943363b135656f0ec8c9d0e"
 		},
@@ -51,6 +55,14 @@
 			"ImportPath": "github.com/satori/go.uuid",
 			"Comment": "v1.1.0-8-g5bf94b6",
 			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "4d647c8944eb42504a714e57e97f244ed6344722"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
@@ -137,10 +149,6 @@
 		{
 			"ImportPath": "gopkg.in/check.v1",
 			"Rev": "20d25e2804050c1cd24a7eea1e7a6447dd0e74ec"
-		},
-		{
-			"ImportPath": "github.com/spf13/cobra/cobra",
-			"Rev": "b4dbd37a01839e0653eec12aa4bbb2a2ce7b2a37"
 		}
 	]
 }
