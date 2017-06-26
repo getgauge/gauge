@@ -156,7 +156,7 @@ func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagNames(c 
 	c.Assert(filter.filterTags([]string{"true", "false"}), Equals, true)
 }
 
-func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagSDFNames(c *C) {
+func (s *MySuite) TestToEvaluateTagExpressionConsistingTrueAndFalseAsTagNamesWithNegation(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "!true"}
 	c.Assert(filter.filterTags(nil), Equals, true)
 }
@@ -524,6 +524,13 @@ func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
 func (s *MySuite) TestFilterTags(c *C) {
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
 	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
+	evaluateTrue := tagFilter.filterTags(specTags)
+	c.Assert(evaluateTrue, Equals, true)
+}
+
+func (s *MySuite) TestSanitizeTags(c *C) {
+	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar | true")
 	evaluateTrue := tagFilter.filterTags(specTags)
 	c.Assert(evaluateTrue, Equals, true)
 }
