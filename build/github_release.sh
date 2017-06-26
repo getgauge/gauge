@@ -38,4 +38,7 @@ $GOPATH/bin/github-release release -u getgauge -r $repoName --draft -t "v$versio
 
 for i in `ls`; do
     $GOPATH/bin/github-release -v upload -u getgauge -r $repoName -t "v$version" -n $i -f $i
+    if [$? -ne 0];then
+        exit 1
+    fi
 done
