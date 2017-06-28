@@ -173,6 +173,7 @@ func (parser *ConceptParser) processConceptStep(token *Token, fileName string) [
 	if parseRes != nil && len(parseRes.ParseErrors) > 0 {
 		return parseRes.ParseErrors
 	}
+	conceptStep.Suffix = token.Suffix
 	parser.currentConcept.ConceptSteps = append(parser.currentConcept.ConceptSteps, conceptStep)
 	parser.currentConcept.Items = append(parser.currentConcept.Items, conceptStep)
 	return nil

@@ -239,7 +239,23 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	c.Assert(len(concept.ConceptSteps), Equals, 2)
 	c.Assert(concept.ConceptSteps[0].Value, Equals, "first step")
 	c.Assert(concept.ConceptSteps[1].Value, Equals, "second step")
+}
 
+func (s *MySuite) TestParsingConceptRetainsStepSuffix(c *C) {
+	parser := new(ConceptParser)
+	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step \n\n", "")
+
+	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(len(concepts), Equals, 1)
+
+	concept := concepts[0]
+
+	c.Assert(concept.IsConcept, Equals, true)
+	c.Assert(len(concept.ConceptSteps), Equals, 2)
+	c.Assert(concept.ConceptSteps[0].Value, Equals, "first step")
+	c.Assert(concept.ConceptSteps[1].Value, Equals, "second step")
+	c.Assert(concept.ConceptSteps[0].Suffix, Equals, "")
+	c.Assert(concept.ConceptSteps[1].Suffix, Equals, "\n")
 }
 
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
