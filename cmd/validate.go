@@ -17,6 +17,7 @@ var validateCmd = &cobra.Command{
 		if err := isValidGaugeProject(args); err != nil {
 			logger.Fatalf(err.Error())
 		}
+		initPackageFlags()
 		track.Validation()
 		validation.Validate(args)
 	},
