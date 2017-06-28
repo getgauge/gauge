@@ -42,5 +42,5 @@ func init() {
 	GaugeCmd.AddCommand(installCmd)
 	installCmd.Flags().BoolVarP(&all, "all", "a", false, "Installs all the plugins specified in project manifest, if not installed.")
 	installCmd.Flags().StringVarP(&zip, "file", "f", "", "Installs the plugin from zip file.")
-	installCmd.Flags().StringVarP(&pVersion, "plugin-version", "v", "", "Version of plugin to be installed.")
+	installCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be installed.")
 }

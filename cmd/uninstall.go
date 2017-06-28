@@ -24,5 +24,5 @@ var uninstallCmd = &cobra.Command{
 
 func init() {
 	GaugeCmd.AddCommand(uninstallCmd)
-	uninstallCmd.Flags().StringVarP(&pVersion, "plugin-version", "v", "", "Version of plugin to be uninstalled.")
+	uninstallCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be uninstalled.")
 }
