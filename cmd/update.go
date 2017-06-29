@@ -20,9 +20,11 @@ var (
 			if all {
 				track.UpdateAll()
 				install.UpdatePlugins()
+				return
 			} else if check {
 				track.CheckUpdates()
 				install.PrintUpdateInfoWithDetails()
+				return
 			}
 			if len(args) < 1 {
 				logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
