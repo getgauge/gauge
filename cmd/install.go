@@ -18,7 +18,6 @@
 package cmd
 
 import (
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
@@ -26,20 +25,18 @@ import (
 
 var (
 	installCmd = &cobra.Command{
-		Use:   "install [flags] <plugin>",
-		Short: "Downloads and installs a plugin.",
-		Long:  "Downloads and installs a plugin.",
-		Example: `  gauge install java
+		Use:   "install [flags] [plugin]",
+		Short: "Download and install plugin(s)",
+		Long:  "Download and install specified plugin or all plugins in the project's `manifest.json` file.",
+		Example: `  gauge install
+  gauge install java
   gauge install java -f gauge-java-0.6.3-darwin.x86_64.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
-			if all {
+			if len(args) < 1 {
 				track.InstallAll()
 				install.InstallAllPlugins()
 				return
-			}
-			if len(args) < 1 {
-				logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
 			}
 			if zip != "" {
 				track.Install(args[0], true)
@@ -50,14 +47,12 @@ var (
 			}
 		},
 	}
-	all      bool
 	zip      string
 	pVersion string
 )
 
 func init() {
 	GaugeCmd.AddCommand(installCmd)
-	installCmd.Flags().BoolVarP(&all, "all", "a", false, "Installs all the plugins specified in project manifest, if not installed.")
-	installCmd.Flags().StringVarP(&zip, "file", "f", "", "Installs the plugin from zip file.")
-	installCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be installed.")
+	installCmd.Flags().StringVarP(&zip, "file", "f", "", "Installs the plugin from zip file")
+	installCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be installed")
 }

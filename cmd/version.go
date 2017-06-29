@@ -31,7 +31,7 @@ import (
 var (
 	versionCmd = &cobra.Command{
 		Use:   "version [flags]",
-		Short: "Print Gauge and plugin versions.",
+		Short: "Print Gauge and plugin versions",
 		Long:  "Print Gauge and plugin versions.",
 		Example: `  gauge version
   gauge version -m`,
@@ -49,7 +49,7 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(versionCmd)
-	versionCmd.Flags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Outputs JSON output of currently installed Gauge and plugin versions.")
+	versionCmd.Flags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Outputs JSON output of currently installed Gauge and plugin versions")
 }
 
 func PrintJSONVersion() {

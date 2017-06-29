@@ -38,7 +38,7 @@ import (
 var (
 	runCmd = &cobra.Command{
 		Use:   "run [flags] [args]",
-		Short: "Run specs.",
+		Short: "Run specs",
 		Long:  "Run specs.",
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
@@ -69,17 +69,17 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable step level reporting on console, default being scenario level.")
-	runCmd.Flags().BoolVarP(&simpleConsole, "simple-console", "", false, "Removes colouring and simplifies the console output.")
-	runCmd.Flags().StringVarP(&environment, "env", "e", "default", "Specifies the environment to use.")
-	runCmd.Flags().StringVarP(&tags, "tags", "t", "", "Executes the specs and scenarios tagged with given tags.")
-	runCmd.Flags().StringVarP(&rows, "table-rows", "r", "", "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4.")
-	runCmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Execute specs in parallel.")
-	runCmd.Flags().IntVarP(&streams, "n", "n", util.NumberOfCores(), "Specify number of parallel execution streams.")
-	runCmd.Flags().IntVarP(&group, "group", "g", -1, "Specify which group of specification to execute based on -n flag.")
-	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`.")
-	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order.")
-	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run.")
+	runCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Enable step level reporting on console, default being scenario level")
+	runCmd.Flags().BoolVarP(&simpleConsole, "simple-console", "", false, "Removes colouring and simplifies the console output")
+	runCmd.Flags().StringVarP(&environment, "env", "e", "default", "Specifies the environment to use")
+	runCmd.Flags().StringVarP(&tags, "tags", "t", "", "Executes the specs and scenarios tagged with given tags")
+	runCmd.Flags().StringVarP(&rows, "table-rows", "r", "", "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
+	runCmd.Flags().BoolVarP(&parallel, "parallel", "p", false, "Execute specs in parallel")
+	runCmd.Flags().IntVarP(&streams, "n", "n", util.NumberOfCores(), "Specify number of parallel execution streams")
+	runCmd.Flags().IntVarP(&group, "group", "g", -1, "Specify which group of specification to execute based on -n flag")
+	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
+	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
+	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
 }
 
 func loadLastState(cmd *cobra.Command) {

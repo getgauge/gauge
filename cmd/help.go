@@ -23,19 +23,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var oldCmd = &cobra.Command{
-	Use:    "old-help [flags]",
-	Short:  "Shows usage for old structure of gauge command",
-	Long:   `Shows usage for old structure of gauge command`,
-	Hidden: true,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(`Gauge 0.8.4 and below
+var (
+	helpCmd = &cobra.Command{
+		Use:   "help [command]",
+		Short: "Help about any command",
+		Long: `Help provides help for any command in the application.
+	Simply type ` + GaugeCmd.Name() + ` help [path to command] for full details.`,
+
+		Run: func(c *cobra.Command, args []string) {
+			if legacy {
+				fmt.Println(legacyUsage)
+				return
+			}
+			cmd, _, e := c.Root().Find(args)
+			if cmd == nil || e != nil {
+				c.Printf("Unknown help topic %#q\n", args)
+				c.Root().Usage()
+			} else {
+				cmd.InitDefaultHelpFlag() // make possible 'help' flag to be shown
+				cmd.Help()
+			}
+		},
+	}
+	legacy      bool
+	legacyUsage = `Gauge 0.8.5 and below
 
 Options:
   --add-plugin=""                  [DEPRECATED] Use 'gauge add <plugin name>'
   --api-port=""                    [DEPRECATED] Use 'gauge daemon <port>'
   --check-updates=false            [DEPRECATED] Use 'gauge update -c'
-  --daemonize=false                [DEPRECATED] Use 'gauge daemon'
+  --daemonize=false                [DEPRECATED] Use 'gauge daemon <port>'
   --docs=""                        [DEPRECATED] Use 'gauge docs <plugin name> specs/'
   --env="default"                  [DEPRECATED] Use 'gauge run -e <env name>'
   --failed=false                   [DEPRECATED] Use 'gauge run --failed'
@@ -45,11 +62,11 @@ Options:
   --init=""                        [DEPRECATED] Use 'gauge init <template name>'
   --install=""                     [DEPRECATED] Use 'gauge install <plugin name>'
   --install-all=false              [DEPRECATED] Use 'gauge install --all'
-  --list-templates=false           [DEPRECATED] Use 'gauge list-templates'
+  --list-templates=false           [DEPRECATED] Use 'gauge init --templates'
   --machine-readable=false         [DEPRECATED] Use 'gauge version -m'
   -n=8                             [DEPRECATED] Use 'gauge run -p -n specs/'
   --parallel, -p=false             [DEPRECATED] Use 'gauge run -p specs/'
-  --plugin-args=""                 [DEPRECATED] Use 'gauge add <plugin name> --plugin-args <args>'
+  --args=""                        [DEPRECATED] Use 'gauge add <plugin name> --args <args>'
   --plugin-version=""              [DEPRECATED] Use 'gauge [install|uninstall] <plugin name> -v <version>'
   --refactor=""                    [DEPRECATED] Use 'gauge refactor <old step> <new step>'
   --simple-console=false           [DEPRECATED] Use 'gauge run --simple-console'
@@ -62,11 +79,10 @@ Options:
   --update-all=false               [DEPRECATED] Use 'gauge update -a'
   -v, --version, -version=false    [DEPRECATED] Use 'gauge version'
   --validate=false                 [DEPRECATED] Use 'gauge validate specs'
-  --verbose=false                  [DEPRECATED] Use 'gauge run -v'
-`)
-	},
-}
+  --verbose=false                  [DEPRECATED] Use 'gauge run -v'`
+)
 
 func init() {
-	GaugeCmd.AddCommand(oldCmd)
+	helpCmd.Flags().BoolVarP(&legacy, "legacy", "", false, "Shows usage for old structure of gauge command")
+	GaugeCmd.SetHelpCommand(helpCmd)
 }

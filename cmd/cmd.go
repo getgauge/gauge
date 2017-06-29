@@ -30,11 +30,7 @@ import (
 
 var (
 	GaugeCmd = &cobra.Command{
-		Use:   "gauge <command> [flags] [args]",
-		Short: "Gauge is a light-weight open-source cross-platform test automation tool.",
-		Long: `Gauge is a light-weight cross-platform test automation tool with the ability to author test cases in the business language.
-
-Complete documentation is available at https://docs.getgauge.io/.`,
+		Use: "gauge <command> [flags] [args]",
 		Example: `  gauge run specs/
   gauge run --parallel specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -69,10 +65,11 @@ Global Flags:
 Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
-Use "{{.CommandPath}} [command] --help" for more information about a command.{{end}}
+Use "{{.CommandPath}} [command] --help" for more information about a command.
+Complete documentation is available at https://docs.getgauge.io/.{{end}}
 `)
-	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical.")
-	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory.")
+	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical")
+	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory")
 }
 
 type commandWriter struct {

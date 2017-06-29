@@ -156,7 +156,7 @@ func createProjectTemplate(language string) error {
 	if err := createEnvDirectory(); err != nil {
 		return err
 	}
-	fmt.Printf("Successfully initialized the project. Run specifications with \"gauge specs/\".\n")
+	fmt.Println("Successfully initialized the project. Run specifications with \"gauge run specs/\".")
 	return nil
 }
 

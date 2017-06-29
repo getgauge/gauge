@@ -26,14 +26,14 @@ import (
 
 var uninstallCmd = &cobra.Command{
 	Use:     "uninstall [flags] <plugin>",
-	Short:   "Uninstalls a plugin.",
+	Short:   "Uninstalls a plugin",
 	Long:    "Uninstalls a plugin.",
 	Example: `  gauge uninstall java`,
 	Run: func(cmd *cobra.Command, args []string) {
+		setGlobalFlags()
 		if len(args) < 1 {
 			logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
 		}
-		setGlobalFlags()
 		track.UninstallPlugin(args[0])
 		install.UninstallPlugin(args[0], pVersion)
 	},
@@ -41,5 +41,5 @@ var uninstallCmd = &cobra.Command{
 
 func init() {
 	GaugeCmd.AddCommand(uninstallCmd)
-	uninstallCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be uninstalled.")
+	uninstallCmd.Flags().StringVarP(&pVersion, "version", "v", "", "Version of plugin to be uninstalled")
 }

@@ -28,7 +28,7 @@ import (
 var (
 	daemonCmd = &cobra.Command{
 		Use:     "daemon [flags] <port> [args]",
-		Short:   "Run as a daemon.",
+		Short:   "Run as a daemon",
 		Long:    "Run as a daemon.",
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -42,7 +42,7 @@ var (
 			specs := args
 			if len(args) > 0 {
 				port = args[0]
-				specs = args[1:]
+				specs = getSpecsDir(args[1:])
 			}
 			api.RunInBackground(port, specs)
 		},

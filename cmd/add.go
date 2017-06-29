@@ -27,7 +27,7 @@ import (
 var (
 	addCmd = &cobra.Command{
 		Use:     "add [flags] <plugin>",
-		Short:   "Adds the specified non-language plugin to the current project.",
+		Short:   "Adds the specified non-language plugin to the current project",
 		Long:    `Adds the specified non-language plugin to the current project.`,
 		Example: "  gauge add xml-report",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -44,5 +44,5 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(addCmd)
-	addCmd.Flags().StringVarP(&pArgs, "plugin-args", "", "", "Specified additional arguments to the plugin.")
+	addCmd.Flags().StringVarP(&pArgs, "args", "", "", "Specified additional arguments to the plugin")
 }

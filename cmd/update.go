@@ -27,7 +27,7 @@ import (
 var (
 	updateCmd = &cobra.Command{
 		Use:   "update [flags] <plugin>",
-		Short: "Updates a plugin.",
+		Short: "Updates a plugin",
 		Long:  "Updates a plugin.",
 		Example: `  gauge update java
   gauge update -a
@@ -50,11 +50,12 @@ var (
 			install.HandleUpdateResult(install.InstallPlugin(args[0], pVersion), args[0], true)
 		},
 	}
+	all   bool
 	check bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(updateCmd)
-	updateCmd.Flags().BoolVarP(&all, "all", "a", false, "Updates all the installed Gauge plugins.")
-	updateCmd.Flags().BoolVarP(&check, "check", "c", false, "Checks for Gauge and plugins updates.")
+	updateCmd.Flags().BoolVarP(&all, "all", "a", false, "Updates all the installed Gauge plugins")
+	updateCmd.Flags().BoolVarP(&check, "check", "c", false, "Checks for Gauge and plugins updates")
 }

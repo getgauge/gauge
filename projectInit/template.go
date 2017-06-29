@@ -40,5 +40,5 @@ func ListTemplates() {
 		logger.Info(t.GetName())
 	}
 	logger.Info("csharp")
-	logger.Info("\nRun `gauge --init <template_name>` to create a new Gauge project.")
+	logger.Info("\nRun `gauge init <template_name>` to create a new Gauge project.")
 }

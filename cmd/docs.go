@@ -27,8 +27,8 @@ import (
 
 var docsCmd = &cobra.Command{
 	Use:     "docs [flags] <plugin> [args]",
-	Short:   "Generate documenation using specified plugin.",
-	Long:    "Generate documenation using specified plugin.",
+	Short:   "Generate documentation using specified plugin",
+	Long:    "Generate documentation using specified plugin.",
 	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
 		setGlobalFlags()
