@@ -89,8 +89,8 @@ func (scenario *Scenario) LatestStep() *Step {
 	return scenario.Steps[len(scenario.Steps)-1]
 }
 
-func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
-	traverser.ScenarioHeading(scenario.Heading)
+func (scenario *Scenario) Traverse(traverser ItemProcessor) {
+	traverser.Heading(scenario.Heading)
 	for _, item := range scenario.Items {
 		switch item.Kind() {
 		case StepKind:
@@ -98,7 +98,7 @@ func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
 		case CommentKind:
 			traverser.Comment(item.(*Comment))
 		case TagKind:
-			traverser.ScenarioTags(item.(*Tags))
+			traverser.Tags(item.(*Tags))
 		}
 	}
 }

@@ -219,31 +219,27 @@ func (spec *Specification) GetSpecItems() []Item {
 	return specItems
 }
 
-func (spec *Specification) Traverse(traverser SpecTraverser) {
-	traverser.Specification(spec)
-	traverser.SpecHeading(spec.Heading)
+func (spec *Specification) Traverse(processor ItemProcessor) {
+	processor.Specification(spec)
+	processor.Heading(spec.Heading)
 
 	for _, item := range spec.Items {
 		switch item.Kind() {
 		case ScenarioKind:
-			item.(*Scenario).Traverse(traverser)
-			traverser.Scenario(item.(*Scenario))
+			item.(*Scenario).Traverse(processor)
+			processor.Scenario(item.(*Scenario))
 		case StepKind:
-			traverser.ContextStep(item.(*Step))
+			processor.Step(item.(*Step))
 		case CommentKind:
-			traverser.Comment(item.(*Comment))
+			processor.Comment(item.(*Comment))
 		case TableKind:
-			traverser.DataTable(item.(*Table))
+			processor.Table(item.(*Table))
 		case TagKind:
-			traverser.SpecTags(item.(*Tags))
+			processor.Tags(item.(*Tags))
 		case TearDownKind:
-			traverser.TearDown(item.(*TearDown))
+			processor.TearDown(item.(*TearDown))
 		case DataTableKind:
-			if !item.(*DataTable).IsExternal {
-				traverser.DataTable(&item.(*DataTable).Table)
-			} else {
-				traverser.ExternalDataTable(item.(*DataTable))
-			}
+			processor.DataTable(item.(*DataTable))
 		}
 	}
 }
