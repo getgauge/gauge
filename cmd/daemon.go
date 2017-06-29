@@ -39,10 +39,12 @@ var (
 			track.Daemon()
 			stream.Start()
 			port := ""
+			specs := args
 			if len(args) > 0 {
 				port = args[0]
+				specs = args[1:]
 			}
-			api.RunInBackground(port, getSpecsDir(args[1:]))
+			api.RunInBackground(port, specs)
 		},
 	}
 )
