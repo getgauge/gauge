@@ -27,6 +27,15 @@ import (
 
 type formatter struct {
 	buffer bytes.Buffer
+	nextItem gauge.Item
+}
+
+func (formatter *formatter) SetNext(item gauge.Item) {
+	formatter.nextItem = item
+}
+
+func (formatter *formatter) Next() (gauge.Item) {
+	return formatter.nextItem
 }
 
 func (formatter *formatter) Specification(specification *gauge.Specification) {
@@ -41,7 +50,13 @@ func (formatter *formatter) Heading(heading *gauge.Heading) {
 }
 
 func (formatter *formatter) Tags(tags *gauge.Tags) {
+	if !strings.HasSuffix(formatter.buffer.String(), "\n\n") {
+		formatter.buffer.WriteString("\n")
+	}
 	formatter.buffer.WriteString(FormatTags(tags))
+	if formatter.nextItem.Kind() != gauge.CommentKind || strings.TrimSpace(formatter.nextItem.(*gauge.Comment).Value) != "" {
+		formatter.buffer.WriteString("\n")
+	}
 }
 
 func (formatter *formatter) Table(table *gauge.Table) {
@@ -52,7 +67,7 @@ func (formatter *formatter) DataTable(dataTable *gauge.DataTable) {
 	if !dataTable.IsExternal {
 		formatter.Table(&(dataTable.Table))
 	} else {
-		formatter.buffer.WriteString(FormatExternalDataTable(dataTable))
+		formatter.buffer.WriteString(formatExternalDataTable(dataTable))
 	}
 }
 

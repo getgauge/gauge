@@ -193,7 +193,7 @@ func FormatTags(tags *gauge.Tags) string {
 	return string(b.Bytes())
 }
 
-func FormatExternalDataTable(dataTable *gauge.DataTable) string {
+func formatExternalDataTable(dataTable *gauge.DataTable) string {
 	if dataTable == nil || len(dataTable.Value) == 0 {
 		return ""
 	}

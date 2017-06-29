@@ -27,4 +27,6 @@ type ItemProcessor interface {
 	Step(*Step)
 	TearDown(*TearDown)
 	Comment(*Comment)
+	SetNext(Item)
+	Next() Item
 }

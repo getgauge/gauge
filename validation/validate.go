@@ -340,6 +340,14 @@ func (v *specValidator) Specification(specification *gauge.Specification) {
 	}
 }
 
+func (validator *specValidator) SetNext(item gauge.Item) {
+
+}
+
+func (validator *specValidator) Next() (gauge.Item) {
+	return nil
+}
+
 func validateDataTableRange(rowCount int) error {
 	if TableRows == "" {
 		return nil

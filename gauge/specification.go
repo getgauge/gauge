@@ -223,7 +223,13 @@ func (spec *Specification) Traverse(processor ItemProcessor) {
 	processor.Specification(spec)
 	processor.Heading(spec.Heading)
 
-	for _, item := range spec.Items {
+	itemsLength := len(spec.Items)
+	for i, item := range spec.Items {
+		if i < itemsLength-1 {
+			processor.SetNext(spec.Items[i+1])
+		} else {
+			processor.SetNext(nil)
+		}
 		switch item.Kind() {
 		case ScenarioKind:
 			item.(*Scenario).Traverse(processor)
