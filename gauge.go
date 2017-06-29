@@ -85,9 +85,9 @@ func main() {
 	if err == nil {
 		os.Exit(exit)
 	}
+	flag.Parse()
 	logger.Initialize(*logLevel)
 	logger.Debug(err.Error())
-	flag.Parse()
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
