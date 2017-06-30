@@ -37,8 +37,8 @@ func ListTemplates() {
 	templates := []template{}
 	json.NewDecoder(res.Body).Decode(&templates)
 	for _, t := range templates {
-		logger.Info(t.GetName())
+		logger.Infof(t.GetName())
 	}
-	logger.Info("csharp")
-	logger.Info("\nRun `gauge init <template_name>` to create a new Gauge project.")
+	logger.Infof("csharp")
+	logger.Infof("\nRun `gauge init <template_name>` to create a new Gauge project.")
 }

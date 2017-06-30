@@ -11,13 +11,12 @@ addons:
 env:
   - GAUGE_ROOT="/tmp/gauge"
 before_install:
-  - go get github.com/tools/godep
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 install:
-  - godep restore
+  - go get -t ./...
 script:
   - go run build/make.go
-  - go test ./...
+  - go run build/make.go --test
   - echo "gauge_repository_url = https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/" >> skel/gauge.properties
   - go run build/make.go --install --prefix=$GAUGE_ROOT
   - git clone --depth=1 https://github.com/getgauge/gauge-tests

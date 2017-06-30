@@ -157,7 +157,7 @@ func writeFailedMeta(contents string) {
 func getJSON(failedMeta *failedMetadata) string {
 	j, err := json.MarshalIndent(failedMeta, "", "\t")
 	if err != nil {
-		logger.Warning("Failed to save run info. Reason: %s", err.Error())
+		logger.Warningf("Failed to save run info. Reason: %s", err.Error())
 	}
 	return string(j)
 }

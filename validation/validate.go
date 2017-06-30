@@ -90,7 +90,7 @@ func Validate(args []string) {
 		os.Exit(1)
 	}
 	if res.SpecCollection.Size() < 1 {
-		logger.Info("No specifications found in %s.", strings.Join(args, ", "))
+		logger.Infof("No specifications found in %s.", strings.Join(args, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
 			os.Exit(0)
@@ -101,7 +101,7 @@ func Validate(args []string) {
 	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
-	logger.Info("No error found.")
+	logger.Infof("No error found.")
 }
 
 //TODO : duplicate in execute.go. Need to fix runner init.

@@ -29,7 +29,11 @@ import (
 	"strings"
 	"time"
 
+	"io/ioutil"
+
 	"github.com/getgauge/common"
+	conf "github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -157,14 +161,27 @@ func installFiles(files map[string]string, installDir string) {
 }
 
 func copyGaugeConfigFiles(installPath string) {
+	err := os.MkdirAll(filepath.Join(installPath, config, "skel"), common.NewDirectoryPermissions)
+	if err != nil {
+		panic(err)
+	}
+
 	files := make(map[string]string)
-	files[filepath.Join("skel", "example.spec")] = filepath.Join(config, "skel")
-	files[filepath.Join("skel", "default.properties")] = filepath.Join(config, "skel", "env")
-	files[filepath.Join("skel", ".gitignore")] = filepath.Join(config, "skel")
-	files[filepath.Join("skel", common.GaugePropertiesFile)] = config
-	files[filepath.Join("notice.md")] = config
+	files[filepath.Join(config, "skel", "example.spec")] = skel.ExampleSpec
+	files[filepath.Join(config, "skel", "default.properties")] = skel.DefaultProperties
+	files[filepath.Join(config, "skel", ".gitignore")] = skel.Gitignore
+	files[filepath.Join(config, common.GaugePropertiesFile)] = conf.MergedProperties().String()
+	files[filepath.Join(config, "notice.md")] = skel.Notice
 	files = addInstallScripts(files)
-	installFiles(files, installPath)
+
+	for dst, content := range files {
+		installDst := filepath.Join(installPath, dst)
+		log.Printf("Write %s\n", installDst)
+		err := ioutil.WriteFile(installDst, []byte(content), common.NewFilePermissions)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func copyGaugeBinaries(installPath string) {
@@ -232,7 +249,6 @@ func main() {
 	//      buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
 	// }
 	fmt.Println("Build: " + buildMetadata)
-	runProcess("go", "generate", "./...")
 	if *test {
 		runTests(*coverage)
 	} else if *install {

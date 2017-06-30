@@ -224,7 +224,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
 	var runnerError error
 	if !refactorResponse.GetSuccess() {
-		logger.APILog.Error("Refactoring error response from runner: %v", refactorResponse.GetError())
+		logger.APILog.Errorf("Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
 	return refactorResponse.GetFilesChanged(), runnerError
@@ -342,11 +342,11 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 		}
 	}
 	for _, warning := range refactoringResult.warnings {
-		logger.Warning("%s \n", warning)
+		logger.Warningf("%s \n", warning)
 	}
-	logger.Info("%d specifications changed.\n", len(refactoringResult.specsChanged))
-	logger.Info("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
-	logger.Info("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
+	logger.Infof("%d specifications changed.\n", len(refactoringResult.specsChanged))
+	logger.Infof("%d concepts changed.\n", len(refactoringResult.conceptsChanged))
+	logger.Infof("%d files in code changed.\n", len(refactoringResult.runnerFilesChanged))
 	os.Exit(exitCode)
 }
 

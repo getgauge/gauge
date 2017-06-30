@@ -49,10 +49,10 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 	var responseMessage *gauge_messages.APIMessage
 	err := proto.Unmarshal(bytesRead, apiMessage)
 	if err != nil {
-		logger.APILog.Error("Failed to read API proto message: %s\n", err.Error())
+		logger.APILog.Errorf("Failed to read API proto message: %s\n", err.Error())
 		responseMessage = handler.getErrorMessage(err)
 	} else {
-		logger.APILog.Debug("Api Request Received: %s", apiMessage)
+		logger.APILog.Debugf("Api Request Received: %s", apiMessage)
 		messageType := apiMessage.GetMessageType()
 		switch messageType {
 		case gauge_messages.APIMessage_GetProjectRootRequest:
@@ -97,13 +97,13 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 }
 
 func (handler *gaugeAPIMessageHandler) sendMessage(message *gauge_messages.APIMessage, connection net.Conn) {
-	logger.APILog.Debug("Sending API response: %s", message)
+	logger.APILog.Debugf("Sending API response: %s", message)
 	dataBytes, err := proto.Marshal(message)
 	if err != nil {
-		logger.APILog.Error("Failed to respond to API request. Could not Marshal response %s\n", err.Error())
+		logger.APILog.Errorf("Failed to respond to API request. Could not Marshal response %s\n", err.Error())
 	}
 	if err := conn.Write(connection, dataBytes); err != nil {
-		logger.APILog.Error("Failed to respond to API request. Could not write response %s\n", err.Error())
+		logger.APILog.Errorf("Failed to respond to API request. Could not write response %s\n", err.Error())
 	}
 }
 
@@ -115,7 +115,7 @@ func (handler *gaugeAPIMessageHandler) projectRootRequestResponse(message *gauge
 func (handler *gaugeAPIMessageHandler) installationRootRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	root, err := common.GetInstallationPrefix()
 	if err != nil {
-		logger.APILog.Error("Failed to find installation root while responding to API request. %s\n", err.Error())
+		logger.APILog.Errorf("Failed to find installation root while responding to API request. %s\n", err.Error())
 		root = ""
 	}
 	installationRootResponse := &gauge_messages.GetInstallationRootResponse{InstallationRoot: root}
@@ -209,9 +209,9 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	startChan := StartAPI(false)
 	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), startChan, handler.specInfoGatherer.SpecDirs)
 	if refactoringResult.Success {
-		logger.APILog.Info("%s", refactoringResult.String())
+		logger.APILog.Infof("%s", refactoringResult.String())
 	} else {
-		logger.APILog.Error("Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
+		logger.APILog.Errorf("Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
 	}
 	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}

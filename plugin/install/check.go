@@ -53,10 +53,10 @@ func PrintUpdateInfoWithDetails() {
 	updates := checkUpdates()
 	if len(updates) > 0 {
 		for _, update := range updates {
-			logger.Info(fmt.Sprintf("%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message))
+			logger.Infof(fmt.Sprintf("%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message))
 		}
 	} else {
-		logger.Info("No Updates available.")
+		logger.Infof("No Updates available.")
 	}
 }
 
@@ -79,7 +79,7 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 	select {
 	case <-printChan:
 		if message != "" {
-			logger.Info(message)
+			logger.Infof(message)
 		}
 		wg.Done()
 	case message = <-messageChan:
@@ -120,7 +120,7 @@ func checkPluginUpdates() []UpdateInfo {
 	if err != nil {
 		return pluginsToUpdate
 	}
-	logger.Debug("Checking updates...")
+	logger.Debugf("Checking updates...")
 	for _, plugin := range plugins {
 		desc, result := getInstallDescription(plugin.Name, true)
 		if result.Error != nil {

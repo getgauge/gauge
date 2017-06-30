@@ -45,7 +45,7 @@ func initializeTemplate(templateName string) error {
 
 	wd := config.ProjectRoot
 
-	logger.Info("Copying Gauge template %s to current directory ...", templateName)
+	logger.Infof("Copying Gauge template %s to current directory ...", templateName)
 	filesAdded, err := common.MirrorDir(filepath.Join(unzippedTemplate, templateName), wd)
 	if err != nil {
 		return fmt.Errorf("Failed to copy Gauge template: %s", err.Error())
@@ -94,7 +94,7 @@ func getTemplateLangauge(templateName string) string {
 func isGaugeProject() bool {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Debug("Gauge manifest file doesn't exist. %s", err.Error())
+		logger.Debugf("Gauge manifest file doesn't exist. %s", err.Error())
 		return false
 	}
 	return m.Language != ""
@@ -103,7 +103,7 @@ func isGaugeProject() bool {
 func installRunner(templateName string) {
 	language := getTemplateLangauge(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
-		logger.Info("Compatible langauge plugin %s is not installed. Installing plugin...", language)
+		logger.Infof("Compatible langauge plugin %s is not installed. Installing plugin...", language)
 
 		install.HandleInstallResult(install.InstallPlugin(language, ""), language, true)
 	}
@@ -134,7 +134,7 @@ func InitializeProject(templateName string) {
 }
 
 func showMessage(action, filename string) {
-	logger.Info(" %s  %s", action, filename)
+	logger.Infof(" %s  %s", action, filename)
 }
 
 func createProjectTemplate(language string) error {

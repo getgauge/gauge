@@ -70,6 +70,6 @@ func writeResult(res *result.SuiteResult) {
 	if err != nil {
 		logger.Errorf("Failed to write to %s. Reason: %s", resultFile, err.Error())
 	} else {
-		logger.Debug("Last run result saved to %s", resultFile)
+		logger.Debugf("Last run result saved to %s", resultFile)
 	}
 }

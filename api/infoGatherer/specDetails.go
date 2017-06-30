@@ -87,9 +87,9 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 
 	s.specsCache.specDetails = make(map[string]*SpecDetail, 0)
 
-	logger.APILog.Info("Initializing specs cache with %d specs", len(details))
+	logger.APILog.Infof("Initializing specs cache with %d specs", len(details))
 	for _, d := range details {
-		logger.APILog.Debug("Adding specs from %s", d.Spec.FileName)
+		logger.APILog.Debugf("Adding specs from %s", d.Spec.FileName)
 		s.addToSpecsCache(d.Spec.FileName, d)
 	}
 }
@@ -108,7 +108,7 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 
 	parsedConcepts := s.getParsedConcepts()
 	s.conceptsCache.concepts = make(map[string][]*gauge.Concept, 0)
-	logger.APILog.Info("Initializing concepts cache with %d concepts", len(parsedConcepts))
+	logger.APILog.Infof("Initializing concepts cache with %d concepts", len(parsedConcepts))
 	for _, concept := range parsedConcepts {
 		logger.APILog.Debug("Adding concepts from %s", concept.FileName)
 		s.addToConceptsCache(concept.FileName, concept)
@@ -129,7 +129,7 @@ func (s *SpecInfoGatherer) initStepsCache() {
 	for filename, steps := range stepsFromSpecsMap {
 		s.addToStepsCache(filename, steps)
 	}
-	logger.APILog.Info("Initializing steps cache with %d steps", len(stepsFromSpecsMap)+len(stepsFromConceptsMap))
+	logger.APILog.Infof("Initializing steps cache with %d steps", len(stepsFromSpecsMap)+len(stepsFromConceptsMap))
 }
 
 func (s *SpecInfoGatherer) addToSpecsCache(key string, value *SpecDetail) {
@@ -207,7 +207,7 @@ func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.Step
 }
 
 func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
-	logger.APILog.Info("Spec file added / modified: %s", file)
+	logger.APILog.Infof("Spec file added / modified: %s", file)
 
 	details := s.getParsedSpecs([]string{file})
 	s.specsCache.mutex.Lock()
@@ -230,12 +230,12 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 
-	logger.APILog.Info("Concept file added / modified: %s", file)
+	logger.APILog.Infof("Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
 	concepts, parseErrors := parser.AddConcepts(file, s.conceptDictionary)
 	if len(parseErrors) > 0 {
 		for _, err := range parseErrors {
-			logger.APILog.Error("Error parsing concepts: ", err)
+			logger.APILog.Errorf("Error parsing concepts: %s", err)
 		}
 		return
 	}
@@ -249,14 +249,14 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 }
 
 func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
-	logger.APILog.Info("Spec file removed: %s", file)
+	logger.APILog.Infof("Spec file removed: %s", file)
 	s.specsCache.mutex.Lock()
 	defer s.specsCache.mutex.Unlock()
 	delete(s.specsCache.specDetails, file)
 }
 
 func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
-	logger.APILog.Info("Concept file removed: %s", file)
+	logger.APILog.Infof("Concept file removed: %s", file)
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 	for _, c := range s.conceptsCache.concepts[file] {
@@ -299,7 +299,7 @@ func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.W
 
 	file, err := filepath.Abs(event.Name)
 	if err != nil {
-		logger.APILog.Error("Failed to get abs file path for %s: %s", event.Name, err)
+		logger.APILog.Errorf("Failed to get abs file path for %s: %s", event.Name, err)
 		return
 	}
 	if util.IsSpec(file) || util.IsConcept(file) || util.IsDir(file) {
@@ -321,7 +321,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
-		logger.APILog.Error("Error creating fileWatcher: %s", err)
+		logger.APILog.Errorf("Error creating fileWatcher: %s", err)
 	}
 	defer watcher.Close()
 
@@ -332,7 +332,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 			case event := <-watcher.Events:
 				s.handleEvent(event, watcher)
 			case err := <-watcher.Errors:
-				logger.APILog.Error("Error event while watching specs", err)
+				logger.APILog.Errorf("Error event while watching specs %s", err)
 			}
 		}
 	}()
@@ -421,7 +421,7 @@ func getParsedStepValues(steps []*gauge.Step) []*gauge.StepValue {
 func handleParseFailures(parseResults []*parser.ParseResult) {
 	for _, result := range parseResults {
 		if !result.Ok {
-			logger.APILog.Error("Spec Parse failure: %s", result.Errors())
+			logger.APILog.Errorf("Spec Parse failure: %s", result.Errors())
 			if len(result.CriticalErrors) > 0 {
 				os.Exit(1)
 			}
@@ -432,15 +432,15 @@ func handleParseFailures(parseResults []*parser.ParseResult) {
 func addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
 	err := watcher.Add(dir)
 	if err != nil {
-		logger.APILog.Error("Unable to add directory %v to file watcher: %s", dir, err)
+		logger.APILog.Errorf("Unable to add directory %v to file watcher: %s", dir, err)
 	} else {
-		logger.APILog.Info("Watching directory: %s", dir)
+		logger.APILog.Infof("Watching directory: %s", dir)
 		files, _ := ioutil.ReadDir(dir)
-		logger.APILog.Debug("Found %d files", len(files))
+		logger.APILog.Debugf("Found %d files", len(files))
 	}
 }
 
 func removeWatcherOn(watcher *fsnotify.Watcher, path string) {
-	logger.APILog.Info("Removing watcher on : %s", path)
+	logger.APILog.Infof("Removing watcher on : %s", path)
 	watcher.Remove(path)
 }

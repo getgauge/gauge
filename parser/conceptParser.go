@@ -224,7 +224,7 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	for _, conceptFile := range conceptFiles {
 		if _, errs := AddConcepts(conceptFile, conceptsDictionary); len(errs) > 0 {
 			for _, err := range errs {
-				logger.APILog.Error("Concept parse failure: %s %s", conceptFile, err)
+				logger.APILog.Errorf("Concept parse failure: %s %s", conceptFile, err)
 			}
 			res.ParseErrors = append(res.ParseErrors, errs...)
 			res.Ok = false
@@ -242,7 +242,7 @@ func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary)
 	concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 	if parseRes != nil && parseRes.Warnings != nil {
 		for _, warning := range parseRes.Warnings {
-			logger.Warning(warning.String())
+			logger.Warningf(warning.String())
 		}
 	}
 	for _, conceptStep := range concepts {

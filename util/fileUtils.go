@@ -210,7 +210,7 @@ func GetPathToFile(path string) string {
 func Remove(dir string) {
 	err := common.Remove(dir)
 	if err != nil {
-		logger.Warning("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+		logger.Warningf("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
 	}
 }
 

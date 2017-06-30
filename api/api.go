@@ -95,7 +95,7 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 	for {
 		select {
 		case runner := <-startChan.RunnerChan:
-			logger.Info("Got a kill message. Killing runner.")
+			logger.Infof("Got a kill message. Killing runner.")
 			runner.Kill()
 		case err := <-startChan.ErrorChan:
 			logger.Fatalf("Killing Gauge daemon. %v", err.Error())

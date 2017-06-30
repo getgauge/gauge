@@ -49,7 +49,7 @@ import (
 func Start() {
 	port, err := conn.GetPortFromEnvironmentVariable(common.APIV2PortEnvVariableName)
 	if err != nil {
-		logger.APILog.Error("Failed to start execution API Service. %s \n", err.Error())
+		logger.APILog.Errorf("Failed to start execution API Service. %s \n", err.Error())
 		return
 	}
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{Port: port})

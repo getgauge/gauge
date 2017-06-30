@@ -59,7 +59,7 @@ func send(category, action, label, medium string) {
 	}
 
 	if err != nil {
-		logger.Warning("Unable to create ga client, %s", err)
+		logger.Warningf("Unable to create ga client, %s", err)
 	}
 
 	ev := ga.NewEvent(category, action)
@@ -69,7 +69,7 @@ func send(category, action, label, medium string) {
 
 	err = client.Send(ev)
 	if err != nil {
-		logger.Warning("Unable to send telemetry data, %s", err)
+		logger.Warningf("Unable to send analytics data, %s", err)
 	}
 }
 
@@ -234,9 +234,9 @@ type logEnabledRoundTripper struct {
 func (r logEnabledRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	dump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		logger.Warning("Unable to dump telemetry request, %s", err)
+		logger.Warningf("Unable to dump analytics request, %s", err)
 	}
 
-	logger.Debug(fmt.Sprintf("%q", dump))
+	logger.Debugf(fmt.Sprintf("%q", dump))
 	return http.DefaultTransport.RoundTrip(req)
 }
