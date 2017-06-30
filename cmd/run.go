@@ -87,7 +87,7 @@ func loadLastState(cmd *cobra.Command) {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	logger.Info("Executing => gauge %s\n", strings.Join(lastState, " "))
+	logger.Infof("Executing => gauge %s\n", strings.Join(lastState, " "))
 	cmd.Parent().SetArgs(lastState)
 	os.Args = append([]string{"gauge"}, lastState...)
 	resetFlags()

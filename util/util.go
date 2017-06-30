@@ -44,19 +44,19 @@ func IsWindows() bool {
 // DownloadAndUnzip downloads the zip file from given download link and unzips it.
 // Returns the unzipped file path.
 func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
-	logger.Info("Downloading %s", filepath.Base(downloadLink))
-	logger.Debug("Download URL %s", downloadLink)
+	logger.Infof("Downloading %s", filepath.Base(downloadLink))
+	logger.Debugf("Download URL %s", downloadLink)
 	downloadedFile, err := Download(downloadLink, tempDir, "", false)
 	if err != nil {
 		return "", err
 	}
-	logger.Debug("Downloaded to %s", downloadedFile)
+	logger.Debugf("Downloaded to %s", downloadedFile)
 
 	unzippedPluginDir, err := common.UnzipArchive(downloadedFile, tempDir)
 	if err != nil {
 		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
 	}
-	logger.Debug("Unzipped to => %s\n", unzippedPluginDir)
+	logger.Debugf("Unzipped to => %s\n", unzippedPluginDir)
 
 	return unzippedPluginDir, nil
 }
@@ -111,8 +111,8 @@ func SetWorkingDir(workingDir string) {
 func ConvertToBool(value, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
-		logger.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
-		logger.Warning("Using default value %v for property %s.", defaultValue, property)
+		logger.Warningf("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		logger.Warningf("Using default value %v for property %s.", defaultValue, property)
 		return defaultValue
 	}
 	return boolValue

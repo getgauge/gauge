@@ -228,7 +228,7 @@ func HandleParseResult(results ...*ParseResult) bool {
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Warning("[ParseWarning] %s", warning)
+				logger.Warningf("[ParseWarning] %s", warning)
 			}
 		}
 	}

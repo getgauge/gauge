@@ -41,21 +41,21 @@ const (
 var level logging.Level
 var isWindows bool
 
-// Info logs INFO messages
-func Info(msg string, args ...interface{}) {
-	GaugeLog.Info(msg, args...)
+// Infof logs INFO messages
+func Infof(msg string, args ...interface{}) {
+	GaugeLog.Infof(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
 // Errorf logs ERROR messages
 func Errorf(msg string, args ...interface{}) {
-	GaugeLog.Error(msg, args...)
+	GaugeLog.Errorf(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
-// Warning logs WARNING messages
-func Warning(msg string, args ...interface{}) {
-	GaugeLog.Warning(msg, args...)
+// Warningf logs WARNING messages
+func Warningf(msg string, args ...interface{}) {
+	GaugeLog.Warningf(msg, args...)
 	fmt.Println(fmt.Sprintf(msg, args...))
 }
 
@@ -65,9 +65,9 @@ func Fatalf(msg string, args ...interface{}) {
 	GaugeLog.Fatalf(msg, args...)
 }
 
-// Debug logs DEBUG messages
-func Debug(msg string, args ...interface{}) {
-	GaugeLog.Debug(msg, args...)
+// Debugf logs DEBUG messages
+func Debugf(msg string, args ...interface{}) {
+	GaugeLog.Debugf(msg, args...)
 	if level == logging.DEBUG {
 		fmt.Println(fmt.Sprintf(msg, args...))
 	}
@@ -149,6 +149,6 @@ func loggingLevel(logLevel string) logging.Level {
 // HandleWarningMessages logs multiple messages in WARNING mode
 func HandleWarningMessages(warnings []string) {
 	for _, warning := range warnings {
-		Warning(warning)
+		Warningf(warning)
 	}
 }

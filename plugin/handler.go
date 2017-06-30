@@ -56,7 +56,7 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 
 func (gp *GaugePlugins) killPlugin(pluginID string) {
 	plugin := gp.pluginsMap[pluginID]
-	logger.Debug("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	logger.Debugf("Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
 		logger.Errorf("Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())

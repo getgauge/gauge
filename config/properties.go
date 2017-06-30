@@ -159,9 +159,18 @@ func newProperty(key, defaultValue, description string) *property {
 
 func writeConfig(p *properties) error {
 	dir, err := common.GetConfigurationDir()
-	f, err := os.OpenFile(filepath.Join(dir, common.GaugePropertiesFile), os.O_WRONLY, os.ModeExclusive)
 	if err != nil {
 		return err
+	}
+	gaugePropertiesFile := filepath.Join(dir, common.GaugePropertiesFile)
+	var f *os.File
+	if _, err = os.Stat(gaugePropertiesFile); err != nil {
+		f, err = os.Create(gaugePropertiesFile)
+	} else {
+		f, err = os.OpenFile(gaugePropertiesFile, os.O_WRONLY, os.ModeExclusive)
+		if err != nil {
+			return err
+		}
 	}
 	defer f.Close()
 	_, err = p.Write(f)

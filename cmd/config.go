@@ -60,6 +60,6 @@ func exit(text string, err error) {
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	logger.Info(text)
+	logger.Infof(text)
 	os.Exit(0)
 }

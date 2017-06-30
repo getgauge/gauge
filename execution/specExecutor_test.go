@@ -482,7 +482,7 @@ func TestExecuteFailsWhenSpecHasParseErrors(t *testing.T) {
 	res := se.execute(false, true, false)
 
 	if !res.GetFailed() {
-		t.Errorf("Expected result.Failed=true, got %s", res.GetFailed())
+		t.Errorf("Expected result.Failed=true, got %t", res.GetFailed())
 	}
 
 	c := len(res.Errors)
@@ -499,7 +499,7 @@ func TestExecuteSkipsWhenSpecHasErrors(t *testing.T) {
 	res := se.execute(false, true, false)
 
 	if !res.Skipped {
-		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+		t.Errorf("Expected result.Skipped=true, got %t", res.Skipped)
 	}
 }
 
@@ -510,7 +510,7 @@ func TestExecuteSkipsWhenSpecHasNoScenario(t *testing.T) {
 	res := se.execute(false, true, false)
 
 	if !res.Skipped {
-		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+		t.Errorf("Expected result.Skipped=true, got %t", res.Skipped)
 	}
 	e := res.Errors[0]
 	expected := "example.spec:0 No scenarios found in spec => 'Example Spec'"
@@ -568,7 +568,7 @@ func TestExecuteSkipsWhenSpecDatastoreInitFails(t *testing.T) {
 	res := se.execute(true, false, false)
 
 	if !res.Skipped {
-		t.Errorf("Expected result.Skipped=true, got %s", res.Skipped)
+		t.Errorf("Expected result.Skipped=true, got %t", res.Skipped)
 	}
 
 	e := res.Errors[0]

@@ -99,13 +99,13 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 		select {
 		case done := <-exited:
 			if done {
-				logger.Debug("Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
+				logger.Debugf("Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			logger.Warning("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
+			logger.Warningf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
 			err := p.pluginCmd.Process.Kill()
 			if err != nil {
-				logger.Warning("Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
+				logger.Warningf("Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
 			}
 			return err
 		}
@@ -443,8 +443,8 @@ func (a byPath) Less(i, j int) bool {
 func GetPluginsInfo() []PluginInfo {
 	allPluginsWithVersion, err := GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		logger.Info("No plugins found")
-		logger.Info("Plugins can be installed with `gauge --install {plugin-name}`")
+		logger.Infof("No plugins found")
+		logger.Infof("Plugins can be installed with `gauge --install {plugin-name}`")
 		os.Exit(0)
 	}
 	return allPluginsWithVersion

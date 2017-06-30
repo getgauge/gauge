@@ -140,13 +140,13 @@ func SetProjectRoot(args []string) error {
 func UniqueID() string {
 	configDir, err := common.GetConfigurationDir()
 	if err != nil {
-		APILog.Warning("Unable to read config dir, %s", err)
+		APILog.Warningf("Unable to read config dir, %s", err)
 		return ""
 	}
 	idFile := filepath.Join(configDir, "id")
 	s, err := ioutil.ReadFile(idFile)
 	if err != nil {
-		APILog.Warning("Unable to read %s", idFile)
+		APILog.Warningf("Unable to read %s", idFile)
 		return ""
 	}
 	return string(s)
@@ -159,7 +159,7 @@ func setCurrentProjectEnvVariable() error {
 func convertToTime(value string, defaultValue time.Duration, name string) time.Duration {
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to time", name, value)
+		APILog.Warningf("Incorrect value for %s in property file. Cannot convert %s to time", name, value)
 		return defaultValue
 	}
 	return time.Millisecond * time.Duration(intValue)
@@ -168,7 +168,7 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 func convertToBool(value string, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
-		APILog.Warning("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		APILog.Warningf("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
 		return defaultValue
 	}
 	return boolValue
@@ -177,7 +177,7 @@ func convertToBool(value string, property string, defaultValue bool) bool {
 var getFromConfig = func(propertyName string) string {
 	config, err := common.GetGaugeConfiguration()
 	if err != nil {
-		APILog.Warning("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
+		APILog.Warningf("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
 		return ""
 	}
 	return config[propertyName]

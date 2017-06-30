@@ -111,7 +111,7 @@ func (r *MultithreadedRunner) Connection() net.Conn {
 
 func (r *MultithreadedRunner) killRunner() error {
 	if r.r.Cmd != nil && r.r.Cmd.Process != nil {
-		logger.Warning("Killing runner with PID:%d forcefully", r.r.Cmd.Process.Pid)
+		logger.Warningf("Killing runner with PID:%d forcefully", r.r.Cmd.Process.Pid)
 		return r.r.Cmd.Process.Kill()
 	}
 	return nil
@@ -229,7 +229,7 @@ func (r *LanguageRunner) Kill() error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			logger.Warning("Killing runner with PID:%d forcefully", r.Cmd.Process.Pid)
+			logger.Warningf("Killing runner with PID:%d forcefully", r.Cmd.Process.Pid)
 			return r.killRunner()
 		}
 	}
@@ -326,7 +326,7 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 		r.Cmd.ProcessState = pState
 		r.mutex.Unlock()
 		if err != nil {
-			logger.Debug("Runner exited with error: %s", err)
+			logger.Debugf("Runner exited with error: %s", err)
 			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 		if !pState.Success() {
@@ -397,9 +397,9 @@ func Start(manifest *manifest.Manifest, reporter reporter.Reporter, killChannel 
 func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) (Runner, error) {
 	connection, connErr := h.AcceptConnection(config.RunnerConnectionTimeout(), runner.errorChannel)
 	if connErr != nil {
-		logger.Debug("Runner connection error: %s", connErr)
+		logger.Debugf("Runner connection error: %s", connErr)
 		if err := runner.killRunner(); err != nil {
-			logger.Debug("Error while killing runner: %s", err)
+			logger.Debugf("Error while killing runner: %s", err)
 		}
 		return nil, connErr
 	}

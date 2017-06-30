@@ -115,6 +115,6 @@ func isValidGaugeProject(args []string) error {
 
 func setGlobalFlags() {
 	logger.Initialize(logLevel)
-	logger.Debug("Gauge Install ID: %s", config.UniqueID())
+	logger.Debugf("Gauge Install ID: %s", config.UniqueID())
 	util.SetWorkingDir(dir)
 }

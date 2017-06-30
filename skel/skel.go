@@ -1,0 +1,95 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
+package skel
+
+var DefaultProperties = `# default.properties
+# properties set here will be available to the test execution as environment variables
+
+# sample_key = sample_value
+
+# The path to the gauge reports directory. Should be either relative to the project directory or an absolute path
+gauge_reports_dir = reports
+
+# Set as false if gauge reports should not be overwritten on each execution. A new time-stamped directory will be created on each execution.
+overwrite_reports = true
+
+# Set to false to disable screenshots on failure in reports.
+screenshot_on_failure = true
+
+# The path to the gauge logs directory. Should be either relative to the project directory or an absolute path
+logs_directory = logs
+
+# Set to true to use multithreading for parallel execution
+enable_multithreading = false
+
+# Possible values for this property are 'suite', 'spec' or 'scenario'.
+# 'scenario' clears the objects after the execution of each scenario, new objects are created for next execution.
+gauge_clear_state_level = scenario
+`
+var ExampleSpec = `Specification Heading
+=====================
+
+This is an executable specification file. This file follows markdown syntax.
+Every heading in this file denotes a scenario. Every bulleted point denotes a step.
+
+To execute this specification, run
+
+    gauge specs
+
+
+* Vowels in English language are "aeiou".
+
+Vowel counts in single word
+---------------------------
+
+tags: single word
+
+* The word "gauge" has "3" vowels.
+
+
+Vowel counts in multiple word
+-----------------------------
+
+This is the second scenario in this specification
+
+Here's a step that takes a table
+
+* Almost all words have vowels
+     |Word  |Vowel Count|
+     |------|-----------|
+     |Gauge |3          |
+     |Mingle|2          |
+     |Snap  |1          |
+     |GoCD  |1          |
+     |Rhythm|0          |
+`
+var Notice = `
+| Dependency Name | Copyright Information | Description |	Repo URL | License Type	| License URL |	Forked from |
+|-----------------|-----------------------|-------------|----------|--------------|-------------|-------------|
+|Goproperties|Copyright (c) 2012 The Goproperties Authors.|Simple library for reading .properties (java properties) files for Go	|github.com/dmotylev/goproperties	|BSD Styled|	https://raw.githubusercontent.com/dmotylev/goproperties/master/LICENSE|
+|Gauge Common|	Copyright 2015 ThoughtWorks, Inc|	|	github.com/getgauge/common|	GPLv3	|||
+|mflag	|Copyright (c) 2014 The Docker & Go Authors.	|mflag (aka multiple-flag) implements command-line flag parsing.It's a hacky fork of the official golang package(http://golang.org/pkg/flag/)||BSD Styled	|https://raw.githubusercontent.com/getgauge/mflag/master/LICENSE	|https://github.com/docker/docker/tree/master/pkg/mflag|
+|terminal|	Copyright (c) 2013 Meng Zhang	|Colorful terminal output for Golang|github.com/wsxiaoys/terminal	|BSD Styled|https://raw.githubusercontent.com/wsxiaoys/terminal/master/LICENSE||
+|gocheck| Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>	|Rich testing for the Go language	|gopkg.in/check.v1	|Simplified BSD	|https://raw.githubusercontent.com/go-check/check/v1/LICENSE||
+|protobuf	|Copyright 2010 The Go Authors.	|Go support for Google's protocol buffers	|https://github.com/golang/protobuf	|BSD Styled	|https://raw.githubusercontent.com/golang/protobuf/master/LICENSE|
+`
+
+var Gitignore = `.gauge
+logs
+reports
+`

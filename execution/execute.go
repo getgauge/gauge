@@ -100,7 +100,7 @@ func ExecuteSpecs(specDirs []string) int {
 		return 1
 	}
 	if res.SpecCollection.Size() < 1 {
-		logger.Info("No specifications found in %s.", strings.Join(specDirs, ", "))
+		logger.Infof("No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
 			return 0
@@ -159,9 +159,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 		nPassedScenarios = 0
 	}
 
-	logger.Info("Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Info("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Info("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Infof("Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Infof("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Infof("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	if suiteResult.IsFailed || !isParsingOk {
 		return 1
