@@ -85,7 +85,7 @@ func main() {
 	if err == nil {
 		os.Exit(exit)
 	}
-	os.Stderr.Write([]byte("[DEPRECATED] This usage is deprecated and will be removed soon. Run `gauge help --legacy` for more info.\n"))
+	os.Stderr.Write([]byte("[DEPRECATED] This usage will be removed soon. Run `gauge help --legacy` for more info.\n"))
 	flag.Parse()
 	logger.Initialize(*logLevel)
 	util.SetWorkingDir(*workingDir)
@@ -162,7 +162,6 @@ func main() {
 			gaugeConnectionHandler := api.Start(specDirs)
 			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
-			logger.Info("Warning: This usage of gauge command is deprecated, it will be removed soon. Use 'gauge run specs/'.")
 			track.Execution(*parallel, *executeTags != "", *sort, *simpleConsoleOutput, *verbosity, *strategy)
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)
