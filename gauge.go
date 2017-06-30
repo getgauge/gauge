@@ -85,7 +85,7 @@ func main() {
 	if err == nil {
 		os.Exit(exit)
 	}
-	fmt.Println("[DEPRECATED] This usage is deprecated and will be removed soon. Run `gauge help --legacy` for more info.")
+	os.Stderr.Write([]byte("[DEPRECATED] This usage is deprecated and will be removed soon. Run `gauge help --legacy` for more info.\n"))
 	flag.Parse()
 	logger.Initialize(*logLevel)
 	util.SetWorkingDir(*workingDir)
