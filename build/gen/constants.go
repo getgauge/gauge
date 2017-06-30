@@ -48,7 +48,7 @@ func createGaugeProperties() {
 		log.Fatalf("Error creating %s\n", outF)
 	}
 	defer out.Close()
-	if _, err := (config.NewProperties()).Write(out); err != nil {
+	if _, err := (config.GaugeProperties()).Write(out); err != nil {
 		log.Fatalf("Error Writing %s\n", outF)
 	}
 }
