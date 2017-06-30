@@ -69,7 +69,7 @@ func printUpdateInfo(print chan bool, wg *sync.WaitGroup) {
 	go func() {
 		updates := checkUpdates()
 		if len(updates) > 0 {
-			message <- "Updates are available. Run gauge --check-updates for more info."
+			message <- "Updates are available. Run `gauge update -c` for more info."
 		}
 	}()
 	waitToPrint(message, print, "", wg)
