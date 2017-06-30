@@ -107,6 +107,11 @@ func Update(name, value string) error {
 	return writeConfig(p)
 }
 
+func Merge() error {
+	p := GetProperties()
+	return writeConfig(p)
+}
+
 func GetProperty(name string) (*property, error) {
 	p := GetProperties()
 	return p.get(name)

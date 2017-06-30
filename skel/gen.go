@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/satori/go.uuid"
 )
@@ -24,7 +25,7 @@ func CreateSkelFilesIfRequired() {
 			return
 		}
 	}
-	writeFile(filepath.Join(p, common.GaugePropertiesFile), gaugeProperties)
+	config.Merge()
 	writeFile(filepath.Join(p, "notice.md"), notice)
 	writeFile(filepath.Join(p, "skel", "example.spec"), exampleSpec)
 	writeFile(filepath.Join(p, "skel", "env", "default.properties"), defaultProperties)
