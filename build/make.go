@@ -161,7 +161,7 @@ func copyGaugeConfigFiles(installPath string) {
 	files[filepath.Join("skel", "example.spec")] = filepath.Join(config, "skel")
 	files[filepath.Join("skel", "default.properties")] = filepath.Join(config, "skel", "env")
 	files[filepath.Join("skel", ".gitignore")] = filepath.Join(config, "skel")
-	files[filepath.Join("skel", "gauge.properties")] = config
+	files[filepath.Join("skel", common.GaugePropertiesFile)] = config
 	files[filepath.Join("notice.md")] = config
 	files = addInstallScripts(files)
 	installFiles(files, installPath)
