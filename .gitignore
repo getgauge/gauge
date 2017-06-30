@@ -38,3 +38,4 @@ gauge.iml
 /specs/
 /step_implementations/
 skel/skel.go
+skel/gauge.properties
