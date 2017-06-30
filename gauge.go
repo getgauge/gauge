@@ -88,7 +88,6 @@ func main() {
 	fmt.Println("[DEPRECATED] This usage is deprecated and will be removed soon. Run `gauge help --legacy` for more info.")
 	flag.Parse()
 	logger.Initialize(*logLevel)
-	logger.Debug(err.Error())
 	util.SetWorkingDir(*workingDir)
 	initPackageFlags()
 	validGaugeProject := true
