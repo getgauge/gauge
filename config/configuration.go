@@ -40,8 +40,8 @@ const (
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
 	checkUpdates            = "check_updates"
-	analyticsEnabled        = "gauge_analytics_enabled"
-	analyticsLoggingEnabled = "gauge_analytics_log_enabled"
+	telemetryEnabled        = "gauge_telemetry_enabled"
+	telemetryLoggingEnabled = "gauge_telemetry_log_enabled"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -107,16 +107,16 @@ func GaugeTemplatesUrl() string {
 	return getFromConfig(gaugeTemplatesURL)
 }
 
-// AnalyticsEnabled determines if sending data to analytics is enabled
-func AnalyticsEnabled() bool {
-	e := getFromConfig(analyticsEnabled)
-	return convertToBool(e, analyticsEnabled, true)
+// TelemetryEnabled determines if sending data to gauge telemetry engine is enabled
+func TelemetryEnabled() bool {
+	e := getFromConfig(telemetryEnabled)
+	return convertToBool(e, telemetryEnabled, true)
 }
 
-// AnalyticsLogEnabled determines if requests to analytics have to be logged
-func AnalyticsLogEnabled() bool {
-	log := getFromConfig(analyticsLoggingEnabled)
-	return convertToBool(log, analyticsLoggingEnabled, false)
+// TelemetryLogEnabled determines if requests to gauge telemetry engine have to be logged
+func TelemetryLogEnabled() bool {
+	log := getFromConfig(telemetryLoggingEnabled)
+	return convertToBool(log, telemetryLoggingEnabled, false)
 }
 
 // SetProjectRoot sets project root location in ENV.

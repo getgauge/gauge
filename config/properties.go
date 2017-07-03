@@ -80,8 +80,8 @@ func Properties() *properties {
 		pluginKillTimeOut:       newProperty(pluginKillTimeOut, "4000", "Timeout in milliseconds for a plugin to stop after a kill message has been sent."),
 		runnerRequestTimeout:    newProperty(runnerRequestTimeout, "30000", "Timeout in milliseconds for requests from the language runner."),
 		checkUpdates:            newProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
-		analyticsEnabled:        newProperty(analyticsEnabled, "false", "Allow Gauge to collect anonymous usage statistics"),
-		analyticsLoggingEnabled: newProperty(analyticsLoggingEnabled, "false", "Log request sent to Gauge analytics engine"),
+		telemetryEnabled:        newProperty(telemetryEnabled, "false", "Allow Gauge to collect anonymous usage statistics"),
+		telemetryLoggingEnabled: newProperty(telemetryLoggingEnabled, "false", "Log request sent to Gauge telemetry engine"),
 	}}
 }
 
@@ -106,13 +106,12 @@ func Update(name, value string) error {
 	return writeConfig(p)
 }
 
-func UpdateAnalytics(value string) error {
-	p := MergedProperties()
-	err := p.set(analyticsEnabled, value)
-	if err != nil {
-		return err
-	}
-	return writeConfig(p)
+func UpdateTelemetry(value string) error {
+	return Update(telemetryEnabled, value)
+}
+
+func UpdateTelemetryLoggging(value string) error {
+	return Update(telemetryLoggingEnabled, value)
 }
 
 func Merge() error {

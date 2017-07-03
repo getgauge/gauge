@@ -20,36 +20,38 @@ package cmd
 import (
 	"fmt"
 
+	"strconv"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/spf13/cobra"
 )
 
 var (
-	analyticsCmd = &cobra.Command{
-		Use:   "analytics [command]",
-		Short: "Turn analytics on/off",
-		Long:  "Turn analytics on/off.",
-		Example: `  gauge analytics on
-  gauge analytics off
-  gauge analytics`,
+	telemetryCmd = &cobra.Command{
+		Use:   "telemetry [command]",
+		Short: "Configure telemetry options",
+		Long:  "Configure telemetry options.",
+		Example: `  gauge telemetry on
+  gauge telemetry off
+  gauge telemetry`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
 			if len(args) != 0 {
 				logger.Fatalf(cmd.UsageString())
 			}
-			fmt.Println(map[bool]string{true: "on", false: "off"}[config.AnalyticsEnabled()])
+			fmt.Println(map[bool]string{true: "on", false: "off"}[config.TelemetryEnabled()])
 		},
 	}
 
 	onCmd = &cobra.Command{
 		Use:     "on",
-		Short:   "Turn analytics on",
-		Long:    "Turn analytics on.",
-		Example: "  gauge analytics on",
+		Short:   "Turn telemetry on",
+		Long:    "Turn telemetry on.",
+		Example: "  gauge telemetry on",
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
-			if err := config.UpdateAnalytics("true"); err != nil {
+			if err := config.UpdateTelemetry("true"); err != nil {
 				logger.Fatalf(err.Error())
 			}
 		},
@@ -57,20 +59,40 @@ var (
 
 	offCmd = &cobra.Command{
 		Use:     "off",
-		Short:   "Turn analytics off",
-		Long:    "Turn analytics off.",
-		Example: "  gauge analytics off",
+		Short:   "Turn telemetry off",
+		Long:    "Turn telemetry off.",
+		Example: "  gauge telemetry off",
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
-			if err := config.UpdateAnalytics("false"); err != nil {
+			if err := config.UpdateTelemetry("false"); err != nil {
 				logger.Fatalf(err.Error())
 			}
+		},
+	}
+
+	logCmd = &cobra.Command{
+		Use:   "log <value>",
+		Short: "Enable/disable telemetry logging",
+		Long:  "Enable/disable telemetry logging.",
+		Example: `  gauge telemetry log true
+  gauge telemetry log false`,
+		Run: func(cmd *cobra.Command, args []string) {
+			setGlobalFlags()
+			if len(args) < 1 {
+				fmt.Println(config.TelemetryLogEnabled())
+				return
+			}
+			if _, err := strconv.ParseBool(args[0]); err != nil {
+				logger.Fatalf("Error: Invalid argument. The valid options are true or false.")
+			}
+			config.UpdateTelemetryLoggging(args[0])
 		},
 	}
 )
 
 func init() {
-	analyticsCmd.AddCommand(onCmd)
-	analyticsCmd.AddCommand(offCmd)
-	GaugeCmd.AddCommand(analyticsCmd)
+	telemetryCmd.AddCommand(onCmd)
+	telemetryCmd.AddCommand(offCmd)
+	telemetryCmd.AddCommand(logCmd)
+	GaugeCmd.AddCommand(telemetryCmd)
 }
