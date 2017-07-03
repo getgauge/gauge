@@ -49,5 +49,5 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(initCmd)
-	initCmd.Flags().BoolVarP(&templates, "templates", "t", false, "Lists all the Gauge templates available")
+	initCmd.Flags().BoolVarP(&templates, "templates", "t", false, "Lists all available templates")
 }
