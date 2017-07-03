@@ -41,6 +41,7 @@ func main() {
 	}
 	goPath := os.Getenv("GOPATH")
 	outF := filepath.Join(goPath, "src", "github.com", "getgauge", "gauge", "skel", "skel.go")
+	gaugePath := filepath.Join(goPath, "src", "github.com", "getgauge", "gauge")
 	out, err := os.Create(outF)
 	if err != nil {
 		log.Fatalf("Error creating %s\n", outF)
@@ -48,7 +49,7 @@ func main() {
 	defer out.Close()
 	out.WriteString("package skel\n\n")
 	for k, v := range filesToRead {
-		fp := filepath.Join(append([]string{"..", ".."}, v...)...)
+		fp := filepath.Join(append([]string{gaugePath}, v...)...)
 		c, err := ioutil.ReadFile(fp)
 		if err != nil {
 			log.Fatalf("Error reading file %s\n", fp)
