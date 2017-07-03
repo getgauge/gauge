@@ -9,7 +9,7 @@ import (
 var (
 	propertyCmd = &cobra.Command{
 		Use:     "config [flags] [args]",
-		Short:   "Manage global config properties.",
+		Short:   "Manage global config properties",
 		Long:    "Manage global config properties.",
 		Example: `  gauge config check_updates false`,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -20,7 +20,7 @@ var (
 				if machineReadable {
 					f = &config.JsonFormatter{}
 				}
-				s, err := config.GetProperties().Format(f)
+				s, err := config.MergedProperties().Format(f)
 				if err != nil {
 					logger.Fatalf(err.Error())
 				}
