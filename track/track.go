@@ -39,7 +39,7 @@ const (
 )
 
 func send(category, action, label, medium string) {
-	if !config.AnalyticsEnabled() {
+	if !config.TelemetryEnabled() {
 		return
 	}
 	client, err := ga.NewClient(gaTrackingID)
@@ -51,7 +51,7 @@ func send(category, action, label, medium string) {
 	client.CampaignMedium(medium)
 	client.CampaignSource(appName)
 
-	if config.AnalyticsLogEnabled() {
+	if config.TelemetryLogEnabled() {
 		client.HttpClient = newlogEnabledHTTPClient()
 	}
 
@@ -66,7 +66,7 @@ func send(category, action, label, medium string) {
 
 	err = client.Send(ev)
 	if err != nil {
-		logger.Warning("Unable to send analytics data, %s", err)
+		logger.Warning("Unable to send telemetry data, %s", err)
 	}
 }
 
@@ -196,7 +196,7 @@ type logEnabledRoundTripper struct {
 func (r logEnabledRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	dump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		logger.Warning("Unable to dump analytics request, %s", err)
+		logger.Warning("Unable to dump telemetry request, %s", err)
 	}
 
 	logger.Debug(fmt.Sprintf("%q", dump))

@@ -113,8 +113,8 @@ plugin_kill_timeout = 4000
 # Timeout in milliseconds for requests from the language runner.
 runner_request_timeout = 30000
 
-# Log request sent to Gauge analytics engine
-gauge_analytics_log_enabled = false
+# Log request sent to Gauge telemetry engine
+gauge_telemetry_log_enabled = false
 
 # Url to get plugin versions
 gauge_repository_url = https://downloads.getgauge.io/plugin
@@ -129,7 +129,7 @@ runner_connection_timeout = 30000
 check_updates = true
 
 # Allow Gauge to collect anonymous usage statistics
-gauge_analytics_enabled = false
+gauge_telemetry_enabled = false
 `
 	want := strings.Split(propertiesContent, "\n")
 	sort.Strings(want)
