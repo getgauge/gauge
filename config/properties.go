@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package config
 
 import (
@@ -33,19 +50,19 @@ func (p *properties) set(k, v string) error {
 	return fmt.Errorf("Config '%s' doesn't exist.", k)
 }
 
-func (p *properties) get(k string) (*property, error) {
+func (p *properties) get(k string) (string, error) {
 	if _, ok := p.p[k]; ok {
-		return p.p[k], nil
+		return p.p[k].Value, nil
 	}
-	return nil, fmt.Errorf("Config '%s' doesn't exist.", k)
+	return "", fmt.Errorf("Config '%s' doesn't exist.", k)
 }
 
-func (p *properties) Format(f Formatter) (string, error) {
+func (p *properties) Format(f formatter) (string, error) {
 	var all []property
 	for _, v := range p.p {
 		all = append(all, *v)
 	}
-	return f.Format(all)
+	return f.format(all)
 }
 
 func (p *properties) String() string {
@@ -118,8 +135,17 @@ func Merge() error {
 	return writeConfig(MergedProperties())
 }
 
-func GetProperty(name string) (*property, error) {
+func GetProperty(name string) (string, error) {
 	return MergedProperties().get(name)
+}
+
+func List(machineReadable bool) (string, error) {
+	var f formatter
+	f = textFormatter{}
+	if machineReadable {
+		f = &jsonFormatter{}
+	}
+	return MergedProperties().Format(f)
 }
 
 func newProperty(key, defaultValue, description string) *property {

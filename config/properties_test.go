@@ -33,7 +33,7 @@ type dummyFormatter struct {
 	p []string
 }
 
-func (f *dummyFormatter) Format(p []property) (string, error) {
+func (f *dummyFormatter) format(p []property) (string, error) {
 	for _, prop := range p {
 		f.p = append(f.p, prop.Value)
 	}
@@ -50,8 +50,8 @@ func TestPropertiesSetValue(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error == nil when setting property, got %s", err.Error())
 	}
-	if got.Value != want {
-		t.Errorf("Setting Property `%s` failed, want: `%s`, got `%s`", gaugeTemplatesURL, want, got.Value)
+	if got != want {
+		t.Errorf("Setting Property `%s` failed, want: `%s`, got `%s`", gaugeTemplatesURL, want, got)
 	}
 }
 
@@ -88,8 +88,8 @@ func TestMergedProperties(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error == nil when getting property after merge, got %s", err.Error())
 	}
-	if got.Value != want {
-		t.Errorf("Properties Merge failed, want: %s == `%s`, got `%s`", checkUpdates, want, got.Value)
+	if got != want {
+		t.Errorf("Properties Merge failed, want: %s == `%s`, got `%s`", checkUpdates, want, got)
 	}
 	os.Setenv("GAUGE_ROOT", "")
 	err = os.Remove(idFile)
