@@ -24,6 +24,8 @@ import (
 
 	"fmt"
 
+	"os"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -36,6 +38,7 @@ const (
 	appName       = "Gauge Core"
 	consoleMedium = "console"
 	apiMedium     = "api"
+	ciMedium      = "CI"
 )
 
 func send(category, action, label, medium string) {
@@ -71,11 +74,42 @@ func send(category, action, label, medium string) {
 }
 
 func trackConsole(category, action, label string) {
-	go send(category, action, label, consoleMedium)
+	var medium = consoleMedium
+	if isCI() {
+		medium = ciMedium
+	}
+	go send(category, action, label, medium)
 }
 
 func trackAPI(category, action, label string) {
-	go send(category, action, label, apiMedium)
+	var medium = apiMedium
+	if isCI() {
+		medium = ciMedium
+	}
+	go send(category, action, label, medium)
+}
+
+func isCI() bool {
+	// Travis, AppVeyor, CircleCI, Wercket, drone.io, gitlab-ci
+	if os.Getenv("CI") == "true" {
+		return true
+	}
+
+	// GoCD
+	if os.Getenv("GO_SERVER_URL") != "" {
+		return true
+	}
+
+	// Teamcity
+	if os.Getenv("TEAMCITY_VERSION") != "" {
+		return true
+	}
+
+	// TFS
+	if os.Getenv("TFS_BUILD") == "true" {
+		return true
+	}
+	return false
 }
 
 func trackManifest() {
