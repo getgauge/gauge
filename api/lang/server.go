@@ -1,0 +1,152 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
+package lang
+
+import (
+	"context"
+	"log"
+
+	"os"
+
+	"errors"
+
+	"github.com/getgauge/gauge/gauge"
+	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
+	"github.com/sourcegraph/jsonrpc2"
+)
+
+type server struct{}
+
+type completionProvider interface {
+	Init()
+	Steps() []*gauge.StepValue
+	Concepts() []*gm.ConceptInfo
+}
+
+var provider completionProvider
+
+func Server(p completionProvider) *server {
+	provider = p
+	provider.Init()
+	return &server{}
+}
+
+type lspHandler struct {
+	jsonrpc2.Handler
+}
+
+type LangHandler struct {
+}
+
+func newHandler() jsonrpc2.Handler {
+	return lspHandler{jsonrpc2.HandlerWithError((&LangHandler{}).handle)}
+}
+
+func (h lspHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
+	if isFileSystemRequest(req.Method) {
+		return
+	}
+	go h.Handler.Handle(ctx, conn, req)
+}
+
+func isFileSystemRequest(method string) bool {
+	return method == "textDocument/didOpen" ||
+		method == "textDocument/didChange" ||
+		method == "textDocument/didClose" ||
+		method == "textDocument/didSave"
+}
+
+func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (interface{}, error) {
+	return h.Handle(ctx, conn, req)
+}
+
+func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
+	switch req.Method {
+	case "initialize":
+		kind := lsp.TDSKFull
+		return lsp.InitializeResult{
+			Capabilities: lsp.ServerCapabilities{
+				TextDocumentSync:   lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
+				CompletionProvider: &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* "}},
+			},
+		}, nil
+	case "initialized":
+		return nil, nil
+	case "shutdown":
+		return nil, nil
+	case "exit":
+		if c, ok := conn.(*jsonrpc2.Conn); ok {
+			c.Close()
+		}
+		return nil, nil
+
+	case "$/cancelRequest":
+		return nil, nil
+	case "textDocument/completion":
+		return completion(req)
+	case "completionItem/resolve":
+		return resolveCompletion(req)
+	case "textDocument/hover":
+		return nil, errors.New("Unknown request")
+	case "textDocument/definition":
+		return nil, errors.New("Unknown request")
+	case "textDocument/xdefinition":
+		return nil, errors.New("Unknown request")
+	case "textDocument/references":
+		return nil, errors.New("Unknown request")
+	case "textDocument/documentSymbol":
+		return nil, errors.New("Unknown request")
+	case "textDocument/signatureHelp":
+		return nil, errors.New("Unknown request")
+	case "textDocument/formatting":
+		return nil, errors.New("Unknown request")
+	case "workspace/symbol":
+		return nil, errors.New("Unknown request")
+	case "workspace/xreferences":
+		return nil, errors.New("Unknown request")
+	default:
+		return nil, errors.New("Unknown request")
+	}
+}
+
+func (s *server) Start() {
+	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
+	var connOpt []jsonrpc2.ConnOpt
+	connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
+	<-jsonrpc2.NewConn(context.Background(), jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...).DisconnectNotify()
+	logger.APILog.Info("Connection closed")
+}
+
+type stdRWC struct{}
+
+func (stdRWC) Read(p []byte) (int, error) {
+	return os.Stdin.Read(p)
+}
+
+func (stdRWC) Write(p []byte) (int, error) {
+	return os.Stdout.Write(p)
+}
+
+func (stdRWC) Close() error {
+	if err := os.Stdin.Close(); err != nil {
+		return err
+	}
+	return os.Stdout.Close()
+}

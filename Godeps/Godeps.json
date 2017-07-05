@@ -57,6 +57,15 @@
 			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
 		},
 		{
+			"ImportPath": "github.com/sourcegraph/go-langserver/pkg/lsp",
+			"Comment": "v1.0.0-187-gfe8fc70",
+			"Rev": "66ff4f536c4fe4a5c525472820a563939a0ab00f"
+		},
+		{
+			"ImportPath": "github.com/sourcegraph/jsonrpc2",
+			"Rev": "b02337b177765febba753be4b7d9c26e3a9fd220"
+		},
+		{
 			"ImportPath": "github.com/spf13/cobra",
 			"Rev": "8c6fa02d2225de0f9bdcb7ca912556f68d172d8c"
 		},
