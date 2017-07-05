@@ -39,6 +39,7 @@ var (
 				logger.Fatalf(err.Error())
 			}
 			if lsp {
+				track.Lsp()
 				lang.Server(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}).Start()
 				return
 			}
