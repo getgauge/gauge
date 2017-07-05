@@ -219,20 +219,15 @@ func (spec *Specification) GetSpecItems() []Item {
 	return specItems
 }
 
-func (spec *Specification) Traverse(processor ItemProcessor) {
+func (spec *Specification) Traverse(processor ItemProcessor, queue *ItemQueue) {
 	processor.Specification(spec)
 	processor.Heading(spec.Heading)
 
-	itemsLength := len(spec.Items)
-	for i, item := range spec.Items {
-		if i < itemsLength-1 {
-			processor.SetNext(spec.Items[i+1])
-		} else {
-			processor.SetNext(nil)
-		}
+	for queue.Peek() != nil {
+		item := queue.Next()
 		switch item.Kind() {
 		case ScenarioKind:
-			item.(*Scenario).Traverse(processor)
+			processor.Heading(item.(*Scenario).Heading)
 			processor.Scenario(item.(*Scenario))
 		case StepKind:
 			processor.Step(item.(*Step))
@@ -248,6 +243,16 @@ func (spec *Specification) Traverse(processor ItemProcessor) {
 			processor.DataTable(item.(*DataTable))
 		}
 	}
+}
+
+func (spec *Specification) AllItems() (items []Item) {
+	for _, item := range spec.Items {
+		items = append(items, item)
+		if item.Kind() == ScenarioKind {
+			items = append(items, item.(*Scenario).Items...)
+		}
+	}
+	return
 }
 
 func (spec *Specification) UsesArgsInContextTeardown(args ...string) bool {

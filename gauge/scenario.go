@@ -89,27 +89,6 @@ func (scenario *Scenario) LatestStep() *Step {
 	return scenario.Steps[len(scenario.Steps)-1]
 }
 
-func (scenario *Scenario) Traverse(processor ItemProcessor) {
-	processor.Heading(scenario.Heading)
-	specNext := processor.Next()
-	itemsLength := len(scenario.Items)
-	for i, item := range scenario.Items {
-		if i < itemsLength-1 {
-			processor.SetNext(scenario.Items[i+1])
-		} else {
-			processor.SetNext(specNext)
-		}
-		switch item.Kind() {
-		case StepKind:
-			processor.Step(item.(*Step))
-		case CommentKind:
-			processor.Comment(item.(*Comment))
-		case TagKind:
-			processor.Tags(item.(*Tags))
-		}
-	}
-}
-
 func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
 	return UsesArgs(scenario.Steps, args...)
 }

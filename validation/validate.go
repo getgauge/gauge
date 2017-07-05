@@ -242,7 +242,8 @@ func (v *validator) validate() validationErrors {
 }
 
 func (v *specValidator) validate() []error {
-	v.specification.Traverse(v)
+	queue := &gauge.ItemQueue{Items: v.specification.AllItems()}
+	v.specification.Traverse(v, queue)
 	return v.validationErrors
 }
 
@@ -338,14 +339,6 @@ func (v *specValidator) Specification(specification *gauge.Specification) {
 	if err != nil {
 		v.validationErrors = append(v.validationErrors, NewSpecValidationError(err.Error(), specification.FileName))
 	}
-}
-
-func (validator *specValidator) SetNext(item gauge.Item) {
-
-}
-
-func (validator *specValidator) Next() (gauge.Item) {
-	return nil
 }
 
 func validateDataTableRange(rowCount int) error {

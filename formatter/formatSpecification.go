@@ -26,16 +26,8 @@ import (
 )
 
 type formatter struct {
-	buffer bytes.Buffer
-	nextItem gauge.Item
-}
-
-func (formatter *formatter) SetNext(item gauge.Item) {
-	formatter.nextItem = item
-}
-
-func (formatter *formatter) Next() (gauge.Item) {
-	return formatter.nextItem
+	buffer    bytes.Buffer
+	itemQueue *gauge.ItemQueue
 }
 
 func (formatter *formatter) Specification(specification *gauge.Specification) {
@@ -54,7 +46,7 @@ func (formatter *formatter) Tags(tags *gauge.Tags) {
 		formatter.buffer.WriteString("\n")
 	}
 	formatter.buffer.WriteString(FormatTags(tags))
-	if formatter.nextItem.Kind() != gauge.CommentKind || strings.TrimSpace(formatter.nextItem.(*gauge.Comment).Value) != "" {
+	if formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "" {
 		formatter.buffer.WriteString("\n")
 	}
 }

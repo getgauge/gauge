@@ -213,8 +213,9 @@ func formatAndSave(spec *gauge.Specification) error {
 
 func FormatSpecification(specification *gauge.Specification) string {
 	var formattedSpec bytes.Buffer
-	formatter := &formatter{buffer: formattedSpec}
-	specification.Traverse(formatter)
+	queue := &gauge.ItemQueue{Items: specification.AllItems()}
+	formatter := &formatter{buffer: formattedSpec, itemQueue: queue}
+	specification.Traverse(formatter, queue)
 	return string(formatter.buffer.Bytes())
 }
 
