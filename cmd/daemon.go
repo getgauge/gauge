@@ -19,6 +19,8 @@ package cmd
 
 import (
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/execution/stream"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
@@ -36,6 +38,10 @@ var (
 			if err := isValidGaugeProject(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
+			if lsp {
+				lang.Server(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}).Start()
+				return
+			}
 			track.Daemon()
 			stream.Start()
 			port := ""
@@ -47,8 +53,11 @@ var (
 			api.RunInBackground(port, specs)
 		},
 	}
+	lsp bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(daemonCmd)
+	daemonCmd.Flags().BoolVarP(&lsp, "lsp", "", false, "Start language server")
+	daemonCmd.Flags().MarkHidden("lsp")
 }

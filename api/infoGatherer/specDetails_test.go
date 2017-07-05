@@ -211,7 +211,7 @@ func (s *MySuite) TestGetAvailableSteps(c *C) {
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
 
-	stepValues = specInfoGatherer.GetAvailableSteps()
+	stepValues = specInfoGatherer.Steps()
 	c.Assert(len(stepValues), Equals, 2)
 	c.Assert(stepValues[0].StepValue, Equals, "say hello")
 	c.Assert(stepValues[1].StepValue, Equals, "say {} to me")

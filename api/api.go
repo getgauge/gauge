@@ -88,7 +88,7 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
-	sig.MakeListOfAvailableSteps()
+	sig.Init()
 	go startAPIServiceWithoutRunner(port, startChan, sig)
 	go checkParentIsAlive(startChan)
 
@@ -135,7 +135,7 @@ func RunInBackground(apiPort string, specDirs []string) {
 
 func Start(specsDir []string) *conn.GaugeConnectionHandler {
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specsDir}
-	sig.MakeListOfAvailableSteps()
+	sig.Init()
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, apiHandler)
 	if err != nil {
