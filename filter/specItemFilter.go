@@ -189,17 +189,6 @@ func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionPart
 	return
 }
 
-func FilterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
-	filteredSpecs := make([]*gauge.Specification, 0)
-	for _, spec := range specs {
-		spec.Filter(filter)
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
-		}
-	}
-	return filteredSpecs
-}
-
 func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) []*gauge.Specification {
 	filteredSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {

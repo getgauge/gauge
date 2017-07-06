@@ -124,11 +124,21 @@ func (s *MySuite) TestCreateStepValueFromStepWithSpecialParams(c *C) {
 	c.Assert(stepValue.ParameterizedStepValue, Equals, "a step with <hello>, <file:user.txt> and <table>")
 }
 
-func (s *MySuite) TestSpecsFormArgsForMultipleIndexedArgsForOneSpec(c *C) {
+func (s *MySuite) TestSpecsFromArgsForMultipleIndexedArgsForOneSpec(c *C) {
 	specs, _ := parseSpecsInDirs(gauge.NewConceptDictionary(), []string{filepath.Join("testdata", "sample.spec:3"), filepath.Join("testdata", "sample.spec:6")}, gauge.NewBuildErrors())
 
 	c.Assert(len(specs), Equals, 1)
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
+}
+
+func (s *MySuite) TestSpecsFromArgsForIndexedArgsForMultipleSpecs(c *C) {
+	sampleSpec := filepath.Join("testdata", "sample.spec")
+	sample2Spec := filepath.Join("testdata", "sample2.spec")
+	specs, _ := parseSpecsInDirs(gauge.NewConceptDictionary(), []string{sample2Spec, sampleSpec, sample2Spec + ":6"}, gauge.NewBuildErrors())
+
+	c.Assert(len(specs), Equals, 2)
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	c.Assert(len(specs[1].Scenarios), Equals, 2)
 }
 
 func (s *MySuite) TestSpecsFromArgsMaintainsOrderOfSpecsPassed(c *C) {

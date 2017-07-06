@@ -92,7 +92,7 @@ type specFile struct {
 }
 
 // parseSpecsInDirs parses all the specs in list of dirs given.
-// It also merges the scenarios belonging to same spec which are passed as different arguments in `specDirs`
+// It also de-duplicates all specs passed through `specDirs` before parsing specs.
 func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
 	passed := true
 	givenSpecs, specFiles := getAllSpecFiles(specDirs)
@@ -105,7 +105,7 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 		i, _ := getIndexFor(specFiles, spec.FileName)
 		specFile := specFiles[i]
 		if len(specFile.indices) > 0 {
-			filter.FilterSpecsItems(specs, filter.NewScenarioFilterBasedOnSpan(specFile.indices))
+			spec.Filter(filter.NewScenarioFilterBasedOnSpan(specFile.indices))
 		}
 		allSpecs[i] = spec
 	}
