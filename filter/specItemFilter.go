@@ -33,19 +33,24 @@ import (
 )
 
 type scenarioFilterBasedOnSpan struct {
-	lineNumber int
+	lineNumbers []int
 }
 type ScenarioFilterBasedOnTags struct {
 	specTags      []string
 	tagExpression string
 }
 
-func NewScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
-	return &scenarioFilterBasedOnSpan{lineNumber}
+func NewScenarioFilterBasedOnSpan(lineNumbers []int) *scenarioFilterBasedOnSpan {
+	return &scenarioFilterBasedOnSpan{lineNumbers}
 }
 
 func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
-	return (item.Kind() == gauge.ScenarioKind) && !(item.(*gauge.Scenario).InSpan(filter.lineNumber))
+	for _, lineNumber := range filter.lineNumbers {
+		if (item.Kind() == gauge.ScenarioKind) && item.(*gauge.Scenario).InSpan(lineNumber) {
+			return false
+		}
+	}
+	return true
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {

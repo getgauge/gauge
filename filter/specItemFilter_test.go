@@ -209,7 +209,7 @@ func (s *MySuite) TestScenarioSpanFilter(c *C) {
 		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
 	}
 
-	spec.Filter(NewScenarioFilterBasedOnSpan(8))
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{8}))
 
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0], Equals, scenario3)
@@ -237,7 +237,7 @@ func (s *MySuite) TestScenarioSpanFilterLastScenario(c *C) {
 		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
 	}
 
-	spec.Filter(NewScenarioFilterBasedOnSpan(13))
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{13}))
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0], Equals, scenario4)
 
@@ -265,7 +265,7 @@ func (s *MySuite) TestScenarioSpanFilterFirstScenario(c *C) {
 		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
 	}
 
-	spec.Filter(NewScenarioFilterBasedOnSpan(2))
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{2}))
 
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0], Equals, scenario1)
@@ -282,7 +282,7 @@ func (s *MySuite) TestScenarioSpanFilterForSingleScenarioSpec(c *C) {
 		Scenarios: []*gauge.Scenario{scenario1},
 	}
 
-	spec.Filter(NewScenarioFilterBasedOnSpan(3))
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{3}))
 	c.Assert(len(spec.Scenarios), Equals, 1)
 	c.Assert(spec.Scenarios[0], Equals, scenario1)
 }
@@ -297,8 +297,38 @@ func (s *MySuite) TestScenarioSpanFilterWithWrongScenarioIndex(c *C) {
 		Scenarios: []*gauge.Scenario{scenario1},
 	}
 
-	spec.Filter(NewScenarioFilterBasedOnSpan(5))
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{5}))
 	c.Assert(len(spec.Scenarios), Equals, 0)
+}
+
+func (s *MySuite) TestScenarioSpanFilterWithMultipleLineNumbers(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 7, End: 10},
+	}
+	scenario4 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Fourth Scenario"},
+		Span:    &gauge.Span{Start: 11, End: 15},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, scenario4},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3, scenario4},
+	}
+
+	spec.Filter(NewScenarioFilterBasedOnSpan([]int{3, 13}))
+
+	c.Assert(len(spec.Scenarios), Equals, 2)
+	c.Assert(spec.Scenarios[0], Equals, scenario1)
+	c.Assert(spec.Scenarios[1], Equals, scenario4)
+
 }
 
 func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
