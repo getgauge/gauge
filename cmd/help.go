@@ -28,7 +28,7 @@ var (
 		Use:   "help [command]",
 		Short: "Help about any command",
 		Long: `Help provides help for any command in the application.
-	Simply type ` + GaugeCmd.Name() + ` help [path to command] for full details.`,
+Simply type ` + GaugeCmd.Name() + ` help [path to command] for full details.`,
 
 		Run: func(c *cobra.Command, args []string) {
 			if legacy {

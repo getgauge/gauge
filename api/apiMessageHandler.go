@@ -123,7 +123,7 @@ func (handler *gaugeAPIMessageHandler) installationRootRequestResponse(message *
 }
 
 func (handler *gaugeAPIMessageHandler) getAllStepsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	stepValues := handler.specInfoGatherer.GetAvailableSteps()
+	stepValues := handler.specInfoGatherer.Steps()
 	var stepValueResponses []*gauge_messages.ProtoStepValue
 	for _, stepValue := range stepValues {
 		stepValueResponses = append(stepValueResponses, gauge.ConvertToProtoStepValue(stepValue))
@@ -152,7 +152,7 @@ func (handler *gaugeAPIMessageHandler) getStepValueRequestResponse(message *gaug
 }
 
 func (handler *gaugeAPIMessageHandler) getAllConceptsRequestResponse(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.GetConceptInfos())
+	allConceptsResponse := handler.createGetAllConceptsResponseMessageFor(handler.specInfoGatherer.Concepts())
 	return &gauge_messages.APIMessage{MessageType: gauge_messages.APIMessage_GetAllConceptsResponse, MessageId: message.MessageId, AllConceptsResponse: allConceptsResponse}
 }
 

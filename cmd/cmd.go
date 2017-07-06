@@ -88,6 +88,9 @@ func (w *commandWriter) display() {
 func Parse() (int, error) {
 	writer := &commandWriter{}
 	GaugeCmd.SetOutput(writer)
+	for _, c := range append(GaugeCmd.Commands(), GaugeCmd) {
+		c.Flags().BoolP("help", "h", false, "Help for "+c.Name())
+	}
 	if cmd, err := GaugeCmd.ExecuteC(); err != nil {
 		if cmd == GaugeCmd {
 			return 1, errors.New("Failed parsing using the new gauge command structure, falling back to the old usage.")

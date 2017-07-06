@@ -203,7 +203,11 @@ func CheckUpdates() {
 }
 
 func Daemon() {
-	trackConsole("execution", "daemon", "")
+	trackConsole("daemon", "api", "")
+}
+
+func Lsp() {
+	trackConsole("daemon", "lsp", "")
 }
 
 func APIRefactoring() {

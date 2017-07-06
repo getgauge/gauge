@@ -68,8 +68,8 @@ func (d *SpecDetail) HasSpec() bool {
 	return d.Spec != nil && d.Spec.Heading != nil
 }
 
-// MakeListOfAvailableSteps initializes all the SpecInfoGatherer caches
-func (s *SpecInfoGatherer) MakeListOfAvailableSteps() {
+// Init initializes all the SpecInfoGatherer caches
+func (s *SpecInfoGatherer) Init() {
 	go s.watchForFileChanges()
 	s.waitGroup.Wait()
 
@@ -370,8 +370,8 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 	return details
 }
 
-// GetAvailableSteps returns the list of all the steps in the gauge project
-func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
+// Steps returns the list of all the steps in the gauge project
+func (s *SpecInfoGatherer) Steps() []*gauge.StepValue {
 	var steps []*gauge.StepValue
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
@@ -381,8 +381,8 @@ func (s *SpecInfoGatherer) GetAvailableSteps() []*gauge.StepValue {
 	return steps
 }
 
-// GetConceptInfos returns an array containing information about all the concepts present in the Gauge project
-func (s *SpecInfoGatherer) GetConceptInfos() []*gauge_messages.ConceptInfo {
+// Concepts returns an array containing information about all the concepts present in the Gauge project
+func (s *SpecInfoGatherer) Concepts() []*gauge_messages.ConceptInfo {
 	var conceptInfos []*gauge_messages.ConceptInfo
 	s.conceptsCache.mutex.RLock()
 	defer s.conceptsCache.mutex.RUnlock()
