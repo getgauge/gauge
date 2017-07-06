@@ -89,14 +89,25 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Specification) {
 	for _, spec := range specs {
 		if _, ok := specsMap[spec.FileName]; ok {
-			specsMap[spec.FileName].Scenarios = append(specsMap[spec.FileName].Scenarios, spec.Scenarios...)
 			for _, sce := range spec.Scenarios {
-				specsMap[spec.FileName].Items = append(specsMap[spec.FileName].Items, sce)
+				if !hasScenario(specsMap[spec.FileName], sce) {
+					specsMap[spec.FileName].Scenarios = append(specsMap[spec.FileName].Scenarios, sce)
+					specsMap[spec.FileName].Items = append(specsMap[spec.FileName].Items, sce)
+				}
 			}
 			continue
 		}
 		specsMap[spec.FileName] = spec
 	}
+}
+
+func hasScenario(spec *gauge.Specification, sce *gauge.Scenario) bool {
+	for _, value := range spec.Scenarios {
+		if value.Heading.Value == sce.Heading.Value {
+			return true
+		}
+	}
+	return false
 }
 
 // parseSpecsInDirs parses all the specs in list of dirs given.
