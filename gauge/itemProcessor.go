@@ -17,24 +17,14 @@
 
 package gauge
 
-type SpecTraverser interface {
+type ItemProcessor interface {
 	Specification(*Specification)
-	SpecHeading(*Heading)
-	SpecTags(*Tags)
-	DataTable(*Table)
-	ExternalDataTable(*DataTable)
-	ContextStep(*Step)
+	Heading(*Heading)
+	Tags(*Tags)
+	Table(*Table)
+	DataTable(*DataTable)
 	Scenario(*Scenario)
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
 	Step(*Step)
 	TearDown(*TearDown)
-	Comment(*Comment)
-}
-
-type ScenarioTraverser interface {
-	ScenarioHeading(*Heading)
-	ScenarioTags(*Tags)
-	Step(*Step)
 	Comment(*Comment)
 }

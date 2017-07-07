@@ -89,20 +89,6 @@ func (scenario *Scenario) LatestStep() *Step {
 	return scenario.Steps[len(scenario.Steps)-1]
 }
 
-func (scenario *Scenario) Traverse(traverser ScenarioTraverser) {
-	traverser.ScenarioHeading(scenario.Heading)
-	for _, item := range scenario.Items {
-		switch item.Kind() {
-		case StepKind:
-			traverser.Step(item.(*Step))
-		case CommentKind:
-			traverser.Comment(item.(*Comment))
-		case TagKind:
-			traverser.ScenarioTags(item.(*Tags))
-		}
-	}
-}
-
 func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
 	return UsesArgs(scenario.Steps, args...)
 }

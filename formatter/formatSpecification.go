@@ -26,30 +26,41 @@ import (
 )
 
 type formatter struct {
-	buffer bytes.Buffer
+	buffer    bytes.Buffer
+	itemQueue *gauge.ItemQueue
 }
 
 func (formatter *formatter) Specification(specification *gauge.Specification) {
 }
 
-func (formatter *formatter) SpecHeading(specHeading *gauge.Heading) {
-	formatter.buffer.WriteString(FormatHeading(specHeading.Value, "="))
+func (formatter *formatter) Heading(heading *gauge.Heading) {
+	if heading.HeadingType == gauge.SpecHeading {
+		formatter.buffer.WriteString(FormatHeading(heading.Value, "="))
+	} else if heading.HeadingType == gauge.ScenarioHeading {
+		formatter.buffer.WriteString(FormatHeading(heading.Value, "-"))
+	}
 }
 
-func (formatter *formatter) SpecTags(tags *gauge.Tags) {
+func (formatter *formatter) Tags(tags *gauge.Tags) {
+	if !strings.HasSuffix(formatter.buffer.String(), "\n\n") {
+		formatter.buffer.WriteString("\n")
+	}
 	formatter.buffer.WriteString(FormatTags(tags))
+	if formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "" {
+		formatter.buffer.WriteString("\n")
+	}
 }
 
-func (formatter *formatter) DataTable(table *gauge.Table) {
+func (formatter *formatter) Table(table *gauge.Table) {
 	formatter.buffer.WriteString(strings.TrimPrefix(FormatTable(table), "\n"))
 }
 
-func (formatter *formatter) ExternalDataTable(extDataTable *gauge.DataTable) {
-	formatter.buffer.WriteString(FormatExternalDataTable(extDataTable))
-}
-
-func (formatter *formatter) ContextStep(step *gauge.Step) {
-	formatter.Step(step)
+func (formatter *formatter) DataTable(dataTable *gauge.DataTable) {
+	if !dataTable.IsExternal {
+		formatter.Table(&(dataTable.Table))
+	} else {
+		formatter.buffer.WriteString(formatExternalDataTable(dataTable))
+	}
 }
 
 func (formatter *formatter) TearDown(t *gauge.TearDown) {
@@ -57,14 +68,6 @@ func (formatter *formatter) TearDown(t *gauge.TearDown) {
 }
 
 func (formatter *formatter) Scenario(scenario *gauge.Scenario) {
-}
-
-func (formatter *formatter) ScenarioHeading(scenarioHeading *gauge.Heading) {
-	formatter.buffer.WriteString(FormatHeading(scenarioHeading.Value, "-"))
-}
-
-func (formatter *formatter) ScenarioTags(scenarioTags *gauge.Tags) {
-	formatter.SpecTags(scenarioTags)
 }
 
 func (formatter *formatter) Step(step *gauge.Step) {

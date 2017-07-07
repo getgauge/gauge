@@ -242,7 +242,8 @@ func (v *validator) validate() validationErrors {
 }
 
 func (v *specValidator) validate() []error {
-	v.specification.Traverse(v)
+	queue := &gauge.ItemQueue{Items: v.specification.AllItems()}
+	v.specification.Traverse(v, queue)
 	return v.validationErrors
 }
 
@@ -308,24 +309,16 @@ func getMessage(message string) string {
 	return strings.ToUpper(lower[:1]) + lower[1:]
 }
 
-func (v *specValidator) ContextStep(step *gauge.Step) {
-	v.Step(step)
-}
-
 func (v *specValidator) TearDown(step *gauge.TearDown) {
 }
 
-func (v *specValidator) SpecHeading(heading *gauge.Heading) {
+func (v *specValidator) Heading(heading *gauge.Heading) {
 }
 
-func (v *specValidator) SpecTags(tags *gauge.Tags) {
+func (v *specValidator) Tags(tags *gauge.Tags) {
 }
 
-func (v *specValidator) ScenarioTags(tags *gauge.Tags) {
-
-}
-
-func (v *specValidator) DataTable(dataTable *gauge.Table) {
+func (v *specValidator) Table(dataTable *gauge.Table) {
 
 }
 
@@ -333,13 +326,10 @@ func (v *specValidator) Scenario(scenario *gauge.Scenario) {
 
 }
 
-func (v *specValidator) ScenarioHeading(heading *gauge.Heading) {
-}
-
 func (v *specValidator) Comment(comment *gauge.Comment) {
 }
 
-func (v *specValidator) ExternalDataTable(dataTable *gauge.DataTable) {
+func (v *specValidator) DataTable(dataTable *gauge.DataTable) {
 
 }
 

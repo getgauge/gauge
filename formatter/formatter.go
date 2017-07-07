@@ -193,7 +193,7 @@ func FormatTags(tags *gauge.Tags) string {
 	return string(b.Bytes())
 }
 
-func FormatExternalDataTable(dataTable *gauge.DataTable) string {
+func formatExternalDataTable(dataTable *gauge.DataTable) string {
 	if dataTable == nil || len(dataTable.Value) == 0 {
 		return ""
 	}
@@ -213,8 +213,9 @@ func formatAndSave(spec *gauge.Specification) error {
 
 func FormatSpecification(specification *gauge.Specification) string {
 	var formattedSpec bytes.Buffer
-	formatter := &formatter{buffer: formattedSpec}
-	specification.Traverse(formatter)
+	queue := &gauge.ItemQueue{Items: specification.AllItems()}
+	formatter := &formatter{buffer: formattedSpec, itemQueue: queue}
+	specification.Traverse(formatter, queue)
 	return string(formatter.buffer.Bytes())
 }
 

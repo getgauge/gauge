@@ -113,14 +113,20 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
+
 tags: tag1, tag2
+
 Scenario Heading
 ----------------
+
 tags: tag3, tag4
+
 * Example step
 Scenario Heading1
 -----------------
+
 tags: tag3, tag4
+
 * Example step
 `)
 
@@ -146,14 +152,20 @@ func (s *MySuite) TestFormatSpecificationWithTeardownSteps(c *C) {
 	c.Assert(formatted, Equals,
 		`My Spec Heading
 ===============
+
 tags: tag1, tag2
+
 Scenario Heading
 ----------------
+
 tags: tag3, tag4
+
 * Example step
 Scenario Heading1
 -----------------
+
 tags: tag3, tag4
+
 * Example step
 ____
 * Example step1
