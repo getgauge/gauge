@@ -86,51 +86,72 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	parseResultChan <- parseResult
 }
 
-func addSpecsToMap(specs []*gauge.Specification, specsMap map[string]*gauge.Specification) {
-	for _, spec := range specs {
-		if _, ok := specsMap[spec.FileName]; ok {
-			specsMap[spec.FileName].Scenarios = append(specsMap[spec.FileName].Scenarios, spec.Scenarios...)
-			for _, sce := range spec.Scenarios {
-				specsMap[spec.FileName].Items = append(specsMap[spec.FileName].Items, sce)
-			}
-			continue
-		}
-		specsMap[spec.FileName] = spec
-	}
+type specFile struct {
+	filePath string
+	indices  []int
 }
 
 // parseSpecsInDirs parses all the specs in list of dirs given.
-// It also merges the scenarios belonging to same spec which are passed as different arguments in `specDirs`
+// It also de-duplicates all specs passed through `specDirs` before parsing specs.
 func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []string, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
-	specsMap := make(map[string]*gauge.Specification)
 	passed := true
-	var givenSpecs []*gauge.Specification
-	for _, specSource := range specDirs {
-		var specs []*gauge.Specification
-		var specParseResults []*ParseResult
-		if isIndexedSpec(specSource) {
-			specs, specParseResults = getSpecWithScenarioIndex(specSource, conceptDictionary, buildErrors)
-		} else {
-			specs, specParseResults = ParseSpecFiles(util.GetSpecFiles(specSource), conceptDictionary, buildErrors)
+	givenSpecs, specFiles := getAllSpecFiles(specDirs)
+	var specs []*gauge.Specification
+	var specParseResults []*ParseResult
+	allSpecs := make([]*gauge.Specification, len(specFiles))
+	specs, specParseResults = ParseSpecFiles(givenSpecs, conceptDictionary, buildErrors)
+	passed = !HandleParseResult(specParseResults...) && passed
+	for _, spec := range specs {
+		i, _ := getIndexFor(specFiles, spec.FileName)
+		specFile := specFiles[i]
+		if len(specFile.indices) > 0 {
+			spec.Filter(filter.NewScenarioFilterBasedOnSpan(specFile.indices))
 		}
-		passed = !HandleParseResult(specParseResults...) && passed
-		givenSpecs = append(givenSpecs, specs...)
-		addSpecsToMap(specs, specsMap)
-	}
-	var allSpecs []*gauge.Specification
-	for _, spec := range givenSpecs {
-		if _, ok := specsMap[spec.FileName]; ok {
-			allSpecs = append(allSpecs, specsMap[spec.FileName])
-			delete(specsMap, spec.FileName)
-		}
+		allSpecs[i] = spec
 	}
 	return allSpecs, !passed
 }
 
-func getSpecWithScenarioIndex(specSource string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
-	specName, indexToFilter := getIndexedSpecName(specSource)
-	parsedSpecs, parseResult := ParseSpecFiles(util.GetSpecFiles(specName), conceptDictionary, buildErrors)
-	return filter.FilterSpecsItems(parsedSpecs, filter.NewScenarioFilterBasedOnSpan(indexToFilter)), parseResult
+func getAllSpecFiles(specDirs []string) (givenSpecs []string, specFiles []*specFile) {
+	for _, specSource := range specDirs {
+		if isIndexedSpec(specSource) {
+			var specName string
+			specName, index := getIndexedSpecName(specSource)
+			files := util.GetSpecFiles(specName)
+			specificationFile, created := addSpecFile(&specFiles, files[0])
+			if created || len(specificationFile.indices) > 0 {
+				specificationFile.indices = append(specificationFile.indices, index)
+			}
+			givenSpecs = append(givenSpecs, files[0])
+		} else {
+			files := util.GetSpecFiles(specSource)
+			for _, file := range files {
+				specificationFile, _ := addSpecFile(&specFiles, file)
+				specificationFile.indices = specificationFile.indices[0:0]
+			}
+			givenSpecs = append(givenSpecs, files...)
+		}
+	}
+	return
+}
+
+func addSpecFile(specFiles *[]*specFile, file string) (*specFile, bool) {
+	i, exists := getIndexFor(*specFiles, file)
+	if !exists {
+		specificationFile := &specFile{filePath: file}
+		*specFiles = append(*specFiles, specificationFile)
+		return specificationFile, true
+	}
+	return (*specFiles)[i], false
+}
+
+func getIndexFor(files []*specFile, file string) (int, bool) {
+	for index, f := range files {
+		if f.filePath == file {
+			return index, true
+		}
+	}
+	return -1, false
 }
 
 func isIndexedSpec(specSource string) bool {

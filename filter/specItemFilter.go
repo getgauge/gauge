@@ -33,19 +33,24 @@ import (
 )
 
 type scenarioFilterBasedOnSpan struct {
-	lineNumber int
+	lineNumbers []int
 }
 type ScenarioFilterBasedOnTags struct {
 	specTags      []string
 	tagExpression string
 }
 
-func NewScenarioFilterBasedOnSpan(lineNumber int) *scenarioFilterBasedOnSpan {
-	return &scenarioFilterBasedOnSpan{lineNumber}
+func NewScenarioFilterBasedOnSpan(lineNumbers []int) *scenarioFilterBasedOnSpan {
+	return &scenarioFilterBasedOnSpan{lineNumbers}
 }
 
 func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
-	return (item.Kind() == gauge.ScenarioKind) && !(item.(*gauge.Scenario).InSpan(filter.lineNumber))
+	for _, lineNumber := range filter.lineNumbers {
+		if (item.Kind() == gauge.ScenarioKind) && item.(*gauge.Scenario).InSpan(lineNumber) {
+			return false
+		}
+	}
+	return true
 }
 
 func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
@@ -182,17 +187,6 @@ func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionPart
 		tags = append(tags, wordValue())
 	}
 	return
-}
-
-func FilterSpecsItems(specs []*gauge.Specification, filter gauge.SpecItemFilter) []*gauge.Specification {
-	filteredSpecs := make([]*gauge.Specification, 0)
-	for _, spec := range specs {
-		spec.Filter(filter)
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
-		}
-	}
-	return filteredSpecs
 }
 
 func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) []*gauge.Specification {
