@@ -46,7 +46,7 @@ func (formatter *formatter) Tags(tags *gauge.Tags) {
 		formatter.buffer.WriteString("\n")
 	}
 	formatter.buffer.WriteString(FormatTags(tags))
-	if formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "" {
+	if formatter.itemQueue.Peek() != nil && (formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "") {
 		formatter.buffer.WriteString("\n")
 	}
 }
