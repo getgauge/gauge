@@ -110,7 +110,7 @@ func main() {
 	} else if *gaugeVersion {
 		printVersion()
 	} else if *initialize != "" {
-		track.ProjectInit()
+		track.ProjectInit(*initialize)
 		projectInit.InitializeProject(*initialize)
 	} else if *installZip != "" && *installPlugin != "" {
 		track.Install(*installPlugin, true)
