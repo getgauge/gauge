@@ -26,6 +26,8 @@ import (
 
 	"os"
 
+	"sync"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -41,7 +43,8 @@ const (
 	ciMedium      = "CI"
 )
 
-func send(category, action, label, medium string) {
+func send(category, action, label, medium string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	if !config.TelemetryEnabled() {
 		return
 	}
@@ -78,7 +81,10 @@ func trackConsole(category, action, label string) {
 	if isCI() {
 		medium = ciMedium
 	}
-	go send(category, action, label, medium)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	defer wg.Wait()
+	go send(category, action, label, medium, wg)
 }
 
 func trackAPI(category, action, label string) {
@@ -86,7 +92,9 @@ func trackAPI(category, action, label string) {
 	if isCI() {
 		medium = ciMedium
 	}
-	go send(category, action, label, medium)
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go send(category, action, label, medium, wg)
 }
 
 func isCI() bool {
@@ -174,8 +182,8 @@ func UninstallPlugin(plugin string) {
 	trackConsole("plugins", "uninstall", plugin)
 }
 
-func ProjectInit() {
-	trackConsole("project", "init", "")
+func ProjectInit(lang string) {
+	trackConsole("project", "init", lang)
 }
 
 func Install(plugin string, zip bool) {

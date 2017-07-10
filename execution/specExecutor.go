@@ -129,7 +129,9 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 }
 
 func (e *specExecutor) executeSpec() {
-	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, e.specification.DataTable.Table.Headers)
+	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
+		return s.DataTableRow.IsInitialized()
+	})
 	res := e.executeScenarios(nonTableRelatedScenarios)
 	e.specResult.AddScenarioResults(res)
 	e.executeTableRelatedScenarios(tableRelatedScenarios)

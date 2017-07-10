@@ -40,7 +40,7 @@ var (
 			if len(args) < 1 {
 				logger.Fatalf("Error: Missing argument <template name>. To see all the templates, run 'gauge list-templates'.\n%s", cmd.UsageString())
 			}
-			track.ProjectInit()
+			track.ProjectInit(args[0])
 			projectInit.InitializeProject(args[0])
 		},
 	}
