@@ -173,8 +173,6 @@ func copyGaugeConfigFiles(installPath string) {
 	files[filepath.Join(config, "skel", ".gitignore")] = skel.Gitignore
 	files[filepath.Join(config, common.GaugePropertiesFile)] = conf.MergedProperties().String()
 	files[filepath.Join(config, "notice.md")] = skel.Notice
-	files = addInstallScripts(files)
-
 	for dst, content := range files {
 		installDst := filepath.Join(installPath, dst)
 		log.Printf("Write %s\n", installDst)
@@ -183,6 +181,7 @@ func copyGaugeConfigFiles(installPath string) {
 			panic(err)
 		}
 	}
+	installFiles(getInstallScripts(), installPath)
 }
 
 func copyGaugeBinaries(installPath string) {
@@ -192,7 +191,8 @@ func copyGaugeBinaries(installPath string) {
 	installFiles(files, installPath)
 }
 
-func addInstallScripts(files map[string]string) map[string]string {
+func getInstallScripts() map[string]string {
+	var files = make(map[string]string, 0)
 	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	} else if getGOOS() == windows {
