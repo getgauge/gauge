@@ -135,7 +135,7 @@ func main() {
 		install.PrintUpdateInfoWithDetails()
 	} else if *addPlugin != "" {
 		track.AddPlugins(*addPlugin)
-		install.AddPluginToProject(*addPlugin, *pluginArgs)
+		install.AddPlugin(*addPlugin, *pluginArgs)
 	} else if *listTemplates {
 		track.ListTemplates()
 		projectInit.ListTemplates()

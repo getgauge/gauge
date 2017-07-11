@@ -587,8 +587,31 @@ func (a byDecreasingVersion) Less(i, j int) bool {
 	return version1.IsGreaterThan(version2)
 }
 
-// AddPluginToProject adds the given plugin to current Gauge project. It installs the plugin if not installed.
-func AddPluginToProject(pluginName string, pluginArgs string) {
+// AddPluginToProject adds the given plugin to current Gauge project.
+func AddPluginToProject(pluginName string) error {
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		return nil
+	}
+	pd, err := plugin.GetPluginDescriptor(pluginName, "")
+	if err != nil {
+		return err
+	}
+	if plugin.IsPluginAdded(m, pd) {
+		logger.Warningf("Plugin %s is already added.", pd.Name)
+		return nil
+	}
+	m.Plugins = append(m.Plugins, pd.ID)
+	if err = m.Save(); err != nil {
+		return err
+	}
+	logger.Infof("Plugin %s was successfully added to the project\n", pluginName)
+	return nil
+}
+
+// TODO: Remove this function after removing the `--add-plugin` flag.
+// AddPlugin adds the given plugin to current Gauge project. It installs the plugin if not installed.
+func AddPlugin(pluginName string, pluginArgs string) error {
 	additionalArgs := make(map[string]string)
 	if pluginArgs != "" {
 		// plugin args will be comma separated values
@@ -601,17 +624,18 @@ func AddPluginToProject(pluginName string, pluginArgs string) {
 			}
 		}
 	}
-	manifest, err := manifest.ProjectManifest()
+	m, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
-	if err := addPluginToTheProject(pluginName, additionalArgs, manifest); err != nil {
+	if err := addPluginToTheProject(pluginName, additionalArgs, m); err != nil {
 		logger.Fatalf(fmt.Sprintf("Failed to add plugin %s to project : %s\n", pluginName, err.Error()))
-	} else {
-		logger.Infof("Plugin %s was successfully added to the project\n", pluginName)
 	}
+	logger.Infof("Plugin %s was successfully added to the project\n", pluginName)
+	return nil
 }
 
+// TODO: Remove this function after removing the `--add-plugin` flag.
 func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest.Manifest) error {
 	if !plugin.IsPluginInstalled(pluginName, pluginArgs["version"]) {
 		logger.Infof("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
