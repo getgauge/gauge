@@ -58,7 +58,7 @@ func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, 
 
 func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specification) *gauge.Specification {
 	dt := &gauge.DataTable{Table: *table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
-	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps}
+	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags}
 	index := 0
 	for _, item := range spec.Items {
 		if item.Kind() == gauge.DataTableKind {
