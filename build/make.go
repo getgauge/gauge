@@ -156,11 +156,11 @@ func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
 	files[getGaugeExecutablePath(gauge)] = bin
 	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
-	files = addInstallScripts(files)
+	files = getInstallScripts(files)
 	installFiles(files, installPath)
 }
 
-func addInstallScripts(files map[string]string) map[string]string {
+func getInstallScripts(files map[string]string) map[string]string {
 	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	} else if getGOOS() == windows {
