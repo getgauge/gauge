@@ -99,6 +99,7 @@ func getBuildVersion() string {
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
+	runProcess("go", "-d", "-t", "./...")
 	args := []string{
 		"build",
 		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
