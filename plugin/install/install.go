@@ -544,7 +544,7 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 	for pluginName, isRunner := range pluginsMap {
 		if !IsCompatiblePluginInstalled(pluginName, isRunner) {
 			logger.Infof("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
-			HandleInstallResult(InstallPlugin(pluginName, ""), pluginName, true)
+			HandleInstallResult(InstallPlugin(pluginName, ""), pluginName, false)
 		} else {
 			logger.Infof("Plugin %s is already installed.", pluginName)
 		}
