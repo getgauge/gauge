@@ -21,7 +21,6 @@ FILE_EXT="zip"
 FILE_MODE=755
 CONTROL_FILE="$BUILD_DIR/packaging/deb/control"
 POSTINST_FILE="$BUILD_DIR/packaging/deb/postinst"
-GAUGE_SETUP_FILE="$BUILD_DIR/packaging/gauge_setup"
 
 if [ "$OS" != "linux" ]; then
     err "This script can only be run on Linux systems"
@@ -96,12 +95,10 @@ function prep_deb() {
     mkdir -m $FILE_MODE -p "$TARGET/usr/local/gauge"
 
     cp -r "$PKG_SRC/bin" "$TARGET/usr/local"
-    cp -r "$PKG_SRC/config" "$TARGET/usr/local/gauge"
 
     mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
     cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
-    cp "$GAUGE_SETUP_FILE" "$TARGET/usr/local/bin/gauge_setup"
 
     chmod +x $TARGET/usr/local/bin/*
 
