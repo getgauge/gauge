@@ -78,19 +78,13 @@ get_absolute_path (){
 }
 
 # Set GAUGE_ROOT and GAUGE binaries to environment variable
-set_gaugeroot() {
+add_gauge_in_path() {
     # ensure gauge is on PATH
     if [[ "$(which gauge)" != $prefix/bin ]]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
     fi
 
-    # ensure GAUGE_ROOT is set
-    echo "Adding GAUGE_ROOT to environment..."
-    if [[ ! -z "$GAUGE_ROOT" && $config != "$GAUGE_ROOT" ]]; then
-        echo "Coppying Gauge configuration at $config. Your older configurations will be at $GAUGE_ROOT/share/gauge."
-    fi
-    echo "export GAUGE_ROOT=$config"  >> ~/.profile
     source ~/.profile
 }
 
@@ -225,7 +219,7 @@ install_gauge_interactively() {
     set_prefix_interavctively
     create_prefix_interactively
     copy_gauge_binaries_interactively
-    set_gaugeroot
+    add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
 }
 
@@ -235,7 +229,7 @@ install_gauge_noninteractively() {
     set_prefix_noninteractively
     create_prefix_noninteractively
     copy_gauge_binaries_noninteractively
-    set_gaugeroot
+    add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
 }
 
@@ -283,10 +277,8 @@ if [[ $# != 0 ]]; then
 fi
 
 # If tty then perform installation in interactive mode.
-if tty -s; then
-    echo "interactive"
+if [["$CONTINUOUS_INTEGRATION" -ne "true"]] || tty -s; then
     do_interactive_installation
 else
-    echo "non interactive"
     do_noninteractive_installation
 fi
