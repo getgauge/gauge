@@ -87,19 +87,21 @@ func TestCompletion(t *testing.T) {
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:    "concept1",
-				Detail:   "Concept",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{}, NewText: `concept1`},
+				Label:      "concept1",
+				Detail:     "Concept",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `concept1`},
+				FilterText: `concept1`,
 			},
 			InsertTextFormat: snippet,
 		},
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:    "Say <hello> to <gauge>",
-				Detail:   "Step",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				Label:      "Say <hello> to <gauge>",
+				Detail:     "Step",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				FilterText: `Say "${1:hello}" to "${0:gauge}"`,
 			},
 			InsertTextFormat: snippet,
 		},

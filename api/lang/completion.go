@@ -51,24 +51,32 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
+	prefix := ""
+	if params.Position.Character > 0 && files[params.TextDocument.URI][params.Position.Line][params.Position.Character-1] == 42 {
+		prefix = " "
+	}
 	for _, c := range provider.Concepts() {
+		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
 		list.Items = append(list.Items, completionItem{
 			CompletionItem: lsp.CompletionItem{
-				Label:    c.StepValue.ParameterizedStepValue,
-				Detail:   "Concept",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)},
+				Label:      c.StepValue.ParameterizedStepValue,
+				Detail:     "Concept",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: cText},
+				FilterText: cText,
 			},
 			InsertTextFormat: snippet,
 		})
 	}
 	for _, s := range provider.Steps() {
+		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
 		list.Items = append(list.Items, completionItem{
 			CompletionItem: lsp.CompletionItem{
-				Label:    s.ParameterizedStepValue,
-				Detail:   "Step",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: addPlaceHolders(s.StepValue, s.Args)},
+				Label:      s.ParameterizedStepValue,
+				Detail:     "Step",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: cText},
+				FilterText: cText,
 			},
 			InsertTextFormat: snippet,
 		})

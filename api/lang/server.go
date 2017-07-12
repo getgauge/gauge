@@ -60,17 +60,7 @@ func newHandler() jsonrpc2.Handler {
 }
 
 func (h lspHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) {
-	if isFileSystemRequest(req.Method) {
-		return
-	}
 	go h.Handler.Handle(ctx, conn, req)
-}
-
-func isFileSystemRequest(method string) bool {
-	return method == "textDocument/didOpen" ||
-		method == "textDocument/didChange" ||
-		method == "textDocument/didClose" ||
-		method == "textDocument/didSave"
 }
 
 func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (interface{}, error) {
@@ -98,6 +88,15 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, nil
 
 	case "$/cancelRequest":
+		return nil, nil
+	case "textDocument/didOpen":
+		openFile(req)
+		return nil, nil
+	case "textDocument/didClose":
+		closeFile(req)
+		return nil, nil
+	case "textDocument/didChange":
+		changeFile(req)
 		return nil, nil
 	case "textDocument/completion":
 		return completion(req)
