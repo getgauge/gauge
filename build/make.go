@@ -29,22 +29,14 @@ import (
 	"strings"
 	"time"
 
-	"io/ioutil"
-
 	"github.com/getgauge/common"
-	conf "github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/version"
 )
 
 const (
 	CGO_ENABLED        = "CGO_ENABLED"
-	config             = "config"
-	dotgauge           = ".gauge"
 	GOARCH             = "GOARCH"
 	GOOS               = "GOOS"
-	GAUGE_ROOT         = "GAUGE_ROOT"
-	home               = "HOME"
 	X86                = "386"
 	X86_64             = "amd64"
 	darwin             = "darwin"
@@ -61,7 +53,6 @@ const (
 	nightlyDatelayout  = "2006-01-02"
 )
 
-var gaugeConfigDir string
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
@@ -161,44 +152,20 @@ func installFiles(files map[string]string, installDir string) {
 	}
 }
 
-func copyGaugeConfigFiles(installPath string) {
-	err := os.MkdirAll(filepath.Join(installPath, config, "skel"), common.NewDirectoryPermissions)
-	if err != nil {
-		panic(err)
-	}
-
-	files := make(map[string]string)
-	files[filepath.Join(config, "skel", "example.spec")] = skel.ExampleSpec
-	files[filepath.Join(config, "skel", "default.properties")] = skel.DefaultProperties
-	files[filepath.Join(config, "skel", ".gitignore")] = skel.Gitignore
-	files[filepath.Join(config, common.GaugePropertiesFile)] = conf.MergedProperties().String()
-	files[filepath.Join(config, "notice.md")] = skel.Notice
-	for dst, content := range files {
-		installDst := filepath.Join(installPath, dst)
-		log.Printf("Write %s\n", installDst)
-		err := ioutil.WriteFile(installDst, []byte(content), common.NewFilePermissions)
-		if err != nil {
-			panic(err)
-		}
-	}
-	installFiles(getInstallScripts(), installPath)
-}
 
 func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
 	files[getGaugeExecutablePath(gauge)] = bin
 	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
+	files = getInstallScripts(files)
 	installFiles(files, installPath)
 }
 
-func getInstallScripts() map[string]string {
-	var files = make(map[string]string, 0)
+func getInstallScripts(files map[string]string) map[string]string {
 	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
 	} else if getGOOS() == windows {
 		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
-		files[filepath.Join("build", "install", "windows", "backup_properties_file.bat")] = ""
-		files[filepath.Join("build", "install", "windows", "set_timestamp.bat")] = ""
 	}
 	return files
 }
@@ -311,11 +278,6 @@ func installGauge() {
 	if _, err := common.MirrorDir(filepath.Join(deployDir, bin), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
-	updateConfigDir()
-	copyGaugeConfigFiles(deployDir)
-	if _, err := common.MirrorDir(filepath.Join(deployDir, config), gaugeConfigDir); err != nil {
-		panic(fmt.Sprintf("Could not copy gauge configuration files: %s", err))
-	}
 }
 
 func createGaugeDistributables(forAllPlatforms bool) {
@@ -350,7 +312,6 @@ func createWindowsInstaller() {
 		panic(err)
 	}
 	copyGaugeBinaries(distroDir)
-	copyGaugeConfigFiles(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
 		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
@@ -364,7 +325,6 @@ func createWindowsInstaller() {
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeBinaries(distroDir)
-	copyGaugeConfigFiles(distroDir)
 	createZipFromUtil(deploy, gauge, packageName())
 	runProcess(packagesBuild, "-v", darwinPackageProject)
 	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
@@ -374,7 +334,6 @@ func createDarwinPackage() {
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
-	copyGaugeConfigFiles(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
 	os.RemoveAll(distroDir)
 }
@@ -391,9 +350,7 @@ func removeUnwatedFiles(dir, currentOS string) error {
 	}
 	if currentOS == "windows" {
 		fileList = append(fileList, []string{
-			"backup_properties_file.bat",
 			"plugin-install.bat",
-			"set_timestamp.bat",
 			"desktop.ini",
 			"Thumbs.db",
 		}...)
@@ -445,19 +402,6 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	os.Chdir(wd)
 }
 
-func updateConfigDir() {
-	if os.Getenv(GAUGE_ROOT) != "" {
-		gaugeConfigDir = os.Getenv(GAUGE_ROOT)
-	} else {
-		if runtime.GOOS == "windows" {
-			appdata := os.Getenv("APPDATA")
-			gaugeConfigDir = filepath.Join(appdata, gauge, config)
-		} else {
-			home := os.Getenv("HOME")
-			gaugeConfigDir = filepath.Join(home, dotgauge, config)
-		}
-	}
-}
 
 func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {

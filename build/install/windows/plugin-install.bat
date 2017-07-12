@@ -1,1 +1,1 @@
-gauge --install %1
+gauge install %1

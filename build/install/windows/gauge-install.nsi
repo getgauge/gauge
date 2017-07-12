@@ -70,22 +70,15 @@ BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
 InstallDir "$PROGRAMFILES\Gauge"
-Var ConfigDir
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowUnInstDetails show
 
 Section "Gauge" SEC_GAUGE
-  IfFileExists "$CONFIGDIR\gauge.properties" 0 +3
   CreateDirectory $%temp%\Gauge
-  CopyFiles "$CONFIGDIR\gauge.properties" "$%temp%\Gauge\gauge.properties.bak"
   SectionIn RO
   SetOutPath "$INSTDIR\bin"
   SetOverwrite on
   File /r "${GAUGE_DISTRIBUTABLES_DIR}\bin\*"
-  SectionIn RO
-  SetOutPath "$CONFIGDIR"
-  SetOverwrite on
-  File /r "${GAUGE_DISTRIBUTABLES_DIR}\config\*"
 SectionEnd
 
 SectionGroup /e "Language Plugins" SEC_LANGUAGES
@@ -125,7 +118,6 @@ function .onInit
     SetRegView 64
     StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
-  StrCpy $CONFIGDIR "$APPDATA\Gauge\config"
   ;See if PLUGINS to install are specified via cmd line arg
   ;Only if it is silent install
   ${If} ${Silent}
@@ -172,11 +164,7 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
-  WriteRegExpandStr ${env_hklm} GAUGE_ROOT $CONFIGDIR
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  ExecWait '"$INSTDIR\set_timestamp.bat" "$CONFIGDIR"'
-  IfFileExists "$%temp%\Gauge\gauge.properties.bak" 0 +3
-  CopyFiles "$%temp%\Gauge\gauge.properties.bak" "$CONFIGDIR"
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
   Dialer::GetConnectedState
@@ -184,7 +172,7 @@ Section -Post
 
   ${If} $R0 == 'online'
     DetailPrint "Installing plugin : html-report"
-    nsExec::ExecToLog 'gauge --install html-report'
+    nsExec::ExecToLog 'gauge install html-report'
 
     SectionGetFlags ${SEC_JAVA} $R0
     SectionGetFlags ${SEC_CSHARP} $R1
@@ -194,27 +182,27 @@ Section -Post
 
     ${If} $R0 == 1
       DetailPrint "Installing plugin : java"
-      nsExec::ExecToLog 'gauge --install java'
+      nsExec::ExecToLog 'gauge install java'
     ${EndIf}
 
     ${If} $R1 == 1
       DetailPrint "Installing plugin : csharp"
-      nsExec::ExecToLog 'gauge --install csharp'
+      nsExec::ExecToLog 'gauge install csharp'
     ${EndIf}
 
     ${If} $R2 == 1
       DetailPrint "Installing plugin : ruby"
-      nsExec::ExecToLog 'gauge --install ruby'
+      nsExec::ExecToLog 'gauge install ruby'
     ${EndIf}
 
     ${If} $R3 == 1
       DetailPrint "Installing plugin : xml-report"
-      nsExec::ExecToLog 'gauge --install xml-report'
+      nsExec::ExecToLog 'gauge install xml-report'
     ${EndIf}
 
     ${If} $R4 == 1
       DetailPrint "Installing plugin : spectacle"
-      nsExec::ExecToLog 'gauge --install spectacle'
+      nsExec::ExecToLog 'gauge install spectacle'
     ${EndIf}
   ${Else}
     DetailPrint "[WARNING] Internet connection unavailable. Skipping plugins installation"
@@ -237,7 +225,6 @@ Section Uninstall
   Delete "$INSTDIR\uninst.exe"
   Delete "$INSTDIR\plugin-install.bat"
   RMDir /r "$INSTDIR\bin"
-  RMDir /r "$CONFIGPREFIX"
   Delete "$SMPROGRAMS\Gauge\Uninstall.lnk"
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"
   DeleteRegKey HKLM "${PRODUCT_DIR_REGKEY}"

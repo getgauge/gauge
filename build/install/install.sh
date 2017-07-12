@@ -36,7 +36,7 @@ install_plugins() {
     for plugin in $@
     do
         echo "Installing plugin $plugin ..."
-        $prefix/bin/gauge --install $plugin
+        $prefix/bin/gauge install $plugin
     done
     echo -e "${YELLOW}GAUGE_ROOT has been set in ~/.profile. If you face errors, run '$ source ~/.profile'\n${NC}"
 }
@@ -78,19 +78,13 @@ get_absolute_path (){
 }
 
 # Set GAUGE_ROOT and GAUGE binaries to environment variable
-set_gaugeroot() {
+add_gauge_in_path() {
     # ensure gauge is on PATH
     if [[ "$(which gauge)" != $prefix/bin ]]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
     fi
 
-    # ensure GAUGE_ROOT is set
-    echo "Adding GAUGE_ROOT to environment..."
-    if [[ ! -z "$GAUGE_ROOT" && $config != "$GAUGE_ROOT" ]]; then
-        echo "Coppying Gauge configuration at $config. Your older configurations will be at $GAUGE_ROOT/share/gauge."
-    fi
-    echo "export GAUGE_ROOT=$config"  >> ~/.profile
     source ~/.profile
 }
 
@@ -142,26 +136,6 @@ change_permission_if_needed() {
     fi
 }
 
-# Creates configuration dirs in interactive mode if doesn't exist
-create_config_interactively_if_does_not_exist() {
-    if [[ ! -d $config ]]; then
-        echo "Creating $config ..."
-        change_permission_if_needed
-        mkdir -p $config
-    fi
-}
-
-# Creates installation prefix and configuration dirs if doesn't exist. Exits if not able to create.
-create_config_if_does_not_exist() {
-    if [[ ! -d $config ]]; then
-        echo "Creating $config ..."
-        if [[ -d $HOME/.gauge && ! -w $HOME/.gauge ]]; then
-            echo "The directory .gauge already exist but was created with eleveted permission. Please change paermissions for $HOME/.gauge dir or delete it."
-            exit 1
-        fi
-        mkdir -p $config
-    fi
-}
 
 # Copy gauge binaries in $prefix dir
 copy_gauge_binaries_interactively() {
@@ -190,23 +164,6 @@ get_time_stamp() {
     else
         time_stamp=$(date +%s -r $1)
     fi
-}
-
-# copy gauge configuration at $config
-copy_gauge_configuration_files() {
-    gauge_properties_file=$config/gauge.properties
-    if [[ -f $config/timestamp.txt ]]; then
-        current_time_stamp=`get_time_stamp $gauge_properties_file`
-        old_time_stamp=`cat $config/timestamp.txt`
-        if [[ $current_time_stamp != $old_time_stamp ]]; then
-            backup_file=$config/gauge.properties.bak
-            echo "If you have Gauge installed already and there are any manual changes in gauge.properties file, a backup of it has been taken at HOME/.gauge/config/gauge.properties.bak. You can restore these configurations later."
-            rm -rf $backup_file
-            cat $gauge_properties_file > $backup_file
-        fi
-    fi
-    cp -rf config/* $config
-    get_time_stamp $gauge_properties_file > $config/timestamp.txt
 }
 
 # Set prefix for installion in interactive mode
@@ -262,10 +219,7 @@ install_gauge_interactively() {
     set_prefix_interavctively
     create_prefix_interactively
     copy_gauge_binaries_interactively
-    create_config_interactively_if_does_not_exist
-    copy_gauge_configuration_files
-    set_gaugeroot
-    source ~/.profile
+    add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
 }
 
@@ -275,10 +229,7 @@ install_gauge_noninteractively() {
     set_prefix_noninteractively
     create_prefix_noninteractively
     copy_gauge_binaries_noninteractively
-    create_config_if_does_not_exist
-    copy_gauge_configuration_files
-    set_gaugeroot
-    source ~/.profile
+    add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
 }
 
