@@ -214,6 +214,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 }
 
 func (e *specExecutor) notifyAfterSpecHook() {
+	e.currentExecutionInfo.CurrentScenario = nil
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding,
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(m, e.specResult, e.runner)
