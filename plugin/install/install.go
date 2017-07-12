@@ -593,6 +593,9 @@ func AddPluginToProject(pluginName string) error {
 	if err != nil {
 		return nil
 	}
+	if plugin.IsLanguagePlugin(pluginName) {
+		return nil
+	}
 	pd, err := plugin.GetPluginDescriptor(pluginName, "")
 	if err != nil {
 		return err

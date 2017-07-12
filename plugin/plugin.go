@@ -482,6 +482,13 @@ func GetLanguageJSONFilePath(language string) (string, error) {
 	return languageJSON, nil
 }
 
+func IsLanguagePlugin(plugin string) bool {
+	if _, err := GetLanguageJSONFilePath(plugin); err != nil {
+		return false
+	}
+	return true
+}
+
 func QueryParams() string {
 	return fmt.Sprintf("?l=%s&p=%s&o=%s&a=%s", language(), plugins(), runtime.GOOS, runtime.GOARCH)
 }
