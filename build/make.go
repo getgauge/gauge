@@ -164,10 +164,6 @@ func copyGaugeBinaries(installPath string) {
 func getInstallScripts(files map[string]string) map[string]string {
 	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
 		files[filepath.Join("build", "install", installShellScript)] = ""
-	} else if getGOOS() == windows {
-		files[filepath.Join("build", "install", "windows", "plugin-install.bat")] = ""
-		files[filepath.Join("build", "install", "windows", "backup_properties_file.bat")] = ""
-		files[filepath.Join("build", "install", "windows", "set_timestamp.bat")] = ""
 	}
 	return files
 }
@@ -352,9 +348,6 @@ func removeUnwatedFiles(dir, currentOS string) error {
 	}
 	if currentOS == "windows" {
 		fileList = append(fileList, []string{
-			"backup_properties_file.bat",
-			"plugin-install.bat",
-			"set_timestamp.bat",
 			"desktop.ini",
 			"Thumbs.db",
 		}...)
