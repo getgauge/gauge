@@ -31,8 +31,11 @@ import (
 type insertTextFormat int
 
 const (
-	text    insertTextFormat = 1
-	snippet insertTextFormat = 2
+	text     insertTextFormat = 1
+	snippet  insertTextFormat = 2
+	asterisk byte             = 42
+	concept                   = "Concept"
+	step                      = "Step"
 )
 
 type completionItem struct {
@@ -51,37 +54,23 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
-	prefix := ""
-	if params.Position.Character > 0 && files[params.TextDocument.URI][params.Position.Line][params.Position.Character-1] == 42 {
-		prefix = " "
-	}
+	prefix := getPrefix(params)
 	for _, c := range provider.Concepts() {
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
-		list.Items = append(list.Items, completionItem{
-			CompletionItem: lsp.CompletionItem{
-				Label:      c.StepValue.ParameterizedStepValue,
-				Detail:     "Concept",
-				Kind:       lsp.CIKFunction,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: cText},
-				FilterText: cText,
-			},
-			InsertTextFormat: snippet,
-		})
+		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, params.Position))
 	}
 	for _, s := range provider.Steps() {
 		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
-		list.Items = append(list.Items, completionItem{
-			CompletionItem: lsp.CompletionItem{
-				Label:      s.ParameterizedStepValue,
-				Detail:     "Step",
-				Kind:       lsp.CIKFunction,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: params.Position, End: params.Position}, NewText: cText},
-				FilterText: cText,
-			},
-			InsertTextFormat: snippet,
-		})
+		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, step, params.Position))
 	}
 	return list, nil
+}
+
+func getPrefix(p lsp.TextDocumentPositionParams) string {
+	if p.Position.Character > 0 && getChar(p.TextDocument.URI, p.Position.Line, p.Position.Character-1) == asterisk {
+		return " "
+	}
+	return ""
 }
 
 func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
@@ -90,6 +79,19 @@ func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	return params, nil
+}
+
+func newCompletionItem(stepText, text, kind string, p lsp.Position) completionItem {
+	return completionItem{
+		CompletionItem: lsp.CompletionItem{
+			Label:      stepText,
+			Detail:     kind,
+			Kind:       lsp.CIKFunction,
+			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: p, End: p}, NewText: text},
+			FilterText: text,
+		},
+		InsertTextFormat: snippet,
+	}
 }
 
 func addPlaceHolders(text string, args []string) string {

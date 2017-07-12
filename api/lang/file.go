@@ -22,18 +22,47 @@ import (
 
 	"strings"
 
+	"sync"
+
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-var files = make(map[string][]string)
+type files struct {
+	cache map[string][]string
+	sync.Mutex
+}
+
+func (f *files) add(uri, text string) {
+	f.Lock()
+	defer f.Unlock()
+	f.cache[uri] = strings.Split(text, "\n")
+}
+
+func (f *files) remove(uri string) {
+	f.Lock()
+	defer f.Unlock()
+	delete(f.cache, uri)
+}
+
+func (f *files) update(uri, text string) {
+	f.add(uri, text)
+}
+
+func (f *files) char(uri string, line, char int) (asciiCode byte) {
+	f.Lock()
+	defer f.Unlock()
+	return f.cache[uri][line][char]
+}
+
+var f = &files{cache: make(map[string][]string)}
 
 func openFile(req *jsonrpc2.Request) {
 	var params lsp.DidOpenTextDocumentParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return
 	}
-	files[params.TextDocument.URI] = strings.Split(params.TextDocument.Text, "\n")
+	f.add(params.TextDocument.URI, params.TextDocument.Text)
 }
 
 func closeFile(req *jsonrpc2.Request) {
@@ -41,7 +70,8 @@ func closeFile(req *jsonrpc2.Request) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return
 	}
-	delete(files, params.TextDocument.URI)
+	f.remove(params.TextDocument.URI)
+	delete(f.cache, params.TextDocument.URI)
 }
 
 func changeFile(req *jsonrpc2.Request) {
@@ -49,5 +79,9 @@ func changeFile(req *jsonrpc2.Request) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return
 	}
-	files[params.TextDocument.URI] = strings.Split(params.ContentChanges[0].Text, "\n")
+	f.add(params.TextDocument.URI, params.ContentChanges[0].Text)
+}
+
+func getChar(uri string, line, char int) (asciiCode byte) {
+	return f.char(uri, line, char)
 }
