@@ -1,1 +1,0 @@
-gauge install %1
