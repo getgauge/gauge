@@ -71,7 +71,7 @@ Options:
   --refactor=""                    [DEPRECATED] Use 'gauge refactor <old step> <new step>'
   --simple-console=false           [DEPRECATED] Use 'gauge run --simple-console'
   --sort, -s=false                 [DEPRECATED] Use 'gauge run -s specs'
-  --strategy="lazy"                [DEPRECATED] Use 'gauge run -p --strategy=\"eager\"'
+  --strategy="lazy"                [DEPRECATED] This usage will be removed soon.
   --table-rows=""                  [DEPRECATED] Use 'gauge run --table-rows <rows>'
   --tags=""                        [DEPRECATED] Use 'gauge run --tags tag1,tag2 specs'
   --uninstall=""                   [DEPRECATED] Use 'gauge uninstall <plugin name>'

@@ -53,7 +53,6 @@ const (
 	nightlyDatelayout  = "2006-01-02"
 )
 
-
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
 var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
@@ -151,7 +150,6 @@ func installFiles(files map[string]string, installDir string) {
 		}
 	}
 }
-
 
 func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
@@ -398,7 +396,6 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	}
 	os.Chdir(wd)
 }
-
 
 func updateGaugeInstallPrefix() {
 	if *gaugeInstallPrefix == "" {

@@ -69,7 +69,7 @@ var parallel = flag.Bool([]string{"-parallel", "p"}, false, "[DEPRECATED] guage 
 var numberOfExecutionStreams = flag.Int([]string{"n"}, util.NumberOfCores(), "[DEPRECATED] Use guage run -p -n specs/")
 var distribute = flag.Int([]string{"g", "-group"}, -1, "[DEPRECATED] Use gauge -n 5 -g 1 specs/")
 var workingDir = flag.String([]string{"-dir"}, ".", "Set the working directory for the current command, accepts a path relative to current directory.")
-var strategy = flag.String([]string{"-strategy"}, "lazy", "[DEPRECATED] Use gauge run -p --strategy=\"eager\"")
+var strategy = flag.String([]string{"-strategy"}, "lazy", "[DEPRECATED] This usage will be removed soon. Parallel execution uses lazy strategy.")
 var sort = flag.Bool([]string{"-sort", "s"}, false, "[DEPRECATED] Use gauge run -s specs")
 var validate = flag.Bool([]string{"-validate", "-check"}, false, "[DEPRECATED] Use gauge validate specs")
 var updateAll = flag.Bool([]string{"-update-all"}, false, "[DEPRECATED] Use gauge update -a")
@@ -80,6 +80,10 @@ var runFailed = flag.Bool([]string{"-failed"}, false, "[DEPRECATED] Use gauge ru
 var docs = flag.String([]string{"-docs"}, "", "[DEPRECATED] Use gauge docs <plugin name> specs/")
 
 func main() {
+	if os.Getenv("GAUGE_ROOT") != "" {
+		os.Stderr.Write([]byte("[DEPRECATED] GAUGE_ROOT will be removed soon. Use GAUGE_HOME instead. Refer to documentation: https://docs.getgauge.io/faqs.html#what-is-gauge-home \n"))
+
+	}
 	skel.CreateSkelFilesIfRequired()
 	exit, err := cmd.Parse()
 	if err == nil {

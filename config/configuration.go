@@ -18,14 +18,12 @@
 package config
 
 import (
+	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
-
-	"io/ioutil"
-
-	"path/filepath"
 
 	"github.com/getgauge/common"
 	"github.com/op/go-logging"
