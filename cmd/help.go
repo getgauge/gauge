@@ -58,7 +58,7 @@ Options:
   --failed=false                   [DEPRECATED] Use 'gauge run --failed'
   --file, -f=""                    [DEPRECATED] Use 'gauge install <plugin name> -f <zip file>'
   --format=""                      [DEPRECATED] Use 'gauge format specs/'
-  -g, --group=-1                   [DEPRECATED] Use 'gauge -n 5 -g 1 specs/'
+  -g, --group=-1                   [DEPRECATED] Use 'gauge run -n 5 -g 1 specs/'
   --init=""                        [DEPRECATED] Use 'gauge init <template name>'
   --install=""                     [DEPRECATED] Use 'gauge install <plugin name>'
   --install-all=false              [DEPRECATED] Use 'gauge install --all'
