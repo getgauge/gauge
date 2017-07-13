@@ -23,10 +23,7 @@ chmod +x %{buildroot}/usr/local/bin/*
 %files
 /usr/local/bin/gauge
 /usr/local/bin/gauge_screenshot
-
-%post
-echo -e "\n\nPlease run the 'gauge_setup' command to complete installation.\n"
-
+    
 %changelog
 * Fri Apr 1 2016 ThoughtWorks Inc. <studios@thoughtworks.com>
 - Release notes are available at https://github.com/getgauge/gauge/releases

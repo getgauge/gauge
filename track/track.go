@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"strings"
+	"time"
 
 	"fmt"
 
@@ -41,38 +42,61 @@ const (
 	consoleMedium = "console"
 	apiMedium     = "api"
 	ciMedium      = "CI"
+	timeout       = 1
 )
 
-func send(category, action, label, medium string, wg *sync.WaitGroup) {
-	defer wg.Done()
-	if !config.TelemetryEnabled() {
-		return
-	}
-	client, err := ga.NewClient(gaTrackingID)
-	client.HttpClient = &http.Client{}
-	client.ClientID(config.UniqueID())
-	client.AnonymizeIP(true)
-	client.ApplicationName(appName)
-	client.ApplicationVersion(version.FullVersion())
-	client.CampaignMedium(medium)
-	client.CampaignSource(appName)
+var gaHTTPTransport = http.DefaultTransport
 
-	if config.TelemetryLogEnabled() {
-		client.HttpClient = newlogEnabledHTTPClient()
-	}
+var telemetryEnabled = config.TelemetryEnabled()
+var telemetryLogEnabled = config.TelemetryLogEnabled()
 
-	if err != nil {
-		logger.Warningf("Unable to create ga client, %s", err)
+func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
+	if !telemetryEnabled {
+		wg.Done()
+		return false
 	}
+	sendChan := make(chan bool, 1)
+	go func(c chan<- bool) {
+		client, err := ga.NewClient(gaTrackingID)
+		client.HttpClient = &http.Client{}
+		client.ClientID(config.UniqueID())
+		client.AnonymizeIP(true)
+		client.ApplicationName(appName)
+		client.ApplicationVersion(version.FullVersion())
+		client.CampaignMedium(medium)
+		client.CampaignSource(appName)
+		client.HttpClient.Transport = gaHTTPTransport
 
-	ev := ga.NewEvent(category, action)
-	if label != "" {
-		ev.Label(label)
-	}
+		if telemetryLogEnabled {
+			client.HttpClient.Transport = newlogEnabledHTTPTransport()
+		}
 
-	err = client.Send(ev)
-	if err != nil {
-		logger.Warningf("Unable to send analytics data, %s", err)
+		if err != nil {
+			logger.Debugf("Unable to create ga client, %s", err)
+		}
+
+		ev := ga.NewEvent(category, action)
+		if label != "" {
+			ev.Label(label)
+		}
+
+		err = client.Send(ev)
+		if err != nil {
+			logger.Debugf("Unable to send analytics data, %s", err)
+		}
+		c <- true
+	}(sendChan)
+
+	for {
+		select {
+		case <-sendChan:
+			wg.Done()
+			return true
+		case <-time.After(timeout * time.Second):
+			logger.Debugf("Unable to send analytics data, timed out")
+			wg.Done()
+			return false
+		}
 	}
 }
 
@@ -132,7 +156,7 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 	if parallel {
 		action = "parallel"
 	}
-	flags := []string{action}
+	flags := []string{}
 
 	if tagged {
 		flags = append(flags, "tagged")
@@ -144,6 +168,8 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 
 	if simpleConsole {
 		flags = append(flags, "simple-console")
+	} else {
+		flags = append(flags, "rich-console")
 	}
 
 	if verbose {
@@ -171,7 +197,7 @@ func Refactor() {
 }
 
 func ListTemplates() {
-	trackConsole("templates", "list", "")
+	trackConsole("init", "templates", "")
 }
 
 func AddPlugins(plugin string) {
@@ -199,11 +225,11 @@ func Update(plugin string) {
 }
 
 func UpdateAll() {
-	trackConsole("plugins", "update-all", "")
+	trackConsole("plugins", "update-all", "all")
 }
 
 func InstallAll() {
-	trackConsole("plugins", "install-all", "")
+	trackConsole("plugins", "install-all", "all")
 }
 
 func CheckUpdates() {
@@ -230,10 +256,8 @@ func APIFormat() {
 	trackAPI("formatting", "format", "")
 }
 
-func newlogEnabledHTTPClient() *http.Client {
-	return &http.Client{
-		Transport: logEnabledRoundTripper{},
-	}
+func newlogEnabledHTTPTransport() http.RoundTripper {
+	return &logEnabledRoundTripper{}
 }
 
 type logEnabledRoundTripper struct {
@@ -242,7 +266,7 @@ type logEnabledRoundTripper struct {
 func (r logEnabledRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	dump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		logger.Warningf("Unable to dump analytics request, %s", err)
+		logger.Debugf("Unable to dump analytics request, %s", err)
 	}
 
 	logger.Debugf(fmt.Sprintf("%q", dump))
