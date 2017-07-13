@@ -22,8 +22,6 @@ import (
 	"reflect"
 	"testing"
 
-	"fmt"
-
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -87,19 +85,21 @@ func TestCompletion(t *testing.T) {
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:    "concept1",
-				Detail:   "Concept",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{}, NewText: `concept1`},
+				Label:      "concept1",
+				Detail:     "Concept",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `concept1`},
+				FilterText: `concept1`,
 			},
 			InsertTextFormat: snippet,
 		},
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:    "Say <hello> to <gauge>",
-				Detail:   "Step",
-				Kind:     lsp.CIKFunction,
-				TextEdit: lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				Label:      "Say <hello> to <gauge>",
+				Detail:     "Step",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				FilterText: "Say <hello> to <gauge>",
 			},
 			InsertTextFormat: snippet,
 		},
@@ -116,10 +116,6 @@ func TestCompletion(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(got, want) {
-		a, _ := json.Marshal(got)
-		b, _ := json.Marshal(want)
-		fmt.Println(string(a))
-		fmt.Println(string(b))
 		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
 	}
 }
@@ -154,5 +150,40 @@ func TestCompletionResolveWithError(t *testing.T) {
 
 	if err == nil {
 		t.Error("Expected error != nil in Completion, got nil")
+	}
+}
+
+func TestGetPrefix(t *testing.T) {
+	want := " "
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", "line1\n*")
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: lsp.Position{Line: 1, Character: 1}}
+	got := getPrefix(params)
+
+	if got != want {
+		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
+	}
+}
+
+func TestGetPrefixWithSpace(t *testing.T) {
+	want := ""
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", "* ")
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: lsp.Position{Line: 0, Character: 2}}
+	got := getPrefix(params)
+
+	if got != want {
+		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
+	}
+}
+
+func TestGetPrefixWithNoCharsInLine(t *testing.T) {
+	want := ""
+	f = &files{cache: make(map[string][]string)}
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: lsp.Position{Line: 1, Character: 0}}
+	got := getPrefix(params)
+
+	if got != want {
+		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
 	}
 }
