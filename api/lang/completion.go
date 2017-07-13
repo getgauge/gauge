@@ -56,12 +56,12 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	prefix := getPrefix(params)
 	for _, c := range provider.Concepts() {
-		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
-		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, params.Position))
+		cText := addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
+		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, prefix, concept, params.Position))
 	}
 	for _, s := range provider.Steps() {
-		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
-		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, step, params.Position))
+		cText := addPlaceHolders(s.StepValue, s.Args)
+		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, prefix, step, params.Position))
 	}
 	return list, nil
 }
@@ -81,14 +81,14 @@ func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
 	return params, nil
 }
 
-func newCompletionItem(stepText, text, kind string, p lsp.Position) completionItem {
+func newCompletionItem(stepText, text, prefix, kind string, p lsp.Position) completionItem {
 	return completionItem{
 		CompletionItem: lsp.CompletionItem{
 			Label:      stepText,
 			Detail:     kind,
 			Kind:       lsp.CIKFunction,
-			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: p, End: p}, NewText: text},
-			FilterText: text,
+			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: p, End: p}, NewText: prefix + text},
+			FilterText: prefix + stepText,
 		},
 		InsertTextFormat: snippet,
 	}

@@ -99,7 +99,7 @@ func TestCompletion(t *testing.T) {
 				Detail:     "Step",
 				Kind:       lsp.CIKFunction,
 				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
-				FilterText: `Say "${1:hello}" to "${0:gauge}"`,
+				FilterText: "Say <hello> to <gauge>",
 			},
 			InsertTextFormat: snippet,
 		},
