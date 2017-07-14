@@ -80,7 +80,7 @@ func TestMergedProperties(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	os.Setenv("GAUGE_ROOT", s)
+	os.Setenv("GAUGE_HOME", s)
 
 	p := MergedProperties()
 	got, err := p.get(checkUpdates)
@@ -91,7 +91,7 @@ func TestMergedProperties(t *testing.T) {
 	if got != want {
 		t.Errorf("Properties Merge failed, want: %s == `%s`, got `%s`", checkUpdates, want, got)
 	}
-	os.Setenv("GAUGE_ROOT", "")
+	os.Setenv("GAUGE_HOME", "")
 	err = os.Remove(idFile)
 	if err != nil {
 		t.Error(err)

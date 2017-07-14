@@ -97,13 +97,13 @@ func TestReadUniqueID(t *testing.T) {
 		t.Error(err)
 	}
 
-	os.Setenv("GAUGE_ROOT", s)
+	os.Setenv("GAUGE_HOME", s)
 	got := UniqueID()
 
 	if got != expected {
 		t.Errorf("Expected UniqueID=%s, got %s", expected, got)
 	}
-	os.Setenv("GAUGE_ROOT", "")
+	os.Setenv("GAUGE_HOME", "")
 	err = os.Remove(idFile)
 	if err != nil {
 		t.Error(err)
