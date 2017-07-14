@@ -49,7 +49,7 @@ Simply type ` + GaugeCmd.Name() + ` help [path to command] for full details.`,
 	legacyUsage = `Gauge 0.8.5 and below
 
 Options:
-  --add-plugin=""                  [DEPRECATED] Use 'gauge add <plugin name>'
+  --add-plugin=""                  [DEPRECATED] Use 'gauge install <plugin name>'
   --api-port=""                    [DEPRECATED] Use 'gauge daemon <port>'
   --check-updates=false            [DEPRECATED] Use 'gauge update -c'
   --daemonize=false                [DEPRECATED] Use 'gauge daemon <port>'
@@ -66,7 +66,7 @@ Options:
   --machine-readable=false         [DEPRECATED] Use 'gauge version -m'
   -n=8                             [DEPRECATED] Use 'gauge run -p -n specs/'
   --parallel, -p=false             [DEPRECATED] Use 'gauge run -p specs/'
-  --args=""                        [DEPRECATED] Use 'gauge add <plugin name> --args <args>'
+  --plugin-args=""                 [DEPRECATED] This usage is removed.
   --plugin-version=""              [DEPRECATED] Use 'gauge [install|uninstall] <plugin name> -v <version>'
   --refactor=""                    [DEPRECATED] Use 'gauge refactor <old step> <new step>'
   --simple-console=false           [DEPRECATED] Use 'gauge run --simple-console'
