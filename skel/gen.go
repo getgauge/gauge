@@ -35,7 +35,7 @@ func CreateSkelFilesIfRequired() {
 		return
 	}
 	if _, err := os.Stat(p); os.IsNotExist(err) {
-		logger.GaugeLog.Infof("Config directory does not exist. Setting up config directory `%s`.", p)
+		logger.GaugeLog.Debugf("Config directory does not exist. Setting up config directory `%s`.", p)
 		err = os.MkdirAll(p, common.NewDirectoryPermissions)
 		if err != nil {
 			logger.GaugeLog.Errorf("Unable to create config path dir `%s`. Error: %s", p, err.Error())
