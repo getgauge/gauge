@@ -26,13 +26,13 @@ import (
 )
 
 func TestCreateSkelFilesIfRequired(t *testing.T) {
-	origGaugeRoot := os.Getenv("GAUGE_ROOT")
-	gaugeRootDir := filepath.Join("_testdata", "GaugeRoot")
-	err := os.Mkdir(gaugeRootDir, common.NewDirectoryPermissions)
+	origGaugeHome := os.Getenv("GAUGE_HOME")
+	gaugeHomeDir := filepath.Join("_testdata", "GaugeHome")
+	err := os.Mkdir(gaugeHomeDir, common.NewDirectoryPermissions)
 	if err != nil {
 		t.Fatalf("Unable to create Gauge Root Dir, %s", err)
 	}
-	os.Setenv("GAUGE_ROOT", gaugeRootDir)
+	os.Setenv("GAUGE_HOME", gaugeHomeDir)
 	expectedFiles := []string{
 		"notice.md",
 		"gauge.properties",
@@ -44,13 +44,13 @@ func TestCreateSkelFilesIfRequired(t *testing.T) {
 	CreateSkelFilesIfRequired()
 
 	for _, expectedFile := range expectedFiles {
-		if _, err := os.Stat(filepath.Join(gaugeRootDir, expectedFile)); err != nil {
+		if _, err := os.Stat(filepath.Join(gaugeHomeDir, expectedFile)); err != nil {
 			t.Errorf("Expected %s to exist. %s", expectedFile, err)
 		}
 	}
-	err = os.RemoveAll(gaugeRootDir)
+	err = os.RemoveAll(gaugeHomeDir)
 	if err != nil {
 		t.Fatalf("Unable to clean up Gauge Root Dir, %s", err)
 	}
-	os.Setenv("GAUGE_ROOT", origGaugeRoot)
+	os.Setenv("GAUGE_ROOT", origGaugeHome)
 }
