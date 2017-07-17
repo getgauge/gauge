@@ -277,7 +277,7 @@ if [[ $# != 0 ]]; then
 fi
 
 # If tty then perform installation in interactive mode.
-if [["$CONTINUOUS_INTEGRATION" -ne "true"]] || tty -s; then
+if [[ "$CONTINUOUS_INTEGRATION" != "true" ]] && [[ "$CI" != "true" ]] && tty -s; then
     do_interactive_installation
 else
     do_noninteractive_installation
