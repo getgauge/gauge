@@ -45,18 +45,18 @@ func CreateSkelFilesIfRequired() {
 	if err != nil {
 		logger.GaugeLog.Errorf("Unable to create gauge.properties. Error: %s", err.Error())
 	}
-	writeFile(filepath.Join(p, "notice.md"), Notice)
-	writeFile(filepath.Join(p, "skel", "example.spec"), ExampleSpec)
-	writeFile(filepath.Join(p, "skel", "env", "default.properties"), DefaultProperties)
-	writeFile(filepath.Join(p, "skel", ".gitignore"), Gitignore)
+	writeFile(filepath.Join(p, "notice.md"), Notice, true)
+	writeFile(filepath.Join(p, "skel", "example.spec"), ExampleSpec, false)
+	writeFile(filepath.Join(p, "skel", "env", "default.properties"), DefaultProperties, false)
+	writeFile(filepath.Join(p, "skel", ".gitignore"), Gitignore, false)
 
 	idFile := filepath.Join(p, "id")
 	if !common.FileExists(idFile) {
-		writeFile(idFile, uuid.NewV4().String())
+		writeFile(idFile, uuid.NewV4().String(), false)
 	}
 }
 
-func writeFile(path, text string) {
+func writeFile(path, text string, overwrite bool) {
 	dirPath := filepath.Dir(path)
 	if !common.DirExists(dirPath) {
 		err := os.MkdirAll(dirPath, common.NewDirectoryPermissions)
@@ -65,7 +65,7 @@ func writeFile(path, text string) {
 			return
 		}
 	}
-	if !common.FileExists(path) {
+	if !common.FileExists(path) || overwrite {
 		err := ioutil.WriteFile(path, []byte(text), common.NewFilePermissions)
 		if err != nil {
 			logger.GaugeLog.Errorf("Unable to create file `%s`. Error: %s", path, err.Error())
