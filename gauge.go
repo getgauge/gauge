@@ -85,6 +85,7 @@ func main() {
 
 	}
 	skel.CreateSkelFilesIfRequired()
+	track.Init()
 	exit, err := cmd.Parse()
 	if err == nil {
 		os.Exit(exit)

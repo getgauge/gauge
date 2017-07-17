@@ -47,8 +47,12 @@ const (
 
 var gaHTTPTransport = http.DefaultTransport
 
-var telemetryEnabled = config.TelemetryEnabled()
-var telemetryLogEnabled = config.TelemetryLogEnabled()
+var telemetryEnabled,telemetryLogEnabled bool
+
+func Init(){
+	telemetryEnabled = config.TelemetryEnabled()
+	telemetryLogEnabled = config.TelemetryLogEnabled()
+}
 
 func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 	if !telemetryEnabled {
