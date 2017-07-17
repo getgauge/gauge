@@ -28,7 +28,7 @@ var (
 	installCmd = &cobra.Command{
 		Use:   "install [flags] [plugin]",
 		Short: "Download and install plugin(s)",
-		Long:  "Download and install specified plugin or all plugins in the project's `manifest.json` file.",
+		Long:  `Download and install specified plugin or all plugins in the project's 'manifest.json' file.`,
 		Example: `  gauge install
   gauge install java
   gauge install java -f gauge-java-0.6.3-darwin.x86_64.zip`,

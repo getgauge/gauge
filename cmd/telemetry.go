@@ -30,8 +30,8 @@ import (
 var (
 	telemetryCmd = &cobra.Command{
 		Use:   "telemetry [command]",
-		Short: "Configure options for sending anonymous usage statistics",
-		Long:  "Configure options for sending anonymous usage statistics.",
+		Short: "Configure options for sending anonymous usage stats",
+		Long:  `Configure options for sending anonymous usage stats.`,
 		Example: `  gauge telemetry on
   gauge telemetry off
   gauge telemetry`,

@@ -88,9 +88,7 @@ func (w *commandWriter) display() {
 func Parse() (int, error) {
 	writer := &commandWriter{}
 	GaugeCmd.SetOutput(writer)
-	for _, c := range append(GaugeCmd.Commands(), GaugeCmd) {
-		c.Flags().BoolP("help", "h", false, "Help for "+c.Name())
-	}
+	InitHelp(GaugeCmd)
 	if cmd, err := GaugeCmd.ExecuteC(); err != nil {
 		if cmd == GaugeCmd {
 			return 1, errors.New("Failed parsing using the new gauge command structure, falling back to the old usage.")
@@ -100,6 +98,14 @@ func Parse() (int, error) {
 	}
 	writer.display()
 	return 0, nil
+}
+func InitHelp(c *cobra.Command) {
+	c.Flags().BoolP("help", "h", false, "Help for "+c.Name())
+	if c.HasSubCommands() {
+		for _, sc := range c.Commands() {
+			InitHelp(sc)
+		}
+	}
 }
 
 func getSpecsDir(args []string) []string {

@@ -31,7 +31,7 @@ var (
 	daemonCmd = &cobra.Command{
 		Use:     "daemon [flags] <port> [args]",
 		Short:   "Run as a daemon",
-		Long:    "Run as a daemon.",
+		Long:    `Run as a daemon.`,
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()

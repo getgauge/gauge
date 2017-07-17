@@ -27,7 +27,7 @@ import (
 var uninstallCmd = &cobra.Command{
 	Use:     "uninstall [flags] <plugin>",
 	Short:   "Uninstalls a plugin",
-	Long:    "Uninstalls a plugin.",
+	Long:    `Uninstalls a plugin.`,
 	Example: `  gauge uninstall java`,
 	Run: func(cmd *cobra.Command, args []string) {
 		setGlobalFlags()

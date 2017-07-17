@@ -39,7 +39,7 @@ var (
 	runCmd = &cobra.Command{
 		Use:   "run [flags] [args]",
 		Short: "Run specs",
-		Long:  "Run specs.",
+		Long:  `Run specs.`,
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {

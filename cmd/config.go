@@ -29,7 +29,7 @@ var (
 	configCmd = &cobra.Command{
 		Use:     "config [flags] [args]",
 		Short:   "Change global configurations",
-		Long:    "Change global configurations.",
+		Long:    `Change global configurations.`,
 		Example: `  gauge config check_updates false`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()

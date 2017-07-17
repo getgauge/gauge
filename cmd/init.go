@@ -28,7 +28,7 @@ var (
 	initCmd = &cobra.Command{
 		Use:     "init [flags] <template>",
 		Short:   "Initialize project structure in the current directory",
-		Long:    "Initialize project structure in the current directory.",
+		Long:    `Initialize project structure in the current directory.`,
 		Example: "  gauge init java",
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()

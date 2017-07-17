@@ -32,7 +32,7 @@ var (
 	versionCmd = &cobra.Command{
 		Use:   "version [flags]",
 		Short: "Print Gauge and plugin versions",
-		Long:  "Print Gauge and plugin versions.",
+		Long:  `Print Gauge and plugin versions.`,
 		Example: `  gauge version
   gauge version -m`,
 		Run: func(cmd *cobra.Command, args []string) {
