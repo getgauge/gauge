@@ -237,7 +237,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 	for _, pluginID := range manifest.Plugins {
 		pd, err := GetPluginDescriptor(pluginID, "")
 		if err != nil {
-			warnings = append(warnings, fmt.Sprintf("Unable to start plugin %s. %s. To install, run `gauge --install %s`.", pluginID, err.Error(), pluginID))
+			warnings = append(warnings, fmt.Sprintf("Unable to start plugin %s. %s. To install, run `gauge install %s`.", pluginID, err.Error(), pluginID))
 			continue
 		}
 		compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport)
@@ -280,7 +280,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 func GenerateDoc(pluginName string, specDirs []string, port int) {
 	pd, err := GetPluginDescriptor(pluginName, "")
 	if err != nil {
-		logger.Fatalf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge --install %s`.", pluginName, err.Error(), pluginName)
+		logger.Fatalf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge install %s`.", pluginName, err.Error(), pluginName)
 	}
 	if err := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport); err != nil {
 		logger.Fatalf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion)
@@ -444,7 +444,7 @@ func GetPluginsInfo() []PluginInfo {
 	allPluginsWithVersion, err := GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		logger.Infof("No plugins found")
-		logger.Infof("Plugins can be installed with `gauge --install {plugin-name}`")
+		logger.Infof("Plugins can be installed with `gauge install {plugin-name}`")
 		os.Exit(0)
 	}
 	return allPluginsWithVersion

@@ -53,7 +53,7 @@ func (s *MySuite) TestCreatePluginUpdateDetailWhenThereIsAnUpdate(c *C) {
 	c.Assert(len(updateDetails), Equals, 1)
 	c.Assert(updateDetails[0].Name, Equals, ruby)
 	c.Assert(updateDetails[0].CompatibleVersion, Equals, "0.1.1")
-	c.Assert(updateDetails[0].Message, Equals, "Run 'gauge --update ruby'")
+	c.Assert(updateDetails[0].Message, Equals, "Run 'gauge update ruby'")
 }
 
 func (s *MySuite) TestCreatePluginUpdateDetailWhenThereIsNoUpdate(c *C) {

@@ -146,7 +146,7 @@ func createPluginUpdateDetail(currentVersion string, latestVersionDetails instal
 		if err != nil {
 			return updateInfo
 		}
-		updateInfo = append(updateInfo, UpdateInfo{latestVersionDetails.Name, versionDesc.Version, fmt.Sprintf("Run 'gauge --update %s'", latestVersionDetails.Name)})
+		updateInfo = append(updateInfo, UpdateInfo{latestVersionDetails.Name, versionDesc.Version, fmt.Sprintf("Run 'gauge update %s'", latestVersionDetails.Name)})
 	}
 	return updateInfo
 }

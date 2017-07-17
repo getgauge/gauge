@@ -177,7 +177,7 @@ func main() {
 
 func refactorInit(args []string) {
 	if len(args) < 1 {
-		logger.Fatalf("Flag needs at least two arguments: --refactor\nUsage : gauge --refactor <old step> <new step> [[spec directories]]")
+		logger.Fatalf("Flag needs at least two arguments: refactor\nUsage : gauge refactor <old step> <new step> [[spec directories]]")
 	}
 	var specDirs = []string{common.SpecsDirectoryName}
 	if len(args) > 1 {

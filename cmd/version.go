@@ -79,7 +79,7 @@ func PrintVersion() {
 	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		fmt.Println("No plugins found")
-		fmt.Println("Plugins can be installed with `gauge --install {plugin-name}`")
+		fmt.Println("Plugins can be installed with `gauge install {plugin-name}`")
 		os.Exit(0)
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
