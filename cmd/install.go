@@ -36,7 +36,7 @@ var (
 			setGlobalFlags()
 			if len(args) < 1 {
 				track.InstallAll()
-				install.InstallAllPlugins()
+				install.AllPlugins()
 				return
 			}
 			if zip != "" {
@@ -44,7 +44,7 @@ var (
 				install.HandleInstallResult(install.InstallPluginFromZipFile(zip, args[0]), args[0], true)
 			} else {
 				track.Install(args[0], false)
-				install.HandleInstallResult(install.InstallPlugin(args[0], pVersion), args[0], true)
+				install.HandleInstallResult(install.Plugin(args[0], pVersion), args[0], true)
 			}
 			if err := install.AddPluginToProject(args[0]); err != nil {
 				logger.Fatalf("Failed to add plugin %s to project : %s\n", args[0], err.Error())
