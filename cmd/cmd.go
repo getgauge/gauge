@@ -38,6 +38,7 @@ var (
 				cmd.Help()
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 	logLevel string
 	dir      string

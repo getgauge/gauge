@@ -44,6 +44,7 @@ Simply type ` + GaugeCmd.Name() + ` help [path to command] for full details.`,
 				cmd.Help()
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 	legacy      bool
 	legacyUsage = `Gauge 0.8.5 and below

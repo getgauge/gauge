@@ -43,6 +43,7 @@ var (
 			track.ProjectInit(args[0])
 			projectInit.InitializeProject(args[0])
 		},
+		DisableAutoGenTag: true,
 	}
 	templates bool
 )

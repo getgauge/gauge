@@ -38,6 +38,7 @@ var validateCmd = &cobra.Command{
 		track.Validation()
 		validation.Validate(args)
 	},
+	DisableAutoGenTag: true,
 }
 
 func init() {

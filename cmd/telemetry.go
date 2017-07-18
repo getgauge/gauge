@@ -42,6 +42,7 @@ var (
 			}
 			fmt.Println(map[bool]string{true: "on", false: "off"}[config.TelemetryEnabled()])
 		},
+		DisableAutoGenTag: true,
 	}
 
 	onCmd = &cobra.Command{

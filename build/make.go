@@ -173,6 +173,7 @@ func setEnv(envVariables map[string]string) {
 }
 
 var test = flag.Bool("test", false, "Run the test cases")
+var manpage = flag.Bool("manpage", false, "generate markdown man pages")
 var coverage = flag.Bool("coverage", false, "Run the test cases and show the coverage")
 var install = flag.Bool("install", false, "Install to the specified prefix")
 var nightly = flag.Bool("nightly", false, "Add nightly build information")
@@ -219,6 +220,8 @@ func main() {
 		installGauge()
 	} else if *distro {
 		createGaugeDistributables(*allPlatforms)
+	} else if *manpage {
+		runProcess("go", "run", filepath.Join(os.Getenv("GOPATH"), "src", "github.com", "getgauge", "gauge", "build", "docs", "docs.go"))
 	} else {
 		if *allPlatforms {
 			crossCompileGauge()
