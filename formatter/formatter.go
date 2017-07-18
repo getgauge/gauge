@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	tableLeftSpacing = 5
+	tableLeftSpacing = 3
 )
 
 func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
