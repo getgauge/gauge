@@ -74,7 +74,7 @@ func TestPropertiesFormat(t *testing.T) {
 
 func TestMergedProperties(t *testing.T) {
 	want := "false"
-	idFile := filepath.Join("_testData", "gauge.properties")
+	idFile := filepath.Join("_testData", "config", "gauge.properties")
 	ioutil.WriteFile(idFile, []byte("check_updates=false"), common.NewFilePermissions)
 	s, err := filepath.Abs("_testData")
 	if err != nil {

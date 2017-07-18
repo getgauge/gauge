@@ -26,6 +26,7 @@ import (
 )
 
 func TestCreateSkelFilesIfRequired(t *testing.T) {
+	config := "config"
 	origGaugeHome := os.Getenv("GAUGE_HOME")
 	gaugeHomeDir := filepath.Join("_testdata", "GaugeHome")
 	err := os.Mkdir(gaugeHomeDir, common.NewDirectoryPermissions)
@@ -44,7 +45,7 @@ func TestCreateSkelFilesIfRequired(t *testing.T) {
 	CreateSkelFilesIfRequired()
 
 	for _, expectedFile := range expectedFiles {
-		if _, err := os.Stat(filepath.Join(gaugeHomeDir, expectedFile)); err != nil {
+		if _, err := os.Stat(filepath.Join(gaugeHomeDir, config, expectedFile)); err != nil {
 			t.Errorf("Expected %s to exist. %s", expectedFile, err)
 		}
 	}
