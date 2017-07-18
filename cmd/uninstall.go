@@ -37,6 +37,7 @@ var uninstallCmd = &cobra.Command{
 		track.UninstallPlugin(args[0])
 		install.UninstallPlugin(args[0], pVersion)
 	},
+	DisableAutoGenTag: true,
 }
 
 func init() {

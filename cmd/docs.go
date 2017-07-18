@@ -43,6 +43,7 @@ var docsCmd = &cobra.Command{
 		gaugeConnectionHandler := api.Start(specDirs)
 		plugin.GenerateDoc(args[0], specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 	},
+	DisableAutoGenTag: true,
 }
 
 func init() {

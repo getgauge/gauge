@@ -46,6 +46,7 @@ var (
 				logger.Fatalf(err.Error())
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 	list bool
 )
