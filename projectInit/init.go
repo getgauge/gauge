@@ -105,7 +105,7 @@ func installRunner(templateName string) {
 	if !install.IsCompatiblePluginInstalled(language, true) {
 		logger.Infof("Compatible langauge plugin %s is not installed. Installing plugin...", language)
 
-		install.HandleInstallResult(install.InstallPlugin(language, ""), language, true)
+		install.HandleInstallResult(install.Plugin(language, ""), language, true)
 	}
 }
 

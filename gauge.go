@@ -122,16 +122,16 @@ func main() {
 		install.HandleInstallResult(install.InstallPluginFromZipFile(*installZip, *installPlugin), *installPlugin, true)
 	} else if *installPlugin != "" {
 		track.Install(*installPlugin, false)
-		install.HandleInstallResult(install.InstallPlugin(*installPlugin, *pluginVersion), *installPlugin, true)
+		install.HandleInstallResult(install.Plugin(*installPlugin, *pluginVersion), *installPlugin, true)
 	} else if *uninstallPlugin != "" {
 		track.UninstallPlugin(*uninstallPlugin)
 		install.UninstallPlugin(*uninstallPlugin, *pluginVersion)
 	} else if *installAll {
 		track.InstallAll()
-		install.InstallAllPlugins()
+		install.AllPlugins()
 	} else if *update != "" {
 		track.Update(*update)
-		install.HandleUpdateResult(install.InstallPlugin(*update, *pluginVersion), *update, true)
+		install.HandleUpdateResult(install.Plugin(*update, *pluginVersion), *update, true)
 	} else if *updateAll {
 		track.UpdateAll()
 		install.UpdatePlugins()

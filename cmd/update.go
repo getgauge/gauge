@@ -47,7 +47,7 @@ var (
 				logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
 			}
 			track.Update(args[0])
-			install.HandleUpdateResult(install.InstallPlugin(args[0], pVersion), args[0], true)
+			install.HandleUpdateResult(install.Plugin(args[0], pVersion), args[0], true)
 		},
 	}
 	all   bool

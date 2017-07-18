@@ -79,6 +79,7 @@ type platformSpecificURL struct {
 type InstallResult struct {
 	Error   error
 	Warning string
+	Info    string
 	Success bool
 	Skipped bool
 }
@@ -91,12 +92,11 @@ func installError(err error) InstallResult {
 	return InstallResult{Error: err, Success: false}
 }
 
-func installSuccess(warning string) InstallResult {
-	return InstallResult{Warning: warning, Success: true}
+func installSuccess(info string) InstallResult {
+	return InstallResult{Info: info, Success: true}
 }
-
-func installSkipped(warning string) InstallResult {
-	return InstallResult{Warning: warning, Skipped: true}
+func installSkipped(warning, info string) InstallResult {
+	return InstallResult{Warning: warning, Info: info, Skipped: true}
 }
 
 // GaugePlugin represents any plugin to Gauge. It can be an language runner or any other plugin.
@@ -173,7 +173,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	}
 
 	// copy files to gauge plugin install location
-	logger.Infof("Installing plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
+	logger.Debugf("Installing plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
@@ -215,9 +215,9 @@ func parsePluginJSON(pluginDir, pluginName string) (*GaugePlugin, error) {
 	return &gp, nil
 }
 
-// InstallPlugin download and install the latest plugin(if version not specified) of given plugin name
-func InstallPlugin(pluginName, version string) InstallResult {
-	logger.Infof("Gathering metadata for %s", pluginName)
+// Plugin download and install the latest plugin(if version not specified) of given plugin name
+func Plugin(pluginName, version string) InstallResult {
+	logger.Debugf("Gathering metadata for %s", pluginName)
 	installDescription, result := getInstallDescription(pluginName, false)
 	defer util.RemoveTempDir()
 	if !result.Success {
@@ -248,7 +248,7 @@ func installPluginWithDescription(installDescription *installDescription, curren
 
 func installPluginVersion(installDesc *installDescription, versionInstallDescription *versionInstallDescription) InstallResult {
 	if common.IsPluginInstalled(installDesc.Name, versionInstallDescription.Version) {
-		return installSkipped(fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
+		return installSkipped("", fmt.Sprintf("Plugin %s %s is already installed.", installDesc.Name, versionInstallDescription.Version))
 	}
 
 	downloadLink, err := getDownloadLink(versionInstallDescription.DownloadUrls)
@@ -258,7 +258,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	logger.Infof("Downloading %s", filepath.Base(downloadLink))
+	logger.Debugf("Downloading %s", filepath.Base(downloadLink))
 	pluginZip, err := util.Download(downloadLink, tempDir, "", false)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
@@ -284,7 +284,7 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 		return nil
 	}
 
-	logger.Infof("Running plugin hook command => %s", command)
+	logger.Debugf("Running plugin hook command => %s", command)
 	cmd, err := common.ExecuteSystemCommand(command, workingDir, os.Stdout, os.Stderr)
 
 	if err != nil {
@@ -468,8 +468,8 @@ func getRunnerJSONContents(file string) (*runner.RunnerInfo, error) {
 	return &r, nil
 }
 
-// InstallAllPlugins install the latest version of all plugins specified in Gauge project manifest file
-func InstallAllPlugins() {
+// AllPlugins install the latest version of all plugins specified in Gauge project manifest file
+func AllPlugins() {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(err.Error())
@@ -481,12 +481,11 @@ func InstallAllPlugins() {
 func UpdatePlugins() {
 	var failedPlugin []string
 	for _, pluginInfo := range plugin.GetPluginsInfo() {
-		logger.Infof("Updating plugin '%s'", pluginInfo.Name)
-		passed := HandleUpdateResult(InstallPlugin(pluginInfo.Name, ""), pluginInfo.Name, false)
+		logger.Debugf("Updating plugin '%s'", pluginInfo.Name)
+		passed := HandleUpdateResult(Plugin(pluginInfo.Name, ""), pluginInfo.Name, false)
 		if !passed {
 			failedPlugin = append(failedPlugin, pluginInfo.Name)
 		}
-		fmt.Println()
 	}
 	if len(failedPlugin) > 0 {
 		logger.Fatalf("Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
@@ -497,6 +496,9 @@ func UpdatePlugins() {
 // HandleInstallResult handles the result of plugin Installation
 // TODO: Merge both HandleInstallResult and HandleUpdateResult, eliminate boolean exitIfFailure
 func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
+	if result.Info != "" {
+		logger.Debugf(result.Info)
+	}
 	if result.Warning != "" {
 		logger.Warningf(result.Warning)
 	}
@@ -517,6 +519,9 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 
 // HandleUpdateResult handles the result of plugin Installation
 func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
+	if result.Info != "" {
+		logger.Debugf(result.Info)
+	}
 	if result.Warning != "" {
 		logger.Warningf(result.Warning)
 	}
@@ -544,9 +549,9 @@ func installPluginsFromManifest(manifest *manifest.Manifest) {
 	for pluginName, isRunner := range pluginsMap {
 		if !IsCompatiblePluginInstalled(pluginName, isRunner) {
 			logger.Infof("Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
-			HandleInstallResult(InstallPlugin(pluginName, ""), pluginName, false)
+			HandleInstallResult(Plugin(pluginName, ""), pluginName, false)
 		} else {
-			logger.Infof("Plugin %s is already installed.", pluginName)
+			logger.Debugf("Plugin %s is already installed.", pluginName)
 		}
 	}
 }
@@ -601,7 +606,7 @@ func AddPluginToProject(pluginName string) error {
 		return err
 	}
 	if plugin.IsPluginAdded(m, pd) {
-		logger.Warningf("Plugin %s is already added.", pd.Name)
+		logger.Debugf("Plugin %s is already added.", pd.Name)
 		return nil
 	}
 	m.Plugins = append(m.Plugins, pd.ID)
@@ -641,8 +646,8 @@ func AddPlugin(pluginName string, pluginArgs string) error {
 // TODO: Remove this function after removing the `--add-plugin` flag.
 func addPluginToTheProject(pluginName string, pluginArgs map[string]string, manifest *manifest.Manifest) error {
 	if !plugin.IsPluginInstalled(pluginName, pluginArgs["version"]) {
-		logger.Infof("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
-		result := InstallPlugin(pluginName, pluginArgs["version"])
+		logger.Debugf("Plugin %s %s is not installed. Downloading the plugin.... \n", pluginName, pluginArgs["version"])
+		result := Plugin(pluginName, pluginArgs["version"])
 		if !result.Success {
 			logger.Errorf(result.getMessage())
 		}
@@ -652,7 +657,7 @@ func addPluginToTheProject(pluginName string, pluginArgs map[string]string, mani
 		return err
 	}
 	if plugin.IsPluginAdded(manifest, pd) {
-		return fmt.Errorf("Plugin %s is already added.", pd.Name)
+		return fmt.Errorf("plugin %s is already added", pd.Name)
 	}
 	manifest.Plugins = append(manifest.Plugins, pd.ID)
 	return manifest.Save()
