@@ -47,9 +47,9 @@ const (
 
 var gaHTTPTransport = http.DefaultTransport
 
-var telemetryEnabled,telemetryLogEnabled bool
+var telemetryEnabled, telemetryLogEnabled bool
 
-func Init(){
+func Init() {
 	telemetryEnabled = config.TelemetryEnabled()
 	telemetryLogEnabled = config.TelemetryLogEnabled()
 }
