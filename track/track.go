@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	gaTrackingID  = "UA-100778536-1"
+	gaTrackingID  = "UA-54838477-1"
 	appName       = "Gauge Core"
 	consoleMedium = "console"
 	apiMedium     = "api"

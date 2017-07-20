@@ -97,7 +97,7 @@ func Properties() *properties {
 		pluginKillTimeOut:       newProperty(pluginKillTimeOut, "4000", "Timeout in milliseconds for a plugin to stop after a kill message has been sent."),
 		runnerRequestTimeout:    newProperty(runnerRequestTimeout, "30000", "Timeout in milliseconds for requests from the language runner."),
 		checkUpdates:            newProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
-		telemetryEnabled:        newProperty(telemetryEnabled, "false", "Allow Gauge to collect anonymous usage statistics"),
+		telemetryEnabled:        newProperty(telemetryEnabled, "true", "Allow Gauge to collect anonymous usage statistics"),
 		telemetryLoggingEnabled: newProperty(telemetryLoggingEnabled, "false", "Log request sent to Gauge telemetry engine"),
 	}}
 }
