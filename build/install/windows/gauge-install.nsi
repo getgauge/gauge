@@ -19,7 +19,6 @@
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
 !include "MUI2.nsh"
-!include "MUI_EXTRAPAGES.nsh"
 !include "EnvVarUpdate.nsh"
 !include "x64.nsh"
 !include "winmessages.nsh"
@@ -50,8 +49,6 @@
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
 !insertmacro MUI_PAGE_INSTFILES
-;Readme page
-!insertmacro MUI_PAGE_README "readme.txt"
 ; Finish page
 !insertmacro MUI_PAGE_FINISH
 
