@@ -129,7 +129,7 @@ runner_connection_timeout = 30000
 check_updates = true
 
 # Allow Gauge to collect anonymous usage statistics
-gauge_telemetry_enabled = false
+gauge_telemetry_enabled = true
 `
 	want := strings.Split(propertiesContent, "\n")
 	sort.Strings(want)

@@ -30,7 +30,7 @@ func TestJSONFormatter(t *testing.T) {
 		"Key                           	Value                              ",
 		"check_updates                 	true                               ",
 		"gauge_repository_url          	https://downloads.getgauge.io/plugin",
-		"gauge_telemetry_enabled       	false                              ",
+		"gauge_telemetry_enabled       	true                               ",
 		"gauge_telemetry_log_enabled   	false                              ",
 		"gauge_templates_url           	https://downloads.getgauge.io/templates",
 		"gauge_update_url              	https://downloads.getgauge.io/gauge",
