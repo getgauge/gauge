@@ -192,44 +192,25 @@ func TestGetPrefixWithNoCharsInLine(t *testing.T) {
 }
 
 func TestIsInStepCompletionAtStartOfLine(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", `* `)
-	position := lsp.Position{Line: 0, Character: 1}
-	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
-	if !isStepCompletion(params) {
+	if !isStepCompletion("* ", 1) {
 		t.Errorf("isStepCompletion not recognizing step context")
 	}
 }
 
 func TestIsInStepCompletionAtEndOfLine(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", `* Step without params`)
-	position := lsp.Position{Line: 0, Character: 21}
-	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
-	if !isStepCompletion(params) {
+	if !isStepCompletion("* Step without params", 21) {
 		t.Errorf("isStepCompletion not recognizing step context")
 	}
 }
 
 func TestIsInStepCompletionWithParams(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", `* Step with "static" and <dynamic> params`)
-
-	position := lsp.Position{Line: 0, Character: 13}
-	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
-	if isStepCompletion(params) {
+	if isStepCompletion(`* Step with "static" and <dynamic> params`, 13) {
 		t.Errorf("isStepCompletion not recognizing step context")
 	}
-
-	position = lsp.Position{Line: 0, Character: 24}
-	params = lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
-	if !isStepCompletion(params) {
+	if !isStepCompletion(`* Step with "static" and <dynamic> params`, 24) {
 		t.Errorf("isStepCompletion not recognizing step context")
 	}
-
-	position = lsp.Position{Line: 0, Character: 28}
-	params = lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
-	if isStepCompletion(params) {
+	if isStepCompletion(`* Step with "static" and <dynamic> params`, 28) {
 		t.Errorf("isStepCompletion not recognizing step context")
 	}
 }

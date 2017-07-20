@@ -46,15 +46,14 @@ type completionList struct {
 	Items        []completionItem `json:"items"`
 }
 
-func isStepCompletion(params lsp.TextDocumentPositionParams) bool {
-	line := getLine(params.TextDocument.URI, params.Position.Line)
-	if params.Position.Character == 0 {
+func isStepCompletion(line string, character int) bool {
+	if character == 0 {
 		return false
 	}
 	if !strings.HasPrefix(strings.TrimSpace(line), "*") {
 		return false
 	}
-	return !inParameterContext(line, params.Position.Character)
+	return !inParameterContext(line, character)
 }
 
 func inParameterContext(line string, charPos int) bool {
@@ -87,7 +86,8 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, err
 	}
-	if !isStepCompletion(params) {
+	line := getLine(params.TextDocument.URI, params.Position.Line)
+	if !isStepCompletion(line, params.Position.Character) {
 		return nil, nil
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
