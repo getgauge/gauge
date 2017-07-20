@@ -81,8 +81,7 @@ var docs = flag.String([]string{"-docs"}, "", "[DEPRECATED] Use gauge docs <plug
 
 func main() {
 	if os.Getenv("GAUGE_ROOT") != "" {
-		os.Stderr.Write([]byte("[DEPRECATED] GAUGE_ROOT will be removed soon. Use GAUGE_HOME instead. Refer to documentation: https://docs.getgauge.io/faqs.html#what-is-gauge-home \n"))
-
+		fmt.Println("[DEPRECATED] GAUGE_ROOT will be removed soon. Use GAUGE_HOME instead. Refer to documentation: https://docs.getgauge.io/faqs.html#what-is-gauge-home")
 	}
 	skel.CreateSkelFilesIfRequired()
 	track.Init()
@@ -90,7 +89,7 @@ func main() {
 	if err == nil {
 		os.Exit(exit)
 	}
-	os.Stderr.Write([]byte("[DEPRECATED] This usage will be removed soon. Run `gauge help --legacy` for more info.\n"))
+	fmt.Println("[DEPRECATED] This usage will be removed soon. Run `gauge help --legacy` for more info.")
 	flag.Parse()
 	logger.Initialize(*logLevel)
 	util.SetWorkingDir(*workingDir)
