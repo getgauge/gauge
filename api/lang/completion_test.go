@@ -82,13 +82,16 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 }
 
 func TestCompletion(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", "* ")
+	position := lsp.Position{Line: 0, Character:2}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
 				Label:      "concept1",
 				Detail:     "Concept",
 				Kind:       lsp.CIKFunction,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `concept1`},
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: position, End:position}, NewText: `concept1`},
 				FilterText: `concept1`,
 			},
 			InsertTextFormat: snippet,
@@ -98,7 +101,7 @@ func TestCompletion(t *testing.T) {
 				Label:      "Say <hello> to <gauge>",
 				Detail:     "Step",
 				Kind:       lsp.CIKFunction,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: position, End:position}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
 				FilterText: "Say <hello> to <gauge>",
 			},
 			InsertTextFormat: snippet,
@@ -106,7 +109,8 @@ func TestCompletion(t *testing.T) {
 	},
 	}
 	provider = &dummyCompletionProvider{}
-	b, _ := json.Marshal(lsp.TextDocumentPositionParams{})
+
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position:position })
 	p := json.RawMessage(b)
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
@@ -114,7 +118,6 @@ func TestCompletion(t *testing.T) {
 	if err != nil {
 		t.Errorf("Expected error == nil in Completion, got %s", err.Error())
 	}
-
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
 	}
@@ -185,5 +188,48 @@ func TestGetPrefixWithNoCharsInLine(t *testing.T) {
 
 	if got != want {
 		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
+	}
+}
+
+func TestIsInStepCompletionAtStartOfLine(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", `* `)
+	position := lsp.Position{Line: 0, Character: 1}
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
+	if !isStepCompletion(params) {
+		t.Errorf("isStepCompletion not recognizing step context")
+	}
+}
+
+func TestIsInStepCompletionAtEndOfLine(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", `* Step without params`)
+	position := lsp.Position{Line: 0, Character: 21}
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
+	if !isStepCompletion(params) {
+		t.Errorf("isStepCompletion not recognizing step context")
+	}
+}
+
+func TestIsInStepCompletionWithParams(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", `* Step with "static" and <dynamic> params`)
+
+	position := lsp.Position{Line: 0, Character: 13}
+	params := lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
+	if isStepCompletion(params) {
+		t.Errorf("isStepCompletion not recognizing step context")
+	}
+
+	position = lsp.Position{Line: 0, Character: 24}
+	params = lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
+	if !isStepCompletion(params) {
+		t.Errorf("isStepCompletion not recognizing step context")
+	}
+
+	position = lsp.Position{Line: 0, Character: 28}
+	params = lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position}
+	if isStepCompletion(params) {
+		t.Errorf("isStepCompletion not recognizing step context")
 	}
 }

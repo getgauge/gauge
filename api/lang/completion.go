@@ -19,10 +19,8 @@ package lang
 
 import (
 	"encoding/json"
-
-	"strings"
-
 	"fmt"
+	"strings"
 
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -48,10 +46,49 @@ type completionList struct {
 	Items        []completionItem `json:"items"`
 }
 
+func isStepCompletion(params lsp.TextDocumentPositionParams) bool {
+	line := getLine(params.TextDocument.URI, params.Position.Line)
+	if params.Position.Character == 0 {
+		return false
+	}
+	if !strings.HasPrefix(strings.TrimSpace(line), "*") {
+		return false
+	}
+	return !inParameterContext(line, params.Position.Character)
+}
+
+func inParameterContext(line string, charPos int) bool {
+	lineAfterCharPos := strings.SplitAfter(line[:charPos], "*")
+	if len(lineAfterCharPos) == 1 {
+		return false
+	}
+	l := strings.TrimPrefix(strings.SplitAfter(line[:charPos], "*")[1], " ")
+	var stack string
+	for _, value := range l {
+		if string(value) == "<" {
+			stack = stack + string(value)
+		}
+		if string(value) == ">" && len(stack) != 0 && stack[len(stack)-1:] == "<" {
+			stack = stack[:len(stack)-1]
+		}
+		if string(value) == "\"" {
+			if len(stack) != 0 && stack[len(stack)-1:] == "\"" {
+				stack = stack[:len(stack)-1]
+			} else {
+				stack = stack + string(value)
+			}
+		}
+	}
+	return len(stack) != 0
+}
+
 func completion(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, err
+	}
+	if !isStepCompletion(params) {
+		return nil, nil
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	prefix := getPrefix(params)
