@@ -4069,14 +4069,6 @@
 				</dict>
 				<dict>
 					<key>ICPRESENTATION_CHAPTER_VIEW_CONTROLLER_CLASS</key>
-					<string>ICPresentationViewReadMeController</string>
-					<key>INSTALLER_PLUGIN</key>
-					<string>ReadMe</string>
-					<key>LIST_TITLE_KEY</key>
-					<string>InstallerSectionTitle</string>
-				</dict>
-				<dict>
-					<key>ICPRESENTATION_CHAPTER_VIEW_CONTROLLER_CLASS</key>
 					<string>ICPresentationViewLicenseController</string>
 					<key>INSTALLER_PLUGIN</key>
 					<string>License</string>
@@ -4157,19 +4149,7 @@
 			<key>README</key>
 			<dict>
 				<key>LOCALIZATIONS</key>
-				<array>
-					<dict>
-						<key>LANGUAGE</key>
-						<string>English</string>
-						<key>VALUE</key>
-						<dict>
-							<key>PATH</key>
-							<string>resources/readme.txt</string>
-							<key>PATH_TYPE</key>
-							<integer>1</integer>
-						</dict>
-					</dict>
-				</array>
+				<array/>
 			</dict>
 			<key>SUMMARY</key>
 			<dict>
