@@ -53,6 +53,7 @@ var (
 			}
 			api.RunInBackground(port, specs)
 		},
+		DisableAutoGenTag: true,
 	}
 	lsp bool
 )

@@ -42,6 +42,7 @@ var refactorCmd = &cobra.Command{
 		track.Refactor()
 		refactorInit(args)
 	},
+	DisableAutoGenTag: true,
 }
 
 func init() {

@@ -37,6 +37,7 @@ var formatCmd = &cobra.Command{
 		track.Format()
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])
 	},
+	DisableAutoGenTag: true,
 }
 
 func init() {

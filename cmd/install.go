@@ -50,6 +50,7 @@ var (
 				logger.Fatalf("Failed to add plugin %s to project : %s\n", args[0], err.Error())
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 	zip      string
 	pVersion string

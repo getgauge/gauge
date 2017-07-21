@@ -42,6 +42,7 @@ var (
 			}
 			fmt.Println(map[bool]string{true: "on", false: "off"}[config.TelemetryEnabled()])
 		},
+		DisableAutoGenTag: true,
 	}
 
 	onCmd = &cobra.Command{
@@ -55,6 +56,7 @@ var (
 				logger.Fatalf(err.Error())
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 
 	offCmd = &cobra.Command{
@@ -68,6 +70,7 @@ var (
 				logger.Fatalf(err.Error())
 			}
 		},
+		DisableAutoGenTag: true,
 	}
 
 	logCmd = &cobra.Command{
@@ -87,6 +90,7 @@ var (
 			}
 			config.UpdateTelemetryLoggging(args[0])
 		},
+		DisableAutoGenTag: true,
 	}
 )
 
