@@ -43,6 +43,7 @@ var (
 			}
 			PrintVersion()
 		},
+		DisableAutoGenTag: true,
 	}
 	machineReadable bool
 )

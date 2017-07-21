@@ -15,20 +15,25 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+// +build linux darwin
+
 package cmd
 
 import (
-	"fmt"
-	"path"
 	"strings"
 
 	"os"
 
+	"path/filepath"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/version"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )
+
+const manDir = "man"
 
 var (
 	manCmd = &cobra.Command{
@@ -36,21 +41,22 @@ var (
 		Short: "Generate man pages",
 		Long:  `Generate man pages.`,
 		Example: `  gauge man
-  gauge man --html
-  gauge man --html man/`,
-		Hidden: true,
+  gauge man --md
+  gauge man --md man/`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
 			if md {
-				out := "man"
-				if len(args) > 0 {
-					out = args[0]
-				}
-				if err := genMarkdownManPages(out); err != nil {
+				if err := genMarkdownManPages(getArg(args, manDir)); err != nil {
 					logger.Fatalf(err.Error())
 				}
 			} else {
-				logger.Infof("Not available.")
+				out, err := getDefaultPath()
+				if err != nil {
+					logger.Fatalf("Cannot find the gauge home directory.")
+				}
+				if err := genManPages(out); err != nil {
+					logger.Fatalf(err.Error())
+				}
 			}
 		},
 		DisableAutoGenTag: true,
@@ -58,22 +64,56 @@ var (
 	md bool
 )
 
-func genMarkdownManPages(out string) error {
-	c := setupCmd()
-	if err := os.MkdirAll(out, common.NewDirectoryPermissions); err != nil {
-		return err
-	}
-	if err := doc.GenMarkdownTreeCustom(c, out, func(s string) string { return "" }, func(s string) string {
-		return fmt.Sprintf("%s.html", strings.TrimSuffix(s, path.Ext(s)))
-	}); err != nil {
-		return err
-	}
-	return nil
-}
-
 func init() {
 	GaugeCmd.AddCommand(manCmd)
 	manCmd.Flags().BoolVarP(&md, "md", "", false, "Generate man pagess in markdown format")
+}
+
+func getArg(args []string, defaultValue string) string {
+	if len(args) > 0 {
+		return args[0]
+	}
+	return defaultValue
+}
+
+func getDefaultPath() (string, error) {
+	p, err := common.GetGaugeHomeDirectory()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(p, manDir, "man1"), nil
+}
+
+func genManPages(out string) error {
+	if err := os.MkdirAll(out, common.NewDirectoryPermissions); err != nil {
+		return err
+	}
+	if err := doc.GenManTreeFromOpts(setupCmd(), doc.GenManTreeOptions{
+		Header: &doc.GenManHeader{
+			Title:   "GAUGE",
+			Section: "1",
+			Manual:  "GAUGE MANUAL",
+			Source:  "GAUGE " + version.CurrentGaugeVersion.String(),
+		},
+		Path:             out,
+		CommandSeparator: "-",
+	}); err != nil {
+		return err
+	}
+	p := strings.TrimSuffix(out, filepath.Base(out))
+	logger.Infof("To view gauge man pages, add the `%s` to `MANPATH` environment variable.", p)
+	return nil
+}
+
+func genMarkdownManPages(out string) error {
+	if err := os.MkdirAll(out, common.NewDirectoryPermissions); err != nil {
+		return err
+	}
+	if err := doc.GenMarkdownTree(setupCmd(), out); err != nil {
+		return err
+	}
+	logger.Infof("Added markdown man pages to `%s`", out)
+	return nil
 }
 
 func setupCmd() *cobra.Command {

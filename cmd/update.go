@@ -49,6 +49,7 @@ var (
 			track.Update(args[0])
 			install.HandleUpdateResult(install.Plugin(args[0], pVersion), args[0], true)
 		},
+		DisableAutoGenTag: true,
 	}
 	all   bool
 	check bool

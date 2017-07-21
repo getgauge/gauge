@@ -53,6 +53,7 @@ var (
 			}
 			execute(args)
 		},
+		DisableAutoGenTag: true,
 	}
 	verbose       bool
 	simpleConsole bool
