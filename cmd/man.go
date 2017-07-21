@@ -37,43 +37,26 @@ const manDir = "man"
 
 var (
 	manCmd = &cobra.Command{
-		Use:   "man [flags]",
-		Short: "Generate man pages",
-		Long:  `Generate man pages.`,
-		Example: `  gauge man
-  gauge man --md
-  gauge man --md man/`,
+		Use:     "man [flags]",
+		Short:   "Generate man pages",
+		Long:    `Generate man pages.`,
+		Example: `  gauge man`,
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
-			if md {
-				if err := genMarkdownManPages(getArg(args, manDir)); err != nil {
-					logger.Fatalf(err.Error())
-				}
-			} else {
-				out, err := getDefaultPath()
-				if err != nil {
-					logger.Fatalf("Cannot find the gauge home directory.")
-				}
-				if err := genManPages(out); err != nil {
-					logger.Fatalf(err.Error())
-				}
+			out, err := getDefaultPath()
+			if err != nil {
+				logger.Fatalf("Cannot find the gauge home directory.")
+			}
+			if err := genManPages(out); err != nil {
+				logger.Fatalf(err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
 	}
-	md bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(manCmd)
-	manCmd.Flags().BoolVarP(&md, "md", "", false, "Generate man pagess in markdown format")
-}
-
-func getArg(args []string, defaultValue string) string {
-	if len(args) > 0 {
-		return args[0]
-	}
-	return defaultValue
 }
 
 func getDefaultPath() (string, error) {
@@ -101,18 +84,7 @@ func genManPages(out string) error {
 		return err
 	}
 	p := strings.TrimSuffix(out, filepath.Base(out))
-	logger.Infof("To view gauge man pages, add the `%s` to `MANPATH` environment variable.", p)
-	return nil
-}
-
-func genMarkdownManPages(out string) error {
-	if err := os.MkdirAll(out, common.NewDirectoryPermissions); err != nil {
-		return err
-	}
-	if err := doc.GenMarkdownTree(setupCmd(), out); err != nil {
-		return err
-	}
-	logger.Infof("Added markdown man pages to `%s`", out)
+	logger.Infof("To view gauge man pages, add `%s` to `MANPATH` environment variable.", p)
 	return nil
 }
 
