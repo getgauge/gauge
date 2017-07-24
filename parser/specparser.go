@@ -607,6 +607,22 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileNa
 	return step, &ParseResult{Warnings: warnings}
 }
 
+func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
+	_, argsType := extractStepValueAndParameterTypes(stepToken.Value)
+	if argsType != nil && len(argsType) != len(stepToken.Args) {
+		return nil, fmt.Errorf("Step text should not have '{static}' or '{dynamic}' or '{special}'")
+	}
+	var args []gauge.StepArg
+	for i, argType := range argsType {
+		if gauge.ArgType(argType) == gauge.Static {
+			args = append(args, gauge.StepArg{ArgType: gauge.Static, Value: stepToken.Args[i]})
+		} else {
+			args = append(args, gauge.StepArg{ArgType: gauge.Dynamic, Value: stepToken.Args[i]})
+		}
+	}
+	return args, nil
+}
+
 func createConceptStep(spec *gauge.Specification, concept *gauge.Step, originalStep *gauge.Step) {
 	stepCopy := concept.GetCopy()
 	originalArgs := originalStep.Args

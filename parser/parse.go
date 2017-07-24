@@ -196,14 +196,7 @@ func CreateStepValue(step *gauge.Step) gauge.StepValue {
 	stepValue := gauge.StepValue{StepValue: step.Value}
 	args := make([]string, 0)
 	for _, arg := range step.Args {
-		switch arg.ArgType {
-		case gauge.Static, gauge.Dynamic:
-			args = append(args, arg.Value)
-		case gauge.TableArg:
-			args = append(args, "table")
-		case gauge.SpecialString, gauge.SpecialTable:
-			args = append(args, arg.Name)
-		}
+		args = append(args, arg.ArgValue())
 	}
 	stepValue.Args = args
 	stepValue.ParameterizedStepValue = getParameterizeStepValue(stepValue.StepValue, args)

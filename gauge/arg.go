@@ -125,3 +125,15 @@ type StepArg struct {
 func (stepArg *StepArg) String() string {
 	return fmt.Sprintf("{Name: %s,value %s,argType %s,table %v}", stepArg.Name, stepArg.Value, string(stepArg.ArgType), stepArg.Table)
 }
+
+func (stepArg *StepArg) ArgValue() string {
+	switch stepArg.ArgType {
+	case Static, Dynamic:
+		return stepArg.Value
+	case TableArg:
+		return "table"
+	case SpecialString, SpecialTable:
+		return stepArg.Name
+	}
+	return ""
+}
