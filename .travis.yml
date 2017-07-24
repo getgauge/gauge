@@ -13,7 +13,8 @@ env:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 install:
-  - go get -t ./...
+  - go get github.com/tools/godep
+  - godep restore
 script:
   - go run build/make.go
   - go run build/make.go --test
