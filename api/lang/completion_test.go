@@ -123,6 +123,50 @@ func TestCompletion(t *testing.T) {
 	}
 }
 
+func TestCompletionForLineWithText(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	f.add("uri", " * step")
+	position := lsp.Position{Line: 0, Character: 2}
+	wantStartPos := lsp.Position{Line: position.Line, Character: 2}
+	wantEndPos := lsp.Position{Line: position.Line, Character: 7}
+	want := completionList{IsIncomplete: false, Items: []completionItem{
+		{
+			CompletionItem: lsp.CompletionItem{
+				Label:      "concept1",
+				Detail:     "Concept",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
+				FilterText: `concept1`,
+			},
+			InsertTextFormat: snippet,
+		},
+		{
+			CompletionItem: lsp.CompletionItem{
+				Label:      "Say <hello> to <gauge>",
+				Detail:     "Step",
+				Kind:       lsp.CIKFunction,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
+				FilterText: "Say <hello> to <gauge>",
+			},
+			InsertTextFormat: snippet,
+		},
+	},
+	}
+	provider = &dummyCompletionProvider{}
+
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
+	p := json.RawMessage(b)
+
+	got, err := completion(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Autocomplete request failed, got: `%+v`, want: `%+v`", got, want)
+	}
+}
+
 func TestCompletionInBetweenLine(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", "* step")

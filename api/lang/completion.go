@@ -55,20 +55,19 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	line := getLine(params.TextDocument.URI, params.Position.Line)
-	if !isStepCompletion(line, params.Position.Character) {
+	pLine := line[:params.Position.Character]
+	if !isStepCompletion(pLine, params.Position.Character) {
 		return nil, nil
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	startPos, endPos := getEditPosition(line, params.Position)
-	prefix := getPrefix(line)
+	prefix := getPrefix(pLine)
 	var givenArgs []gauge.StepArg
-	if startPos.Character != endPos.Character {
 		var err error
-		givenArgs, err = getStepArgs(strings.TrimSpace(line[:params.Position.Character]))
+		givenArgs, err = getStepArgs(strings.TrimSpace(pLine))
 		if err != nil {
 			return nil, err
 		}
-	}
 	for _, c := range provider.Concepts() {
 		fText := getFilterText(c.StepValue.StepValue, c.StepValue.Parameters, givenArgs)
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
@@ -84,7 +83,7 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 
 func getStepArgs(line string) ([]gauge.StepArg, error) {
 	var givenArgs []gauge.StepArg
-	if line != "" {
+	if line != "" && strings.TrimSpace(line) != "*" {
 		specParser := new(parser.SpecParser)
 		tokens, errs := specParser.GenerateTokens(line, "")
 		if len(errs) > 0 {
@@ -162,6 +161,9 @@ func getEditPosition(line string, cursorPos lsp.Position) (lsp.Position, lsp.Pos
 	if loc != nil {
 		start = loc[1]
 	}
+	if start > cursorPos.Character {
+		start = cursorPos.Character
+	}
 	end := len(line)
 	if end < 2 {
 		end = 1
@@ -173,7 +175,7 @@ func getEditPosition(line string, cursorPos lsp.Position) (lsp.Position, lsp.Pos
 }
 
 func getPrefix(line string) string {
-	if strings.HasPrefix(line, "* ") {
+	if strings.HasPrefix(strings.TrimPrefix(line, " "), "* ") {
 		return ""
 	}
 	return " "
