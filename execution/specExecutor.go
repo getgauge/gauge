@@ -153,7 +153,7 @@ func (e *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_messages.Proto
 	case gauge.StepKind:
 		if (item.(*gauge.Step)).IsConcept {
 			concept := item.(*gauge.Step)
-			protoItem = e.resolveToProtoConceptItem(*concept)
+			protoItem = e.resolveToProtoConceptItem(*concept, e.dataTableLookup())
 		} else {
 			protoItem = e.resolveToProtoStepItem(item.(*gauge.Step))
 		}
@@ -166,19 +166,18 @@ func (e *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_messages.Proto
 }
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
-func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup) *gauge_messages.ProtoItem {
 	paramResolver := new(parser.ParamResolver)
-
-	parser.PopulateConceptDynamicParams(&concept, e.dataTableLookup())
+	parser.PopulateConceptDynamicParams(&concept, lookup)
 	protoConceptItem := gauge.ConvertToProtoItem(&concept)
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 	for stepIndex, step := range concept.ConceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
 			step.Parent = &concept
-			protoConceptItem.GetConcept().GetSteps()[stepIndex] = e.resolveToProtoConceptItem(*step)
+			protoConceptItem.GetConcept().GetSteps()[stepIndex] = e.resolveToProtoConceptItem(*step, &concept.Lookup)
 		} else {
-			stepParameters := paramResolver.GetResolvedParams(step, &concept, e.dataTableLookup())
+			stepParameters := paramResolver.GetResolvedParams(step, &concept, &concept.Lookup)
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
 			e.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
