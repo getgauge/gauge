@@ -409,3 +409,65 @@ func TestGetFilterTextWithLesserNumberOfStepArgsGiven(t *testing.T) {
 		t.Errorf("The parameters are not replaced correctly")
 	}
 }
+
+var testEditPosition = []struct {
+	input     string
+	cursorPos lsp.Position
+	wantStart lsp.Position
+	wantEnd   lsp.Position
+}{
+	{
+		input:     "*",
+		cursorPos: lsp.Position{Line: 0, Character: 1},
+		wantStart: lsp.Position{Line: 0, Character: 1},
+		wantEnd:   lsp.Position{Line: 0, Character: 1},
+	},
+	{
+		input:     "* ",
+		cursorPos: lsp.Position{Line: 0, Character: 1},
+		wantStart: lsp.Position{Line: 0, Character: 1},
+		wantEnd:   lsp.Position{Line: 0, Character: 2},
+	},
+	{
+		input:     "* Step",
+		cursorPos: lsp.Position{Line: 10, Character: 1},
+		wantStart: lsp.Position{Line: 10, Character: 1},
+		wantEnd:   lsp.Position{Line: 10, Character: 6},
+	},
+	{
+		input:     "* Step",
+		cursorPos: lsp.Position{Line: 0, Character: 2},
+		wantStart: lsp.Position{Line: 0, Character: 2},
+		wantEnd:   lsp.Position{Line: 0, Character: 6},
+	},
+	{
+		input:     "* Step",
+		cursorPos: lsp.Position{Line: 0, Character: 4},
+		wantStart: lsp.Position{Line: 0, Character: 2},
+		wantEnd:   lsp.Position{Line: 0, Character: 6},
+	},
+	{
+		input:     "    * Step",
+		cursorPos: lsp.Position{Line: 0, Character: 7},
+		wantStart: lsp.Position{Line: 0, Character: 6},
+		wantEnd:   lsp.Position{Line: 0, Character: 10},
+	},
+	{
+		input:     " * Step ",
+		cursorPos: lsp.Position{Line: 0, Character: 10},
+		wantStart: lsp.Position{Line: 0, Character: 3},
+		wantEnd:   lsp.Position{Line: 0, Character: 10},
+	},
+}
+
+func TestGetEditPosition(t *testing.T) {
+	for _, test := range testEditPosition {
+		gotStart, gotEnd := getEditPosition(test.input, test.cursorPos)
+		if gotStart.Line != test.wantStart.Line || gotStart.Character != test.wantStart.Character {
+			t.Errorf(`Incorrect Edit Start Position got: %+v , want : %+v, input : "%s"`, gotStart, test.wantStart, test.input)
+		}
+		if gotEnd.Line != test.wantEnd.Line || gotEnd.Character != test.wantEnd.Character {
+			t.Errorf(`Incorrect Edit End Position got: %+v , want : %+v, input : "%s"`, gotEnd, test.wantEnd, test.input)
+		}
+	}
+}

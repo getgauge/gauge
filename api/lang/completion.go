@@ -63,11 +63,11 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	startPos, endPos := getEditPosition(line, params.Position)
 	prefix := getPrefix(pLine)
 	var givenArgs []gauge.StepArg
-		var err error
-		givenArgs, err = getStepArgs(strings.TrimSpace(pLine))
-		if err != nil {
-			return nil, err
-		}
+	var err error
+	givenArgs, err = getStepArgs(strings.TrimSpace(pLine))
+	if err != nil {
+		return nil, err
+	}
 	for _, c := range provider.Concepts() {
 		fText := getFilterText(c.StepValue.StepValue, c.StepValue.Parameters, givenArgs)
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
