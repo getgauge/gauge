@@ -18,6 +18,7 @@
 package main
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"html/template"
@@ -28,7 +29,6 @@ import (
 
 	analytics "google.golang.org/api/analytics/v3"
 
-	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/jwt"
 
 	"path/filepath"
@@ -373,7 +373,7 @@ func main() {
 		Scopes:     []string{analytics.AnalyticsReadonlyScope},
 		TokenURL:   tokenurl,
 	}
-	clt := jwtc.Client(oauth2.NoContext)
+	clt := jwtc.Client(context.Background())
 	as, err := analytics.New(clt)
 	if err != nil {
 		log.Fatal("Error creating Analytics Service", err)
