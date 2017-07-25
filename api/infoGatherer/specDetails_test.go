@@ -224,8 +224,12 @@ func (s *MySuite) TestGetAvailableSteps(c *C) {
 
 	stepValues = specInfoGatherer.Steps()
 	c.Assert(len(stepValues), Equals, 2)
-	c.Assert(stepValues[0].StepValue, Equals, "say hello")
-	c.Assert(stepValues[1].StepValue, Equals, "say {} to me")
+	if !hasStep(stepValues, "say hello") {
+		c.Fatalf("Step value not found %s", "say hello")
+	}
+	if !hasStep(stepValues, "say {} to me") {
+		c.Fatalf("Step value not found %s", "say {} to me")
+	}
 }
 
 func (s *MySuite) TestGetAvailableStepsShouldFilterDuplicates(c *C) {
