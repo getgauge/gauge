@@ -29,6 +29,8 @@ import (
 
 	"sync"
 
+	"runtime/debug"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
@@ -115,9 +117,17 @@ func ExecuteSpecs(specDirs []string) int {
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()
+	defer recoverPanic()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ParseOk)
+}
+
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Infof("%v\n%s", r, string(debug.Stack()))
+		os.Exit(1)
+	}
 }
 
 func Execute(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, n int) {

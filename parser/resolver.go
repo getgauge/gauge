@@ -44,7 +44,7 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
-func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, dataTableLookup *gauge.ArgLookup) []*gauge_messages.Parameter {
+func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) []*gauge_messages.Parameter {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
@@ -57,13 +57,13 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			if parent != nil {
 				resolvedArg = parent.GetArg(arg.Value)
 			} else {
-				resolvedArg = dataTableLookup.GetArg(arg.Value)
+				resolvedArg = lookup.GetArg(arg.Value)
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = resolvedArg.Name
 			if resolvedArg.Table.IsInitialized() {
 				parameter.ParameterType = gauge_messages.Parameter_Special_Table
-				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.Table, dataTableLookup)
+				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.Table, lookup)
 			} else {
 				parameter.ParameterType = gauge_messages.Parameter_Dynamic
 				parameter.Value = resolvedArg.Value
@@ -73,10 +73,10 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.SpecialTable {
 			parameter.ParameterType = gauge_messages.Parameter_Special_Table
-			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, dataTableLookup)
+			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, lookup)
 		} else {
 			parameter.ParameterType = gauge_messages.Parameter_Table
-			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, dataTableLookup)
+			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, lookup)
 
 		}
 		parameters = append(parameters, parameter)
@@ -86,7 +86,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 
 }
 
-func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, dataTableLookup *gauge.ArgLookup) *gauge_messages.ProtoTable {
+func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) *gauge_messages.ProtoTable {
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
@@ -101,7 +101,7 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, dataTabl
 			value := tableCell.Value
 			if tableCell.CellType == gauge.Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
-				value = dataTableLookup.GetArg(tableCell.Value).Value
+				value = lookup.GetArg(tableCell.Value).Value
 			}
 			row = append(row, value)
 		}
@@ -166,17 +166,15 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 // Creating a copy of the lookup and populating table values
 func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.ArgLookup) {
 	//If it is a top level concept
-	if concept.Parent == nil {
-		lookup := concept.Lookup.GetCopy()
-		for key, _ := range lookup.ParamIndexMap {
-			conceptLookupArg := lookup.GetArg(key)
-			if conceptLookupArg.ArgType == gauge.Dynamic {
-				resolvedArg := dataTableLookup.GetArg(conceptLookupArg.Value)
-				lookup.AddArgValue(key, resolvedArg)
-			}
+	lookup := concept.Lookup.GetCopy()
+	for key := range lookup.ParamIndexMap {
+		conceptLookupArg := lookup.GetArg(key)
+		if conceptLookupArg.ArgType == gauge.Dynamic {
+			resolvedArg := dataTableLookup.GetArg(conceptLookupArg.Value)
+			lookup.AddArgValue(key, resolvedArg)
 		}
-		concept.Lookup = *lookup
 	}
+	concept.Lookup = *lookup
 
 	//Updating values inside the concept step as well
 	newArgs := make([]*gauge.StepArg, 0)

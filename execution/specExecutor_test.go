@@ -116,7 +116,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 	firstNestedStep := protoConcept.GetSteps()[0].GetConcept().GetSteps()[0].GetStep()
@@ -154,7 +154,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
@@ -180,7 +180,29 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	c.Assert(1, Equals, len(params))
 	c.Assert(params[0].GetParameterType(), Equals, gauge_messages.Parameter_Dynamic)
 	c.Assert(params[0].GetValue(), Equals, "9900")
+}
 
+func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
+	conceptDictionary := gauge.NewConceptDictionary()
+
+	specText := SpecBuilder().specHeading("A spec heading").
+		scenarioHeading("First scenario").
+		step("create user \"456\"").
+		String()
+	want := "456"
+	path, _ := filepath.Abs(filepath.Join("testdata", "conceptTable.cpt"))
+	parser.AddConcepts(path, conceptDictionary)
+	specParser := new(parser.SpecParser)
+	spec, _ := specParser.Parse(specText, conceptDictionary, "")
+
+	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
+	specExecutor.errMap = getValidationErrorMap()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
+	got := getParameters(protoConcept.GetSteps()[0].GetStep().GetFragments())[0].GetTable().GetRows()[1].Cells[0]
+
+	if want != got {
+		t.Errorf("Did not resolve dynamic param in table for concept. Got %s, want: %s", got, want)
+	}
 }
 
 func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
@@ -202,7 +224,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	specExecutor.errMap = gauge.NewBuildErrors()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0]).GetConcept()
+	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
