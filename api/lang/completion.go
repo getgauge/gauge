@@ -64,7 +64,7 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	var givenArgs []gauge.StepArg
 	if startPos.Character != endPos.Character {
 		var err error
-		givenArgs, err = getStepArgs(line[:params.Position.Character])
+		givenArgs, err = getStepArgs(strings.TrimSpace(line[:params.Position.Character]))
 		if err != nil {
 			return nil, err
 		}
@@ -99,6 +99,7 @@ func getStepArgs(line string) ([]gauge.StepArg, error) {
 	return givenArgs, nil
 
 }
+
 func isStepCompletion(line string, character int) bool {
 	if character == 0 {
 		return false
@@ -157,7 +158,7 @@ func getFilterText(text string, params []string, givenArgs []gauge.StepArg) stri
 
 func getEditPosition(line string, cursorPos lsp.Position) (lsp.Position, lsp.Position) {
 	start := 1
-	loc := regexp.MustCompile(`^\*(\s*)`).FindIndex([]byte(line))
+	loc := regexp.MustCompile(`^\s*\*(\s*)`).FindIndex([]byte(line))
 	if loc != nil {
 		start = loc[1]
 	}

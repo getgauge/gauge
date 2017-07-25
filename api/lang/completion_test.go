@@ -83,8 +83,8 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 
 func TestCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "* ")
-	position := lsp.Position{Line: 0, Character: 2}
+	f.add("uri", " * ")
+	position := lsp.Position{Line: 0, Character: 3}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{

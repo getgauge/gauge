@@ -246,7 +246,7 @@ func (s *MySuite) TestGetAvailableStepsShouldFilterDuplicates(c *C) {
 	}
 }
 
-func hasStep(stepValues []*gauge.StepValue, step string) bool{
+func hasStep(stepValues []*gauge.StepValue, step string) bool {
 	for _, value := range stepValues {
 		if value.StepValue == step {
 			return true
