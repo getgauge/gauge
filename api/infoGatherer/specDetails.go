@@ -372,11 +372,17 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 
 // Steps returns the list of all the steps in the gauge project
 func (s *SpecInfoGatherer) Steps() []*gauge.StepValue {
-	var steps []*gauge.StepValue
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
+	sValues := make(map[string]*gauge.StepValue)
 	for _, stepValues := range s.stepsCache.stepValues {
-		steps = append(steps, stepValues...)
+		for _, sv := range stepValues {
+			sValues[sv.StepValue] = sv
+		}
+	}
+	var steps []*gauge.StepValue
+	for _, sv := range sValues {
+		steps = append(steps, sv)
 	}
 	return steps
 }

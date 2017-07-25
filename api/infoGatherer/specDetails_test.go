@@ -38,6 +38,7 @@ var _ = Suite(&MySuite{})
 var concept1 []byte
 var concept2 []byte
 var spec1 []byte
+var spec2 []byte
 
 type MySuite struct {
 	specsDir   string
@@ -78,6 +79,16 @@ Scenario 1
 ----------
 * say hello
 * say "hello" to me
+`...)
+
+	spec2 = make([]byte, 0)
+	spec2 = append(spec2, `Specification Heading
+=====================
+Scenario 1
+----------
+* say hello
+* say "hello" to me
+* say "bye" to me
 `...)
 }
 
@@ -215,6 +226,33 @@ func (s *MySuite) TestGetAvailableSteps(c *C) {
 	c.Assert(len(stepValues), Equals, 2)
 	c.Assert(stepValues[0].StepValue, Equals, "say hello")
 	c.Assert(stepValues[1].StepValue, Equals, "say {} to me")
+}
+
+func (s *MySuite) TestGetAvailableStepsShouldFilterDuplicates(c *C) {
+	var stepValues []*gauge.StepValue
+	util.CreateFileIn(s.specsDir, "spec2.spec", spec2)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+
+	stepValues = specInfoGatherer.Steps()
+	c.Assert(len(stepValues), Equals, 2)
+	if !hasStep(stepValues, "say hello") {
+		c.Fatalf("Step value not found %s", "say hello")
+	}
+	if !hasStep(stepValues, "say {} to me") {
+		c.Fatalf("Step value not found %s", "say {} to me")
+	}
+}
+
+func hasStep(stepValues []*gauge.StepValue, step string) bool{
+	for _, value := range stepValues {
+		if value.StepValue == step {
+			return true
+		}
+	}
+	return false
 }
 
 func (s *MySuite) TestHasSpecForSpecDetail(c *C) {
