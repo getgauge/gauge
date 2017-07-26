@@ -1651,3 +1651,17 @@ Scenario Heading
 	c.Assert(parseRes.ParseErrors[2].Message, Equals, "Table header should not be blank")
 	c.Assert(parseRes.ParseErrors[3].Message, Equals, "Table header cannot have repeated column values")
 }
+
+func (s *MySuite) TestExtractStepArgsFromToken(c *C) {
+	token := &Token{Kind: gauge.StepKind, LineText: `my step with "Static" and <Dynamic> params`, Value: `my step with {static} and {dynamic} params`, Args: []string{"Static", "Dynamic"}}
+
+	args, err := ExtractStepArgsFromToken(token)
+	if err != nil {
+		c.Fatalf("Error while extracting step args : %s", err.Error())
+	}
+	c.Assert(len(args), Equals, 2)
+	c.Assert(args[0].Value, Equals, "Static")
+	c.Assert(args[0].ArgType, Equals, gauge.Static)
+	c.Assert(args[1].Value, Equals, "Dynamic")
+	c.Assert(args[1].ArgType, Equals, gauge.Dynamic)
+}

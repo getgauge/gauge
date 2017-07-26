@@ -19,11 +19,13 @@ package lang
 
 import (
 	"encoding/json"
-
+	"fmt"
 	"strings"
 
-	"fmt"
+	"regexp"
 
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -31,11 +33,10 @@ import (
 type insertTextFormat int
 
 const (
-	text     insertTextFormat = 1
-	snippet  insertTextFormat = 2
-	asterisk byte             = 42
-	concept                   = "Concept"
-	step                      = "Step"
+	text    insertTextFormat = 1
+	snippet insertTextFormat = 2
+	concept                  = "Concept"
+	step                     = "Step"
 )
 
 type completionItem struct {
@@ -53,24 +54,131 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, err
 	}
+	line := getLine(params.TextDocument.URI, params.Position.Line)
+	pLine := line[:params.Position.Character]
+	if !isStepCompletion(pLine, params.Position.Character) {
+		return nil, nil
+	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
-	prefix := getPrefix(params)
+	startPos, endPos := getEditPosition(line, params.Position)
+	prefix := getPrefix(pLine)
+	var givenArgs []gauge.StepArg
+	var err error
+	givenArgs, err = getStepArgs(strings.TrimSpace(pLine))
+	if err != nil {
+		return nil, err
+	}
 	for _, c := range provider.Concepts() {
-		cText := addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
-		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, prefix, concept, params.Position))
+		fText := getFilterText(c.StepValue.StepValue, c.StepValue.Parameters, givenArgs)
+		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
+		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, fText, startPos, endPos))
 	}
 	for _, s := range provider.Steps() {
-		cText := addPlaceHolders(s.StepValue, s.Args)
-		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, prefix, step, params.Position))
+		fText := getFilterText(s.StepValue, s.Args, givenArgs)
+		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
+		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, step, fText, startPos, endPos))
 	}
 	return list, nil
 }
 
-func getPrefix(p lsp.TextDocumentPositionParams) string {
-	if p.Position.Character > 0 && getChar(p.TextDocument.URI, p.Position.Line, p.Position.Character-1) == asterisk {
-		return " "
+func getStepArgs(line string) ([]gauge.StepArg, error) {
+	var givenArgs []gauge.StepArg
+	if line != "" && strings.TrimSpace(line) != "*" {
+		specParser := new(parser.SpecParser)
+		tokens, errs := specParser.GenerateTokens(line, "")
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("Unable to parse text entered")
+		}
+		var err error
+		givenArgs, err = parser.ExtractStepArgsFromToken(tokens[0])
+		if err != nil {
+			return nil, fmt.Errorf("Unable to parse text entered")
+		}
 	}
-	return ""
+	return givenArgs, nil
+
+}
+
+func isStepCompletion(line string, character int) bool {
+	if character == 0 {
+		return false
+	}
+	if !strings.HasPrefix(strings.TrimSpace(line), "*") {
+		return false
+	}
+	return !inParameterContext(line, character)
+}
+
+func inParameterContext(line string, charPos int) bool {
+	pl := line
+	if len(line) > charPos {
+		pl = line[:charPos]
+	}
+	lineAfterCharPos := strings.SplitAfter(pl, "*")
+	if len(lineAfterCharPos) == 1 {
+		return false
+	}
+	l := strings.TrimPrefix(strings.SplitAfter(pl, "*")[1], " ")
+	var stack string
+	for _, value := range l {
+		if string(value) == "<" {
+			stack = stack + string(value)
+		}
+		if string(value) == ">" && len(stack) != 0 && stack[len(stack)-1:] == "<" {
+			stack = stack[:len(stack)-1]
+		}
+		if string(value) == "\"" {
+			if len(stack) != 0 && stack[len(stack)-1:] == "\"" {
+				stack = stack[:len(stack)-1]
+			} else {
+				stack = stack + string(value)
+			}
+		}
+	}
+	return len(stack) != 0
+}
+
+func getFilterText(text string, params []string, givenArgs []gauge.StepArg) string {
+	if len(params) > 0 {
+		for i, p := range params {
+			if len(givenArgs) > i {
+				if givenArgs[i].ArgType == gauge.Static {
+					text = strings.Replace(text, "{}", fmt.Sprintf("\"%s\"", givenArgs[i].ArgValue()), 1)
+				} else {
+					text = strings.Replace(text, "{}", fmt.Sprintf("<%s>", givenArgs[i].ArgValue()), 1)
+				}
+			} else {
+				text = strings.Replace(text, "{}", fmt.Sprintf("<%s>", p), 1)
+			}
+		}
+	}
+	return text
+}
+
+func getEditPosition(line string, cursorPos lsp.Position) (lsp.Position, lsp.Position) {
+	start := 1
+	loc := regexp.MustCompile(`^\s*\*(\s*)`).FindIndex([]byte(line))
+	if loc != nil {
+		start = loc[1]
+	}
+	if start > cursorPos.Character {
+		start = cursorPos.Character
+	}
+	end := len(line)
+	if end < 2 {
+		end = 1
+	}
+	if end < cursorPos.Character {
+		end = cursorPos.Character
+	}
+	return lsp.Position{Line: cursorPos.Line, Character: start}, lsp.Position{Line: cursorPos.Line, Character: end}
+}
+
+func getPrefix(line string) string {
+	if strings.HasPrefix(strings.TrimPrefix(line, " "), "* ") {
+		return ""
+	}
+	return " "
 }
 
 func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
@@ -81,14 +189,14 @@ func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
 	return params, nil
 }
 
-func newCompletionItem(stepText, text, prefix, kind string, p lsp.Position) completionItem {
+func newCompletionItem(stepText, text, kind, fText string, startPos, endPos lsp.Position) completionItem {
 	return completionItem{
 		CompletionItem: lsp.CompletionItem{
 			Label:      stepText,
 			Detail:     kind,
 			Kind:       lsp.CIKFunction,
-			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: p, End: p}, NewText: prefix + text},
-			FilterText: prefix + stepText,
+			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: startPos, End: endPos}, NewText: text},
+			FilterText: fText,
 		},
 		InsertTextFormat: snippet,
 	}

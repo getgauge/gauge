@@ -55,6 +55,12 @@ func (f *files) char(uri string, line, char int) (asciiCode byte) {
 	return f.cache[uri][line][char]
 }
 
+func (f *files) line(uri string, lineNo int) string {
+	f.Lock()
+	defer f.Unlock()
+	return f.cache[uri][lineNo]
+}
+
 var f = &files{cache: make(map[string][]string)}
 
 func openFile(req *jsonrpc2.Request) {
@@ -84,4 +90,8 @@ func changeFile(req *jsonrpc2.Request) {
 
 func getChar(uri string, line, char int) (asciiCode byte) {
 	return f.char(uri, line, char)
+}
+
+func getLine(uri string, line int) string {
+	return f.line(uri, line)
 }
