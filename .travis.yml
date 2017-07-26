@@ -22,7 +22,7 @@ script:
   - go run build/make.go --install --prefix=$GAUGE_ROOT
   - git clone --depth=1 https://github.com/getgauge/gauge-tests
   - cd gauge-tests
-  - $GAUGE_ROOT/bin/gauge --install-all
+  - $GAUGE_ROOT/bin/gauge install
   - java -version
   - echo $JAVA_HOME
   - TAGS="\!unimplemented" ./starttests.sh java
