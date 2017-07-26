@@ -19,6 +19,8 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"strings"
 
 	"strconv"
 
@@ -26,6 +28,21 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/spf13/cobra"
 )
+
+const gaugeTelemetryEnabled = "GAUGE_TELEMETRY_ENABLED"
+
+var telemetryEnv = os.Getenv(gaugeTelemetryEnabled)
+
+func telemetryEnabled() bool {
+	boolValue, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv))
+	if err != nil {
+		return config.TelemetryEnabled()
+	}
+	if config.TelemetryLogEnabled() {
+		logger.Debugf("Gauge telemetry behaviour is controlled via %s environment variable.", gaugeTelemetryEnabled)
+	}
+	return boolValue
+}
 
 var (
 	telemetryCmd = &cobra.Command{
@@ -40,7 +57,7 @@ var (
 			if len(args) != 0 {
 				logger.Fatalf(cmd.UsageString())
 			}
-			fmt.Println(map[bool]string{true: "on", false: "off"}[config.TelemetryEnabled()])
+			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
 		},
 		DisableAutoGenTag: true,
 	}
@@ -55,6 +72,7 @@ var (
 			if err := config.UpdateTelemetry("true"); err != nil {
 				logger.Fatalf(err.Error())
 			}
+			telemetryEnabled()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -69,6 +87,7 @@ var (
 			if err := config.UpdateTelemetry("false"); err != nil {
 				logger.Fatalf(err.Error())
 			}
+			telemetryEnabled()
 		},
 		DisableAutoGenTag: true,
 	}
