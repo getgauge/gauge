@@ -69,12 +69,12 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	for _, c := range provider.Concepts() {
-		fText := getFilterText(c.StepValue.StepValue, c.StepValue.Parameters, givenArgs)
+		fText := prefix + getFilterText(c.StepValue.StepValue, c.StepValue.Parameters, givenArgs)
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
 		list.Items = append(list.Items, newCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, fText, startPos, endPos))
 	}
 	for _, s := range provider.Steps() {
-		fText := getFilterText(s.StepValue, s.Args, givenArgs)
+		fText := prefix + getFilterText(s.StepValue, s.Args, givenArgs)
 		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
 		list.Items = append(list.Items, newCompletionItem(s.ParameterizedStepValue, cText, step, fText, startPos, endPos))
 	}
