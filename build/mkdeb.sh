@@ -4,6 +4,10 @@
 # Usage:
 # ./build/mkdeb.sh [--rebuild]
 
+export GOPATH=`pwd`
+export GOBIN="$GOPATH/bin"
+go get github.com/tools/godep && $GOBIN/godep restore
+
 set -e
 
 function err () {

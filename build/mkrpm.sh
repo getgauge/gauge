@@ -6,6 +6,10 @@
 
 set -e
 
+export GOPATH=`pwd`
+export GOBIN="$GOPATH/bin"
+go get github.com/tools/godep && $GOBIN/godep restore
+
 function err () {
     echo "ERROR: $1"
     exit 1
