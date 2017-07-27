@@ -36,6 +36,6 @@ Pop-Location
 
 mkdir test_installers 
 
-& copy /B deploy\gauge-*-darwin.x86_64.zip test_installers\gauge-darwin.x86_64.zip
-& copy /B deploy\gauge-*-linux.x86_64.zip test_installers\gauge-linux.x86_64.zip
-& copy /B deploy\gauge-*-windows.x86_64.exe test_installers\gauge-windows.x86_64.exe
+& cmd "/c" "copy /B deploy\gauge-*-darwin.x86_64.zip test_installers\gauge-darwin.x86_64.zip"
+& cmd "/c" "copy /B deploy\gauge-*-linux.x86_64.zip test_installers\gauge-linux.x86_64.zip"
+& cmd "/c" "copy /B deploy\gauge-*-windows.x86_64.exe test_installers\gauge-windows.x86_64.exe"
