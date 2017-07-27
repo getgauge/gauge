@@ -15,8 +15,8 @@
 $env:GOPATH=$pwd
 $GOBIN="$env:GOPATH\bin"
 Set-Location $GOPATH\src\github.com\getgauge\gauge
-go get github.com/tools/godep && $GOBIN/godep restore
-
+go get github.com/tools/godep 
+$env:GOBIN\godep.exe restore
 
 Push-Location "$pwd\bin\windows_amd64"
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
