@@ -19,9 +19,10 @@
 
 export GOPATH=`pwd`
 export GOBIN="$GOPATH/bin"
-go get github.com/tools/godep && $GOBIN/godep restore
 
 cd $GOPATH/src/github.com/getgauge/gauge
+
+go get github.com/tools/godep && $GOBIN/godep restore
 
 go run build/make.go --all-platforms
 
