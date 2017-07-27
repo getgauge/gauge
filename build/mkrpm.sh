@@ -8,6 +8,9 @@ set -e
 
 export GOPATH=`pwd`
 export GOBIN="$GOPATH/bin"
+
+cd $GOPATH/src/github.com/getgauge/gauge
+
 go get github.com/tools/godep && $GOBIN/godep restore
 
 function err () {
