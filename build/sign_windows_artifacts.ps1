@@ -16,7 +16,7 @@ $env:GOPATH=$pwd
 $GOBIN="$env:GOPATH\bin"
 Set-Location $GOPATH\src\github.com\getgauge\gauge
 go get github.com/tools/godep 
-"$env:GOBIN\godep.exe" restore
+& "$env:GOBIN\godep.exe" "restore"
 
 Push-Location "$pwd\bin\windows_amd64"
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
@@ -28,11 +28,11 @@ signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge_screenshot.exe
 Pop-Location
 
-go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64
-go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386
 
 mkdir test_installers 
 
-copy /B deploy\gauge-*-darwin.x86_64.zip test_installers\gauge-darwin.x86_64.zip 
-copy /B deploy\gauge-*-linux.x86_64.zip test_installers\gauge-linux.x86_64.zip 
-copy /B deploy\gauge-*-windows.x86_64.exe test_installers\gauge-windows.x86_64.exe
+& copy /B deploy\gauge-*-darwin.x86_64.zip test_installers\gauge-darwin.x86_64.zip
+& copy /B deploy\gauge-*-linux.x86_64.zip test_installers\gauge-linux.x86_64.zip
+& copy /B deploy\gauge-*-windows.x86_64.exe test_installers\gauge-windows.x86_64.exe
