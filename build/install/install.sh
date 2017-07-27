@@ -221,6 +221,7 @@ install_gauge_interactively() {
     copy_gauge_binaries_interactively
     add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
+    echo -e "We are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
 }
 
 # Install gauge noninteractively
@@ -231,6 +232,7 @@ install_gauge_noninteractively() {
     copy_gauge_binaries_noninteractively
     add_gauge_in_path
     echo -e "Gauge core successfully installed.\n"
+    echo -e "We are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
 }
 
 

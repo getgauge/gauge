@@ -1,0 +1,4 @@
+#!/bin/bash
+
+MSG="\n\nWe are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
+echo -e "$MSG"

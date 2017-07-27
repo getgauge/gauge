@@ -5,8 +5,9 @@
 # ./build/mkrpm.sh [--rebuild]
 
 set -e
-
-export GOPATH=`pwd`
+if [[ -z $GOPATH ]]; then
+    export GOPATH=`pwd`
+fi
 export GOBIN="$GOPATH/bin"
 
 cd $GOPATH/src/github.com/getgauge/gauge
