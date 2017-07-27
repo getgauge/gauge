@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-$env:GOPATH=$pwd
-$GOBIN="$env:GOPATH\bin"
-Set-Location $GOPATH\src\github.com\getgauge\gauge
+if ("$env:GOPATH" -eq "") {
+    $env:GOPATH=$pwd
+}
+$env:GOBIN="$env:GOPATH\bin"
+Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
+
 go get github.com/tools/godep 
 & "$env:GOBIN\godep.exe" "restore"
 
