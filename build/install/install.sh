@@ -213,6 +213,11 @@ set_prefix_noninteractively() {
     fi
 }
 
+show_post_install_messages(){
+    echo -e "Gauge core successfully installed.\n"
+    echo -e "We are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
+}
+
 # Install Gauge interactively
 install_gauge_interactively() {
     config=$HOME/.gauge/config
@@ -220,8 +225,7 @@ install_gauge_interactively() {
     create_prefix_interactively
     copy_gauge_binaries_interactively
     add_gauge_in_path
-    echo -e "Gauge core successfully installed.\n"
-    echo -e "We are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
+    show_post_install_messages
 }
 
 # Install gauge noninteractively
@@ -231,10 +235,8 @@ install_gauge_noninteractively() {
     create_prefix_noninteractively
     copy_gauge_binaries_noninteractively
     add_gauge_in_path
-    echo -e "Gauge core successfully installed.\n"
-    echo -e "We are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
+    show_post_install_messages
 }
-
 
 # perform gauge installation in interactives mode
 do_interactive_installation() {
