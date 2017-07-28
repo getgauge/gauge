@@ -14,8 +14,10 @@
 !define MUI_FINISHPAGE_LINK "Click here to read the Gauge Reference Documentation"
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.getgauge.io"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
-!define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge --install <plugin>'"
-
+!define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
+!define TELEMETRY_PAGE_TITLE "Gauge Telemetry"
+!define TELEMETRY_PAGE_DESCRIPTION "We are constantly looking to make Gauge better, and report usage statistics anonymously over time."
+!define TELEMETRY_PAGE_ACTION_DESCRIPTION "If you do not want to participate please uncheck the option below."
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
 !include "MUI2.nsh"
@@ -24,15 +26,37 @@
 !include "winmessages.nsh"
 !include "FileFunc.nsh" ;For GetOptions
 !include "WordFunc.nsh"
+!include "nsDialogs.nsh"
 
 !define Explode "!insertmacro Explode"
 
 !macro  Explode Length  Separator   String
-    Push    `${Separator}`
-    Push    `${String}`
-    Call    Explode
-    Pop     `${Length}`
+  Push    `${Separator}`
+  Push    `${String}`
+  Call    Explode
+  Pop     `${Length}`
 !macroend
+
+var TelemetryEnabled
+var TelemetryEnabledDialog
+Function TelemetryEnablePage
+  !insertmacro MUI_HEADER_TEXT "${TELEMETRY_PAGE_TITLE}" ""
+  nsDialogs::Create 1018
+  Pop $TelemetryEnabledDialog
+  ${If} $TelemetryEnabledDialog == error
+    abort
+  ${EndIf}
+  ${NSD_CreateLabel} 20u 0 250u 30u "${TELEMETRY_PAGE_DESCRIPTION}"
+  ${NSD_CreateLabel} 20u 30u 250u 30u "${TELEMETRY_PAGE_ACTION_DESCRIPTION}"
+  ${NSD_CreateCheckbox} 20u 60u 100% 10u "&Enable Telemetry"
+  Pop $TelemetryEnabled
+  ${NSD_Check} $TelemetryEnabled
+  nsDialogs::Show
+FunctionEnd
+
+Function TelemetryPageLeave
+    ${NSD_GetState} $TelemetryEnabled $R5
+FunctionEnd
 
 ; MUI Settings
 !define MUI_ABORTWARNING
@@ -45,6 +69,7 @@
 !insertmacro MUI_PAGE_LICENSE "gpl.txt"
 ; Plugin options page
 !insertmacro MUI_PAGE_COMPONENTS
+Page Custom TelemetryEnablePage TelemetryPageLeave
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
@@ -115,10 +140,10 @@ function .onInit
     SetRegView 64
     StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
-  ;See if PLUGINS to install are specified via cmd line arg
   ;Only if it is silent install
   ${If} ${Silent}
     ${GetParameters} $R0
+    ;See if PLUGINS to install are specified via cmd line arg
     ${GetOptions} $R0 "/PLUGINS" $0
     ${IfNot} ${Errors}
       ${Explode}  $1  "," $0
@@ -142,6 +167,14 @@ function .onInit
         ${EndIf}
       ${Next}
     ${EndIF}
+
+    ;See if TELEMETRY is set via cmd line arg
+    ${GetOptions} $R0 "/TELEMETRY" $0
+    ${IfNot} ${Errors}
+      ${If} $0 == "off"
+        StrCpy $R5 0
+      ${EndIF}
+    ${EndIF}
   ${EndIf}
 functionEnd
 
@@ -164,6 +197,14 @@ Section -Post
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
+  ${If} $R5 == 0
+    DetailPrint "Turning off Telemetry"
+    nsExec::ExecToLog 'gauge telemetry off'
+  ${Else}
+    DetailPrint "Turning on Telemetry"
+    nsExec::ExecToLog 'gauge telemetry on'
+  ${EndIf}
+  
   Dialer::GetConnectedState
   Pop $R0
 
