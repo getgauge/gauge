@@ -14,7 +14,7 @@
 !define MUI_FINISHPAGE_LINK "Click here to read the Gauge Reference Documentation"
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.getgauge.io"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
-!define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional pluginscan be installed using the command 'gauge install <plugin>'"
+!define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
 !define TELEMETRY_PAGE_TITLE "Gauge Telemetry"
 !define TELEMETRY_PAGE_DESCRIPTION "We are constantly looking to make Gauge better, and report usage statistics anonymously over time."
 !define TELEMETRY_PAGE_ACTION_DESCRIPTION "If you do not want to participate please uncheck the option below."
