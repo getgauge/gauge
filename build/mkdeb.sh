@@ -107,6 +107,7 @@ function prep_deb() {
 
     mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
     cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
+    chmod +x "$POSTINST_FILE"
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
 
     chmod +x $TARGET/usr/local/bin/*
