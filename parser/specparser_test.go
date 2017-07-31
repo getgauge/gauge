@@ -295,6 +295,25 @@ func (s *MySuite) TestParseScenarioTags(c *C) {
 	c.Assert(tokens[2].Value, Equals, "tag1,tag2")
 }
 
+func (s *MySuite) TestParseScenarioWithTagsInMultipleLines(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec heading with hash ").scenarioHeading("Scenario Heading").tags("tag1", "\ntag2").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 4)
+
+	c.Assert(tokens[2].Kind, Equals, gauge.TagKind)
+	c.Assert(len(tokens[2].Args), Equals, 1)
+	c.Assert(tokens[2].Args[0], Equals, "tag1")
+	c.Assert(tokens[2].LineText, Equals, "tags: tag1,")
+	c.Assert(tokens[2].Value, Equals, "tag1,")
+	c.Assert(tokens[3].Args[0], Equals, "tag2")
+	c.Assert(tokens[3].LineText, Equals, "tag2")
+	c.Assert(tokens[3].Value, Equals, "tag2")
+}
+
 func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().tags("tag1 ").specHeading("Spec heading with hash ").String()

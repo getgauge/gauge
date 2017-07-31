@@ -50,6 +50,7 @@ const (
 	tearDownScope       = 1 << iota
 	conceptScope        = 1 << iota
 	keywordScope        = 1 << iota
+	tagsScope           = 1 << iota
 )
 
 func (parser *SpecParser) initialize() {
@@ -104,7 +105,13 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
 		} else if parser.isStep(trimmedLine) {
 			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
-		} else if found, startIndex := parser.checkTag(trimmedLine); found {
+		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
+			if isInState(parser.currentState, tagsScope) {
+				startIndex = 0
+			}
+			if parser.isTagEndingWithComma(trimmedLine) {
+				addStates(&parser.currentState, tagsScope)
+			}
 			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
@@ -139,6 +146,9 @@ func (parser *SpecParser) checkTag(text string) (bool, int) {
 		return true, len(tagSpaceColon)
 	}
 	return false, -1
+}
+func (parser *SpecParser) isTagEndingWithComma(text string) bool {
+	return strings.HasSuffix(strings.ToLower(text), ",")
 }
 
 func (parser *SpecParser) isSpecHeading(text string) bool {
@@ -483,16 +493,25 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		tags := &gauge.Tags{Values: token.Args}
 		if isInState(*state, scenarioScope) {
-			if spec.LatestScenario().NTags() != 0 {
-				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
+			if isInState(*state, tagsScope) {
+				spec.LatestScenario().Tags.Values = append(spec.LatestScenario().Tags.Values, tags.Values...)
+			} else {
+				if spec.LatestScenario().NTags() != 0 {
+					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
+				}
+				spec.LatestScenario().AddTags(tags)
 			}
-			spec.LatestScenario().AddTags(tags)
 		} else {
-			if spec.NTags() != 0 {
-				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
+			if isInState(*state, tagsScope) {
+				spec.Tags.Values = append(spec.Tags.Values, tags.Values...)
+			} else {
+				if spec.NTags() != 0 {
+					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
+				}
+				spec.AddTags(tags)
 			}
-			spec.AddTags(tags)
 		}
+		addStates(state, tagsScope)
 		return ParseResult{Ok: true}
 	})
 

@@ -58,7 +58,11 @@ func processComment(parser *SpecParser, token *Token) ([]error, bool) {
 }
 
 func processTag(parser *SpecParser, token *Token) ([]error, bool) {
-	parser.clearState()
+	if isInState(parser.currentState, tagsScope) {
+		retainStates(&parser.currentState, tagsScope)
+	} else {
+		parser.clearState()
+	}
 	tokens := splitAndTrimTags(token.Value)
 
 	for _, tagValue := range tokens {
