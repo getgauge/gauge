@@ -15,12 +15,12 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-if ("$env:GOPATH" -eq "") {
-    $env:GOPATH=$pwd
-}
-if ("$env:GOBIN" -eq "") {
-    $env:GOBIN="$env:GOPATH\bin"
-}
+if [[ -z $GOPATH ]]; then
+    export GOPATH=`pwd`
+fi
+if [[ -z $GOBIN ]]; then
+    export GOBIN="$GOPATH/bin"
+fi
 
 cd $GOPATH/src/github.com/getgauge/gauge
 
