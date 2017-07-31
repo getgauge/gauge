@@ -22,14 +22,23 @@ if [[ -z $GOBIN ]]; then
     export GOBIN="$GOPATH/bin"
 fi
 
-cd $GOPATH/src/github.com/getgauge/gauge
-
-go get github.com/tools/godep && $GOBIN/godep restore
-
-test() {
-    go test ./... -v
+setup(){
+    cd $GOPATH/src/github.com/getgauge/gauge
+    go get github.com/tools/godep && $GOBIN/godep restore
 }
 
-build() {
-    go run build/make.go
-}
+option="${1}"
+case ${option} in
+    test)
+        setup
+        go test ./... -v
+        ;;
+    build|"")
+        setup
+        go run build/make.go
+        ;;
+    *)
+        echo "`basename ${0}`:usage: [build|test]"
+        exit 1
+        ;;
+esac

@@ -44,3 +44,9 @@ function build() {
 function test() {
     & go test .\... -v
 }
+
+function checkLasterror(){
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
+}
