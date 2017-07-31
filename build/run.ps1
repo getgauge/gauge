@@ -37,15 +37,15 @@ switch ($task) {
     }
 }
 
-function build() {
+function build {
     & go run build/make.go
 }
 
-function test() {
+function test {
     & go test .\... -v
 }
 
-function checkLasterror(){
+function checkLasterror {
     if ($LastExitCode -ne 0) {
         exit $LastExitCode
     }
