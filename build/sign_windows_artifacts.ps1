@@ -15,7 +15,10 @@
 if ("$env:GOPATH" -eq "") {
     $env:GOPATH=$pwd
 }
-$env:GOBIN="$env:GOPATH\bin"
+if ("$env:GOBIN" -eq "") {
+    $env:GOBIN="$env:GOPATH\bin"
+}
+
 Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
 
 go get github.com/tools/godep 

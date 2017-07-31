@@ -1,5 +1,3 @@
-#!/bin/sh
-
 # Copyright 2015 ThoughtWorks, Inc.
 
 # This file is part of Gauge.
@@ -17,19 +15,21 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $GOPATH ]]; then
-    export GOPATH=`pwd`
-fi
-if [[ -z $GOBIN ]]; then
-    export GOBIN="$GOPATH/bin"
-fi
+if ("$env:GOPATH" -eq "") {
+    $env:GOPATH=$pwd
+}
+if ("$env:GOBIN" -eq "") {
+    $env:GOBIN="$env:GOPATH\bin"
+}
 
 cd $GOPATH/src/github.com/getgauge/gauge
 
 go get github.com/tools/godep && $GOBIN/godep restore
 
-go run build/make.go --all-platforms
+test() {
+    go test ./... -v
+}
 
-chmod +x build/install/install.sh && chmod +x bin/**/* && rm -rf deploy
-
-security unlock-keychain -p $KEYCHAIN_PASSWORD login.keychain && security import /vagrant/Gauge_Osx_Cert.p12 -P "$CERT_PASSWORD" -A -k login.keychain && go run build/make.go --distro --all-platforms --skip-windows
+build() {
+    go run build/make.go
+}

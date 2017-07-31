@@ -8,7 +8,9 @@ set -e
 if [[ -z $GOPATH ]]; then
     export GOPATH=`pwd`
 fi
-export GOBIN="$GOPATH/bin"
+if [[ -z $GOBIN ]]; then
+    export GOBIN="$GOPATH/bin"
+fi
 
 cd $GOPATH/src/github.com/getgauge/gauge
 
