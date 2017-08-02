@@ -26,6 +26,8 @@ import (
 
 	"errors"
 
+	"bytes"
+
 	. "gopkg.in/check.v1"
 )
 
@@ -131,6 +133,27 @@ Scenario 2
 }
 
 func (s *MySuite) TestValidateStep(c *C) {
+	NoQuickFix = false
+	var quickFix bytes.Buffer
+	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
+	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+		quickFix.WriteString("\nQuick Fix : \n@Step(\"my step\")\npublic void implementation(){\n}")
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, QuickFix: quickFix.String()}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	}
+	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	valErr := specVal.validateStep(myStep)
+
+	c.Assert(valErr, Not(Equals), nil)
+	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'"+"\n"+
+		"Quick Fix : "+"\n"+
+		"@Step(\"my step\")"+"\n"+
+		"public void implementation(){"+"\n"+
+		"}")
+}
+
+func (s *MySuite) TestShouldNotGiveQuickFixWhenQuickFixFlagIsNotSet(c *C) {
+	NoQuickFix = true
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
@@ -144,10 +167,13 @@ func (s *MySuite) TestValidateStep(c *C) {
 }
 
 func (s *MySuite) TestValidateStepInConcept(c *C) {
+	NoQuickFix = false
+	var quickFix bytes.Buffer
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
+		quickFix.WriteString("\nQuick Fix : \n@Step(\"my step\")\npublic void implementation(){\n}")
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, QuickFix: quickFix.String()}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
 	cptDict := gauge.NewConceptDictionary()
@@ -156,7 +182,11 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
-	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'")
+	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'"+"\n"+
+		"Quick Fix : "+"\n"+
+		"@Step(\"my step\")"+"\n"+
+		"public void implementation(){"+"\n"+
+		"}")
 }
 
 type tableRow struct {

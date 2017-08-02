@@ -37,6 +37,7 @@ import (
 )
 
 var TableRows = ""
+var NoQuickFix bool
 
 type validator struct {
 	manifest           *manifest.Manifest
@@ -58,6 +59,7 @@ type StepValidationError struct {
 	message   string
 	fileName  string
 	errorType *gauge_messages.StepValidateResponse_ErrorType
+	quickFix  string
 }
 
 type SpecValidationError struct {
@@ -66,7 +68,7 @@ type SpecValidationError struct {
 }
 
 func (s StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+	return fmt.Sprintf("%s:%d %s => '%s'%s", s.fileName, s.step.LineNo, s.message, s.step.GetLineText(), s.quickFix)
 }
 
 func (s SpecValidationError) Error() string {
@@ -283,8 +285,12 @@ var getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*
 }
 
 func (v *specValidator) validateStep(s *gauge.Step) error {
+	stepValue, _ := parser.ExtractStepValueAndParams(s.LineText, s.HasInlineTable)
+	protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
+
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest,
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args))}}
+		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args)), StepValue: protoStepValue}}
+
 	r, err := getResponseFromRunner(m, v)
 	if err != nil {
 		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil)
@@ -293,11 +299,21 @@ func (v *specValidator) validateStep(s *gauge.Step) error {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
+			quickFix := res.GetQuickFix()
 			if s.Parent == nil {
-				return NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
+				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
+				if !NoQuickFix {
+					vErr.quickFix = quickFix
+				}
+				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			return NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
+			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
+			if !NoQuickFix {
+				vErr.quickFix = quickFix
+			}
+			return vErr
+
 		}
 		return nil
 	}
