@@ -68,7 +68,7 @@ install_plugins_noninteractively() {
         plugins_list=( ${list[@]} ${plugins_list[@]} )
         plugins_list=($(echo "${plugins_list[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
     fi
-    install_plugins $plugins_list
+    install_plugins "${plugins_list[@]}"
 }
 
 # Find absolute path
