@@ -1065,7 +1065,7 @@
 				<key>IDENTIFIER</key>
 				<string>html-report</string>
 				<key>NAME</key>
-				<string>html-report</string>
+				<string>HTML Report</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -1595,7 +1595,7 @@
 				<key>IDENTIFIER</key>
 				<string>xml-report</string>
 				<key>NAME</key>
-				<string>xml-report</string>
+				<string>XML</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -2125,7 +2125,7 @@
 				<key>IDENTIFIER</key>
 				<string>spectacle</string>
 				<key>NAME</key>
-				<string>spectacle</string>
+				<string>Spectacle</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -2655,7 +2655,7 @@
 				<key>IDENTIFIER</key>
 				<string>java</string>
 				<key>NAME</key>
-				<string>java</string>
+				<string>Java</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -3185,7 +3185,7 @@
 				<key>IDENTIFIER</key>
 				<string>csharp</string>
 				<key>NAME</key>
-				<string>csharp</string>
+				<string>C#</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -3715,7 +3715,7 @@
 				<key>IDENTIFIER</key>
 				<string>ruby</string>
 				<key>NAME</key>
-				<string>ruby</string>
+				<string>Ruby</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -4154,7 +4154,7 @@
 				<key>LOCATION</key>
 				<integer>0</integer>
 				<key>NAME</key>
-				<string>telemetry</string>
+				<string>Telemetry</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -4189,7 +4189,7 @@
 				<key>LOCATION</key>
 				<integer>0</integer>
 				<key>NAME</key>
-				<string>telemetry-off</string>
+				<string>Telemetry-off</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
@@ -4328,7 +4328,7 @@
 										<key>LANGUAGE</key>
 										<string>English</string>
 										<key>VALUE</key>
-										<string>telemetry</string>
+										<string>Telemetry</string>
 									</dict>
 								</array>
 								<key>TOOLTIP</key>
