@@ -38,9 +38,6 @@ func telemetryEnabled() bool {
 	if err != nil {
 		return config.TelemetryEnabled()
 	}
-	if config.TelemetryLogEnabled() {
-		logger.Debugf("Gauge telemetry behaviour is controlled via %s environment variable.", gaugeTelemetryEnabled)
-	}
 	return boolValue
 }
 
@@ -59,6 +56,11 @@ var (
 			}
 			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
 		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {
+			if _, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
+				logger.Infof("%s is set.", gaugeTelemetryEnabled)
+			}
+		},
 		DisableAutoGenTag: true,
 	}
 
@@ -72,7 +74,6 @@ var (
 			if err := config.UpdateTelemetry("true"); err != nil {
 				logger.Fatalf(err.Error())
 			}
-			telemetryEnabled()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -87,7 +88,6 @@ var (
 			if err := config.UpdateTelemetry("false"); err != nil {
 				logger.Fatalf(err.Error())
 			}
-			telemetryEnabled()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -109,6 +109,7 @@ var (
 			}
 			config.UpdateTelemetryLoggging(args[0])
 		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 		DisableAutoGenTag: true,
 	}
 )
