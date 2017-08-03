@@ -17,6 +17,9 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+# Usage:
+# ./build/package.sh [--nightly]
+
 if [[ -z $GOPATH ]]; then
     export GOPATH=`pwd`
 fi
@@ -28,8 +31,8 @@ cd $GOPATH/src/github.com/getgauge/gauge
 
 go get github.com/tools/godep && $GOBIN/godep restore
 
-go run build/make.go --all-platforms
+go run build/make.go --all-platforms $1
 
 chmod +x build/install/install.sh && chmod +x bin/**/* && rm -rf deploy
 
-security unlock-keychain -p $KEYCHAIN_PASSWORD login.keychain && security import /vagrant/Gauge_Osx_Cert.p12 -P "$CERT_PASSWORD" -A -k login.keychain && go run build/make.go --distro --all-platforms --skip-windows
+security unlock-keychain -p $KEYCHAIN_PASSWORD login.keychain && security import /vagrant/Gauge_Osx_Cert.p12 -P "$CERT_PASSWORD" -A -k login.keychain && go run build/make.go --distro --all-platforms --skip-windows $1
