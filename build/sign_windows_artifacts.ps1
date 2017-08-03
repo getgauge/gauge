@@ -15,6 +15,10 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+param (
+    [switch]$nightly = $false
+)
+
 if ("$env:GOPATH" -eq "") {
     $env:GOPATH=$pwd
 }
@@ -37,8 +41,9 @@ signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge_screenshot.exe
 Pop-Location
 
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386
+$nightlyFlag = If ($nightly) {"--nightly"} Else {""}
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64 $nightlyFlag
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386 $nightlyFlag
 
 mkdir test_installers 
 
