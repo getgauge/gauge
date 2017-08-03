@@ -184,12 +184,17 @@ func FormatTags(tags *gauge.Tags) string {
 	var b bytes.Buffer
 	b.WriteString("tags: ")
 	for i, tag := range tags.Values {
-		b.WriteString(tag)
-		if (i + 1) != len(tags.Values) {
-			b.WriteString(", ")
+		for j, tagString := range tag {
+			b.WriteString(tagString)
+			if (i != len(tags.Values) -1) || (j != len(tag) - 1){
+				b.WriteString(", ")
+			}
+		}
+		b.WriteString("\n")
+		if i != len(tags.Values) -1 {
+			b.WriteString("      ")
 		}
 	}
-	b.WriteString("\n")
 	return string(b.Bytes())
 }
 

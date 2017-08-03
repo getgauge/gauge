@@ -137,7 +137,7 @@ func (spec *Specification) AddExternalDataTable(externalTable *DataTable) {
 
 func (spec *Specification) AddTags(tags *Tags) {
 	spec.Tags = tags
-	spec.AddItem(tags)
+	spec.AddItem(spec.Tags)
 }
 
 func (spec *Specification) NTags() int {
@@ -310,9 +310,19 @@ func (t *TearDown) Kind() TokenKind {
 }
 
 type Tags struct {
-	Values []string
+	Values [][]string
 }
 
+func (tags *Tags) Add(values []string) {
+	tags.Values = append(tags.Values, values)
+}
+
+func ToArray(values [][]string) (val []string) {
+	for i, _ := range values {
+		val = append(val, values[i]...)
+	}
+	return val
+}
 func (tags *Tags) Kind() TokenKind {
 	return TagKind
 }
