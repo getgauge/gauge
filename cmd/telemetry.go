@@ -57,8 +57,8 @@ var (
 			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			if _, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
-				logger.Infof("%s is set.", gaugeTelemetryEnabled)
+			if v, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
+				logger.Infof("ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
 			}
 		},
 		DisableAutoGenTag: true,
