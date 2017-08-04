@@ -470,10 +470,10 @@ func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
 	specs = append(specs, spec1)
 
 	c.Assert(len(specs[0].Scenarios), Equals, 4)
-	c.Assert(len(gauge.ToArray(specs[0].Scenarios[0].Tags.Values)), Equals, 1)
-	c.Assert(len(gauge.ToArray(specs[0].Scenarios[1].Tags.Values)), Equals, 2)
-	c.Assert(len(gauge.ToArray(specs[0].Scenarios[2].Tags.Values)), Equals, 2)
-	c.Assert(len(gauge.ToArray(specs[0].Scenarios[3].Tags.Values)), Equals, 4)
+	c.Assert(len(specs[0].Scenarios[0].Tags.ToArray()), Equals, 1)
+	c.Assert(len(specs[0].Scenarios[1].Tags.ToArray()), Equals, 2)
+	c.Assert(len(specs[0].Scenarios[2].Tags.ToArray()), Equals, 2)
+	c.Assert(len(specs[0].Scenarios[3].Tags.ToArray()), Equals, 4)
 
 	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].Scenarios), Equals, 3)
@@ -509,7 +509,7 @@ func (s *MySuite) TestToFilterScenariosByTagsAtSpecLevel(c *C) {
 	specs = append(specs, spec1)
 
 	c.Assert(len(specs[0].Scenarios), Equals, 3)
-	c.Assert(len(gauge.ToArray(specs[0].Tags.Values)), Equals, 2)
+	c.Assert(len(specs[0].Tags.ToArray()), Equals, 2)
 	specs = filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(specs[0].Scenarios), Equals, 3)
 	c.Assert(specs[0].Scenarios[0], Equals, scenario1)

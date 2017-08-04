@@ -87,7 +87,7 @@ func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
 
 func getAllTags(tags *Tags) []string {
 	allTags := make([]string, 0)
-	for _, tag := range ToArray(tags.Values) {
+	for _, tag := range tags.ToArray() {
 		allTags = append(allTags, tag)
 	}
 	return allTags
@@ -275,7 +275,7 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 
 func getTags(tags *Tags) []string {
 	if tags != nil {
-		return ToArray(tags.Values)
+		return tags.ToArray()
 	} else {
 		return make([]string, 0)
 	}

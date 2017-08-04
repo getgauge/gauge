@@ -317,9 +317,9 @@ func (tags *Tags) Add(values []string) {
 	tags.Values = append(tags.Values, values)
 }
 
-func ToArray(values [][]string) (val []string) {
-	for i, _ := range values {
-		val = append(val, values[i]...)
+func (tags *Tags)ToArray() (val []string) {
+	for i, _ := range tags.Values {
+		val = append(val, tags.Values[i]...)
 	}
 	return val
 }
