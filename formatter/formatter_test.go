@@ -152,7 +152,7 @@ func (s *MySuite) TestFormatSpecificationWithTagsInMutipleLines(c *C) {
 		`My Spec Heading
 ===============
 
-tags: tag1, tag2,` + string(" \n      ") + `tag3, tag4,`+ string(" \n      ") + `tag5
+tags: tag1, tag2,`+string(" \n      ")+`tag3, tag4,`+string(" \n      ")+`tag5
 
 Scenario Heading
 ----------------

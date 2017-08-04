@@ -178,20 +178,20 @@ func FormatComment(comment *gauge.Comment) string {
 }
 
 func FormatTags(tags *gauge.Tags) string {
-	if tags == nil || len(tags.Values) == 0 {
+	if tags == nil || len(tags.RawValues) == 0 {
 		return ""
 	}
 	var b bytes.Buffer
 	b.WriteString("tags: ")
-	for i, tag := range tags.Values {
+	for i, tag := range tags.RawValues {
 		for j, tagString := range tag {
 			b.WriteString(tagString)
-			if (i != len(tags.Values) -1) || (j != len(tag) - 1){
+			if (i != len(tags.RawValues)-1) || (j != len(tag)-1) {
 				b.WriteString(", ")
 			}
 		}
 		b.WriteString("\n")
-		if i != len(tags.Values) -1 {
+		if i != len(tags.RawValues)-1 {
 			b.WriteString("      ")
 		}
 	}

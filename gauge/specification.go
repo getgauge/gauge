@@ -144,7 +144,7 @@ func (spec *Specification) NTags() int {
 	if spec.Tags == nil {
 		return 0
 	}
-	return len(spec.Tags.Values)
+	return len(spec.Tags.Values())
 }
 
 func (spec *Specification) LatestScenario() *Scenario {
@@ -310,16 +310,16 @@ func (t *TearDown) Kind() TokenKind {
 }
 
 type Tags struct {
-	Values [][]string
+	RawValues [][]string
 }
 
 func (tags *Tags) Add(values []string) {
-	tags.Values = append(tags.Values, values)
+	tags.RawValues = append(tags.RawValues, values)
 }
 
-func (tags *Tags)ToArray() (val []string) {
-	for i, _ := range tags.Values {
-		val = append(val, tags.Values[i]...)
+func (tags *Tags) Values() (val []string) {
+	for i, _ := range tags.RawValues {
+		val = append(val, tags.RawValues[i]...)
 	}
 	return val
 }

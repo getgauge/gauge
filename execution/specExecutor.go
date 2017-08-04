@@ -367,7 +367,7 @@ func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters [
 func getTagValue(tags *gauge.Tags) []string {
 	var tagValues []string
 	if tags != nil {
-		tagValues = append(tagValues, tags.ToArray()...)
+		tagValues = append(tagValues, tags.Values()...)
 	}
 	return tagValues
 }

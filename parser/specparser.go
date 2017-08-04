@@ -493,10 +493,10 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	tagConverter := converterFn(func(token *Token, state *int) bool {
 		return (token.Kind == gauge.TagKind)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		tags := &gauge.Tags{Values: [][]string{token.Args}}
+		tags := &gauge.Tags{RawValues: [][]string{token.Args}}
 		if isInState(*state, scenarioScope) {
 			if isInState(*state, tagsScope) {
-				spec.LatestScenario().Tags.Add(tags.Values[0])
+				spec.LatestScenario().Tags.Add(tags.RawValues[0])
 			} else {
 				if spec.LatestScenario().NTags() != 0 {
 					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
@@ -505,7 +505,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else {
 			if isInState(*state, tagsScope) {
-				spec.Tags.Add(tags.Values[0])
+				spec.Tags.Add(tags.RawValues[0])
 			} else {
 				if spec.NTags() != 0 {
 					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
