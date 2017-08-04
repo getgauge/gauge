@@ -3185,7 +3185,7 @@
 				<key>IDENTIFIER</key>
 				<string>csharp</string>
 				<key>NAME</key>
-				<string>C#</string>
+				<string>CSharp</string>
 				<key>OVERWRITE_PERMISSIONS</key>
 				<false/>
 				<key>VERSION</key>
