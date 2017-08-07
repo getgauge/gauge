@@ -15,10 +15,19 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+$zipsrc = $args[0]
 $zipdst = $args[1]
 
 If(Test-path $zipdst) {Remove-item $zipdst}
 
 Add-Type -assembly "system.io.compression.filesystem"
 
-[io.compression.zipfile]::CreateFromDirectory($zipsrc, $zipdst)
+Write-Host "Creating zip : $zipdst"
+
+try {
+    [io.compression.zipfile]::CreateFromDirectory($zipsrc, $zipdst)
+}
+catch {
+    Write-Host -ForegroundColor Red "Unable to create zip : $($_.Exception)"
+    exit -1
+}
