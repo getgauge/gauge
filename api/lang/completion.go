@@ -55,7 +55,10 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	line := getLine(params.TextDocument.URI, params.Position.Line)
-	pLine := line[:params.Position.Character]
+	pLine := line
+	if len(line) > params.Position.Character {
+		pLine = line[:params.Position.Character]
+	}
 	if !isStepCompletion(pLine, params.Position.Character) {
 		return nil, nil
 	}
