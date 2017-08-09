@@ -60,7 +60,7 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		pLine = line[:params.Position.Character]
 	}
 	if !isStepCompletion(pLine, params.Position.Character) {
-		return nil, nil
+		return completionList{IsIncomplete: false, Items: []completionItem{}}, nil
 	}
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	startPos, endPos := getEditPosition(line, params.Position)
@@ -195,11 +195,12 @@ func resolveCompletion(req *jsonrpc2.Request) (interface{}, error) {
 func newCompletionItem(stepText, text, kind, fText string, startPos, endPos lsp.Position) completionItem {
 	return completionItem{
 		CompletionItem: lsp.CompletionItem{
-			Label:      stepText,
-			Detail:     kind,
-			Kind:       lsp.CIKFunction,
-			TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: startPos, End: endPos}, NewText: text},
-			FilterText: fText,
+			Label:         stepText,
+			Detail:        kind,
+			Kind:          lsp.CIKFunction,
+			TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: startPos, End: endPos}, NewText: text},
+			FilterText:    fText,
+			Documentation: stepText,
 		},
 		InsertTextFormat: snippet,
 	}
