@@ -57,7 +57,7 @@ func (scenario *Scenario) NTags() int {
 	if scenario.Tags == nil {
 		return 0
 	}
-	return len(scenario.Tags.Values)
+	return len(scenario.Tags.Values())
 }
 
 func (scenario *Scenario) AddComment(comment *Comment) {

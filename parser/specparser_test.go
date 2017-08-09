@@ -592,9 +592,9 @@ func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.Tags.Values), Equals, 2)
-	c.Assert(spec.Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.Values()), Equals, 2)
+	c.Assert(spec.Tags.Values()[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values()[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
@@ -609,9 +609,9 @@ func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
-	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Scenarios[0].Tags.Values()), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.Values()[0], Equals, "tag1")
+	c.Assert(spec.Scenarios[0].Tags.Values()[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestParsingConceptInSpec(c *C) {
@@ -1150,10 +1150,9 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 
 	c.Assert(result.Ok, Equals, true)
-
-	c.Assert(len(spec.Tags.Values), Equals, 2)
-	c.Assert(spec.Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.Values()), Equals, 2)
+	c.Assert(spec.Tags.Values()[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values()[1], Equals, "tag2")
 }
 
 func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
@@ -1169,14 +1168,14 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 
-	c.Assert(len(spec.Tags.Values), Equals, 2)
-	c.Assert(spec.Tags.Values[0], Equals, "tag1")
-	c.Assert(spec.Tags.Values[1], Equals, "tag2")
+	c.Assert(len(spec.Tags.Values()), Equals, 2)
+	c.Assert(spec.Tags.Values()[0], Equals, "tag1")
+	c.Assert(spec.Tags.Values()[1], Equals, "tag2")
 
 	tags := spec.Scenarios[0].Tags
-	c.Assert(len(tags.Values), Equals, 2)
-	c.Assert(tags.Values[0], Equals, "tag3")
-	c.Assert(tags.Values[1], Equals, "tag4")
+	c.Assert(len(tags.Values()), Equals, 2)
+	c.Assert(tags.Values()[0], Equals, "tag3")
+	c.Assert(tags.Values()[1], Equals, "tag4")
 }
 
 func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
@@ -1622,9 +1621,9 @@ Scenario
 	`, gauge.NewConceptDictionary(), "")
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per specification")
-	c.Assert(len(spec.Tags.Values), Equals, 2)
-	c.Assert(spec.Tags.Values[0], Equals, "foo")
-	c.Assert(spec.Tags.Values[1], Equals, "bar")
+	c.Assert(len(spec.Tags.Values()), Equals, 2)
+	c.Assert(spec.Tags.Values()[0], Equals, "foo")
+	c.Assert(spec.Tags.Values()[1], Equals, "bar")
 }
 
 func (s *MySuite) TestScenarioWithRepeatedTagDefinitions(c *C) {
@@ -1643,11 +1642,11 @@ tags: blah
 	`, gauge.NewConceptDictionary(), "")
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per scenario")
-	c.Assert(len(spec.Scenarios[0].Tags.Values), Equals, 2)
-	c.Assert(spec.Scenarios[0].Tags.Values[0], Equals, "foo")
-	c.Assert(spec.Scenarios[0].Tags.Values[1], Equals, "bar")
-	c.Assert(len(spec.Tags.Values), Equals, 1)
-	c.Assert(spec.Tags.Values[0], Equals, "tag1")
+	c.Assert(len(spec.Scenarios[0].Tags.Values()), Equals, 2)
+	c.Assert(spec.Scenarios[0].Tags.Values()[0], Equals, "foo")
+	c.Assert(spec.Scenarios[0].Tags.Values()[1], Equals, "bar")
+	c.Assert(len(spec.Tags.Values()), Equals, 1)
+	c.Assert(spec.Tags.Values()[0], Equals, "tag1")
 }
 
 func (s *MySuite) TestDatatTableWithEmptyHeaders(c *C) {

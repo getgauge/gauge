@@ -9,7 +9,7 @@ addons:
     packages:
       - oracle-java8-set-default
 env:
-  - GAUGE_ROOT="/tmp/gauge"
+  - GAUGE_ROOT="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 install:
