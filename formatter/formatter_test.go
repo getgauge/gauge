@@ -132,6 +132,43 @@ tags: tag3, tag4
 
 }
 
+func (s *MySuite) TestFormatSpecificationWithTagsInMutipleLines(c *C) {
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 3},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag5"}, LineNo: 4},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 5},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 6},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 7, LineText: "Example step"},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading1", LineNo: 8},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 9},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 10, LineText: "Example step"},
+	}
+
+	spec, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	formatted := FormatSpecification(spec)
+	c.Assert(formatted, Equals,
+		`My Spec Heading
+===============
+
+tags: tag1, tag2,`+string(" \n      ")+`tag3, tag4,`+string(" \n      ")+`tag5
+
+Scenario Heading
+----------------
+
+tags: tag3, tag4
+
+* Example step
+Scenario Heading1
+-----------------
+
+tags: tag3, tag4
+
+* Example step
+`)
+}
+
 func (s *MySuite) TestFormatSpecificationWithTeardownSteps(c *C) {
 	tokens := []*parser.Token{
 		&parser.Token{Kind: gauge.SpecKind, Value: "My Spec Heading", LineNo: 1},
