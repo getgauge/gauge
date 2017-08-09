@@ -54,10 +54,10 @@ Scenario Heading
 * Example step
 * Step with inline table`+" "+`
 
-     |id |name|
-     |---|----|
-     |<1>|foo |
-     |2  |bar |
+   |id |name|
+   |---|----|
+   |<1>|foo |
+   |2  |bar |
 `)
 }
 
@@ -72,9 +72,9 @@ func (s *MySuite) TestFormatTable(c *C) {
 
 	got := FormatTable(table)
 	want := `
-     |name1|name2|
-     |-----|-----|
-     |john |doe  |
+   |name1|name2|
+   |-----|-----|
+   |john |doe  |
 `
 
 	c.Assert(got, Equals, want)
@@ -265,18 +265,18 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 	c.Assert(formatted, Equals,
 		`Spec Heading
 ============
-     |id|foo|
-     |--|---|
-     |1 |f  |
+   |id|foo|
+   |--|---|
+   |1 |f  |
 Scenario Heading
 ----------------
 * Example step
 * Step with inline table `+`
 
-     |id|name |
-     |--|-----|
-     |1 |<foo>|
-     |2 |bar  |
+   |id|name |
+   |--|-----|
+   |1 |<foo>|
+   |2 |bar  |
 `)
 }
 
@@ -309,10 +309,10 @@ Scenario Heading
 |2|bar|
 * Example step `+`
 
-     |id|name |
-     |--|-----|
-     |1 |<foo>|
-     |2 |bar  |
+   |id|name |
+   |--|-----|
+   |1 |<foo>|
+   |2 |bar  |
 `)
 }
 
@@ -369,10 +369,10 @@ Scenario Heading
 |2|bar|
 * Example step `+`
 
-     |id|name |
-     |--|-----|
-     |1 |<foo>|
-     |2 |bar  |
+   |id|name |
+   |--|-----|
+   |1 |<foo>|
+   |2 |bar  |
 `)
 }
 
@@ -412,19 +412,19 @@ Scenario Heading
 |2|bar|
 * Example step `+`
 
-     |id|name |
-     |--|-----|
-     |1 |<foo>|
-     |2 |bar  |
+   |id|name |
+   |--|-----|
+   |1 |<foo>|
+   |2 |bar  |
 
 ____
 
 * Example step `+`
 
-     |id|name |
-     |--|-----|
-     |1 |<foo>|
-     |2 |bar  |
+   |id|name |
+   |--|-----|
+   |1 |<foo>|
+   |2 |bar  |
 `)
 }
 
@@ -445,12 +445,12 @@ func (s *MySuite) TestFormatShouldNotAddExtraNewLinesBeforeDataTable(c *C) {
 		`Specification Heading
 =====================
 
-     |Word  |Vowel Count|
-     |------|-----------|
-     |Gauge |3          |
-     |Mingle|2          |
-     |Snap  |1          |
-     |GoCD  |1          |
-     |Rhythm|0          |
+   |Word  |Vowel Count|
+   |------|-----------|
+   |Gauge |3          |
+   |Mingle|2          |
+   |Snap  |1          |
+   |GoCD  |1          |
+   |Rhythm|0          |
 `)
 }
