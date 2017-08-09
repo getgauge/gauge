@@ -9,6 +9,7 @@ init:
         }
 environment:
   GOPATH: c:\gopath
+  GAUGE_TELEMETRY_ENABLED: false
 build_script:
 - ps: >-
     $env:Path = "$env:GOPATH\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
