@@ -188,10 +188,6 @@ func Validation() {
 	trackConsole("validation", "validate", "")
 }
 
-func Generation() {
-	trackConsole("generation", "generate", "")
-}
-
 func Docs(docs string) {
 	trackConsole("docs", "generate", docs)
 }

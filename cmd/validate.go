@@ -32,8 +32,8 @@ var (
 		Example: "  gauge validate specs/",
 		Run: func(cmd *cobra.Command, args []string) {
 			setGlobalFlags()
-			if noQuickFix {
-				validation.NoQuickFix = noQuickFix
+			if hideQuickFix {
+				validation.HideQuickFix = hideQuickFix
 			}
 			if err := isValidGaugeProject(args); err != nil {
 				logger.Fatalf(err.Error())
@@ -44,11 +44,11 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	noQuickFix bool
+	hideQuickFix bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(validateCmd)
-	validateCmd.Flags().BoolVarP(&noQuickFix, "no-quick-fix", "n", false, "Gives default step implementation for un implemented steps")
+	validateCmd.Flags().BoolVarP(&hideQuickFix, "hide-quick-fix", "", false, "Gives default step implementation for un implemented steps")
 
 }

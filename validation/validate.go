@@ -37,7 +37,7 @@ import (
 )
 
 var TableRows = ""
-var NoQuickFix bool
+var HideQuickFix bool
 
 type validator struct {
 	manifest           *manifest.Manifest
@@ -302,14 +302,14 @@ func (v *specValidator) validateStep(s *gauge.Step) error {
 			quickFix := res.GetQuickFix()
 			if s.Parent == nil {
 				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
-				if !NoQuickFix {
+				if !HideQuickFix {
 					vErr.quickFix = quickFix
 				}
 				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
 			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
-			if !NoQuickFix {
+			if !HideQuickFix {
 				vErr.quickFix = quickFix
 			}
 			return vErr

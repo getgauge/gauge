@@ -133,7 +133,7 @@ Scenario 2
 }
 
 func (s *MySuite) TestValidateStep(c *C) {
-	NoQuickFix = false
+	HideQuickFix = false
 	var quickFix bytes.Buffer
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
@@ -153,7 +153,7 @@ func (s *MySuite) TestValidateStep(c *C) {
 }
 
 func (s *MySuite) TestShouldNotGiveQuickFixWhenQuickFixFlagIsNotSet(c *C) {
-	NoQuickFix = true
+	HideQuickFix = true
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
@@ -167,7 +167,7 @@ func (s *MySuite) TestShouldNotGiveQuickFixWhenQuickFixFlagIsNotSet(c *C) {
 }
 
 func (s *MySuite) TestValidateStepInConcept(c *C) {
-	NoQuickFix = false
+	HideQuickFix = false
 	var quickFix bytes.Buffer
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
