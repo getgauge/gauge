@@ -62,7 +62,7 @@ Options:
   -g, --group=-1                   [DEPRECATED] Use 'gauge run -n 5 -g 1 specs/'
   --init=""                        [DEPRECATED] Use 'gauge init <template name>'
   --install=""                     [DEPRECATED] Use 'gauge install <plugin name>'
-  --install-all=false              [DEPRECATED] Use 'gauge install --all'
+  --install-all=false              [DEPRECATED] Use 'gauge install'
   --list-templates=false           [DEPRECATED] Use 'gauge init --templates'
   --machine-readable=false         [DEPRECATED] Use 'gauge version -m'
   -n=8                             [DEPRECATED] Use 'gauge run -p -n specs/'
