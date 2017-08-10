@@ -47,6 +47,6 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(validateCmd)
-	validateCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Gives default step implementation for un implemented steps")
+	validateCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 
 }
