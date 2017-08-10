@@ -303,3 +303,29 @@ func (s *MySuite) TestGetAvailableSpecDetailsWithEmptyCache(c *C) {
 
 	c.Assert(len(details), Equals, 0)
 }
+
+func (s *MySuite) TestParamsForFile(c *C) {
+	file, _ := util.CreateFileIn(s.specsDir, "spec2.spec", spec2)
+	file, _ = filepath.Abs(file)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+	specInfoGatherer.initParamsCache()
+
+	params := specInfoGatherer.Params(file)
+	hasParam := func(param string, list []string) bool {
+		for _, p := range list {
+			if p == param {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasParam("hello", params) {
+		c.Errorf(`Param "hello" not found`)
+	}
+	if !hasParam("bye", params) {
+		c.Errorf(`Param "bye" not found`)
+	}
+}

@@ -41,6 +41,7 @@ type SpecInfoGatherer struct {
 	specsCache        specsCache
 	conceptsCache     conceptCache
 	stepsCache        stepsCache
+	paramsCache       paramsCache
 	SpecDirs          []string
 }
 
@@ -57,6 +58,11 @@ type stepsCache struct {
 type specsCache struct {
 	mutex       sync.RWMutex
 	specDetails map[string]*SpecDetail
+}
+
+type paramsCache struct {
+	mutex  sync.RWMutex
+	params map[string][]string
 }
 
 type SpecDetail struct {
@@ -77,6 +83,23 @@ func (s *SpecInfoGatherer) Init() {
 	s.initConceptsCache()
 	s.initSpecsCache()
 	s.initStepsCache()
+	s.initParamsCache()
+}
+
+func (s *SpecInfoGatherer) initParamsCache() {
+	s.paramsCache.mutex.Lock()
+	defer s.paramsCache.mutex.Unlock()
+	s.paramsCache.params = make(map[string][]string, 0)
+	for file, stepValues := range s.stepsCache.stepValues {
+		s.updateParamsCache(stepValues, file)
+	}
+}
+
+func (s *SpecInfoGatherer) updateParamsCache(stepValues []*gauge.StepValue, file string) {
+	s.paramsCache.params[file] = make([]string, 0)
+	for _, sv := range stepValues {
+		s.paramsCache.params[file] = append(s.paramsCache.params[file], sv.Args...)
+	}
 }
 
 func (s *SpecInfoGatherer) initSpecsCache() {
@@ -224,6 +247,10 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 	s.stepsCache.mutex.Lock()
 	s.addToStepsCache(file, steps)
 	s.stepsCache.mutex.Unlock()
+
+	s.paramsCache.mutex.Lock()
+	defer s.paramsCache.mutex.Unlock()
+	s.updateParamsCache(steps, file)
 }
 
 func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
@@ -385,6 +412,13 @@ func (s *SpecInfoGatherer) Steps() []*gauge.StepValue {
 		steps = append(steps, sv)
 	}
 	return steps
+}
+
+// Steps returns the list of all the steps in the gauge project
+func (s *SpecInfoGatherer) Params(filePath string) []string {
+	s.paramsCache.mutex.RLock()
+	defer s.paramsCache.mutex.RUnlock()
+	return s.paramsCache.params[filePath]
 }
 
 // Concepts returns an array containing information about all the concepts present in the Gauge project

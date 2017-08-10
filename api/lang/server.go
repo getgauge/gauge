@@ -38,6 +38,7 @@ type completionProvider interface {
 	Init()
 	Steps() []*gauge.StepValue
 	Concepts() []*gm.ConceptInfo
+	Params(params string) []string
 }
 
 var provider completionProvider
