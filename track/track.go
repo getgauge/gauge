@@ -184,8 +184,12 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 	trackConsole("execution", action, strings.Join(flags, ","))
 }
 
-func Validation() {
-	trackConsole("validation", "validate", "")
+func Validation(hideSuggestion bool) {
+	if hideSuggestion {
+		trackConsole("validation", "validate", "hide-suggestion")
+	} else {
+		trackConsole("validation", "validate", "")
+	}
 }
 
 func Docs(docs string) {

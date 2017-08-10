@@ -37,7 +37,7 @@ import (
 )
 
 var TableRows = ""
-var HideQuickFix bool
+var HideSuggestion bool
 
 type validator struct {
 	manifest           *manifest.Manifest
@@ -55,11 +55,11 @@ type specValidator struct {
 }
 
 type StepValidationError struct {
-	step      *gauge.Step
-	message   string
-	fileName  string
-	errorType *gauge_messages.StepValidateResponse_ErrorType
-	quickFix  string
+	step       *gauge.Step
+	message    string
+	fileName   string
+	errorType  *gauge_messages.StepValidateResponse_ErrorType
+	suggestion string
 }
 
 type SpecValidationError struct {
@@ -68,7 +68,7 @@ type SpecValidationError struct {
 }
 
 func (s StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d %s => '%s'%s", s.fileName, s.step.LineNo, s.message, s.step.GetLineText(), s.quickFix)
+	return fmt.Sprintf("%s:%d %s => '%s'%s", s.fileName, s.step.LineNo, s.message, s.step.GetLineText(), s.suggestion)
 }
 
 func (s SpecValidationError) Error() string {
@@ -299,18 +299,18 @@ func (v *specValidator) validateStep(s *gauge.Step) error {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
-			quickFix := res.GetQuickFix()
+			suggestion := res.GetSuggestion()
 			if s.Parent == nil {
 				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
-				if !HideQuickFix {
-					vErr.quickFix = quickFix
+				if !HideSuggestion {
+					vErr.suggestion = suggestion
 				}
 				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
 			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
-			if !HideQuickFix {
-				vErr.quickFix = quickFix
+			if !HideSuggestion {
+				vErr.suggestion = suggestion
 			}
 			return vErr
 
