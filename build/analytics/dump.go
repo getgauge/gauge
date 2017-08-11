@@ -22,6 +22,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -43,6 +44,7 @@ const (
 	demographicDimensions = "ga:countryIsoCode"
 	demographicMetric     = "ga:users"
 	outDir                = "_insights"
+	gaServiceAcctPEMFile  = "ga.pem"
 )
 
 var (
@@ -50,7 +52,6 @@ var (
 	startdate          = time.Now().Add(time.Hour * 24 * -30).Format(datelayout)
 	tokenurl           = os.Getenv("GA_TOKEN_URL")             // (json:"token_uri") Google oauth2 Token URL
 	gaServiceAcctEmail = os.Getenv("GA_SERVICE_ACCOUNT_EMAIL") // (json:"client_email") email address of registered application
-	gaServiceAcctPEM   = os.Getenv("GA_PRIVATE_KEY")           // private key string (PEM format) from Google Cloud Console
 	gaTableID          = os.Getenv("GA_VIEW_ID")               // namespaced profile (table) ID of your analytics account/property/profile
 )
 
@@ -199,9 +200,13 @@ func (e *events) writeCSV(dest string) {
 }
 
 func main() {
+	pk, err := ioutil.ReadFile(gaServiceAcctPEMFile)
+	if err != nil {
+		log.Fatal("error reading GA Service Account PEM key -", err)
+	}
 	jwtc := jwt.Config{
 		Email:      gaServiceAcctEmail,
-		PrivateKey: []byte(gaServiceAcctPEM),
+		PrivateKey: pk,
 		Scopes:     []string{analytics.AnalyticsReadonlyScope},
 		TokenURL:   tokenurl,
 	}
