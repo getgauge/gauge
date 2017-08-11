@@ -159,7 +159,7 @@ func main() {
 			track.Format()
 			formatter.FormatSpecFilesIn(*specFilesToFormat)
 		} else if *validate {
-			track.Validation()
+			track.Validation(false)
 			validation.Validate(flag.Args())
 		} else if *docs != "" {
 			track.Docs(*docs)
