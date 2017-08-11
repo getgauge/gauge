@@ -37,203 +37,12 @@ import (
 )
 
 const (
-	datelayout   = "2006-01-02"                                                // date format that Core Reporting API requires
-	dimensions   = "ga:eventCategory, ga:eventAction, ga:eventLabel,ga:medium" // GA dimensions that we want
-	metric       = "ga:totalEvents"                                            // GA metric that we want
-	outDir       = "insights"
-	htmltemplate = `
-{{define "table"}}
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Category</th>
-                    <th>Action</th>
-                    <th>Label</th>
-                    <th>Hits</th>
-                    <th>%</th>
-                </tr>
-            </thead>
-			<tbody>
-				{{range .}}
-					<tr>
-						<td>{{.Category}}</td>
-						<td>{{.Action}}</td>
-						<td>{{.Labels}}</td>
-						<td>{{.Hits}}</td>
-						<td>{{printf "%.2f" .Percent}}</td>
-					</tr>
-				{{end}}
-            </tbody>
-        </table>
-		<div class="actions">
-			<a href="./console.csv">Download</a>
-		</div>
-    </div>
-{{end}}
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Gauge - Insights</title>
-    	<link href="https://getgauge.io/assets/images/favicons/favicon.ico" rel="shortcut icon" type="image/ico" />
-		<style>
-			.side{
-				position: fixed;
-				top:0;
-				left:0;
-				background-color: #343131;
-				min-height: 100%;
-				z-index: 200;
-				width: 22em;
-				font-family: "Open Sans";
-			}
-			.side .header{
-				background: #F5C20F;
-				color: #343131;
-			}
-			.logo{
-				background: url('data:image/svg+xml; ');
-			}
-			.side .header .heading{
-				font-size: 1.8em;
-				font-weight: bold;
-				font-family: monospace;
-			}
-			.side .header h2 {
-				margin-top: 0.2em;
-			}
-			.side ul{
-				list-style: none;
-				text-align: left;
-				padding:0;
-			}
-			.side ul li{
-				padding-bottom: 0.2em;
-				padding-top: 0.2em;
-				color: #b3b3b3;
-			}
-			.side ul li:hover{
-				background-color: #4e4a4a;
-			}
-			.side ul li.active{
-				background-color: rgb(252, 252, 252);
-				color: rgb(64, 64, 64);
-			}
-			.side ul li a{
-				text-decoration: none;
-				font-size: 1.2em;
-				display: block;
-				margin-left: 2em;
-				color: inherit;
-			}		
-			.logo{
-				height: 3em;
-				margin-top: 1em;
-			}
-			body{
-				margin:0;
-				background: rgb(252, 252, 252);
-				color: rgb(64, 64, 64);
-				font-family: monospace;
-				text-align: center;
-			}
-			h1{
-				font-size: 2.5em;
-				margin-top: 0.5em;
-				color: #343131;
-			}
-			h2{
-				font-size: 1.8em;
-				font-family: "Open Sans";
-			}
-			.content{
-				margin-left: 22em;
-			}
-			.table-container{
-				display: inline-block;
-			}
-			.table-container .actions{
-				margin-top: 1em;
-			}
-			table, th, td{
-				border: 1px solid #755C07;
-				border-collapse: collapse;
-				font-size: 1em;
-				text-align: left;
-				margin-left: 0.5em;
-			}
-			th {
-				background-color: #343131;
-				color: #b3b3b3;
-				text-align: center;
-			}
-			footer{
-				margin-left: 22em;
-				margin-top: 2em;
-				margin-bottom: 1.5em;
-			}
-			section {
-				min-height: 96vh;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="side">
-			<div class="header">
-				<img class="logo" src='https://docs.getgauge.io/_static/img/Gauge-Logo.svg'>
-				<div class="heading">Insights</div>
-			</div>
-			<ul class="menu">
-				<li class="active"><a href="#console">Console</a></li>
-				<li><a href="#ci">CI</a></li>
-				<li><a href="#api">API</a></li>
-			</ul>
-		</div>
-		<div class="content">
-			<h3>Report period: {{reportPeriod}}</h3>
-			<section>
-				<h2 id="console">Command Usage - Console</h2>
-				{{template "table" .Console}}
-			</section>
-			<section>
-				<h2 id="ci">Command Usage - CI</h2>
-				{{template "table" .CI}}
-			</section>
-			<section>
-				<h2 id="api">Command Usage - API</h2>
-				{{template "table" .API}}
-			</section>
-		</div>
-		<footer>Report generated on {{now}}</footer>
-		<script type="text/javascript">
-			(function() {
-				'use strict';
-				var section = document.querySelectorAll("h2");
-				var sections = {};
-				var i = 0;
-
-				Array.prototype.forEach.call(section, function(e) {
-					sections[e.id] = e.offsetTop;
-					document.querySelector('a[href*=' + e.id + ']').addEventListener("click", function(){
-						document.querySelector('.active').setAttribute('class', ' ');
-						this.parentNode.setAttribute('class', 'active');
-					})
-				});
-
-				window.onscroll = function() {
-					var scrollPosition = document.documentElement.scrollTop || document.body.scrollTop;
-					for (i in sections) {
-						if (sections[i] <= scrollPosition) {
-							document.querySelector('.active').setAttribute('class', ' ');
-							document.querySelector('a[href*=' + i + ']').parentNode.setAttribute('class', 'active');
-						}
-					}
-				};
-			})();
-		</script>
-	</body>
-</html>
-`
+	datelayout            = "2006-01-02"
+	dimensions            = "ga:eventCategory, ga:eventAction, ga:eventLabel,ga:medium"
+	metric                = "ga:totalEvents"
+	demographicDimensions = "ga:countryIsoCode"
+	demographicMetric     = "ga:users"
+	outDir                = "_insights"
 )
 
 var (
@@ -257,13 +66,20 @@ func (e *eventSummary) toSlice() []string {
 	return []string{e.Category, e.Action, e.Labels, strings.Replace(e.Labels, ",", " ", -1), fmt.Sprintf("%.2f", e.Percent)}
 }
 
+type countryWiseUser struct {
+	Country   country
+	UserCount int
+	Radius    int
+}
+
 type events struct {
-	Console      []*eventSummary
-	CI           []*eventSummary
-	API          []*eventSummary
-	apiCount     int
-	ciCount      int
-	consoleCount int
+	Console          []*eventSummary
+	CI               []*eventSummary
+	API              []*eventSummary
+	apiCount         int
+	ciCount          int
+	consoleCount     int
+	CountryWiseUsers []*countryWiseUser
 }
 
 type eventSorter []*eventSummary
@@ -274,16 +90,17 @@ func (e eventSorter) Less(i, j int) bool { return e[i].Hits > e[j].Hits }
 
 func newEvents() *events {
 	return &events{
-		Console:      make([]*eventSummary, 0),
-		CI:           make([]*eventSummary, 0),
-		API:          make([]*eventSummary, 0),
-		consoleCount: 0,
-		apiCount:     0,
-		ciCount:      0,
+		Console:          make([]*eventSummary, 0),
+		CI:               make([]*eventSummary, 0),
+		API:              make([]*eventSummary, 0),
+		consoleCount:     0,
+		apiCount:         0,
+		ciCount:          0,
+		CountryWiseUsers: make([]*countryWiseUser, 0),
 	}
 }
 
-func (e *events) populate(data *analytics.GaData) {
+func (e *events) populate(data, countryData *analytics.GaData) {
 	for _, row := range data.Rows {
 		h, _ := strconv.Atoi(row[4])
 		switch row[3] {
@@ -315,6 +132,21 @@ func (e *events) populate(data *analytics.GaData) {
 	sort.Sort(eventSorter(e.API))
 	sort.Sort(eventSorter(e.Console))
 	sort.Sort(eventSorter(e.CI))
+	var totalUsers = 0
+	for _, c := range countryData.Rows {
+		country, ok := countries()[c[0]]
+		if ok {
+			count, err := strconv.Atoi(c[1])
+			if err == nil {
+				e.CountryWiseUsers = append(e.CountryWiseUsers, &countryWiseUser{Country: country, UserCount: count})
+				totalUsers += count
+			}
+		}
+	}
+
+	for _, c := range e.CountryWiseUsers {
+		c.Radius = int(c.UserCount * 100 / totalUsers)
+	}
 }
 
 func (e *events) writeHTML(dest string) {
@@ -380,13 +212,17 @@ func main() {
 	}
 	ads := analytics.NewDataGaService(as)
 	gasetup := ads.Get(gaTableID, startdate, enddate, metric).Dimensions(dimensions)
-	gadata, err := gasetup.Do()
+	eventData, err := gasetup.Do()
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	gasetup = ads.Get(gaTableID, startdate, enddate, demographicMetric).Dimensions(demographicDimensions)
+	usersPerCountry, err := gasetup.Do()
+	if err != nil {
+		log.Fatal(err)
+	}
 	events := newEvents()
-	events.populate(gadata)
+	events.populate(eventData, usersPerCountry)
 
 	pwd, err := os.Getwd()
 	if err != nil {
