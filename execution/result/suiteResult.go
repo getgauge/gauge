@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
+// SuitResult represents the result of suit execution
 type SuiteResult struct {
 	SpecResults       []*SpecResult
 	PreSuite          *(gauge_messages.ProtoHookFailure)
@@ -41,6 +42,7 @@ type SuiteResult struct {
 	SpecsSkippedCount int
 }
 
+// NewSuiteResult is a constructor for SuitResult
 func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
@@ -51,10 +53,12 @@ func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	return result
 }
 
+// SetFailure sets the result to failed
 func (sr *SuiteResult) SetFailure() {
 	sr.IsFailed = true
 }
 
+// SetSpecsSkippedCount sets the count of specs skipped.
 func (sr *SuiteResult) SetSpecsSkippedCount() {
 	sr.SpecsSkippedCount = 0
 	for _, specRes := range sr.SpecResults {
@@ -64,6 +68,7 @@ func (sr *SuiteResult) SetSpecsSkippedCount() {
 	}
 }
 
+// AddUnhandledError adds the unhandled error to suit result.
 func (sr *SuiteResult) AddUnhandledError(err error) {
 	sr.UnhandledErrors = append(sr.UnhandledErrors, err)
 }
@@ -72,6 +77,7 @@ func (sr *SuiteResult) UpdateExecTime(startTime time.Time) {
 	sr.ExecutionTime = int64(time.Since(startTime) / 1e6)
 }
 
+// AddSpecResult adds a specs result to suit result.
 func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	if specResult.IsFailed {
 		sr.IsFailed = true
@@ -81,6 +87,7 @@ func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	sr.SpecResults = append(sr.SpecResults, specResult)
 }
 
+// AddSpecResults adds multiple spec results to suit result.
 func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
 	for _, result := range specResults {
 		sr.AddSpecResult(result)
@@ -109,10 +116,12 @@ func (sr *SuiteResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
 	sr.PostSuite = f[0]
 }
 
+// ExecTime returns the time taken to execute the suit
 func (sr *SuiteResult) ExecTime() int64 {
 	return sr.ExecutionTime
 }
 
+// GetFailed returns the state of the result
 func (sr *SuiteResult) GetFailed() bool {
 	return sr.IsFailed
 }

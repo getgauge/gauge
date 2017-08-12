@@ -15,6 +15,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+   Execution can be of two types
+	- Simple execution
+	- Paralell execution
+
+   Execution Flow :
+   	- Checks for updates
+    	- Validation
+    	- Init Registry
+    	- Saving Execution result
+
+   Strategy
+    	- Lazy : Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
+    	- Eager : Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.
+*/
 package execution
 
 import (
@@ -49,7 +64,10 @@ import (
 	"github.com/getgauge/gauge/validation"
 )
 
+// NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
 var NumberOfExecutionStreams int
+
+// InParallel if true executes the specs in parallel else in serial.
 var InParallel bool
 
 type suiteExecutor interface {
@@ -88,6 +106,8 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 	}
 }
 
+// ExecuteSpecs : Check for updates, validates the specs (by invoking the respective language runners), initiates the registry which is needed for console reporting, execution API and Rerunning of specs
+// and finally saves the execution result as binary in .gauge folder.
 func ExecuteSpecs(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
