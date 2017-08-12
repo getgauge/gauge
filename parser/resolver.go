@@ -44,6 +44,7 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
+// GetResolvedParams based on the arg type(static, dynamic, table, special_string, special_table) resolves the parameter of a step.
 func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) []*gauge_messages.Parameter {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {

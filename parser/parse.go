@@ -15,6 +15,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+  Parses all the specs in the list of directories given and also de-duplicates all specs passed through `specDirs` before parsing specs.
+  Gets all the specs files in the given directory and generates token for each spec file.
+  While parsing a concept file, concepts are inlined i.e. concept in the spec file is replaced with steps that concept has in the concept file.
+  While creating a specification file parser applies the converter functions.
+  Parsing a spec file gives a specification with parseresult. ParseResult contains ParseErrors, CriticalErrors, Warnings and FileName
+
+  Errors can be generated, While
+	- Generating tokens
+	- Applying converters
+	- After Applying converters
+
+  If a parse error is found in a spec, only that spec is ignored and others will continue execution.
+  This doesn't invoke the language runner.
+  Eg : Multiple spec headings found in same file.
+       Scenario should be defined after the spec heading.
+
+  Critical error :
+  	Circular reference of concepts - Doesn't parse specs becz it goes in recursion and crashes
+*/
 package parser
 
 import (
@@ -32,6 +52,8 @@ import (
 )
 
 // TODO: Use single channel instead of one for spec and another for result, so that mapping is consistent
+// ParseSpecFiles - gets all the spec files and parse each spec file.
+// Generates specifications and parse results.
 func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
 	parseResultsChan := make(chan *ParseResult, len(specFiles))
 	specsChan := make(chan *gauge.Specification, len(specFiles))
@@ -59,12 +81,14 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 	return specs, parseResults
 }
 
+// ParseSpecs parses specs in the give directory and gives specification and pass/fail status, used in validation.
 func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
 	specs, failed := parseSpecsInDirs(conceptsDictionary, args, buildErrors)
 	specsToExecute := order.Sort(filter.FilterSpecs(specs))
 	return specsToExecute, failed
 }
 
+// ParseConcepts creates concept dictionary and concept parse result.
 func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult) {
 	conceptsDictionary, conceptParseResult := CreateConceptsDictionary()
 	HandleParseResult(conceptParseResult)
