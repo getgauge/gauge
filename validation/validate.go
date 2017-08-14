@@ -147,12 +147,12 @@ type ValidationResult struct {
 	ParseOk        bool
 }
 
-// Creates a new Validation result
+// NewValidationResult creates a new Validation result
 func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
 	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, ParseOk: parseOk, Errs: e}
 }
 
-// Parses the specs, creates a new validator and call the runner to get the validation result
+// ValidateSpecs parses the specs, creates a new validator and call the runner to get the validation result.
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
