@@ -68,7 +68,11 @@ type SpecValidationError struct {
 }
 
 func (s StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d %s => '%s'%s", s.fileName, s.step.LineNo, s.message, s.step.GetLineText(), s.suggestion)
+	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+}
+
+func (s StepValidationError) Suggestion() string {
+	return fmt.Sprintf("%s : %s => '%s'\t%s", "One or more errors were due to", "Step implementation not found", s.step.GetLineText(), s.suggestion)
 }
 
 func (s SpecValidationError) Error() string {
@@ -81,6 +85,16 @@ func NewSpecValidationError(m string, f string) SpecValidationError {
 
 func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) StepValidationError {
 	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
+}
+
+func showSuggestion(validationErrors validationErrors) {
+	for _, errs := range validationErrors {
+		for _, v := range errs {
+			if v.(StepValidationError).suggestion != "" {
+				logger.Errorf(v.(StepValidationError).Suggestion())
+			}
+		}
+	}
 }
 
 func Validate(args []string) {
@@ -158,6 +172,7 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	if specsFailed {
 		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
+	showSuggestion(vErrs)
 	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 

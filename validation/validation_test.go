@@ -145,11 +145,13 @@ func (s *MySuite) TestValidateStep(c *C) {
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
-	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'"+"\n"+
-		"Suggestion : "+"\n"+
-		"@Step(\"my step\")"+"\n"+
-		"public void implementation(){"+"\n\t"+
-		"// your code here...\n}")
+	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'")
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "One or more errors were due to : Step implementation not found => 'my step'\t\n"+
+		"Suggestion : \n"+
+		"@Step(\"my step\")\n"+
+		"public void implementation(){\n"+
+		"\t// your code here...\n"+
+		"}")
 }
 
 func (s *MySuite) TestShouldNotGiveSuggestionWhenHideSuggestionFlagIsFalse(c *C) {
@@ -164,6 +166,7 @@ func (s *MySuite) TestShouldNotGiveSuggestionWhenHideSuggestionFlagIsFalse(c *C)
 
 	c.Assert(valErr, Not(Equals), nil)
 	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'")
+	c.Assert(valErr.(StepValidationError).suggestion, Equals, "")
 }
 
 func (s *MySuite) TestValidateStepInConcept(c *C) {
@@ -182,11 +185,13 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
-	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'"+"\n"+
-		"Suggestion : "+"\n"+
-		"@Step(\"my step\")"+"\n"+
-		"public void implementation(){"+"\n\t"+
-		"// your code here...\n}")
+	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'")
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "One or more errors were due to : Step implementation not found => 'my step'\t\n"+
+		"Suggestion : \n"+
+		"@Step(\"my step\")\n"+
+		"public void implementation(){\n"+
+		"\t// your code here...\n"+
+		"}")
 }
 
 type tableRow struct {
