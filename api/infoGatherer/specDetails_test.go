@@ -37,8 +37,10 @@ var _ = Suite(&MySuite{})
 
 var concept1 []byte
 var concept2 []byte
+var concept3 []byte
 var spec1 []byte
 var spec2 []byte
+var spec3 []byte
 
 type MySuite struct {
 	specsDir   string
@@ -72,6 +74,13 @@ func (s *MySuite) buildTestData() {
 * a "final" step
 `...)
 
+	concept3 = make([]byte, 0)
+	concept3 = append(concept3, `# foo bar with <param> having errors
+* first step with "foo"
+* say <param> to me
+* a <final> step
+`...)
+
 	spec1 = make([]byte, 0)
 	spec1 = append(spec1, `Specification Heading
 =====================
@@ -89,6 +98,20 @@ Scenario 1
 * say hello
 * say "hello" to me
 * say "bye" to me
+`...)
+
+	spec3 = make([]byte, 0)
+	spec3 = append(spec3, `Specification Heading
+=====================
+|Col1|Col2|
+|----|----|
+|Val1|Val2|
+
+Scenario with parse errors
+----------
+* say hello
+* say "hello" to me
+* say <bye> to me
 `...)
 }
 
@@ -304,28 +327,75 @@ func (s *MySuite) TestGetAvailableSpecDetailsWithEmptyCache(c *C) {
 	c.Assert(len(details), Equals, 0)
 }
 
-func (s *MySuite) TestParamsForFile(c *C) {
-	file, _ := util.CreateFileIn(s.specsDir, "spec2.spec", spec2)
+func (s *MySuite) TestParamsForStepFile(c *C) {
+	file, _ := util.CreateFileIn(s.specsDir, "spec3.spec", spec3)
 	file, _ = filepath.Abs(file)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
 	specInfoGatherer.initParamsCache()
 
 	params := specInfoGatherer.Params(file)
-	hasParam := func(param string, list []string) bool {
+	c.Assert(len(params), Equals, 4)
+	hasParam := func(param, pType string, list []gauge.StepArg) bool {
 		for _, p := range list {
-			if p == param {
-				return true
+			if p.ArgValue() == param {
+				if p.ArgType == gauge.Static && pType == "static" {
+					return true
+				} else if pType == "dynamic" && (p.ArgType == gauge.Dynamic || p.ArgType == gauge.TableArg || p.ArgType == gauge.SpecialString || p.ArgType == gauge.SpecialTable) {
+					return true
+				}
 			}
 		}
 		return false
 	}
-	if !hasParam("hello", params) {
+	if !hasParam("hello", "static", params) {
 		c.Errorf(`Param "hello" not found`)
 	}
-	if !hasParam("bye", params) {
+	if !hasParam("bye", "dynamic", params) {
 		c.Errorf(`Param "bye" not found`)
+	}
+	if !hasParam("Col1", "dynamic", params) {
+		c.Errorf(`Param "Col1" not found Params : %+v`, params)
+	}
+	if !hasParam("Col2", "dynamic", params) {
+		c.Errorf(`Param "Col1" not found Params : %+v`, params)
+	}
+}
+
+func (s *MySuite) TestParamsForConceptFile(c *C) {
+	file, _ := util.CreateFileIn(s.specsDir, "concept3.cpt", concept3)
+	file, _ = filepath.Abs(file)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initConceptsCache()
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+	specInfoGatherer.initParamsCache()
+
+	params := specInfoGatherer.Params(file)
+	c.Assert(len(params), Equals, 3)
+	hasParam := func(param, pType string, list []gauge.StepArg) bool {
+		for _, p := range list {
+			if p.ArgValue() == param {
+				if p.ArgType == gauge.Static && pType == "static" {
+					return true
+				} else if pType == "dynamic" && (p.ArgType == gauge.Dynamic || p.ArgType == gauge.TableArg || p.ArgType == gauge.SpecialString || p.ArgType == gauge.SpecialTable) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	if !hasParam("foo", "static", params) {
+		c.Errorf(`Param "foo" not found`)
+	}
+	if !hasParam("param", "dynamic", params) {
+		c.Errorf(`Param "param" not found`)
+	}
+	if !hasParam("final", "dynamic", params) {
+		c.Errorf(`Param "final" not found Params : %+v`, params)
 	}
 }

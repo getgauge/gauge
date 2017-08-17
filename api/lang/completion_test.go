@@ -81,8 +81,8 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 	}
 }
 
-func (p *dummyCompletionProvider) Params(file string) []string {
-	return []string{"hello", "gauge"}
+func (p *dummyCompletionProvider) Params(file string) []gauge.StepArg {
+	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
 }
 
 func TestCompletion(t *testing.T) {
@@ -315,26 +315,28 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 
 func TestParamCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", " * step with a <param")
+	f.add("uri", " * step with a \"param")
 	position := lsp.Position{Line: 0, Character: 18}
 	wantStartPos := lsp.Position{Line: position.Line, Character: 16}
 	wantEndPos := lsp.Position{Line: position.Line, Character: 21}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:         "hello",
-				Detail:        "Param",
-				Kind:          lsp.CIKVariable,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "hello"},
+				Label:      "hello",
+				FilterText: "hello\"",
+				Detail:     "static",
+				Kind:       lsp.CIKVariable,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "hello\""},
 			},
 			InsertTextFormat: text,
 		},
 		{
 			CompletionItem: lsp.CompletionItem{
-				Label:         "gauge",
-				Detail:        "Param",
-				Kind:          lsp.CIKVariable,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "gauge"},
+				Label:      "gauge",
+				FilterText: "gauge\"",
+				Detail:     "static",
+				Kind:       lsp.CIKVariable,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "gauge\""},
 			},
 			InsertTextFormat: text,
 		},
