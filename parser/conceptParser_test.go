@@ -90,7 +90,7 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	_, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 5)
+	c.Assert(len(res.ParseErrors), Equals, 4)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
