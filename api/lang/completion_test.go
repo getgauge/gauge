@@ -81,7 +81,7 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 	}
 }
 
-func (p *dummyCompletionProvider) Params(file string) []gauge.StepArg {
+func (p *dummyCompletionProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
 	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
 }
 

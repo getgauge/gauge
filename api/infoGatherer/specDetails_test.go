@@ -337,31 +337,29 @@ func (s *MySuite) TestParamsForStepFile(c *C) {
 	specInfoGatherer.initStepsCache()
 	specInfoGatherer.initParamsCache()
 
-	params := specInfoGatherer.Params(file)
-	c.Assert(len(params), Equals, 4)
-	hasParam := func(param, pType string, list []gauge.StepArg) bool {
+	staticParams := specInfoGatherer.Params(file, gauge.Static)
+	c.Assert(len(staticParams), Equals, 1)
+	dynamicParams := specInfoGatherer.Params(file, gauge.Dynamic)
+	c.Assert(len(dynamicParams), Equals, 3)
+	hasParam := func(param string, list []gauge.StepArg) bool {
 		for _, p := range list {
 			if p.ArgValue() == param {
-				if p.ArgType == gauge.Static && pType == "static" {
-					return true
-				} else if pType == "dynamic" && (p.ArgType == gauge.Dynamic || p.ArgType == gauge.TableArg || p.ArgType == gauge.SpecialString || p.ArgType == gauge.SpecialTable) {
-					return true
-				}
+				return true
 			}
 		}
 		return false
 	}
-	if !hasParam("hello", "static", params) {
+	if !hasParam("hello", staticParams) {
 		c.Errorf(`Param "hello" not found`)
 	}
-	if !hasParam("bye", "dynamic", params) {
+	if !hasParam("bye", dynamicParams) {
 		c.Errorf(`Param "bye" not found`)
 	}
-	if !hasParam("Col1", "dynamic", params) {
-		c.Errorf(`Param "Col1" not found Params : %+v`, params)
+	if !hasParam("Col1", dynamicParams) {
+		c.Errorf(`Param "Col1" not found`)
 	}
-	if !hasParam("Col2", "dynamic", params) {
-		c.Errorf(`Param "Col1" not found Params : %+v`, params)
+	if !hasParam("Col2", dynamicParams) {
+		c.Errorf(`Param "Col1" not found`)
 	}
 }
 
@@ -375,27 +373,25 @@ func (s *MySuite) TestParamsForConceptFile(c *C) {
 	specInfoGatherer.initStepsCache()
 	specInfoGatherer.initParamsCache()
 
-	params := specInfoGatherer.Params(file)
-	c.Assert(len(params), Equals, 3)
-	hasParam := func(param, pType string, list []gauge.StepArg) bool {
+	staticParams := specInfoGatherer.Params(file, gauge.Static)
+	c.Assert(len(staticParams), Equals, 1)
+	dynamicParams := specInfoGatherer.Params(file, gauge.Dynamic)
+	c.Assert(len(dynamicParams), Equals, 2)
+	hasParam := func(param string, list []gauge.StepArg) bool {
 		for _, p := range list {
 			if p.ArgValue() == param {
-				if p.ArgType == gauge.Static && pType == "static" {
-					return true
-				} else if pType == "dynamic" && (p.ArgType == gauge.Dynamic || p.ArgType == gauge.TableArg || p.ArgType == gauge.SpecialString || p.ArgType == gauge.SpecialTable) {
-					return true
-				}
+				return true
 			}
 		}
 		return false
 	}
-	if !hasParam("foo", "static", params) {
+	if !hasParam("foo", staticParams) {
 		c.Errorf(`Param "foo" not found`)
 	}
-	if !hasParam("param", "dynamic", params) {
+	if !hasParam("param", dynamicParams) {
 		c.Errorf(`Param "param" not found`)
 	}
-	if !hasParam("final", "dynamic", params) {
-		c.Errorf(`Param "final" not found Params : %+v`, params)
+	if !hasParam("final", dynamicParams) {
+		c.Errorf(`Param "final" not found`)
 	}
 }

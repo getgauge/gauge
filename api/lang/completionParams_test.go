@@ -11,49 +11,49 @@ var testParamEditPosition = []struct {
 	input       string
 	cursorPos   lsp.Position
 	wantRange   lsp.Range
-	wantArgType string
+	wantArgType gauge.ArgType
 	wantSuffix  string
 }{
 	{
 		input:       `* Step with "static" param`,
 		cursorPos:   lsp.Position{Line: 0, Character: 19},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 13}, End: lsp.Position{Line: 0, Character: 20}},
-		wantArgType: "static",
+		wantArgType: gauge.Static,
 		wantSuffix:  "\"",
 	},
 	{
 		input:       `* Step with <dynamic> param"`,
 		cursorPos:   lsp.Position{Line: 0, Character: 13},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 13}, End: lsp.Position{Line: 0, Character: 21}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 	{
 		input:       `* Step with <dynamic> param and "static" param`,
 		cursorPos:   lsp.Position{Line: 0, Character: 14},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 13}, End: lsp.Position{Line: 0, Character: 21}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 	{
 		input:       `* Step with <dynamic> param and "static" param`,
 		cursorPos:   lsp.Position{Line: 0, Character: 36},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 33}, End: lsp.Position{Line: 0, Character: 40}},
-		wantArgType: "static",
+		wantArgType: gauge.Static,
 		wantSuffix:  "\"",
 	},
 	{
 		input:       `* Step with "static" param and <dynamic> param`,
 		cursorPos:   lsp.Position{Line: 0, Character: 35},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 32}, End: lsp.Position{Line: 0, Character: 40}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 	{
 		input:       `* Step with "static" param and <dynamic> param`,
 		cursorPos:   lsp.Position{Line: 0, Character: 13},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 13}, End: lsp.Position{Line: 0, Character: 20}},
-		wantArgType: "static",
+		wantArgType: gauge.Static,
 		wantSuffix:  "\"",
 	},
 
@@ -61,21 +61,21 @@ var testParamEditPosition = []struct {
 		input:       `* Incomplete step with <para`,
 		cursorPos:   lsp.Position{Line: 0, Character: 28},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 24}, End: lsp.Position{Line: 0, Character: 28}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 	{
 		input:       `* Incomplete step with <para`,
 		cursorPos:   lsp.Position{Line: 0, Character: 26},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 24}, End: lsp.Position{Line: 0, Character: 28}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 	{
 		input:       `* Step with "one" and "two" static params`,
 		cursorPos:   lsp.Position{Line: 0, Character: 15},
 		wantRange:   lsp.Range{Start: lsp.Position{Line: 0, Character: 13}, End: lsp.Position{Line: 0, Character: 17}},
-		wantArgType: "dynamic",
+		wantArgType: gauge.Dynamic,
 		wantSuffix:  ">",
 	},
 }
@@ -97,28 +97,19 @@ func TestGetParamEditPosition(t *testing.T) {
 }
 
 func TestShouldAddParam(t *testing.T) {
-	if !shouldAddParam(gauge.Static, "static") {
-		t.Errorf("shouldAddParam should be `true`")
+	if !shouldAddParam(gauge.Static) {
+		t.Errorf("should add static params")
 	}
-	if shouldAddParam(gauge.Static, "dynamic") {
-		t.Errorf("shouldAddParam should be `false`")
+	if !shouldAddParam(gauge.Dynamic) {
+		t.Errorf("should add dynamic params")
 	}
-	if !shouldAddParam(gauge.Dynamic, "dynamic") {
-		t.Errorf("shouldAddParam should be `true`")
+	if shouldAddParam(gauge.TableArg) {
+		t.Errorf("should not add table params")
 	}
-	if shouldAddParam(gauge.TableArg, "dynamic") {
-		t.Errorf("shouldAddParam should be `false`")
+	if !shouldAddParam(gauge.SpecialTable) {
+		t.Errorf("should add special table params")
 	}
-	if shouldAddParam(gauge.Static, "dynamic") {
-		t.Errorf("shouldAddParam should be `false`")
-	}
-	if !shouldAddParam(gauge.SpecialTable, "dynamic") {
-		t.Errorf("shouldAddParam should be `true`")
-	}
-	if shouldAddParam(gauge.SpecialString, "static") {
-		t.Errorf("shouldAddParam should be `false`")
-	}
-	if !shouldAddParam(gauge.SpecialString, "dynamic") {
-		t.Errorf("shouldAddParam should be `true`")
+	if !shouldAddParam(gauge.SpecialString) {
+		t.Errorf("should add special string params")
 	}
 }

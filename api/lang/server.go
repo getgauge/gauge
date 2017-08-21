@@ -38,7 +38,7 @@ type completionProvider interface {
 	Init()
 	Steps() []*gauge.StepValue
 	Concepts() []*gm.ConceptInfo
-	Params(file string) []gauge.StepArg
+	Params(file string, argType gauge.ArgType) []gauge.StepArg
 }
 
 var provider completionProvider

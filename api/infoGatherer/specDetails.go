@@ -61,8 +61,9 @@ type specsCache struct {
 }
 
 type paramsCache struct {
-	mutex  sync.RWMutex
-	params map[string][]gauge.StepArg
+	mutex         sync.RWMutex
+	staticParams  map[string]map[string]gauge.StepArg
+	dynamicParams map[string]map[string]gauge.StepArg
 }
 
 type SpecDetail struct {
@@ -90,7 +91,8 @@ func (s *SpecInfoGatherer) initParamsCache() {
 	s.paramsCache.mutex.Lock()
 	defer s.paramsCache.mutex.Unlock()
 	s.specsCache.mutex.Lock()
-	s.paramsCache.params = make(map[string][]gauge.StepArg, 0)
+	s.paramsCache.staticParams = make(map[string]map[string]gauge.StepArg, 0)
+	s.paramsCache.dynamicParams = make(map[string]map[string]gauge.StepArg, 0)
 	for file, specDetail := range s.specsCache.specDetails {
 		s.updateParamCacheFromSpecs(file, specDetail)
 	}
@@ -100,16 +102,6 @@ func (s *SpecInfoGatherer) initParamsCache() {
 		s.updateParamsCacheFromConcepts(file, concepts)
 	}
 	s.conceptsCache.mutex.Unlock()
-}
-
-func (s *SpecInfoGatherer) addToParamsCache(file string, staticParams map[string]gauge.StepArg, dynamicParams map[string]gauge.StepArg) {
-	s.paramsCache.params[file] = make([]gauge.StepArg, 0)
-	for _, arg := range staticParams {
-		s.paramsCache.params[file] = append(s.paramsCache.params[file], arg)
-	}
-	for _, arg := range dynamicParams {
-		s.paramsCache.params[file] = append(s.paramsCache.params[file], arg)
-	}
 }
 
 func (s *SpecInfoGatherer) initSpecsCache() {
@@ -166,38 +158,36 @@ func (s *SpecInfoGatherer) initStepsCache() {
 }
 
 func (s *SpecInfoGatherer) updateParamsCacheFromConcepts(file string, concepts []*gauge.Concept) {
-	staticParams := make(map[string]gauge.StepArg, 0)
-	dynamicParams := make(map[string]gauge.StepArg, 0)
+	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg, 0)
+	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg, 0)
 	for _, concept := range concepts {
-		addParamsFromSteps([]*gauge.Step{concept.ConceptStep}, staticParams, dynamicParams)
-		addParamsFromSteps(concept.ConceptStep.ConceptSteps, staticParams, dynamicParams)
+		s.addParamsFromSteps([]*gauge.Step{concept.ConceptStep}, file)
+		s.addParamsFromSteps(concept.ConceptStep.ConceptSteps, file)
 	}
-	s.addToParamsCache(file, staticParams, dynamicParams)
 }
 
 func (s *SpecInfoGatherer) updateParamCacheFromSpecs(file string, specDetail *SpecDetail) {
-	staticParams := make(map[string]gauge.StepArg, 0)
-	dynamicParams := make(map[string]gauge.StepArg, 0)
-	addParamsFromSteps(specDetail.Spec.Contexts, staticParams, dynamicParams)
+	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg, 0)
+	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg, 0)
+	s.addParamsFromSteps(specDetail.Spec.Contexts, file)
 	for _, sce := range specDetail.Spec.Scenarios {
-		addParamsFromSteps(sce.Steps, staticParams, dynamicParams)
+		s.addParamsFromSteps(sce.Steps, file)
 	}
-	addParamsFromSteps(specDetail.Spec.TearDownSteps, staticParams, dynamicParams)
+	s.addParamsFromSteps(specDetail.Spec.TearDownSteps, file)
 	if specDetail.Spec.DataTable.IsInitialized() {
 		for _, header := range specDetail.Spec.DataTable.Table.Headers {
-			dynamicParams[header] = gauge.StepArg{Value: header, ArgType: gauge.Dynamic}
+			s.paramsCache.dynamicParams[file][header] = gauge.StepArg{Value: header, ArgType: gauge.Dynamic}
 		}
 	}
-	s.addToParamsCache(file, staticParams, dynamicParams)
 }
 
-func addParamsFromSteps(steps []*gauge.Step, staticParams map[string]gauge.StepArg, dynamicParams map[string]gauge.StepArg) {
+func (s *SpecInfoGatherer) addParamsFromSteps(steps []*gauge.Step, file string) {
 	for _, step := range steps {
 		for _, arg := range step.Args {
 			if arg.ArgType == gauge.Static {
-				staticParams[arg.ArgValue()] = *arg
+				s.paramsCache.staticParams[file][arg.ArgValue()] = *arg
 			} else {
-				dynamicParams[arg.ArgValue()] = *arg
+				s.paramsCache.dynamicParams[file][arg.ArgValue()] = *arg
 			}
 		}
 	}
@@ -466,10 +456,20 @@ func (s *SpecInfoGatherer) Steps() []*gauge.StepValue {
 }
 
 // Steps returns the list of all the steps in the gauge project
-func (s *SpecInfoGatherer) Params(filePath string) []gauge.StepArg {
+func (s *SpecInfoGatherer) Params(filePath string, argType gauge.ArgType) []gauge.StepArg {
 	s.paramsCache.mutex.RLock()
 	defer s.paramsCache.mutex.RUnlock()
-	return s.paramsCache.params[filePath]
+	var params []gauge.StepArg
+	if argType == gauge.Static {
+		for _, param := range s.paramsCache.staticParams[filePath] {
+			params = append(params, param)
+		}
+	} else {
+		for _, param := range s.paramsCache.dynamicParams[filePath] {
+			params = append(params, param)
+		}
+	}
+	return params
 }
 
 // Concepts returns an array containing information about all the concepts present in the Gauge project
