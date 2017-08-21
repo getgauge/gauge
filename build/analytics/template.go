@@ -18,10 +18,10 @@
 package main
 
 const htmltemplate = `
-{{$maxRows := 25}}
+{{$maxRows := 15}}
 {{define "table"}}
     <div class="table-container">
-        <table>
+        <table class="u-full-width">
             <thead>
                 <tr>
                     <th>Category</th>
@@ -50,10 +50,11 @@ const htmltemplate = `
 	<head>
 		<title>Gauge - Insights</title>
     	<link href="https://getgauge.io/assets/images/favicons/favicon.ico" rel="shortcut icon" type="image/ico" />
+		<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Raleway:400,300,600">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.css">
 		<style>
 			body,
 			html {
-				font-family: monospace;
 				text-align: center;
 				margin: 0;
 				overflow: hidden;
@@ -165,12 +166,9 @@ const htmltemplate = `
 			.header .heading {
 				font-size: 1.8em;
 				font-weight: bold;
-				font-family: monospace;
 			}
 
-			.header h2 {
-				margin-top: 0.2em;
-			}
+
 
 			.logo {
 				height: 4em;
@@ -179,15 +177,12 @@ const htmltemplate = `
 
 			h1 {
 				font-size: 2.5em;
-				margin-top: 0.5em;
 				color: #343131;
 			}
 
 			h2 {
 				font-size: 1.8em;
 				font-family: "Open Sans";
-				margin-top: 0;
-				padding-top: 0.5em;
 			}
 
 			.table-container {
@@ -196,32 +191,23 @@ const htmltemplate = `
 				padding-bottom: 1em;
 			}
 
-			table,
-			th,
-			td {
-				border: 1px solid #755C07;
+			table {
 				border-collapse: collapse;
-				font-size: 1em;
+			}
+
+			td,th {
+				padding: 5px 15px;
 				text-align: left;
-				margin-left: 0.5em;
+				border-bottom: 1px solid #B58F0B;
+				font-size: medium;
 			}
 
 			.truncated:after {
 				content: '<Truncated. Download CSV for Full data>';
 				font-size: 1em;
-				font-family: monospace;
 			}
 
-			th {
-				background-color: #343131;
-				color: #b3b3b3;
-				text-align: center;
-				padding: 0.5em;
-			}
 
-			td {
-				padding: 0.3em;
-			}
 
 			tr:nth-child(n+{{$maxRows}}){
 				display:none;
@@ -236,7 +222,6 @@ const htmltemplate = `
 			.caption {
 				font-size: 2em;
 				margin: 0;
-				padding: 1em;
 			}
 
 			section {
@@ -263,13 +248,17 @@ const htmltemplate = `
 				padding-top: 6em;
 			}
 
+			.reportPeriod {
+				font-weight: bold;
+			}
+
 		</style>
 	</head>
 	<body>
 		<div class="mobile">
 			<div class="header">
 				<img class="logo" src="https://docs.getgauge.io/_static/img/Gauge-Logo.svg">
-				<div class="heading">Insights</div>
+				<h2 class="heading">Insights</h2>
 			</div>
 			<p>This page is not supported in this resolution.</p>
 		</div>
@@ -277,9 +266,12 @@ const htmltemplate = `
 			<section>
 				<div class="header">
 					<img class="logo" src="https://docs.getgauge.io/_static/img/Gauge-Logo.svg">
-					<div class="heading">Insights</div>
+					<h2 class="heading">Insights</h2>
 				</div>
-				<h3 class="caption">Report period: {{reportPeriod}}</h3>
+				<h3 class="caption">
+					<span class="reportPeriod">{{startDate}}</span> to <span class="reportPeriod">{{endDate}}</span>
+				</h3>
+				<span>Report generated on : {{now}}</span>
 				<div id="map"></div>
 			</section>
 			<section>
@@ -303,7 +295,6 @@ const htmltemplate = `
 					<a href="./api.csv">Download</a>
 				</div>
 			</section>
-			<footer>Report generated on {{now}}</footer>
 		</div>
 		<script src="https://cdn.rawgit.com/peachananr/purejs-onepage-scroll/master/onepagescroll.min.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.min.js"></script>
@@ -337,7 +328,6 @@ const htmltemplate = `
 					},
 					bubblesConfig: {
 						popupTemplate: function (geo, data) {
-							console.log(geo);
 							return "<div class='hoverinfo'>" + data.name + " : " + data.count + "</div>";
 						},
 						highlightFillColor: '#DBAD0D',
@@ -349,7 +339,6 @@ const htmltemplate = `
 				var tables= document.getElementsByTagName("table");
 				for(i=0; i< tables.length; i++){
 					var table = tables[i];
-					console.log(table);
 					if (table.getElementsByTagName("tr").length > {{$maxRows}}) {
 						table.parentElement.classList.add("truncated");
 					}

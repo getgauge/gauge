@@ -38,7 +38,8 @@ import (
 )
 
 const (
-	datelayout            = "2006-01-02"
+	gaDatelayout          = "2006-01-02"
+	dateLayout            = "_2 Jan 2006"
 	dimensions            = "ga:eventCategory, ga:eventAction, ga:eventLabel,ga:medium"
 	metric                = "ga:totalEvents"
 	demographicDimensions = "ga:countryIsoCode"
@@ -48,8 +49,8 @@ const (
 )
 
 var (
-	enddate            = time.Now().Format(datelayout)
-	startdate          = time.Now().Add(time.Hour * 24 * -30).Format(datelayout)
+	enddate            = time.Now()
+	startdate          = time.Now().Add(time.Hour * 24 * -30)
 	tokenurl           = os.Getenv("GA_TOKEN_URL")             // (json:"token_uri") Google oauth2 Token URL
 	gaServiceAcctEmail = os.Getenv("GA_SERVICE_ACCOUNT_EMAIL") // (json:"client_email") email address of registered application
 	gaTableID          = os.Getenv("GA_VIEW_ID")               // namespaced profile (table) ID of your analytics account/property/profile
@@ -153,10 +154,13 @@ func (e *events) populate(data, countryData *analytics.GaData) {
 func (e *events) writeHTML(dest string) {
 	funcMap := template.FuncMap{
 		"now": func() string {
-			return time.Now().Format(datelayout)
+			return time.Now().Format(dateLayout)
 		},
-		"reportPeriod": func() string {
-			return fmt.Sprintf("%s - %s", startdate, enddate)
+		"startDate": func() string {
+			return startdate.Format(dateLayout)
+		},
+		"endDate": func() string {
+			return enddate.Format(dateLayout)
 		},
 	}
 	tmpl, err := template.New("html").Funcs(funcMap).Parse(htmltemplate)
@@ -216,12 +220,12 @@ func main() {
 		log.Fatal("Error creating Analytics Service", err)
 	}
 	ads := analytics.NewDataGaService(as)
-	gasetup := ads.Get(gaTableID, startdate, enddate, metric).Dimensions(dimensions)
+	gasetup := ads.Get(gaTableID, startdate.Format(gaDatelayout), enddate.Format(gaDatelayout), metric).Dimensions(dimensions)
 	eventData, err := gasetup.Do()
 	if err != nil {
 		log.Fatal(err)
 	}
-	gasetup = ads.Get(gaTableID, startdate, enddate, demographicMetric).Dimensions(demographicDimensions)
+	gasetup = ads.Get(gaTableID, startdate.Format(gaDatelayout), enddate.Format(gaDatelayout), demographicMetric).Dimensions(demographicDimensions)
 	usersPerCountry, err := gasetup.Do()
 	if err != nil {
 		log.Fatal(err)
