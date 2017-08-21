@@ -88,7 +88,7 @@ func (p *dummyCompletionProvider) Params(file string, argType gauge.ArgType) []g
 func TestCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", " * ")
-	position := lsp.Position{Line: 0, Character: 3}
+	position := lsp.Position{Line: 0, Character: len(" * ")}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -132,9 +132,9 @@ func TestCompletion(t *testing.T) {
 func TestCompletionForLineWithText(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", " * step")
-	position := lsp.Position{Line: 0, Character: 2}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 2}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 7}
+	position := lsp.Position{Line: 0, Character: len(` *`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(` *`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step`)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -178,9 +178,9 @@ func TestCompletionForLineWithText(t *testing.T) {
 func TestCompletionInBetweenLine(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", "* step")
-	position := lsp.Position{Line: 0, Character: 5}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 2}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 6}
+	position := lsp.Position{Line: 0, Character: len(`* s`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`* `)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(`* step`)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -223,10 +223,11 @@ func TestCompletionInBetweenLine(t *testing.T) {
 
 func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "*step with a <param> and more")
-	position := lsp.Position{Line: 0, Character: 25}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 1}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 29}
+	line := "*step with a <param> and more"
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(`*step with a <param> and`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -269,10 +270,11 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 
 func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "*step with a <file:test.txt> and more")
-	position := lsp.Position{Line: 0, Character: 30}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 1}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 37}
+	line := "*step with a <file:test.txt> and more"
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(`*step with a <file:test.txt>`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -315,10 +317,11 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 
 func TestParamCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", " * step with a \"param")
-	position := lsp.Position{Line: 0, Character: 18}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 16}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 21}
+	line := ` * step with a "param`
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(` * step with a "pa`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(` * step with a "`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step with a "param`)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -402,14 +405,33 @@ func TestIsInStepCompletionAtEndOfLine(t *testing.T) {
 	}
 }
 
+var paramContextTest = []struct {
+	input   string
+	charPos int
+	want    bool
+}{
+	{
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "`),
+		want:    true,
+	},
+	{
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "static" an`),
+		want:    false,
+	},
+	{
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "static" and <d`),
+		want:    true,
+	},
+}
+
 func TestIsInParamContext(t *testing.T) {
-	if !inParameterContext(`* Step with "static" and <dynamic> params`, 13) {
-		t.Errorf("inParameterContext not recognizing step context")
-	}
-	if inParameterContext(`* Step with "static" and <dynamic> params`, 24) {
-		t.Errorf("inParameterContext not recognizing step context")
-	}
-	if !inParameterContext(`* Step with "static" and <dynamic> params`, 28) {
-		t.Errorf("inParameterContext not recognizing step context")
+	for _, test := range paramContextTest {
+		got := inParameterContext(test.input, test.charPos)
+		if test.want != got {
+			t.Errorf("got : %s, want : %s", got, test.want)
+		}
 	}
 }

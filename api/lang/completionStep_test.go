@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
@@ -29,7 +46,7 @@ func TestGetFilterTextWithStaticParam(t *testing.T) {
 	got := getStepFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{{Name: "Args1", Value: "Args1", ArgType: gauge.Static}})
 	want := `Text with "Args1"`
 	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
+		t.Errorf("Parameters not replaced properly; got : %+v, want : %+v", got, want)
 	}
 }
 
@@ -37,7 +54,7 @@ func TestGetFilterTextWithDynamicParam(t *testing.T) {
 	got := getStepFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{{Name: "Args1", Value: "Args1", ArgType: gauge.Dynamic}})
 	want := `Text with <Args1>`
 	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
+		t.Errorf("Parameters not replaced properly; got : %+v, want : %+v", got, want)
 	}
 }
 
@@ -45,7 +62,7 @@ func TestGetFilterTextShouldNotReplaceIfNoStepArgsGiven(t *testing.T) {
 	got := getStepFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{})
 	want := `Text with <param1>`
 	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
+		t.Errorf("Parameters not replaced properly; got : %+v, want : %+v", got, want)
 	}
 }
 
@@ -57,7 +74,7 @@ func TestGetFilterTextWithLesserNumberOfStepArgsGiven(t *testing.T) {
 	got := getStepFilterText("Text with {} {} and {}", []string{"param1", "param2", "param3"}, stepArgs)
 	want := `Text with <Args1> "Args2" and <param3>`
 	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
+		t.Errorf("Parameters not replaced properly; got : %+v, want : %+v", got, want)
 	}
 }
 
@@ -69,45 +86,45 @@ var testEditPosition = []struct {
 }{
 	{
 		input:     "*",
-		cursorPos: lsp.Position{Line: 0, Character: 1},
-		wantStart: lsp.Position{Line: 0, Character: 1},
-		wantEnd:   lsp.Position{Line: 0, Character: 1},
+		cursorPos: lsp.Position{Line: 0, Character: len(`*`)},
+		wantStart: lsp.Position{Line: 0, Character: len(`*`)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(`*`)},
 	},
 	{
 		input:     "* ",
-		cursorPos: lsp.Position{Line: 0, Character: 1},
-		wantStart: lsp.Position{Line: 0, Character: 1},
-		wantEnd:   lsp.Position{Line: 0, Character: 2},
+		cursorPos: lsp.Position{Line: 0, Character: len(`*`)},
+		wantStart: lsp.Position{Line: 0, Character: len(`*`)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(`* `)},
 	},
 	{
 		input:     "* Step",
-		cursorPos: lsp.Position{Line: 10, Character: 1},
-		wantStart: lsp.Position{Line: 10, Character: 1},
-		wantEnd:   lsp.Position{Line: 10, Character: 6},
+		cursorPos: lsp.Position{Line: 10, Character: len(`*`)},
+		wantStart: lsp.Position{Line: 10, Character: len(`*`)},
+		wantEnd:   lsp.Position{Line: 10, Character: len(`* Step`)},
 	},
 	{
 		input:     "* Step",
-		cursorPos: lsp.Position{Line: 0, Character: 2},
-		wantStart: lsp.Position{Line: 0, Character: 2},
-		wantEnd:   lsp.Position{Line: 0, Character: 6},
+		cursorPos: lsp.Position{Line: 0, Character: len(`* `)},
+		wantStart: lsp.Position{Line: 0, Character: len(`* `)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(`* Step`)},
 	},
 	{
 		input:     "* Step",
-		cursorPos: lsp.Position{Line: 0, Character: 4},
-		wantStart: lsp.Position{Line: 0, Character: 2},
-		wantEnd:   lsp.Position{Line: 0, Character: 6},
+		cursorPos: lsp.Position{Line: 0, Character: len(`* St`)},
+		wantStart: lsp.Position{Line: 0, Character: len(`* `)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(`* Step`)},
 	},
 	{
 		input:     "    * Step",
-		cursorPos: lsp.Position{Line: 0, Character: 7},
-		wantStart: lsp.Position{Line: 0, Character: 6},
-		wantEnd:   lsp.Position{Line: 0, Character: 10},
+		cursorPos: lsp.Position{Line: 0, Character: len(`    * S`)},
+		wantStart: lsp.Position{Line: 0, Character: len(`    * `)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(`    * Step`)},
 	},
 	{
 		input:     " * Step ",
-		cursorPos: lsp.Position{Line: 0, Character: 10},
-		wantStart: lsp.Position{Line: 0, Character: 3},
-		wantEnd:   lsp.Position{Line: 0, Character: 10},
+		cursorPos: lsp.Position{Line: 0, Character: len(` * Step `) + 2},
+		wantStart: lsp.Position{Line: 0, Character: len(` * `)},
+		wantEnd:   lsp.Position{Line: 0, Character: len(` * Step `) + 2},
 	},
 }
 
