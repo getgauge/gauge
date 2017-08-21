@@ -72,7 +72,7 @@ func (s StepValidationError) Error() string {
 }
 
 func (s StepValidationError) Suggestion() string {
-	return fmt.Sprintf("%s : %s => '%s'\t%s", "One or more errors were due to", "Step implementation not found", s.step.GetLineText(), s.suggestion)
+	return fmt.Sprintf("%s : %s => '%s'\t%s", "One or more errors were due to", s.message, s.step.GetLineText(), s.suggestion)
 }
 
 func (s SpecValidationError) Error() string {
