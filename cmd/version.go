@@ -59,10 +59,11 @@ func PrintJSONVersion() {
 		Version string `json:"version"`
 	}
 	type versionJSON struct {
-		Version string        `json:"version"`
-		Plugins []*pluginJSON `json:"plugins"`
+		Version    string        `json:"version"`
+		CommitHash string        `json:"commitHash"`
+		Plugins    []*pluginJSON `json:"plugins"`
 	}
-	gaugeVersion := versionJSON{version.FullVersion(), make([]*pluginJSON, 0)}
+	gaugeVersion := versionJSON{version.FullVersion(), version.GetCommitSHA(), make([]*pluginJSON, 0)}
 	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
@@ -75,7 +76,8 @@ func PrintJSONVersion() {
 }
 
 func PrintVersion() {
-	fmt.Printf("Gauge version: %s\n\n", version.FullVersion())
+	fmt.Printf("Gauge version: %s\n", version.FullVersion())
+	fmt.Printf("Commit Hash: %s\n\n", version.GetCommitSHA())
 	fmt.Println("Plugins\n-------")
 	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
