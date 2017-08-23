@@ -155,7 +155,7 @@ func trackManifest() {
 	}
 }
 
-func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelExecutionStrategy string) {
+func Execution(parallel, tagged, sorted, simpleConsole, verbose, hideSuggestion bool, parallelExecutionStrategy string) {
 	action := "serial"
 	if parallel {
 		action = "parallel"
@@ -178,6 +178,9 @@ func Execution(parallel, tagged, sorted, simpleConsole, verbose bool, parallelEx
 
 	if verbose {
 		flags = append(flags, "verbose")
+	}
+	if hideSuggestion {
+		flags = append(flags, "hide-suggestion")
 	}
 
 	trackManifest()

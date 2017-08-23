@@ -81,6 +81,7 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
+	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 }
 
 func loadLastState(cmd *cobra.Command) {
@@ -96,7 +97,7 @@ func loadLastState(cmd *cobra.Command) {
 }
 
 func resetFlags() {
-	verbose, simpleConsole, failed, parallel, sort = false, false, false, false, false
+	verbose, simpleConsole, failed, parallel, sort, hideSuggestion = false, false, false, false, false, false
 	environment, tags, rows, strategy, logLevel, dir = "default", "", "", "lazy", "info", "."
 	streams, group = util.NumberOfCores(), -1
 }
@@ -104,7 +105,7 @@ func resetFlags() {
 func execute(args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
-	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, strategy)
+	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
 	initPackageFlags()
 	if e := env.LoadEnv(environment); e != nil {
 		logger.Fatalf(e.Error())
@@ -131,6 +132,7 @@ func initPackageFlags() {
 	filter.Distribute = group
 	filter.NumberOfExecutionStreams = streams
 	reporter.NumberOfExecutionStreams = streams
+	validation.HideSuggestion = hideSuggestion
 	if group != -1 {
 		execution.Strategy = execution.Eager
 	}

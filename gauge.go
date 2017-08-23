@@ -166,7 +166,7 @@ func main() {
 			gaugeConnectionHandler := api.Start(specDirs)
 			plugin.GenerateDoc(*docs, specDirs, gaugeConnectionHandler.ConnectionPortNumber())
 		} else {
-			track.Execution(*parallel, *executeTags != "", *sort, *simpleConsoleOutput, *verbosity, *strategy)
+			track.Execution(*parallel, *executeTags != "", *sort, *simpleConsoleOutput, *verbosity, false, *strategy)
 			exitCode := execution.ExecuteSpecs(specDirs)
 			os.Exit(exitCode)
 		}

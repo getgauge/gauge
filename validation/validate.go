@@ -72,7 +72,7 @@ func (s StepValidationError) Error() string {
 }
 
 func (s StepValidationError) Suggestion() string {
-	return fmt.Sprintf("%s : %s => '%s'\t%s", "One or more errors were due to", s.message, s.step.GetLineText(), s.suggestion)
+	return fmt.Sprintf("\t%s", s.suggestion)
 }
 
 func (s SpecValidationError) Error() string {
@@ -88,12 +88,19 @@ func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages
 }
 
 func showSuggestion(validationErrors validationErrors) {
+	var stepImplNotFoundErrs []StepValidationError
 	for _, errs := range validationErrors {
 		for _, v := range errs {
-			if v.(StepValidationError).suggestion != "" {
-				logger.Errorf(v.(StepValidationError).Suggestion())
+			if e, ok := v.(StepValidationError); ok && e.suggestion != ""{
+				stepImplNotFoundErrs = append(stepImplNotFoundErrs, e)
 			}
 		}
+	}
+	if !HideSuggestion && len(stepImplNotFoundErrs) > 0 {
+		fmt.Println("Add the following missing implementations to fix above `Step implementation not found` errors.")
+	}
+	for _, e := range stepImplNotFoundErrs{
+		fmt.Println(e.Suggestion())
 	}
 }
 

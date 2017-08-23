@@ -137,7 +137,7 @@ func (s *MySuite) TestValidateStep(c *C) {
 	var suggestion bytes.Buffer
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
-		suggestion.WriteString("\nSuggestion : \n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
+		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
@@ -146,8 +146,7 @@ func (s *MySuite) TestValidateStep(c *C) {
 
 	c.Assert(valErr, Not(Equals), nil)
 	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'")
-	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "One or more errors were due to : Step implementation not found => 'my step'\t\n"+
-		"Suggestion : \n\t"+
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\t\n\t"+
 		"@Step(\"my step\")\n\t"+
 		"public void implementation1(){\n\t"+
 		"\t// your code here...\n\t"+
@@ -175,7 +174,7 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
 	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
-		suggestion.WriteString("\nSuggestion : \n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
+		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
@@ -186,9 +185,7 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 
 	c.Assert(valErr, Not(Equals), nil)
 	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'")
-	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "One or more errors were due to : Step implementation not found => 'my step'\t\n"+
-		"Suggestion : \n\t"+
-		"@Step(\"my step\")\n\t"+
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\t\n\t@Step(\"my step\")\n\t"+
 		"public void implementation1(){\n\t"+
 		"\t// your code here...\n\t"+
 		"}")
