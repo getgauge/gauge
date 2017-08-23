@@ -14,10 +14,6 @@ Gauge is a light weight cross-platform test automation tool. It provides the abi
 ## Get Started
 Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) can be used, its [terminologies](https://docs.getgauge.io/longstart.html#gauge-terminologies) and [**get started...**](https://getgauge.io/get-started.html)
 
-## Looking for examples?
-Get started by [example projects](https://docs.getgauge.io/examples.html)
-
-
 ## Find out more
 
 | **[User Docs][userdocs]**     | **[Setup Guide][get-started]**     | **[Examples][examples]**           | **[Contributing][contributing]**           |
