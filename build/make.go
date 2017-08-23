@@ -88,7 +88,7 @@ func signExecutable(exeFilePath string, certFilePath string, certFilePwd string)
 }
 
 var buildMetadata string
-var commitSHA string
+var commitHash string
 
 func getBuildVersion() string {
 	if buildMetadata != "" {
@@ -100,7 +100,7 @@ func getBuildVersion() string {
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
 	runProcess("go", "get", "-d", "-t", "./...")
-	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitSHA=%s", buildMetadata, commitSHA)
+	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitHash=%s", buildMetadata, commitHash)
 	args := []string{
 		"build",
 		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
@@ -203,7 +203,7 @@ var (
 
 func main() {
 	flag.Parse()
-	commitSHA = revParseHead()
+	commitHash = revParseHead()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
 	}
