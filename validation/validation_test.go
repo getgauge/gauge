@@ -146,7 +146,7 @@ func (s *MySuite) TestValidateStep(c *C) {
 
 	c.Assert(valErr, Not(Equals), nil)
 	c.Assert(valErr.Error(), Equals, "foo.spec:3 Step implementation not found => 'my step'")
-	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\t\n\t"+
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\n\t"+
 		"@Step(\"my step\")\n\t"+
 		"public void implementation1(){\n\t"+
 		"\t// your code here...\n\t"+
@@ -185,7 +185,7 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 
 	c.Assert(valErr, Not(Equals), nil)
 	c.Assert(valErr.Error(), Equals, "concept.cpt:3 Step implementation not found => 'my step'")
-	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\t\n\t@Step(\"my step\")\n\t"+
+	c.Assert(valErr.(StepValidationError).Suggestion(), Equals, "\n\t@Step(\"my step\")\n\t"+
 		"public void implementation1(){\n\t"+
 		"\t// your code here...\n\t"+
 		"}")
