@@ -37,8 +37,19 @@ func (s *MySuite) TestSubscribeSpecEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, &DummyResult{}, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, &gauge.Specification{}, &DummyResult{}, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.SpecEnd)
+}
+
+func (s *MySuite) TestSubscribeSuiteStart(c *C) {
+	e := make(chan event.Topic)
+	currentReporter = &dummyConsole{event: e}
+	event.InitRegistry()
+
+	ListenExecutionEvents(&sync.WaitGroup{})
+
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
+	c.Assert(<-e, Equals, event.SuiteStart)
 }
 
 func (s *MySuite) TestSubscribeSpecStart(c *C) {
@@ -98,7 +109,7 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, nil, sceRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{}, sceRes, 0, gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.ScenarioEnd)
 }
 
@@ -172,19 +183,23 @@ type dummyConsole struct {
 	event chan event.Topic
 }
 
-func (dc *dummyConsole) SpecStart(heading string) {
+func (dc *dummyConsole) SuiteStart() {
+	dc.event <- event.SuiteStart
+}
+
+func (dc *dummyConsole) SpecStart(spec *gauge.Specification, res result.Result) {
 	dc.event <- event.SpecStart
 }
 
-func (dc *dummyConsole) SpecEnd(res result.Result) {
+func (dc *dummyConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	dc.event <- event.SpecEnd
 }
 
-func (dc *dummyConsole) ScenarioStart(heading string) {
+func (dc *dummyConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
 	dc.event <- event.ScenarioStart
 }
 
-func (dc *dummyConsole) ScenarioEnd(res result.Result) {
+func (dc *dummyConsole) ScenarioEnd(s *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
 	dc.event <- event.ScenarioEnd
 }
 

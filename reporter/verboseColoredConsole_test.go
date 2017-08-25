@@ -70,7 +70,7 @@ func setupVerboseColoredConsole() (*dummyWriter, *verboseColoredConsole) {
 func (s *MySuite) TestSpecStart_ColoredConsole(c *C) {
 	dw, cc := setupVerboseColoredConsole()
 
-	cc.SpecStart("Spec heading")
+	cc.SpecStart(&gauge.Specification{Heading: &gauge.Heading{Value: "Spec heading"}}, &result.SpecResult{Skipped: false})
 
 	c.Assert(dw.output, Equals, "# Spec heading\n")
 }
@@ -78,16 +78,17 @@ func (s *MySuite) TestSpecStart_ColoredConsole(c *C) {
 func (s *MySuite) TestSpecEnd_ColoredConsole(c *C) {
 	dw, cc := setupVerboseColoredConsole()
 
-	res := &DummyResult{IsFailed: false}
-	cc.SpecEnd(res)
+	res := &result.SpecResult{Skipped: false, ProtoSpec: &gauge_messages.ProtoSpec{}, IsFailed: false}
+	cc.SpecEnd(&gauge.Specification{}, res)
 	c.Assert(dw.output, Equals, "\n")
 }
 
 func (s *MySuite) TestScenarioStartInVerbose_ColoredConsole(c *C) {
 	dw, cc := setupVerboseColoredConsole()
 	cc.indentation = 2
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED})
 
-	cc.ScenarioStart("my first scenario")
+	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "my first scenario"}}, gauge_messages.ExecutionInfo{}, scnRes)
 
 	c.Assert(dw.output, Equals, "    ## my first scenario\t\n")
 }
@@ -99,8 +100,9 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: "hello.spec"}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{}})
 	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: sceHeading})
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED})
 
-	cc.ScenarioStart(sceHeading)
+	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}}, gauge_messages.ExecutionInfo{}, scnRes)
 	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\t\n")
 	dw.output = ""
 
@@ -114,7 +116,7 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
 	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+stepText+"\t ...[PASS]\n")
 
-	cc.ScenarioEnd(sceRes)
+	cc.ScenarioEnd(nil, sceRes, gauge_messages.ExecutionInfo{})
 	c.Assert(cc.headingBuffer.String(), Equals, "")
 	c.Assert(cc.pluginMessagesBuffer.String(), Equals, "")
 }
@@ -356,9 +358,12 @@ func (s *MySuite) TestSubscribeScenarioEndPreHookFailure_ColoredConsole(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
-	res := &DummyResult{PreHookFailure: []*gauge_messages.ProtoHookFailure{preHookFailure}}
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{
+		ExecutionStatus: gauge_messages.ExecutionStatus_PASSED,
+		PreHookFailure:  preHookFailure,
+	})
 
-	cc.ScenarioEnd(res)
+	cc.ScenarioEnd(nil, sceRes, gauge_messages.ExecutionInfo{})
 
 	ind := spaces(scenarioIndentation + errorIndentation)
 	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
@@ -372,9 +377,9 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_ColoredConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
-	res := &DummyResult{PostHookFailure: []*gauge_messages.ProtoHookFailure{postHookFailure}}
+	res := &result.SpecResult{Skipped: false, ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailures: []*gauge_messages.ProtoHookFailure{postHookFailure}}}
 
-	cc.SpecEnd(res)
+	cc.SpecEnd(&gauge.Specification{}, res)
 
 	c.Assert(cc.indentation, Equals, 0)
 	ind := spaces(errorIndentation)

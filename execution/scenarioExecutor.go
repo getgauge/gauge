@@ -60,9 +60,6 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	scenarioResult := r.(*result.ScenarioResult)
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
 	scenarioResult.ProtoScenario.Skipped = false
-	if len(scenario.Steps) == 0 {
-		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
-	}
 	if scenario.DataTableRow.IsInitialized() && !shouldExecuteForRow(scenario.DataTableRowIndex) {
 		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("skipped Reason: Doesn't satisfy --table-rows flag condition")}, e.errMap.ScenarioErrs[scenario]...)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
@@ -107,14 +104,6 @@ func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
 	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
-}
-
-func (e *scenarioExecutor) skipSceForError(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
-	errMsg := fmt.Sprintf("%s:%d No steps found in scenario", e.currentExecutionInfo.GetCurrentSpec().GetFileName(), scenario.Heading.LineNo)
-	logger.Errorf(errMsg)
-	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
-		errMsg, e.currentExecutionInfo.GetCurrentSpec().GetFileName(), nil)
-	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 }
 
 func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {

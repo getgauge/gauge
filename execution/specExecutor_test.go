@@ -290,6 +290,7 @@ func (s *MySuite) TestCreateSkippedSpecResult(c *C) {
 
 	c.Assert(se.specResult.IsFailed, Equals, false)
 	c.Assert(se.specResult.Skipped, Equals, true)
+	c.Assert(len(se.errMap.SpecErrs[spec]), Equals, 1)
 }
 
 func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
@@ -298,45 +299,8 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 	se.specResult = &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{}}
 	se.skipSpecForError(fmt.Errorf("ERROR"))
 
-	c.Assert(se.specResult.IsFailed, Equals, false)
-	c.Assert(se.specResult.Skipped, Equals, true)
-}
-
-func (s *MySuite) TestSkipSpecWithDataTableScenarios(c *C) {
-	stepText := "Unimplememted step"
-
-	specText := SpecBuilder().specHeading("A spec heading").
-		tableHeader("id", "name", "phone").
-		tableRow("123", "foo", "8800").
-		tableRow("666", "bar", "9900").
-		scenarioHeading("First scenario").
-		step(stepText).
-		step("create user <id> <name> and <phone>").
-		String()
-
-	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
-
-	errMap := &gauge.BuildErrors{
-		SpecErrs:     make(map[*gauge.Specification][]error),
-		ScenarioErrs: make(map[*gauge.Scenario][]error),
-		StepErrs:     make(map[*gauge.Step]error),
-	}
-
-	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
-	se := newSpecExecutor(spec, nil, nil, errMap, 0)
-	specInfo := &gauge_messages.SpecInfo{Name: se.specification.Heading.Value,
-		FileName: se.specification.FileName,
-		IsFailed: false, Tags: getTagValue(se.specification.Tags)}
-	se.currentExecutionInfo = &gauge_messages.ExecutionInfo{CurrentSpec: specInfo}
-	se.specResult = gauge.NewSpecResult(se.specification)
-	resolvedSpecItems := se.resolveItems(se.specification.GetSpecItems())
-	se.specResult.AddSpecItems(resolvedSpecItems)
-
-	se.skipSpec()
-
-	c.Assert(se.specResult.ProtoSpec.GetIsTableDriven(), Equals, true)
-	c.Assert(len(se.specResult.ProtoSpec.GetItems()), Equals, 3)
-
+	c.Assert(len(se.errMap.ScenarioErrs[se.specification.Scenarios[0]]), Equals, 1)
+	c.Assert(len(se.errMap.SpecErrs[se.specification]), Equals, 1)
 }
 
 func anySpec() *gauge.Specification {
@@ -361,7 +325,7 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Table row number out of range", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
-	specResult := se.execute(true, true, true)
+	specResult := se.execute(true, false, false)
 	c.Assert(specResult.Skipped, Equals, true)
 }
 
@@ -386,6 +350,7 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 	}
 
 	errMap.SpecErrs[spec] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
+	errMap.ScenarioErrs[spec.Scenarios[0]] = []error{validation.NewSpecValidationError("Step implementation not found", spec.FileName)}
 	se := newSpecExecutor(spec, nil, nil, errMap, 0)
 
 	specResult := se.execute(true, true, true)
@@ -522,22 +487,6 @@ func TestExecuteSkipsWhenSpecHasErrors(t *testing.T) {
 
 	if !res.Skipped {
 		t.Errorf("Expected result.Skipped=true, got %t", res.Skipped)
-	}
-}
-
-func TestExecuteSkipsWhenSpecHasNoScenario(t *testing.T) {
-	errs := gauge.NewBuildErrors()
-	se := newSpecExecutor(exampleSpec, nil, nil, errs, 0)
-
-	res := se.execute(false, true, false)
-
-	if !res.Skipped {
-		t.Errorf("Expected result.Skipped=true, got %t", res.Skipped)
-	}
-	e := res.Errors[0]
-	expected := "example.spec:0 No scenarios found in spec => 'Example Spec'"
-	if e.Message != expected {
-		t.Errorf("Expected error with message : '%s', got '%s'", expected, e.Message)
 	}
 }
 

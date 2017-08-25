@@ -83,26 +83,20 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			return e.specResult
 		}
 	}
-
 	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
 	e.specResult.AddSpecItems(resolvedSpecItems)
-	if _, ok := e.errMap.SpecErrs[e.specification]; ok {
-		e.skipSpec()
-		return e.specResult
-	}
-	if len(e.specification.Scenarios) == 0 {
-		e.skipSpecForError(fmt.Errorf("No scenarios found in spec"))
-		return e.specResult
-	}
-
 	if executeBefore {
-		res := e.initSpecDataStore()
-		if res.GetFailed() {
-			e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
-			return e.specResult
+		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
+		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
+			if res := e.initSpecDataStore(); res.GetFailed() {
+				e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
+			} else {
+				e.notifyBeforeSpecHook()
+			}
+		} else {
+			e.specResult.SetSkipped(true)
+			e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
 		}
-		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, nil, e.stream, *e.currentExecutionInfo))
-		e.notifyBeforeSpecHook()
 	}
 	if execute && !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
@@ -112,10 +106,12 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			e.executeSpec()
 		}
 	}
-	e.specResult.SetSkipped(e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
+	e.specResult.SetSkipped(e.specResult.Skipped || e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
 	if executeAfter {
-		e.notifyAfterSpecHook()
-		event.Notify(event.NewExecutionEvent(event.SpecEnd, nil, e.specResult, e.stream, *e.currentExecutionInfo))
+		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
+			e.notifyAfterSpecHook()
+		}
+		event.Notify(event.NewExecutionEvent(event.SpecEnd, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
 	}
 	return e.specResult
 }
@@ -238,34 +234,13 @@ func (e *specExecutor) skipSpecForError(err error) {
 		e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	}
 	e.errMap.SpecErrs[e.specification] = []error{validationError}
-	e.skipSpec()
-}
-
-func (e *specExecutor) accumulateSkippedScenarioResults() []result.Result {
-	var scenarioResults []result.Result
-	for _, scenario := range e.specification.Scenarios {
-		scenarioResults = append(scenarioResults, e.getSkippedScenarioResult(scenario))
-	}
-	return scenarioResults
+	e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
+	e.specResult.SetSkipped(true)
 }
 
 func (e *specExecutor) failSpec() {
 	e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
 	e.specResult.SetFailure()
-}
-
-func (e *specExecutor) skipSpec() {
-	if e.specResult.ProtoSpec.GetIsTableDriven() {
-		res := make([][]result.Result, 0)
-		for i := 0; i < e.specification.DataTable.Table.GetRowCount(); i++ {
-			res = append(res, e.accumulateSkippedScenarioResults())
-		}
-		e.specResult.AddTableRelatedScenarioResult(res, e.specification.Scenarios[0].DataTableRowIndex)
-	} else {
-		e.specResult.AddScenarioResults(e.accumulateSkippedScenarioResults())
-	}
-	e.specResult.Errors = e.convertErrors(e.errMap.SpecErrs[e.specification])
-	e.specResult.Skipped = true
 }
 
 func (e *specExecutor) convertErrors(specErrors []error) []*gauge_messages.Error {
@@ -311,10 +286,6 @@ func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
 	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
 }
 
-func (e *specExecutor) getCurrentDataTableValueFor(columnName string) string {
-	return e.specification.DataTable.Table.Get(columnName)[0].Value
-}
-
 func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {
 	var scenarioResults []result.Result
 	for _, scenario := range scenarios {
@@ -344,14 +315,6 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 	scenarioResult.AddContexts(e.getItemsForScenarioExecution(e.specification.Contexts))
 	scenarioResult.AddTearDownSteps(e.getItemsForScenarioExecution(e.specification.TearDownSteps))
 	scenarioResult.AddItems(e.resolveItems(scenario.Items))
-}
-
-func (e *specExecutor) getSkippedScenarioResult(scenario *gauge.Scenario) *result.ScenarioResult {
-	scenarioResult := &result.ScenarioResult{ProtoScenario: gauge.NewProtoScenario(scenario)}
-	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
-	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
-	e.specResult.ScenarioSkippedCount++
-	return scenarioResult
 }
 
 func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters []*gauge_messages.Parameter) {

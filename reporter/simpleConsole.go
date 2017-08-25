@@ -39,15 +39,24 @@ func newSimpleConsole(out io.Writer) *simpleConsole {
 	return &simpleConsole{mu: &sync.Mutex{}, writer: out}
 }
 
-func (sc *simpleConsole) SpecStart(heading string) {
+func (sc *simpleConsole) SuiteStart() {
+}
+
+func (sc *simpleConsole) SpecStart(spec *gauge.Specification, res result.Result) {
+	if res.(*result.SpecResult).Skipped {
+		return
+	}
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	formattedHeading := formatSpec(heading)
+	formattedHeading := formatSpec(spec.Heading.Value)
 	logger.GaugeLog.Info(formattedHeading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
 }
 
-func (sc *simpleConsole) SpecEnd(res result.Result) {
+func (sc *simpleConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
+	if res.(*result.SpecResult).Skipped {
+		return
+	}
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	printHookFailureSC(sc, res, res.GetPreHook)
@@ -55,16 +64,22 @@ func (sc *simpleConsole) SpecEnd(res result.Result) {
 	fmt.Fprintln(sc.writer)
 }
 
-func (sc *simpleConsole) ScenarioStart(heading string) {
+func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
+		return
+	}
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.indentation += scenarioIndentation
-	formattedHeading := formatScenario(heading)
+	formattedHeading := formatScenario(scenario.Heading.Value)
 	logger.GaugeLog.Info(formattedHeading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formattedHeading, sc.indentation), newline))
 }
 
-func (sc *simpleConsole) ScenarioEnd(res result.Result) {
+func (sc *simpleConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
+		return
+	}
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	printHookFailureSC(sc, res, res.GetPreHook)
