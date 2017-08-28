@@ -314,12 +314,15 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		latestScenario := spec.LatestScenario()
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
+		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		latestScenario.AddStep(stepToAdd)
 		retainStates(state, specScope, scenarioScope)
 		addStates(state, stepScope)
+		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
+			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
+		}
 		if parseDetails.Warnings != nil {
 			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -330,13 +333,16 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope) && !isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
-			parseDetails.Ok = false
-			return *parseDetails
+		if stepToAdd == nil {
+			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.AddContext(stepToAdd)
 		retainStates(state, specScope)
 		addStates(state, contextScope)
+		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
+			parseDetails.Ok = false
+			return *parseDetails
+		}
 		if parseDetails.Warnings != nil {
 			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -356,14 +362,16 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		stepToAdd, parseDetails := createStep(spec, token)
-		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
-			parseDetails.Ok = false
-			return *parseDetails
+		if stepToAdd == nil {
+			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
 		spec.TearDownSteps = append(spec.TearDownSteps, stepToAdd)
 		spec.AddItem(stepToAdd)
 		retainStates(state, specScope, tearDownScope)
-
+		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
+			parseDetails.Ok = false
+			return *parseDetails
+		}
 		if parseDetails.Warnings != nil {
 			return ParseResult{Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -596,11 +604,9 @@ func converterFn(predicate func(token *Token, state *int) bool, apply func(token
 func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *ParseResult) {
 	dataTableLookup := new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table)
 	stepToAdd, parseDetails := CreateStepUsingLookup(stepToken, dataTableLookup, spec.FileName)
-
-	if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
-		return nil, parseDetails
+	if stepToAdd != nil {
+		stepToAdd.Suffix = stepToken.Suffix
 	}
-	stepToAdd.Suffix = stepToken.Suffix
 	return stepToAdd, parseDetails
 }
 
@@ -611,11 +617,12 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileNa
 	}
 	step := &gauge.Step{LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
 	arguments := make([]*gauge.StepArg, 0)
+	var errors []ParseError
 	var warnings []*Warning
 	for i, argType := range argsType {
 		argument, parseDetails := createStepArg(stepToken.Args[i], argType, stepToken, lookup, specFileName)
 		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
-			return nil, parseDetails
+			errors = append(errors, parseDetails.ParseErrors...)
 		}
 		arguments = append(arguments, argument)
 		if parseDetails != nil && parseDetails.Warnings != nil {
@@ -625,7 +632,7 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileNa
 		}
 	}
 	step.AddArgs(arguments...)
-	return step, &ParseResult{Warnings: warnings}
+	return step, &ParseResult{ParseErrors: errors, Warnings: warnings}
 }
 
 func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
@@ -690,7 +697,7 @@ func createStepArg(argValue string, typeOfArg string, token *Token, lookup *gaug
 			case invalidSpecialParamError:
 				return treatArgAsDynamic(argValue, token, lookup, fileName)
 			default:
-				return nil, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
+				return &gauge.StepArg{ArgType: gauge.Dynamic, Value: argValue, Name: argValue}, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
 			}
 		}
 		return resolvedArgValue, nil
@@ -718,10 +725,11 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *gauge.ArgLookup, f
 }
 
 func validateDynamicArg(argValue string, token *Token, lookup *gauge.ArgLookup, fileName string) (*gauge.StepArg, *ParseResult) {
-	if !isConceptHeader(lookup) && !lookup.ContainsArg(argValue) {
-		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
-	}
 	stepArgument := &gauge.StepArg{ArgType: gauge.Dynamic, Value: argValue, Name: argValue}
+	if !isConceptHeader(lookup) && !lookup.ContainsArg(argValue) {
+		return stepArgument, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic parameter <%s> could not be resolved", argValue), LineText: token.LineText}}}
+	}
+
 	return stepArgument, nil
 }
 

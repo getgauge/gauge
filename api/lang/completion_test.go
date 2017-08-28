@@ -81,10 +81,14 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 	}
 }
 
+func (p *dummyCompletionProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
+	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
+}
+
 func TestCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", " * ")
-	position := lsp.Position{Line: 0, Character: 3}
+	position := lsp.Position{Line: 0, Character: len(" * ")}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -128,9 +132,9 @@ func TestCompletion(t *testing.T) {
 func TestCompletionForLineWithText(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", " * step")
-	position := lsp.Position{Line: 0, Character: 2}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 2}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 7}
+	position := lsp.Position{Line: 0, Character: len(` *`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(` *`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step`)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -174,9 +178,9 @@ func TestCompletionForLineWithText(t *testing.T) {
 func TestCompletionInBetweenLine(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", "* step")
-	position := lsp.Position{Line: 0, Character: 5}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 2}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 6}
+	position := lsp.Position{Line: 0, Character: len(`* s`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`* `)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(`* step`)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -219,10 +223,11 @@ func TestCompletionInBetweenLine(t *testing.T) {
 
 func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "*step with a <param> and more")
-	position := lsp.Position{Line: 0, Character: 25}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 1}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 29}
+	line := "*step with a <param> and more"
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(`*step with a <param> and`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -265,10 +270,11 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 
 func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "*step with a <file:test.txt> and more")
-	position := lsp.Position{Line: 0, Character: 30}
-	wantStartPos := lsp.Position{Line: position.Line, Character: 1}
-	wantEndPos := lsp.Position{Line: position.Line, Character: 37}
+	line := "*step with a <file:test.txt> and more"
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(`*step with a <file:test.txt>`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
 			CompletionItem: lsp.CompletionItem{
@@ -291,6 +297,51 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 				Documentation: "Say <hello> to <gauge>",
 			},
 			InsertTextFormat: snippet,
+		},
+	},
+	}
+	provider = &dummyCompletionProvider{}
+
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
+	p := json.RawMessage(b)
+
+	got, err := completion(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Autocomplete request failed, got: `%+v`, want: `%+v`", got, want)
+	}
+}
+
+func TestParamCompletion(t *testing.T) {
+	f = &files{cache: make(map[string][]string)}
+	line := ` * step with a "param`
+	f.add("uri", line)
+	position := lsp.Position{Line: 0, Character: len(` * step with a "pa`)}
+	wantStartPos := lsp.Position{Line: position.Line, Character: len(` * step with a "`)}
+	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step with a "param`)}
+	want := completionList{IsIncomplete: false, Items: []completionItem{
+		{
+			CompletionItem: lsp.CompletionItem{
+				Label:      "hello",
+				FilterText: "hello\"",
+				Detail:     "static",
+				Kind:       lsp.CIKVariable,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "hello\""},
+			},
+			InsertTextFormat: text,
+		},
+		{
+			CompletionItem: lsp.CompletionItem{
+				Label:      "gauge",
+				FilterText: "gauge\"",
+				Detail:     "static",
+				Kind:       lsp.CIKVariable,
+				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "gauge\""},
+			},
+			InsertTextFormat: text,
 		},
 	},
 	}
@@ -342,24 +393,6 @@ func TestCompletionResolveWithError(t *testing.T) {
 	}
 }
 
-func TestGetPrefix(t *testing.T) {
-	want := " "
-	got := getPrefix("line1\n*")
-
-	if got != want {
-		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
-	}
-}
-
-func TestGetPrefixWithSpace(t *testing.T) {
-	want := ""
-	got := getPrefix("* ")
-
-	if got != want {
-		t.Errorf("GetPrefix failed for autocomplete, want: `%s`, got: `%s`", want, got)
-	}
-}
-
 func TestIsInStepCompletionAtStartOfLine(t *testing.T) {
 	if !isStepCompletion("* ", 1) {
 		t.Errorf("isStepCompletion not recognizing step context")
@@ -372,112 +405,33 @@ func TestIsInStepCompletionAtEndOfLine(t *testing.T) {
 	}
 }
 
-func TestIsInStepCompletionWithParams(t *testing.T) {
-	if isStepCompletion(`* Step with "static" and <dynamic> params`, 13) {
-		t.Errorf("isStepCompletion not recognizing step context")
-	}
-	if !isStepCompletion(`* Step with "static" and <dynamic> params`, 24) {
-		t.Errorf("isStepCompletion not recognizing step context")
-	}
-	if isStepCompletion(`* Step with "static" and <dynamic> params`, 28) {
-		t.Errorf("isStepCompletion not recognizing step context")
-	}
-}
-
-func TestGetFilterTextWithStaticParam(t *testing.T) {
-	got := getFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{{Name: "Args1", Value: "Args1", ArgType: gauge.Static}})
-	want := `Text with "Args1"`
-	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
-	}
-}
-
-func TestGetFilterTextWithDynamicParam(t *testing.T) {
-	got := getFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{{Name: "Args1", Value: "Args1", ArgType: gauge.Dynamic}})
-	want := `Text with <Args1>`
-	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
-	}
-}
-
-func TestGetFilterTextShouldNotReplaceIfNoStepArgsGiven(t *testing.T) {
-	got := getFilterText("Text with {}", []string{"param1"}, []gauge.StepArg{})
-	want := `Text with <param1>`
-	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
-	}
-}
-
-func TestGetFilterTextWithLesserNumberOfStepArgsGiven(t *testing.T) {
-	stepArgs := []gauge.StepArg{
-		{Name: "Args1", Value: "Args1", ArgType: gauge.Dynamic},
-		{Name: "Args2", Value: "Args2", ArgType: gauge.Static},
-	}
-	got := getFilterText("Text with {} {} and {}", []string{"param1", "param2", "param3"}, stepArgs)
-	want := `Text with <Args1> "Args2" and <param3>`
-	if got != want {
-		t.Errorf("The parameters are not replaced correctly")
-	}
-}
-
-var testEditPosition = []struct {
-	input     string
-	cursorPos lsp.Position
-	wantStart lsp.Position
-	wantEnd   lsp.Position
+var paramContextTest = []struct {
+	input   string
+	charPos int
+	want    bool
 }{
 	{
-		input:     "*",
-		cursorPos: lsp.Position{Line: 0, Character: 1},
-		wantStart: lsp.Position{Line: 0, Character: 1},
-		wantEnd:   lsp.Position{Line: 0, Character: 1},
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "`),
+		want:    true,
 	},
 	{
-		input:     "* ",
-		cursorPos: lsp.Position{Line: 0, Character: 1},
-		wantStart: lsp.Position{Line: 0, Character: 1},
-		wantEnd:   lsp.Position{Line: 0, Character: 2},
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "static" an`),
+		want:    false,
 	},
 	{
-		input:     "* Step",
-		cursorPos: lsp.Position{Line: 10, Character: 1},
-		wantStart: lsp.Position{Line: 10, Character: 1},
-		wantEnd:   lsp.Position{Line: 10, Character: 6},
-	},
-	{
-		input:     "* Step",
-		cursorPos: lsp.Position{Line: 0, Character: 2},
-		wantStart: lsp.Position{Line: 0, Character: 2},
-		wantEnd:   lsp.Position{Line: 0, Character: 6},
-	},
-	{
-		input:     "* Step",
-		cursorPos: lsp.Position{Line: 0, Character: 4},
-		wantStart: lsp.Position{Line: 0, Character: 2},
-		wantEnd:   lsp.Position{Line: 0, Character: 6},
-	},
-	{
-		input:     "    * Step",
-		cursorPos: lsp.Position{Line: 0, Character: 7},
-		wantStart: lsp.Position{Line: 0, Character: 6},
-		wantEnd:   lsp.Position{Line: 0, Character: 10},
-	},
-	{
-		input:     " * Step ",
-		cursorPos: lsp.Position{Line: 0, Character: 10},
-		wantStart: lsp.Position{Line: 0, Character: 3},
-		wantEnd:   lsp.Position{Line: 0, Character: 10},
+		input:   `* Step with "static" and <dynamic> params`,
+		charPos: len(`* Step with "static" and <d`),
+		want:    true,
 	},
 }
 
-func TestGetEditPosition(t *testing.T) {
-	for _, test := range testEditPosition {
-		gotStart, gotEnd := getEditPosition(test.input, test.cursorPos)
-		if gotStart.Line != test.wantStart.Line || gotStart.Character != test.wantStart.Character {
-			t.Errorf(`Incorrect Edit Start Position got: %+v , want : %+v, input : "%s"`, gotStart, test.wantStart, test.input)
-		}
-		if gotEnd.Line != test.wantEnd.Line || gotEnd.Character != test.wantEnd.Character {
-			t.Errorf(`Incorrect Edit End Position got: %+v , want : %+v, input : "%s"`, gotEnd, test.wantEnd, test.input)
+func TestIsInParamContext(t *testing.T) {
+	for _, test := range paramContextTest {
+		got := inParameterContext(test.input, test.charPos)
+		if test.want != got {
+			t.Errorf("got : %s, want : %s", got, test.want)
 		}
 	}
 }
