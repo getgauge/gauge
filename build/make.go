@@ -88,6 +88,7 @@ func signExecutable(exeFilePath string, certFilePath string, certFilePwd string)
 }
 
 var buildMetadata string
+var commitHash string
 
 func getBuildVersion() string {
 	if buildMetadata != "" {
@@ -99,11 +100,12 @@ func getBuildVersion() string {
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
 	runProcess("go", "get", "-d", "-t", "./...")
+	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitHash=%s", buildMetadata, commitHash)
 	args := []string{
 		"build",
 		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
 		fmt.Sprintf("-asmflags=-trimpath=%s", os.Getenv("GOPATH")),
-		"-ldflags", "-X github.com/getgauge/gauge/version.BuildMetadata=" + buildMetadata, "-o", executablePath,
+		"-ldflags", ldflags, "-o", executablePath,
 	}
 	runProcess("go", args...)
 	compileGaugeScreenshot()
@@ -201,17 +203,10 @@ var (
 
 func main() {
 	flag.Parse()
+	commitHash = revParseHead()
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
 	}
-	// disabled this temporarily.
-	// dependency on external package breaks vendoring, since make.go is in a different package, i.e. not in gauge
-	// os.Stdin.Stat is the way to go, but it doesnt work on windows. Fix tentatively in go1.9
-	// ref: https://github.com/golang/go/issues/14853
-
-	// else if isatty.IsTerminal(os.Stdout.Fd()) {
-	//      buildMetadata = fmt.Sprintf("%s%s", buildMetadata, revParseHead())
-	// }
 	fmt.Println("Build: " + buildMetadata)
 	if *test {
 		runTests(*coverage)
@@ -236,14 +231,7 @@ func revParseHead() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd = exec.Command("git", "rev-parse", "--abbrev-ref", "HEAD")
-	var branch bytes.Buffer
-	cmd.Stdout = &branch
-	err = cmd.Run()
-	if err != nil {
-		log.Fatal(err)
-	}
-	return fmt.Sprintf("%s-%s", strings.TrimSpace(hash.String()), strings.TrimSpace(branch.String()))
+	return fmt.Sprintf("%s", strings.TrimSpace(hash.String()))
 }
 
 func filteredPlatforms() []map[string]string {
