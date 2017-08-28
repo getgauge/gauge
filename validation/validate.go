@@ -29,7 +29,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
@@ -58,7 +58,7 @@ type StepValidationError struct {
 	step       *gauge.Step
 	message    string
 	fileName   string
-	errorType  *gauge_messages.StepValidateResponse_ErrorType
+	errorType  *gm.StepValidateResponse_ErrorType
 	suggestion string
 }
 
@@ -68,7 +68,11 @@ type SpecValidationError struct {
 }
 
 func (s StepValidationError) Error() string {
-	return fmt.Sprintf("%s:%d %s => '%s'%s", s.fileName, s.step.LineNo, s.message, s.step.GetLineText(), s.suggestion)
+	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
+}
+
+func (s StepValidationError) Suggestion() string {
+	return s.suggestion
 }
 
 func (s SpecValidationError) Error() string {
@@ -79,7 +83,7 @@ func NewSpecValidationError(m string, f string) SpecValidationError {
 	return SpecValidationError{message: m, fileName: f}
 }
 
-func NewStepValidationError(s *gauge.Step, m string, f string, e *gauge_messages.StepValidateResponse_ErrorType) StepValidationError {
+func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidateResponse_ErrorType) StepValidationError {
 	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
 }
 
@@ -158,6 +162,7 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	if specsFailed {
 		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
+	showSuggestion(vErrs)
 	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 
@@ -278,9 +283,9 @@ func (v *specValidator) Step(s *gauge.Step) {
 	}
 }
 
-var invalidResponse gauge_messages.StepValidateResponse_ErrorType = -1
+var invalidResponse gm.StepValidateResponse_ErrorType = -1
 
-var getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+var getResponseFromRunner = func(m *gm.Message, v *specValidator) (*gm.Message, error) {
 	return conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
 }
 
@@ -288,30 +293,26 @@ func (v *specValidator) validateStep(s *gauge.Step) error {
 	stepValue, _ := parser.ExtractStepValueAndParams(s.LineText, s.HasInlineTable)
 	protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
 
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateRequest,
-		StepValidateRequest: &gauge_messages.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args)), StepValue: protoStepValue}}
+	m := &gm.Message{MessageType: gm.Message_StepValidateRequest,
+		StepValidateRequest: &gm.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args)), StepValue: protoStepValue}}
 
 	r, err := getResponseFromRunner(m, v)
 	if err != nil {
 		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil)
 	}
-	if r.GetMessageType() == gauge_messages.Message_StepValidateResponse {
+	if r.GetMessageType() == gm.Message_StepValidateResponse {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
 			suggestion := res.GetSuggestion()
 			if s.Parent == nil {
 				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
-				if !HideSuggestion {
-					vErr.suggestion = suggestion
-				}
+				vErr.suggestion = suggestion
 				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
 			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
-			if !HideSuggestion {
-				vErr.suggestion = suggestion
-			}
+			vErr.suggestion = suggestion
 			return vErr
 
 		}
