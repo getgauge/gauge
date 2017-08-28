@@ -85,7 +85,6 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			}
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
 				parseRes.ParseErrors = append(parseRes.ParseErrors, errs...)
-				continue
 			}
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
@@ -170,13 +169,12 @@ func (parser *ConceptParser) processConceptHeading(token *Token, fileName string
 func (parser *ConceptParser) processConceptStep(token *Token, fileName string) []ParseError {
 	processStep(new(SpecParser), token)
 	conceptStep, parseRes := CreateStepUsingLookup(token, &parser.currentConcept.Lookup, fileName)
-	if parseRes != nil && len(parseRes.ParseErrors) > 0 {
-		return parseRes.ParseErrors
+	if conceptStep != nil {
+		conceptStep.Suffix = token.Suffix
+		parser.currentConcept.ConceptSteps = append(parser.currentConcept.ConceptSteps, conceptStep)
+		parser.currentConcept.Items = append(parser.currentConcept.Items, conceptStep)
 	}
-	conceptStep.Suffix = token.Suffix
-	parser.currentConcept.ConceptSteps = append(parser.currentConcept.ConceptSteps, conceptStep)
-	parser.currentConcept.Items = append(parser.currentConcept.Items, conceptStep)
-	return nil
+	return parseRes.ParseErrors
 }
 
 func (parser *ConceptParser) processTableHeader(token *Token) {

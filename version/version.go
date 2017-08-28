@@ -29,6 +29,7 @@ var CurrentGaugeVersion = &Version{0, 9, 2}
 
 // BuildMetadata represents build information of current release (e.g, nightly build information)
 var BuildMetadata = ""
+var CommitHash = ""
 
 type Version struct {
 	Major int
@@ -129,6 +130,14 @@ func FullVersion() string {
 		metadata = fmt.Sprintf(".%s", BuildMetadata)
 	}
 	return fmt.Sprintf("%s%s", CurrentGaugeVersion.String(), metadata)
+}
+
+func GetCommitHash() string {
+	var commitHash string
+	if CommitHash != "" {
+		commitHash = fmt.Sprintf("%s", CommitHash)
+	}
+	return fmt.Sprintf("%s", commitHash)
 }
 
 type byDecreasingVersion []*Version

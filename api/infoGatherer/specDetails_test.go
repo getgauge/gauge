@@ -37,8 +37,10 @@ var _ = Suite(&MySuite{})
 
 var concept1 []byte
 var concept2 []byte
+var concept3 []byte
 var spec1 []byte
 var spec2 []byte
+var spec3 []byte
 
 type MySuite struct {
 	specsDir   string
@@ -72,6 +74,13 @@ func (s *MySuite) buildTestData() {
 * a "final" step
 `...)
 
+	concept3 = make([]byte, 0)
+	concept3 = append(concept3, `# foo bar with <param> having errors
+* first step with "foo"
+* say <param> to me
+* a <final> step
+`...)
+
 	spec1 = make([]byte, 0)
 	spec1 = append(spec1, `Specification Heading
 =====================
@@ -89,6 +98,20 @@ Scenario 1
 * say hello
 * say "hello" to me
 * say "bye" to me
+`...)
+
+	spec3 = make([]byte, 0)
+	spec3 = append(spec3, `Specification Heading
+=====================
+|Col1|Col2|
+|----|----|
+|Val1|Val2|
+
+Scenario with parse errors
+----------
+* say hello
+* say "hello" to me
+* say <bye> to me
 `...)
 }
 
@@ -302,4 +325,73 @@ func (s *MySuite) TestGetAvailableSpecDetailsWithEmptyCache(c *C) {
 	details := sig.GetAvailableSpecDetails([]string{})
 
 	c.Assert(len(details), Equals, 0)
+}
+
+func (s *MySuite) TestParamsForStepFile(c *C) {
+	file, _ := util.CreateFileIn(s.specsDir, "spec3.spec", spec3)
+	file, _ = filepath.Abs(file)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initConceptsCache()
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+	specInfoGatherer.initParamsCache()
+
+	staticParams := specInfoGatherer.Params(file, gauge.Static)
+	c.Assert(len(staticParams), Equals, 1)
+	dynamicParams := specInfoGatherer.Params(file, gauge.Dynamic)
+	c.Assert(len(dynamicParams), Equals, 3)
+	hasParam := func(param string, list []gauge.StepArg) bool {
+		for _, p := range list {
+			if p.ArgValue() == param {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasParam("hello", staticParams) {
+		c.Errorf(`Param "hello" not found`)
+	}
+	if !hasParam("bye", dynamicParams) {
+		c.Errorf(`Param "bye" not found`)
+	}
+	if !hasParam("Col1", dynamicParams) {
+		c.Errorf(`Param "Col1" not found`)
+	}
+	if !hasParam("Col2", dynamicParams) {
+		c.Errorf(`Param "Col1" not found`)
+	}
+}
+
+func (s *MySuite) TestParamsForConceptFile(c *C) {
+	file, _ := util.CreateFileIn(s.specsDir, "concept3.cpt", concept3)
+	file, _ = filepath.Abs(file)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+	specInfoGatherer.initConceptsCache()
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+	specInfoGatherer.initParamsCache()
+
+	staticParams := specInfoGatherer.Params(file, gauge.Static)
+	c.Assert(len(staticParams), Equals, 1)
+	dynamicParams := specInfoGatherer.Params(file, gauge.Dynamic)
+	c.Assert(len(dynamicParams), Equals, 2)
+	hasParam := func(param string, list []gauge.StepArg) bool {
+		for _, p := range list {
+			if p.ArgValue() == param {
+				return true
+			}
+		}
+		return false
+	}
+	if !hasParam("foo", staticParams) {
+		c.Errorf(`Param "foo" not found`)
+	}
+	if !hasParam("param", dynamicParams) {
+		c.Errorf(`Param "param" not found`)
+	}
+	if !hasParam("final", dynamicParams) {
+		c.Errorf(`Param "final" not found`)
+	}
 }

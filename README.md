@@ -28,7 +28,7 @@ Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) c
 [userdocs]:http://docs.getgauge.io
 [get-started]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
 [examples]:https://getgauge-examples.github.io/
-[contributing]:CONTRIBUTING.MD
+[contributing]:CONTRIBUTING.md
 
 ## Questions or need help?
 
@@ -39,8 +39,8 @@ Refer our [Troubleshooting](https://docs.getgauge.io/troubleshooting.html) guide
 
 Please see below for the best place to ask a query:
 
-- How do I? -- [Stack Overflow]((https://stackoverflow.com/questions/ask?tags=getgauge)
-- I got this error, why? -- [Stack Overflow]((https://stackoverflow.com/questions/ask?tags=getgauge)
+- How do I? -- [Stack Overflow](https://stackoverflow.com/questions/ask?tags=getgauge)
+- I got this error, why? -- [Stack Overflow](https://stackoverflow.com/questions/ask?tags=getgauge)
 - I got this error and I'm sure it's a bug -- file an [issue](https://github.com/getgauge/gauge/issues) 
 - I have an idea/request -- file an [issue](https://github.com/getgauge/gauge/issues) 
 - Why do you? -- [Google Groups](https://groups.google.com/forum/#!forum/getgauge)
