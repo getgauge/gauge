@@ -45,6 +45,13 @@ func initializeTemplate(templateName string) error {
 
 	wd := config.ProjectRoot
 
+	if common.FileExists(gitignoreFileName) {
+		templateGitIgnore := filepath.Join(unzippedTemplate, templateName , gitignoreFileName)
+		if err := common.AppendToFile(gitignoreFileName, templateGitIgnore); err != nil{
+			return err
+		}
+	}
+
 	logger.Infof("Copying Gauge template %s to current directory ...", templateName)
 	filesAdded, err := common.MirrorDir(filepath.Join(unzippedTemplate, templateName), wd)
 	if err != nil {
@@ -119,7 +126,6 @@ func InitializeProject(templateName string) {
 	if isGaugeProject() {
 		logger.Fatalf("This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
 	}
-
 	exists, _ := common.UrlExists(getTemplateURL(templateName))
 	if exists {
 		err = initializeTemplate(templateName)
