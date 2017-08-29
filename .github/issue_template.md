@@ -21,5 +21,5 @@ Tell us what happens instead
 
 ### Gauge version
 ```
-Run gauge -v on your system and paste the results here.
+Run gauge version on your system and paste the results here.
 ```
