@@ -16,8 +16,9 @@ func setupColoredConsole() (*dummyWriter, *coloredConsole) {
 func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	cc.indentation = 2
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED})
 
-	cc.ScenarioStart("my first scenario")
+	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "my first scenario"}}, gauge_messages.ExecutionInfo{}, scnRes)
 
 	c.Assert(dw.output, Equals, "    ## my first scenario\t")
 }
@@ -25,12 +26,12 @@ func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
 func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	cc.indentation = 2
-	cc.ScenarioStart("failing step")
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED, Failed: true})
+	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "failing step"}}, gauge_messages.ExecutionInfo{}, scnRes)
 	dw.output = ""
 
 	cc.Write([]byte("fail reason: blah"))
-	res := &DummyResult{IsFailed: true}
-	cc.ScenarioEnd(res)
+	cc.ScenarioEnd(nil, scnRes, gauge_messages.ExecutionInfo{})
 
 	c.Assert(dw.output, Equals, "fail reason: blah\n")
 }

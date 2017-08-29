@@ -40,8 +40,9 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	logLevel string
-	dir      string
+	logLevel        string
+	dir             string
+	machineReadable bool
 )
 
 func init() {
@@ -71,6 +72,7 @@ Complete documentation is available at https://docs.getgauge.io/.{{end}}
 `)
 	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical")
 	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory")
+	GaugeCmd.PersistentFlags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Prints output in JSON format")
 }
 
 type commandWriter struct {
