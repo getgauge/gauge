@@ -49,29 +49,33 @@ func setupSimpleConsole() (*dummyWriter, *simpleConsole) {
 
 func (s *MySuite) TestSpecStart_SimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
-	sc.SpecStart("Specification heading")
+	specRes := &result.SpecResult{Skipped: false}
+
+	sc.SpecStart(&gauge.Specification{Heading: &gauge.Heading{Value: "Specification heading"}}, specRes)
 	c.Assert(dw.output, Equals, "# Specification heading\n")
 }
 
 func (s *MySuite) TestSpecEnd_SimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
 
-	sc.SpecEnd(&DummyResult{})
+	sc.SpecEnd(&gauge.Specification{}, &result.SpecResult{Skipped: false, ProtoSpec: &gauge_messages.ProtoSpec{}})
 	c.Assert(dw.output, Equals, "\n")
 }
 
 func (s *MySuite) TestScenarioStart_SimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
-	sc.ScenarioStart("First Scenario")
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED})
+
+	sc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "First Scenario"}}, gauge_messages.ExecutionInfo{}, scnRes)
 	c.Assert(dw.output, Equals, "  ## First Scenario\n")
 }
 
 func (s *MySuite) TestScenarioEnd_SimpleConsole(c *C) {
 	_, sc := setupSimpleConsole()
 	sc.indentation = 2
-	res := &DummyResult{IsFailed: true}
+	res := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED, Failed: true})
 
-	sc.ScenarioEnd(res)
+	sc.ScenarioEnd(nil, res, gauge_messages.ExecutionInfo{})
 
 	c.Assert(sc.indentation, Equals, 0)
 }
@@ -219,18 +223,20 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	dw, sc := setupSimpleConsole()
 	Verbose = true
 
-	sc.SpecStart("Specification heading")
-	sc.ScenarioStart("My First scenario")
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED})
+	sc.SpecStart(&gauge.Specification{Heading: &gauge.Heading{Value: "Specification heading"}}, &result.SpecResult{Skipped: false})
+	sc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "My First scenario"}}, gauge_messages.ExecutionInfo{}, scnRes)
 	sc.StepStart("* do foo bar")
 	sc.Write([]byte("doing foo bar"))
-	res := &DummyResult{IsFailed: false}
+	res := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED, Failed: false})
 	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: false}}
 	stepRes := result.NewStepResult(&gauge_messages.ProtoStep{StepExecutionResult: stepExeRes})
 
 	sc.StepEnd(gauge.Step{LineText: "* do foo bar"}, stepRes, specInfo)
-	sc.ScenarioEnd(res)
-	sc.SpecEnd(res)
+	sc.ScenarioEnd(nil, res, gauge_messages.ExecutionInfo{})
+	specRes := &result.SpecResult{Skipped: false, ProtoSpec: &gauge_messages.ProtoSpec{}}
+	sc.SpecEnd(&gauge.Specification{}, specRes)
 
 	want := `# Specification heading
   ## My First scenario
@@ -300,9 +306,12 @@ func (s *MySuite) TestSubscribeScenarioEndPreHookFailure(c *C) {
 	preHookErrMsg := "pre hook failure message"
 	stackTrace := "my stacktrace"
 	preHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: preHookErrMsg, StackTrace: stackTrace}
-	res := &DummyResult{PreHookFailure: []*gauge_messages.ProtoHookFailure{preHookFailure}}
+	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{
+		ExecutionStatus: gauge_messages.ExecutionStatus_PASSED,
+		PreHookFailure:  preHookFailure,
+	})
 
-	sc.ScenarioEnd(res)
+	sc.ScenarioEnd(nil, sceRes, gauge_messages.ExecutionInfo{})
 
 	ind := spaces(scenarioIndentation + errorIndentation)
 	want := ind + "Error Message: " + preHookErrMsg + newline + ind + "Stacktrace: \n" + ind + stackTrace + newline
@@ -316,9 +325,9 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_SimpleConsole(c *C) {
 	errMsg := "post hook failure message"
 	stackTrace := "my stacktrace"
 	postHookFailure := &gauge_messages.ProtoHookFailure{ErrorMessage: errMsg, StackTrace: stackTrace}
-	res := &DummyResult{PostHookFailure: []*gauge_messages.ProtoHookFailure{postHookFailure}}
+	res := &result.SpecResult{Skipped: false, ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailures: []*gauge_messages.ProtoHookFailure{postHookFailure}}, IsFailed: true}
 
-	sc.SpecEnd(res)
+	sc.SpecEnd(&gauge.Specification{}, res)
 
 	c.Assert(sc.indentation, Equals, 0)
 	ind := spaces(errorIndentation)

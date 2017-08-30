@@ -45,12 +45,10 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	machineReadable bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(versionCmd)
-	versionCmd.Flags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Outputs JSON output of currently installed Gauge and plugin versions")
 }
 
 func PrintJSONVersion() {

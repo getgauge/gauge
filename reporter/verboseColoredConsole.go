@@ -43,23 +43,35 @@ func newVerboseColoredConsole(out io.Writer) *verboseColoredConsole {
 	return &verboseColoredConsole{writer: goterminal.New(out)}
 }
 
-func (c *verboseColoredConsole) SpecStart(heading string) {
-	msg := formatSpec(heading)
+func (c *verboseColoredConsole) SuiteStart() {
+}
+
+func (c *verboseColoredConsole) SpecStart(spec *gauge.Specification, res result.Result) {
+	if res.(*result.SpecResult).Skipped {
+		return
+	}
+	msg := formatSpec(spec.Heading.Value)
 	logger.GaugeLog.Info(msg)
 	c.displayMessage(msg+newline, ct.Cyan)
 	c.writer.Reset()
 }
 
-func (c *verboseColoredConsole) SpecEnd(res result.Result) {
+func (c *verboseColoredConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
+	if res.(*result.SpecResult).Skipped {
+		return
+	}
 	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
 	c.displayMessage(newline, ct.None)
 	c.writer.Reset()
 }
 
-func (c *verboseColoredConsole) ScenarioStart(scenarioHeading string) {
+func (c *verboseColoredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
+		return
+	}
 	c.indentation += scenarioIndentation
-	msg := formatScenario(scenarioHeading)
+	msg := formatScenario(scenario.Heading.Value)
 	logger.GaugeLog.Info(msg)
 
 	indentedText := indent(msg+"\t", c.indentation)
@@ -67,7 +79,10 @@ func (c *verboseColoredConsole) ScenarioStart(scenarioHeading string) {
 	c.writer.Reset()
 }
 
-func (c *verboseColoredConsole) ScenarioEnd(res result.Result) {
+func (c *verboseColoredConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
+		return
+	}
 	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
 
