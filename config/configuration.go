@@ -107,7 +107,10 @@ func GaugeTemplatesUrl() string {
 
 // TelemetryEnabled determines if sending data to gauge telemetry engine is enabled
 func TelemetryEnabled() bool {
-	e := getFromConfig(telemetryEnabled)
+	e := os.Getenv(strings.ToUpper(telemetryEnabled))
+	if e == "" {
+		e = getFromConfig(telemetryEnabled)
+	}
 	return convertToBool(e, telemetryEnabled, true)
 }
 

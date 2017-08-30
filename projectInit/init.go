@@ -46,8 +46,8 @@ func initializeTemplate(templateName string) error {
 	wd := config.ProjectRoot
 
 	if common.FileExists(gitignoreFileName) {
-		templateGitIgnore := filepath.Join(unzippedTemplate, templateName , gitignoreFileName)
-		if err := common.AppendToFile(gitignoreFileName, templateGitIgnore); err != nil{
+		templateGitIgnore := filepath.Join(unzippedTemplate, templateName, gitignoreFileName)
+		if err := common.AppendToFile(gitignoreFileName, templateGitIgnore); err != nil {
 			return err
 		}
 	}
