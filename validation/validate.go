@@ -155,6 +155,7 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	errMap = getErrMap(errMap, vErrs)
 	s = parser.GetSpecsForDataTableRows(s, errMap)
 	printValidationFailures(vErrs)
+	showSuggestion(vErrs)
 	if !res.Ok {
 		r.Kill()
 		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))
@@ -162,7 +163,6 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	if specsFailed {
 		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
-	showSuggestion(vErrs)
 	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 
