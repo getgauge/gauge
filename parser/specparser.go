@@ -537,6 +537,7 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec does not have any elements"}
 	}
 	if specification.Heading == nil {
+		specification.AddHeading(&gauge.Heading{})
 		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec heading not found"}
 	}
 	if len(strings.TrimSpace(specification.Heading.Value)) < 1 {
