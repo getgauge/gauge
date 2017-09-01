@@ -267,7 +267,6 @@ func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *
 	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ", "foo2.spec")
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
 	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo2.spec:1 Dynamic parameter <table: foo> could not be resolved => 'my concept with <table: foo>'")
-
 }
 
 func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
@@ -646,6 +645,13 @@ func (s *MySuite) TestConceptParserShouldNotAddTableAsArgIfCommentsArePresentBet
 		String()
 	steps, _ := new(ConceptParser).Parse(conceptText, "")
 	c.Assert(steps[0].ConceptSteps[0].GetLineText(), Equals, "a step")
+}
+
+func (s *MySuite) TestErrorParsingConceptWithNoSteps(c *C) {
+	parser := new(ConceptParser)
+	_, parseRes := parser.Parse("# my concept\n# second concept\n* first step ", "foo.cpt")
+	c.Assert(len(parseRes.ParseErrors), Equals, 1)
+	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.cpt:1 Concept should have atleast one step => 'my concept'")
 }
 
 func containsAny(errs []ParseError, msg string) bool {
