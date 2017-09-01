@@ -534,6 +534,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 
 func (parser *SpecParser) validateSpec(specification *gauge.Specification) error {
 	if len(specification.Items) == 0 {
+		specification.AddHeading(&gauge.Heading{})
 		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec does not have any elements"}
 	}
 	if specification.Heading == nil {
