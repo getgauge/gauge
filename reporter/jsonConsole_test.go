@@ -170,7 +170,7 @@ func (s *MySuite) TestScenarioEndWithPreHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Scenario","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Scenario","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
@@ -214,7 +214,7 @@ func (s *MySuite) TestScenarioEndWithPostHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"pass","time":0,"afterHookFailure":{"text":"After Scenario","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"pass","time":0,"afterHookFailure":{"text":"After Scenario","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
@@ -262,7 +262,7 @@ func (s *MySuite) TestScenarioEndWithPreAndPostHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Scenario","filename":"","message":"message","stackTrace":"stacktrace"},"afterHookFailure":{"text":"After Scenario","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Scenario","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"},"afterHookFailure":{"text":"After Scenario","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
@@ -317,7 +317,7 @@ func (s *MySuite) TestScenarioEndWithBeforeStepHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"BeforeStep hook for step: Step","filename":"","message":"message","stackTrace":"stacktrace"}]}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"BeforeStep hook for step: Step","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}]}}
 `
 
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
@@ -327,23 +327,25 @@ func (s *MySuite) TestScenarioEndWithBeforeStepHookFailure_JSONConsole(c *C) {
 func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 	dw, jc := setupJSONConsole()
 
+	protoStep := &gauge_messages.ProtoStep{
+		ActualText: "Step",
+		ParsedText: "Step",
+		StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{
+			ExecutionResult: &gauge_messages.ProtoExecutionResult{
+				Failed:       true,
+				ErrorMessage: "message",
+				StackTrace:   "stacktrace",
+			},
+		},
+	}
+
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
 		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
 			&gauge_messages.ProtoItem{
 				ItemType: gauge_messages.ProtoItem_Step,
-				Step: &gauge_messages.ProtoStep{
-					ActualText: "Step",
-					ParsedText: "Step",
-					StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{
-						ExecutionResult: &gauge_messages.ProtoExecutionResult{
-							Failed:       true,
-							ErrorMessage: "message",
-							StackTrace:   "stacktrace",
-						},
-					},
-				},
+				Step:     protoStep,
 			},
 		},
 		ExecutionStatus: gauge_messages.ExecutionStatus_FAILED,
@@ -371,12 +373,122 @@ func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 			Name:     "Scenario",
 			IsFailed: false,
 		},
+		CurrentStep: &gauge_messages.StepInfo{
+			Step: &gauge_messages.ExecuteStepRequest{
+				ActualStepText:  "Step",
+				ParsedStepText:  "Step",
+				ScenarioFailing: false,
+			},
+			IsFailed:   false,
+			StackTrace: "stacktrace",
+		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"file","message":"message","stackTrace":"stacktrace"}]}}
+	step := gauge.Step{
+		Value:     "Step",
+		LineNo:    4,
+		LineText:  "Step",
+		IsConcept: false,
+		Parent:    nil,
+	}
+
+	res := result.NewStepResult(protoStep)
+	res.StepFailed = false
+	jc.StepEnd(step, res, info)
+	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
+
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"file","message":"message","lineNo":"4","stackTrace":"stacktrace"}]}}
 `
 
+	c.Assert(dw.output, Equals, expected)
+}
+
+func (s *MySuite) TestScenarioEndWithConceptFailure_JSONConsole(c *C) {
+	dw, jc := setupJSONConsole()
+
+	protoStep := &gauge_messages.ProtoStep{
+		ActualText: "Step",
+		ParsedText: "Step",
+		StepExecutionResult: &gauge_messages.ProtoStepExecutionResult{
+			ExecutionResult: &gauge_messages.ProtoExecutionResult{
+				Failed:       true,
+				ErrorMessage: "message",
+				StackTrace:   "stacktrace",
+			},
+		},
+	}
+
+	protoScenario := &gauge_messages.ProtoScenario{
+		ScenarioHeading: "Scenario",
+		Failed:          true,
+		ScenarioItems: []*gauge_messages.ProtoItem{
+			&gauge_messages.ProtoItem{
+				ItemType: gauge_messages.ProtoItem_Step,
+				Step:     protoStep,
+			},
+		},
+		ExecutionStatus: gauge_messages.ExecutionStatus_FAILED,
+	}
+
+	scenario := &gauge.Scenario{
+		Heading: &gauge.Heading{
+			Value:       "Scenario",
+			LineNo:      2,
+			HeadingType: 1,
+		},
+		Span: &gauge.Span{
+			Start: 2,
+			End:   3,
+		},
+	}
+
+	info := gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{
+			Name:     "Specification",
+			FileName: "file",
+			IsFailed: false,
+		},
+		CurrentScenario: &gauge_messages.ScenarioInfo{
+			Name:     "Scenario",
+			IsFailed: false,
+		},
+		CurrentStep: &gauge_messages.StepInfo{
+			Step: &gauge_messages.ExecuteStepRequest{
+				ActualStepText:  "Step",
+				ParsedStepText:  "Step",
+				ScenarioFailing: false,
+			},
+			IsFailed:   false,
+			StackTrace: "stacktrace",
+		},
+	}
+
+	step := gauge.Step{
+		Value:     "Step",
+		LineNo:    4,
+		LineText:  "Step",
+		IsConcept: true,
+		Parent:    nil,
+	}
+
+	step2 := gauge.Step{
+		Value:     "Step 2",
+		LineNo:    2,
+		LineText:  "Step 2",
+		IsConcept: false,
+		Parent:    &step,
+	}
+
+	step.ConceptSteps = []*gauge.Step{&step2}
+
+	res := result.NewStepResult(protoStep)
+	res.StepFailed = false
+	jc.StepEnd(step2, res, info)
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
+
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"file","message":"message","lineNo":"","stackTrace":"stacktrace"}]}}
+`
+
 	c.Assert(dw.output, Equals, expected)
 }
 
@@ -428,7 +540,7 @@ func (s *MySuite) TestScenarioEndWithAfterStepHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"AfterStep hook for step: Step","filename":"","message":"message","stackTrace":"stacktrace"}]}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"AfterStep hook for step: Step","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}]}}
 `
 
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
@@ -495,7 +607,7 @@ func (s *MySuite) TestSpecEndWithPreHookFailure_JSONConsole(c *C) {
 		},
 		Scenarios: scenarios,
 	}
-	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Specification","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Specification","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 	res := &result.SpecResult{
 		ProtoSpec: protoSpec,
@@ -536,7 +648,7 @@ func (s *MySuite) TestSpecEndWithPostHookFailure_JSONConsole(c *C) {
 		},
 		Scenarios: scenarios,
 	}
-	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"afterHookFailure":{"text":"After Specification","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"afterHookFailure":{"text":"After Specification","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 	res := &result.SpecResult{
 		ProtoSpec: protoSpec,
@@ -583,7 +695,7 @@ func (s *MySuite) TestSpecEndWithPreAndPostHookFailure_JSONConsole(c *C) {
 		},
 		Scenarios: scenarios,
 	}
-	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Specification","filename":"","message":"message","stackTrace":"stacktrace"},"afterHookFailure":{"text":"After Specification","filename":"","message":"message","stackTrace":"stacktrace"}}}
+	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Specification","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"},"afterHookFailure":{"text":"After Specification","filename":"","message":"message","lineNo":"","stackTrace":"stacktrace"}}}
 `
 	res := &result.SpecResult{
 		ProtoSpec: protoSpec,
@@ -611,7 +723,7 @@ func (s *MySuite) TestSuiteEndWithBeforeHookFailure_JSONConsole(c *C) {
 		},
 		IsFailed: true,
 	}
-	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Suite","filename":"","message":"message","stackTrace":"stack trace"}}}
+	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Suite","filename":"","message":"message","lineNo":"","stackTrace":"stack trace"}}}
 `
 	jc.SuiteEnd(res)
 	c.Assert(dw.output, Equals, expected)
@@ -631,7 +743,7 @@ func (s *MySuite) TestSuiteEndWithAfterHookFailure_JSONConsole(c *C) {
 		},
 		IsFailed: true,
 	}
-	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Suite","filename":"","message":"message","stackTrace":"stack trace"},"afterHookFailure":{"text":"After Suite","filename":"","message":"message","stackTrace":"stack trace"}}}
+	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"beforeHookFailure":{"text":"Before Suite","filename":"","message":"message","lineNo":"","stackTrace":"stack trace"},"afterHookFailure":{"text":"After Suite","filename":"","message":"message","lineNo":"","stackTrace":"stack trace"}}}
 `
 	jc.SuiteEnd(res)
 	c.Assert(dw.output, Equals, expected)
@@ -647,7 +759,7 @@ func (s *MySuite) TestSuiteEndWithBeforeAndAfterHookFailure_JSONConsole(c *C) {
 		},
 		IsFailed: true,
 	}
-	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"afterHookFailure":{"text":"After Suite","filename":"","message":"message","stackTrace":"stack trace"}}}
+	expected := `{"type":"suiteEnd","result":{"status":"fail","time":0,"afterHookFailure":{"text":"After Suite","filename":"","message":"message","lineNo":"","stackTrace":"stack trace"}}}
 `
 	jc.SuiteEnd(res)
 	c.Assert(dw.output, Equals, expected)

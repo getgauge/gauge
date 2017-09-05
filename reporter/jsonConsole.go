@@ -52,6 +52,12 @@ type jsonConsole struct {
 	writer     io.Writer
 	isParallel bool
 	stream     int
+	stepCache  map[*gm.ScenarioInfo][]*stepInfo
+}
+
+type stepInfo struct {
+	step      *gauge.Step
+	protoStep *gm.ProtoStep
 }
 
 type executionEvent struct {
@@ -84,11 +90,12 @@ type executionError struct {
 	Text       string `json:"text"`
 	Filename   string `json:"filename"`
 	Message    string `json:"message"`
+	LineNo     string `json:"lineNo"`
 	StackTrace string `json:"stackTrace"`
 }
 
 func newJSONConsole(out io.Writer, isParallel bool, stream int) *jsonConsole {
-	return &jsonConsole{Mutex: &sync.Mutex{}, writer: out, isParallel: isParallel, stream: stream}
+	return &jsonConsole{Mutex: &sync.Mutex{}, writer: out, isParallel: isParallel, stream: stream, stepCache: make(map[*gm.ScenarioInfo][]*stepInfo), }
 }
 
 func (c *jsonConsole) SuiteStart() {
@@ -183,7 +190,7 @@ func (c *jsonConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i
 		Res: &executionResult{
 			Status:            getScenarioStatus(res.(*result.ScenarioResult)),
 			Time:              res.ExecTime(),
-			Errors:            getErrors(getAllStepsFromScenario(res.(*result.ScenarioResult).ProtoScenario), i.CurrentSpec.FileName),
+			Errors:            getErrors(c.stepCache, getAllStepsFromScenario(res.(*result.ScenarioResult).ProtoScenario), i.CurrentSpec.FileName, i),
 			BeforeHookFailure: getHookFailure(res.GetPreHook(), "Before Scenario"),
 			AfterHookFailure:  getHookFailure(res.GetPostHook(), "After Scenario"),
 			Table:             getTable(scenario),
@@ -200,6 +207,8 @@ func (c *jsonConsole) StepStart(stepText string) {
 }
 
 func (c *jsonConsole) StepEnd(step gauge.Step, res result.Result, execInfo gm.ExecutionInfo) {
+	si := &stepInfo{step: &step, protoStep: res.(*result.StepResult).Item().(*gm.ProtoStep)}
+	c.stepCache[execInfo.CurrentScenario] = append(c.stepCache[execInfo.CurrentScenario], si)
 }
 
 func (c *jsonConsole) ConceptStart(conceptHeading string) {
@@ -250,7 +259,7 @@ func getStatus(failed, skipped bool) status {
 	return pass
 }
 
-func getErrors(items []*gm.ProtoItem, id string) (errors []executionError) {
+func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem, id string, execInfo gm.ExecutionInfo) (errors []executionError) {
 	for _, item := range items {
 		executionResult := item.GetStep().GetStepExecutionResult()
 		res := executionResult.GetExecutionResult()
@@ -270,6 +279,7 @@ func getErrors(items []*gm.ProtoItem, id string) (errors []executionError) {
 					errors = append(errors, executionError{
 						Text:       item.Step.ActualText,
 						Filename:   filename,
+						LineNo:     getLineNo(stepCache, item.GetStep(), execInfo),
 						StackTrace: res.StackTrace,
 						Message:    res.ErrorMessage,
 					})
@@ -279,10 +289,18 @@ func getErrors(items []*gm.ProtoItem, id string) (errors []executionError) {
 				errors = append(errors, *getHookFailure([]*gm.ProtoHookFailure{err}, "AfterStep hook for step: "+item.Step.ActualText))
 			}
 		case gm.ProtoItem_Concept:
-			errors = append(errors, getErrors(item.GetConcept().GetSteps(), id)...)
+			errors = append(errors, getErrors(stepCache, item.GetConcept().GetSteps(), id, execInfo)...)
 		}
 	}
 	return
+}
+func getLineNo(stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info gm.ExecutionInfo) string {
+	for _, si := range stepCache[info.CurrentScenario] {
+		if si.protoStep == step && si.step.Parent == nil {
+			return strconv.Itoa(si.step.LineNo)
+		}
+	}
+	return ""
 }
 
 func getTable(scenario *gauge.Scenario) *tableInfo {
