@@ -24,7 +24,7 @@ import (
 )
 
 var message = map[gm.StepValidateResponse_ErrorType]string{
-	gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND: "Add the following missing implementations to fix `Step implementation not found` errors.\n",
+	gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND: "Add the following missing implementations to fix `Step implementation not found` errors.",
 }
 
 func showSuggestion(validationErrors validationErrors) {
