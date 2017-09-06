@@ -18,35 +18,41 @@
 package runner
 
 import (
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/getgauge/common"
-	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
-
-func (s *MySuite) TestGetCleanEnvRemovesGAUGE_INTERNAL_PORTAndSetsPortNumber(c *C) {
+func TestGetCleanEnvRemovesGAUGE_INTERNAL_PORTAndSetsPortNumber(t *testing.T) {
 	HELLO := "HELLO"
 	portVariable := common.GaugeInternalPortEnvName + "=1234"
 	PORT_NAME_WITH_EXTRA_WORD := "b" + common.GaugeInternalPortEnvName
 	PORT_NAME_WITH_SPACES := "      " + common.GaugeInternalPortEnvName + "         "
-	env := getCleanEnv("1234", []string{HELLO, common.GaugeInternalPortEnvName + "=", common.GaugeInternalPortEnvName,
-		PORT_NAME_WITH_SPACES, PORT_NAME_WITH_EXTRA_WORD}, false)
+	env := []string{HELLO, common.GaugeInternalPortEnvName + "=", common.GaugeInternalPortEnvName,
+		PORT_NAME_WITH_SPACES, PORT_NAME_WITH_EXTRA_WORD}
+	want := []string{HELLO, portVariable, portVariable, portVariable, PORT_NAME_WITH_EXTRA_WORD}
+	got := getCleanEnv("1234", env, false, []string{})
 
-	c.Assert(env[0], Equals, HELLO)
-	c.Assert(env[1], Equals, portVariable)
-	c.Assert(env[2], Equals, portVariable)
-	c.Assert(env[3], Equals, portVariable)
-	c.Assert(env[4], Equals, PORT_NAME_WITH_EXTRA_WORD)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Did not clean env.\n\tWant: %v\n\tGot: %v", want, got)
+	}
 }
 
-func (s *MySuite) TestGetCleanEnvWithDebugging(c *C) {
-	env := getCleanEnv("1234", []string{}, true)
+func TestGetCleanEnvWithDebugging(t *testing.T) {
+	env := getCleanEnv("1234", []string{}, true, []string{})
 
-	c.Assert(env[1], Equals, "debugging=true")
+	if env[1] != "debugging=true" {
+		t.Errorf("getCleanEnv failed. Did not add debugging env")
+	}
+}
+
+func TestGetCleanEnvAddsToPath(t *testing.T) {
+	env := getCleanEnv("1234", []string{"PATH=PATH"}, false, []string{"path1", "path2"})
+
+	want := "path1:path2"
+	if !strings.Contains(env[0], want) {
+		t.Errorf("getCleanEnv failed. Did not append to path.\n\tWanted PATH to contain: `%s`", want)
+	}
 }

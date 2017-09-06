@@ -31,19 +31,19 @@ import (
 func CreateSkelFilesIfRequired() {
 	p, err := common.GetConfigurationDir()
 	if err != nil {
-		logger.GaugeLog.Errorf("Unable to get path to config. Error: %s", err.Error())
+		logger.Debugf("Unable to get path to config. Error: %s", err.Error())
 		return
 	}
 	if _, err := os.Stat(p); os.IsNotExist(err) {
 		err = os.MkdirAll(p, common.NewDirectoryPermissions)
 		if err != nil {
-			logger.GaugeLog.Errorf("Unable to create config path dir `%s`. Error: %s", p, err.Error())
+			logger.Debugf("Unable to create config path dir `%s`. Error: %s", p, err.Error())
 			return
 		}
 	}
 	err = config.Merge()
 	if err != nil {
-		logger.GaugeLog.Errorf("Unable to create gauge.properties. Error: %s", err.Error())
+		logger.Debugf("Unable to create gauge.properties. Error: %s", err.Error())
 	}
 	writeFile(filepath.Join(p, "notice.md"), Notice, true)
 	writeFile(filepath.Join(p, "skel", "example.spec"), ExampleSpec, false)
@@ -54,6 +54,7 @@ func CreateSkelFilesIfRequired() {
 	if !common.FileExists(idFile) {
 		writeFile(idFile, uuid.NewV4().String(), false)
 	}
+	setupPlugins()
 }
 
 func writeFile(path, text string, overwrite bool) {
@@ -61,14 +62,14 @@ func writeFile(path, text string, overwrite bool) {
 	if !common.DirExists(dirPath) {
 		err := os.MkdirAll(dirPath, common.NewDirectoryPermissions)
 		if err != nil {
-			logger.GaugeLog.Errorf("Unable to create dir `%s`. Error: %s", dirPath, err.Error())
+			logger.Debugf("Unable to create dir `%s`. Error: %s", dirPath, err.Error())
 			return
 		}
 	}
 	if !common.FileExists(path) || overwrite {
 		err := ioutil.WriteFile(path, []byte(text), common.NewFilePermissions)
 		if err != nil {
-			logger.GaugeLog.Errorf("Unable to create file `%s`. Error: %s", path, err.Error())
+			logger.Debugf("Unable to create file `%s`. Error: %s", path, err.Error())
 		}
 	}
 }

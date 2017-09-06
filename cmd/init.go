@@ -31,7 +31,6 @@ var (
 		Long:    `Initialize project structure in the current directory.`,
 		Example: "  gauge init java",
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if templates {
 				track.ListTemplates()
 				projectInit.ListTemplates()

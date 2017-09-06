@@ -21,6 +21,7 @@ import (
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/stream"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
@@ -34,8 +35,7 @@ var (
 		Long:    `Run as a daemon.`,
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
-			if err := isValidGaugeProject(args); err != nil {
+			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
 			if lsp {

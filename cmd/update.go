@@ -33,7 +33,6 @@ var (
   gauge update -a
   gauge update -c`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if all {
 				track.UpdateAll()
 				install.UpdatePlugins()

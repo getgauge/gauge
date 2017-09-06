@@ -285,7 +285,7 @@ func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 		return nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
 	command := getOsSpecificCommand(r)
-	env := getCleanEnv(port, os.Environ(), debug)
+	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, reporter, reporter, env)
 	if err != nil {
 		return nil, err
@@ -301,6 +301,13 @@ func StartRunner(manifest *manifest.Manifest, port string, reporter reporter.Rep
 	testRunner := &LanguageRunner{Cmd: cmd, errorChannel: errChannel, mutex: &sync.Mutex{}, multiThreaded: r.Multithreaded}
 	testRunner.waitAndGetErrorMessage()
 	return testRunner, nil
+}
+
+func getPluginPaths() (paths []string) {
+	for _, p := range plugin.PluginsWithoutScope() {
+		paths = append(paths, p.Path)
+	}
+	return
 }
 
 func getLanguageJSONFilePath(manifest *manifest.Manifest, r *RunnerInfo) (string, error) {
@@ -335,13 +342,20 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 	}()
 }
 
-func getCleanEnv(port string, env []string, debug bool) []string {
-	//clear environment variable common.GaugeInternalPortEnvName
+func getCleanEnv(port string, env []string, debug bool, pathToAdd []string) []string {
 	isPresent := false
 	for i, k := range env {
-		if strings.TrimSpace(strings.Split(k, "=")[0]) == common.GaugeInternalPortEnvName {
+		key := strings.TrimSpace(strings.Split(k, "=")[0])
+		//clear environment variable common.GaugeInternalPortEnvName
+		if key == common.GaugeInternalPortEnvName {
 			isPresent = true
 			env[i] = common.GaugeInternalPortEnvName + "=" + port
+		} else if key == "PATH" {
+			path := os.Getenv("PATH")
+			for _, p := range pathToAdd {
+				path += string(os.PathListSeparator) + p
+			}
+			env[i] = "PATH=" + path
 		}
 	}
 	if !isPresent {

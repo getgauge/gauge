@@ -6,8 +6,6 @@ License:        GPLv3
 URL:            http://getgauge.io/
 Prefix:         /usr/local
 
-Provides: gauge_screenshot
-
 Requires(post): /bin/sh
 
 %description
@@ -20,7 +18,6 @@ chmod +x %{buildroot}/usr/local/bin/*
 
 %files
 /usr/local/bin/gauge
-/usr/local/bin/gauge_screenshot
 
 %post
 echo -e "\n\nWe are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"

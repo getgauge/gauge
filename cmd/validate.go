@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/validation"
@@ -31,12 +32,10 @@ var (
 		Long:    `Check for validation and parse errors.`,
 		Example: "  gauge validate specs/",
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			validation.HideSuggestion = hideSuggestion
-			if err := isValidGaugeProject(args); err != nil {
+			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
-			initPackageFlags()
 			track.Validation(hideSuggestion)
 			validation.Validate(args)
 		},

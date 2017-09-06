@@ -44,7 +44,6 @@ const (
 	windows            = "windows"
 	bin                = "bin"
 	gauge              = "gauge"
-	gaugeScreenshot    = "gauge_screenshot"
 	deploy             = "deploy"
 	installShellScript = "install.sh"
 	CC                 = "CC"
@@ -54,8 +53,6 @@ const (
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
-
-var gaugeScreenshotLocation = filepath.Join("github.com", "getgauge", "gauge_screenshot")
 
 var deployDir = filepath.Join(deploy, gauge)
 
@@ -108,17 +105,6 @@ func compileGauge() {
 		"-ldflags", ldflags, "-o", executablePath,
 	}
 	runProcess("go", args...)
-	compileGaugeScreenshot()
-}
-
-func compileGaugeScreenshot() {
-	getGaugeScreenshot()
-	executablePath := getGaugeExecutablePath(gaugeScreenshot)
-	runProcess("go", "build", "-o", executablePath, gaugeScreenshotLocation)
-}
-
-func getGaugeScreenshot() {
-	runProcess("go", "get", "-u", "-d", gaugeScreenshotLocation)
 }
 
 func runTests(coverage bool) {
@@ -156,7 +142,6 @@ func installFiles(files map[string]string, installDir string) {
 func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
 	files[getGaugeExecutablePath(gauge)] = bin
-	files[getGaugeExecutablePath(gaugeScreenshot)] = bin
 	files = getInstallScripts(files)
 	installFiles(files, installPath)
 }

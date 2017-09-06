@@ -32,7 +32,6 @@ var (
 		Long:    `Change global configurations.`,
 		Example: `  gauge config check_updates false`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if list || machineReadable {
 				exit(config.List(machineReadable))
 			}

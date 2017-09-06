@@ -23,8 +23,14 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/execution"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/order"
+	"github.com/getgauge/gauge/reporter"
+	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
 
@@ -39,6 +45,12 @@ var (
 			}
 		},
 		DisableAutoGenTag: true,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			config.SetProjectRoot(args)
+			setGlobalFlags()
+			skel.CreateSkelFilesIfRequired()
+			initPackageFlags()
+		},
 	}
 	logLevel        string
 	dir             string
@@ -102,6 +114,7 @@ func Parse() (int, error) {
 	writer.display()
 	return 0, nil
 }
+
 func InitHelp(c *cobra.Command) {
 	c.Flags().BoolP("help", "h", false, "Help for "+c.Name())
 	if c.HasSubCommands() {
@@ -118,12 +131,33 @@ func getSpecsDir(args []string) []string {
 	return []string{common.SpecsDirectoryName}
 }
 
-func isValidGaugeProject(args []string) error {
-	return config.SetProjectRoot(args)
-}
-
 func setGlobalFlags() {
 	logger.Initialize(logLevel)
 	logger.Debugf("Gauge Install ID: %s", config.UniqueID())
 	util.SetWorkingDir(dir)
+}
+
+func initPackageFlags() {
+	if parallel {
+		simpleConsole = true
+		reporter.IsParallel = true
+	}
+	reporter.SimpleConsoleOutput = simpleConsole
+	reporter.Verbose = verbose
+	reporter.MachineReadable = machineReadable
+	execution.ExecuteTags = tags
+	execution.SetTableRows(rows)
+	validation.TableRows = rows
+	execution.NumberOfExecutionStreams = streams
+	execution.InParallel = parallel
+	execution.Strategy = strategy
+	filter.ExecuteTags = tags
+	order.Sorted = sort
+	filter.Distribute = group
+	filter.NumberOfExecutionStreams = streams
+	reporter.NumberOfExecutionStreams = streams
+	validation.HideSuggestion = hideSuggestion
+	if group != -1 {
+		execution.Strategy = execution.Eager
+	}
 }

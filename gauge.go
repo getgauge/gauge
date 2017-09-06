@@ -83,7 +83,6 @@ func main() {
 	if os.Getenv("GAUGE_ROOT") != "" {
 		fmt.Println("[DEPRECATED] GAUGE_ROOT will be removed soon. Use GAUGE_HOME instead. Refer to documentation: https://docs.getgauge.io/faqs.html#what-is-gauge-home")
 	}
-	skel.CreateSkelFilesIfRequired()
 	track.Init()
 	exit, err := cmd.Parse()
 	if err == nil {
@@ -91,14 +90,15 @@ func main() {
 	}
 	fmt.Println("[DEPRECATED] This usage will be removed soon. Run `gauge help --legacy` for more info.")
 	flag.Parse()
-	logger.Initialize(*logLevel)
-	util.SetWorkingDir(*workingDir)
-	initPackageFlags()
 	validGaugeProject := true
 	err = config.SetProjectRoot(flag.Args())
 	if err != nil {
 		validGaugeProject = false
 	}
+	logger.Initialize(*logLevel)
+	skel.CreateSkelFilesIfRequired()
+	util.SetWorkingDir(*workingDir)
+	initPackageFlags()
 	if *runFailed {
 		logger.Fatalf("Rerun is not supported via the old usage. Use 'gauge run -f'")
 	}

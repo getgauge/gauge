@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/track"
@@ -31,8 +32,7 @@ var docsCmd = &cobra.Command{
 	Long:    `Generate documentation using specified plugin.`,
 	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
-		setGlobalFlags()
-		if err := isValidGaugeProject(args); err != nil {
+		if err := config.SetProjectRoot(args); err != nil {
 			logger.Fatalf(err.Error())
 		}
 		if len(args) < 1 {
