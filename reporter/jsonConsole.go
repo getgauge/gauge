@@ -95,7 +95,7 @@ type executionError struct {
 }
 
 func newJSONConsole(out io.Writer, isParallel bool, stream int) *jsonConsole {
-	return &jsonConsole{Mutex: &sync.Mutex{}, writer: out, isParallel: isParallel, stream: stream, stepCache: make(map[*gm.ScenarioInfo][]*stepInfo), }
+	return &jsonConsole{Mutex: &sync.Mutex{}, writer: out, isParallel: isParallel, stream: stream, stepCache: make(map[*gm.ScenarioInfo][]*stepInfo)}
 }
 
 func (c *jsonConsole) SuiteStart() {
@@ -123,10 +123,9 @@ func (c *jsonConsole) SpecStart(spec *gauge.Specification, res result.Result) {
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && spec.DataTable.IsInitialized()
-	id := getIDWithRow(spec.FileName, spec.Scenarios[0].DataTableRowIndex, addRow)
 	c.write(executionEvent{
 		EventType: specStart,
-		ID:        id,
+		ID:        getIDWithRow(spec.FileName, spec.Scenarios, addRow),
 		Name:      spec.Heading.Value,
 		Filename:  spec.FileName,
 		Line:      spec.Heading.LineNo,
@@ -137,12 +136,12 @@ func (c *jsonConsole) SpecStart(spec *gauge.Specification, res result.Result) {
 func (c *jsonConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	c.Lock()
 	defer c.Unlock()
-	protoSpec := (res.Item().(*gm.ProtoSpec))
+	protoSpec := res.Item().(*gm.ProtoSpec)
 	sRes := res.(*result.SpecResult)
 	addRow := c.isParallel && spec.DataTable.IsInitialized()
 	e := executionEvent{
 		EventType: specEnd,
-		ID:        getIDWithRow(spec.FileName, spec.Scenarios[0].DataTableRowIndex, addRow),
+		ID:        getIDWithRow(spec.FileName, spec.Scenarios, addRow),
 		Name:      protoSpec.GetSpecHeading(),
 		Filename:  spec.FileName,
 		Line:      spec.Heading.LineNo,
@@ -160,7 +159,7 @@ func (c *jsonConsole) ScenarioStart(scenario *gauge.Scenario, i gm.ExecutionInfo
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.DataTableRow.IsInitialized()
-	parentID := getIDWithRow(i.CurrentSpec.FileName, scenario.DataTableRowIndex, addRow)
+	parentID := getIDWithRow(i.CurrentSpec.FileName, []*gauge.Scenario{scenario}, addRow)
 	e := executionEvent{
 		EventType: scenarioStart,
 		ID:        parentID + ":" + strconv.Itoa(scenario.Span.Start),
@@ -178,7 +177,7 @@ func (c *jsonConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.DataTableRow.IsInitialized()
-	parentID := getIDWithRow(i.CurrentSpec.FileName, scenario.DataTableRowIndex, addRow)
+	parentID := getIDWithRow(i.CurrentSpec.FileName, []*gauge.Scenario{scenario}, addRow)
 	e := executionEvent{
 		EventType: scenarioEnd,
 		ID:        parentID + ":" + strconv.Itoa(scenario.Span.Start),
@@ -237,11 +236,11 @@ func (c *jsonConsole) write(e executionEvent) {
 	fmt.Fprint(c.writer, string(b)+newline)
 }
 
-func getIDWithRow(name string, row int, isDataTable bool) string {
-	if !isDataTable {
+func getIDWithRow(name string, scenarios []*gauge.Scenario, isDataTable bool) string {
+	if !isDataTable || len(scenarios) < 1 {
 		return name
 	}
-	return name + ":" + strconv.Itoa(row)
+	return name + ":" + strconv.Itoa(scenarios[0].DataTableRowIndex)
 }
 
 func getScenarioStatus(result *result.ScenarioResult) status {

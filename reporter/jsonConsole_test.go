@@ -706,6 +706,35 @@ func (s *MySuite) TestSpecEndWithPreAndPostHookFailure_JSONConsole(c *C) {
 	c.Assert(dw.output, Equals, expected)
 }
 
+func (s *MySuite) TestSpecEndWithNoScenariosInSpec_JSONConsole(c *C) {
+	dw, jc := setupJSONConsole()
+	protoSpec := &gauge_messages.ProtoSpec{
+		FileName:    "file",
+		SpecHeading: "Specification",
+	}
+
+	scenarios := []*gauge.Scenario{}
+
+	spec := &gauge.Specification{
+		FileName: "file",
+		Heading: &gauge.Heading{
+			Value:       "Specification",
+			LineNo:      1,
+			HeadingType: 0,
+		},
+		Scenarios: scenarios,
+	}
+	expected := `{"type":"specEnd","id":"file","name":"Specification","filename":"file","line":1,"result":{"status":"skip","time":0}}
+`
+	res := &result.SpecResult{
+		ProtoSpec: protoSpec,
+		Skipped:   true,
+	}
+
+	jc.SpecEnd(spec, res)
+	c.Assert(dw.output, Equals, expected)
+}
+
 func (s *MySuite) TestSuiteEnd_JSONConsole(c *C) {
 	dw, jc := setupJSONConsole()
 
