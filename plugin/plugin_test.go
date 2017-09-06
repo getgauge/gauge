@@ -19,9 +19,12 @@ package plugin
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/version"
 
@@ -223,4 +226,22 @@ func (s *MySuite) TestGetLanguageQueryParam(c *C) {
 	l := language()
 
 	c.Assert(l, Equals, "java")
+}
+
+func TestGetPluginsWithoutScope(t *testing.T) {
+	path, _ := filepath.Abs(filepath.Join("_testdata"))
+	os.Setenv(common.GaugeHome, path)
+
+	got := PluginsWithoutScope()
+
+	want := []PluginInfo{
+		{
+			Name:    "noscope",
+			Version: &version.Version{Major: 1, Minor: 0, Patch: 0},
+			Path:    filepath.Join(path, "plugins", "noscope", "1.0.0"),
+		},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Failed GetPluginWithoutScope.\n\tWant: %v\n\tGot: %v", want, got)
+	}
 }

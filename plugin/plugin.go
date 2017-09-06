@@ -409,6 +409,18 @@ func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
 	return sortPlugins(allPlugins), nil
 }
 
+func PluginsWithoutScope() (infos []PluginInfo) {
+	if plugins, err := GetAllInstalledPluginsWithVersion(); err == nil {
+		for _, p := range plugins {
+			pd, err := GetPluginDescriptor(p.Name, p.Version.String())
+			if err == nil && len(pd.Scope) == 0 {
+				infos = append(infos, p)
+			}
+		}
+	}
+	return
+}
+
 type PluginInfo struct {
 	Name    string
 	Version *version.Version

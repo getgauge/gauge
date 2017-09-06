@@ -22,16 +22,13 @@ import (
 
 	"strings"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
-	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/order"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
 
@@ -43,8 +40,7 @@ var (
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
-			if err := isValidGaugeProject(args); err != nil {
+			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
 			if failed {
@@ -106,35 +102,9 @@ func execute(args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
-	initPackageFlags()
 	if e := env.LoadEnv(environment); e != nil {
 		logger.Fatalf(e.Error())
 	}
 	exitCode := execution.ExecuteSpecs(specs)
 	os.Exit(exitCode)
-}
-
-func initPackageFlags() {
-	if parallel {
-		simpleConsole = true
-		reporter.IsParallel = true
-	}
-	reporter.SimpleConsoleOutput = simpleConsole
-	reporter.Verbose = verbose
-	reporter.MachineReadable = machineReadable
-	execution.ExecuteTags = tags
-	execution.SetTableRows(rows)
-	validation.TableRows = rows
-	execution.NumberOfExecutionStreams = streams
-	execution.InParallel = parallel
-	execution.Strategy = strategy
-	filter.ExecuteTags = tags
-	order.Sorted = sort
-	filter.Distribute = group
-	filter.NumberOfExecutionStreams = streams
-	reporter.NumberOfExecutionStreams = streams
-	validation.HideSuggestion = hideSuggestion
-	if group != -1 {
-		execution.Strategy = execution.Eager
-	}
 }

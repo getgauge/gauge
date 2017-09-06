@@ -36,7 +36,6 @@ var (
 		Example: `  gauge version
   gauge version -m`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if machineReadable {
 				PrintJSONVersion()
 				return

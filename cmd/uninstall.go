@@ -30,7 +30,6 @@ var uninstallCmd = &cobra.Command{
 	Long:    `Uninstalls a plugin.`,
 	Example: `  gauge uninstall java`,
 	Run: func(cmd *cobra.Command, args []string) {
-		setGlobalFlags()
 		if len(args) < 1 {
 			logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
 		}

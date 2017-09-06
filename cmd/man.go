@@ -42,7 +42,6 @@ var (
 		Long:    `Generate man pages.`,
 		Example: `  gauge man`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			out, err := getDefaultPath()
 			if err != nil {
 				logger.Fatalf("Cannot find the gauge home directory.")

@@ -132,7 +132,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specificati
 	select {
 	case runner = <-agent.startChan.RunnerChan:
 	case err := <-agent.startChan.ErrorChan:
-		logger.Debugf("Cannot perform refactoring: Unable to connect to runner."+err.Error())
+		logger.Debugf("Cannot perform refactoring: Unable to connect to runner." + err.Error())
 		return result
 	}
 	if !agent.isConcept {

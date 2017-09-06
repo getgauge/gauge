@@ -50,7 +50,7 @@ var (
   gauge telemetry off
   gauge telemetry`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
+
 			if len(args) != 0 {
 				logger.Fatalf(cmd.UsageString())
 			}
@@ -70,7 +70,6 @@ var (
 		Long:    "Turn telemetry on.",
 		Example: "  gauge telemetry on",
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if err := config.UpdateTelemetry("true"); err != nil {
 				logger.Fatalf(err.Error())
 			}
@@ -84,7 +83,6 @@ var (
 		Long:    "Turn telemetry off.",
 		Example: "  gauge telemetry off",
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if err := config.UpdateTelemetry("false"); err != nil {
 				logger.Fatalf(err.Error())
 			}
@@ -99,7 +97,6 @@ var (
 		Example: `  gauge telemetry log true
   gauge telemetry log false`,
 		Run: func(cmd *cobra.Command, args []string) {
-			setGlobalFlags()
 			if len(args) < 1 {
 				fmt.Println(config.TelemetryLogEnabled())
 				return
