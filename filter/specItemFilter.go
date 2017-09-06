@@ -45,8 +45,11 @@ func NewScenarioFilterBasedOnSpan(lineNumbers []int) *scenarioFilterBasedOnSpan 
 }
 
 func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
+	if item.Kind() != gauge.ScenarioKind {
+		return false
+	}
 	for _, lineNumber := range filter.lineNumbers {
-		if (item.Kind() == gauge.ScenarioKind) && item.(*gauge.Scenario).InSpan(lineNumber) {
+		if item.(*gauge.Scenario).InSpan(lineNumber) {
 			return false
 		}
 	}
