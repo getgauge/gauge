@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/getgauge/gauge",
-	"GoVersion": "go1.8",
+	"GoVersion": "go1.9",
 	"GodepVersion": "v79",
 	"Packages": [
 		"./..."
@@ -42,6 +42,7 @@
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Comment": "v1.0",
 			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
 		},
 		{
@@ -95,14 +96,11 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
+			"Comment": "v1.0.0",
 			"Rev": "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
 		},
 		{
 			"ImportPath": "golang.org/x/net/context",
-			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
-		},
-		{
-			"ImportPath": "golang.org/x/net/context/ctxhttp",
 			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
 		},
 		{
@@ -126,40 +124,8 @@
 			"Rev": "e445b19913b9d40fdbdfe19ac5e3d314aafd6f63"
 		},
 		{
-			"ImportPath": "golang.org/x/oauth2",
-			"Rev": "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
-		},
-		{
-			"ImportPath": "golang.org/x/oauth2/internal",
-			"Rev": "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
-		},
-		{
-			"ImportPath": "golang.org/x/oauth2/jws",
-			"Rev": "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
-		},
-		{
-			"ImportPath": "golang.org/x/oauth2/jwt",
-			"Rev": "cce311a261e6fcf29de72ca96827bdb0b7d9c9e6"
-		},
-		{
 			"ImportPath": "golang.org/x/sys/unix",
 			"Rev": "4cd6d1a821c7175768725b55ca82f14683a29ea4"
-		},
-		{
-			"ImportPath": "google.golang.org/api/analytics/v3",
-			"Rev": "e665075b5ff79143ba49c58fab02df9dc122afd5"
-		},
-		{
-			"ImportPath": "google.golang.org/api/gensupport",
-			"Rev": "e665075b5ff79143ba49c58fab02df9dc122afd5"
-		},
-		{
-			"ImportPath": "google.golang.org/api/googleapi",
-			"Rev": "e665075b5ff79143ba49c58fab02df9dc122afd5"
-		},
-		{
-			"ImportPath": "google.golang.org/api/googleapi/internal/uritemplates",
-			"Rev": "e665075b5ff79143ba49c58fab02df9dc122afd5"
 		},
 		{
 			"ImportPath": "google.golang.org/grpc",
