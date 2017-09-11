@@ -224,6 +224,9 @@ func main() {
 }
 
 func revParseHead() string {
+	if _, err := os.Stat(".git"); err != nil {
+		return ""
+	}
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
 	var hash bytes.Buffer
 	cmd.Stdout = &hash

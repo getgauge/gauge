@@ -75,8 +75,12 @@ func PrintJSONVersion() {
 
 func PrintVersion() {
 	fmt.Printf("Gauge version: %s\n", version.FullVersion())
-	fmt.Printf("Commit Hash: %s\n\n", version.GetCommitHash())
-	fmt.Println("Plugins\n-------")
+	v := version.GetCommitHash()
+	if v != "" {
+		fmt.Printf("Commit Hash: %s\n", v)
+
+	}
+	fmt.Printf("\nPlugins\n-------\n")
 	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		fmt.Println("No plugins found")
