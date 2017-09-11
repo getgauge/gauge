@@ -20,22 +20,3 @@ _cgo_export.*
 _testmain.go
 
 *.exe
-!src/github.com/twist2
-tags
-.bundle
-bin/
-deploy
-.idea
-*.ipr
-*.iws
-_workspace/
-count.out
-gauge.iml
-
-/Gemfile
-/env/default/
-/manifest.json
-/specs/
-/step_implementations/
-_man/
-_insights
