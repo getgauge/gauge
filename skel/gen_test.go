@@ -27,6 +27,7 @@ import (
 
 func TestCreateSkelFilesIfRequired(t *testing.T) {
 	config := "config"
+	setupPlugins = func() {}
 	origGaugeHome := os.Getenv("GAUGE_HOME")
 	gaugeHomeDir := filepath.Join("_testdata", "GaugeHome")
 	err := os.Mkdir(gaugeHomeDir, common.NewDirectoryPermissions)

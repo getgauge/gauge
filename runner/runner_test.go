@@ -18,6 +18,7 @@
 package runner
 
 import (
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -51,7 +52,7 @@ func TestGetCleanEnvWithDebugging(t *testing.T) {
 func TestGetCleanEnvAddsToPath(t *testing.T) {
 	env := getCleanEnv("1234", []string{"PATH=PATH"}, false, []string{"path1", "path2"})
 
-	want := "path1:path2"
+	want := "path1" + string(os.PathListSeparator) + "path2"
 	if !strings.Contains(env[0], want) {
 		t.Errorf("getCleanEnv failed. Did not append to path.\n\tWanted PATH to contain: `%s`", want)
 	}
