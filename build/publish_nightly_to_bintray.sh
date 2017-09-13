@@ -47,6 +47,11 @@ if [ -z "$RENAME" ]; then
     RENAME=0
 fi
 
+# Use BINTRAY_REPO environment variable if package name is different from bintray repository's name.
+if [ -z "$BINTRAY_REPO" ]; then
+    BINTRAY_REPO=$PACKAGE
+fi
+
 command -v jq >/dev/null 2>&1 || { echo >&2 "jq is not installed, aborting."; exit 1; }
 
 PACKAGE_FILE_PREFIX=$(echo $PACKAGE | tr '[:upper:]' '[:lower:]')
@@ -101,7 +106,7 @@ function getPlatformFromFileName () {
 function bintrayUpload () {
     for i in `ls`; do
         PLATFORM=$( getPlatformFromFileName $i )
-        URL="https://api.bintray.com/content/gauge/$PACKAGE/$BINTRAY_PACKAGE/$VERSION/$PLATFORM$i?publish=1&override=1"
+        URL="https://api.bintray.com/content/gauge/$BINTRAY_REPO/$BINTRAY_PACKAGE/$VERSION/$PLATFORM$i?publish=1&override=1"
 
         echo "Uploading to : $URL"
 
@@ -112,11 +117,11 @@ function bintrayUpload () {
         fi
         echo "HTTP response code: $RESPONSE_CODE"
         if [[ $PLATFORM == "" ]]; then
-            eval "PLATFORM_INDEPENDENT_FILE=https://dl.bintray.com/gauge/$PACKAGE/$i"
+            eval "PLATFORM_INDEPENDENT_FILE=https://dl.bintray.com/gauge/$BINTRAY_REPO/$i"
         elif [[ $i == *"x86_64"* ]]; then
-            eval "${PLATFORM:0:${#PLATFORM}-1}_x86_64=https://dl.bintray.com/gauge/$PACKAGE/$PLATFORM$i"
+            eval "${PLATFORM:0:${#PLATFORM}-1}_x86_64=https://dl.bintray.com/gauge/$BINTRAY_REPO/$PLATFORM$i"
         else
-            eval "${PLATFORM:0:${#PLATFORM}-1}_x86=https://dl.bintray.com/gauge/$PACKAGE/$PLATFORM$i"
+            eval "${PLATFORM:0:${#PLATFORM}-1}_x86=https://dl.bintray.com/gauge/$BINTRAY_REPO/$PLATFORM$i"
         fi
     done;
 }
@@ -124,9 +129,9 @@ function bintrayUpload () {
 function bintraySetDownloads () {
     for i in `ls`; do
         PLATFORM=$( getPlatformFromFileName $i )
-        URL="https://api.bintray.com/file_metadata/gauge/$PACKAGE/$PLATFORM$i"
+        URL="https://api.bintray.com/file_metadata/gauge/$BINTRAY_REPO/$PLATFORM$i"
 
-        echo "Putting $i in $PACKAGE's download list"
+        echo "Putting $i in $BINTRAY_REPO's download list"
         RESPONSE_CODE=$(curl -X PUT -d "{ \"list_in_downloads\": true }" -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL -s -w "%{http_code}" -o /dev/null);
         if [[ "${RESPONSE_CODE:0:2}" != "20" ]]; then
             echo "Unable to put in download list, HTTP response code: $RESPONSE_CODE"
@@ -137,7 +142,7 @@ function bintraySetDownloads () {
 }
 
 function cleanOldNightlyVersions() {
-    URL="https://api.bintray.com/packages/gauge/$PACKAGE/$BINTRAY_PACKAGE"
+    URL="https://api.bintray.com/packages/gauge/$BINTRAY_REPO/$BINTRAY_PACKAGE"
     versions=($(curl -X GET -H "Content-Type: application/json" -u$BINTRAY_USER:$BINTRAY_API_KEY $URL | jq -r '.versions'))
     for v in ${versions[@]:11}; do
         version=$(echo $v | sed -e 's/,//' -e 's/"//g')
@@ -163,6 +168,7 @@ function snooze () {
 function printMeta () {
     echo "Publishing package : $PACKAGE"
     echo "Version to be uploaded: $VERSION"
+    echo "Bintray repository: $BINTRAY_REPO"
 }
 
 function updateRepo () {
