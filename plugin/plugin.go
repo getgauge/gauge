@@ -293,7 +293,7 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 		path, _ := filepath.Abs(src)
 		sources = append(sources, path)
 	}
-	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, " "))
+	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, "||"))
 	os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
 	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
 	p, err := StartPlugin(pd, docScope)
