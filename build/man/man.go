@@ -433,10 +433,12 @@ const html = `
 <body id='manpage'>
     <div class='mp' id='man'>
         <!--CONTENT-->
+		<div><b>Complete documentation is available <a href="https://docs.getgauge.io/">here</a>.</b></div>
         <nav id="menu" class='man-navigation' style='display:none'>
             <!--NAV-->
         </nav>
     </div>
+
 </body>
 
 </html>
