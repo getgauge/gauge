@@ -63,8 +63,8 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	c.Assert(len(concepts), Equals, 2)
 	c.Assert(len(errs) > 0, Equals, true)
 	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found => 'test concept step 5' => at\n"+
-		"\t/Users/apoorvag/Projects/Go/src/github.com/getgauge/gauge/parser/testdata/err/cpt/duplicate_concept.cpt:1\n"+
-		"\t/Users/apoorvag/Projects/Go/src/github.com/getgauge/gauge/parser/testdata/err/cpt/duplicate_concept.cpt:4")
+		"\t"+path+":1\n"+
+		"\t"+path+":4")
 }
 
 func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
@@ -76,12 +76,10 @@ func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
 	concepts, errs := AddConcepts([]string{cpt2}, dictionary)
 
 	c.Assert(len(concepts), Equals, 2)
-
 	c.Assert(len(errs), Equals, 1)
-
 	c.Assert(errs[0].Message, Equals, "Duplicate concept definition found => 'test concept step 2' => at\n"+
-		"\t/Users/apoorvag/Projects/Go/src/github.com/getgauge/gauge/parser/testdata/err/cpt/duplicate.cpt:1\n"+
-		"\t/Users/apoorvag/Projects/Go/src/github.com/getgauge/gauge/parser/testdata/err/cpt/duplicate.cpt:4")
+		"\t"+cpt2+":1\n"+
+		"\t"+cpt2+":4")
 }
 
 func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
