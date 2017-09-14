@@ -110,7 +110,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts(path, conceptDictionary)
+	parser.AddConcepts([]string{path}, conceptDictionary)
 
 	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
 
@@ -148,7 +148,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 		String()
 
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts(path, conceptDictionary)
+	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
@@ -191,7 +191,7 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 		String()
 	want := "456"
 	path, _ := filepath.Abs(filepath.Join("testdata", "conceptTable.cpt"))
-	parser.AddConcepts(path, conceptDictionary)
+	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 
@@ -217,7 +217,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 		String()
 
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts(path, conceptDictionary)
+	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
 	spec, _ := specParser.Parse(specText, conceptDictionary, "")
 

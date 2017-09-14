@@ -622,7 +622,7 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 		step("another step").String()
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	tokens, err := parser.GenerateTokens(specText, "")
 	c.Assert(err, IsNil)
 	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary, "")
@@ -1221,7 +1221,7 @@ func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
 	c.Assert(result.Ok, Equals, true)
 
@@ -1241,7 +1241,7 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
 	c.Assert(result.Ok, Equals, true)
@@ -1279,7 +1279,7 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
 	c.Assert(result.Ok, Equals, true)
 
@@ -1322,7 +1322,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
 	c.Assert(result.Ok, Equals, true)
 
@@ -1349,7 +1349,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
 	c.Assert(result.Ok, Equals, true)
 
@@ -1372,7 +1372,7 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 func (s *MySuite) TestCreateConceptStep(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "param_nested_concept.cpt"))
-	AddConcepts(path, dictionary)
+	AddConcepts([]string{path}, dictionary)
 
 	argsInStep := []*gauge.StepArg{&gauge.StepArg{Name: "bar", Value: "first name", ArgType: gauge.Static}, &gauge.StepArg{Name: "far", Value: "last name", ArgType: gauge.Static}}
 	originalStep := &gauge.Step{

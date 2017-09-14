@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"strings"
 
+	"bytes"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
@@ -223,14 +225,12 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	}
 	conceptsDictionary := gauge.NewConceptDictionary()
 	res := &ParseResult{Ok: true}
-	for _, conceptFile := range conceptFiles {
-		if _, errs := AddConcepts(conceptFile, conceptsDictionary); len(errs) > 0 {
-			for _, err := range errs {
-				logger.APILog.Errorf("Concept parse failure: %s %s", conceptFile, err)
-			}
-			res.ParseErrors = append(res.ParseErrors, errs...)
-			res.Ok = false
+	if _, errs := AddConcepts(conceptFiles, conceptsDictionary); len(errs) > 0 {
+		for _, err := range errs {
+			logger.APILog.Errorf("Concept parse failure: %s %s", conceptFiles[0], err)
 		}
+		res.ParseErrors = append(res.ParseErrors, errs...)
+		res.Ok = false
 	}
 	vRes := validateConcepts(conceptsDictionary)
 	if len(vRes.CriticalErrors) > 0 {
@@ -240,22 +240,44 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	return conceptsDictionary, res
 }
 
-func AddConcepts(conceptFile string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
-	concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
-	if parseRes != nil && parseRes.Warnings != nil {
-		for _, warning := range parseRes.Warnings {
-			logger.Warningf(warning.String())
+func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
+	var message string
+	var conceptSteps []*gauge.Step
+	var buffer bytes.Buffer
+	var parseResults []*ParseResult
+	for _, conceptFile := range conceptFiles {
+		concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
+		if parseRes != nil && parseRes.Warnings != nil {
+			for _, warning := range parseRes.Warnings {
+				logger.Warningf(warning.String())
+			}
 		}
-	}
-	for _, conceptStep := range concepts {
-		if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-			parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: conceptFile, LineNo: conceptStep.LineNo, Message: "Duplicate concept definition found", LineText: conceptStep.LineText})
+		for _, conceptStep := range concepts {
+			if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
+				buffer.WriteString(fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
+				message = fmt.Sprintf("Duplicate concept definition found => '%s' => at%s", conceptStep.LineText, buffer.String())
+			} else {
+				conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
+				buffer.WriteString(fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
+			}
+			conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 		}
-		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
-		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
+		conceptDictionary.UpdateLookupForNestedConcepts()
+		conceptSteps = append(conceptSteps, concepts...)
+		parseResults = append(parseResults, parseRes)
 	}
-	conceptDictionary.UpdateLookupForNestedConcepts()
-	return concepts, parseRes.ParseErrors
+	errs := collectAllPArseErrors(parseResults)
+	if message != "" {
+		errs = append(errs, ParseError{Message: message})
+	}
+	return conceptSteps, errs
+}
+
+func collectAllPArseErrors(results []*ParseResult) (errs []ParseError) {
+	for _, res := range results {
+		errs = append(errs, res.ParseErrors...)
+	}
+	return
 }
 
 func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
