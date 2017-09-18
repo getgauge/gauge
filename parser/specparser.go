@@ -805,9 +805,8 @@ type ParseError struct {
 func (se ParseError) Error() string {
 	if se.LineNo == 0 && se.FileName == "" {
 		return fmt.Sprintf("%s", se.Message)
-	} else {
-		return fmt.Sprintf("%s:%d %s => '%s'", se.FileName, se.LineNo, se.Message, se.LineText)
 	}
+	return fmt.Sprintf("%s:%d %s => '%s'", se.FileName, se.LineNo, se.Message, se.LineText)
 }
 
 func (token *Token) String() string {
