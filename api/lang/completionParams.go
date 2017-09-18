@@ -18,7 +18,6 @@
 package lang
 
 import (
-	"net/url"
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
@@ -28,8 +27,8 @@ import (
 func paramCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (interface{}, error) {
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	argType, suffix, editRange := getParamArgTypeAndEditRange(line, pLine, params.Position)
-	fileUrl, _ := url.Parse(params.TextDocument.URI)
-	for _, param := range provider.Params(fileUrl.Path, argType) {
+	file := convertURItoFilePath(params.TextDocument.URI)
+	for _, param := range provider.Params(file, argType) {
 		if !shouldAddParam(param.ArgType) {
 			continue
 		}
