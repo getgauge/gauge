@@ -118,6 +118,9 @@ func getAllSpecFiles(specDirs []string) (givenSpecs []string, specFiles []*specF
 			var specName string
 			specName, index := getIndexedSpecName(specSource)
 			files := util.GetSpecFiles(specName)
+			if len(files) < 1 {
+				continue
+			}
 			specificationFile, created := addSpecFile(&specFiles, files[0])
 			if created || len(specificationFile.indices) > 0 {
 				specificationFile.indices = append(specificationFile.indices, index)

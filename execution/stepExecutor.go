@@ -55,6 +55,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	e.notifyAfterStepHook(stepResult)
 
 	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, *e.currentExecutionInfo))
+	defer e.currentExecutionInfo.CurrentStep.Reset()
 	return stepResult
 }
 
