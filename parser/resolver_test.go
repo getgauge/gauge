@@ -95,7 +95,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary, "")
 	concept := spec.Scenarios[0].Steps[0]
 
@@ -120,7 +120,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
@@ -155,7 +155,7 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 
 	spec, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
@@ -181,7 +181,7 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
-	AddConcepts(path, conceptDictionary)
+	AddConcepts([]string{path}, conceptDictionary)
 	spec, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 

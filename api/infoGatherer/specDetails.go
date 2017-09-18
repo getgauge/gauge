@@ -297,7 +297,7 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 
 	logger.APILog.Infof("Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
-	concepts, parseErrors := parser.AddConcepts(file, s.conceptDictionary)
+	concepts, parseErrors := parser.AddConcepts([]string{file}, s.conceptDictionary)
 	if len(parseErrors) > 0 {
 		res := &parser.ParseResult{}
 		res.ParseErrors = append(res.ParseErrors, parseErrors...)
