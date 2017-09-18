@@ -33,6 +33,7 @@ type StepValue struct {
 
 type Step struct {
 	LineNo         int
+	FileName       string
 	Value          string
 	LineText       string
 	Args           []*StepArg
@@ -227,7 +228,6 @@ func (self *Step) CopyFrom(another *Step) {
 		copy(self.Fragments, another.Fragments)
 	}
 
-	self.LineNo = another.LineNo
 	self.LineText = another.LineText
 	self.HasInlineTable = another.HasInlineTable
 	self.Value = another.Value
