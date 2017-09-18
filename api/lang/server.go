@@ -74,8 +74,9 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		kind := lsp.TDSKFull
 		return lsp.InitializeResult{
 			Capabilities: lsp.ServerCapabilities{
-				TextDocumentSync:   lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
-				CompletionProvider: &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<"}},
+				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
+				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<"}},
+				DocumentFormattingProvider: true,
 			},
 		}, nil
 	case "initialized":
@@ -96,6 +97,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/didClose":
 		closeFile(req)
 		return nil, nil
+	case "textDocument/didSave":
+		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
 		changeFile(req)
 		return nil, nil
@@ -116,7 +119,11 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/signatureHelp":
 		return nil, errors.New("Unknown request")
 	case "textDocument/formatting":
-		return nil, errors.New("Unknown request")
+		data, err := format(req)
+		if err != nil {
+			conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: 1, Message: err.Error()})
+		}
+		return data, err
 	case "workspace/symbol":
 		return nil, errors.New("Unknown request")
 	case "workspace/xreferences":
