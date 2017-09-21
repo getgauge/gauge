@@ -18,7 +18,7 @@
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
 download() {
-    dir="$(ensure pwd)"
+    CWD="$(ensure pwd)"
     # Create tmp directory
     tmp="$(ensure mktemp -d)"
     ensure cd "$tmp"
@@ -37,30 +37,29 @@ download() {
     ensure unzip -q gauge.zip
 
     verbose_say "Copying the binary to $LOCATION"
-    if [[ -w $LOCATION ]]; then
+    if [ -w $LOCATION ]; then
+        mkdir -p "$LOCATION"
         ensure cp ./bin/gauge "$LOCATION/"
     else
-        echo "You do not have write permision for '$LOCATION. Trying with sudo."
+        echo "You do not have write permision for $LOCATION. Trying with sudo."
         sudo cp ./bin/gauge "$LOCATION/"
     fi
 
-    ensure cd "$dir"
+    ensure cd "$CWD"
     verbose_say "Cleaning up..."
     ensure rm -rf "$tmp"
 
     if $_ansi_escapes_are_valid; then
-        printf "\33[1mDownloaded the binary to $LOCATION.\33[0m\n" 1>&2
-        printf "\33[1mAdd the above path to the PATH environment variable to use it from anywhere.\33[0m"
+        printf "\33[1mDownloaded the binary to '$LOCATION'.\33[0m\n" 1>&2
+        printf "\33[1mMake sure above path is available in PATH environment variable.\33[0m\n"
     else
-        say "Downloaded the binary to $LOCATION."
-        say "Add the above path to the PATH environment variable to use it from anywhere."
+        say "Downloaded the binary to '$LOCATION'."
+        say "Make sure above path is available in PATH environment variable."
     fi
 }
 
 set_os_architecture() {
-
     verbose_say "Detecting architecture"
-
     local _ostype="$(uname -s)"
     local _cputype="$(uname -m)"
 
@@ -117,7 +116,7 @@ set_os_architecture() {
 }
 
 handle_cmd_line_args() {
-    LOCATION="$(ensure pwd)"
+    LOCATION="/usr/local/bin"
     for _arg in "$@"; do
         case "${_arg%%=*}" in
             --verbose)
@@ -150,6 +149,7 @@ assert_cmds_available() {
     need_cmd echo
     need_cmd curl
     need_cmd mktemp
+    need_cmd mkdir
     need_cmd pwd
     need_cmd grep
     need_cmd cut

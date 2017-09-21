@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getgauge/gauge/skel"
+
 	"fmt"
 
 	"strings"
@@ -96,7 +98,7 @@ func ExecuteSpecs(specDirs []string) int {
 		i.BufferUpdateDetails()
 		defer i.PrintUpdateBuffer()
 	}
-
+	skel.SetupPlugins()
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
 		return 1
