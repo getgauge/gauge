@@ -51,10 +51,10 @@ download() {
 
     if $_ansi_escapes_are_valid; then
         printf "\33[1mDownloaded the binary to '$LOCATION'.\33[0m\n" 1>&2
-        printf "\33[1mMake sure above path is available in PATH environment variable.\33[0m\n"
+        printf "\33[1mMake sure the above path is available in 'PATH' environment variable.\33[0m\n"
     else
         say "Downloaded the binary to '$LOCATION'."
-        say "Make sure above path is available in PATH environment variable."
+        say "Make sure the above path is available in 'PATH' environment variable."
     fi
 }
 
