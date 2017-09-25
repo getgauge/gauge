@@ -241,10 +241,9 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 }
 
 func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
-	var message string
 	var conceptSteps []*gauge.Step
-	var buffer bytes.Buffer
 	var parseResults []*ParseResult
+	var duplicateConcepts map[string][]string = make(map[string][]string)
 	for _, conceptFile := range conceptFiles {
 		concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 		if parseRes != nil && parseRes.Warnings != nil {
@@ -253,24 +252,50 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 			}
 		}
 		for _, conceptStep := range concepts {
-			if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-				buffer.WriteString(fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
-				message = fmt.Sprintf("Duplicate concept definition found => '%s' => at%s", conceptStep.LineText, buffer.String())
-			} else {
-				conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
-				buffer.WriteString(fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
-			}
-			conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
+			checkForDuplicateConcepts(conceptDictionary, conceptStep, duplicateConcepts, conceptFile)
 		}
 		conceptDictionary.UpdateLookupForNestedConcepts()
 		conceptSteps = append(conceptSteps, concepts...)
 		parseResults = append(parseResults, parseRes)
 	}
 	errs := collectAllPArseErrors(parseResults)
-	if message != "" {
-		errs = append(errs, ParseError{Message: message})
+	if len(duplicateConcepts) > 0 {
+		for k, v := range duplicateConcepts {
+			var buffer bytes.Buffer
+			buffer.WriteString(fmt.Sprintf("Duplicate concept definition found => '%s' => at", k))
+			for _, value := range v {
+				buffer.WriteString(value)
+			}
+			errs = append(errs, ParseError{Message: buffer.String()})
+		}
 	}
 	return conceptSteps, errs
+}
+func checkForDuplicateConcepts(conceptDictionary *gauge.ConceptDictionary, conceptStep *gauge.Step, duplicateConcepts map[string][]string, conceptFile string) {
+	var duplicateConceptStep *gauge.Step
+	if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
+		duplicateConceptStep = conceptStep
+		duplicateConcepts[conceptStep.LineText] = append(duplicateConcepts[conceptStep.LineText], fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
+	} else {
+		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
+	}
+	conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
+	if duplicateConceptStep != nil {
+		conceptInDictionary := conceptDictionary.ConceptsMap[duplicateConceptStep.Value]
+		errorInfo := fmt.Sprintf("\n\t%s:%d", conceptInDictionary.FileName, conceptInDictionary.ConceptStep.LineNo)
+		if !contains(duplicateConcepts[duplicateConceptStep.LineText], errorInfo) {
+			duplicateConcepts[duplicateConceptStep.LineText] = append(duplicateConcepts[duplicateConceptStep.LineText], errorInfo)
+		}
+	}
+}
+
+func contains(slice []string, item string) bool {
+	set := make(map[string]struct{}, len(slice))
+	for _, s := range slice {
+		set[s] = struct{}{}
+	}
+	_, ok := set[item]
+	return ok
 }
 
 func collectAllPArseErrors(results []*ParseResult) (errs []ParseError) {
