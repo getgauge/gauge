@@ -43,7 +43,7 @@ install_plugins() {
 
 # Install all the plugins in interactive mode.
 install_plugins_interactively() {
-    plugins_list=( html-report )
+    plugins_list=( )
     if [[ -z "$GAUGE_PLUGINS" ]]; then
         echo "Enter comma(',') separated list of plugins which you would like to install :- "
         read -e plugins
@@ -62,7 +62,7 @@ install_plugins_interactively() {
 
 # Install plugins mentioned in $GAUGE_PLUGINS
 install_plugins_noninteractively() {
-    plugins_list=( html-report )
+    plugins_list=( )
     if [[ ! -z "$GAUGE_PLUGINS" ]]; then
         convert_to_list $GAUGE_PLUGINS
         plugins_list=( ${list[@]} ${plugins_list[@]} )

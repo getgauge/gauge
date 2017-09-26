@@ -54,7 +54,6 @@ func CreateSkelFilesIfRequired() {
 	if !common.FileExists(idFile) {
 		writeFile(idFile, uuid.NewV4().String(), false)
 	}
-	setupPlugins()
 }
 
 func writeFile(path, text string, overwrite bool) {

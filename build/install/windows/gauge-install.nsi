@@ -209,9 +209,6 @@ Section -Post
   Pop $R0
 
   ${If} $R0 == 'online'
-    DetailPrint "Installing plugin : html-report"
-    nsExec::ExecToLog 'gauge install html-report'
-
     SectionGetFlags ${SEC_JAVA} $R0
     SectionGetFlags ${SEC_CSHARP} $R1
     SectionGetFlags ${SEC_RUBY} $R2

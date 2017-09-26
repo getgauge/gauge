@@ -30,7 +30,7 @@ const (
 
 var requiredPlugins = []string{screenshot, html}
 
-var setupPlugins = func() {
+var SetupPlugins = func() {
 	installPlugins(getPluginsToInstall())
 }
 

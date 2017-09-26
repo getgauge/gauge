@@ -20,6 +20,11 @@ if [ -z "$repoName" ]; then
   exit 1
 fi
 
+if [ -z "$artifactName" ]; then
+  echo "artifactName is not set"
+  artifactName=$repoName
+fi
+
 if [ -z "$GITHUB_TOKEN" ]; then
   echo "GITHUB_TOKEN is not set"
   exit 1
@@ -27,7 +32,7 @@ fi
 
 go get -v -u github.com/aktau/github-release
 
-version=$(ls $repoName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$repoName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+version=$(ls $artifactName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$artifactName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
 echo "------------------------------"
 echo "Releasing $repoName v$version"
 echo "------------------------------"
