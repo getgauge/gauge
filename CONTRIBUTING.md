@@ -27,4 +27,4 @@ If you need help in getting started with contribution, feel free to reach out on
 
 ## Developer documentation
 
-If you are trying to write plugins for Gauge or trying to contribute to Gauge core, take a look at the [Developer Documentation](http://getgauge.io/documentation/technical/current/).
+If you are trying to write plugins for Gauge or trying to contribute to Gauge core, take a look at the [Developer Documentation](https://github.com/getgauge/gauge/wiki/Gauge-Technical-Documentation).
