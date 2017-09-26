@@ -22,14 +22,14 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 	logger.APILog.Debugf("LangServer: request received : Type: Format Document URI: %s", params.TextDocument.URI)
 	file := convertURItoFilePath(params.TextDocument.URI)
 	if util.IsValidSpecExtension(file) {
-		spec, err := parseSpec(params.TextDocument.URI, file)
-		if err != nil {
-			return nil, err
+		spec, errs := parseSpec(params.TextDocument.URI, file)
+		if len(errs) > 0 {
+			return nil, fmt.Errorf("failed to format document. parse errors found in %s", file)
 		}
 		newString := formatter.FormatSpecification(spec)
 		return createTextEdit(getContent(params.TextDocument.URI), newString), nil
 	}
-	return nil, fmt.Errorf("file %s is not a valid spec file", file)
+	return nil, fmt.Errorf("failed to format document. %s is not a valid spec file", file)
 }
 
 func createTextEdit(oldContent string, newString string) []lsp.TextEdit {
@@ -50,11 +50,10 @@ func createTextEdit(oldContent string, newString string) []lsp.TextEdit {
 	}
 }
 
-func parseSpec(uri, specFile string) (*gauge.Specification, error) {
+func parseSpec(uri, specFile string) (*gauge.Specification, []parser.ParseError) {
 	spec, parseResult := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), specFile)
 	if !parseResult.Ok {
-		err := parseResult.ParseErrors[0]
-		return nil, fmt.Errorf("ParseError : %s, Location : %s:%d", err.Message, err.FileName, err.LineNo)
+		return nil, parseResult.ParseErrors
 	}
 	return spec, nil
 }

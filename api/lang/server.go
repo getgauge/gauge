@@ -25,6 +25,8 @@ import (
 
 	"errors"
 
+	"encoding/json"
+
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -93,6 +95,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, nil
 	case "textDocument/didOpen":
 		openFile(req)
+		publishDiagnostics(ctx, conn, req)
 		return nil, nil
 	case "textDocument/didClose":
 		closeFile(req)
@@ -101,6 +104,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
 		changeFile(req)
+		publishDiagnostics(ctx, conn, req)
 		return nil, nil
 	case "textDocument/completion":
 		return completion(req)
@@ -131,6 +135,15 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	default:
 		return nil, errors.New("Unknown request")
 	}
+}
+
+func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, request *jsonrpc2.Request) {
+	var params lsp.DidChangeTextDocumentParams
+	if err := json.Unmarshal(*request.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+	}
+	diagnostics := createDiagnostics(params.TextDocument.URI)
+	conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: params.TextDocument.URI, Diagnostics: diagnostics})
 }
 
 func (s *server) Start() {

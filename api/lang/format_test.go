@@ -80,7 +80,7 @@ func TestFormatParseError(t *testing.T) {
 	b, _ := json.Marshal(lsp.DocumentFormattingParams{TextDocument: lsp.TextDocumentIdentifier{URI: specFile}, Options: lsp.FormattingOptions{}})
 	p := json.RawMessage(b)
 
-	expectedError := fmt.Errorf("ParseError : Spec should have atleast one scenario, Location : %s:1", specFile)
+	expectedError := fmt.Errorf("failed to format document. parse errors found in %s", specFile)
 
 	data, err := format(&jsonrpc2.Request{Params: &p})
 	if data != nil {
