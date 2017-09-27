@@ -18,9 +18,6 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -29,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/skel"
+	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
@@ -46,6 +44,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			track.Init()
 			config.SetProjectRoot(args)
 			setGlobalFlags()
 			skel.CreateSkelFilesIfRequired()
@@ -87,32 +86,9 @@ Complete manual is available at https://manpage.getgauge.io/.{{end}}
 	GaugeCmd.PersistentFlags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Prints output in JSON format")
 }
 
-type commandWriter struct {
-	bytes []byte
-}
-
-func (w *commandWriter) Write(p []byte) (int, error) {
-	w.bytes = append(w.bytes, p...)
-	return len(p), nil
-}
-
-func (w *commandWriter) display() {
-	fmt.Print(string(w.bytes))
-}
-
-func Parse() (int, error) {
-	writer := &commandWriter{}
-	GaugeCmd.SetOutput(writer)
+func Parse() error {
 	InitHelp(GaugeCmd)
-	if cmd, err := GaugeCmd.ExecuteC(); err != nil {
-		if cmd == GaugeCmd {
-			return 1, errors.New("Failed parsing using the new gauge command structure, falling back to the old usage.")
-		}
-		writer.display()
-		return 1, nil
-	}
-	writer.display()
-	return 0, nil
+	return GaugeCmd.Execute()
 }
 
 func InitHelp(c *cobra.Command) {
