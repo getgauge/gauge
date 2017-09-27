@@ -114,7 +114,7 @@ func ExecuteSpecs(specDirs []string) int {
 	event.InitRegistry()
 	wg := &sync.WaitGroup{}
 	reporter.ListenExecutionEvents(wg)
-	rerun.ListenFailedScenarios(wg)
+	rerun.ListenFailedScenarios(wg, specDirs)
 	if util.ConvertToBool(os.Getenv(env.SaveExecutionResult), env.SaveExecutionResult, false) {
 		ListenSuiteEndAndSaveResult(wg)
 	}
@@ -130,10 +130,6 @@ func recoverPanic() {
 		logger.Infof("%v\n%s", r, string(debug.Stack()))
 		os.Exit(1)
 	}
-}
-
-func Execute(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, n int) {
-	newExecution(newExecutionInfo(s, r, ph, e, p, n)).run()
 }
 
 func newExecution(executionInfo *executionInfo) suiteExecutor {

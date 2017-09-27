@@ -26,7 +26,6 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
@@ -91,22 +90,6 @@ func FormatStep(step *gauge.Step) string {
 		stepText = fmt.Sprintf("* %s%s\n", text, step.Suffix)
 	}
 	return stepText
-}
-
-func FormatConcept(protoConcept *gauge_messages.ProtoConcept) string {
-	conceptText := "* "
-	for _, fragment := range protoConcept.ConceptStep.GetFragments() {
-		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
-			conceptText = conceptText + fragment.GetText()
-		} else if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
-			if fragment.GetParameter().GetParameterType() == (gauge_messages.Parameter_Table | gauge_messages.Parameter_Special_Table) {
-				conceptText += "\n" + FormatTable(parser.TableFrom(fragment.GetParameter().GetTable()))
-			} else {
-				conceptText = conceptText + "\"" + fragment.GetParameter().GetValue() + "\""
-			}
-		}
-	}
-	return conceptText + "\n"
 }
 
 func FormatHeading(heading, headingChar string) string {

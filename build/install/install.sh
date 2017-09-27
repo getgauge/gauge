@@ -38,7 +38,6 @@ install_plugins() {
         echo "Installing plugin $plugin ..."
         $prefix/bin/gauge install $plugin
     done
-    echo -e "${YELLOW}GAUGE_ROOT has been set in ~/.profile. If you face errors, run '$ source ~/.profile'\n${NC}"
 }
 
 # Install all the plugins in interactive mode.
@@ -77,12 +76,13 @@ get_absolute_path (){
     { cd "$(dirname "$1")" || exit 1; echo "$(pwd -P)/$(basename "$1")"; }
 }
 
-# Set GAUGE_ROOT and GAUGE binaries to environment variable
+# Set GAUGE binaries to environment variable
 add_gauge_in_path() {
     # ensure gauge is on PATH
     if [[ "$(which gauge)" != $prefix/bin ]]; then
         echo "Adding gauge to system path..."
         echo "PATH=$PATH:$prefix/bin" >> ~/.profile
+        echo -e "${YELLOW}gauge has been added to PATH. If you face errors, run '$ source ~/.profile'\n${NC}"
     fi
 
     source ~/.profile
@@ -96,7 +96,7 @@ create_nested_repo() {
         if [[ -w $parent ]]; then
             mkdir -p $1
         else
-            echo "You do not have write paermisions for '$parent ."
+            echo "You do not have write permisions for '$parent ."
             sudo mkdir -p $1
         fi
     else
@@ -177,20 +177,7 @@ set_prefix_interavctively() {
             prefix=$(get_absolute_path ${install_location/\~/$HOME})
         fi
     else
-        if [[ "$GAUGE_ROOT" != "" && "$GAUGE_ROOT" != "$GAUGE_PREFIX" && "$GAUGE_ROOT" != "$config" ]]; then
-            echo "Previous installation was at $GAUGE_ROOT/bin. Enter [1] to use the same location or [2] to use $GAUGE_PREFIX for installation (By default it will be $GAUGE_PREFIX):-"
-            read -e choice
-            case $choice in
-                1)
-                    prefix=$GAUGE_ROOT ;;
-                2)
-                    prefix=$GAUGE_PREFIX ;;
-                *)
-                    prefix=$GAUGE_PREFIX ;;
-            esac
-        else
-            prefix=$GAUGE_PREFIX
-        fi
+        prefix=$GAUGE_PREFIX
         echo "Installing gauge at $prefix/bin"
     fi
 }
@@ -200,16 +187,7 @@ set_prefix_noninteractively() {
     if [[ -z $GAUGE_PREFIX ]]; then
         prefix=/usr/local
     else
-        if [[ $ForceInstall ]]; then
-            prefix=$GAUGE_PREFIX
-        else
-            if [[ "$GAUGE_ROOT" != "" && "$GAUGE_ROOT" != "/usr/local" && "$GAUGE_ROOT" != "$config" && "$GAUGE_ROOT" != "$GAUGE_PREFIX" ]]; then
-                echo "Previous installation was at  $GAUGE_ROOT. Cannot proceed with installation use --force to install."
-                exit 1
-            else
-                prefix=$GAUGE_PREFIX
-            fi
-        fi
+        prefix=$GAUGE_PREFIX
     fi
 }
 

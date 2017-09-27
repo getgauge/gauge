@@ -9,7 +9,7 @@ addons:
     packages:
       - oracle-java8-set-default
 env:
-  - GAUGE_ROOT="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
+  - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 install:
@@ -19,10 +19,10 @@ script:
   - go run build/make.go
   - go run build/make.go --test
   - echo "gauge_repository_url = https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/" >> skel/gauge.properties
-  - go run build/make.go --install --prefix=$GAUGE_ROOT
+  - go run build/make.go --install --prefix=$GAUGE_PREFIX
   - git clone --depth=1 https://github.com/getgauge/gauge-tests
   - cd gauge-tests
-  - $GAUGE_ROOT/bin/gauge install
+  - $GAUGE_PREFIX/bin/gauge install
   - java -version
   - echo $JAVA_HOME
-  - TAGS="\!unimplemented" ./starttests.sh java
+  - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java

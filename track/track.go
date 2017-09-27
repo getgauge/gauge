@@ -211,10 +211,6 @@ func ListTemplates() {
 	trackConsole("init", "templates", "")
 }
 
-func AddPlugins(plugin string) {
-	trackConsole("plugins", "add", plugin)
-}
-
 func UninstallPlugin(plugin string) {
 	trackConsole("plugins", "uninstall", plugin)
 }

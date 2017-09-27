@@ -22,7 +22,6 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/execution/stream"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
@@ -44,7 +43,6 @@ var (
 				return
 			}
 			track.Daemon()
-			stream.Start()
 			port := ""
 			specs := args
 			if len(args) > 0 {

@@ -49,7 +49,7 @@ type MySuite struct {
 
 func (s *MySuite) SetUpTest(c *C) {
 	s.projectDir, _ = ioutil.TempDir("_testdata", "gaugeTest")
-	s.specsDir, _ = util.CreateDirIn(s.projectDir, specDir)
+	s.specsDir, _ = createDirIn(s.projectDir, specDir)
 	config.ProjectRoot = s.projectDir
 
 	s.buildTestData()
@@ -116,7 +116,7 @@ Scenario with parse errors
 }
 
 func (s *MySuite) TestGetParsedSpecs(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{specDir}}
 
@@ -138,7 +138,7 @@ func (s *MySuite) TestGetParsedSpecsForInvalidFile(c *C) {
 }
 
 func (s *MySuite) TestGetParsedConcepts(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "concept.cpt", concept1)
+	_, err := createFileIn(s.specsDir, "concept.cpt", concept1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.projectDir + string(filepath.Separator) + specDir}}
 
@@ -168,7 +168,7 @@ func (s *MySuite) TestGetParsedStepValues(c *C) {
 }
 
 func (s *MySuite) TestInitSpecsCache(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(1)
@@ -179,9 +179,9 @@ func (s *MySuite) TestInitSpecsCache(c *C) {
 }
 
 func (s *MySuite) TestInitConceptsCache(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "concept1.cpt", concept1)
+	_, err := createFileIn(s.specsDir, "concept1.cpt", concept1)
 	c.Assert(err, Equals, nil)
-	_, err = util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
+	_, err = createFileIn(s.specsDir, "concept2.cpt", concept2)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.projectDir + string(filepath.Separator) + specDir}}
 	specInfoGatherer.waitGroup.Add(1)
@@ -192,9 +192,9 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 }
 
 func (s *MySuite) TestInitStepsCache(c *C) {
-	f, _ := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	f, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
 	f, _ = filepath.Abs(f)
-	f1, _ := util.CreateFileIn(s.specsDir, "concept2.cpt", concept2)
+	f1, _ := createFileIn(s.specsDir, "concept2.cpt", concept2)
 	f1, _ = filepath.Abs(f1)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(3)
@@ -209,7 +209,7 @@ func (s *MySuite) TestInitStepsCache(c *C) {
 
 func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
 	var stepsFromSpecsMap = make(map[string][]*gauge.StepValue, 0)
-	f, _ := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	f, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(3)
@@ -223,7 +223,7 @@ func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
 
 func (s *MySuite) TestGetStepsFromCachedConcepts(c *C) {
 	var stepsFromConceptsMap = make(map[string][]*gauge.StepValue, 0)
-	f, _ := util.CreateFileIn(s.specsDir, "concept1.cpt", concept1)
+	f, _ := createFileIn(s.specsDir, "concept1.cpt", concept1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(3)
@@ -239,7 +239,7 @@ func (s *MySuite) TestGetStepsFromCachedConcepts(c *C) {
 
 func (s *MySuite) TestGetAvailableSteps(c *C) {
 	var stepValues []*gauge.StepValue
-	util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	createFileIn(s.specsDir, "spec1.spec", spec1)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initSpecsCache()
@@ -257,7 +257,7 @@ func (s *MySuite) TestGetAvailableSteps(c *C) {
 
 func (s *MySuite) TestGetAvailableStepsShouldFilterDuplicates(c *C) {
 	var stepValues []*gauge.StepValue
-	util.CreateFileIn(s.specsDir, "spec2.spec", spec2)
+	createFileIn(s.specsDir, "spec2.spec", spec2)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initSpecsCache()
@@ -289,7 +289,7 @@ func (s *MySuite) TestHasSpecForSpecDetail(c *C) {
 }
 
 func (s *MySuite) TestGetAvailableSpecDetails(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}, specsCache: specsCache{specDetails: make(map[string]*SpecDetail)}}
 	specFiles := util.FindSpecFilesIn(s.specsDir)
@@ -302,7 +302,7 @@ func (s *MySuite) TestGetAvailableSpecDetails(c *C) {
 }
 
 func (s *MySuite) TestGetAvailableSpecDetailsInDefaultDir(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	wd, _ := os.Getwd()
 	os.Chdir(s.projectDir)
@@ -318,7 +318,7 @@ func (s *MySuite) TestGetAvailableSpecDetailsInDefaultDir(c *C) {
 }
 
 func (s *MySuite) TestGetAvailableSpecDetailsWithEmptyCache(c *C) {
-	_, err := util.CreateFileIn(s.specsDir, "spec1.spec", spec1)
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 
@@ -328,7 +328,7 @@ func (s *MySuite) TestGetAvailableSpecDetailsWithEmptyCache(c *C) {
 }
 
 func (s *MySuite) TestParamsForStepFile(c *C) {
-	file, _ := util.CreateFileIn(s.specsDir, "spec3.spec", spec3)
+	file, _ := createFileIn(s.specsDir, "spec3.spec", spec3)
 	file, _ = filepath.Abs(file)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
@@ -364,7 +364,7 @@ func (s *MySuite) TestParamsForStepFile(c *C) {
 }
 
 func (s *MySuite) TestParamsForConceptFile(c *C) {
-	file, _ := util.CreateFileIn(s.specsDir, "concept3.cpt", concept3)
+	file, _ := createFileIn(s.specsDir, "concept3.cpt", concept3)
 	file, _ = filepath.Abs(file)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
@@ -394,4 +394,17 @@ func (s *MySuite) TestParamsForConceptFile(c *C) {
 	if !hasParam("final", dynamicParams) {
 		c.Errorf(`Param "final" not found`)
 	}
+}
+
+func createFileIn(dir string, fileName string, data []byte) (string, error) {
+	os.MkdirAll(dir, 0755)
+	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
+	return filepath.Join(dir, fileName), err
+}
+
+func createDirIn(dir string, dirName string) (string, error) {
+	tempDir, err := ioutil.TempDir(dir, dirName)
+	fullDirName := filepath.Join(dir, dirName)
+	err = os.Rename(tempDir, fullDirName)
+	return fullDirName, err
 }

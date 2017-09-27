@@ -54,16 +54,6 @@ func (f *files) remove(uri string) {
 	delete(f.cache, uri)
 }
 
-func (f *files) update(uri, text string) {
-	f.add(uri, text)
-}
-
-func (f *files) char(uri string, line, char int) (asciiCode byte) {
-	f.Lock()
-	defer f.Unlock()
-	return f.cache[uri][line][char]
-}
-
 func (f *files) line(uri string, lineNo int) string {
 	f.Lock()
 	defer f.Unlock()
@@ -101,10 +91,6 @@ func changeFile(req *jsonrpc2.Request) {
 		return
 	}
 	f.add(params.TextDocument.URI, params.ContentChanges[0].Text)
-}
-
-func getChar(uri string, line, char int) (asciiCode byte) {
-	return f.char(uri, line, char)
 }
 
 func getLine(uri string, line int) string {
