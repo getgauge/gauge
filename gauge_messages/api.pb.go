@@ -7,7 +7,6 @@ Package gauge_messages is a generated protocol buffer package.
 
 It is generated from these files:
 	api.proto
-	api_v2.proto
 	messages.proto
 	spec.proto
 
@@ -38,9 +37,6 @@ It has these top-level messages:
 	FormatSpecsResponse
 	UnsupportedApiMessageResponse
 	APIMessage
-	ExecutionRequest
-	Result
-	ExecutionResponse
 	KillProcessRequest
 	ExecutionStatusResponse
 	ExecutionStartingRequest

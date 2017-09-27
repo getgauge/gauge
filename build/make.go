@@ -96,7 +96,6 @@ func getBuildVersion() string {
 
 func compileGauge() {
 	executablePath := getGaugeExecutablePath(gauge)
-	runProcess("go", "get", "-d", "-t", "./...")
 	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitHash=%s", buildMetadata, commitHash)
 	args := []string{
 		"build",

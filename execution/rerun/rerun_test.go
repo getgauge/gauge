@@ -79,7 +79,7 @@ func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
 
-	addFailedMetadata(spec1, addSpecFailedMetadata)
+	addFailedMetadata(spec1, []string{}, addSpecFailedMetadata)
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
 	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
@@ -90,7 +90,7 @@ func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PostHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
 
-	addFailedMetadata(spec1, addSpecFailedMetadata)
+	addFailedMetadata(spec1, []string{}, addSpecFailedMetadata)
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
 	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
@@ -104,7 +104,7 @@ func (s *MySuite) TestAddSpecFailedMetadataOverwritesPreviouslyAddedValues(c *C)
 	failedMeta.failedItemsMap[spec1Rel]["scn1"] = true
 	failedMeta.failedItemsMap[spec1Rel]["scn2"] = true
 
-	addSpecFailedMetadata(spec1)
+	addSpecFailedMetadata(spec1, []string{})
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Rel]), Equals, 1)
 	c.Assert(failedMeta.failedItemsMap[spec1Rel][spec1Rel], Equals, true)

@@ -34,7 +34,6 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
-	flag "github.com/getgauge/mflag"
 )
 
 const (
@@ -84,7 +83,7 @@ func (m *failedMetadata) addFailedItem(itemName string, item string) {
 }
 
 // ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
-func ListenFailedScenarios(wg *sync.WaitGroup) {
+func ListenFailedScenarios(wg *sync.WaitGroup, specDirs []string) {
 	ch := make(chan event.ExecutionEvent, 0)
 	event.Register(ch, event.ScenarioEnd)
 	event.Register(ch, event.SpecEnd)
@@ -98,9 +97,9 @@ func ListenFailedScenarios(wg *sync.WaitGroup) {
 			case event.ScenarioEnd:
 				prepareScenarioFailedMetadata(e.Result.(*result.ScenarioResult), e.Item.(*gauge.Scenario), e.ExecutionInfo)
 			case event.SpecEnd:
-				addFailedMetadata(e.Result, addSpecFailedMetadata)
+				addFailedMetadata(e.Result, specDirs, addSpecFailedMetadata)
 			case event.SuiteEnd:
-				addFailedMetadata(e.Result, addSuiteFailedMetadata)
+				addFailedMetadata(e.Result, specDirs, addSuiteFailedMetadata)
 				failedMeta.aggregateFailedItems()
 				writeFailedMeta(getJSON(failedMeta))
 				wg.Done()
@@ -117,7 +116,7 @@ func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenar
 	}
 }
 
-func addSpecFailedMetadata(res result.Result) {
+func addSpecFailedMetadata(res result.Result, args []string) {
 	fileName := util.RelPathToProjectRoot(res.(*result.SpecResult).ProtoSpec.GetFileName())
 	if _, ok := failedMeta.failedItemsMap[fileName]; ok {
 		delete(failedMeta.failedItemsMap, fileName)
@@ -125,9 +124,9 @@ func addSpecFailedMetadata(res result.Result) {
 	failedMeta.addFailedItem(fileName, fileName)
 }
 
-func addSuiteFailedMetadata(res result.Result) {
+func addSuiteFailedMetadata(res result.Result, args []string) {
 	failedMeta.failedItemsMap = make(map[string]map[string]bool)
-	for _, arg := range flag.Args() {
+	for _, arg := range args {
 		path, err := filepath.Abs(arg)
 		path = util.RelPathToProjectRoot(path)
 		if err == nil {
@@ -136,9 +135,9 @@ func addSuiteFailedMetadata(res result.Result) {
 	}
 }
 
-func addFailedMetadata(res result.Result, add func(res result.Result)) {
+func addFailedMetadata(res result.Result, args []string, add func(res result.Result, args []string)) {
 	if len(res.GetPostHook()) > 0 || len(res.GetPreHook()) > 0 {
-		add(res)
+		add(res, args)
 	}
 }
 
