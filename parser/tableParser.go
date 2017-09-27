@@ -22,17 +22,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 )
-
-func TableFrom(protoTable *gauge_messages.ProtoTable) *gauge.Table {
-	table := &gauge.Table{}
-	table.AddHeaders(protoTable.GetHeaders().GetCells())
-	for _, row := range protoTable.GetRows() {
-		table.AddRowValues(row.GetCells())
-	}
-	return table
-}
 
 func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 	r := csv.NewReader(strings.NewReader(csvContents))

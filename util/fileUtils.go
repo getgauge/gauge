@@ -18,7 +18,6 @@
 package util
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -143,21 +142,6 @@ func IsDir(path string) bool {
 		return false
 	}
 	return fileInfo.IsDir()
-}
-
-// CreateFileIn creates a file `fileName` in given dir with its content as data
-func CreateFileIn(dir string, fileName string, data []byte) (string, error) {
-	os.MkdirAll(dir, 0755)
-	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
-	return filepath.Join(dir, fileName), err
-}
-
-//CreateDirIn creates a dir in given path
-func CreateDirIn(dir string, dirName string) (string, error) {
-	tempDir, err := ioutil.TempDir(dir, dirName)
-	fullDirName := filepath.Join(dir, dirName)
-	err = os.Rename(tempDir, fullDirName)
-	return fullDirName, err
 }
 
 // GetSpecFiles returns the list of spec files present at the given path.

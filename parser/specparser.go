@@ -560,40 +560,6 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 	return nil
 }
 
-func CreateStepFromStepRequest(stepReq *gauge_messages.ExecuteStepRequest) *gauge.Step {
-	args := createStepArgsFromProtoArguments(stepReq.GetParameters())
-	step := &gauge.Step{Value: stepReq.GetParsedStepText(),
-		LineText: stepReq.GetActualStepText()}
-	step.AddArgs(args...)
-	return step
-}
-
-func createStepArgsFromProtoArguments(parameters []*gauge_messages.Parameter) []*gauge.StepArg {
-	stepArgs := make([]*gauge.StepArg, 0)
-	for _, parameter := range parameters {
-		var arg *gauge.StepArg
-		switch parameter.GetParameterType() {
-		case gauge_messages.Parameter_Static:
-			arg = &gauge.StepArg{ArgType: gauge.Static, Value: parameter.GetValue(), Name: parameter.GetName()}
-			break
-		case gauge_messages.Parameter_Dynamic:
-			arg = &gauge.StepArg{ArgType: gauge.Dynamic, Value: parameter.GetValue(), Name: parameter.GetName()}
-			break
-		case gauge_messages.Parameter_Special_String:
-			arg = &gauge.StepArg{ArgType: gauge.SpecialString, Value: parameter.GetValue(), Name: parameter.GetName()}
-			break
-		case gauge_messages.Parameter_Table:
-			arg = &gauge.StepArg{ArgType: gauge.TableArg, Table: *(TableFrom(parameter.GetTable())), Name: parameter.GetName()}
-			break
-		case gauge_messages.Parameter_Special_Table:
-			arg = &gauge.StepArg{ArgType: gauge.SpecialTable, Table: *(TableFrom(parameter.GetTable())), Name: parameter.GetName()}
-			break
-		}
-		stepArgs = append(stepArgs, arg)
-	}
-	return stepArgs
-}
-
 func converterFn(predicate func(token *Token, state *int) bool, apply func(token *Token, spec *gauge.Specification, state *int) ParseResult) func(*Token, *int, *gauge.Specification) ParseResult {
 	return func(token *Token, state *int, spec *gauge.Specification) ParseResult {
 		if !predicate(token, state) {
@@ -651,21 +617,6 @@ func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
 		}
 	}
 	return args, nil
-}
-
-func createConceptStep(spec *gauge.Specification, concept *gauge.Step, originalStep *gauge.Step) {
-	stepCopy := concept.GetCopy()
-	originalArgs := originalStep.Args
-	originalStep.CopyFrom(stepCopy)
-	originalStep.Args = originalArgs
-
-	// set parent of all concept steps to be the current concept (referred as originalStep here)
-	// this is used to fetch from parent's lookup when nested
-	for _, conceptStep := range originalStep.ConceptSteps {
-		conceptStep.Parent = originalStep
-	}
-
-	spec.PopulateConceptLookup(&originalStep.Lookup, concept.Args, originalStep.Args)
 }
 
 func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string) {
