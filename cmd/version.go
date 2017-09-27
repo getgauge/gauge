@@ -37,10 +37,10 @@ var (
   gauge version -m`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if machineReadable {
-				PrintJSONVersion()
+				printJSONVersion()
 				return
 			}
-			PrintVersion()
+			printTextVersion()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -50,7 +50,15 @@ func init() {
 	GaugeCmd.AddCommand(versionCmd)
 }
 
-func PrintJSONVersion() {
+func printVersion() {
+	if machineReadable {
+		printJSONVersion()
+		return
+	}
+	printTextVersion()
+}
+
+func printJSONVersion() {
 	type pluginJSON struct {
 		Name    string `json:"name"`
 		Version string `json:"version"`
@@ -72,7 +80,7 @@ func PrintJSONVersion() {
 	fmt.Println(fmt.Sprintf("%s\n", string(b)))
 }
 
-func PrintVersion() {
+func printTextVersion() {
 	fmt.Printf("Gauge version: %s\n", version.FullVersion())
 	v := version.GetCommitHash()
 	if v != "" {
