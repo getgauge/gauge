@@ -60,6 +60,12 @@ func (f *files) line(uri string, lineNo int) string {
 	return f.cache[uri][lineNo]
 }
 
+func (files *files) content(uri string) []string {
+	f.Lock()
+	defer f.Unlock()
+	return f.cache[uri]
+}
+
 var f = &files{cache: make(map[string][]string)}
 
 func openFile(req *jsonrpc2.Request) {
@@ -89,6 +95,10 @@ func changeFile(req *jsonrpc2.Request) {
 
 func getLine(uri string, line int) string {
 	return f.line(uri, line)
+}
+
+func getContent(uri string) string {
+	return strings.Join(f.content(uri), "\n")
 }
 
 func convertURItoFilePath(uri string) string {
