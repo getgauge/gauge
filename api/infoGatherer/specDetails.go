@@ -486,6 +486,11 @@ func (s *SpecInfoGatherer) Concepts() []*gauge_messages.ConceptInfo {
 	return conceptInfos
 }
 
+// SearchConceptDictionary searches for a concept in concept dictionary
+func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Concept {
+	return s.conceptDictionary.Search(stepValue)
+}
+
 func getStepsFromSpec(spec *gauge.Specification) []*gauge.StepValue {
 	stepValues := getParsedStepValues(spec.Contexts)
 	for _, scenario := range spec.Scenarios {
