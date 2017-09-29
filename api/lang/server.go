@@ -79,6 +79,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
 				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<"}},
 				DocumentFormattingProvider: true,
+				CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: true},
 			},
 		}, nil
 	case "initialized":
@@ -128,6 +129,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: 1, Message: err.Error()})
 		}
 		return data, err
+	case "textDocument/codeLens":
+		return getCodeLenses(req)
+	case "codeLens/resolve":
+		return resolveCodeLens(req)
 	case "workspace/symbol":
 		return nil, errors.New("Unknown request")
 	case "workspace/xreferences":
