@@ -21,13 +21,14 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 func paramCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (interface{}, error) {
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	argType, suffix, editRange := getParamArgTypeAndEditRange(line, pLine, params.Position)
-	file := convertURItoFilePath(params.TextDocument.URI)
+	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	for _, param := range provider.Params(file, argType) {
 		if !shouldAddParam(param.ArgType) {
 			continue

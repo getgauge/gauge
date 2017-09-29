@@ -24,17 +24,8 @@ import (
 
 	"sync"
 
-	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-)
-
-const (
-	uriPrefix      = "file://"
-	unixSep        = "/"
-	windowColonRep = "%3A"
-	colon          = ":"
-	windowsSep     = "\\"
 )
 
 type files struct {
@@ -99,21 +90,4 @@ func getLine(uri string, line int) string {
 
 func getContent(uri string) string {
 	return strings.Join(f.content(uri), "\n")
-}
-
-func convertURItoFilePath(uri string) string {
-	if util.IsWindows() {
-		return convertURIToWindowsPath(uri)
-	}
-	return convertURIToUnixPath(uri)
-}
-
-func convertURIToWindowsPath(uri string) string {
-	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
-	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	return strings.Replace(uri, unixSep, windowsSep, -1)
-}
-
-func convertURIToUnixPath(uri string) string {
-	return strings.TrimPrefix(uri, uriPrefix)
 }
