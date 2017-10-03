@@ -4,15 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/bugdiver/go-langserver/pkg/lsp"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/util"
 )
 
 const (
-	command = "gauge.execute"
+	command           = "gauge.execute"
+	inParallelCommand = "gauge.execute.inParallel"
 )
 
 func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
@@ -21,17 +23,30 @@ func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
+
 	uri := string(params.TextDocument.URI)
-	file := convertURItoFilePath(string(uri))
+	file := util.ConvertURItoFilePath(uri)
 	spec, res := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
+
 	if !res.Ok {
 		err := fmt.Errorf("failed to parse specification %s", file)
 		logger.APILog.Debugf(err.Error())
 		return nil, err
 	}
-	codeLenses := createCodeLens(spec.Heading.LineNo-1, "Run Specification", command, getExecutionArgs(spec.FileName))
-	return append(getScenariosCodeLenses(spec), codeLenses), nil
+	var codeLenses []lsp.CodeLens
+	specLenses := createCodeLens(spec.Heading.LineNo-1, "Run Spec", command, getExecutionArgs(spec.FileName))
+	codeLenses = append(codeLenses, specLenses)
+	if spec.DataTable.IsInitialized() {
+		codeLenses = append(codeLenses, getDataTableLenses(spec)...)
+	}
+	return append(getScenarioCodeLenses(spec), codeLenses...), nil
 
+}
+
+func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
+	var lenses []lsp.CodeLens
+	lenses = append(lenses, createCodeLens(spec.Heading.LineNo-1, "Run in parallel", inParallelCommand, getExecutionArgs(spec.FileName)))
+	return lenses
 }
 
 func resolveCodeLens(req *jsonrpc2.Request) (interface{}, error) {
@@ -43,7 +58,7 @@ func resolveCodeLens(req *jsonrpc2.Request) (interface{}, error) {
 	return params, nil
 }
 
-func getScenariosCodeLenses(spec *gauge.Specification) []lsp.CodeLens {
+func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
 	for _, sce := range spec.Scenarios {
 		args := getExecutionArgs(fmt.Sprintf("%s:%d", spec.FileName, sce.Heading.LineNo))
