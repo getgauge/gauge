@@ -22,8 +22,6 @@ import (
 	"path/filepath"
 	"sync"
 
-	"os"
-
 	"github.com/fsnotify/fsnotify"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -37,7 +35,7 @@ import (
 // SpecInfoGatherer contains the caches for specs, concepts, and steps
 type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
-	conceptDictionary *gauge.ConceptDictionary
+	ConceptDictionary *gauge.ConceptDictionary
 	specsCache        specsCache
 	conceptsCache     conceptCache
 	stepsCache        stepsCache
@@ -206,7 +204,7 @@ func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) 
 
 func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
+		delete(s.ConceptDictionary.ConceptsMap, c.ConceptStep.Value)
 	}
 }
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.StepValue) {
@@ -214,10 +212,10 @@ func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.St
 }
 
 func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
-	if s.conceptDictionary == nil {
-		s.conceptDictionary = gauge.NewConceptDictionary()
+	if s.ConceptDictionary == nil {
+		s.ConceptDictionary = gauge.NewConceptDictionary()
 	}
-	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary, gauge.NewBuildErrors())
+	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.ConceptDictionary, gauge.NewBuildErrors())
 	specs := make(map[string]*SpecDetail)
 
 	for _, spec := range parsedSpecs {
@@ -226,9 +224,8 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 	for _, v := range parseResults {
 		_, ok := specs[v.FileName]
 		if !ok {
-			specs[v.FileName] = &SpecDetail{Spec: &gauge.Specification{FileName: v.FileName}}
+			specs[v.FileName] = &SpecDetail{Spec: &gauge.Specification{FileName: v.FileName}, Errs: v.ParseErrors}
 		}
-		specs[v.FileName].Errs = append(v.CriticalErrors, v.ParseErrors...)
 	}
 	details := make([]*SpecDetail, 0)
 	for _, d := range specs {
@@ -239,9 +236,9 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
-	s.conceptDictionary, result = parser.CreateConceptsDictionary()
+	s.ConceptDictionary, result = parser.CreateConceptsDictionary()
 	handleParseFailures([]*parser.ParseResult{result})
-	return s.conceptDictionary.ConceptsMap
+	return s.ConceptDictionary.ConceptsMap
 }
 
 func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.StepValue {
@@ -277,7 +274,7 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 
 	var steps []*gauge.StepValue
 	for _, step := range getStepsFromSpec(details[0].Spec) {
-		con := s.conceptDictionary.Search(step.StepValue)
+		con := s.ConceptDictionary.Search(step.StepValue)
 		if con == nil {
 			steps = append(steps, step)
 		}
@@ -297,7 +294,7 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 
 	logger.APILog.Infof("Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
-	concepts, parseErrors := parser.AddConcepts([]string{file}, s.conceptDictionary)
+	concepts, parseErrors := parser.AddConcepts([]string{file}, s.ConceptDictionary)
 	if len(parseErrors) > 0 {
 		res := &parser.ParseResult{}
 		res.ParseErrors = append(res.ParseErrors, parseErrors...)
@@ -328,7 +325,7 @@ func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
+		delete(s.ConceptDictionary.ConceptsMap, c.ConceptStep.Value)
 	}
 	delete(s.conceptsCache.concepts, file)
 }
@@ -486,9 +483,13 @@ func (s *SpecInfoGatherer) Concepts() []*gauge_messages.ConceptInfo {
 	return conceptInfos
 }
 
+func (s *SpecInfoGatherer) GetConceptDictionary() *gauge.ConceptDictionary {
+	return s.ConceptDictionary
+}
+
 // SearchConceptDictionary searches for a concept in concept dictionary
 func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Concept {
-	return s.conceptDictionary.Search(stepValue)
+	return s.ConceptDictionary.Search(stepValue)
 }
 
 func getStepsFromSpec(spec *gauge.Specification) []*gauge.StepValue {
@@ -518,9 +519,6 @@ func handleParseFailures(parseResults []*parser.ParseResult) {
 	for _, result := range parseResults {
 		if !result.Ok {
 			logger.APILog.Errorf("Parse failure: %s", result.Errors())
-			if len(result.CriticalErrors) > 0 {
-				os.Exit(1)
-			}
 		}
 	}
 }

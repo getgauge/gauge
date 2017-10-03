@@ -99,7 +99,7 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	_, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 4)
+	c.Assert(len(res.ParseErrors), Equals, 5)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -505,10 +505,35 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 	cd := gauge.NewConceptDictionary()
 	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
 
-	res := validateConcepts(cd)
+	res := ValidateConcepts(cd)
 
-	c.Assert(len(res.CriticalErrors), Not(Equals), 0)
-	c.Assert(containsAny(res.CriticalErrors, "Circular reference found"), Equals, true)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+}
+
+func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(c *C) {
+	cd := gauge.NewConceptDictionary()
+	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
+	cd.ConceptsMap["concept2"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept2", Value: "concept2", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
+
+	res := ValidateConcepts(cd)
+
+	c.Assert(cd.ConceptsMap["concept"], Equals, (*gauge.Concept)(nil))
+	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 0)
+	c.Assert(len(res.ParseErrors), Equals, 1)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+}
+
+func (s *MySuite) TestRemoveAllReferences(c *C) {
+	cd := gauge.NewConceptDictionary()
+	cpt1 := &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
+	cd.ConceptsMap["concept"] = cpt1
+	cd.ConceptsMap["concept2"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept2", Value: "concept2", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
+
+	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 1)
+
+	removeAllReferences(cd, cpt1)
+
+	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 0)
 }
 
 func (s *MySuite) TestReplaceNestedConceptsWithCircularReference(c *C) {
@@ -531,10 +556,10 @@ func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 	cd := gauge.NewConceptDictionary()
 	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: false}}}, FileName: "filename.cpt"}
 
-	res := validateConcepts(cd)
+	res := ValidateConcepts(cd)
 
-	c.Assert(len(res.CriticalErrors), Not(Equals), 0)
-	c.Assert(containsAny(res.CriticalErrors, "Circular reference found"), Equals, true)
+	c.Assert(len(res.ParseErrors), Not(Equals), 0)
+	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {

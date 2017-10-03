@@ -146,7 +146,7 @@ Another Scenario
 	}
 }
 
-func TestGetCodeLensWithdataTable(t *testing.T) {
+func TestGetCodeLensWithDataTable(t *testing.T) {
 	specText := `Specification Heading
 =====================
 
