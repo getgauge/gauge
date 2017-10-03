@@ -18,9 +18,6 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -29,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/skel"
+	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
@@ -40,12 +38,17 @@ var (
 		Example: `  gauge run specs/
   gauge run --parallel specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
+			if gaugeVersion {
+				printVersion()
+				return
+			}
 			if len(args) < 1 {
 				cmd.Help()
 			}
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			track.Init()
 			config.SetProjectRoot(args)
 			setGlobalFlags()
 			skel.CreateSkelFilesIfRequired()
@@ -55,6 +58,7 @@ var (
 	logLevel        string
 	dir             string
 	machineReadable bool
+	gaugeVersion    bool
 )
 
 func init() {
@@ -85,34 +89,12 @@ Complete manual is available at https://manpage.getgauge.io/.{{end}}
 	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical")
 	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory")
 	GaugeCmd.PersistentFlags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Prints output in JSON format")
+	GaugeCmd.Flags().BoolVarP(&gaugeVersion, "version", "v", false, "Print Gauge and plugin versions")
 }
 
-type commandWriter struct {
-	bytes []byte
-}
-
-func (w *commandWriter) Write(p []byte) (int, error) {
-	w.bytes = append(w.bytes, p...)
-	return len(p), nil
-}
-
-func (w *commandWriter) display() {
-	fmt.Print(string(w.bytes))
-}
-
-func Parse() (int, error) {
-	writer := &commandWriter{}
-	GaugeCmd.SetOutput(writer)
+func Parse() error {
 	InitHelp(GaugeCmd)
-	if cmd, err := GaugeCmd.ExecuteC(); err != nil {
-		if cmd == GaugeCmd {
-			return 1, errors.New("Failed parsing using the new gauge command structure, falling back to the old usage.")
-		}
-		writer.display()
-		return 1, nil
-	}
-	writer.display()
-	return 0, nil
+	return GaugeCmd.Execute()
 }
 
 func InitHelp(c *cobra.Command) {

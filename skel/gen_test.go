@@ -53,5 +53,5 @@ func TestCreateSkelFilesIfRequired(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to clean up Gauge Root Dir, %s", err)
 	}
-	os.Setenv("GAUGE_ROOT", origGaugeHome)
+	os.Setenv("GAUGE_HOME", origGaugeHome)
 }

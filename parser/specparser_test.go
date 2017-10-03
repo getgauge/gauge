@@ -1369,46 +1369,6 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 	c.Assert(len(steps[0].ConceptSteps), Equals, 2)
 }
 
-func (s *MySuite) TestCreateConceptStep(c *C) {
-	dictionary := gauge.NewConceptDictionary()
-	path, _ := filepath.Abs(filepath.Join("testdata", "param_nested_concept.cpt"))
-	AddConcepts([]string{path}, dictionary)
-
-	argsInStep := []*gauge.StepArg{&gauge.StepArg{Name: "bar", Value: "first name", ArgType: gauge.Static}, &gauge.StepArg{Name: "far", Value: "last name", ArgType: gauge.Static}}
-	originalStep := &gauge.Step{
-		LineNo:         12,
-		Value:          "create user {} {}",
-		LineText:       "create user \"first name\" \"last name\"",
-		Args:           argsInStep,
-		IsConcept:      false,
-		HasInlineTable: false}
-
-	createConceptStep(new(gauge.Specification), dictionary.Search("create user {} {}").ConceptStep, originalStep)
-
-	c.Assert(originalStep.IsConcept, Equals, true)
-	c.Assert(len(originalStep.ConceptSteps), Equals, 1)
-	c.Assert(originalStep.Args[0].Value, Equals, "first name")
-	c.Assert(originalStep.Lookup.GetArg("bar").Value, Equals, "first name")
-	c.Assert(originalStep.Args[1].Value, Equals, "last name")
-	c.Assert(originalStep.Lookup.GetArg("far").Value, Equals, "last name")
-
-	nestedConcept := originalStep.ConceptSteps[0]
-	c.Assert(nestedConcept.IsConcept, Equals, true)
-	c.Assert(len(nestedConcept.ConceptSteps), Equals, 1)
-
-	c.Assert(nestedConcept.Args[0].ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.Args[0].Name, Equals, "bar")
-
-	c.Assert(nestedConcept.Args[1].ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.Args[1].Name, Equals, "far")
-
-	c.Assert(nestedConcept.ConceptSteps[0].Args[0].ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.ConceptSteps[0].Args[0].Name, Equals, "baz")
-
-	c.Assert(nestedConcept.Lookup.GetArg("baz").ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.Lookup.GetArg("baz").Value, Equals, "bar")
-}
-
 func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},

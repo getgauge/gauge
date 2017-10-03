@@ -110,16 +110,6 @@ func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg 
 	return args
 }
 
-func (step *Step) deepCopyStepArgs() []*StepArg {
-	copiedStepArgs := make([]*StepArg, 0)
-	for _, conceptStepArg := range step.Args {
-		temp := new(StepArg)
-		*temp = *conceptStepArg
-		copiedStepArgs = append(copiedStepArgs, temp)
-	}
-	return copiedStepArgs
-}
-
 func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {
 	for i, arg := range step.Args {
 		for _, conceptArg := range args {

@@ -27,17 +27,8 @@ type Concept struct {
 	FileName    string
 }
 
-func (cpt *Concept) deepCopy() *Concept {
-	return &Concept{FileName: cpt.FileName, ConceptStep: cpt.ConceptStep.GetCopy()}
-}
-
 func NewConceptDictionary() *ConceptDictionary {
 	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept, 0), constructionMap: make(map[string][]*Step, 0)}
-}
-
-func (dict *ConceptDictionary) isConcept(step *Step) bool {
-	_, ok := dict.ConceptsMap[step.Value]
-	return ok
 }
 
 func (dict *ConceptDictionary) Search(stepValue string) *Concept {

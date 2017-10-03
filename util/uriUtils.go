@@ -15,29 +15,34 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-package parser
+package util
 
 import (
-	"encoding/csv"
 	"strings"
-
-	"github.com/getgauge/gauge/gauge"
 )
 
-func convertCsvToTable(csvContents string) (*gauge.Table, error) {
-	r := csv.NewReader(strings.NewReader(csvContents))
-	r.Comment = '#'
-	lines, err := r.ReadAll()
-	if err != nil {
-		return nil, err
+const (
+	uriPrefix      = "file://"
+	unixSep        = "/"
+	windowColonRep = "%3A"
+	colon          = ":"
+	windowsSep     = "\\"
+)
+
+// ConvertURItoFilePath - converts file uri (eg: file://example.spec) to OS specific file paths.
+func ConvertURItoFilePath(uri string) string {
+	if IsWindows() {
+		return convertURIToWindowsPath(uri)
 	}
-	table := new(gauge.Table)
-	for i, line := range lines {
-		if i == 0 {
-			table.AddHeaders(line)
-		} else {
-			table.AddRowValues(line)
-		}
-	}
-	return table, nil
+	return convertURIToUnixPath(uri)
+}
+
+func convertURIToWindowsPath(uri string) string {
+	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
+	uri = strings.Replace(uri, windowColonRep, colon, -1)
+	return strings.Replace(uri, unixSep, windowsSep, -1)
+}
+
+func convertURIToUnixPath(uri string) string {
+	return strings.TrimPrefix(uri, uriPrefix)
 }

@@ -24,17 +24,8 @@ import (
 
 	"sync"
 
-	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-)
-
-const (
-	uriPrefix      = "file://"
-	unixSep        = "/"
-	windowColonRep = "%3A"
-	colon          = ":"
-	windowsSep     = "\\"
 )
 
 type files struct {
@@ -54,20 +45,16 @@ func (f *files) remove(uri string) {
 	delete(f.cache, uri)
 }
 
-func (f *files) update(uri, text string) {
-	f.add(uri, text)
-}
-
-func (f *files) char(uri string, line, char int) (asciiCode byte) {
-	f.Lock()
-	defer f.Unlock()
-	return f.cache[uri][line][char]
-}
-
 func (f *files) line(uri string, lineNo int) string {
 	f.Lock()
 	defer f.Unlock()
 	return f.cache[uri][lineNo]
+}
+
+func (files *files) content(uri string) []string {
+	f.Lock()
+	defer f.Unlock()
+	return f.cache[uri]
 }
 
 var f = &files{cache: make(map[string][]string)}
@@ -97,27 +84,10 @@ func changeFile(req *jsonrpc2.Request) {
 	f.add(params.TextDocument.URI, params.ContentChanges[0].Text)
 }
 
-func getChar(uri string, line, char int) (asciiCode byte) {
-	return f.char(uri, line, char)
-}
-
 func getLine(uri string, line int) string {
 	return f.line(uri, line)
 }
 
-func convertURItoFilePath(uri string) string {
-	if util.IsWindows() {
-		return convertURIToWindowsPath(uri)
-	}
-	return convertURIToUnixPath(uri)
-}
-
-func convertURIToWindowsPath(uri string) string {
-	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
-	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	return strings.Replace(uri, unixSep, windowsSep, -1)
-}
-
-func convertURIToUnixPath(uri string) string {
-	return strings.TrimPrefix(uri, uriPrefix)
+func getContent(uri string) string {
+	return strings.Join(f.content(uri), "\n")
 }

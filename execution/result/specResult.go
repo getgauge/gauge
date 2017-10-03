@@ -102,10 +102,6 @@ func (specResult *SpecResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure)
 	specResult.ProtoSpec.PostHookFailures = append(specResult.ProtoSpec.PostHookFailures, f...)
 }
 
-func (specResult *SpecResult) setFileName(fileName string) {
-	specResult.ProtoSpec.FileName = fileName
-}
-
 func (specResult *SpecResult) ExecTime() int64 {
 	return specResult.ExecutionTime
 }

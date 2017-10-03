@@ -59,7 +59,6 @@ const (
 
 const (
 	GaugeProjectRootEnv      = "GAUGE_PROJECT_ROOT"
-	GaugeRootEnvVariableName = "GAUGE_ROOT" //specifies the installation path if installs to non-standard location
 	GaugeHome                = "GAUGE_HOME" //specifies the plugin installation path if installs to non-standard location
 	GaugePortEnvName         = "GAUGE_PORT" // user specifies this to use a specific port
 	GaugeInternalPortEnvName = "GAUGE_INTERNAL_PORT"
@@ -180,17 +179,11 @@ func FindFilesInDir(dirPath string, isValidFile func(path string) bool, shouldSk
 }
 
 // GetConfigurationPrefix returns the configuration directory prefix
-// $GAUGE_HOME or $GAUGE_ROOT or $home/.gauge/config
+// $GAUGE_HOME or $home/.gauge/config
 func GetConfigurationDir() (string, error) {
 	gaugeHome := os.Getenv(GaugeHome)
 	if gaugeHome != "" {
 		return filepath.Join(gaugeHome, config), nil
-	}
-
-	// TODO: Should be removed
-	gaugeRoot := os.Getenv(GaugeRootEnvVariableName)
-	if gaugeRoot != "" {
-		return gaugeRoot, nil
 	}
 
 	var configDir string
@@ -214,13 +207,8 @@ func GetConfigurationDir() (string, error) {
 }
 
 // GetInstallationPrefix returns the installation directory prefix
-// /usr or /usr/local or gauge_root
+// /usr or /usr/local
 func GetInstallationPrefix() (string, error) {
-	// TODO: should be removed
-	gaugeRoot := os.Getenv(GaugeRootEnvVariableName)
-	if gaugeRoot != "" {
-		return gaugeRoot, nil
-	}
 	var possibleInstallationPrefixes []string
 	if isWindows() {
 		programFilesPath := os.Getenv("PROGRAMFILES")
@@ -249,18 +237,9 @@ func ExecutableName() string {
 	return "gauge"
 }
 
-// GetSearchPathForSharedFiles returns the path of "share" folder present in GAUGE_ROOT
-func GetSearchPathForSharedFiles() (string, error) {
-	configDir, err := GetConfigurationDir()
-	if err != nil {
-		return "", err
-	}
-	return configDir, nil
-}
-
 // GetSkeletonFilePath returns the path skeleton file
 func GetSkeletonFilePath(filename string) (string, error) {
-	searchPath, err := GetSearchPathForSharedFiles()
+	searchPath, err := GetConfigurationDir()
 	if err != nil {
 		return "", err
 	}
@@ -346,9 +325,9 @@ func IsPluginInstalled(name, version string) bool {
 	return DirExists(filepath.Join(pluginsDir, name, version))
 }
 
-// GetGaugeConfiguration parsed the gauge.properties file and other config files from GAUGE_ROOT and returns the contents
+// GetGaugeConfiguration parsed the gauge.properties file and other config files from GAUGE_HOME and returns the contents
 func GetGaugeConfiguration() (properties.Properties, error) {
-	configDir, err := GetSearchPathForSharedFiles()
+	configDir, err := GetConfigurationDir()
 	if err != nil {
 		return nil, err
 	}
