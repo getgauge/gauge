@@ -47,9 +47,6 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 		if spec != nil {
 			specs = append(specs, spec)
 			var parseErrs []error
-			for _, e := range parseRes.CriticalErrors {
-				parseErrs = append(parseErrs, e)
-			}
 			for _, e := range parseRes.ParseErrors {
 				parseErrs = append(parseErrs, e)
 			}

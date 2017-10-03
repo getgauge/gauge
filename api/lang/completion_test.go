@@ -93,6 +93,10 @@ func (p *dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Con
 	}})
 }
 
+func (p *dummyInfoProvider) GetConceptDictionary() *gauge.ConceptDictionary {
+	return nil
+}
+
 func TestCompletion(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add("uri", " * ")
