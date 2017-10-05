@@ -94,7 +94,7 @@ func getTemplateURL(templateName string) string {
 	return config.GaugeTemplatesUrl() + "/" + templateName + ".zip"
 }
 
-func getTemplateLangauge(templateName string) string {
+func getTemplateLanguage(templateName string) string {
 	return strings.Split(templateName, "_")[0]
 }
 
@@ -108,9 +108,9 @@ func isGaugeProject() bool {
 }
 
 func installRunner(templateName string) {
-	language := getTemplateLangauge(templateName)
+	language := getTemplateLanguage(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
-		logger.Infof("Compatible langauge plugin %s is not installed. Installing plugin...", language)
+		logger.Infof("Compatible language plugin %s is not installed. Installing plugin...", language)
 
 		install.HandleInstallResult(install.Plugin(language, ""), language, true)
 	}
