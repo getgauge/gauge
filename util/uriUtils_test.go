@@ -38,3 +38,21 @@ func TestConvertURItoUnixFilePath(t *testing.T) {
 		t.Errorf("got : %s, want : %s", got, want)
 	}
 }
+
+func TestConvertWindowsFilePathToURI(t *testing.T) {
+	path := `c:\Users\gauge\project\example.spec`
+	want := `file://c%3A/Users/gauge/project/example.spec`
+	got := convertWindowsPathToURI(path)
+	if want != got {
+		t.Errorf("got : %s, want : %s", got, want)
+	}
+}
+
+func TestConvertUnixFilePathToURI(t *testing.T) {
+	path := `/Users/gauge/project/example.spec`
+	want := `file:///Users/gauge/project/example.spec`
+	got := convertUnixPathToURI(path)
+	if want != got {
+		t.Errorf("got : %s, want : %s", got, want)
+	}
+}

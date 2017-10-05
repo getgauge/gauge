@@ -59,17 +59,17 @@ func TestAddPlaceHolders(t *testing.T) {
 	}
 }
 
-type dummyCompletionProvider struct{}
+type dummyInfoProvider struct{}
 
-func (p *dummyCompletionProvider) Init() {}
-func (p *dummyCompletionProvider) Steps() []*gauge.StepValue {
+func (p *dummyInfoProvider) Init() {}
+func (p *dummyInfoProvider) Steps() []*gauge.StepValue {
 	return []*gauge.StepValue{{
 		Args:                   []string{"hello", "gauge"},
 		StepValue:              "Say {} to {}",
 		ParameterizedStepValue: "Say <hello> to <gauge>",
 	}}
 }
-func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
+func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {
 	return []*gm.ConceptInfo{
 		{
 			StepValue: &gm.ProtoStepValue{
@@ -81,8 +81,16 @@ func (p *dummyCompletionProvider) Concepts() []*gm.ConceptInfo {
 	}
 }
 
-func (p *dummyCompletionProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
+func (p *dummyInfoProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
 	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
+}
+
+func (p *dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {
+	return &(gauge.Concept{FileName: "concept_uri", ConceptStep: &gauge.Step{
+		Value:    "concept1",
+		LineNo:   1,
+		LineText: "concept1",
+	}})
 }
 
 func TestCompletion(t *testing.T) {
@@ -114,7 +122,7 @@ func TestCompletion(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
@@ -160,7 +168,7 @@ func TestCompletionForLineWithText(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
@@ -206,7 +214,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
@@ -253,7 +261,7 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
@@ -300,7 +308,7 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
@@ -345,7 +353,7 @@ func TestParamCompletion(t *testing.T) {
 		},
 	},
 	}
-	provider = &dummyCompletionProvider{}
+	provider = &dummyInfoProvider{}
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
