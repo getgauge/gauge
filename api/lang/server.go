@@ -36,16 +36,17 @@ import (
 
 type server struct{}
 
-type completionProvider interface {
+type infoProvider interface {
 	Init()
 	Steps() []*gauge.StepValue
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
+	SearchConceptDictionary(string) *gauge.Concept
 }
 
-var provider completionProvider
+var provider infoProvider
 
-func Server(p completionProvider) *server {
+func Server(p infoProvider) *server {
 	provider = p
 	provider.Init()
 	return &server{}
@@ -79,6 +80,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
 				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<"}},
 				DocumentFormattingProvider: true,
+				DefinitionProvider:         true,
 			},
 		}, nil
 	case "initialized":
@@ -90,7 +92,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			c.Close()
 		}
 		return nil, nil
-
 	case "$/cancelRequest":
 		return nil, nil
 	case "textDocument/didOpen":
@@ -110,28 +111,14 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return completion(req)
 	case "completionItem/resolve":
 		return resolveCompletion(req)
-	case "textDocument/hover":
-		return nil, errors.New("Unknown request")
 	case "textDocument/definition":
-		return nil, errors.New("Unknown request")
-	case "textDocument/xdefinition":
-		return nil, errors.New("Unknown request")
-	case "textDocument/references":
-		return nil, errors.New("Unknown request")
-	case "textDocument/documentSymbol":
-		return nil, errors.New("Unknown request")
-	case "textDocument/signatureHelp":
-		return nil, errors.New("Unknown request")
+		return definition(req)
 	case "textDocument/formatting":
 		data, err := format(req)
 		if err != nil {
 			conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: 1, Message: err.Error()})
 		}
 		return data, err
-	case "workspace/symbol":
-		return nil, errors.New("Unknown request")
-	case "workspace/xreferences":
-		return nil, errors.New("Unknown request")
 	default:
 		return nil, errors.New("Unknown request")
 	}
