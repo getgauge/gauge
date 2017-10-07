@@ -26,6 +26,9 @@ func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
 
 	uri := string(params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(uri)
+	if !util.IsSpec(file) {
+		return nil, nil
+	}
 	spec, res := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
 
 	if !res.Ok {
