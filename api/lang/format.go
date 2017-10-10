@@ -22,9 +22,9 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 	logger.APILog.Debugf("LangServer: request received : Type: Format Document URI: %s", params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	if util.IsValidSpecExtension(file) {
-		spec, errs := parseSpec(params.TextDocument.URI, file)
-		if len(errs) > 0 {
-			return nil, fmt.Errorf("failed to format document. parse errors found in %s", file)
+		spec, parseResult := new(parser.SpecParser).Parse(getContent(params.TextDocument.URI), gauge.NewConceptDictionary(), file)
+		if !parseResult.Ok {
+			return nil, fmt.Errorf("failed to format document. Fix all the problems first")
 		}
 		newString := formatter.FormatSpecification(spec)
 		return createTextEdit(getContent(params.TextDocument.URI), newString), nil
@@ -48,12 +48,4 @@ func createTextEdit(oldContent string, newString string) []lsp.TextEdit {
 			NewText: newString,
 		},
 	}
-}
-
-func parseSpec(uri, specFile string) (*gauge.Specification, []parser.ParseError) {
-	spec, parseResult := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), specFile)
-	if !parseResult.Ok {
-		return nil, parseResult.ParseErrors
-	}
-	return spec, nil
 }
