@@ -34,7 +34,7 @@ import (
 const (
 	logsDirectory    = "logs_directory"
 	logs             = "logs"
-	gaugeLogFileName = "gauge.log"
+	GaugeLogFileName = "gauge.log"
 	apiLogFileName   = "api.log"
 )
 
@@ -84,21 +84,25 @@ var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}
 // Initialize initializes the logger object
 func Initialize(logLevel string) {
 	level = loggingLevel(logLevel)
-	initFileLogger(gaugeLogFileName, GaugeLog)
+	initFileLogger(GaugeLogFileName, GaugeLog)
 	initFileLogger(apiLogFileName, APILog)
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}
 }
 
-func initFileLogger(logFileName string, fileLogger *logging.Logger) {
+func GetLogFilePath(logFileName string) string {
 	customLogsDir := os.Getenv(logsDirectory)
-	var backend logging.Backend
 	if customLogsDir == "" {
-		backend = createFileLogger(filepath.Join(logs, logFileName), 10)
+		return filepath.Join(logs, logFileName)
 	} else {
-		backend = createFileLogger(filepath.Join(customLogsDir, logFileName), 10)
+		return filepath.Join(customLogsDir, logFileName)
 	}
+}
+
+func initFileLogger(logFileName string, fileLogger *logging.Logger) {
+	var backend logging.Backend
+	backend = createFileLogger(GetLogFilePath(logFileName), 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")

@@ -22,8 +22,18 @@ import (
 
 	"github.com/getgauge/gauge/util"
 
+	"os"
+
+	"fmt"
+
+	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/runner"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -39,8 +49,8 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 		concepts, _ := new(parser.ConceptParser).Parse(fileContent, "")
 		for _, concept := range concepts {
 			for _, step := range concept.ConceptSteps {
-				if loc := searchConcept(step, params.Position.Line); loc != nil {
-					return loc, nil
+				if (step.LineNo - 1) == params.Position.Line {
+					return search(step)
 				}
 			}
 		}
@@ -49,8 +59,8 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 		for _, item := range spec.AllItems() {
 			if item.Kind() == gauge.StepKind {
 				step := item.(*gauge.Step)
-				if loc := searchConcept(step, params.Position.Line); loc != nil {
-					return loc, nil
+				if (step.LineNo - 1) == params.Position.Line {
+					return search(step)
 				}
 			}
 		}
@@ -58,17 +68,64 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 	return nil, nil
 }
 
-func searchConcept(step *gauge.Step, lineNo int) interface{} {
-	if (step.LineNo - 1) == lineNo {
-		if concept := provider.SearchConceptDictionary(step.Value); concept != nil {
-			return lsp.Location{
-				URI: util.ConvertPathToURI(concept.FileName),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: concept.ConceptStep.LineNo - 1, Character: 0},
-					End:   lsp.Position{Line: concept.ConceptStep.LineNo - 1, Character: 0},
-				},
-			}
-		}
+func search(step *gauge.Step) (interface{}, error) {
+	if loc := searchConcept(step); loc != nil {
+		return loc, nil
+	}
+	return searchStep(step)
+
+}
+func killRunner(killChan chan bool) {
+	killChan <- true
+}
+
+func connectToRunner(killChan chan bool) (runner.Runner, error) {
+	outfile, err := os.OpenFile(logger.GetLogFilePath(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		logger.APILog.Infof("%s", err.Error())
+		return nil, err
+	}
+	runner, err := api.ConnectToRunner(killChan, false, outfile)
+	if err != nil {
+		logger.APILog.Infof("%s", err.Error())
+		return nil, err
+	}
+	return runner, nil
+}
+
+func searchStep(step *gauge.Step) (interface{}, error) {
+	killChan := make(chan bool)
+	defer killRunner(killChan)
+	langRunner, err := connectToRunner(killChan)
+	if err != nil {
+		return nil, err
+	}
+	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
+	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, langRunner.Connection(), config.RunnerRequestTimeout())
+	if err != nil {
+		logger.APILog.Infof("%s", err.Error())
+		return nil, err
+	}
+	if responseMessage == nil || !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
+		logger.APILog.Debugf("Step implementation not found for step : %s", step.Value)
+		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
+	}
+	return getLspLocation(responseMessage.GetStepNameResponse().GetFileName(), int(responseMessage.GetStepNameResponse().GetLineNumber())), nil
+}
+
+func searchConcept(step *gauge.Step) interface{} {
+	if concept := provider.SearchConceptDictionary(step.Value); concept != nil {
+		return getLspLocation(concept.FileName, concept.ConceptStep.LineNo)
 	}
 	return nil
+}
+
+func getLspLocation(fileName string, lineNumber int) lsp.Location {
+	return lsp.Location{
+		URI: util.ConvertPathToURI(fileName),
+		Range: lsp.Range{
+			Start: lsp.Position{Line: lineNumber - 1, Character: 0},
+			End:   lsp.Position{Line: lineNumber - 1, Character: 0},
+		},
+	}
 }

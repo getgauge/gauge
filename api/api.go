@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"time"
 
+	"io"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/config"
@@ -46,7 +48,7 @@ func StartAPI(debug bool) *runner.StartChannels {
 func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
 	startAPIServiceWithoutRunner(port, startChannels, sig)
 
-	runner, err := connectToRunner(startChannels.KillChan, debug)
+	runner, err := ConnectToRunner(startChannels.KillChan, debug, reporter.Current())
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
@@ -70,13 +72,13 @@ func startAPIServiceWithoutRunner(port int, startChannels *runner.StartChannels,
 	go gaugeConnectionHandler.HandleMultipleConnections()
 }
 
-func connectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
+func ConnectToRunner(killChannel chan bool, debug bool, outputStreamWriter io.Writer) (runner.Runner, error) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		return nil, err
 	}
 
-	runner, connErr := runner.Start(manifest, reporter.Current(), killChannel, debug)
+	runner, connErr := runner.Start(manifest, outputStreamWriter, killChannel, debug)
 	if connErr != nil {
 		return nil, connErr
 	}
