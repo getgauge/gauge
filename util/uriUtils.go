@@ -57,7 +57,7 @@ func ConvertPathToURI(path string) string {
 
 func convertWindowsPathToURI(path string) string {
 	path = strings.Replace(path, colon, windowColonRep, -1)
-	return uriPrefix + strings.Replace(path, windowsSep, unixSep, -1)
+	return uriPrefix + unixSep + strings.Replace(path, windowsSep, unixSep, -1)
 }
 
 func convertUnixPathToURI(path string) string {

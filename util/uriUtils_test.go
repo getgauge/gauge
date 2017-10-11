@@ -41,7 +41,7 @@ func TestConvertURItoUnixFilePath(t *testing.T) {
 
 func TestConvertWindowsFilePathToURI(t *testing.T) {
 	path := `c:\Users\gauge\project\example.spec`
-	want := `file://c%3A/Users/gauge/project/example.spec`
+	want := `file:///c%3A/Users/gauge/project/example.spec`
 	got := convertWindowsPathToURI(path)
 	if want != got {
 		t.Errorf("got : %s, want : %s", got, want)

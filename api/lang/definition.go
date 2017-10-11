@@ -35,7 +35,7 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 	}
 
 	fileContent := getContent(params.TextDocument.URI)
-	if util.IsConcept(util.ConvertPathToURI(params.TextDocument.URI)) {
+	if util.IsConcept(util.ConvertURItoFilePath(params.TextDocument.URI)) {
 		concepts, _ := new(parser.ConceptParser).Parse(fileContent, "")
 		for _, concept := range concepts {
 			for _, step := range concept.ConceptSteps {
