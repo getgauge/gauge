@@ -77,6 +77,18 @@ func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.Concep
 	return spec, res
 }
 
+// ParseSpecText without validating and replacing concepts.
+func (parser *SpecParser) ParseSpecText(specText string, specFile string) (*gauge.Specification, *ParseResult) {
+	tokens, errs := parser.GenerateTokens(specText, specFile)
+	spec, res := parser.createSpecification(tokens, specFile)
+	res.FileName = specFile
+	if len(errs) > 0 {
+		res.Ok = false
+	}
+	res.ParseErrors = append(errs, res.ParseErrors...)
+	return spec, res
+}
+
 func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
@@ -240,9 +252,20 @@ func (parser *SpecParser) clearState() {
 
 func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
 	parser.conceptDictionary = conceptDictionary
+	specification, finalResult := parser.createSpecification(tokens, specFile)
+	specification.ProcessConceptStepsFrom(conceptDictionary)
+	err := parser.validateSpec(specification)
+	if err != nil {
+		finalResult.Ok = false
+		finalResult.ParseErrors = append([]ParseError{err.(ParseError)}, finalResult.ParseErrors...)
+	}
+	return specification, finalResult
+}
+
+func (parser *SpecParser) createSpecification(tokens []*Token, specFile string) (*gauge.Specification, *ParseResult) {
+	finalResult := &ParseResult{ParseErrors: make([]ParseError, 0), Ok: true}
 	converters := parser.initializeConverters()
 	specification := &gauge.Specification{FileName: specFile}
-	finalResult := &ParseResult{ParseErrors: make([]ParseError, 0), Ok: true}
 	state := initial
 	for _, token := range tokens {
 		for _, converter := range converters {
@@ -263,12 +286,6 @@ func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary
 	}
 	if len(specification.Scenarios) > 0 {
 		specification.LatestScenario().Span.End = tokens[len(tokens)-1].LineNo
-	}
-	specification.ProcessConceptStepsFrom(conceptDictionary)
-	err := parser.validateSpec(specification)
-	if err != nil {
-		finalResult.Ok = false
-		finalResult.ParseErrors = append([]ParseError{err.(ParseError)}, finalResult.ParseErrors...)
 	}
 	return specification, finalResult
 }

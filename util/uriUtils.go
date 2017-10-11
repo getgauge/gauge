@@ -46,3 +46,20 @@ func convertURIToWindowsPath(uri string) string {
 func convertURIToUnixPath(uri string) string {
 	return strings.TrimPrefix(uri, uriPrefix)
 }
+
+// ConvertPathToURI - converts OS specific file paths to file uri (eg: file://example.spec).
+func ConvertPathToURI(path string) string {
+	if IsWindows() {
+		return convertWindowsPathToURI(path)
+	}
+	return convertUnixPathToURI(path)
+}
+
+func convertWindowsPathToURI(path string) string {
+	path = strings.Replace(path, colon, windowColonRep, -1)
+	return uriPrefix + strings.Replace(path, windowsSep, unixSep, -1)
+}
+
+func convertUnixPathToURI(path string) string {
+	return uriPrefix + path
+}
