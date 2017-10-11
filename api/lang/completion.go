@@ -28,10 +28,15 @@ import (
 type insertTextFormat int
 
 const (
-	text    insertTextFormat = 1
-	snippet insertTextFormat = 2
-	concept                  = "Concept"
-	step                     = "Step"
+	text          insertTextFormat = 1
+	snippet       insertTextFormat = 2
+	concept                        = "Concept"
+	step                           = "Step"
+	tag                            = "Tag"
+	tagIdentifier                  = "tags:"
+	emptyString                    = ""
+	colon                          = ":"
+	comma                          = ","
 )
 
 type completionItem struct {
@@ -54,6 +59,9 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	if len(line) > params.Position.Character {
 		pLine = line[:params.Position.Character]
 	}
+	if isInTagsContext(params.Position.Line, params.TextDocument.URI) {
+		return tagsCompletion(line, pLine, params)
+	}
 	if !isStepCompletion(pLine, params.Position.Character) {
 		return completionList{IsIncomplete: false, Items: []completionItem{}}, nil
 	}
@@ -61,6 +69,19 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 		return paramCompletion(line, pLine, params)
 	}
 	return stepCompletion(line, pLine, params)
+}
+
+func isInTagsContext(line int, uri string) bool {
+	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(getLine(uri, line))), tagIdentifier) {
+		return true
+	} else if line != 0 && (endsWithComma(getLine(uri, line-1)) && isInTagsContext(line-1, uri)) {
+		return true
+	}
+	return false
+}
+
+func endsWithComma(line string) bool {
+	return strings.HasSuffix(strings.TrimSpace(line), comma)
 }
 
 func isStepCompletion(line string, character int) bool {
