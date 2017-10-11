@@ -53,27 +53,27 @@ func shouldAddParam(argType gauge.ArgType) bool {
 }
 
 func getParamArgTypeAndEditRange(line, pLine string, position lsp.Position) (gauge.ArgType, string, lsp.Range) {
-	getRange := func(index int, endSeparator string) lsp.Range {
-		start := lsp.Position{Line: position.Line, Character: index + 1}
-		endIndex := start.Character
-		if len(line) >= position.Character {
-			lineAfterCursor := line[position.Character:]
-			endIndex = strings.Index(lineAfterCursor, endSeparator)
-		}
-		if endIndex == -1 {
-			endIndex = len(line)
-		} else {
-			endIndex = len(pLine) + endIndex + 1
-		}
-		end := lsp.Position{Line: position.Line, Character: endIndex}
-		return lsp.Range{Start: start, End: end}
-
-	}
 	quoteIndex := strings.LastIndex(pLine, "\"")
 	bracIndex := strings.LastIndex(pLine, "<")
 	if quoteIndex > bracIndex {
-		return gauge.Static, "\"", getRange(quoteIndex, "\"")
+		return gauge.Static, "\"", getRange(quoteIndex, position.Character, position, pLine, line, "\"")
 	} else {
-		return gauge.Dynamic, ">", getRange(bracIndex, ">")
+		return gauge.Dynamic, ">", getRange(bracIndex, position.Character, position, pLine, line, ">")
 	}
+}
+
+func getRange(index, cursorPosition int, position lsp.Position, pLine, line string, endSeparator string) lsp.Range {
+	start := lsp.Position{Line: position.Line, Character: index + 1}
+	endIndex := start.Character
+	if len(line) >= cursorPosition {
+		lineAfterCursor := line[position.Character:]
+		endIndex = strings.Index(lineAfterCursor, endSeparator)
+	}
+	if endIndex == -1 {
+		endIndex = len(line)
+	} else {
+		endIndex = len(pLine) + endIndex + 1
+	}
+	end := lsp.Position{Line: position.Line, Character: endIndex}
+	return lsp.Range{Start: start, End: end}
 }

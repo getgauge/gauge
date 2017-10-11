@@ -86,6 +86,10 @@ func (p *dummyInfoProvider) Params(file string, argType gauge.ArgType) []gauge.S
 	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
 }
 
+func (p *dummyInfoProvider) Tags() []string {
+	return []string{"hello"}
+}
+
 func (p *dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {
 	return &(gauge.Concept{FileName: "concept_uri", ConceptStep: &gauge.Step{
 		Value:    "concept1",
@@ -450,5 +454,63 @@ func TestIsInParamContext(t *testing.T) {
 		if test.want != got {
 			t.Errorf("got : %s, want : %s", got, test.want)
 		}
+	}
+}
+
+func TestIsInTagsContext(t *testing.T) {
+	specText := `Specification Heading
+=====================
+tags:foo, bar
+
+Scenario Heading
+----------------
+tags: blah,abc
+* step
+`
+	uri := "foo.spec"
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+	got := isInTagsContext(2, uri)
+	if !got {
+		t.Errorf("want : %v\n Got : %v", true, got)
+	}
+}
+
+func TestIsInTagsContextMultiline(t *testing.T) {
+	specText := `Specification Heading
+=====================
+tags:foo, bar,
+	abc
+
+Scenario Heading
+----------------
+tags: blah,abc
+* step
+`
+	uri := "foo.spec"
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+	got := isInTagsContext(3, uri)
+	if !got {
+		t.Errorf("want : %v\n Got : %v", true, got)
+	}
+}
+
+func TestNotInTagsContext(t *testing.T) {
+	specText := `Specification Heading
+=====================
+tags:foo, bar
+
+Scenario Heading
+----------------
+tags: blah,abc
+* step
+`
+	uri := "foo.spec"
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+	got := isInTagsContext(3, uri)
+	if got {
+		t.Errorf("want : %v\n Got : %v", false, got)
 	}
 }

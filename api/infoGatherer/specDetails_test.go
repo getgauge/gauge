@@ -41,6 +41,8 @@ var concept3 []byte
 var spec1 []byte
 var spec2 []byte
 var spec3 []byte
+var specWithTags []byte
+var spec2WithTags []byte
 
 type MySuite struct {
 	specsDir   string
@@ -109,6 +111,34 @@ Scenario 1
 
 Scenario with parse errors
 ----------
+* say hello
+* say "hello" to me
+* say <bye> to me
+`...)
+
+	specWithTags = make([]byte, 0)
+	specWithTags = append(specWithTags, `Specification Heading
+=====================
+tags:foo, bar, hello
+
+Scenario with tags
+----------
+tags: simple, complex
+
+* say hello
+* say "hello" to me
+* say <bye> to me
+`...)
+
+	spec2WithTags = make([]byte, 0)
+	spec2WithTags = append(spec2WithTags, `Specification Heading
+=====================
+tags:foo, another
+
+Scenario with tags
+----------
+tags: simple, complex
+
 * say hello
 * say "hello" to me
 * say <bye> to me
@@ -205,6 +235,32 @@ func (s *MySuite) TestInitStepsCache(c *C) {
 	c.Assert(len(specInfoGatherer.stepsCache.stepValues[f]), Equals, 2)
 	c.Assert(len(specInfoGatherer.stepsCache.stepValues[f1]), Equals, 3)
 
+}
+
+func (s *MySuite) TestInitTagsCache(c *C) {
+	f, _ := createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
+	f, _ = filepath.Abs(f)
+
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initTagsCache()
+	c.Assert(len(specInfoGatherer.Tags()), Equals, 5)
+}
+
+func (s *MySuite) TestInitTagsCacheWithMultipleFiles(c *C) {
+	f, _ := createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
+	f, _ = filepath.Abs(f)
+	f1, _ := createFileIn(s.specsDir, "spec2WithTags.spec", spec2WithTags)
+	f1, _ = filepath.Abs(f1)
+
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.waitGroup.Add(2)
+
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initTagsCache()
+	c.Assert(len(specInfoGatherer.Tags()), Equals, 6)
 }
 
 func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
