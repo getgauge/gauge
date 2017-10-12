@@ -38,7 +38,7 @@ Scenario Heading
 * Step text`
 
 	uri := "foo.spec"
-	provider = &infoGatherer.SpecInfoGatherer{ConceptDictionary: gauge.NewConceptDictionary()}
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, specText)
 
@@ -100,7 +100,7 @@ func TestParseConcept(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, cptText)
 
-	provider = &infoGatherer.SpecInfoGatherer{ConceptDictionary: gauge.NewConceptDictionary()}
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 	provider.GetConceptDictionary().ConceptsMap = map[string]*gauge.Concept{}
 	res := validateConcept(uri, uri)
 
@@ -117,7 +117,7 @@ func TestParseConceptChanges(t *testing.T) {
 
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, cptText)
-	provider = &infoGatherer.SpecInfoGatherer{ConceptDictionary: gauge.NewConceptDictionary()}
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 	res := validateConcept(uri, uri)
 
 	if len(res.ParseErrors) > 0 {
@@ -153,7 +153,7 @@ func TestConceptDiagnostic(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, cptText)
 
-	provider = &infoGatherer.SpecInfoGatherer{ConceptDictionary: gauge.NewConceptDictionary()}
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 	provider.GetConceptDictionary().ConceptsMap = map[string]*gauge.Concept{
 		"concept": {
 			ConceptStep: &gauge.Step{Value: "concept", LineNo: 1, IsConcept: true, LineText: "concept"},
@@ -189,7 +189,7 @@ func TestConceptDiagnosticWithCircularReference(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, cptText)
 
-	provider = &infoGatherer.SpecInfoGatherer{ConceptDictionary: gauge.NewConceptDictionary()}
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 
 	want := []lsp.Diagnostic{
 		{

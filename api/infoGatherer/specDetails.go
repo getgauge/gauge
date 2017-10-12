@@ -35,7 +35,7 @@ import (
 // SpecInfoGatherer contains the caches for specs, concepts, and steps
 type SpecInfoGatherer struct {
 	waitGroup         sync.WaitGroup
-	ConceptDictionary *gauge.ConceptDictionary
+	conceptDictionary *gauge.ConceptDictionary
 	specsCache        specsCache
 	conceptsCache     conceptCache
 	stepsCache        stepsCache
@@ -71,6 +71,10 @@ type SpecDetail struct {
 
 func (d *SpecDetail) HasSpec() bool {
 	return d.Spec != nil && d.Spec.Heading != nil
+}
+
+func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer{
+	return &SpecInfoGatherer{conceptDictionary:conceptDictionary}
 }
 
 // Init initializes all the SpecInfoGatherer caches
@@ -204,7 +208,7 @@ func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) 
 
 func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.ConceptDictionary.ConceptsMap, c.ConceptStep.Value)
+		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
 	}
 }
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.StepValue) {
@@ -212,10 +216,10 @@ func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.St
 }
 
 func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
-	if s.ConceptDictionary == nil {
-		s.ConceptDictionary = gauge.NewConceptDictionary()
+	if s.conceptDictionary == nil {
+		s.conceptDictionary = gauge.NewConceptDictionary()
 	}
-	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.ConceptDictionary, gauge.NewBuildErrors())
+	parsedSpecs, parseResults := parser.ParseSpecFiles(specFiles, s.conceptDictionary, gauge.NewBuildErrors())
 	specs := make(map[string]*SpecDetail)
 
 	for _, spec := range parsedSpecs {
@@ -236,9 +240,9 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
-	s.ConceptDictionary, result = parser.CreateConceptsDictionary()
+	s.conceptDictionary, result = parser.CreateConceptsDictionary()
 	handleParseFailures([]*parser.ParseResult{result})
-	return s.ConceptDictionary.ConceptsMap
+	return s.conceptDictionary.ConceptsMap
 }
 
 func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.StepValue {
@@ -274,7 +278,7 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 
 	var steps []*gauge.StepValue
 	for _, step := range getStepsFromSpec(details[0].Spec) {
-		con := s.ConceptDictionary.Search(step.StepValue)
+		con := s.conceptDictionary.Search(step.StepValue)
 		if con == nil {
 			steps = append(steps, step)
 		}
@@ -294,7 +298,7 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 
 	logger.APILog.Infof("Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
-	concepts, parseErrors := parser.AddConcepts([]string{file}, s.ConceptDictionary)
+	concepts, parseErrors := parser.AddConcepts([]string{file}, s.conceptDictionary)
 	if len(parseErrors) > 0 {
 		res := &parser.ParseResult{}
 		res.ParseErrors = append(res.ParseErrors, parseErrors...)
@@ -325,7 +329,7 @@ func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.ConceptDictionary.ConceptsMap, c.ConceptStep.Value)
+		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
 	}
 	delete(s.conceptsCache.concepts, file)
 }
@@ -484,12 +488,12 @@ func (s *SpecInfoGatherer) Concepts() []*gauge_messages.ConceptInfo {
 }
 
 func (s *SpecInfoGatherer) GetConceptDictionary() *gauge.ConceptDictionary {
-	return s.ConceptDictionary
+	return s.conceptDictionary
 }
 
 // SearchConceptDictionary searches for a concept in concept dictionary
 func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Concept {
-	return s.ConceptDictionary.Search(stepValue)
+	return s.conceptDictionary.Search(stepValue)
 }
 
 func getStepsFromSpec(spec *gauge.Specification) []*gauge.StepValue {
