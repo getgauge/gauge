@@ -146,7 +146,7 @@ func (s *MySuite) TestGetParsedConcepts(c *C) {
 
 	c.Assert(len(conceptsMap), Equals, 1)
 	c.Assert(conceptsMap["foo bar"], NotNil)
-	c.Assert(specInfoGatherer.ConceptDictionary, NotNil)
+	c.Assert(specInfoGatherer.conceptDictionary, NotNil)
 }
 
 func (s *MySuite) TestGetParsedStepValues(c *C) {
