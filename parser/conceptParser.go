@@ -241,23 +241,12 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 }
 
 func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
-	errs := []ParseError{}
 	var duplicateConcepts map[string][]string = make(map[string][]string)
 	for _, conceptStep := range concepts {
 		checkForDuplicateConcepts(conceptDictionary, conceptStep, duplicateConcepts, file)
 	}
 	conceptDictionary.UpdateLookupForNestedConcepts()
-	if len(duplicateConcepts) > 0 {
-		for k, v := range duplicateConcepts {
-			var buffer bytes.Buffer
-			buffer.WriteString(fmt.Sprintf("Duplicate concept definition found => '%s' => at", k))
-			for _, value := range v {
-				buffer.WriteString(value)
-			}
-			errs = append(errs, ParseError{Message: buffer.String()})
-		}
-	}
-	return errs
+	return mergeDuplicateConceptErrors(duplicateConcepts)
 }
 
 func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
@@ -279,6 +268,12 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 		parseResults = append(parseResults, parseRes)
 	}
 	errs := collectAllPArseErrors(parseResults)
+	errs = append(errs, mergeDuplicateConceptErrors(duplicateConcepts)...)
+	return conceptSteps, errs
+}
+
+func mergeDuplicateConceptErrors(duplicateConcepts map[string][]string) []ParseError {
+	errs := []ParseError{}
 	if len(duplicateConcepts) > 0 {
 		for k, v := range duplicateConcepts {
 			var buffer bytes.Buffer
@@ -289,7 +284,7 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 			errs = append(errs, ParseError{Message: buffer.String()})
 		}
 	}
-	return conceptSteps, errs
+	return errs
 }
 
 func checkForDuplicateConcepts(conceptDictionary *gauge.ConceptDictionary, conceptStep *gauge.Step, duplicateConcepts map[string][]string, conceptFile string) {
