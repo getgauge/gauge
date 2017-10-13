@@ -73,8 +73,8 @@ func (d *SpecDetail) HasSpec() bool {
 	return d.Spec != nil && d.Spec.Heading != nil
 }
 
-func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer{
-	return &SpecInfoGatherer{conceptDictionary:conceptDictionary}
+func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer {
+	return &SpecInfoGatherer{conceptDictionary: conceptDictionary,conceptsCache:conceptCache{concepts:make(map[string][]*gauge.Concept, 0)}}
 }
 
 // Init initializes all the SpecInfoGatherer caches
@@ -211,6 +211,22 @@ func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
 	}
 }
+
+func (s *SpecInfoGatherer) UpdateConceptCache(file, cptContent string) *parser.ParseResult {
+	s.deleteFromConceptDictionary(file)
+	cpts, res := new(parser.ConceptParser).Parse(cptContent, file)
+	if errs := parser.AddConcept(cpts, file, s.conceptDictionary); len(errs) > 0 {
+		res.ParseErrors = append(res.ParseErrors, errs...)
+	}
+	s.conceptsCache.concepts[file] = make([]*gauge.Concept, 0)
+	for _, concept := range s.conceptDictionary.ConceptsMap {
+		if file == concept.FileName {
+			s.addToConceptsCache(concept.FileName, concept)
+		}
+	}
+	return res
+}
+
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.StepValue) {
 	s.stepsCache.stepValues[fileName] = allSteps
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/parser"
 )
 
 type server struct{}
@@ -43,6 +44,7 @@ type infoProvider interface {
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	SearchConceptDictionary(string) *gauge.Concept
 	GetConceptDictionary() *gauge.ConceptDictionary
+	UpdateConceptCache(string, string) *parser.ParseResult
 }
 
 var provider infoProvider
