@@ -18,17 +18,8 @@ func createDiagnostics(uri string) []lsp.Diagnostic {
 }
 
 func validateConcept(uri string, file string) *parser.ParseResult {
-	dictionary := provider.GetConceptDictionary()
-	for _, cpt := range dictionary.ConceptsMap {
-		if cpt.FileName == file {
-			delete(dictionary.ConceptsMap, cpt.ConceptStep.Value)
-		}
-	}
-	cpts, res := new(parser.ConceptParser).Parse(getContent(uri), file)
-	if errs := parser.AddConcept(cpts, file, dictionary); len(errs) > 0 {
-		res.ParseErrors = append(res.ParseErrors, errs...)
-	}
-	vRes := parser.ValidateConcepts(dictionary)
+	res := provider.UpdateConceptCache(file, getContent(uri))
+	vRes := parser.ValidateConcepts(provider.GetConceptDictionary())
 	res.ParseErrors = append(res.ParseErrors, vRes.ParseErrors...)
 	res.Warnings = append(res.Warnings, vRes.Warnings...)
 	return res
