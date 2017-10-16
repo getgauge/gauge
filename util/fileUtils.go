@@ -71,18 +71,10 @@ func addIgnoredDirectories() {
 }
 
 func addDirFromEnv(name string, add func(value string)) {
-	value := trimQuotes(os.Getenv(name))
+	value := os.Getenv(name)
 	if value != "" {
 		add(value)
 	}
-}
-func trimQuotes(s string) string {
-	if len(s) >= 2 {
-		if s[0] == '"' && s[len(s)-1] == '"' {
-			return s[1 : len(s)-1]
-		}
-	}
-	return s
 }
 
 // findFilesIn Finds all the files in the directory of a given extension
