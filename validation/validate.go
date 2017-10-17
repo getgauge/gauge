@@ -141,13 +141,6 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		return NewValidationResult(nil, nil, nil, false, err)
 	}
 	conceptDict, res := parser.ParseConcepts()
-	if len(res.CriticalErrors) > 0 {
-		var errs []error
-		for _, err := range res.CriticalErrors {
-			errs = append(errs, err)
-		}
-		return NewValidationResult(nil, nil, nil, false, errs...)
-	}
 	errMap := gauge.NewBuildErrors()
 	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
 	r := startAPI(debug)

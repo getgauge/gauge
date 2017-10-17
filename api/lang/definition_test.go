@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"testing"
 
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -38,7 +39,7 @@ func TestConceptDefinitionInSpecFile(t *testing.T) {
 		t.Errorf("Failed to find definition, err: `%v`", err)
 	}
 
-	want := lsp.Location{URI: "file://concept_uri", Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
+	want := lsp.Location{URI: util.ConvertPathToURI("concept_uri"), Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
 	if got != want {
 		t.Errorf("Wrong definition found, got: `%v`, want: `%v`", got, want)
 	}
@@ -57,7 +58,7 @@ func TestConceptDefinitionInConceptFile(t *testing.T) {
 		t.Errorf("Failed to find definition, err: `%v`", err)
 	}
 
-	want := lsp.Location{URI: "file://concept_uri", Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
+	want := lsp.Location{URI: util.ConvertPathToURI("concept_uri"), Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
 	if got != want {
 		t.Errorf("Wrong definition found, got: `%v`, want: `%v`", got, want)
 	}

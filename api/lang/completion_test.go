@@ -26,6 +26,7 @@ import (
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/parser"
 )
 
 var placeHolderTests = []struct {
@@ -91,6 +92,14 @@ func (p *dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Con
 		LineNo:   1,
 		LineText: "concept1",
 	}})
+}
+
+func (p *dummyInfoProvider) GetConceptDictionary() *gauge.ConceptDictionary {
+	return nil
+}
+
+func (p *dummyInfoProvider) UpdateConceptCache(file , cptContent string) *parser.ParseResult{
+	return nil
 }
 
 func TestCompletion(t *testing.T) {

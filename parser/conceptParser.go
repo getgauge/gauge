@@ -232,12 +232,21 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 		res.ParseErrors = append(res.ParseErrors, errs...)
 		res.Ok = false
 	}
-	vRes := validateConcepts(conceptsDictionary)
-	if len(vRes.CriticalErrors) > 0 {
+	vRes := ValidateConcepts(conceptsDictionary)
+	if len(vRes.ParseErrors) > 0 {
 		res.Ok = false
-		res.CriticalErrors = append(res.CriticalErrors, vRes.CriticalErrors...)
+		res.ParseErrors = append(res.ParseErrors, vRes.ParseErrors...)
 	}
 	return conceptsDictionary, res
+}
+
+func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
+	var duplicateConcepts map[string][]string = make(map[string][]string)
+	for _, conceptStep := range concepts {
+		checkForDuplicateConcepts(conceptDictionary, conceptStep, duplicateConcepts, file)
+	}
+	conceptDictionary.UpdateLookupForNestedConcepts()
+	return mergeDuplicateConceptErrors(duplicateConcepts)
 }
 
 func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
@@ -259,6 +268,12 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 		parseResults = append(parseResults, parseRes)
 	}
 	errs := collectAllPArseErrors(parseResults)
+	errs = append(errs, mergeDuplicateConceptErrors(duplicateConcepts)...)
+	return conceptSteps, errs
+}
+
+func mergeDuplicateConceptErrors(duplicateConcepts map[string][]string) []ParseError {
+	errs := []ParseError{}
 	if len(duplicateConcepts) > 0 {
 		for k, v := range duplicateConcepts {
 			var buffer bytes.Buffer
@@ -269,8 +284,9 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 			errs = append(errs, ParseError{Message: buffer.String()})
 		}
 	}
-	return conceptSteps, errs
+	return errs
 }
+
 func checkForDuplicateConcepts(conceptDictionary *gauge.ConceptDictionary, conceptStep *gauge.Step, duplicateConcepts map[string][]string, conceptFile string) {
 	var duplicateConceptStep *gauge.Step
 	if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
@@ -305,24 +321,48 @@ func collectAllPArseErrors(results []*ParseResult) (errs []ParseError) {
 	return
 }
 
-func validateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
+func ValidateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
+	res := &ParseResult{ParseErrors: []ParseError{}}
+	var conceptsWithError []*gauge.Concept
 	for _, concept := range conceptDictionary.ConceptsMap {
 		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
 		if err != nil {
-			return &ParseResult{CriticalErrors: []ParseError{err.(ParseError)}, FileName: concept.FileName}
+			delete(conceptDictionary.ConceptsMap, concept.ConceptStep.Value)
+			res.ParseErrors = append(res.ParseErrors, err.(ParseError))
+			conceptsWithError = append(conceptsWithError, concept)
 		}
 	}
-	return &ParseResult{ParseErrors: []ParseError{}}
+	for _, con := range conceptsWithError {
+		removeAllReferences(conceptDictionary, con)
+	}
+	return res
+}
+
+func removeAllReferences(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Concept) {
+	for _, cpt := range conceptDictionary.ConceptsMap {
+		var nestedSteps []*gauge.Step
+		for _, con := range cpt.ConceptStep.ConceptSteps {
+			if con.Value != concept.ConceptStep.Value {
+				nestedSteps = append(nestedSteps, con)
+			}
+		}
+		cpt.ConceptStep.ConceptSteps = nestedSteps
+	}
 }
 
 func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) error {
 	if traversedSteps == nil {
 		traversedSteps = make(map[string]string, 0)
 	}
-	currentConceptFileName := conceptDictionary.Search(concept.Value).FileName
+	con := conceptDictionary.Search(concept.Value)
+	if con == nil {
+		return nil
+	}
+	currentConceptFileName := con.FileName
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
 		if fileName, exists := traversedSteps[step.Value]; exists {
+			delete(conceptDictionary.ConceptsMap, step.Value)
 			return ParseError{
 				FileName: fileName,
 				LineText: step.LineText,

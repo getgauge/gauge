@@ -782,22 +782,17 @@ func (token *Token) String() string {
 }
 
 type ParseResult struct {
-	ParseErrors    []ParseError
-	CriticalErrors []ParseError
-	Warnings       []*Warning
-	Ok             bool
-	FileName       string
+	ParseErrors []ParseError
+	Warnings    []*Warning
+	Ok          bool
+	FileName    string
 }
 
-func (result *ParseResult) Errors() []string {
-	var errors []string
+func (result *ParseResult) Errors() (errors []string) {
 	for _, err := range result.ParseErrors {
 		errors = append(errors, fmt.Sprintf("[ParseError] %s", err.Error()))
 	}
-	for _, err := range result.CriticalErrors {
-		errors = append(errors, fmt.Sprintf("[ParseError] %s", err.Error()))
-	}
-	return errors
+	return
 }
 
 type Warning struct {

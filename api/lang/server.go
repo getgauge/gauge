@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/parser"
 )
 
 type server struct{}
@@ -42,6 +43,8 @@ type infoProvider interface {
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	SearchConceptDictionary(string) *gauge.Concept
+	GetConceptDictionary() *gauge.ConceptDictionary
+	UpdateConceptCache(string, string) *parser.ParseResult
 }
 
 var provider infoProvider
@@ -134,7 +137,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 }
 
 func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, request *jsonrpc2.Request) {
-	var params lsp.DidChangeTextDocumentParams
+	var params struct{ TextDocument lsp.TextDocumentIdentifier }
 	if err := json.Unmarshal(*request.Params, &params); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 	}
