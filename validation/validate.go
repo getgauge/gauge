@@ -15,6 +15,15 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+Validation invokes language runner for every step in serial fashion with the StepValidateRequest and runner gets back with the StepValidateResponse.
+
+Step Level validation
+	1. Duplicate step implementation
+	2. Step implementation not found : Prints a step implementation stub for every unimplemented step
+
+If there is a validation error it skips that scenario and executes other scenarios in the spec.
+*/
 package validation
 
 import (
@@ -36,7 +45,10 @@ import (
 	"github.com/getgauge/gauge/runner"
 )
 
+// TableRows is used to check for table rows range validation.
 var TableRows = ""
+
+// HideSuggestion is used decide whether suggestion should be given for the unimplemented step or not based on the flag : --hide-suggestion.
 var HideSuggestion bool
 
 type validator struct {
@@ -67,6 +79,7 @@ type SpecValidationError struct {
 	fileName string
 }
 
+// Error prints a step validation error with filename, line number, error message, step text and suggestion in case of step implementation not found.
 func (s StepValidationError) Error() string {
 	return fmt.Sprintf("%s:%d %s => '%s'", s.fileName, s.step.LineNo, s.message, s.step.GetLineText())
 }
@@ -75,18 +88,22 @@ func (s StepValidationError) Suggestion() string {
 	return s.suggestion
 }
 
+// Error prints a spec validation error with filename and error message.
 func (s SpecValidationError) Error() string {
 	return fmt.Sprintf("%s %s", s.fileName, s.message)
 }
 
+// NewSpecValidationError generates new spec validation error with error message and filename.
 func NewSpecValidationError(m string, f string) SpecValidationError {
 	return SpecValidationError{message: m, fileName: f}
 }
 
+// NewStepValidationError generates new step validation error with error message, filename and error type.
 func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidateResponse_ErrorType) StepValidationError {
 	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
 }
 
+// Validate validates specs and if it has any errors, it exits.
 func Validate(args []string) {
 	if len(args) == 0 {
 		args = append(args, common.SpecsDirectoryName)
@@ -130,10 +147,12 @@ type ValidationResult struct {
 	ParseOk        bool
 }
 
+// NewValidationResult creates a new Validation result
 func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r runner.Runner, parseOk bool, e ...error) *ValidationResult {
 	return &ValidationResult{SpecCollection: s, ErrMap: errMap, Runner: r, ParseOk: parseOk, Errs: e}
 }
 
+// ValidateSpecs parses the specs, creates a new validator and call the runner to get the validation result.
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
@@ -247,6 +266,8 @@ func (v *specValidator) validate() []error {
 	return v.validationErrors
 }
 
+// Validates a step. If validation result from runner is not valid then it creates a new validation error.
+// If the error type is StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND then gives suggestion with step implementation stub.
 func (v *specValidator) Step(s *gauge.Step) {
 	if s.IsConcept {
 		for _, c := range s.ConceptSteps {
@@ -343,6 +364,7 @@ func (v *specValidator) DataTable(dataTable *gauge.DataTable) {
 
 }
 
+// Validates data table for the range, if any error found append to the validation errors
 func (v *specValidator) Specification(specification *gauge.Specification) {
 	v.validationErrors = make([]error, 0)
 	err := validateDataTableRange(specification.DataTable.Table.GetRowCount())

@@ -15,6 +15,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+/*
+   Given old and new step gives the filenames of specification, concepts and files in code changed.
+
+   Refactoring Flow:
+	- Refactor specs and concepts in memory
+	- Checks if it is a concept or not
+	- In case of concept - writes to file and skips the runner
+	- If its not a concept (its a step) - need to know the text, so makes a call to runner to get the text(step name)
+	- Refactors the text(changes param positions ect) and sends it to runner to refactor implementations.
+*/
 package refactor
 
 import (
@@ -60,6 +70,8 @@ func (refactoringResult *refactoringResult) String() string {
 	return result
 }
 
+// PerformRephraseRefactoring given an old step and new step refactors specs and concepts in memory and if its a concept writes to file
+// else invokes runner to get the step name and refactors the step and sends it to runner to refactor implementation.
 func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) *refactoringResult {
 	defer killRunner(startChan)
 	if newStep == oldStep {
@@ -189,6 +201,7 @@ func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
 	return orderMap
 }
 
+// SliceIndex gives the index of the args.
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
 		if predicate(i) {
@@ -350,6 +363,8 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	os.Exit(exitCode)
 }
 
+// RefactorSteps performs rephrase refactoring and prints the refactoring summary which includes errors and warnings generated during refactoring and
+// files changed during refactoring : specification files, concept files and the implementation files changed.
 func RefactorSteps(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) {
 	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, startChan, specDirs)
 	printRefactoringSummary(refactoringResult)

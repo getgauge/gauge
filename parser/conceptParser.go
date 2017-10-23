@@ -34,7 +34,8 @@ type ConceptParser struct {
 	currentConcept *gauge.Step
 }
 
-//concept file can have multiple concept headings
+// concept file can have multiple concept headings.
+// Generates token for the given concept file and cretes concepts(array of steps) and parse results.
 func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *ParseResult) {
 	defer parser.resetState()
 
@@ -44,6 +45,7 @@ func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *Parse
 	return concepts, &ParseResult{ParseErrors: append(errs, res.ParseErrors...), Warnings: res.Warnings}
 }
 
+// Reads file contents from a give file and parses the file.
 func (parser *ConceptParser) ParseFile(file string) ([]*gauge.Step, *ParseResult) {
 	fileText, fileReadErr := common.ReadFileContents(file)
 	if fileReadErr != nil {
@@ -214,6 +216,7 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 	}
 }
 
+// CreateConceptsDictionary generates a ConceptDictionary which is map of concept text to concept. ConceptDictionary is used to search for a concept.
 func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	cptFilesMap := make(map[string]bool, 0)
 	for _, cpt := range util.GetConceptFiles() {
@@ -249,6 +252,7 @@ func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.Co
 	return mergeDuplicateConceptErrors(duplicateConcepts)
 }
 
+// AddConcepts parses the given concept file and adds each concept to the concept dictionary.
 func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
 	var conceptSteps []*gauge.Step
 	var parseResults []*ParseResult

@@ -19,7 +19,7 @@ package parser
 
 import "github.com/getgauge/gauge/gauge"
 
-// Creates a spec for each data table row
+// GetSpecsForDataTableRows creates a spec for each data table row
 func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for _, spec := range s {
 		if spec.DataTable.IsInitialized() {
@@ -106,6 +106,7 @@ func getTableWithOneRow(t gauge.Table, i int) *gauge.Table {
 	return gauge.NewTable(t.Headers, row, t.LineNo)
 }
 
+// FilterTableRelatedScenarios filters Scenarios that are using dynamic params from data table.
 func FilterTableRelatedScenarios(scenarios []*gauge.Scenario, fun func(*gauge.Scenario) bool) (otherScenarios, tableRelatedScenarios []*gauge.Scenario) {
 	for _, scenario := range scenarios {
 		if fun(scenario) {
