@@ -48,9 +48,9 @@ func getTagsEditRange(line, pLine string, position lsp.Position) (string, lsp.Ra
 	commaIndex := strings.LastIndex(pLine, comma)
 	colonIndex := strings.LastIndex(pLine, colon)
 	if commaIndex > colonIndex {
-		editRange = getRange(commaIndex, position.Character+1, position, pLine, line, comma)
+		editRange = getEditRange(commaIndex, position, pLine, line, comma)
 	} else {
-		editRange = getRange(colonIndex, position.Character+1, position, pLine, line, colon)
+		editRange = getEditRange(colonIndex, position, pLine, line, comma)
 	}
 	if len(line) >= position.Character+1 && len(line) != editRange.End.Character {
 		suffix = comma
