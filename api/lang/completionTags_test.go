@@ -25,17 +25,19 @@ import (
 )
 
 func TestGetTagsCompletion(t *testing.T) {
+	lineNumber := 1
 	provider = &dummyInfoProvider{}
 
 	line := "tags:foo,"
+	pLine := "tags:foo,"
 	param := lsp.TextDocumentPositionParams{
 		Position: lsp.Position{
-			Line:      1,
-			Character: 9,
+			Line:      lineNumber,
+			Character: len("tags:foo,"),
 		},
 		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
 	}
-	got, err := tagsCompletion(line, line, param)
+	got, err := tagsCompletion(line, pLine, param)
 	if err != nil {
 		t.Errorf("Autocomplete tags failed with error: %s", err.Error())
 	}
@@ -52,12 +54,12 @@ func TestGetTagsCompletion(t *testing.T) {
 					TextEdit: lsp.TextEdit{
 						Range: lsp.Range{
 							Start: lsp.Position{
-								Line:      1,
-								Character: 9,
+								Line:      lineNumber,
+								Character: len("tags:foo,"),
 							},
 							End: lsp.Position{
-								Line:      1,
-								Character: 19,
+								Line:      lineNumber,
+								Character: len("tags:foo,"),
 							},
 						},
 						NewText: " hello"},
@@ -71,14 +73,15 @@ func TestGetTagsCompletion(t *testing.T) {
 }
 
 func TestGetTagsCompletionWhenEditingInMiddle(t *testing.T) {
+	lineNumber := 1
 	provider = &dummyInfoProvider{}
 
 	line := "tags:foo, bar, blah"
 	pLine := "tags:foo,"
 	param := lsp.TextDocumentPositionParams{
 		Position: lsp.Position{
-			Line:      1,
-			Character: 9,
+			Line:      lineNumber,
+			Character: len("tags:foo,"),
 		},
 		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
 	}
@@ -99,12 +102,12 @@ func TestGetTagsCompletionWhenEditingInMiddle(t *testing.T) {
 					TextEdit: lsp.TextEdit{
 						Range: lsp.Range{
 							Start: lsp.Position{
-								Line:      1,
-								Character: 9,
+								Line:      lineNumber,
+								Character: len("tags:foo,"),
 							},
 							End: lsp.Position{
-								Line:      1,
-								Character: 14,
+								Line:      lineNumber,
+								Character: len("tags:foo, bar,"),
 							},
 						},
 						NewText: " hello,"},

@@ -80,7 +80,7 @@ func (d *SpecDetail) HasSpec() bool {
 }
 
 func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer {
-	return &SpecInfoGatherer{conceptDictionary: conceptDictionary,conceptsCache:conceptCache{concepts:make(map[string][]*gauge.Concept, 0)}}
+	return &SpecInfoGatherer{conceptDictionary: conceptDictionary, conceptsCache: conceptCache{concepts: make(map[string][]*gauge.Concept, 0)}}
 }
 
 // Init initializes all the SpecInfoGatherer caches
@@ -103,7 +103,7 @@ func (s *SpecInfoGatherer) initTagsCache() {
 	for file, specDetail := range s.specsCache.specDetails {
 		s.updateTagsCacheFromSpecs(file, specDetail)
 	}
-	s.specsCache.mutex.Unlock()
+	defer s.specsCache.mutex.Unlock()
 }
 
 func (s *SpecInfoGatherer) initParamsCache() {
@@ -344,12 +344,12 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 	s.stepsCache.mutex.Unlock()
 
 	s.paramsCache.mutex.Lock()
-	defer s.paramsCache.mutex.Unlock()
 	s.updateParamCacheFromSpecs(file, details[0])
+	s.paramsCache.mutex.Unlock()
 
 	s.tagsCache.mutex.Lock()
-	defer s.tagsCache.mutex.Unlock()
 	s.updateTagsCacheFromSpecs(file, details[0])
+	s.tagsCache.mutex.Unlock()
 }
 
 func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
