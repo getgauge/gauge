@@ -397,7 +397,7 @@ func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 	jc.StepEnd(step, res, info)
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"file","message":"message","lineNo":"4","stackTrace":"stacktrace"}]}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"","message":"message","lineNo":"4","stackTrace":"stacktrace"}]}}
 `
 
 	c.Assert(dw.output, Equals, expected)
@@ -486,7 +486,7 @@ func (s *MySuite) TestScenarioEndWithConceptFailure_JSONConsole(c *C) {
 	jc.StepEnd(step2, res, info)
 	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
 
-	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"file","message":"message","lineNo":"","stackTrace":"stacktrace"}]}}
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario","filename":"file","line":2,"result":{"status":"fail","time":0,"errors":[{"text":"Step","filename":"","message":"message","lineNo":"2","stackTrace":"stacktrace"}]}}
 `
 
 	c.Assert(dw.output, Equals, expected)

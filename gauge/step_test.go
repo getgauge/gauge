@@ -111,7 +111,8 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 func (s *MySuite) TestUpdatePropertiesFromAnotherStep(c *C) {
 	argsInStep := []*StepArg{&StepArg{Name: "arg1", Value: "arg value", ArgType: Dynamic}}
 	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: "foo"}}
-	originalStep := &Step{LineNo: 12,
+	originalStep := &Step{
+		LineNo:         0,
 		Value:          "foo {}",
 		LineText:       "foo <bar>",
 		Args:           argsInStep,
@@ -133,7 +134,7 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 	fragments := []*gauge_messages.Fragment{&gauge_messages.Fragment{Text: "foo"}}
 	conceptSteps := []*Step{&Step{Value: "step 1"}}
 	originalConcept := &Step{
-		LineNo:         12,
+		LineNo:         0,
 		Value:          "foo {}",
 		LineText:       "foo <bar>",
 		Args:           argsInStep,
@@ -141,7 +142,8 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 		Lookup:         *argLookup,
 		Fragments:      fragments,
 		ConceptSteps:   conceptSteps,
-		HasInlineTable: false}
+		HasInlineTable: false,
+	}
 
 	destinationConcept := new(Step)
 	destinationConcept.CopyFrom(originalConcept)

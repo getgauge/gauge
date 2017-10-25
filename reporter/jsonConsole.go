@@ -271,13 +271,13 @@ func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem
 				if executionResult.GetSkipped() {
 					errors = append(errors, executionError{
 						Text:     item.Step.ActualText,
-						Filename: filename,
+						Filename: getFileName(filename, stepCache, item.GetStep(), execInfo),
 						Message:  executionResult.SkippedReason,
 					})
 				} else if res.GetFailed() {
 					errors = append(errors, executionError{
 						Text:       item.Step.ActualText,
-						Filename:   filename,
+						Filename:   getFileName(filename, stepCache, item.GetStep(), execInfo),
 						LineNo:     getLineNo(stepCache, item.GetStep(), execInfo),
 						StackTrace: res.StackTrace,
 						Message:    res.ErrorMessage,
@@ -293,9 +293,19 @@ func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem
 	}
 	return
 }
+
+func getFileName(file string, stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info gm.ExecutionInfo) string {
+	for _, si := range stepCache[info.CurrentScenario] {
+		if si.protoStep == step {
+			return si.step.FileName
+		}
+	}
+	return file
+}
+
 func getLineNo(stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info gm.ExecutionInfo) string {
 	for _, si := range stepCache[info.CurrentScenario] {
-		if si.protoStep == step && si.step.Parent == nil {
+		if si.protoStep == step {
 			return strconv.Itoa(si.step.LineNo)
 		}
 	}
