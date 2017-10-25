@@ -21,6 +21,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
+// SpecResult represents the result of spec execution
 type SpecResult struct {
 	ProtoSpec            *gauge_messages.ProtoSpec
 	ScenarioFailedCount  int
@@ -33,6 +34,7 @@ type SpecResult struct {
 	Errors               []*gauge_messages.Error
 }
 
+// SetFailure sets the result to failed
 func (specResult *SpecResult) SetFailure() {
 	specResult.IsFailed = true
 }
@@ -45,6 +47,7 @@ func (specResult *SpecResult) AddSpecItems(resolvedItems []*gauge_messages.Proto
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, resolvedItems...)
 }
 
+// AddScenarioResults adds the scenario result to the spec result.
 func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	for _, scenarioResult := range scenarioResults {
 		if scenarioResult.GetFailed() {
@@ -57,6 +60,7 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
+// AddTableRelatedScenarioResult aggregates the data table driven spec results.
 func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
 	numberOfScenarios := len(scenarioResults[0])
 
@@ -106,6 +110,7 @@ func (specResult *SpecResult) ExecTime() int64 {
 	return specResult.ExecutionTime
 }
 
+// GetFailed returns the state of the result
 func (specResult *SpecResult) GetFailed() bool {
 	return specResult.IsFailed
 }

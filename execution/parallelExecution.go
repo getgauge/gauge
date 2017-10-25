@@ -44,7 +44,10 @@ import (
 
 var Strategy string
 
+// Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.
 const Eager string = "eager"
+
+// Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
 const Lazy string = "lazy"
 const enableMultithreadingEnv = "enable_multithreading"
 

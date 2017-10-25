@@ -66,6 +66,7 @@ func (parser *SpecParser) initialize() {
 	parser.processors[gauge.TearDownKind] = processTearDown
 }
 
+// Parse generates tokens for the given spec text and creates the specification.
 func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
 	tokens, errs := parser.GenerateTokens(specText, specFile)
 	spec, res := parser.CreateSpecification(tokens, conceptDictionary, specFile)
@@ -89,6 +90,7 @@ func (parser *SpecParser) ParseSpecText(specText string, specFile string) (*gaug
 	return spec, res
 }
 
+// Generates tokens based on the parsed line.
 func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
@@ -250,6 +252,7 @@ func (parser *SpecParser) clearState() {
 	parser.currentState = 0
 }
 
+// CreateSpecification creates specification from the given set of tokens.
 func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
 	parser.conceptDictionary = conceptDictionary
 	specification, finalResult := parser.createSpecification(tokens, specFile)
@@ -595,6 +598,7 @@ func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *Pars
 	return stepToAdd, parseDetails
 }
 
+// CreateStepUsingLookup generates gauge steps from step token and args lookup.
 func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileName string) (*gauge.Step, *ParseResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
@@ -620,6 +624,7 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileNa
 	return step, &ParseResult{ParseErrors: errors, Warnings: warnings}
 }
 
+// ExtractStepArgsFromToken extracts step args(Static and Dynamic) from the given step token.
 func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
 	_, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
@@ -770,6 +775,7 @@ type ParseError struct {
 	LineText string
 }
 
+// Error prints error with filename, line number, error message and step text.
 func (se ParseError) Error() string {
 	if se.LineNo == 0 && se.FileName == "" {
 		return fmt.Sprintf("%s", se.Message)
@@ -788,6 +794,7 @@ type ParseResult struct {
 	FileName    string
 }
 
+// Errors Prints parse errors and critical errors.
 func (result *ParseResult) Errors() (errors []string) {
 	for _, err := range result.ParseErrors {
 		errors = append(errors, fmt.Sprintf("[ParseError] %s", err.Error()))

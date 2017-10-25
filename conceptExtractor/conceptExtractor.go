@@ -50,6 +50,7 @@ type extractor struct {
 	errors         []error
 }
 
+// ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
 func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
 	content := SPEC_HEADING_TEMPLATE
 	if util.IsSpec(selectedTextInfo.GetFileName()) {
@@ -63,6 +64,7 @@ func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.St
 	return true, errors.New(""), []string{conceptFileName, selectedTextInfo.GetFileName()}
 }
 
+// ReplaceExtractedStepsWithConcept replaces the steps selected for concept extraction with the concept name given.
 func ReplaceExtractedStepsWithConcept(selectedTextInfo *gauge_messages.TextInfo, conceptText string) string {
 	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
 	return replaceText(content, selectedTextInfo, conceptText)

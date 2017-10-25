@@ -33,6 +33,7 @@ type ExecutionEvent struct {
 	ExecutionInfo gauge_messages.ExecutionInfo
 }
 
+// NewExecutionEvent creates a new execution event.
 func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int, executionInfo gauge_messages.ExecutionInfo) ExecutionEvent {
 	return ExecutionEvent{
 		Topic:         t,
@@ -61,6 +62,7 @@ const (
 
 var subscriberRegistry map[Topic][]chan ExecutionEvent
 
+// InitRegistry is used for console reporting, execution API and rerun of specs
 func InitRegistry() {
 	subscriberRegistry = make(map[Topic][]chan ExecutionEvent, 0)
 	subscriberRegistry[SuiteStart] = make([]chan ExecutionEvent, 0)
