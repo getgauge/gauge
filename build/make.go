@@ -140,16 +140,8 @@ func installFiles(files map[string]string, installDir string) {
 
 func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
-	files[getGaugeExecutablePath(gauge)] = bin
-	files = getInstallScripts(files)
+	files[getGaugeExecutablePath(gauge)] = ""
 	installFiles(files, installPath)
-}
-
-func getInstallScripts(files map[string]string) map[string]string {
-	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
-		files[filepath.Join("build", "install", installShellScript)] = ""
-	}
-	return files
 }
 
 func setEnv(envVariables map[string]string) {
