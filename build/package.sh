@@ -33,6 +33,6 @@ go get github.com/tools/godep && $GOBIN/godep restore
 
 go run build/make.go --all-platforms $1
 
-chmod +x build/install/install.sh && chmod +x bin/**/* && rm -rf deploy
+chmod +x bin/**/* && rm -rf deploy
 
 security unlock-keychain -p $KEYCHAIN_PASSWORD login.keychain && security import /vagrant/Gauge_Osx_Cert.p12 -P "$CERT_PASSWORD" -A -k login.keychain && go run build/make.go --distro --all-platforms --skip-windows $1

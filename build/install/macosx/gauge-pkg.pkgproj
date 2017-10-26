@@ -4376,8 +4376,19 @@
 		</dict>
 		<key>PROJECT_PRESENTATION</key>
 		<dict>
+			<key>CUSTOM</key>
+			<false/>
 			<key>BACKGROUND</key>
-			<dict/>
+			<dict>
+				<key>ALIGNMENT</key>
+				<integer>4</integer>
+				<key>BACKGROUND_PATH</key>
+				<dict/>
+				<key>CUSTOM</key>
+				<false/>
+				<key>SCALING</key>
+				<integer>0</integer>
+			</dict>
 			<key>INSTALLATION TYPE</key>
 			<dict>
 				<key>HIERARCHIES</key>
@@ -4756,6 +4767,8 @@
 						<dict/>
 					</dict>
 				</dict>
+				<key>INSTALLATION TYPE</key>
+				<integer>0</integer>
 				<key>MODE</key>
 				<integer>2</integer>
 			</dict>
@@ -4829,6 +4842,8 @@
 			</dict>
 			<key>LICENSE</key>
 			<dict>
+				<key>KEYWORDS</key>
+				<dict/>
 				<key>LOCALIZATIONS</key>
 				<array>
 					<dict>
@@ -4873,6 +4888,10 @@
 		<dict>
 			<key>LIST</key>
 			<array/>
+			<key>POSTINSTALL_PATH</key>
+			<dict/>
+			<key>PREINSTALL_PATH</key>
+			<dict/>
 			<key>RESOURCES</key>
 			<array/>
 			<key>ROOT_VOLUME_ONLY</key>
@@ -4880,6 +4899,8 @@
 		</dict>
 		<key>PROJECT_SETTINGS</key>
 		<dict>
+			<key>ADVANCED_OPTIONS</key>
+			<dict/>
 			<key>BUILD_FORMAT</key>
 			<integer>0</integer>
 			<key>BUILD_PATH</key>

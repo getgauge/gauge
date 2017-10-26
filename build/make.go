@@ -34,22 +34,21 @@ import (
 )
 
 const (
-	CGO_ENABLED        = "CGO_ENABLED"
-	GOARCH             = "GOARCH"
-	GOOS               = "GOOS"
-	X86                = "386"
-	X86_64             = "amd64"
-	darwin             = "darwin"
-	linux              = "linux"
-	windows            = "windows"
-	bin                = "bin"
-	gauge              = "gauge"
-	deploy             = "deploy"
-	installShellScript = "install.sh"
-	CC                 = "CC"
-	pkg                = ".pkg"
-	packagesBuild      = "packagesbuild"
-	nightlyDatelayout  = "2006-01-02"
+	CGO_ENABLED       = "CGO_ENABLED"
+	GOARCH            = "GOARCH"
+	GOOS              = "GOOS"
+	X86               = "386"
+	X86_64            = "amd64"
+	darwin            = "darwin"
+	linux             = "linux"
+	windows           = "windows"
+	bin               = "bin"
+	gauge             = "gauge"
+	deploy            = "deploy"
+	CC                = "CC"
+	pkg               = ".pkg"
+	packagesBuild     = "packagesbuild"
+	nightlyDatelayout = "2006-01-02"
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
