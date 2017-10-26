@@ -100,7 +100,7 @@ Section "Gauge" SEC_GAUGE
   SectionIn RO
   SetOutPath "$INSTDIR\bin"
   SetOverwrite on
-  File /r "${GAUGE_DISTRIBUTABLES_DIR}\bin\*"
+  File /r "${GAUGE_DISTRIBUTABLES_DIR}\*"
 SectionEnd
 
 SectionGroup /e "Language Plugins" SEC_LANGUAGES
