@@ -237,7 +237,7 @@ func crossCompileGauge() {
 func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeBinaries(deployDir)
-	if _, err := common.MirrorDir(filepath.Join(deployDir, bin), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
+	if _, err := common.MirrorDir(filepath.Join(deployDir), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
 }
