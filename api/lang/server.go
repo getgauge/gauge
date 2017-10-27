@@ -27,6 +27,7 @@ import (
 
 	"encoding/json"
 
+	cn "github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -135,38 +136,48 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, nil
 	case "textDocument/didOpen":
 		var params lsp.DidOpenTextDocumentParams
-		if err := json.Unmarshal(*req.Params, &params); err != nil {
+		var err error
+		if err = json.Unmarshal(*req.Params, &params); err != nil {
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
 		if isGaugeFile(params.TextDocument.URI) {
 			openFile(params)
 			publishDiagnostics(ctx, conn, params.TextDocument.URI)
+		} else {
+			err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
 		}
-		return nil, nil
+		return nil, err
 	case "textDocument/didClose":
 		var params lsp.DidCloseTextDocumentParams
+		var err error
 		if err := json.Unmarshal(*req.Params, &params); err != nil {
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
 		if isGaugeFile(params.TextDocument.URI) {
 			closeFile(params)
+		} else {
+			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
+			err = sendMessageToRunner(cacheFileRequest)
 		}
-		return nil, nil
+		return nil, err
 	case "textDocument/didSave":
 		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
 		var params lsp.DidChangeTextDocumentParams
-		if err := json.Unmarshal(*req.Params, &params); err != nil {
+		var err error
+		if err = json.Unmarshal(*req.Params, &params); err != nil {
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
 		if isGaugeFile(params.TextDocument.URI) {
 			changeFile(params)
 			publishDiagnostics(ctx, conn, params.TextDocument.URI)
+		} else {
+			err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
 		}
-		return nil, nil
+		return nil, err
 	case "textDocument/completion":
 		return completion(req)
 	case "completionItem/resolve":
@@ -199,6 +210,21 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, errors.New("Unknown request")
 	}
 }
+
+func cacheFileOnRunner(uri, text string) error {
+	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: util.ConvertURItoFilePath(uri), IsClosed: false}}
+	err := sendMessageToRunner(cacheFileRequest)
+	return err
+}
+
+func sendMessageToRunner(cacheFileRequest *gm.Message) error {
+	err := cn.WriteGaugeMessage(cacheFileRequest, lRunner.runner.Connection())
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+	}
+	return err
+}
+
 func isGaugeFile(uri string) bool {
 	return util.IsConcept(uri) || util.IsSpec(uri)
 }
