@@ -18,14 +18,11 @@
 package lang
 
 import (
-	"encoding/json"
-
 	"strings"
 
 	"sync"
 
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/sourcegraph/jsonrpc2"
 )
 
 type files struct {
@@ -59,28 +56,16 @@ func (files *files) content(uri string) []string {
 
 var f = &files{cache: make(map[string][]string)}
 
-func openFile(req *jsonrpc2.Request) {
-	var params lsp.DidOpenTextDocumentParams
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return
-	}
+func openFile(params lsp.DidOpenTextDocumentParams) {
 	f.add(params.TextDocument.URI, params.TextDocument.Text)
 }
 
-func closeFile(req *jsonrpc2.Request) {
-	var params lsp.DidCloseTextDocumentParams
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return
-	}
+func closeFile(params lsp.DidCloseTextDocumentParams) {
 	f.remove(params.TextDocument.URI)
 	delete(f.cache, params.TextDocument.URI)
 }
 
-func changeFile(req *jsonrpc2.Request) {
-	var params lsp.DidChangeTextDocumentParams
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return
-	}
+func changeFile(params lsp.DidChangeTextDocumentParams) {
 	f.add(params.TextDocument.URI, params.ContentChanges[0].Text)
 }
 

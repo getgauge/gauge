@@ -1,7 +1,6 @@
 package lang
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/getgauge/gauge/gauge"
@@ -9,7 +8,6 @@ import (
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/sourcegraph/jsonrpc2"
 )
 
 const (
@@ -17,13 +15,7 @@ const (
 	inParallelCommand = "gauge.execute.inParallel"
 )
 
-func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
-	var params lsp.CodeLensParams
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
-	}
-
+func getCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := string(params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(uri)
 	if !util.IsSpec(file) {
@@ -50,15 +42,6 @@ func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
 	lenses = append(lenses, createCodeLens(spec.Heading.LineNo-1, "Run in parallel", inParallelCommand, getExecutionArgs(spec.FileName)))
 	return lenses
-}
-
-func resolveCodeLens(req *jsonrpc2.Request) (interface{}, error) {
-	var params lsp.CodeLens
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
-	}
-	return params, nil
 }
 
 func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {

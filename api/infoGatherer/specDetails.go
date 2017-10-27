@@ -74,7 +74,7 @@ func (d *SpecDetail) HasSpec() bool {
 }
 
 func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer {
-	return &SpecInfoGatherer{conceptDictionary: conceptDictionary,conceptsCache:conceptCache{concepts:make(map[string][]*gauge.Concept, 0)}}
+	return &SpecInfoGatherer{conceptDictionary: conceptDictionary, conceptsCache: conceptCache{concepts: make(map[string][]*gauge.Concept, 0)}}
 }
 
 // Init initializes all the SpecInfoGatherer caches
