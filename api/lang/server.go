@@ -83,14 +83,23 @@ type registrationParams struct {
 }
 
 type registration struct {
-	Id              string          `json:"id"`
-	Method          string          `json:"method"`
-	RegisterOptions registerOptions `json:"registerOptions"`
+	Id              string      `json:"id"`
+	Method          string      `json:"method"`
+	RegisterOptions interface{} `json:"registerOptions"`
 }
 
-type registerOptions struct {
-	DocumentSelector documentSelector         `json:"documentSelector"`
-	SyncKind         lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
+type textDocumentRegistrationOptions struct {
+	DocumentSelector documentSelector `json:"documentSelector"`
+}
+
+type textDocumentChangeRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	SyncKind lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
+}
+
+type codeLensRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	ResolveProvider bool `json:"resolveProvider,omitempty"`
 }
 
 type documentSelector struct {
@@ -141,7 +150,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
-		if isGaugeFile(params.TextDocument.URI) {
+		if util.IsGaugeFile(params.TextDocument.URI) {
 			openFile(params)
 			publishDiagnostics(ctx, conn, params.TextDocument.URI)
 		} else {
@@ -155,7 +164,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
-		if isGaugeFile(params.TextDocument.URI) {
+		if util.IsGaugeFile(params.TextDocument.URI) {
 			closeFile(params)
 		} else {
 			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
@@ -171,7 +180,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logger.APILog.Debugf("failed to parse request %s", err.Error())
 			return nil, err
 		}
-		if isGaugeFile(params.TextDocument.URI) {
+		if util.IsGaugeFile(params.TextDocument.URI) {
 			changeFile(params)
 			publishDiagnostics(ctx, conn, params.TextDocument.URI)
 		} else {
@@ -191,15 +200,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return data, err
 	case "textDocument/codeLens":
-		var params lsp.CodeLensParams
-		if err := json.Unmarshal(*req.Params, &params); err != nil {
-			logger.APILog.Debugf("failed to parse request %s", err.Error())
-			return nil, err
-		}
-		if isGaugeFile(params.TextDocument.URI) {
-			return getCodeLenses(params)
-		}
-		return nil, nil
+		return getCodeLenses(req)
 	case "codeLens/resolve":
 		return nil, errors.New("Unknown request")
 	case "workspace/symbol":
@@ -225,16 +226,14 @@ func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 	return err
 }
 
-func isGaugeFile(uri string) bool {
-	return util.IsConcept(uri) || util.IsSpec(uri)
-}
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	var result string
+	// TODO : fetch the language dynamically
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
-		{Id: "js-didOpen", Method: "textDocument/didOpen", RegisterOptions: registerOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
-		{Id: "js-didClose", Method: "textDocument/didClose", RegisterOptions: registerOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
-		{Id: "js-didChange", Method: "textDocument/didChange", RegisterOptions: registerOptions{DocumentSelector: documentSelector{Language: "javascript"}, SyncKind: lsp.TDSKFull}},
-		{Id: "js-codelens", Method: "textDocument/codeLens", RegisterOptions: registerOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
+		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
+		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
+		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, SyncKind: lsp.TDSKFull}},
+		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, ResolveProvider: false}},
 	}}, result)
 }
 

@@ -123,6 +123,11 @@ func IsSpec(path string) bool {
 	return IsValidSpecExtension(path)
 }
 
+// IsGaugeFile Returns true if spec file or concept file
+func IsGaugeFile(path string) bool {
+	return IsConcept(path) || IsSpec(path)
+}
+
 // FindAllNestedDirs returns list of all nested directories in given path
 func FindAllNestedDirs(dir string) []string {
 	var nestedDirs []string

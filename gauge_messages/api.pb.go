@@ -66,6 +66,9 @@ It has these top-level messages:
 	StepNameRequest
 	StepNameResponse
 	UnsupportedMessageResponse
+	CacheFileRequest
+	StepPositionsRequest
+	StepPositionsResponse
 	Message
 	ProtoSpec
 	ProtoItem

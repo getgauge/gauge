@@ -20,9 +20,11 @@ package lang
 import (
 	"testing"
 
+	"encoding/json"
 	"reflect"
 
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+	"github.com/sourcegraph/jsonrpc2"
 )
 
 func TestGetCodeLens(t *testing.T) {
@@ -37,7 +39,10 @@ Scenario Heading
 	f = &files{cache: make(map[string][]string)}
 	f.add("foo.spec", specText)
 
-	got, err := getCodeLenses(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	p := json.RawMessage(b)
+
+	got, err := getCodeLenses(&jsonrpc2.Request{Params: &p})
 	if err != nil {
 		t.Errorf("Expected error to be nil. got : %s", err.Error())
 	}
@@ -90,7 +95,10 @@ Another Scenario
 	f = &files{cache: make(map[string][]string)}
 	f.add("foo.spec", specText)
 
-	got, err := getCodeLenses(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	p := json.RawMessage(b)
+
+	got, err := getCodeLenses(&jsonrpc2.Request{Params: &p})
 	if err != nil {
 		t.Errorf("Expected error to be nil. got : %s", err.Error())
 	}
@@ -160,7 +168,10 @@ Scenario Heading
 	f = &files{cache: make(map[string][]string)}
 	f.add("foo.spec", specText)
 
-	got, err := getCodeLenses(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	p := json.RawMessage(b)
+
+	got, err := getCodeLenses(&jsonrpc2.Request{Params: &p})
 	if err != nil {
 		t.Errorf("Expected error to be nil. got : %s", err.Error())
 	}

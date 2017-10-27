@@ -3,11 +3,18 @@ package lang
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+
+	"encoding/json"
+
+	"github.com/sourcegraph/jsonrpc2"
 )
 
 const (
@@ -15,7 +22,20 @@ const (
 	inParallelCommand = "gauge.execute.inParallel"
 )
 
-func getCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
+func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
+	var params lsp.CodeLensParams
+	if err := json.Unmarshal(*req.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return nil, err
+	}
+	if util.IsGaugeFile(params.TextDocument.URI) {
+		return getExecutionCodeLenses(params)
+	} else {
+		return getReferenceCodeLenses(params)
+	}
+}
+
+func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := string(params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(uri)
 	if !util.IsSpec(file) {
@@ -36,6 +56,26 @@ func getCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	}
 	return append(getScenarioCodeLenses(spec), codeLenses...), nil
 
+}
+
+func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
+	cacheFileRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
+	response, err := conn.GetResponseForMessageWithTimeout(cacheFileRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	codeLensResponse := response.GetStepPositionsResponse()
+	if codeLensResponse.GetError() != "" {
+		logger.APILog.Infof("Error while connecting to runner : %s", codeLensResponse.GetError())
+	}
+	var lenses []lsp.CodeLens
+	for _, codeLens := range codeLensResponse.GetStepPosition() {
+		var args []interface{}
+		lens := createCodeLens(int(codeLens.GetLineNumber())-1, "Find Usages", "find_usages", args)
+		lenses = append(lenses, lens)
+	}
+	return lenses, nil
 }
 
 func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
