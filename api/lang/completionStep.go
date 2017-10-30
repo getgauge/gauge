@@ -43,9 +43,10 @@ func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (
 		list.Items = append(list.Items, newStepCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, fText, editRange))
 	}
 	for _, s := range provider.Steps() {
-		fText := prefix + getStepFilterText(s.StepValue, s.Args, givenArgs)
-		cText := prefix + addPlaceHolders(s.StepValue, s.Args)
-		list.Items = append(list.Items, newStepCompletionItem(s.ParameterizedStepValue, cText, step, fText, editRange))
+		sv := parser.CreateStepValue(s)
+		fText := prefix + getStepFilterText(sv.StepValue, sv.Args, givenArgs)
+		cText := prefix + addPlaceHolders(sv.StepValue, sv.Args)
+		list.Items = append(list.Items, newStepCompletionItem(sv.ParameterizedStepValue, cText, step, fText, editRange))
 	}
 	return list, nil
 }

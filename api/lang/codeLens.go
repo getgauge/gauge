@@ -65,14 +65,14 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 		return nil, err
 	}
-	codeLensResponse := response.GetStepPositionsResponse()
-	if codeLensResponse.GetError() != "" {
-		logger.APILog.Infof("Error while connecting to runner : %s", codeLensResponse.GetError())
+	stepPositionsResponse := response.GetStepPositionsResponse()
+	if stepPositionsResponse.GetError() != "" {
+		logger.APILog.Infof("Error while connecting to runner : %s", stepPositionsResponse.GetError())
 	}
 	var lenses []lsp.CodeLens
-	for _, codeLens := range codeLensResponse.GetStepPosition() {
+	for _, stepPosition := range stepPositionsResponse.GetStepPosition() {
 		var args []interface{}
-		lens := createCodeLens(int(codeLens.GetLineNumber())-1, "Find Usages", "find_usages", args)
+		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, "Find Usages", "find_usages", args)
 		lenses = append(lenses, lens)
 	}
 	return lenses, nil

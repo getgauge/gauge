@@ -49,8 +49,8 @@ type conceptCache struct {
 }
 
 type stepsCache struct {
-	mutex      sync.RWMutex
-	stepValues map[string][]*gauge.StepValue
+	mutex sync.RWMutex
+	steps map[string][]*gauge.Step
 }
 
 type specsCache struct {
@@ -146,7 +146,7 @@ func (s *SpecInfoGatherer) initStepsCache() {
 	s.stepsCache.mutex.Lock()
 	defer s.stepsCache.mutex.Unlock()
 
-	s.stepsCache.stepValues = make(map[string][]*gauge.StepValue, 0)
+	s.stepsCache.steps = make(map[string][]*gauge.Step, 0)
 	stepsFromSpecsMap := s.getStepsFromCachedSpecs()
 	stepsFromConceptsMap := s.getStepsFromCachedConcepts()
 
@@ -227,8 +227,8 @@ func (s *SpecInfoGatherer) UpdateConceptCache(file, cptContent string) *parser.P
 	return res
 }
 
-func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.StepValue) {
-	s.stepsCache.stepValues[fileName] = allSteps
+func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.Step) {
+	s.stepsCache.steps[fileName] = allSteps
 }
 
 func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
@@ -261,19 +261,19 @@ func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	return s.conceptDictionary.ConceptsMap
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.StepValue {
+func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.Step {
 	s.specsCache.mutex.RLock()
 	defer s.specsCache.mutex.RUnlock()
 
-	var stepsFromSpecsMap = make(map[string][]*gauge.StepValue, 0)
+	var stepsFromSpecsMap = make(map[string][]*gauge.Step, 0)
 	for _, detail := range s.specsCache.specDetails {
 		stepsFromSpecsMap[detail.Spec.FileName] = append(stepsFromSpecsMap[detail.Spec.FileName], getStepsFromSpec(detail.Spec)...)
 	}
 	return stepsFromSpecsMap
 }
 
-func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.StepValue {
-	var stepsFromConceptMap = make(map[string][]*gauge.StepValue, 0)
+func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.Step {
+	var stepsFromConceptMap = make(map[string][]*gauge.Step, 0)
 	s.conceptsCache.mutex.RLock()
 	defer s.conceptsCache.mutex.RUnlock()
 	for _, conceptList := range s.conceptsCache.concepts {
@@ -292,9 +292,9 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 	s.addToSpecsCache(file, details[0])
 	s.specsCache.mutex.Unlock()
 
-	var steps []*gauge.StepValue
+	var steps []*gauge.Step
 	for _, step := range getStepsFromSpec(details[0].Spec) {
-		con := s.conceptDictionary.Search(step.StepValue)
+		con := s.conceptDictionary.Search(step.Value)
 		if con == nil {
 			steps = append(steps, step)
 		}
@@ -456,17 +456,17 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 }
 
 // Steps returns the list of all the steps in the gauge project
-func (s *SpecInfoGatherer) Steps() []*gauge.StepValue {
+func (s *SpecInfoGatherer) Steps() []*gauge.Step {
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
-	sValues := make(map[string]*gauge.StepValue)
-	for _, stepValues := range s.stepsCache.stepValues {
-		for _, sv := range stepValues {
-			sValues[sv.StepValue] = sv
+	filteredSteps := make(map[string]*gauge.Step)
+	for _, steps := range s.stepsCache.steps {
+		for _, s := range steps {
+			filteredSteps[s.Value] = s
 		}
 	}
-	var steps []*gauge.StepValue
-	for _, sv := range sValues {
+	var steps []*gauge.Step
+	for _, sv := range filteredSteps {
 		steps = append(steps, sv)
 	}
 	return steps
@@ -512,27 +512,27 @@ func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Conc
 	return s.conceptDictionary.Search(stepValue)
 }
 
-func getStepsFromSpec(spec *gauge.Specification) []*gauge.StepValue {
-	stepValues := getParsedStepValues(spec.Contexts)
+func getStepsFromSpec(spec *gauge.Specification) []*gauge.Step {
+	steps := filterConcepts(spec.Contexts)
 	for _, scenario := range spec.Scenarios {
-		stepValues = append(stepValues, getParsedStepValues(scenario.Steps)...)
+		steps = append(steps, filterConcepts(scenario.Steps)...)
 	}
-	return stepValues
+	steps = append(steps, filterConcepts(spec.TearDownSteps)...)
+	return steps
 }
 
-func getStepsFromConcept(concept *gauge.Concept) []*gauge.StepValue {
-	return getParsedStepValues(concept.ConceptStep.ConceptSteps)
+func getStepsFromConcept(concept *gauge.Concept) []*gauge.Step {
+	return filterConcepts(concept.ConceptStep.ConceptSteps)
 }
 
-func getParsedStepValues(steps []*gauge.Step) []*gauge.StepValue {
-	var stepValues []*gauge.StepValue
+func filterConcepts(steps []*gauge.Step) []*gauge.Step {
+	var filteredSteps []*gauge.Step
 	for _, step := range steps {
 		if !step.IsConcept {
-			stepValue := parser.CreateStepValue(step)
-			stepValues = append(stepValues, &stepValue)
+			filteredSteps = append(filteredSteps, step)
 		}
 	}
-	return stepValues
+	return filteredSteps
 }
 
 func handleParseFailures(parseResults []*parser.ParseResult) {

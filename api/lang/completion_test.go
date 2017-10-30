@@ -63,11 +63,11 @@ func TestAddPlaceHolders(t *testing.T) {
 type dummyInfoProvider struct{}
 
 func (p *dummyInfoProvider) Init() {}
-func (p *dummyInfoProvider) Steps() []*gauge.StepValue {
-	return []*gauge.StepValue{{
-		Args:                   []string{"hello", "gauge"},
-		StepValue:              "Say {} to {}",
-		ParameterizedStepValue: "Say <hello> to <gauge>",
+func (p *dummyInfoProvider) Steps() []*gauge.Step {
+	return []*gauge.Step{{
+		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
+		Value:    "Say {} to {}",
+		LineText: "Say <hello> to <gauge>",
 	}}
 }
 func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {

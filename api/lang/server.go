@@ -42,7 +42,7 @@ type server struct{}
 
 type infoProvider interface {
 	Init()
-	Steps() []*gauge.StepValue
+	Steps() []*gauge.Step
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	SearchConceptDictionary(string) *gauge.Concept
