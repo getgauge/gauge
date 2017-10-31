@@ -455,7 +455,7 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 	return details
 }
 
-// Steps returns the list of all the steps in the gauge project
+// Steps returns the list of all the steps in the gauge project. Duplicate steps are filtered
 func (s *SpecInfoGatherer) Steps() []*gauge.Step {
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
@@ -470,6 +470,17 @@ func (s *SpecInfoGatherer) Steps() []*gauge.Step {
 		steps = append(steps, sv)
 	}
 	return steps
+}
+
+// Steps returns the list of all the steps in the gauge project including duplicate steps
+func (s *SpecInfoGatherer) AllSteps() []*gauge.Step {
+	s.stepsCache.mutex.RLock()
+	defer s.stepsCache.mutex.RUnlock()
+	var allSteps []*gauge.Step
+	for _, steps := range s.stepsCache.steps {
+		allSteps = append(allSteps, steps...)
+	}
+	return allSteps
 }
 
 // Steps returns the list of all the steps in the gauge project

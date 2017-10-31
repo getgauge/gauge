@@ -14,6 +14,8 @@ import (
 
 	"encoding/json"
 
+	"strconv"
+
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -69,10 +71,26 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if stepPositionsResponse.GetError() != "" {
 		logger.APILog.Infof("Error while connecting to runner : %s", stepPositionsResponse.GetError())
 	}
+	allSteps := provider.AllSteps()
 	var lenses []lsp.CodeLens
-	for _, stepPosition := range stepPositionsResponse.GetStepPosition() {
-		var args []interface{}
-		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, "Find Usages", "find_usages", args)
+	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
+		stepValue, err := parser.ExtractStepValueAndParams(stepPosition.GetStepValue(), false)
+		var count int
+		var locations []lsp.Location
+		if err != nil {
+			continue
+		}
+		for _, step := range allSteps {
+			if stepValue.StepValue == step.Value {
+				count++
+				locations = append(locations, lsp.Location{URI: util.ConvertPathToURI(step.FileName), Range: lsp.Range{
+					Start: lsp.Position{Line: step.LineNo - 1, Character: 0},
+					End:   lsp.Position{Line: step.LineNo - 1, Character: 0},
+				}})
+			}
+		}
+
+		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" references", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
 		lenses = append(lenses, lens)
 	}
 	return lenses, nil

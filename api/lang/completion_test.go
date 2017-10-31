@@ -70,6 +70,14 @@ func (p *dummyInfoProvider) Steps() []*gauge.Step {
 		LineText: "Say <hello> to <gauge>",
 	}}
 }
+
+func (p *dummyInfoProvider) AllSteps() []*gauge.Step {
+	return []*gauge.Step{{
+		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
+		Value:    "Say {} to {}",
+		LineText: "Say <hello> to <gauge>",
+	}}
+}
 func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {
 	return []*gm.ConceptInfo{
 		{
