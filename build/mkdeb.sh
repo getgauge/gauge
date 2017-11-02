@@ -120,23 +120,23 @@ function clean_stage() {
 
 function prep_deb() {
     echo "Preparing .deb data..."
-    mkdir -m $FILE_MODE -p "$TARGET/usr/local/gauge"
+    mkdir -m $FILE_MODE -p "$TARGET/usr/local/bin/"
 
-    cp -r "$PKG_SRC/bin" "$TARGET/usr/local"
+    cp -r "$PKG_SRC/gauge" "$TARGET/usr/local/bin/"
 
     mkdir -m $FILE_MODE -p "$TARGET/DEBIAN"
     cp "$CONTROL_FILE" "$TARGET/DEBIAN/control"
     chmod +x "$POSTINST_FILE"
     cp "$POSTINST_FILE" "$TARGET/DEBIAN/postinst"
 
-    chmod +x $TARGET/usr/local/bin/*
+    chmod +x $TARGET/usr/local/bin/gauge
 
     sync
 
     CONTROL_DATA=$(cat "$TARGET/DEBIAN/control")
-    INSTALLED_SIZE=$(du -s $PKG_SRC/bin/ | sed "s/^\([0-9]*\).*$/\1/")
+    INSTALLED_SIZE=$(du -s $PKG_SRC/ | sed "s/^\([0-9]*\).*$/\1/")
     while [ $INSTALLED_SIZE -lt 1 ]; do
-            INSTALLED_SIZE=$(du -s $PKG_SRC/bin/ | sed "s/^\([0-9]*\).*$/\1/")
+            INSTALLED_SIZE=$(du -s $PKG_SRC/ | sed "s/^\([0-9]*\).*$/\1/")
     done
     echo "$CONTROL_DATA" | sed "s/<version>/$VERSION/" | sed "s/<arch>/$ARCH/" | sed "s/<size>/$INSTALLED_SIZE/" > "$TARGET/DEBIAN/control"
 

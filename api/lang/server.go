@@ -46,6 +46,7 @@ type infoProvider interface {
 	AllSteps() []*gauge.Step
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
+	Tags() []string
 	SearchConceptDictionary(string) *gauge.Concept
 	GetConceptDictionary() *gauge.ConceptDictionary
 	UpdateConceptCache(string, string) *parser.ParseResult
@@ -126,7 +127,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return lsp.InitializeResult{
 			Capabilities: lsp.ServerCapabilities{
 				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
-				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<"}},
+				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
 				DocumentFormattingProvider: true,
 				CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
 				DefinitionProvider:         true,

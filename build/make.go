@@ -34,22 +34,21 @@ import (
 )
 
 const (
-	CGO_ENABLED        = "CGO_ENABLED"
-	GOARCH             = "GOARCH"
-	GOOS               = "GOOS"
-	X86                = "386"
-	X86_64             = "amd64"
-	darwin             = "darwin"
-	linux              = "linux"
-	windows            = "windows"
-	bin                = "bin"
-	gauge              = "gauge"
-	deploy             = "deploy"
-	installShellScript = "install.sh"
-	CC                 = "CC"
-	pkg                = ".pkg"
-	packagesBuild      = "packagesbuild"
-	nightlyDatelayout  = "2006-01-02"
+	CGO_ENABLED       = "CGO_ENABLED"
+	GOARCH            = "GOARCH"
+	GOOS              = "GOOS"
+	X86               = "386"
+	X86_64            = "amd64"
+	darwin            = "darwin"
+	linux             = "linux"
+	windows           = "windows"
+	bin               = "bin"
+	gauge             = "gauge"
+	deploy            = "deploy"
+	CC                = "CC"
+	pkg               = ".pkg"
+	packagesBuild     = "packagesbuild"
+	nightlyDatelayout = "2006-01-02"
 )
 
 var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
@@ -140,16 +139,8 @@ func installFiles(files map[string]string, installDir string) {
 
 func copyGaugeBinaries(installPath string) {
 	files := make(map[string]string)
-	files[getGaugeExecutablePath(gauge)] = bin
-	files = getInstallScripts(files)
+	files[getGaugeExecutablePath(gauge)] = ""
 	installFiles(files, installPath)
-}
-
-func getInstallScripts(files map[string]string) map[string]string {
-	if (getGOOS() == darwin || getGOOS() == linux) && (*distro) {
-		files[filepath.Join("build", "install", installShellScript)] = ""
-	}
-	return files
 }
 
 func setEnv(envVariables map[string]string) {
@@ -246,7 +237,7 @@ func crossCompileGauge() {
 func installGauge() {
 	updateGaugeInstallPrefix()
 	copyGaugeBinaries(deployDir)
-	if _, err := common.MirrorDir(filepath.Join(deployDir, bin), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
+	if _, err := common.MirrorDir(filepath.Join(deployDir), filepath.Join(*gaugeInstallPrefix, bin)); err != nil {
 		panic(fmt.Sprintf("Could not install gauge : %s", err))
 	}
 }

@@ -106,7 +106,8 @@ function prep_rpm() {
     echo "Preparing .rpm data..."
     rpmdev-setuptree
 
-    cp -r "$PKG_SRC/bin" "$TARGET/BUILD/"
+    mkdir -m $FILE_MODE -p "$TARGET/BUILD/bin/"
+    cp -r "$PKG_SRC/gauge" "$TARGET/BUILD/bin/"
 
     SPEC_DATA=`cat "$SPEC_FILE"`
     echo "$SPEC_DATA" | sed "s/<version>/$RPM_VERSION/g" | sed "s/<release>/$RELEASE/g" > "$TARGET/SPECS/gauge.spec"
