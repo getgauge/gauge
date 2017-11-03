@@ -22,18 +22,14 @@ import (
 
 	"github.com/getgauge/gauge/util"
 
-	"os"
-
 	"fmt"
 
-	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/runner"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -75,33 +71,10 @@ func search(step *gauge.Step) (interface{}, error) {
 	return searchStep(step)
 
 }
-func killRunner(killChan chan bool) {
-	killChan <- true
-}
-
-func connectToRunner(killChan chan bool) (runner.Runner, error) {
-	outfile, err := os.OpenFile(logger.GetLogFilePath(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
-		return nil, err
-	}
-	runner, err := api.ConnectToRunner(killChan, false, outfile)
-	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
-		return nil, err
-	}
-	return runner, nil
-}
 
 func searchStep(step *gauge.Step) (interface{}, error) {
-	killChan := make(chan bool)
-	defer killRunner(killChan)
-	langRunner, err := connectToRunner(killChan)
-	if err != nil {
-		return nil, err
-	}
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, langRunner.Connection(), config.RunnerRequestTimeout())
+	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 	if err != nil {
 		logger.APILog.Infof("%s", err.Error())
 		return nil, err

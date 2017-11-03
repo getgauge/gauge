@@ -27,12 +27,10 @@ import (
 
 	"encoding/json"
 
-	cn "github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
-	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -54,22 +52,10 @@ type infoProvider interface {
 
 var provider infoProvider
 
-type langRunner struct {
-	runner   runner.Runner
-	killChan chan bool
-}
-
-var lRunner langRunner
-
 func Server(p infoProvider) *server {
 	provider = p
 	provider.Init()
-	lRunner.killChan = make(chan bool)
-	var err error
-	lRunner.runner, err = connectToRunner(lRunner.killChan)
-	if err != nil {
-		logger.APILog.Infof("Unable to connect to runner : %s", err.Error())
-	}
+	startRunner()
 	return &server{}
 }
 
@@ -205,27 +191,9 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return getCodeLenses(req)
 	case "codeLens/resolve":
 		return nil, errors.New("Unknown request")
-	case "workspace/symbol":
-		return nil, errors.New("Unknown request")
-	case "workspace/xreferences":
-		return nil, errors.New("Unknown request")
 	default:
 		return nil, errors.New("Unknown request")
 	}
-}
-
-func cacheFileOnRunner(uri, text string) error {
-	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: util.ConvertURItoFilePath(uri), IsClosed: false}}
-	err := sendMessageToRunner(cacheFileRequest)
-	return err
-}
-
-func sendMessageToRunner(cacheFileRequest *gm.Message) error {
-	err := cn.WriteGaugeMessage(cacheFileRequest, lRunner.runner.Connection())
-	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-	}
-	return err
 }
 
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
@@ -249,7 +217,7 @@ func (s *server) Start() {
 	var connOpt []jsonrpc2.ConnOpt
 	connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
 	<-jsonrpc2.NewConn(context.Background(), jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...).DisconnectNotify()
-	lRunner.killChan <- true
+	killRunner()
 	logger.APILog.Info("Connection closed")
 }
 
