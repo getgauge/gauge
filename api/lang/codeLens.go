@@ -74,14 +74,10 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	allSteps := provider.AllSteps()
 	var lenses []lsp.CodeLens
 	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
-		stepValue, err := parser.ExtractStepValueAndParams(stepPosition.GetStepValue(), false)
 		var count int
 		var locations []lsp.Location
-		if err != nil {
-			continue
-		}
 		for _, step := range allSteps {
-			if stepValue.StepValue == step.Value {
+			if stepPosition.GetStepValue() == step.Value {
 				count++
 				locations = append(locations, lsp.Location{URI: util.ConvertPathToURI(step.FileName), Range: lsp.Range{
 					Start: lsp.Position{Line: step.LineNo - 1, Character: 0},
