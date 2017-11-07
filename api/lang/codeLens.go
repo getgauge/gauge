@@ -61,8 +61,8 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 }
 
 func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
-	cacheFileRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
-	response, err := conn.GetResponseForMessageWithTimeout(cacheFileRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
+	response, err := conn.GetResponseForMessageWithTimeout(stepPositionsRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 		return nil, err
