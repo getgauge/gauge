@@ -26,6 +26,8 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+	"github.com/getgauge/gauge/validation"
+	"github.com/getgauge/gauge/gauge_messages"
 )
 
 func TestDiagnostic(t *testing.T) {
@@ -60,13 +62,92 @@ Scenario Heading
 			Severity: 1,
 		},
 	}
-
+	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: true}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	}
 	got := createDiagnostics(uri)
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)
 	}
 }
+
+func TestDiagnosticWithUnimplementedStepError(t *testing.T) {
+	specText := `Specification Heading
+=====================
+
+Scenario Heading
+----------------
+
+* Step text
+`
+
+	uri := "foo.spec"
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+
+	want := []lsp.Diagnostic{
+		{
+			Range: lsp.Range{
+				Start: lsp.Position{6, 0},
+				End:   lsp.Position{6, 11},
+			},
+			Message:  "Step implementation not found",
+			Severity: 1,
+		},
+
+	}
+	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	}
+	got := createDiagnostics(uri)
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	}
+}
+
+
+func TestDiagnosticWithDuplicateStepError(t *testing.T) {
+	specText := `Specification Heading
+=====================
+
+Scenario Heading
+----------------
+
+* Step text
+`
+
+	uri := "foo.spec"
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+
+	want := []lsp.Diagnostic{
+		{
+			Range: lsp.Range{
+				Start: lsp.Position{6, 0},
+				End:   lsp.Position{6, 11},
+			},
+			Message:  "Duplicate step implementation",
+			Severity: 1,
+		},
+
+	}
+	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorType: gauge_messages.StepValidateResponse_DUPLICATE_STEP_IMPLEMENTATION}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	}
+	got := createDiagnostics(uri)
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	}
+}
+
 
 func TestDiagnosticWithoutParseError(t *testing.T) {
 	specText := `Specification Heading
@@ -81,13 +162,18 @@ Scenario Heading
 
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, specText)
+	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
+	provider.GetConceptDictionary().ConceptsMap = map[string]*gauge.Concept{}
 
-	want := []lsp.Diagnostic{}
+	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
+		res := &gauge_messages.StepValidateResponse{IsValid: true}
+		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	}
 
-	got := createDiagnostics(uri)
+	d := createDiagnostics(uri)
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	if len(d) > 0{
+		t.Errorf("want: `%s` errors,\n got: `%v`", 0, len(d))
 	}
 }
 
