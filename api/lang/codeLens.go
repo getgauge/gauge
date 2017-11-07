@@ -1,14 +1,21 @@
 package lang
 
 import (
-	"encoding/json"
 	"fmt"
 
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+
+	"encoding/json"
+
+	"strconv"
+
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -23,7 +30,14 @@ func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
+	if util.IsGaugeFile(params.TextDocument.URI) {
+		return getExecutionCodeLenses(params)
+	} else {
+		return getReferenceCodeLenses(params)
+	}
+}
 
+func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := string(params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(uri)
 	if !util.IsSpec(file) {
@@ -46,19 +60,42 @@ func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
 
 }
 
+func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
+	response, err := conn.GetResponseForMessageWithTimeout(stepPositionsRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	stepPositionsResponse := response.GetStepPositionsResponse()
+	if stepPositionsResponse.GetError() != "" {
+		logger.APILog.Infof("Error while connecting to runner : %s", stepPositionsResponse.GetError())
+	}
+	allSteps := provider.AllSteps()
+	var lenses []lsp.CodeLens
+	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
+		var count int
+		var locations []lsp.Location
+		for _, step := range allSteps {
+			if stepPosition.GetStepValue() == step.Value {
+				count++
+				locations = append(locations, lsp.Location{URI: util.ConvertPathToURI(step.FileName), Range: lsp.Range{
+					Start: lsp.Position{Line: step.LineNo - 1, Character: 0},
+					End:   lsp.Position{Line: step.LineNo - 1, Character: 0},
+				}})
+			}
+		}
+
+		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" references", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
+		lenses = append(lenses, lens)
+	}
+	return lenses, nil
+}
+
 func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
 	lenses = append(lenses, createCodeLens(spec.Heading.LineNo-1, "Run in parallel", inParallelCommand, getExecutionArgs(spec.FileName)))
 	return lenses
-}
-
-func resolveCodeLens(req *jsonrpc2.Request) (interface{}, error) {
-	var params lsp.CodeLens
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
-	}
-	return params, nil
 }
 
 func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {

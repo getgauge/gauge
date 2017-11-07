@@ -31,6 +31,7 @@ import (
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -39,7 +40,8 @@ type server struct{}
 
 type infoProvider interface {
 	Init()
-	Steps() []*gauge.StepValue
+	Steps() []*gauge.Step
+	AllSteps() []*gauge.Step
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	Tags() []string
@@ -53,6 +55,7 @@ var provider infoProvider
 func Server(p infoProvider) *server {
 	provider = p
 	provider.Init()
+	startRunner()
 	return &server{}
 }
 
@@ -61,6 +64,34 @@ type lspHandler struct {
 }
 
 type LangHandler struct {
+}
+
+type registrationParams struct {
+	Registrations []registration `json:"registrations"`
+}
+
+type registration struct {
+	Id              string      `json:"id"`
+	Method          string      `json:"method"`
+	RegisterOptions interface{} `json:"registerOptions"`
+}
+
+type textDocumentRegistrationOptions struct {
+	DocumentSelector documentSelector `json:"documentSelector"`
+}
+
+type textDocumentChangeRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	SyncKind lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
+}
+
+type codeLensRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	ResolveProvider bool `json:"resolveProvider,omitempty"`
+}
+
+type documentSelector struct {
+	Language string `json:"language"`
 }
 
 func newHandler() jsonrpc2.Handler {
@@ -84,11 +115,12 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
 				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
 				DocumentFormattingProvider: true,
-				CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: true},
+				CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
 				DefinitionProvider:         true,
 			},
 		}, nil
 	case "initialized":
+		registerRunnerCapabilities(conn, ctx)
 		return nil, nil
 	case "shutdown":
 		return nil, nil
@@ -100,18 +132,49 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "$/cancelRequest":
 		return nil, nil
 	case "textDocument/didOpen":
-		openFile(req)
-		publishDiagnostics(ctx, conn, req)
-		return nil, nil
+		var params lsp.DidOpenTextDocumentParams
+		var err error
+		if err = json.Unmarshal(*req.Params, &params); err != nil {
+			logger.APILog.Debugf("failed to parse request %s", err.Error())
+			return nil, err
+		}
+		if util.IsGaugeFile(params.TextDocument.URI) {
+			openFile(params)
+			publishDiagnostics(ctx, conn, params.TextDocument.URI)
+		} else {
+			err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
+		}
+		return nil, err
 	case "textDocument/didClose":
-		closeFile(req)
-		return nil, nil
+		var params lsp.DidCloseTextDocumentParams
+		var err error
+		if err := json.Unmarshal(*req.Params, &params); err != nil {
+			logger.APILog.Debugf("failed to parse request %s", err.Error())
+			return nil, err
+		}
+		if util.IsGaugeFile(params.TextDocument.URI) {
+			closeFile(params)
+		} else {
+			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
+			err = sendMessageToRunner(cacheFileRequest)
+		}
+		return nil, err
 	case "textDocument/didSave":
 		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
-		changeFile(req)
-		publishDiagnostics(ctx, conn, req)
-		return nil, nil
+		var params lsp.DidChangeTextDocumentParams
+		var err error
+		if err = json.Unmarshal(*req.Params, &params); err != nil {
+			logger.APILog.Debugf("failed to parse request %s", err.Error())
+			return nil, err
+		}
+		if util.IsGaugeFile(params.TextDocument.URI) {
+			changeFile(params)
+			publishDiagnostics(ctx, conn, params.TextDocument.URI)
+		} else {
+			err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
+		}
+		return nil, err
 	case "textDocument/completion":
 		return completion(req)
 	case "completionItem/resolve":
@@ -127,23 +190,26 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/codeLens":
 		return getCodeLenses(req)
 	case "codeLens/resolve":
-		return resolveCodeLens(req)
-	case "workspace/symbol":
-		return nil, errors.New("Unknown request")
-	case "workspace/xreferences":
 		return nil, errors.New("Unknown request")
 	default:
 		return nil, errors.New("Unknown request")
 	}
 }
 
-func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, request *jsonrpc2.Request) {
-	var params struct{ TextDocument lsp.TextDocumentIdentifier }
-	if err := json.Unmarshal(*request.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-	}
-	diagnostics := createDiagnostics(params.TextDocument.URI)
-	conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: params.TextDocument.URI, Diagnostics: diagnostics})
+func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
+	var result string
+	// TODO : fetch the language dynamically
+	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
+		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
+		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
+		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, SyncKind: lsp.TDSKFull}},
+		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, ResolveProvider: false}},
+	}}, result)
+}
+
+func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, textDocumentUri string) {
+	diagnostics := createDiagnostics(textDocumentUri)
+	conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: textDocumentUri, Diagnostics: diagnostics})
 }
 
 func (s *server) Start() {
@@ -151,6 +217,7 @@ func (s *server) Start() {
 	var connOpt []jsonrpc2.ConnOpt
 	connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
 	<-jsonrpc2.NewConn(context.Background(), jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...).DisconnectNotify()
+	killRunner()
 	logger.APILog.Info("Connection closed")
 }
 
