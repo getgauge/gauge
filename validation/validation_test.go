@@ -136,12 +136,12 @@ func (s *MySuite) TestValidateStep(c *C) {
 	HideSuggestion = false
 	var suggestion bytes.Buffer
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
-	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
 		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
-	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
@@ -156,11 +156,11 @@ func (s *MySuite) TestValidateStep(c *C) {
 func (s *MySuite) TestShouldNotGiveSuggestionWhenHideSuggestionFlagIsFalse(c *C) {
 	HideSuggestion = true
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
-	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
-	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
@@ -173,14 +173,14 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	var suggestion bytes.Buffer
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
-	getResponseFromRunner = func(m *gauge_messages.Message, v *specValidator) (*gauge_messages.Message, error) {
+	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
 		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
 		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
 		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
 	}
 	cptDict := gauge.NewConceptDictionary()
 	cptDict.ConceptsMap["my concept"] = &gauge.Concept{ConceptStep: parentStep, FileName: "concept.cpt"}
-	specVal := &specValidator{specification: &gauge.Specification{FileName: "foo.spec"}, conceptsDictionary: cptDict}
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}, conceptsDictionary: cptDict}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
