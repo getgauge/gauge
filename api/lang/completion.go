@@ -72,7 +72,7 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 }
 
 func isInTagsContext(line int, uri string) bool {
-	if strings.HasPrefix(strings.ToLower(strings.TrimSpace(getLine(uri, line))), tagIdentifier) {
+	if strings.HasPrefix(strings.ToLower(strings.Join(strings.Fields(getLine(uri, line)), "")), tagIdentifier) {
 		return true
 	} else if line != 0 && (endsWithComma(getLine(uri, line-1)) && isInTagsContext(line-1, uri)) {
 		return true

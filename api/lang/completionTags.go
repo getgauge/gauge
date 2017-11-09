@@ -30,6 +30,7 @@ func tagsCompletion(line string, pLine string, params lsp.TextDocumentPositionPa
 		item := completionItem{
 			InsertTextFormat: text,
 			CompletionItem: lsp.CompletionItem{
+				SortText:   "a" + t,
 				Label:      t,
 				FilterText: t + suffix,
 				Detail:     tag,
