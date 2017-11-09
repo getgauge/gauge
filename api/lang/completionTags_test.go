@@ -47,6 +47,7 @@ func TestGetTagsCompletion(t *testing.T) {
 			{
 				InsertTextFormat: text,
 				CompletionItem: lsp.CompletionItem{
+					SortText:   "ahello",
 					Label:      "hello",
 					FilterText: "hello",
 					Detail:     tag,
@@ -95,6 +96,7 @@ func TestGetTagsCompletionWhenEditingInMiddle(t *testing.T) {
 			{
 				InsertTextFormat: text,
 				CompletionItem: lsp.CompletionItem{
+					SortText:   "ahello",
 					Label:      "hello",
 					FilterText: "hello,",
 					Detail:     tag,
