@@ -212,10 +212,12 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, textDocumen
 	conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: textDocumentUri, Diagnostics: diagnostics})
 }
 
-func (s *server) Start() {
+func (s *server) Start(logLevel string) {
 	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
-	connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
+	if logLevel == "debug" {
+		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
+	}
 	<-jsonrpc2.NewConn(context.Background(), jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...).DisconnectNotify()
 	killRunner()
 	logger.APILog.Info("Connection closed")
