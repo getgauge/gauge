@@ -21,7 +21,15 @@ func createDiagnostics(uri string) []lsp.Diagnostic {
 
 func createValidationDiagnostics(errors []validation.StepValidationError, uri string) (diagnostics []lsp.Diagnostic) {
 	for _, err := range errors {
-		diagnostics = append(diagnostics, createDiagnostic(err.Message(), err.Step().LineNo-1, 1, uri))
+		diagnostics = append(diagnostics, lsp.Diagnostic{
+			Range: lsp.Range{
+				Start: lsp.Position{Line: err.Step().LineNo - 1, Character: 0},
+				End:   lsp.Position{Line: err.Step().LineNo - 1, Character: len(getLine(uri, err.Step().LineNo-1))},
+			},
+			Message:  err.Message(),
+			Severity: 1,
+			Code:     err.Suggestion(),
+		})
 	}
 	return
 }
