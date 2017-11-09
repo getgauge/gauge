@@ -86,7 +86,7 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 			}
 		}
 
-		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" references", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
+		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" reference(s)", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
 		lenses = append(lenses, lens)
 	}
 	return lenses, nil
