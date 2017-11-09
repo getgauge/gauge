@@ -42,14 +42,15 @@ func validateConcept(uri string, file string) *parser.ParseResult {
 	return res
 }
 
-func createDiagnosticsFrom(res *parser.ParseResult, uri string) (diagnostics []lsp.Diagnostic) {
+func createDiagnosticsFrom(res *parser.ParseResult, uri string) []lsp.Diagnostic {
+	diagnostics := make([]lsp.Diagnostic, 0)
 	for _, err := range res.ParseErrors {
 		diagnostics = append(diagnostics, createDiagnostic(err.Message, err.LineNo-1, 1, uri))
 	}
 	for _, warning := range res.Warnings {
 		diagnostics = append(diagnostics, createDiagnostic(warning.Message, warning.LineNo-1, 2, uri))
 	}
-	return
+	return diagnostics
 }
 
 func createDiagnostic(message string, line int, severity lsp.DiagnosticSeverity, uri string) lsp.Diagnostic {
