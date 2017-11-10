@@ -27,6 +27,9 @@ func createValidationDiagnostics(errors []validation.StepValidationError, uri st
 }
 
 func validateSpec(spec *gauge.Specification) (vErrors []validation.StepValidationError) {
+	if lRunner.runner == nil{
+		return
+	}
 	v := validation.NewSpecValidator(spec, lRunner.runner, provider.GetConceptDictionary(), []error{}, map[string]error{})
 	for _, e := range v.Validate() {
 		vErrors = append(vErrors, e.(validation.StepValidationError))

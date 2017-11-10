@@ -87,66 +87,13 @@ Scenario Heading
 	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, specText)
-
-	want := []lsp.Diagnostic{
-		{
-			Range: lsp.Range{
-				Start: lsp.Position{6, 0},
-				End:   lsp.Position{6, 11},
-			},
-			Message:  "Step implementation not found",
-			Severity: 1,
-		},
-
-	}
-	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
-	}
-	got := createDiagnostics(uri)
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	d := createDiagnostics(uri)
+	if len(d) > 0 {
+		t.Errorf("expected no error.\n Got: %s", d)
 	}
 }
 
 
-func TestDiagnosticWithDuplicateStepError(t *testing.T) {
-	specText := `Specification Heading
-=====================
-
-Scenario Heading
-----------------
-
-* Step text
-`
-
-	uri := "foo.spec"
-	provider = infoGatherer.NewSpecInfoGatherer(gauge.NewConceptDictionary())
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
-
-	want := []lsp.Diagnostic{
-		{
-			Range: lsp.Range{
-				Start: lsp.Position{6, 0},
-				End:   lsp.Position{6, 11},
-			},
-			Message:  "Duplicate step implementation",
-			Severity: 1,
-		},
-
-	}
-	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorType: gauge_messages.StepValidateResponse_DUPLICATE_STEP_IMPLEMENTATION}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
-	}
-	got := createDiagnostics(uri)
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
-	}
-}
 
 
 func TestDiagnosticWithoutParseError(t *testing.T) {

@@ -110,15 +110,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	switch req.Method {
 	case "initialize":
 		kind := lsp.TDSKFull
-		return lsp.InitializeResult{
-			Capabilities: lsp.ServerCapabilities{
-				TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
-				CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
-				DocumentFormattingProvider: true,
-				CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
-				DefinitionProvider:         true,
-			},
-		}, nil
+		return gaugeLSPCapabilities(kind), nil
 	case "initialized":
 		registerRunnerCapabilities(conn, ctx)
 		return nil, nil
@@ -132,49 +124,13 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "$/cancelRequest":
 		return nil, nil
 	case "textDocument/didOpen":
-		var params lsp.DidOpenTextDocumentParams
-		var err error
-		if err = json.Unmarshal(*req.Params, &params); err != nil {
-			logger.APILog.Debugf("failed to parse request %s", err.Error())
-			return nil, err
-		}
-		if util.IsGaugeFile(params.TextDocument.URI) {
-			openFile(params)
-			publishDiagnostics(ctx, conn, params.TextDocument.URI)
-		} else {
-			err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
-		}
-		return nil, err
+		return nil, documentOpened(req, ctx, conn)
 	case "textDocument/didClose":
-		var params lsp.DidCloseTextDocumentParams
-		var err error
-		if err := json.Unmarshal(*req.Params, &params); err != nil {
-			logger.APILog.Debugf("failed to parse request %s", err.Error())
-			return nil, err
-		}
-		if util.IsGaugeFile(params.TextDocument.URI) {
-			closeFile(params)
-		} else {
-			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
-			err = sendMessageToRunner(cacheFileRequest)
-		}
-		return nil, err
+		return nil, documentClosed(req)
 	case "textDocument/didSave":
 		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
-		var params lsp.DidChangeTextDocumentParams
-		var err error
-		if err = json.Unmarshal(*req.Params, &params); err != nil {
-			logger.APILog.Debugf("failed to parse request %s", err.Error())
-			return nil, err
-		}
-		if util.IsGaugeFile(params.TextDocument.URI) {
-			changeFile(params)
-			publishDiagnostics(ctx, conn, params.TextDocument.URI)
-		} else {
-			err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
-		}
-		return nil, err
+		return nil, documentChange(req, ctx, conn)
 	case "textDocument/completion":
 		return completion(req)
 	case "completionItem/resolve":
@@ -194,6 +150,66 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	default:
 		return nil, errors.New("Unknown request")
 	}
+}
+
+func gaugeLSPCapabilities(kind lsp.TextDocumentSyncKind) lsp.InitializeResult {
+	return lsp.InitializeResult{
+		Capabilities: lsp.ServerCapabilities{
+			TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
+			CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
+			DocumentFormattingProvider: true,
+			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
+			DefinitionProvider:         true,
+		},
+	}
+}
+
+func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
+	var params lsp.DidOpenTextDocumentParams
+	var err error
+	if err = json.Unmarshal(*req.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return err
+	}
+	if util.IsGaugeFile(params.TextDocument.URI) {
+		openFile(params)
+		publishDiagnostics(ctx, conn, params.TextDocument.URI)
+	} else if lRunner.runner != nil {
+		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
+	}
+	return err
+}
+
+func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
+	var params lsp.DidChangeTextDocumentParams
+	var err error
+	if err = json.Unmarshal(*req.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return err
+	}
+	if util.IsGaugeFile(params.TextDocument.URI) {
+		changeFile(params)
+		publishDiagnostics(ctx, conn, params.TextDocument.URI)
+	} else if lRunner.runner != nil {
+		err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
+	}
+	return err
+}
+
+func documentClosed(req *jsonrpc2.Request) error {
+	var params lsp.DidCloseTextDocumentParams
+	var err error
+	if err := json.Unmarshal(*req.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return err
+	}
+	if util.IsGaugeFile(params.TextDocument.URI) {
+		closeFile(params)
+	} else if lRunner.runner != nil {
+		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
+		err = sendMessageToRunner(cacheFileRequest)
+	}
+	return err
 }
 
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {

@@ -9,6 +9,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/manifest"
 )
 
 type langRunner struct {
@@ -28,6 +29,10 @@ func startRunner() {
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
+	m, _ := manifest.ProjectManifest()
+	if m.Language != "js" {
+		return nil, nil
+	}
 	outfile, err := os.OpenFile(logger.GetLogFilePath(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		logger.APILog.Infof("%s", err.Error())
