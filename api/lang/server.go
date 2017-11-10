@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
+	"github.com/op/go-logging"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -234,7 +235,10 @@ func (s *server) Start(logLevel string) {
 	if logLevel == "debug" {
 		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
 	}
-	<-jsonrpc2.NewConn(context.Background(), jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...).DisconnectNotify()
+	ctx := context.Background()
+	conn := jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
+	logger.SetCustomLogger(lspLogger{conn, ctx})
+	<-conn.DisconnectNotify()
 	killRunner()
 	logger.APILog.Info("Connection closed")
 }
@@ -254,4 +258,29 @@ func (stdRWC) Close() error {
 		return err
 	}
 	return os.Stdout.Close()
+}
+
+type lspLogger struct {
+	conn *jsonrpc2.Conn
+	ctx  context.Context
+}
+
+func (c lspLogger) Log(logLevel logging.Level, msg string) {
+	logger.APILog.Info(logLevel)
+	var level lsp.MessageType
+	switch logLevel {
+	case logging.DEBUG:
+		level = lsp.Log
+	case logging.INFO:
+		level = lsp.Info
+	case logging.WARNING:
+		level = lsp.MTWarning
+	case logging.ERROR:
+		level = lsp.MTError
+	case logging.CRITICAL:
+		level = lsp.MTError
+	default:
+		level = lsp.Info
+	}
+	c.conn.Notify(c.ctx, "window/logMessage", lsp.LogMessageParams{Type: level, Message: msg})
 }
