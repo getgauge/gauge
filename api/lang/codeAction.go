@@ -2,6 +2,7 @@ package lang
 
 import (
 	"encoding/json"
+
 	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"

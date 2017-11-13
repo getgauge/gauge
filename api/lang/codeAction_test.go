@@ -16,12 +16,12 @@
 package lang
 
 import (
-	"testing"
-	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"encoding/json"
 	"reflect"
+	"testing"
+
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"fmt"
 )
 
 func TestGetCodeActionForUnimplementedStep(t *testing.T) {
@@ -50,8 +50,8 @@ func TestGetCodeActionForUnimplementedStep(t *testing.T) {
 		},
 	}
 
-	got,err := getCodeActions(&jsonrpc2.Request{Params: &p})
-	fmt.Print(got)
+	got, err := getCodeActions(&jsonrpc2.Request{Params: &p})
+
 	if err != nil {
 		t.Errorf("expected eror to be nil. \nGot : %s", err)
 	}

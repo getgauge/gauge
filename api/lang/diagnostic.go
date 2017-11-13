@@ -1,11 +1,11 @@
 package lang
 
 import (
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/getgauge/gauge/gauge"
 )
 
 func createDiagnostics(uri string) []lsp.Diagnostic {
@@ -21,21 +21,15 @@ func createDiagnostics(uri string) []lsp.Diagnostic {
 
 func createValidationDiagnostics(errors []validation.StepValidationError, uri string) (diagnostics []lsp.Diagnostic) {
 	for _, err := range errors {
-		diagnostics = append(diagnostics, lsp.Diagnostic{
-			Range: lsp.Range{
-				Start: lsp.Position{Line: err.Step().LineNo - 1, Character: 0},
-				End:   lsp.Position{Line: err.Step().LineNo - 1, Character: len(getLine(uri, err.Step().LineNo-1))},
-			},
-			Message:  err.Message(),
-			Severity: 1,
-			Code:     err.Suggestion(),
-		})
+		d := createDiagnostic(err.Message(), err.Step().LineNo-1, 1, uri)
+		d.Code = err.Suggestion()
+		diagnostics = append(diagnostics, d)
 	}
 	return
 }
 
 func validateSpec(spec *gauge.Specification) (vErrors []validation.StepValidationError) {
-	if lRunner.runner == nil{
+	if lRunner.runner == nil {
 		return
 	}
 	v := validation.NewSpecValidator(spec, lRunner.runner, provider.GetConceptDictionary(), []error{}, map[string]error{})

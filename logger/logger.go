@@ -40,28 +40,37 @@ const (
 
 var level logging.Level
 var isWindows bool
+var customLogger CustomLogger
+
+type CustomLogger interface {
+	Log(logLevel logging.Level, msg string)
+}
+
+func SetCustomLogger(l CustomLogger) {
+	customLogger = l
+}
 
 // Infof logs INFO messages
 func Infof(msg string, args ...interface{}) {
 	GaugeLog.Infof(msg, args...)
-	fmt.Println(fmt.Sprintf(msg, args...))
+	write(logging.INFO, msg, args...)
 }
 
 // Errorf logs ERROR messages
 func Errorf(msg string, args ...interface{}) {
 	GaugeLog.Errorf(msg, args...)
-	fmt.Println(fmt.Sprintf(msg, args...))
+	write(logging.ERROR, msg, args...)
 }
 
 // Warningf logs WARNING messages
 func Warningf(msg string, args ...interface{}) {
 	GaugeLog.Warningf(msg, args...)
-	fmt.Println(fmt.Sprintf(msg, args...))
+	write(logging.WARNING, msg, args...)
 }
 
 // Fatalf logs CRITICAL messages and exits
 func Fatalf(msg string, args ...interface{}) {
-	fmt.Println(fmt.Sprintf(msg, args...))
+	write(logging.CRITICAL, msg, args...)
 	GaugeLog.Fatalf(msg, args...)
 }
 
@@ -69,6 +78,14 @@ func Fatalf(msg string, args ...interface{}) {
 func Debugf(msg string, args ...interface{}) {
 	GaugeLog.Debugf(msg, args...)
 	if level == logging.DEBUG {
+		write(logging.DEBUG, msg, args...)
+	}
+}
+
+func write(logLevel logging.Level, msg string, args ...interface{}) {
+	if customLogger != nil {
+		customLogger.Log(logLevel, fmt.Sprintf(msg, args...))
+	} else {
 		fmt.Println(fmt.Sprintf(msg, args...))
 	}
 }

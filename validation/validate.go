@@ -79,19 +79,19 @@ type SpecValidationError struct {
 	fileName string
 }
 
-func (s StepValidationError) Message() string{
+func (s StepValidationError) Message() string {
 	return s.message
 }
 
-func (s StepValidationError) Step() *gauge.Step{
+func (s StepValidationError) Step() *gauge.Step {
 	return s.step
 }
 
-func (s StepValidationError) FileName() string{
+func (s StepValidationError) FileName() string {
 	return s.fileName
 }
 
-func (s StepValidationError) ErrorType() gm.StepValidateResponse_ErrorType{
+func (s StepValidationError) ErrorType() gm.StepValidateResponse_ErrorType {
 	return *s.errorType
 }
 
