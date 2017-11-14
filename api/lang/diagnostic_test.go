@@ -24,10 +24,10 @@ import (
 
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/parser"
-	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/getgauge/gauge/validation"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/validation"
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 func TestDiagnostic(t *testing.T) {
@@ -93,9 +93,6 @@ Scenario Heading
 	}
 }
 
-
-
-
 func TestDiagnosticWithoutParseError(t *testing.T) {
 	specText := `Specification Heading
 =====================
@@ -119,7 +116,7 @@ Scenario Heading
 
 	d := createDiagnostics(uri)
 
-	if len(d) > 0{
+	if len(d) > 0 {
 		t.Errorf("want: `%s` errors,\n got: `%v`", 0, len(d))
 	}
 }

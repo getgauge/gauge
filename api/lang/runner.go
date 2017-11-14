@@ -7,9 +7,9 @@ import (
 	"github.com/getgauge/gauge/conn"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/manifest"
 )
 
 type langRunner struct {

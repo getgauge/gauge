@@ -147,6 +147,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return getCodeLenses(req)
 	case "codeLens/resolve":
 		return nil, errors.New("Unknown request")
+	case "textDocument/codeAction":
+		return getCodeActions(req)
 	default:
 		return nil, errors.New("Unknown request")
 	}
@@ -161,6 +163,7 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 			DocumentFormattingProvider: true,
 			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
 			DefinitionProvider:         true,
+			CodeActionProvider:         true,
 		},
 	}
 }

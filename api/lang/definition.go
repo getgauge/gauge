@@ -74,7 +74,7 @@ func search(step *gauge.Step) (interface{}, error) {
 
 func searchStep(step *gauge.Step) (interface{}, error) {
 	if lRunner.runner == nil {
-		return nil,nil
+		return nil, nil
 	}
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
 	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, lRunner.runner.Connection(), config.RunnerRequestTimeout())
