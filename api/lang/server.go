@@ -145,8 +145,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return data, err
 	case "textDocument/codeLens":
 		return getCodeLenses(req)
-	case "codeLens/resolve":
-		return nil, errors.New("Unknown request")
+	case "gauge/stepReferences":
+		return getStepReferences(req)
 	default:
 		return nil, errors.New("Unknown request")
 	}

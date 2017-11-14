@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
@@ -62,7 +79,7 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 
 func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if lRunner.runner == nil {
-		return nil,nil
+		return nil, nil
 	}
 	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
 	response, err := conn.GetResponseForMessageWithTimeout(stepPositionsRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
@@ -78,18 +95,13 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	var lenses []lsp.CodeLens
 	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
 		var count int
-		var locations []lsp.Location
 		for _, step := range allSteps {
 			if stepPosition.GetStepValue() == step.Value {
 				count++
-				locations = append(locations, lsp.Location{URI: util.ConvertPathToURI(step.FileName), Range: lsp.Range{
-					Start: lsp.Position{Line: step.LineNo - 1, Character: 0},
-					End:   lsp.Position{Line: step.LineNo - 1, Character: 0},
-				}})
 			}
 		}
 
-		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" reference(s)", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
+		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" reference(s)", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, stepPosition.GetStepValue(), count})
 		lenses = append(lenses, lens)
 	}
 	return lenses, nil
