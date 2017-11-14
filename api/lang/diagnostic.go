@@ -2,10 +2,15 @@ package lang
 
 import (
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+
+	"strconv"
+	"strings"
+
 )
 
 func createDiagnostics(uri string) []lsp.Diagnostic {
@@ -50,10 +55,27 @@ func validateConcept(uri string, file string) *parser.ParseResult {
 func createDiagnosticsFrom(res *parser.ParseResult, uri string) []lsp.Diagnostic {
 	diagnostics := make([]lsp.Diagnostic, 0)
 	for _, err := range res.ParseErrors {
-		diagnostics = append(diagnostics, createDiagnostic(err.Message, err.LineNo-1, 1, uri))
+		if strings.Contains(err.Message, "Duplicate concept definition found") {
+			diagnostics = createDiagnosticsForDuplicateConcepts(err, diagnostics, uri)
+		} else {
+			diagnostics = append(diagnostics, createDiagnostic(err.Message, err.LineNo-1, 1, uri))
+		}
 	}
 	for _, warning := range res.Warnings {
 		diagnostics = append(diagnostics, createDiagnostic(warning.Message, warning.LineNo-1, 2, uri))
+	}
+	return diagnostics
+}
+
+func createDiagnosticsForDuplicateConcepts(err parser.ParseError, diagnostics []lsp.Diagnostic, uri string) []lsp.Diagnostic {
+	values := strings.Split(err.Message, "\t")[1:]
+	for _, val := range values {
+		arr := strings.Split(val, ":")
+		l, error := strconv.Atoi(strings.TrimSuffix(arr[len(arr)-1], "\n"))
+		if error != nil {
+			logger.Errorf("Error while getting line number for duplicate concepts: ", error)
+		}
+		diagnostics = append(diagnostics, createDiagnostic(err.Message, l-1, 1, uri))
 	}
 	return diagnostics
 }
