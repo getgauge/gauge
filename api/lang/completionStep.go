@@ -28,7 +28,7 @@ import (
 )
 
 func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (interface{}, error) {
-	list := completionList{IsIncomplete: false, Items: []completionItem{}}
+	list := completionList{IsIncomplete: false, Items: make([]completionItem, 0)}
 	editRange := getStepEditRange(line, params.Position)
 	prefix := getPrefix(pLine)
 	var givenArgs []gauge.StepArg
@@ -52,7 +52,7 @@ func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (
 }
 
 func getStepArgs(line string) ([]gauge.StepArg, error) {
-	var givenArgs []gauge.StepArg
+	givenArgs := make([]gauge.StepArg, 0)
 	if line != "" && strings.TrimSpace(line) != "*" {
 		specParser := new(parser.SpecParser)
 		tokens, errs := specParser.GenerateTokens(line, "")

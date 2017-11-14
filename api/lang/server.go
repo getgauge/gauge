@@ -110,8 +110,7 @@ func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
 	switch req.Method {
 	case "initialize":
-		kind := lsp.TDSKFull
-		return gaugeLSPCapabilities(kind), nil
+		return gaugeLSPCapabilities(), nil
 	case "initialized":
 		registerRunnerCapabilities(conn, ctx)
 		return nil, nil
@@ -153,10 +152,11 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	}
 }
 
-func gaugeLSPCapabilities(kind lsp.TextDocumentSyncKind) lsp.InitializeResult {
+func gaugeLSPCapabilities() lsp.InitializeResult {
+	kind := lsp.TDSKFull
 	return lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
-			TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind},
+			TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind, Options: &lsp.TextDocumentSyncOptions{Save: &lsp.SaveOptions{IncludeText: true}}},
 			CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
 			DocumentFormattingProvider: true,
 			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
