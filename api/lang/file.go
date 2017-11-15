@@ -54,6 +54,13 @@ func (files *files) content(uri string) []string {
 	return f.cache[uri]
 }
 
+func (files *files) exists(uri string) bool {
+	f.Lock()
+	defer f.Unlock()
+	_, ok := f.cache[uri]
+	return ok
+}
+
 var f = &files{cache: make(map[string][]string)}
 
 func openFile(params lsp.DidOpenTextDocumentParams) {
@@ -75,4 +82,8 @@ func getLine(uri string, line int) string {
 
 func getContent(uri string) string {
 	return strings.Join(f.content(uri), "\n")
+}
+
+func isOpen(uri string) bool {
+	return f.exists(uri)
 }

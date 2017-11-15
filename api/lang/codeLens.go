@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
@@ -20,8 +37,9 @@ import (
 )
 
 const (
-	command           = "gauge.execute"
+	executeCommand    = "gauge.execute"
 	inParallelCommand = "gauge.execute.inParallel"
+	referencesCommand = "gauge.showReferences"
 )
 
 func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
@@ -51,7 +69,7 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 		return nil, err
 	}
 	var codeLenses []lsp.CodeLens
-	specLenses := createCodeLens(spec.Heading.LineNo-1, "Run Spec", command, getExecutionArgs(spec.FileName))
+	specLenses := createCodeLens(spec.Heading.LineNo-1, "Run Spec", executeCommand, getExecutionArgs(spec.FileName))
 	codeLenses = append(codeLenses, specLenses)
 	if spec.DataTable.IsInitialized() {
 		codeLenses = append(codeLenses, getDataTableLenses(spec)...)
@@ -64,7 +82,8 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI)}}
+	uri := params.TextDocument.URI
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
 	response, err := conn.GetResponseForMessageWithTimeout(stepPositionsRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
@@ -78,18 +97,18 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	var lenses []lsp.CodeLens
 	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
 		var count int
-		var locations []lsp.Location
+		stepValue := stepPosition.GetStepValue()
 		for _, step := range allSteps {
-			if stepPosition.GetStepValue() == step.Value {
+			if stepValue == step.Value {
 				count++
-				locations = append(locations, lsp.Location{URI: util.ConvertPathToURI(step.FileName), Range: lsp.Range{
-					Start: lsp.Position{Line: step.LineNo - 1, Character: 0},
-					End:   lsp.Position{Line: step.LineNo - 1, Character: 0},
-				}})
 			}
 		}
+		lensTitle := strconv.Itoa(count) + " reference(s)"
+		lensPosition := lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}
+		lineNo := int(stepPosition.GetLineNumber()) - 1
+		args := []interface{}{uri, lensPosition, stepValue, count}
 
-		lens := createCodeLens(int(stepPosition.GetLineNumber())-1, strconv.Itoa(count)+" reference(s)", "gauge.showReferences", []interface{}{params.TextDocument.URI, lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}, locations})
+		lens := createCodeLens(lineNo, lensTitle, referencesCommand, args)
 		lenses = append(lenses, lens)
 	}
 	return lenses, nil
@@ -105,7 +124,7 @@ func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
 	for _, sce := range spec.Scenarios {
 		args := getExecutionArgs(fmt.Sprintf("%s:%d", spec.FileName, sce.Heading.LineNo))
-		lens := createCodeLens(sce.Heading.LineNo-1, "Run Scenario", command, args)
+		lens := createCodeLens(sce.Heading.LineNo-1, "Run Scenario", executeCommand, args)
 		lenses = append(lenses, lens)
 	}
 	return lenses

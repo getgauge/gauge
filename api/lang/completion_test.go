@@ -65,6 +65,7 @@ type dummyInfoProvider struct{}
 func (p *dummyInfoProvider) Init() {}
 func (p *dummyInfoProvider) Steps() []*gauge.Step {
 	return []*gauge.Step{{
+		FileName: "foo.spec",
 		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
 		Value:    "Say {} to {}",
 		LineText: "Say <hello> to <gauge>",
@@ -73,11 +74,14 @@ func (p *dummyInfoProvider) Steps() []*gauge.Step {
 
 func (p *dummyInfoProvider) AllSteps() []*gauge.Step {
 	return []*gauge.Step{{
+		FileName: "foo.spec",
+		LineNo:   7,
 		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
 		Value:    "Say {} to {}",
 		LineText: "Say <hello> to <gauge>",
 	}}
 }
+
 func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {
 	return []*gm.ConceptInfo{
 		{
