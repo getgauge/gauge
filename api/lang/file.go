@@ -59,7 +59,6 @@ func (files *files) exists(uri string) bool {
 	defer f.Unlock()
 	_, ok := f.cache[uri]
 	return ok
-
 }
 
 var f = &files{cache: make(map[string][]string)}
