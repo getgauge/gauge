@@ -1,6 +1,8 @@
 package lang
 
 import (
+	"io/ioutil"
+	"github.com/getgauge/common"
 	"encoding/json"
 	"fmt"
 
@@ -16,6 +18,26 @@ type ScenarioInfo struct {
 	Heading             string `json:"heading"`
 	LineNo              int    `json:"lineNo"`
 	ExecutionIdentifier string `json:"executionIdentifier"`
+}
+
+type specInfo struct {
+	Heading             string `json:"heading"`
+	ExecutionIdentifier string `json:"executionIdentifier"`	
+}
+
+func getSpecs(req *jsonrpc2.Request) (interface{}, error) {
+	specFiles := util.FindSpecFilesIn(common.SpecsDirectoryName)
+	parser := new(parser.SpecParser)
+	specs := make([]specInfo, 0)
+	for _, f := range specFiles {
+		content, err := ioutil.ReadFile(f)
+		if err != nil {
+			return nil, err
+		}
+		spec, _ := parser.ParseSpecText(string(content), f)
+		specs = append(specs, specInfo{Heading: spec.Heading.Value, ExecutionIdentifier: f})
+	}
+	return specs, nil
 }
 
 func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
@@ -39,9 +61,8 @@ func getScenarioAt(scenarios []*gauge.Scenario, file string, line int) interface
 		info := getScenarioInfo(sce, file)
 		if sce.InSpan(line + 1) {
 			return info
-		} else {
-			ifs = append(ifs, info)
 		}
+		ifs = append(ifs, info)
 	}
 	return ifs
 }
