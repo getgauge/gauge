@@ -138,7 +138,7 @@ func substituteEnvVars() error {
 				if _, ok := envVars[property]; !ok {
 					// error if env property is not found
 					if !isPropertySet(property) {
-						return fmt.Errorf("'%s' env property was not set!", property)
+						return fmt.Errorf("'%s' env property was not set.", property)
 					}
 					// get env var from system
 					propertyValue = os.Getenv(property)
