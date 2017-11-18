@@ -19,6 +19,7 @@ package env
 
 import (
 	"os"
+	"reflect"
 	"testing"
 
 	"github.com/getgauge/gauge/config"
@@ -185,4 +186,35 @@ func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
 
 	e := LoadEnv("default")
 	c.Assert(e.Error(), Equals, "'foo' env property was not set.")
+}
+
+func TestContainsEnvVar(t *testing.T) {
+	type args struct {
+		value string
+	}
+	tests := []struct {
+		name              string
+		args              args
+		wantContains      bool
+		wantNumberMatches int
+	}{
+		{"When empty", args{value: ""}, false, 0},
+		{"When no substitution", args{value: "test"}, false, 0},
+		{"When valid substitution", args{value: "${a}"}, true, 1},
+		{"When valid substitution followed by text", args{value: "${a}/test"}, true, 1},
+		{"When valid multiple substitutions", args{value: "${a}${b}"}, true, 2},
+		{"When invalid substitution", args{value: "${a"}, false, 0},
+		{"When valid and an invalid substitution", args{value: "$a${b}/test"}, true, 1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotContains, gotNumberOfMatches := containsEnvVar(tt.args.value)
+			if gotContains != tt.wantContains {
+				t.Errorf("containsEnvVar() gotContains = %v, want %v", gotContains, tt.wantContains)
+			}
+			if !reflect.DeepEqual(len(gotNumberOfMatches), tt.wantNumberMatches) {
+				t.Errorf("containsEnvVar() gotNumberOfMatches = %v, want %v", len(gotNumberOfMatches), tt.wantNumberMatches)
+			}
+		})
+	}
 }
