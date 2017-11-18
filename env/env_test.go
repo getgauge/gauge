@@ -99,6 +99,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("foo"), Equals, "bar")
 	c.Assert(os.Getenv("property1"), Equals, "value1")
+	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
 	c.Assert(os.Getenv("logs_directory"), Equals, "custom_logs_dir")
 }
 
@@ -110,6 +111,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("property1"), Equals, "value1")
+	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
 }
 
 func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
@@ -162,4 +164,25 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 
 	e := LoadEnv("bar")
 	c.Assert(e.Error(), Equals, "Failed to load env. bar environment does not exist")
+}
+
+func (s * MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
+	os.Clearenv()
+	os.Setenv("foo", "bar")
+
+	config.ProjectRoot = "_testdata/proj3"
+
+	e := LoadEnv("default")
+	c.Assert(e, Equals, nil)
+
+	c.Assert(os.Getenv("property1"), Equals, "value1")
+	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
+	c.Assert(os.Getenv("property3"), Equals, "bar/value1/value2")
+}
+
+func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
+	config.ProjectRoot = "_testdata/proj3"
+
+	e := LoadEnv("default")
+	c.Assert(e.Error(), Equals, "'foo' env property was not set!")
 }
