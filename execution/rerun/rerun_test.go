@@ -47,12 +47,12 @@ var _ = Suite(&MySuite{})
 func (s *MySuite) SetUpTest(c *C) {
 	p, _ := filepath.Abs("_testdata")
 	config.ProjectRoot = p
-	lastRunInfo = newLastRunMetaData()
+	runInfo = newLastRunInfo()
 }
 
 func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	msg := "hello world"
-	writeFailedMeta(msg)
+	writeLastRunInfo(msg)
 
 	file := filepath.Join(config.ProjectRoot, dotGauge, infoFileName)
 	c.Assert(common.FileExists(file), Equals, true)
@@ -72,8 +72,8 @@ func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 
 	prepareScenarioFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: spec1Abs}})
 
-	c.Assert(len(lastRunInfo.failedItemsMap[spec1Abs]), Equals, 1)
-	c.Assert(lastRunInfo.failedItemsMap[spec1Abs][spec1Rel+":2"], Equals, true)
+	c.Assert(len(runInfo.failedItemsMap[spec1Abs]), Equals, 1)
+	c.Assert(runInfo.failedItemsMap[spec1Abs][spec1Rel+":2"], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
@@ -83,8 +83,8 @@ func (s *MySuite) TestAddSpecPreHookFailedMetadata(c *C) {
 
 	addFailedMetadata(spec1, []string{}, addSpecFailedMetadata)
 
-	c.Assert(len(lastRunInfo.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(lastRunInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
+	c.Assert(len(runInfo.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(runInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
@@ -94,22 +94,22 @@ func (s *MySuite) TestAddSpecPostHookFailedMetadata(c *C) {
 
 	addFailedMetadata(spec1, []string{}, addSpecFailedMetadata)
 
-	c.Assert(len(lastRunInfo.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(lastRunInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
+	c.Assert(len(runInfo.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(runInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestAddSpecFailedMetadataOverwritesPreviouslyAddedValues(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec1Abs := filepath.Join(config.ProjectRoot, spec1Rel)
 	spec1 := &result.SpecResult{ProtoSpec: &gauge_messages.ProtoSpec{PreHookFailures: []*gauge_messages.ProtoHookFailure{{ErrorMessage: "error"}}, FileName: spec1Abs}}
-	lastRunInfo.failedItemsMap[spec1Rel] = make(map[string]bool)
-	lastRunInfo.failedItemsMap[spec1Rel]["scn1"] = true
-	lastRunInfo.failedItemsMap[spec1Rel]["scn2"] = true
+	runInfo.failedItemsMap[spec1Rel] = make(map[string]bool)
+	runInfo.failedItemsMap[spec1Rel]["scn1"] = true
+	runInfo.failedItemsMap[spec1Rel]["scn2"] = true
 
 	addSpecFailedMetadata(spec1, []string{})
 
-	c.Assert(len(lastRunInfo.failedItemsMap[spec1Rel]), Equals, 1)
-	c.Assert(lastRunInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
+	c.Assert(len(runInfo.failedItemsMap[spec1Rel]), Equals, 1)
+	c.Assert(runInfo.failedItemsMap[spec1Rel][spec1Rel], Equals, true)
 }
 
 func (s *MySuite) TestGetRelativePath(c *C) {
@@ -124,7 +124,7 @@ func (s *MySuite) TestGetRelativePath(c *C) {
 func (s *MySuite) TestGetAllFailedItems(c *C) {
 	spec1Rel := filepath.Join("specs", "example1.spec")
 	spec2Rel := filepath.Join("specs", "example2.spec")
-	metaData := newLastRunMetaData()
+	metaData := newLastRunInfo()
 	metaData.failedItemsMap[spec1Rel] = make(map[string]bool)
 	metaData.failedItemsMap[spec2Rel] = make(map[string]bool)
 	metaData.failedItemsMap[spec1Rel]["scn1"] = true
@@ -148,8 +148,8 @@ func (s *MySuite) TestCaptureLastRunInfo(c *C) {
 	event.Notify(suiteEnd)
 	wg.Wait()
 
-	c.Assert(len(lastRunInfo.LastRunItems), Equals, 1)
-	c.Assert(lastRunInfo.LastRunItems[0], Equals, "foo.spec")
+	c.Assert(len(runInfo.Items), Equals, 1)
+	c.Assert(runInfo.Items[0], Equals, "foo.spec")
 
 	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }
