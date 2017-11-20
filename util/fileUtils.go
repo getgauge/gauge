@@ -151,7 +151,7 @@ func IsDir(path string) bool {
 
 // GetSpecFiles returns the list of spec files present at the given path.
 // If the path itself represents a spec file, it returns the same.
-func GetSpecFiles(path string) []string {
+var GetSpecFiles = func(path string) []string {
 	var specFiles []string
 	if common.DirExists(path) {
 		specFiles = append(specFiles, FindSpecFilesIn(path)...)
@@ -163,7 +163,7 @@ func GetSpecFiles(path string) []string {
 }
 
 // GetConceptFiles returns the list of concept files present in the PROJECTROOT
-func GetConceptFiles() []string {
+var GetConceptFiles = func() []string {
 	projRoot := config.ProjectRoot
 	if projRoot == "" {
 		logger.Fatalf("Failed to get project root.")

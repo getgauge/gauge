@@ -229,7 +229,7 @@ func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTim
 func (e *specExecutor) skipSpecForError(err error) {
 	logger.Errorf(err.Error())
 	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
-		err.Error(), e.specification.FileName, nil)
+		err.Error(), e.specification.FileName, nil, "")
 	for _, scenario := range e.specification.Scenarios {
 		e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	}

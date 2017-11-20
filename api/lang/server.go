@@ -23,14 +23,11 @@ import (
 
 	"os"
 
-	"errors"
-
 	"encoding/json"
 
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/op/go-logging"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -47,8 +44,6 @@ type infoProvider interface {
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	Tags() []string
 	SearchConceptDictionary(string) *gauge.Concept
-	GetConceptDictionary() *gauge.ConceptDictionary
-	UpdateConceptCache(string, string) *parser.ParseResult
 }
 
 var provider infoProvider
@@ -113,6 +108,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
 		registerRunnerCapabilities(conn, ctx)
+		go publishDiagnostics(ctx, conn)
 		return nil, nil
 	case "shutdown":
 		return nil, nil
@@ -127,8 +123,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, documentOpened(req, ctx, conn)
 	case "textDocument/didClose":
 		return nil, documentClosed(req)
-	case "textDocument/didSave":
-		return nil, errors.New("Unknown request")
 	case "textDocument/didChange":
 		return nil, documentChange(req, ctx, conn)
 	case "textDocument/completion":
@@ -152,7 +146,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "gauge/scenarios":
 		return getScenarios(req)
 	default:
-		return nil, errors.New("Unknown request")
+		return nil, nil
 	}
 }
 
@@ -179,7 +173,7 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	}
 	if util.IsGaugeFile(params.TextDocument.URI) {
 		openFile(params)
-		publishDiagnostics(ctx, conn, params.TextDocument.URI)
+		go publishDiagnostics(ctx, conn)
 	} else if lRunner.runner != nil {
 		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
 	}
@@ -195,10 +189,10 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	}
 	if util.IsGaugeFile(params.TextDocument.URI) {
 		changeFile(params)
-		publishDiagnostics(ctx, conn, params.TextDocument.URI)
 	} else if lRunner.runner != nil {
 		err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
 	}
+	go publishDiagnostics(ctx, conn)
 	return err
 }
 
@@ -227,11 +221,6 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, SyncKind: lsp.TDSKFull}},
 		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, ResolveProvider: false}},
 	}}, result)
-}
-
-func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2, textDocumentUri string) {
-	diagnostics := createDiagnostics(textDocumentUri)
-	conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: textDocumentUri, Diagnostics: diagnostics})
 }
 
 func (s *server) Start(logLevel string) {
