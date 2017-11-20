@@ -43,7 +43,7 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
-			if failed {
+			if failed || repeat {
 				loadLastState(cmd)
 				return
 			}
@@ -54,6 +54,7 @@ var (
 	verbose       bool
 	simpleConsole bool
 	failed        bool
+	repeat        bool
 	parallel      bool
 	sort          bool
 	environment   string
@@ -77,11 +78,12 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
+	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat the previous run")
 	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 }
 
 func loadLastState(cmd *cobra.Command) {
-	lastState, err := rerun.GetLastState()
+	lastState, err := rerun.GetLastState(repeat)
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
@@ -93,7 +95,7 @@ func loadLastState(cmd *cobra.Command) {
 }
 
 func resetFlags() {
-	verbose, simpleConsole, failed, parallel, sort, hideSuggestion = false, false, false, false, false, false
+	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion = false, false, false, false, false, false, false
 	environment, tags, rows, strategy, logLevel, dir = "default", "", "", "lazy", "info", "."
 	streams, group = util.NumberOfCores(), -1
 }
