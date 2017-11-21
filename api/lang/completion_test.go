@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/getgauge/gauge/api/infoGatherer"		
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -59,10 +60,15 @@ func TestAddPlaceHolders(t *testing.T) {
 	}
 }
 
-type dummyInfoProvider struct{}
+type dummyInfoProvider struct{
+	specsFunc func(specs []string) []*infoGatherer.SpecDetail
+}
 
-func (p *dummyInfoProvider) Init() {}
-func (p *dummyInfoProvider) Steps() []*gauge.Step {
+func (p dummyInfoProvider) GetAvailableSpecDetails(specs []string) []*infoGatherer.SpecDetail { 
+	return p.specsFunc(specs) 
+}
+func (p dummyInfoProvider) Init() {}
+func (p dummyInfoProvider) Steps() []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
@@ -71,7 +77,7 @@ func (p *dummyInfoProvider) Steps() []*gauge.Step {
 	}}
 }
 
-func (p *dummyInfoProvider) AllSteps() []*gauge.Step {
+func (p dummyInfoProvider) AllSteps() []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		LineNo:   7,
@@ -81,7 +87,7 @@ func (p *dummyInfoProvider) AllSteps() []*gauge.Step {
 	}}
 }
 
-func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {
+func (p dummyInfoProvider) Concepts() []*gm.ConceptInfo {
 	return []*gm.ConceptInfo{
 		{
 			StepValue: &gm.ProtoStepValue{
@@ -93,15 +99,15 @@ func (p *dummyInfoProvider) Concepts() []*gm.ConceptInfo {
 	}
 }
 
-func (p *dummyInfoProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
+func (p dummyInfoProvider) Params(file string, argType gauge.ArgType) []gauge.StepArg {
 	return []gauge.StepArg{{Value: "hello", ArgType: gauge.Static}, {Value: "gauge", ArgType: gauge.Static}}
 }
 
-func (p *dummyInfoProvider) Tags() []string {
+func (p dummyInfoProvider) Tags() []string {
 	return []string{"hello"}
 }
 
-func (p *dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {
+func (p dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {
 	return &(gauge.Concept{FileName: "concept_uri", ConceptStep: &gauge.Step{
 		Value:    "concept1",
 		LineNo:   1,

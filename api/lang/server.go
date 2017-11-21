@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/api/infoGatherer"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
@@ -45,6 +46,7 @@ type infoProvider interface {
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	Tags() []string
 	SearchConceptDictionary(string) *gauge.Concept
+	GetAvailableSpecDetails(specs []string) []*infoGatherer.SpecDetail
 }
 
 var provider infoProvider

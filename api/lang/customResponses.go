@@ -18,10 +18,7 @@
 package lang
 
 import (
-	"path/filepath"	
-	"os"
 	"io/ioutil"
-	"github.com/getgauge/common"
 	"encoding/json"
 	"fmt"
 
@@ -45,16 +42,10 @@ type specInfo struct {
 }
 
 func getSpecs() (interface{}, error) {
-	specsDir := filepath.Join(os.Getenv(common.GaugeProjectRootEnv), common.SpecsDirectoryName)
-	specFiles := util.GetSpecFiles(specsDir)
+	specDetails := provider.GetAvailableSpecDetails([]string{})
 	specs := make([]specInfo, 0)
-	for _, f := range specFiles {
-		content, err := ioutil.ReadFile(f)
-		if err != nil {
-			return nil, err
-		}
-		spec, _ := new(parser.SpecParser).ParseSpecText(string(content), f)
-		specs = append(specs, specInfo{Heading: spec.Heading.Value, ExecutionIdentifier: f})
+	for _, d := range specDetails {
+		specs = append(specs, specInfo{Heading: d.Spec.Heading.Value, ExecutionIdentifier: d.Spec.FileName})
 	}
 	return specs, nil
 }

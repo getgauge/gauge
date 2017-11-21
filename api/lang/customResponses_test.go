@@ -18,9 +18,10 @@
 package lang
 
 import (
-	"fmt"
 	"os"
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/api/infoGatherer"
 	"io/ioutil"
 	"path/filepath"
 	"encoding/json"
@@ -169,34 +170,38 @@ Scenario Heading2
 	os.Remove(uri)
 }
 
-
 func TestGetSpecsShouldReturnAllSpecsInDirectory(t *testing.T) {
-	specTextTemplate := `Specification %d
-=====================
-
-Scenario Heading
-----------------
-
-* Step text
-`
-	rootPath, err := filepath.Abs("_testdata")
-	if err != nil {
-		t.Error("Unable to get absolute path for _testdata")
-	}
-	os.Setenv(common.GaugeProjectRootEnv, rootPath)
-	os.Mkdir(filepath.Join("_testdata", common.SpecsDirectoryName), common.NewDirectoryPermissions)
-	want := make([]specInfo, 0)
-	for i := 0; i < 2; i++ {
-		uri := filepath.Join("_testdata", common.SpecsDirectoryName, fmt.Sprintf("foo%d.spec", i))
-		ioutil.WriteFile(uri, []byte(fmt.Sprintf(specTextTemplate, i)), common.NewFilePermissions)			
-		want = append(want, specInfo{
-			Heading: fmt.Sprintf("Specification %d", i), 
-			ExecutionIdentifier: filepath.Join(rootPath, common.SpecsDirectoryName, fmt.Sprintf("foo%d.spec", i)),
-		})
+	provider = dummyInfoProvider{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail{
+			return []*infoGatherer.SpecDetail{
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading: &gauge.Heading{Value: "Specification 1"	},
+						FileName: "foo1.spec",
+					},
+				},
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading: &gauge.Heading{Value: "Specification 2"	},
+						FileName: "foo2.spec",
+					},
+				},				
+			}
+		},
 	}
 
+	want := []specInfo{
+		{
+			Heading: "Specification 1",
+			ExecutionIdentifier: "foo1.spec",
+		},
+		{
+			Heading: "Specification 2",
+			ExecutionIdentifier: "foo2.spec",
+		},
+	}
 	got, err := getSpecs()
-
+	
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
 	}
@@ -205,8 +210,5 @@ Scenario Heading
 
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
-	}
-
-	os.RemoveAll(filepath.Join("_testdata", common.SpecsDirectoryName))
-	os.Setenv(common.GaugeProjectRootEnv, "")
+	}	
 }
