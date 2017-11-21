@@ -1,6 +1,25 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
+	"path/filepath"	
+	"os"
 	"io/ioutil"
 	"github.com/getgauge/common"
 	"encoding/json"
@@ -25,16 +44,16 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`	
 }
 
-func getSpecs(req *jsonrpc2.Request) (interface{}, error) {
-	specFiles := util.FindSpecFilesIn(common.SpecsDirectoryName)
-	parser := new(parser.SpecParser)
+func getSpecs() (interface{}, error) {
+	specsDir := filepath.Join(os.Getenv(common.GaugeProjectRootEnv), common.SpecsDirectoryName)
+	specFiles := util.GetSpecFiles(specsDir)
 	specs := make([]specInfo, 0)
 	for _, f := range specFiles {
 		content, err := ioutil.ReadFile(f)
 		if err != nil {
 			return nil, err
 		}
-		spec, _ := parser.ParseSpecText(string(content), f)
+		spec, _ := new(parser.SpecParser).ParseSpecText(string(content), f)
 		specs = append(specs, specInfo{Heading: spec.Heading.Value, ExecutionIdentifier: f})
 	}
 	return specs, nil

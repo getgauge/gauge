@@ -146,7 +146,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "gauge/scenarios":
 		return getScenarios(req)
 	case "gauge/specs":
-		return getSpecs(req)
+		return getSpecs()
 	default:
 		return nil, errors.New("Unknown request : " + req.Method)
 	}
