@@ -34,14 +34,27 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 )
 
+// Diagnostics lock ensures only one goroutine publishes diagnostics at a time.
 var diagnosticsLock sync.Mutex
 
+// isInQueue ensures that only one other goroutine waits for the diagnostic lock.
+// Since diagnostics are published for all files, multiple threads need not wait to publish diagnostics.
+var isInQueue = false
+
 func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
-	diagnosticsLock.Lock()
-	defer diagnosticsLock.Unlock()
-	diagnosticsMap := getDiagnostics()
-	for uri, diagnostics := range diagnosticsMap {
-		conn.Notify(ctx, "textDocument/publishDiagnostics", lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics})
+	if !isInQueue {
+		isInQueue = true
+
+		diagnosticsLock.Lock()
+		defer diagnosticsLock.Unlock()
+
+		isInQueue = false
+
+		diagnosticsMap := getDiagnostics()
+		for uri, diagnostics := range diagnosticsMap {
+			params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
+			conn.Notify(ctx, "textDocument/publishDiagnostics", params)
+		}
 	}
 }
 
