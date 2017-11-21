@@ -39,8 +39,8 @@ Please see below for the best place to ask a query:
 
 - How do I? -- [Stack Overflow](https://stackoverflow.com/questions/ask?tags=getgauge)
 - I got this error, why? -- [Stack Overflow](https://stackoverflow.com/questions/ask?tags=getgauge)
-- I got this error and I'm sure it's a bug -- file an [issue](https://github.com/getgauge/gauge/issues) 
-- I have an idea/request -- file an [issue](https://github.com/getgauge/gauge/issues) 
+- I got this error and I'm sure it's a bug -- file an [issue](https://github.com/getgauge/gauge/issues)
+- I have an idea/request -- file an [issue](https://github.com/getgauge/gauge/issues)
 - Why do you? -- [Google Groups](https://groups.google.com/forum/#!forum/getgauge)
 - When will you? -- [Google Groups](https://groups.google.com/forum/#!forum/getgauge)
 

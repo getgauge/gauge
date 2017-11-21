@@ -101,7 +101,7 @@ func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutio
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
 	logger.Errorf(err.Error())
 	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
-		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil)
+		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil, "")
 	e.errMap.ScenarioErrs[scenario] = []error{validationError}
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 }

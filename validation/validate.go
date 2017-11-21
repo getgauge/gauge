@@ -126,8 +126,8 @@ func NewSpecValidationError(m string, f string) SpecValidationError {
 }
 
 // NewStepValidationError generates new step validation error with error message, filename and error type.
-func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidateResponse_ErrorType) StepValidationError {
-	return StepValidationError{step: s, message: m, fileName: f, errorType: e}
+func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidateResponse_ErrorType, suggestion string) StepValidationError {
+	return StepValidationError{step: s, message: m, fileName: f, errorType: e, suggestion: suggestion}
 }
 
 // Validate validates specs and if it has any errors, it exits.
@@ -315,11 +315,11 @@ func (v *SpecValidator) Step(s *gauge.Step) {
 		valErr := val.(StepValidationError)
 		if s.Parent == nil {
 			v.validationErrors = append(v.validationErrors,
-				NewStepValidationError(s, valErr.message, v.specification.FileName, valErr.errorType))
+				NewStepValidationError(s, valErr.message, v.specification.FileName, valErr.errorType, valErr.suggestion))
 		} else {
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
 			v.validationErrors = append(v.validationErrors,
-				NewStepValidationError(s, valErr.message, cpt.FileName, valErr.errorType))
+				NewStepValidationError(s, valErr.message, cpt.FileName, valErr.errorType, valErr.suggestion))
 		}
 	}
 }
@@ -339,7 +339,7 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 
 	r, err := GetResponseFromRunner(m, v)
 	if err != nil {
-		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil)
+		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil, "")
 	}
 	if r.GetMessageType() == gm.Message_StepValidateResponse {
 		res := r.GetStepValidateResponse()
@@ -347,19 +347,17 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 			msg := getMessage(res.GetErrorType().String())
 			suggestion := res.GetSuggestion()
 			if s.Parent == nil {
-				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType)
-				vErr.suggestion = suggestion
+				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType, suggestion)
 				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType)
-			vErr.suggestion = suggestion
+			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType, suggestion)
 			return vErr
 
 		}
 		return nil
 	}
-	return NewStepValidationError(s, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse)
+	return NewStepValidationError(s, "Invalid response from runner for Validation request", v.specification.FileName, &invalidResponse, "")
 }
 
 func getMessage(message string) string {

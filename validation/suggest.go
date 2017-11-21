@@ -31,11 +31,24 @@ func showSuggestion(validationErrors validationErrors) {
 	if !HideSuggestion {
 		for t, errs := range groupErrors(validationErrors) {
 			fmt.Println(getSuggestionMessage(t))
-			for _, err := range errs {
-				fmt.Println(err.Suggestion())
+			suggestions := filterDuplicateSuggestions(errs)
+			for _, suggestion := range suggestions {
+				fmt.Println(suggestion)
 			}
 		}
 	}
+}
+
+func filterDuplicateSuggestions(errors []StepValidationError) []string {
+	suggestionMap := make(map[string]error)
+	filteredSuggestions := make([]string, 0)
+	for _, err := range errors {
+		if _, ok := suggestionMap[err.Suggestion()]; !ok {
+			suggestionMap[err.Suggestion()] = err
+			filteredSuggestions = append(filteredSuggestions, err.Suggestion())
+		}
+	}
+	return filteredSuggestions
 }
 
 func getSuggestionMessage(t gm.StepValidateResponse_ErrorType) string {
