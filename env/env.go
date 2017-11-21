@@ -22,6 +22,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"regexp"
+	"strings"
+
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -62,6 +65,11 @@ func LoadEnv(envName string) error {
 	}
 
 	loadDefaultEnvVars()
+
+	err = substituteEnvVars()
+	if err != nil {
+		return fmt.Errorf("%s", err.Error())
+	}
 
 	err = setEnvVars()
 	if err != nil {
@@ -117,6 +125,34 @@ func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
 }
 
+func substituteEnvVars() error {
+	for name, value := range envVars {
+		contains, matches := containsEnvVar(value)
+		// if value contains an env var E.g. ${foo}
+		if contains {
+			for _, match := range matches {
+				// check if match is from properties file
+				// if not, get from system env
+				envKey, property := match[0], match[1]
+				propertyValue := envVars[property]
+				if _, ok := envVars[property]; !ok {
+					// error if env property is not found
+					if !isPropertySet(property) {
+						return fmt.Errorf("'%s' env property was not set.", property)
+					}
+					// get env var from system
+					propertyValue = os.Getenv(property)
+				}
+				// replace env key with property value
+				value = strings.Replace(value, envKey, propertyValue, -1)
+			}
+			// overwrite the envVar value
+			envVars[name] = value
+		}
+	}
+	return nil
+}
+
 func setEnvVars() error {
 	for name, value := range envVars {
 		if !isPropertySet(name) {
@@ -131,6 +167,16 @@ func setEnvVars() error {
 
 func isPropertySet(property string) bool {
 	return len(os.Getenv(property)) > 0
+}
+
+func containsEnvVar(value string) (contains bool, matches [][]string) {
+	// match for any ${foo}
+	r, _ := regexp.Compile("\\$\\{(\\w+)\\}")
+	contains = r.MatchString(value)
+	if contains {
+		matches = r.FindAllStringSubmatch(value, -1)
+	}
+	return
 }
 
 // CurrentEnv returns the value of currentEnv
