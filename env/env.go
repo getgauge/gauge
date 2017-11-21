@@ -66,9 +66,13 @@ func LoadEnv(envName string) error {
 
 	loadDefaultEnvVars()
 
-	err = substituteEnvVars()
-	if err != nil {
-		return fmt.Errorf("%s", err.Error())
+	// Feature in progress
+	// https://github.com/getgauge/gauge/issues/866
+	if false {
+		err = substituteEnvVars()
+		if err != nil {
+			return fmt.Errorf("%s", err.Error())
+		}
 	}
 
 	err = setEnvVars()
