@@ -52,8 +52,8 @@ Scenario 2
 	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 	errs := validationErrors{spec: []error{
-		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err),
-		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", &err),
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err, ""),
+		NewStepValidationError(spec.Scenarios[1].Steps[0], "", "", &err, ""),
 	}}
 
 	errMap := getErrMap(gauge.NewBuildErrors(), errs)
@@ -79,7 +79,7 @@ Scenario 2
 	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 
 	errs := validationErrors{spec: []error{
-		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err),
+		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err, ""),
 	}}
 
 	errMap := getErrMap(gauge.NewBuildErrors(), errs)

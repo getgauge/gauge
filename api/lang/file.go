@@ -33,6 +33,7 @@ type files struct {
 func (f *files) add(uri, text string) {
 	f.Lock()
 	defer f.Unlock()
+	text = strings.Replace(text, "\r\n", "\n", -1)
 	f.cache[uri] = strings.Split(text, "\n")
 }
 

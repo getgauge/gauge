@@ -252,21 +252,6 @@ func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 	}
 }
 
-func (s *SpecInfoGatherer) UpdateConceptCache(file, cptContent string) *parser.ParseResult {
-	s.deleteFromConceptDictionary(file)
-	cpts, res := new(parser.ConceptParser).Parse(cptContent, file)
-	if errs := parser.AddConcept(cpts, file, s.conceptDictionary); len(errs) > 0 {
-		res.ParseErrors = append(res.ParseErrors, errs...)
-	}
-	s.conceptsCache.concepts[file] = make([]*gauge.Concept, 0)
-	for _, concept := range s.conceptDictionary.ConceptsMap {
-		if file == concept.FileName {
-			s.addToConceptsCache(concept.FileName, concept)
-		}
-	}
-	return res
-}
-
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.Step) {
 	s.stepsCache.steps[fileName] = allSteps
 }
@@ -556,10 +541,6 @@ func (s *SpecInfoGatherer) Concepts() []*gauge_messages.ConceptInfo {
 		}
 	}
 	return conceptInfos
-}
-
-func (s *SpecInfoGatherer) GetConceptDictionary() *gauge.ConceptDictionary {
-	return s.conceptDictionary
 }
 
 func (s *SpecInfoGatherer) Tags() []string {

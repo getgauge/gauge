@@ -65,6 +65,20 @@ func TestGetSuggestionMessageForStepImplNotFoundError(t *testing.T) {
 	}
 }
 
+func TestFilterDuplicateSuggestions(t *testing.T) {
+	dupImplFoundError := StepValidationError{
+		errorType:  &dupImplFound,
+		suggestion: "suggestion1",
+	}
+
+	want := []string{"suggestion1"}
+	got := filterDuplicateSuggestions([]StepValidationError{dupImplFoundError, dupImplFoundError})
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("Wrong suggestion message. got: %v, want: %v", got, want)
+	}
+}
+
 func TestGetSuggestionMessageForOtherValidationErrors(t *testing.T) {
 	want := "Suggestions for fixing `Duplicate step implementation` errors.\n"
 
