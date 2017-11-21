@@ -48,7 +48,17 @@ func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
-	spec, parseResult := new(parser.SpecParser).Parse(getContent(params.TextDocument.URI), gauge.NewConceptDictionary(), file)
+	content:=""
+	if isOpen(params.TextDocument.URI) {
+		content=getContent(params.TextDocument.URI)
+	} else {
+		contentBytes, err := ioutil.ReadFile(file)
+		if err != nil {
+			return nil, err
+		}
+		content = string(contentBytes)
+	}
+	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed")
 	}
