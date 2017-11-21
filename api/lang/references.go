@@ -33,11 +33,33 @@ func getStepReferences(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
+	return getLocationFor(params)
+}
+
+func getStepValueAt(req *jsonrpc2.Request) (interface{}, error) {
+	var params lsp.TextDocumentPositionParams
+	if err := json.Unmarshal(*req.Params, &params); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return nil, err
+	}
+	stepPositionsResponse, err := getStepPositionResponse(params.TextDocument.URI)
+	if err != nil {
+		return nil, err
+	}
+	for _, step := range stepPositionsResponse.StepPositions {
+		if (int(step.GetSpan().GetStart()) <= params.Position.Line+1) && (int(step.GetSpan().GetEnd()) >= params.Position.Line+1) {
+			return step.GetStepValue(), nil
+		}
+	}
+	return nil, nil
+}
+
+func getLocationFor(stepValue string) (interface{}, error) {
 	allSteps := provider.AllSteps()
 	var locations []lsp.Location
 	diskFileCache := &files{cache: make(map[string][]string)}
 	for _, step := range allSteps {
-		if params == step.Value {
+		if stepValue == step.Value {
 			uri := util.ConvertPathToURI(step.FileName)
 			var endPos int
 			lineNo := step.LineNo - 1

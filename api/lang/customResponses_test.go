@@ -35,7 +35,7 @@ Scenario Heading2
 	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
-		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
+		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
 	}
 
 	info := got.(ScenarioInfo)
@@ -76,7 +76,7 @@ Scenario Heading2
 	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
-		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
+		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
 	}
 
 	info := got.([]ScenarioInfo)
