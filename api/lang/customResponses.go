@@ -18,7 +18,6 @@
 package lang
 
 import (
-	"io/ioutil"
 	"encoding/json"
 	"fmt"
 
@@ -59,15 +58,11 @@ func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	content:=""
-	if isOpen(params.TextDocument.URI) {
-		content=getContent(params.TextDocument.URI)
-	} else {
-		contentBytes, err := ioutil.ReadFile(file)
-		if err != nil {
-			return nil, err
-		}
-		content = string(contentBytes)
+	if !isOpen(params.TextDocument.URI) {
+		specDetails := provider.GetAvailableSpecDetails([]string{file})
+		return getScenarioAt(specDetails[0].Spec.Scenarios, file, params.Position.Line), nil
 	}
+	content=getContent(params.TextDocument.URI)
 	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed")

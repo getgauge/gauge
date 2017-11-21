@@ -18,12 +18,8 @@
 package lang
 
 import (
-	"os"
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/api/infoGatherer"
-	"io/ioutil"
-	"path/filepath"
 	"encoding/json"
 	"testing"
 
@@ -34,6 +30,7 @@ import (
 )
 
 func TestGetScenariosShouldGiveTheScenarioAtCurrentCursorPosition(t *testing.T) {
+	provider = &dummyInfoProvider{}
 	specText := `Specification Heading
 =====================
 
@@ -71,9 +68,11 @@ Scenario Heading2
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
+	f.remove(uri)
 }
 
 func TestGetScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
+	provider = &dummyInfoProvider{}
 	specText := `Specification Heading
 =====================
 
@@ -119,28 +118,29 @@ Scenario Heading2
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
+	f.remove(uri)
 }
 
 func TestGetScenariosShouldGiveTheScenariosIfDocumentIsNotOpened(t *testing.T) {
-	specText := `Specification Heading
-=====================
-
-Scenario Heading
-----------------
-
-* Step text
-
-Scenario Heading2
------------------
-
-* Step text
-`
-
-	uri := filepath.Join("_testdata", "foo.spec")
-	ioutil.WriteFile(uri, []byte(specText), common.NewFilePermissions)
+	provider = &dummyInfoProvider{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail{
+			return []*infoGatherer.SpecDetail{
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading: &gauge.Heading{Value: "Specification 1"	},
+						FileName: "foo.spec",
+						Scenarios: []*gauge.Scenario {
+							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 1", LineNo: 4}, Span: &gauge.Span{Start:4, End:7}},
+							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 2", LineNo: 9}, Span: &gauge.Span{Start:9, End:12}},
+						},
+					},
+				},
+			}
+		},
+	}
 
 	position := lsp.Position{Line: 2, Character: 1}
-	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}, Position: position})
 	p := json.RawMessage(b)
 
 	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
@@ -153,25 +153,23 @@ Scenario Heading2
 
 	want := []ScenarioInfo{
 		{
-			Heading:             "Scenario Heading",
+			Heading:             "Scenario 1",
 			LineNo:              4,
-			ExecutionIdentifier: filepath.Join("_testdata","foo.spec:4"),
+			ExecutionIdentifier: "foo.spec:4",
 		},
 		{
-			Heading:             "Scenario Heading2",
+			Heading:             "Scenario 2",
 			LineNo:              9,
-			ExecutionIdentifier: filepath.Join("_testdata", "foo.spec:9"),
+			ExecutionIdentifier: "foo.spec:9",
 		},
 	}
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
-
-	os.Remove(uri)
 }
 
 func TestGetSpecsShouldReturnAllSpecsInDirectory(t *testing.T) {
-	provider = dummyInfoProvider{
+	provider = &dummyInfoProvider{
 		specsFunc: func(specs []string) []*infoGatherer.SpecDetail{
 			return []*infoGatherer.SpecDetail{
 				&infoGatherer.SpecDetail{
