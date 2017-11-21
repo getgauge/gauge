@@ -19,7 +19,6 @@ package env
 
 import (
 	"os"
-	"reflect"
 	"testing"
 
 	"github.com/getgauge/gauge/config"
@@ -166,10 +165,9 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
-	c.Skip("Feature in progress")
-
 	os.Clearenv()
 	os.Setenv("foo", "bar")
+	os.Setenv("property1", "value1")
 
 	config.ProjectRoot = "_testdata/proj3"
 
@@ -178,46 +176,13 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	c.Assert(e, Equals, nil)
 
 	c.Assert(os.Getenv("property1"), Equals, "value1")
+	c.Assert(os.Getenv("property3"), Equals, "bar/value1")
 	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
-	c.Assert(os.Getenv("property3"), Equals, "bar/value1/value2")
+
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
-	c.Skip("Feature in progress")
-
 	config.ProjectRoot = "_testdata/proj3"
 	e := LoadEnv("default")
-	c.Assert(e.Error(), Equals, "'foo' env property was not set.")
-}
-
-func TestContainsEnvVar(t *testing.T) {
-	t.Skip("Feature in progress")
-	type args struct {
-		value string
-	}
-	tests := []struct {
-		name              string
-		args              args
-		wantContains      bool
-		wantNumberMatches int
-	}{
-		{"When empty", args{value: ""}, false, 0},
-		{"When no substitution", args{value: "test"}, false, 0},
-		{"When valid substitution", args{value: "${a}"}, true, 1},
-		{"When valid substitution followed by text", args{value: "${a}/test"}, true, 1},
-		{"When valid multiple substitutions", args{value: "${a}${b}"}, true, 2},
-		{"When invalid substitution", args{value: "${a"}, false, 0},
-		{"When valid and an invalid substitution", args{value: "$a${b}/test"}, true, 1},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			gotContains, gotNumberOfMatches := containsEnvVar(tt.args.value)
-			if gotContains != tt.wantContains {
-				t.Errorf("containsEnvVar() gotContains = %v, want %v", gotContains, tt.wantContains)
-			}
-			if !reflect.DeepEqual(len(gotNumberOfMatches), tt.wantNumberMatches) {
-				t.Errorf("containsEnvVar() gotNumberOfMatches = %v, want %v", len(gotNumberOfMatches), tt.wantNumberMatches)
-			}
-		})
-	}
+	c.Assert(e.Error(), Equals, "'foo' env variable was not set.")
 }
