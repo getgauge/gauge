@@ -18,7 +18,6 @@
 package lang
 
 import (
-	"fmt"
 	"context"
 	"log"
 
@@ -151,7 +150,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "gauge/specs":
 		return getSpecs()
 	default:
-		return nil, fmt.Errorf("Unknown request : %s" + req.Method)
+		return nil, nil
 	}
 }
 
