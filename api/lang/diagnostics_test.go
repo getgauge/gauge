@@ -169,22 +169,9 @@ func TestDiagnosticOfConceptsWithCircularReference(t *testing.T) {
 	uri := util.ConvertPathToURI(conceptFile)
 	f.add(uri, cptText)
 
-	want := []lsp.Diagnostic{
-		{
-			Range: lsp.Range{
-				Start: lsp.Position{0, 0},
-				End:   lsp.Position{0, 9},
-			},
-			Severity: 1,
-			Message:  `Circular reference found in concept. "concept" => foo.cpt:2`,
-		},
-	}
-
 	got := getDiagnostics()[uri]
 
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%+v`,\n got: `%+v`", want, got)
-	}
+	containsDiagnostics(got, 1, 0, "Circular reference found in concept.", t)
 }
 
 func TestDiagnosticWithDuplicateConcepts(t *testing.T) {
@@ -203,22 +190,22 @@ func TestDiagnosticWithDuplicateConcepts(t *testing.T) {
 		t.Errorf("Expected 2 diagnostic errors")
 	}
 
-	var checkDiagnostics = func(diagnostics []lsp.Diagnostic, line1, line2 int, startMessage string) {
-		for _, diagnostic := range diagnostics {
-			if !strings.Contains(diagnostic.Message, startMessage) {
-				t.Errorf("Invalid error message, got : %s : ", diagnostic.Message)
-			}
-			if (diagnostic.Range.Start.Line != line1 || diagnostic.Range.Start.Line != line2) && diagnostic.Range.Start.Character != 0 {
-				t.Errorf("Invalid start in range, got : %+v : ", diagnostic.Range.Start)
-			}
-			if (diagnostic.Range.End.Line != line1 || diagnostic.Range.End.Line != line2) && diagnostic.Range.End.Character != 9 {
-				t.Errorf("Invalid end in range, got : %+v : ", diagnostic.Range.End)
-			}
-			if diagnostic.Severity != 1 {
-				t.Errorf("Invalid diagnostic severity, want : 1, got : %d : ", diagnostic.Severity)
-			}
+	containsDiagnostics(got, 0, 2, "Duplicate concept definition found => 'concept'", t)
+}
+
+var containsDiagnostics = func(diagnostics []lsp.Diagnostic, line1, line2 int, startMessage string, t *testing.T) {
+	for _, diagnostic := range diagnostics {
+		if !strings.Contains(diagnostic.Message, startMessage) {
+			t.Errorf("Invalid error message, got : %s : ", diagnostic.Message)
+		}
+		if (diagnostic.Range.Start.Line != line1 || diagnostic.Range.Start.Line != line2) && diagnostic.Range.Start.Character != 0 {
+			t.Errorf("Invalid start in range, got : %+v : ", diagnostic.Range.Start)
+		}
+		if (diagnostic.Range.End.Line != line1 || diagnostic.Range.End.Line != line2) && diagnostic.Range.End.Character != 9 {
+			t.Errorf("Invalid end in range, got : %+v : ", diagnostic.Range.End)
+		}
+		if diagnostic.Severity != 1 {
+			t.Errorf("Invalid diagnostic severity, want : 1, got : %d : ", diagnostic.Severity)
 		}
 	}
-
-	checkDiagnostics(got, 0, 2, "Duplicate concept definition found => 'concept'")
 }
