@@ -329,10 +329,10 @@ func ValidateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	res := &ParseResult{ParseErrors: []ParseError{}}
 	var conceptsWithError []*gauge.Concept
 	for _, concept := range conceptDictionary.ConceptsMap {
-		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
-		if err != nil {
+		errs := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
+		if errs != nil {
 			delete(conceptDictionary.ConceptsMap, concept.ConceptStep.Value)
-			res.ParseErrors = append(res.ParseErrors, err.(ParseError))
+			res.ParseErrors = append(res.ParseErrors, errs...)
 			conceptsWithError = append(conceptsWithError, concept)
 		}
 	}
@@ -354,7 +354,7 @@ func removeAllReferences(conceptDictionary *gauge.ConceptDictionary, concept *ga
 	}
 }
 
-func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) error {
+func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) []ParseError {
 	if traversedSteps == nil {
 		traversedSteps = make(map[string]string, 0)
 	}
@@ -365,18 +365,26 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	currentConceptFileName := con.FileName
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
-		if fileName, exists := traversedSteps[step.Value]; exists {
+		if _, exists := traversedSteps[step.Value]; exists {
 			delete(conceptDictionary.ConceptsMap, step.Value)
-			return ParseError{
-				FileName: fileName,
-				LineText: step.LineText,
-				LineNo:   concept.LineNo,
-				Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, fileName, step.LineNo),
+			return []ParseError{
+				{
+					FileName: step.FileName,
+					LineText: step.LineText,
+					LineNo:   step.LineNo,
+					Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, concept.FileName, concept.LineNo),
+				},
+				{
+					FileName: concept.FileName,
+					LineText: concept.LineText,
+					LineNo:   concept.LineNo,
+					Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", step.LineText, step.FileName, step.LineNo),
+				},
 			}
 		}
 		if step.IsConcept {
-			if err := checkCircularReferencing(conceptDictionary, step, traversedSteps); err != nil {
-				return err
+			if errs := checkCircularReferencing(conceptDictionary, step, traversedSteps); errs != nil {
+				return errs
 			}
 		}
 	}

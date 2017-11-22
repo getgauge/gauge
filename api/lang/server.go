@@ -25,6 +25,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -205,6 +206,9 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	}
 	if util.IsGaugeFile(params.TextDocument.URI) {
 		closeFile(params)
+		if !common.FileExists(util.ConvertPathToURI(params.TextDocument.URI)) {
+			publishDiagnostic(params.TextDocument.URI, []lsp.Diagnostic{}, conn, ctx)
+		}
 	} else if lRunner.runner != nil {
 		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
 		err = sendMessageToRunner(cacheFileRequest)
