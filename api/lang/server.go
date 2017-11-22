@@ -25,6 +25,7 @@ import (
 
 	"encoding/json"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	gm "github.com/getgauge/gauge/gauge_messages"
@@ -124,7 +125,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/didOpen":
 		return nil, documentOpened(req, ctx, conn)
 	case "textDocument/didClose":
-		return nil, documentClosed(req)
+		return nil, documentClosed(req, ctx, conn)
 	case "textDocument/didChange":
 		return nil, documentChange(req, ctx, conn)
 	case "textDocument/completion":
@@ -177,10 +178,10 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	}
 	if util.IsGaugeFile(params.TextDocument.URI) {
 		openFile(params)
-		go publishDiagnostics(ctx, conn)
 	} else if lRunner.runner != nil {
 		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
 	}
+	go publishDiagnostics(ctx, conn)
 	return err
 }
 
@@ -200,7 +201,7 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	return err
 }
 
-func documentClosed(req *jsonrpc2.Request) error {
+func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
 	var params lsp.DidCloseTextDocumentParams
 	var err error
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
@@ -209,10 +210,14 @@ func documentClosed(req *jsonrpc2.Request) error {
 	}
 	if util.IsGaugeFile(params.TextDocument.URI) {
 		closeFile(params)
+		if !common.FileExists(util.ConvertPathToURI(params.TextDocument.URI)) {
+			publishDiagnostic(params.TextDocument.URI, []lsp.Diagnostic{}, conn, ctx)
+		}
 	} else if lRunner.runner != nil {
 		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
 		err = sendMessageToRunner(cacheFileRequest)
 	}
+	go publishDiagnostics(ctx, conn)
 	return err
 }
 

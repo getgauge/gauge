@@ -99,7 +99,7 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	_, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 5)
+	c.Assert(len(res.ParseErrors), Equals, 6)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -519,8 +519,9 @@ func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(
 
 	c.Assert(cd.ConceptsMap["concept"], Equals, (*gauge.Concept)(nil))
 	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 0)
-	c.Assert(len(res.ParseErrors), Equals, 1)
-	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(strings.Contains(res.ParseErrors[0].Message, "Circular reference found"), Equals, true)
+	c.Assert(strings.Contains(res.ParseErrors[1].Message, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestRemoveAllReferences(c *C) {

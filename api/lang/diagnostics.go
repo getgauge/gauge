@@ -52,10 +52,13 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 
 		diagnosticsMap := getDiagnostics()
 		for uri, diagnostics := range diagnosticsMap {
-			params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
-			conn.Notify(ctx, "textDocument/publishDiagnostics", params)
+			publishDiagnostic(uri, diagnostics, conn, ctx)
 		}
 	}
+}
+func publishDiagnostic(uri string, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
+	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
+	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
 }
 
 func getDiagnostics() map[string][]lsp.Diagnostic {

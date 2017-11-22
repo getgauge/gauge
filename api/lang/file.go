@@ -70,7 +70,6 @@ func openFile(params lsp.DidOpenTextDocumentParams) {
 
 func closeFile(params lsp.DidCloseTextDocumentParams) {
 	f.remove(params.TextDocument.URI)
-	delete(f.cache, params.TextDocument.URI)
 }
 
 func changeFile(params lsp.DidChangeTextDocumentParams) {
