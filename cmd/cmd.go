@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
+	"fmt"
 )
 
 var (
@@ -115,8 +116,11 @@ func getSpecsDir(args []string) []string {
 
 func setGlobalFlags() {
 	logger.Initialize(logLevel)
+	msg := fmt.Sprintf("Gauge Install ID: %s , %s", config.UniqueID(), logLevel)
 	if !lsp {
-		logger.Debugf("Gauge Install ID: %s", config.UniqueID())
+		logger.Debugf(msg)
+	} else {
+		logger.GaugeLog.Debugf(msg)
 	}
 	util.SetWorkingDir(dir)
 }
