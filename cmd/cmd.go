@@ -116,7 +116,7 @@ func getSpecsDir(args []string) []string {
 
 func setGlobalFlags() {
 	logger.Initialize(logLevel)
-	msg := fmt.Sprintf("Gauge Install ID: %s , %s", config.UniqueID(), logLevel)
+	msg := fmt.Sprintf("Gauge Install ID: %s", config.UniqueID())
 	if !lsp {
 		logger.Debugf(msg)
 	} else {
