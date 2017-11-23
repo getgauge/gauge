@@ -174,25 +174,6 @@ func TestDiagnosticOfConceptsWithCircularReference(t *testing.T) {
 	containsDiagnostics(got, 1, 0, "Circular reference found in concept.", t)
 }
 
-func TestDiagnosticWithDuplicateConcepts(t *testing.T) {
-	setup()
-	cptText := `# concept
-* abc
-# concept
-* abc			
-`
-	uri := util.ConvertPathToURI(conceptFile)
-	f.add(uri, cptText)
-
-	got := getDiagnostics()[uri]
-
-	if len(got) != 2 {
-		t.Errorf("Expected 2 diagnostic errors")
-	}
-
-	containsDiagnostics(got, 0, 2, "Duplicate concept definition found => 'concept'", t)
-}
-
 var containsDiagnostics = func(diagnostics []lsp.Diagnostic, line1, line2 int, startMessage string, t *testing.T) {
 	for _, diagnostic := range diagnostics {
 		if !strings.Contains(diagnostic.Message, startMessage) {

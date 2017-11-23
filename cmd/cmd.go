@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -30,7 +32,6 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
-	"fmt"
 )
 
 var (
