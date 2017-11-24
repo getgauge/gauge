@@ -331,7 +331,10 @@ var GetResponseFromRunner = func(m *gm.Message, v *SpecValidator) (*gm.Message, 
 }
 
 func (v *SpecValidator) validateStep(s *gauge.Step) error {
-	stepValue, _ := parser.ExtractStepValueAndParams(s.LineText, s.HasInlineTable)
+	stepValue, err := parser.ExtractStepValueAndParams(s.LineText, s.HasInlineTable)
+	if err != nil {
+		return nil
+	}
 	protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
 
 	m := &gm.Message{MessageType: gm.Message_StepValidateRequest,
