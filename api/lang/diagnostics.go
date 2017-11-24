@@ -18,9 +18,6 @@
 package lang
 
 import (
-	"strconv"
-	"strings"
-
 	"context"
 	"sync"
 
@@ -52,10 +49,13 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 
 		diagnosticsMap := getDiagnostics()
 		for uri, diagnostics := range diagnosticsMap {
-			params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
-			conn.Notify(ctx, "textDocument/publishDiagnostics", params)
+			publishDiagnostic(uri, diagnostics, conn, ctx)
 		}
 	}
+}
+func publishDiagnostic(uri string, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
+	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
+	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
 }
 
 func getDiagnostics() map[string][]lsp.Diagnostic {
@@ -125,33 +125,13 @@ func validateConcepts(diagnostics map[string][]lsp.Diagnostic) *gauge.ConceptDic
 
 func createDiagnostics(res *parser.ParseResult, diagnostics map[string][]lsp.Diagnostic) {
 	for _, err := range res.ParseErrors {
-		if strings.Contains(err.Message, "Duplicate concept definition found") {
-			diagnostics = createDiagnosticsForDuplicateConcepts(err, diagnostics)
-		} else {
-			uri := util.ConvertPathToURI(err.FileName)
-			diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, 1))
-		}
+		uri := util.ConvertPathToURI(err.FileName)
+		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, 1))
 	}
 	for _, warning := range res.Warnings {
 		uri := util.ConvertPathToURI(warning.FileName)
 		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, warning.Message, warning.LineNo-1, 2))
 	}
-}
-
-func createDiagnosticsForDuplicateConcepts(err parser.ParseError, diagnostics map[string][]lsp.Diagnostic) map[string][]lsp.Diagnostic {
-	values := strings.Split(err.Message, "\t")[1:]
-	for _, val := range values {
-		arr := strings.Split(val, ":")
-		fileName := strings.TrimSuffix(arr[0], "\n")
-		lineNo := strings.TrimSuffix(arr[len(arr)-1], "\n")
-		l, error := strconv.Atoi(lineNo)
-		if error != nil {
-			logger.Errorf("Error while getting line number for duplicate concepts: ", error)
-		}
-		uri := util.ConvertPathToURI(fileName)
-		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, l-1, 1))
-	}
-	return diagnostics
 }
 
 func createDiagnostic(uri, message string, line int, severity lsp.DiagnosticSeverity) lsp.Diagnostic {

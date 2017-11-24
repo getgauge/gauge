@@ -62,15 +62,13 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 
 	c.Assert(len(concepts), Equals, 2)
 	c.Assert(len(errs) > 0, Equals, true)
-	if !(hasParseError("Duplicate concept definition found => 'test concept step 5' => at\n\t"+path+":4\n\t"+path+":1", errs) ||
-		hasParseError("Duplicate concept definition found => 'test concept step 5' => at\n\t"+path+":1\n\t"+path+":4", errs)) {
-		c.Fail()
-	}
+	c.Assert(hasParseError("Duplicate concept definition found", path, 1, errs), Equals, true)
+	c.Assert(hasParseError("Duplicate concept definition found", path, 4, errs), Equals, true)
 }
 
-func hasParseError(eMessage string, errs []ParseError) bool {
+func hasParseError(eMessage, fileName string, lineNo int, errs []ParseError) bool {
 	for _, e := range errs {
-		if e.Message == eMessage {
+		if e.Message == eMessage && e.FileName == fileName && e.LineNo == lineNo {
 			return true
 		}
 	}
@@ -86,11 +84,11 @@ func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
 	concepts, errs := AddConcepts([]string{cpt2}, dictionary)
 
 	c.Assert(len(concepts), Equals, 2)
-	c.Assert(len(errs), Equals, 2)
-	if !(hasParseError("Duplicate concept definition found => 'test concept step 1' => at\n\t"+cpt2+":1\n\t"+cpt1+":1", errs) ||
-		hasParseError("Duplicate concept definition found => 'test concept step 1' => at\n\t"+cpt1+":1\n\t"+cpt2+":1", errs)) {
-		c.Fail()
-	}
+	c.Assert(len(errs), Equals, 4)
+	c.Assert(hasParseError("Duplicate concept definition found", cpt1, 1, errs), Equals, true)
+	c.Assert(hasParseError("Duplicate concept definition found", cpt1, 4, errs), Equals, true)
+	c.Assert(hasParseError("Duplicate concept definition found", cpt2, 1, errs), Equals, true)
+	c.Assert(hasParseError("Duplicate concept definition found", cpt2, 4, errs), Equals, true)
 }
 
 func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
@@ -99,7 +97,7 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	_, res := CreateConceptsDictionary()
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(len(res.ParseErrors), Equals, 5)
+	c.Assert(len(res.ParseErrors), Equals, 9)
 }
 
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
@@ -519,8 +517,9 @@ func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(
 
 	c.Assert(cd.ConceptsMap["concept"], Equals, (*gauge.Concept)(nil))
 	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 0)
-	c.Assert(len(res.ParseErrors), Equals, 1)
-	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
+	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(strings.Contains(res.ParseErrors[0].Message, "Circular reference found"), Equals, true)
+	c.Assert(strings.Contains(res.ParseErrors[1].Message, "Circular reference found"), Equals, true)
 }
 
 func (s *MySuite) TestRemoveAllReferences(c *C) {

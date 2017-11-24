@@ -21,8 +21,6 @@ import (
 	"fmt"
 	"strings"
 
-	"bytes"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
@@ -244,19 +242,33 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 }
 
 func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
-	var duplicateConcepts map[string][]string = make(map[string][]string)
+	parseErrors := make([]ParseError, 0)
 	for _, conceptStep := range concepts {
-		checkForDuplicateConcepts(conceptDictionary, conceptStep, duplicateConcepts, file)
+		if dupConcept, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
+			parseErrors = append(parseErrors, ParseError{
+				FileName: file,
+				LineNo:   conceptStep.LineNo,
+				Message:  "Duplicate concept definition found",
+				LineText: conceptStep.LineText,
+			})
+			parseErrors = append(parseErrors, ParseError{
+				FileName: dupConcept.FileName,
+				LineNo:   dupConcept.ConceptStep.LineNo,
+				Message:  "Duplicate concept definition found",
+				LineText: dupConcept.ConceptStep.LineText,
+			})
+		}
+		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, file}
+		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
 	}
 	conceptDictionary.UpdateLookupForNestedConcepts()
-	return mergeDuplicateConceptErrors(duplicateConcepts)
+	return parseErrors
 }
 
 // AddConcepts parses the given concept file and adds each concept to the concept dictionary.
 func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
 	var conceptSteps []*gauge.Step
 	var parseResults []*ParseResult
-	var duplicateConcepts map[string][]string = make(map[string][]string)
 	for _, conceptFile := range conceptFiles {
 		concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 		if parseRes != nil && parseRes.Warnings != nil {
@@ -264,61 +276,15 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 				logger.Warningf(warning.String())
 			}
 		}
-		for _, conceptStep := range concepts {
-			checkForDuplicateConcepts(conceptDictionary, conceptStep, duplicateConcepts, conceptFile)
-		}
-		conceptDictionary.UpdateLookupForNestedConcepts()
+		parseRes.ParseErrors = append(parseRes.ParseErrors, AddConcept(concepts, conceptFile, conceptDictionary)...)
 		conceptSteps = append(conceptSteps, concepts...)
 		parseResults = append(parseResults, parseRes)
 	}
-	errs := collectAllPArseErrors(parseResults)
-	errs = append(errs, mergeDuplicateConceptErrors(duplicateConcepts)...)
+	errs := collectAllParseErrors(parseResults)
 	return conceptSteps, errs
 }
 
-func mergeDuplicateConceptErrors(duplicateConcepts map[string][]string) []ParseError {
-	errs := []ParseError{}
-	if len(duplicateConcepts) > 0 {
-		for k, v := range duplicateConcepts {
-			var buffer bytes.Buffer
-			buffer.WriteString(fmt.Sprintf("Duplicate concept definition found => '%s' => at", k))
-			for _, value := range v {
-				buffer.WriteString(value)
-			}
-			errs = append(errs, ParseError{Message: buffer.String()})
-		}
-	}
-	return errs
-}
-
-func checkForDuplicateConcepts(conceptDictionary *gauge.ConceptDictionary, conceptStep *gauge.Step, duplicateConcepts map[string][]string, conceptFile string) {
-	var duplicateConceptStep *gauge.Step
-	if _, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
-		duplicateConceptStep = conceptStep
-		duplicateConcepts[conceptStep.LineText] = append(duplicateConcepts[conceptStep.LineText], fmt.Sprintf("\n\t%s:%d", conceptFile, conceptStep.LineNo))
-	} else {
-		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, conceptFile}
-	}
-	conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
-	if duplicateConceptStep != nil {
-		conceptInDictionary := conceptDictionary.ConceptsMap[duplicateConceptStep.Value]
-		errorInfo := fmt.Sprintf("\n\t%s:%d", conceptInDictionary.FileName, conceptInDictionary.ConceptStep.LineNo)
-		if !contains(duplicateConcepts[duplicateConceptStep.LineText], errorInfo) {
-			duplicateConcepts[duplicateConceptStep.LineText] = append(duplicateConcepts[duplicateConceptStep.LineText], errorInfo)
-		}
-	}
-}
-
-func contains(slice []string, item string) bool {
-	set := make(map[string]struct{}, len(slice))
-	for _, s := range slice {
-		set[s] = struct{}{}
-	}
-	_, ok := set[item]
-	return ok
-}
-
-func collectAllPArseErrors(results []*ParseResult) (errs []ParseError) {
+func collectAllParseErrors(results []*ParseResult) (errs []ParseError) {
 	for _, res := range results {
 		errs = append(errs, res.ParseErrors...)
 	}
@@ -329,10 +295,10 @@ func ValidateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	res := &ParseResult{ParseErrors: []ParseError{}}
 	var conceptsWithError []*gauge.Concept
 	for _, concept := range conceptDictionary.ConceptsMap {
-		err := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
-		if err != nil {
+		errs := checkCircularReferencing(conceptDictionary, concept.ConceptStep, nil)
+		if errs != nil {
 			delete(conceptDictionary.ConceptsMap, concept.ConceptStep.Value)
-			res.ParseErrors = append(res.ParseErrors, err.(ParseError))
+			res.ParseErrors = append(res.ParseErrors, errs...)
 			conceptsWithError = append(conceptsWithError, concept)
 		}
 	}
@@ -354,7 +320,7 @@ func removeAllReferences(conceptDictionary *gauge.ConceptDictionary, concept *ga
 	}
 }
 
-func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) error {
+func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) []ParseError {
 	if traversedSteps == nil {
 		traversedSteps = make(map[string]string, 0)
 	}
@@ -365,18 +331,26 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	currentConceptFileName := con.FileName
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
-		if fileName, exists := traversedSteps[step.Value]; exists {
+		if _, exists := traversedSteps[step.Value]; exists {
 			delete(conceptDictionary.ConceptsMap, step.Value)
-			return ParseError{
-				FileName: fileName,
-				LineText: step.LineText,
-				LineNo:   concept.LineNo,
-				Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, fileName, step.LineNo),
+			return []ParseError{
+				{
+					FileName: step.FileName,
+					LineText: step.LineText,
+					LineNo:   step.LineNo,
+					Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", concept.LineText, concept.FileName, concept.LineNo),
+				},
+				{
+					FileName: concept.FileName,
+					LineText: concept.LineText,
+					LineNo:   concept.LineNo,
+					Message:  fmt.Sprintf("Circular reference found in concept. \"%s\" => %s:%d", step.LineText, step.FileName, step.LineNo),
+				},
 			}
 		}
 		if step.IsConcept {
-			if err := checkCircularReferencing(conceptDictionary, step, traversedSteps); err != nil {
-				return err
+			if errs := checkCircularReferencing(conceptDictionary, step, traversedSteps); errs != nil {
+				return errs
 			}
 		}
 	}

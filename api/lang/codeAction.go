@@ -27,7 +27,7 @@ import (
 
 const (
 	copyStubCommand = "gauge.copy.unimplemented.stub"
-	copyStubTitle   = "Copy function stub for this step to clipboard"
+	copyStubTitle   = "Generate step implementation stub"
 )
 
 func getCodeActions(req *jsonrpc2.Request) (interface{}, error) {
