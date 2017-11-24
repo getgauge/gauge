@@ -50,6 +50,7 @@ func connectToRunner(killChan chan bool) (runner.Runner, error) {
 	if m.Language != "js" {
 		return nil, nil
 	}
+	logger.GaugeLog.Infof("Starting language runner")
 	outfile, err := os.OpenFile(logger.GetLogFilePath(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		logger.APILog.Infof("%s", err.Error())

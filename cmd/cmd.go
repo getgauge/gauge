@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -115,8 +117,11 @@ func getSpecsDir(args []string) []string {
 
 func setGlobalFlags() {
 	logger.Initialize(logLevel)
+	msg := fmt.Sprintf("Gauge Install ID: %s", config.UniqueID())
 	if !lsp {
-		logger.Debugf("Gauge Install ID: %s", config.UniqueID())
+		logger.Debugf(msg)
+	} else {
+		logger.GaugeLog.Debugf(msg)
 	}
 	util.SetWorkingDir(dir)
 }
