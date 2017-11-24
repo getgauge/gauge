@@ -220,3 +220,55 @@ func (s *MySuite) TestReplaceArgs(c *C) {
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
 	c.Assert(step.Args[1].Value, Equals, "text from file")
 }
+
+func (s *MySuite) TestUsageDynamicArgs(c *C) {
+
+	dArgs := []string{"first", "second"}
+
+	sArg := &StepArg{ArgType: Dynamic, Value: "first"}
+
+	step := &Step{Value: "step with {}", Args: []*StepArg{sArg}}
+
+	usesDynamicArgs := step.UsesDynamicArgs(dArgs...)
+
+	c.Assert(usesDynamicArgs, Equals, true)
+
+}
+
+func (s *MySuite) TestStepDoesNotUsageDynamicArgs(c *C) {
+
+	dArgs := []string{"first", "second"}
+
+	sArg := &StepArg{ArgType: Dynamic, Value: "third"}
+
+	step := &Step{Value: "step with {}", Args: []*StepArg{sArg}}
+
+	usesDynamicArgs := step.UsesDynamicArgs(dArgs...)
+
+	c.Assert(usesDynamicArgs, Equals, false)
+
+}
+
+func (s *MySuite) TestInlineTableUsageDynamicArgs(c *C) {
+	headers := []string{"header"}
+	cells := [][]TableCell{
+		{
+			{
+				CellType: Dynamic,
+				Value:    "first",
+			},
+		},
+	}
+	table := NewTable(headers, cells, 1)
+
+	dArgs := []string{"first", "second"}
+
+	sArg := &StepArg{Name: "hello", ArgType: TableArg, Table: *table}
+
+	step := &Step{Value: "step with {}", Args: []*StepArg{sArg}}
+
+	usesDynamicArgs := step.UsesDynamicArgs(dArgs...)
+
+	c.Assert(usesDynamicArgs, Equals, true)
+
+}

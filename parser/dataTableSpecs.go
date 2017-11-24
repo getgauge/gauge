@@ -17,7 +17,9 @@
 
 package parser
 
-import "github.com/getgauge/gauge/gauge"
+import (
+	"github.com/getgauge/gauge/gauge"
+)
 
 // GetSpecsForDataTableRows creates a spec for each data table row
 func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
