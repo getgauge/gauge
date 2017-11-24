@@ -87,7 +87,18 @@ func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap
 func (step *Step) UsesDynamicArgs(args ...string) bool {
 	for _, arg := range args {
 		for _, stepArg := range step.Args {
-			if stepArg.Value == arg && stepArg.ArgType == Dynamic {
+			if (stepArg.Value == arg && stepArg.ArgType == Dynamic) || (stepArg.ArgType == TableArg && tableUsesDynamicArgs(stepArg, arg)) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func tableUsesDynamicArgs(tableArg *StepArg, arg string) bool {
+	for _, cells := range tableArg.Table.Columns {
+		for _, cell := range cells {
+			if cell.CellType == Dynamic && cell.Value == arg {
 				return true
 			}
 		}
@@ -178,51 +189,51 @@ func (step *Step) InConcept() bool {
 
 // Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
 // are copied and their parent copying again comes back to copy the same concept.
-func (self *Step) GetCopy() *Step {
-	if !self.IsConcept {
-		return self
+func (step *Step) GetCopy() *Step {
+	if !step.IsConcept {
+		return step
 	}
 	nestedStepsCopy := make([]*Step, 0)
-	for _, nestedStep := range self.ConceptSteps {
+	for _, nestedStep := range step.ConceptSteps {
 		nestedStepsCopy = append(nestedStepsCopy, nestedStep.GetCopy())
 	}
 
 	copiedConceptStep := new(Step)
-	*copiedConceptStep = *self
+	*copiedConceptStep = *step
 	copiedConceptStep.ConceptSteps = nestedStepsCopy
-	copiedConceptStep.Lookup = *self.Lookup.GetCopy()
+	copiedConceptStep.Lookup = *step.Lookup.GetCopy()
 	return copiedConceptStep
 }
 
-func (self *Step) CopyFrom(another *Step) {
-	self.IsConcept = another.IsConcept
+func (step *Step) CopyFrom(another *Step) {
+	step.IsConcept = another.IsConcept
 
 	if another.Args == nil {
-		self.Args = nil
+		step.Args = nil
 	} else {
-		self.Args = make([]*StepArg, len(another.Args))
-		copy(self.Args, another.Args)
+		step.Args = make([]*StepArg, len(another.Args))
+		copy(step.Args, another.Args)
 	}
 
 	if another.ConceptSteps == nil {
-		self.ConceptSteps = nil
+		step.ConceptSteps = nil
 	} else {
-		self.ConceptSteps = make([]*Step, len(another.ConceptSteps))
-		copy(self.ConceptSteps, another.ConceptSteps)
+		step.ConceptSteps = make([]*Step, len(another.ConceptSteps))
+		copy(step.ConceptSteps, another.ConceptSteps)
 	}
 
 	if another.Fragments == nil {
-		self.Fragments = nil
+		step.Fragments = nil
 	} else {
-		self.Fragments = make([]*gauge_messages.Fragment, len(another.Fragments))
-		copy(self.Fragments, another.Fragments)
+		step.Fragments = make([]*gauge_messages.Fragment, len(another.Fragments))
+		copy(step.Fragments, another.Fragments)
 	}
 
-	self.LineText = another.LineText
-	self.HasInlineTable = another.HasInlineTable
-	self.Value = another.Value
-	self.Lookup = another.Lookup
-	self.Parent = another.Parent
+	step.LineText = another.LineText
+	step.HasInlineTable = another.HasInlineTable
+	step.Value = another.Value
+	step.Lookup = another.Lookup
+	step.Parent = another.Parent
 }
 
 func (step Step) Kind() TokenKind {
