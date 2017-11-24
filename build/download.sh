@@ -39,7 +39,7 @@ download() {
     verbose_say "Copying the binary to $LOCATION"
     if [ -w $LOCATION ]; then
         mkdir -p "$LOCATION"
-        ensure cp ./bin/gauge "$LOCATION/"
+        ensure cp ./gauge "$LOCATION/"
     else
         echo "You do not have write permision for $LOCATION. Trying with sudo."
         sudo cp ./bin/gauge "$LOCATION/"
