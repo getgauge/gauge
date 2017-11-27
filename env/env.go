@@ -66,13 +66,9 @@ func LoadEnv(envName string) error {
 
 	loadDefaultEnvVars()
 
-	// Feature in progress
-	// https://github.com/getgauge/gauge/issues/866
-	if false {
-		err = substituteEnvVars()
-		if err != nil {
-			return fmt.Errorf("%s", err.Error())
-		}
+	err = substituteEnvVars()
+	if err != nil {
+		return fmt.Errorf("%s", err.Error())
 	}
 
 	err = setEnvVars()
@@ -138,15 +134,12 @@ func substituteEnvVars() error {
 				// check if match is from properties file
 				// if not, get from system env
 				envKey, property := match[0], match[1]
-				propertyValue := envVars[property]
-				if _, ok := envVars[property]; !ok {
-					// error if env property is not found
-					if !isPropertySet(property) {
-						return fmt.Errorf("'%s' env property was not set.", property)
-					}
-					// get env var from system
-					propertyValue = os.Getenv(property)
+				// error if env property is not found
+				if !isPropertySet(property) {
+					return fmt.Errorf("'%s' env variable was not set.", property)
 				}
+				// get env var from system
+				propertyValue := os.Getenv(property)
 				// replace env key with property value
 				value = strings.Replace(value, envKey, propertyValue, -1)
 			}
