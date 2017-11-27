@@ -18,10 +18,11 @@
 package lang
 
 import (
-	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/api/infoGatherer"
 	"encoding/json"
 	"testing"
+
+	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/gauge"
 
 	"reflect"
 
@@ -123,15 +124,15 @@ Scenario Heading2
 
 func TestGetScenariosShouldGiveTheScenariosIfDocumentIsNotOpened(t *testing.T) {
 	provider = &dummyInfoProvider{
-		specsFunc: func(specs []string) []*infoGatherer.SpecDetail{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
 			return []*infoGatherer.SpecDetail{
 				&infoGatherer.SpecDetail{
 					Spec: &gauge.Specification{
-						Heading: &gauge.Heading{Value: "Specification 1"	},
+						Heading:  &gauge.Heading{Value: "Specification 1"},
 						FileName: "foo.spec",
-						Scenarios: []*gauge.Scenario {
-							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 1", LineNo: 4}, Span: &gauge.Span{Start:4, End:7}},
-							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 2", LineNo: 9}, Span: &gauge.Span{Start:9, End:12}},
+						Scenarios: []*gauge.Scenario{
+							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 1", LineNo: 4}, Span: &gauge.Span{Start: 4, End: 7}},
+							&gauge.Scenario{Heading: &gauge.Heading{Value: "Scenario 2", LineNo: 9}, Span: &gauge.Span{Start: 9, End: 12}},
 						},
 					},
 				},
@@ -170,36 +171,36 @@ func TestGetScenariosShouldGiveTheScenariosIfDocumentIsNotOpened(t *testing.T) {
 
 func TestGetSpecsShouldReturnAllSpecsInDirectory(t *testing.T) {
 	provider = &dummyInfoProvider{
-		specsFunc: func(specs []string) []*infoGatherer.SpecDetail{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
 			return []*infoGatherer.SpecDetail{
 				&infoGatherer.SpecDetail{
 					Spec: &gauge.Specification{
-						Heading: &gauge.Heading{Value: "Specification 1"	},
+						Heading:  &gauge.Heading{Value: "Specification 1"},
 						FileName: "foo1.spec",
 					},
 				},
 				&infoGatherer.SpecDetail{
 					Spec: &gauge.Specification{
-						Heading: &gauge.Heading{Value: "Specification 2"	},
+						Heading:  &gauge.Heading{Value: "Specification 2"},
 						FileName: "foo2.spec",
 					},
-				},				
+				},
 			}
 		},
 	}
 
 	want := []specInfo{
 		{
-			Heading: "Specification 1",
+			Heading:             "Specification 1",
 			ExecutionIdentifier: "foo1.spec",
 		},
 		{
-			Heading: "Specification 2",
+			Heading:             "Specification 2",
 			ExecutionIdentifier: "foo2.spec",
 		},
 	}
 	got, err := getSpecs()
-	
+
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
 	}
@@ -208,5 +209,5 @@ func TestGetSpecsShouldReturnAllSpecsInDirectory(t *testing.T) {
 
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
-	}	
+	}
 }

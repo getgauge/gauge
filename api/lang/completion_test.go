@@ -22,7 +22,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/getgauge/gauge/api/infoGatherer"		
+	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -60,12 +60,12 @@ func TestAddPlaceHolders(t *testing.T) {
 	}
 }
 
-type dummyInfoProvider struct{
+type dummyInfoProvider struct {
 	specsFunc func(specs []string) []*infoGatherer.SpecDetail
 }
 
-func (p dummyInfoProvider) GetAvailableSpecDetails(specs []string) []*infoGatherer.SpecDetail { 
-	return p.specsFunc(specs) 
+func (p dummyInfoProvider) GetAvailableSpecDetails(specs []string) []*infoGatherer.SpecDetail {
+	return p.specsFunc(specs)
 }
 func (p dummyInfoProvider) Init() {}
 func (p dummyInfoProvider) Steps() []*gauge.Step {

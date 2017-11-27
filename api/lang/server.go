@@ -26,8 +26,8 @@ import (
 	"encoding/json"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"

@@ -37,7 +37,7 @@ type ScenarioInfo struct {
 
 type specInfo struct {
 	Heading             string `json:"heading"`
-	ExecutionIdentifier string `json:"executionIdentifier"`	
+	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
 func getSpecs() (interface{}, error) {
@@ -57,12 +57,12 @@ func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
-	content:=""
+	content := ""
 	if !isOpen(params.TextDocument.URI) {
 		specDetails := provider.GetAvailableSpecDetails([]string{file})
 		return getScenarioAt(specDetails[0].Spec.Scenarios, file, params.Position.Line), nil
 	}
-	content=getContent(params.TextDocument.URI)
+	content = getContent(params.TextDocument.URI)
 	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed")

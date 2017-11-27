@@ -21,6 +21,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
