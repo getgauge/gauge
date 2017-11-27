@@ -105,9 +105,7 @@ func ListenFailedScenarios(wg *sync.WaitGroup, specDirs []string) {
 				addFailedMetadata(e.Result, specDirs, addSpecFailedMetadata)
 			case event.SuiteEnd:
 				addFailedMetadata(e.Result, specDirs, addSuiteFailedMetadata)
-				runInfo.Items = specDirs
 				runInfo.aggregateFailedItems()
-				writeLastRunInfo(getJSON(runInfo))
 				wg.Done()
 			}
 		}
@@ -147,7 +145,8 @@ func addFailedMetadata(res result.Result, args []string, add func(res result.Res
 	}
 }
 
-func writeLastRunInfo(contents string) {
+func WriteLastRunInfo() {
+	contents := getJSON(runInfo)
 	failuresFile := filepath.Join(config.ProjectRoot, dotGauge, infoFileName)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
@@ -180,6 +179,7 @@ func GetLastState(repeat bool) ([]string, error) {
 }
 
 func SaveState(args []string, specs []string) {
+	runInfo.Items = specs
 	isPresent := func(values []string, value string) bool {
 		for _, v := range values {
 			if v == value {

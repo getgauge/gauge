@@ -18,16 +18,11 @@
 package rerun
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"sync"
 	"testing"
-	"time"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -51,16 +46,11 @@ func (s *MySuite) SetUpTest(c *C) {
 }
 
 func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
-	msg := "hello world"
-	writeLastRunInfo(msg)
+
+	WriteLastRunInfo()
 
 	file := filepath.Join(config.ProjectRoot, dotGauge, infoFileName)
 	c.Assert(common.FileExists(file), Equals, true)
-	expected := msg
-
-	content, _ := ioutil.ReadFile(file)
-
-	c.Assert(string(content), Equals, expected)
 	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }
 
@@ -138,18 +128,11 @@ func (s *MySuite) TestGetAllFailedItems(c *C) {
 }
 
 func (s *MySuite) TestCaptureLastRunInfo(c *C) {
-	suiteRes := result.NewSuiteResult("", time.Now())
-	ei := gauge_messages.ExecutionInfo{}
-	suiteEnd := event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 1, ei)
 
-	wg := &sync.WaitGroup{}
-	event.InitRegistry()
-	ListenFailedScenarios(wg, []string{"foo.spec"})
-	event.Notify(suiteEnd)
-	wg.Wait()
+	SaveState([]string{`--tags="foo"`, `specs`}, []string{`specs`})
 
 	c.Assert(len(runInfo.Items), Equals, 1)
-	c.Assert(runInfo.Items[0], Equals, "foo.spec")
-
+	c.Assert(runInfo.Items[0], Equals, "specs")
+	c.Assert(runInfo.Args[0], Equals, `--tags="foo"`)
 	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }
