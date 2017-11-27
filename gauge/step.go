@@ -48,16 +48,19 @@ type Step struct {
 	Suffix         string
 }
 
-func (step *Step) GetArg(name string) *StepArg {
-	arg := step.Lookup.GetArg(name)
+func (step *Step) GetArg(name string) (*StepArg, error) {
+	arg, err := step.Lookup.GetArg(name)
+	if err != nil {
+		return nil, err
+	}
 	// Return static values
 	if arg != nil && arg.ArgType != Dynamic {
-		return arg
+		return arg, nil
 	}
 	if step.Parent == nil {
-		return step.Lookup.GetArg(name)
+		return arg, nil
 	}
-	return step.Parent.GetArg(step.Lookup.GetArg(name).Value)
+	return step.Parent.GetArg(arg.Value)
 }
 
 func (step *Step) GetFragments() []*gauge_messages.Fragment {

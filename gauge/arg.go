@@ -62,19 +62,19 @@ func (lookup *ArgLookup) ContainsArg(param string) bool {
 	return ok
 }
 
-func (lookup *ArgLookup) GetArg(param string) *StepArg {
+func (lookup *ArgLookup) GetArg(param string) (*StepArg, error) {
 	paramIndex, ok := lookup.ParamIndexMap[param]
 	if !ok {
-		panic(fmt.Sprintf("Accessing an invalid parameter (%s)", param))
+		return nil, fmt.Errorf("Accessing an invalid parameter (%s)", param)
 	}
-	return lookup.paramValue[paramIndex].stepArg
+	return lookup.paramValue[paramIndex].stepArg, nil
 }
 
 func (lookup *ArgLookup) GetCopy() *ArgLookup {
 	lookupCopy := new(ArgLookup)
 	for key, _ := range lookup.ParamIndexMap {
 		lookupCopy.AddArgName(key)
-		arg := lookup.GetArg(key)
+		arg, _ := lookup.GetArg(key)
 		if arg != nil {
 			lookupCopy.AddArgValue(key, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
 		}

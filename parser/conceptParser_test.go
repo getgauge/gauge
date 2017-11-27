@@ -160,10 +160,12 @@ func (s *MySuite) TestConceptDictionaryWithNestedConceptsWithStaticParameters(c 
 
 	c.Assert(actualNestedConcept.Args[1].ArgType, Equals, gauge.Static)
 	c.Assert(actualNestedConcept.Args[1].Value, Equals, "static-value")
-	c.Assert(actualNestedConcept.Lookup.GetArg("userid").Value, Equals, "user-id")
-	c.Assert(actualNestedConcept.Lookup.GetArg("userid").ArgType, Equals, gauge.Dynamic)
-	c.Assert(actualNestedConcept.Lookup.GetArg("username").Value, Equals, "static-value")
-	c.Assert(actualNestedConcept.Lookup.GetArg("username").ArgType, Equals, gauge.Static)
+	useridArg, _ := actualNestedConcept.Lookup.GetArg("userid")
+	usernameArg, _ := actualNestedConcept.Lookup.GetArg("username")
+	c.Assert(useridArg.Value, Equals, "user-id")
+	c.Assert(useridArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(usernameArg.Value, Equals, "static-value")
+	c.Assert(usernameArg.ArgType, Equals, gauge.Static)
 
 	c.Assert(len(actualNestedConcept.ConceptSteps), Equals, 2)
 	c.Assert(actualNestedConcept.ConceptSteps[0].Value, Equals, "add id {}")
@@ -419,9 +421,9 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	c.Assert(parseResult.Ok, Equals, true)
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
 	nestedConcept := firstStepInSpec.ConceptSteps[0]
-	nestedConceptArg1 := nestedConcept.GetArg("baz")
+	nestedConceptArg1, _ := nestedConcept.GetArg("baz")
 	c.Assert(nestedConceptArg1.Value, Equals, "foo")
-	nestedConceptArg2 := nestedConcept.GetArg("boo")
+	nestedConceptArg2, _ := nestedConcept.GetArg("boo")
 	c.Assert(nestedConceptArg2.Value, Equals, "doo")
 }
 
@@ -448,16 +450,20 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
 	c.Assert(firstStepInSpec.IsConcept, Equals, true)
-	c.Assert(firstStepInSpec.GetArg("bar").ArgType, Equals, gauge.Dynamic)
-	c.Assert(firstStepInSpec.GetArg("far").ArgType, Equals, gauge.Dynamic)
-	c.Assert(firstStepInSpec.GetArg("bar").Value, Equals, "id")
-	c.Assert(firstStepInSpec.GetArg("far").Value, Equals, "name")
+	barArg, _ := firstStepInSpec.GetArg("bar")
+	farArg, _ := firstStepInSpec.GetArg("far")
+	c.Assert(barArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(farArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(barArg.Value, Equals, "id")
+	c.Assert(farArg.Value, Equals, "name")
 
 	nestedConcept := firstStepInSpec.ConceptSteps[0]
-	c.Assert(nestedConcept.GetArg("baz").ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.GetArg("boo").ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.GetArg("baz").Value, Equals, "id")
-	c.Assert(nestedConcept.GetArg("boo").Value, Equals, "name")
+	bazArg, _ := nestedConcept.GetArg("baz")
+	booArg, _ := nestedConcept.GetArg("boo")
+	c.Assert(bazArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(booArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(bazArg.Value, Equals, "id")
+	c.Assert(booArg.Value, Equals, "name")
 
 }
 
@@ -484,18 +490,23 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
 	c.Assert(firstStepInSpec.IsConcept, Equals, true)
-	c.Assert(firstStepInSpec.GetArg("user-id").ArgType, Equals, gauge.Dynamic)
-	c.Assert(firstStepInSpec.GetArg("user-name").ArgType, Equals, gauge.Dynamic)
-	c.Assert(firstStepInSpec.GetArg("user-phone").ArgType, Equals, gauge.Dynamic)
-	c.Assert(firstStepInSpec.GetArg("user-id").Value, Equals, "id")
-	c.Assert(firstStepInSpec.GetArg("user-name").Value, Equals, "name")
-	c.Assert(firstStepInSpec.GetArg("user-phone").Value, Equals, "phone")
+	useridArg, _ := firstStepInSpec.GetArg("user-id")
+	usernameArg, _ := firstStepInSpec.GetArg("user-name")
+	userphoneArg, _ := firstStepInSpec.GetArg("user-phone")
+	c.Assert(useridArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(usernameArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(userphoneArg.ArgType, Equals, gauge.Dynamic)
+	c.Assert(useridArg.Value, Equals, "id")
+	c.Assert(usernameArg.Value, Equals, "name")
+	c.Assert(userphoneArg.Value, Equals, "phone")
 
 	nestedConcept := firstStepInSpec.ConceptSteps[0]
-	c.Assert(nestedConcept.GetArg("user-id").ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.GetArg("user-name").ArgType, Equals, gauge.Dynamic)
-	c.Assert(nestedConcept.GetArg("user-id").Value, Equals, "id")
-	c.Assert(nestedConcept.GetArg("user-name").Value, Equals, "name")
+	useridArg2, _ := nestedConcept.GetArg("user-id")
+	usernameArg2, _ := nestedConcept.GetArg("user-name")
+	c.Assert(useridArg2.ArgType, Equals, gauge.Dynamic)
+	c.Assert(usernameArg2.ArgType, Equals, gauge.Dynamic)
+	c.Assert(useridArg2.Value, Equals, "id")
+	c.Assert(usernameArg2.Value, Equals, "name")
 
 }
 

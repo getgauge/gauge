@@ -1254,8 +1254,10 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(firstConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
 	c.Assert(firstConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
 	c.Assert(firstConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
-	c.Assert(firstConceptStep.GetArg("username").Value, Equals, "foo1")
-	c.Assert(firstConceptStep.GetArg("userid").Value, Equals, "foo")
+	usernameArg, _ := firstConceptStep.GetArg("username")
+	c.Assert(usernameArg.Value, Equals, "foo1")
+	useridArg, _ := firstConceptStep.GetArg("userid")
+	c.Assert(useridArg.Value, Equals, "foo")
 
 	secondConceptStep := spec.Scenarios[0].Steps[1]
 	c.Assert(secondConceptStep.IsConcept, Equals, true)
@@ -1263,8 +1265,10 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(secondConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
 	c.Assert(secondConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
 	c.Assert(secondConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
-	c.Assert(secondConceptStep.GetArg("username").Value, Equals, "bar1")
-	c.Assert(secondConceptStep.GetArg("userid").Value, Equals, "bar")
+	usernameArg2, _ := secondConceptStep.GetArg("username")
+	c.Assert(usernameArg2.Value, Equals, "bar1")
+	useridArg2, _ := secondConceptStep.GetArg("userid")
+	c.Assert(useridArg2.Value, Equals, "bar")
 
 }
 
@@ -1301,11 +1305,11 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(firstConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
 	c.Assert(firstConcept.ConceptSteps[1].Args[0].ArgType, Equals, gauge.Dynamic)
 
-	arg1 := firstConcept.Lookup.GetArg("userid")
+	arg1, _ := firstConcept.Lookup.GetArg("userid")
 	c.Assert(arg1.Value, Equals, "id")
 	c.Assert(arg1.ArgType, Equals, gauge.Dynamic)
 
-	arg2 := firstConcept.Lookup.GetArg("username")
+	arg2, _ := firstConcept.Lookup.GetArg("username")
 	c.Assert(arg2.Value, Equals, "description")
 	c.Assert(arg2.ArgType, Equals, gauge.Dynamic)
 }

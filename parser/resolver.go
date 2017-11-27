@@ -56,9 +56,9 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 		} else if arg.ArgType == gauge.Dynamic {
 			var resolvedArg *gauge.StepArg
 			if parent != nil {
-				resolvedArg = parent.GetArg(arg.Value)
+				resolvedArg, _ = parent.GetArg(arg.Value)
 			} else {
-				resolvedArg = lookup.GetArg(arg.Value)
+				resolvedArg, _ = lookup.GetArg(arg.Value)
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = resolvedArg.Name
@@ -102,7 +102,8 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 			value := tableCell.Value
 			if tableCell.CellType == gauge.Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
-				value = lookup.GetArg(tableCell.Value).Value
+				arg, _ := lookup.GetArg(tableCell.Value)
+				value = arg.Value
 			}
 			row = append(row, value)
 		}
@@ -169,9 +170,9 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	//If it is a top level concept
 	lookup := concept.Lookup.GetCopy()
 	for key := range lookup.ParamIndexMap {
-		conceptLookupArg := lookup.GetArg(key)
+		conceptLookupArg, _ := lookup.GetArg(key)
 		if conceptLookupArg.ArgType == gauge.Dynamic {
-			resolvedArg := dataTableLookup.GetArg(conceptLookupArg.Value)
+			resolvedArg, _ := dataTableLookup.GetArg(conceptLookupArg.Value)
 			lookup.AddArgValue(key, resolvedArg)
 		}
 	}
@@ -182,9 +183,11 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	for _, arg := range concept.Args {
 		if arg.ArgType == gauge.Dynamic {
 			if concept.Parent != nil {
-				newArgs = append(newArgs, concept.Parent.GetArg(arg.Value))
+				cArg, _ := concept.Parent.GetArg(arg.Value)
+				newArgs = append(newArgs, cArg)
 			} else {
-				newArgs = append(newArgs, dataTableLookup.GetArg(arg.Value))
+				dArg, _ := dataTableLookup.GetArg(arg.Value)
+				newArgs = append(newArgs, dArg)
 			}
 		} else {
 			newArgs = append(newArgs, arg)
