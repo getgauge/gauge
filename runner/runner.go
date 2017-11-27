@@ -351,7 +351,7 @@ func getCleanEnv(port string, env []string, debug bool, pathToAdd []string) []st
 		if key == common.GaugeInternalPortEnvName {
 			isPresent = true
 			env[i] = common.GaugeInternalPortEnvName + "=" + port
-		} else if key == "PATH" {
+		} else if strings.ToUpper(key) == "PATH" {
 			path := os.Getenv("PATH")
 			for _, p := range pathToAdd {
 				path += string(os.PathListSeparator) + p
