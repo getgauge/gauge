@@ -20,19 +20,14 @@ package lang
 import (
 	"fmt"
 
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
+	"encoding/json"
+	"strconv"
+
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-
-	"encoding/json"
-
-	"strconv"
-
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -83,15 +78,9 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 		return nil, nil
 	}
 	uri := params.TextDocument.URI
-	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
-	response, err := conn.GetResponseForMessageWithTimeout(stepPositionsRequest, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+	stepPositionsResponse, err := getStepPositionResponse(uri)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 		return nil, err
-	}
-	stepPositionsResponse := response.GetStepPositionsResponse()
-	if stepPositionsResponse.GetError() != "" {
-		logger.APILog.Infof("Error while connecting to runner : %s", stepPositionsResponse.GetError())
 	}
 	allSteps := provider.AllSteps()
 	var lenses []lsp.CodeLens
@@ -104,9 +93,9 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 			}
 		}
 		lensTitle := strconv.Itoa(count) + " reference(s)"
-		lensPosition := lsp.Position{Line: int(stepPosition.GetLineNumber()) - 1, Character: 0}
-		lineNo := int(stepPosition.GetLineNumber()) - 1
-		args := []interface{}{uri, lensPosition, stepValue, count}
+		lensPosition := lsp.Position{Line: int(stepPosition.GetSpan().GetStart()) - 1, Character: 0}
+		lineNo := int(stepPosition.GetSpan().GetStart()) - 1
+		args := []interface{}{uri, lensPosition, stepValue}
 
 		lens := createCodeLens(lineNo, lensTitle, referencesCommand, args)
 		lenses = append(lenses, lens)

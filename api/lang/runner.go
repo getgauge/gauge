@@ -20,7 +20,10 @@ package lang
 import (
 	"os"
 
+	"fmt"
+
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -76,6 +79,24 @@ func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 	}
 	return err
+}
+
+var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+}
+
+func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
+	response, err := GetResponseFromRunner(stepPositionsRequest)
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	stepPositionsResponse := response.GetStepPositionsResponse()
+	if stepPositionsResponse.GetError() != "" {
+		return nil, fmt.Errorf("error while connecting to runner : %s", stepPositionsResponse.GetError())
+	}
+	return stepPositionsResponse, nil
 }
 
 func killRunner() {

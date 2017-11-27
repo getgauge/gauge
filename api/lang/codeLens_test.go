@@ -97,7 +97,6 @@ Another Scenario
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
 	p := json.RawMessage(b)
-
 	got, err := getCodeLenses(&jsonrpc2.Request{Params: &p})
 	if err != nil {
 		t.Errorf("Expected error to be nil. got : %s", err.Error())

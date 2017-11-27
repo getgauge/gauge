@@ -144,6 +144,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return getCodeLenses(req)
 	case "gauge/stepReferences":
 		return getStepReferences(req)
+	case "gauge/stepValueAt":
+		return getStepValueAt(req)
 	case "textDocument/codeAction":
 		return getCodeActions(req)
 	case "gauge/scenarios":
