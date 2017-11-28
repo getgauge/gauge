@@ -102,7 +102,10 @@ func FormatTable(table *gauge.Table) string {
 	columnToWidthMap := make(map[int]int)
 	for i, header := range table.Headers {
 		//table.get(header) returns a list of cells in that particular column
-		cells := table.Get(header)
+		cells, err := table.Get(header)
+		if err != nil {
+			logger.Fatalf(err.Error())
+		}
 		columnToWidthMap[i] = findLongestCellWidth(cells, len(header))
 	}
 

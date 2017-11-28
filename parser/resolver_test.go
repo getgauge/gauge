@@ -63,11 +63,11 @@ func (s *MySuite) TestParsingInvalidSpecialType(c *C) {
 func (s *MySuite) TestConvertCsvToTable(c *C) {
 	table, _ := convertCsvToTable("id,name\n1,foo\n2,bar")
 
-	idColumn := table.Get("id")
+	idColumn, _ := table.Get("id")
 	c.Assert(idColumn[0].Value, Equals, "1")
 	c.Assert(idColumn[1].Value, Equals, "2")
 
-	nameColumn := table.Get("name")
+	nameColumn, _ := table.Get("name")
 	c.Assert(nameColumn[0].Value, Equals, "foo")
 	c.Assert(nameColumn[1].Value, Equals, "bar")
 }

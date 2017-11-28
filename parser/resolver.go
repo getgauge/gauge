@@ -99,11 +99,11 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 	for i := 0; i < len(table.Columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.Headers {
-			tableCell := table.Get(header)[i]
-			value := tableCell.Value
-			if tableCell.CellType == gauge.Dynamic {
+			tableCells, _ := table.Get(header)
+			value := tableCells[i].Value
+			if tableCells[i].CellType == gauge.Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
-				arg, _ := lookup.GetArg(tableCell.Value)
+				arg, _ := lookup.GetArg(tableCells[i].Value)
 				value = arg.Value
 			}
 			row = append(row, value)

@@ -95,7 +95,8 @@ func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) (*ArgLook
 	}
 	for _, header := range datatable.Headers {
 		dataTableLookup.AddArgName(header)
-		err = dataTableLookup.AddArgValue(header, &StepArg{Value: datatable.Get(header)[index].Value, ArgType: Static})
+		tableCells, _ := datatable.Get(header)
+		err = dataTableLookup.AddArgValue(header, &StepArg{Value: tableCells[index].Value, ArgType: Static})
 	}
 	return dataTableLookup, err
 }

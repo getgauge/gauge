@@ -84,8 +84,11 @@ func (table *Table) GetDynamicArgs() []string {
 	return args
 }
 
-func (table *Table) Get(header string) []TableCell {
-	return table.Columns[table.headerIndexMap[header]]
+func (table *Table) Get(header string) ([]TableCell, error) {
+	if !table.headerExists(header) {
+		return nil, fmt.Errorf("Table column %s not found", header)
+	}
+	return table.Columns[table.headerIndexMap[header]], nil
 }
 
 func (table *Table) headerExists(header string) bool {
@@ -149,7 +152,8 @@ func (table *Table) Rows() [][]string {
 	for i := 0; i < len(table.Columns[0]); i++ {
 		row := make([]string, 0)
 		for _, header := range table.Headers {
-			tableCell := table.Get(header)[i]
+			tableCells, _ := table.Get(header)
+			tableCell := tableCells[i]
 			value := tableCell.GetValue()
 			row = append(row, value)
 		}

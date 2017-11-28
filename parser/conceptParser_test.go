@@ -384,16 +384,18 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 
 	inlineTable := tableArgument.Table
 	c.Assert(inlineTable.IsInitialized(), Equals, true)
-	c.Assert(len(inlineTable.Get("id")), Equals, 2)
-	c.Assert(len(inlineTable.Get("name")), Equals, 2)
-	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")
-	c.Assert(inlineTable.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[1].Value, Equals, "2")
-	c.Assert(inlineTable.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[0].Value, Equals, "vishnu")
-	c.Assert(inlineTable.Get("name")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[1].Value, Equals, "prateek")
-	c.Assert(inlineTable.Get("name")[1].CellType, Equals, gauge.Static)
+	idCells, _ := inlineTable.Get("id")
+	nameCells, _ := inlineTable.Get("name")
+	c.Assert(len(idCells), Equals, 2)
+	c.Assert(len(nameCells), Equals, 2)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "vishnu")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "prateek")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
