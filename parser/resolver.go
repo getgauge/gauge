@@ -56,10 +56,14 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.Dynamic {
 			var resolvedArg *gauge.StepArg
+			var err error
 			if parent != nil {
-				resolvedArg, _ = parent.GetArg(arg.Value)
+				resolvedArg, err = parent.GetArg(arg.Value)
 			} else {
-				resolvedArg, _ = lookup.GetArg(arg.Value)
+				resolvedArg, err = lookup.GetArg(arg.Value)
+			}
+			if err != nil {
+				logger.Fatalf(err.Error())
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = resolvedArg.Name
@@ -103,7 +107,10 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 			value := tableCells[i].Value
 			if tableCells[i].CellType == gauge.Dynamic {
 				//if concept has a table with dynamic cell, fetch from datatable
-				arg, _ := lookup.GetArg(tableCells[i].Value)
+				arg, err := lookup.GetArg(tableCells[i].Value)
+				if err != nil {
+					logger.Fatalf(err.Error())
+				}
 				value = arg.Value
 			}
 			row = append(row, value)
@@ -174,7 +181,10 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 		logger.Fatalf(err.Error())
 	}
 	for key := range lookup.ParamIndexMap {
-		conceptLookupArg, _ := lookup.GetArg(key)
+		conceptLookupArg, err := lookup.GetArg(key)
+		if err != nil {
+			logger.Fatalf(err.Error())
+		}
 		if conceptLookupArg.ArgType == gauge.Dynamic {
 			resolvedArg, err := dataTableLookup.GetArg(conceptLookupArg.Value)
 			if err != nil {
@@ -195,7 +205,10 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 				cArg, _ := concept.Parent.GetArg(arg.Value)
 				newArgs = append(newArgs, cArg)
 			} else {
-				dArg, _ := dataTableLookup.GetArg(arg.Value)
+				dArg, err := dataTableLookup.GetArg(arg.Value)
+				if err != nil {
+					logger.Fatalf(err.Error())
+				}
 				newArgs = append(newArgs, dArg)
 			}
 		} else {
