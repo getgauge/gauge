@@ -85,9 +85,6 @@ func (table *Table) GetDynamicArgs() []string {
 }
 
 func (table *Table) Get(header string) []TableCell {
-	if !table.headerExists(header) {
-		panic(fmt.Sprintf("Table column %s not found", header))
-	}
 	return table.Columns[table.headerIndexMap[header]]
 }
 

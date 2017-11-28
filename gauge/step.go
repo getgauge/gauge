@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 )
 
 type StepValue struct {
@@ -204,7 +205,11 @@ func (step *Step) GetCopy() *Step {
 	copiedConceptStep := new(Step)
 	*copiedConceptStep = *step
 	copiedConceptStep.ConceptSteps = nestedStepsCopy
-	copiedConceptStep.Lookup = *step.Lookup.GetCopy()
+	lookupCopy, err := step.Lookup.GetCopy()
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
+	copiedConceptStep.Lookup = *lookupCopy
 	return copiedConceptStep
 }
 

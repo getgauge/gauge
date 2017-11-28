@@ -283,7 +283,11 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) []*gaug
 }
 
 func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
-	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
+	d, err := new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
+	return d
 }
 
 func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {

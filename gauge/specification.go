@@ -17,7 +17,11 @@
 
 package gauge
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/getgauge/gauge/logger"
+)
 
 type HeadingType int
 
@@ -186,7 +190,10 @@ func (spec *Specification) removeScenario(scenario *Scenario) {
 
 func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs []*StepArg, stepArgs []*StepArg) {
 	for i, arg := range stepArgs {
-		lookup.AddArgValue(conceptArgs[i].Value, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
+		err := lookup.AddArgValue(conceptArgs[i].Value, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
+		if err != nil {
+			logger.Fatalf(err.Error())
+		}
 	}
 }
 

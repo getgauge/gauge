@@ -125,16 +125,6 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 	c.Assert(table.headerExists("four"), Equals, false)
 }
 
-func (s *MySuite) TestGetInvalidColumn(c *C) {
-	var table Table
-
-	table.AddHeaders([]string{"one", "two", "three"})
-	table.AddRowValues([]string{"foo", "bar", "baz"})
-	table.AddRowValues([]string{"john", "jim", "jack"})
-
-	c.Assert(func() { table.Get("four") }, Panics, "Table column four not found")
-}
-
 func (s *MySuite) TestGetRows(c *C) {
 	var table Table
 

@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
 
@@ -168,12 +169,20 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 // Creating a copy of the lookup and populating table values
 func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.ArgLookup) {
 	//If it is a top level concept
-	lookup := concept.Lookup.GetCopy()
+	lookup, err := concept.Lookup.GetCopy()
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
 	for key := range lookup.ParamIndexMap {
 		conceptLookupArg, _ := lookup.GetArg(key)
 		if conceptLookupArg.ArgType == gauge.Dynamic {
-			resolvedArg, _ := dataTableLookup.GetArg(conceptLookupArg.Value)
-			lookup.AddArgValue(key, resolvedArg)
+			resolvedArg, err := dataTableLookup.GetArg(conceptLookupArg.Value)
+			if err != nil {
+				logger.Fatalf(err.Error())
+			}
+			if err = lookup.AddArgValue(key, resolvedArg); err != nil {
+				logger.Fatalf(err.Error())
+			}
 		}
 	}
 	concept.Lookup = *lookup

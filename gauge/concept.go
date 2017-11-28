@@ -17,6 +17,8 @@
 
 package gauge
 
+import "github.com/getgauge/gauge/logger"
+
 type ConceptDictionary struct {
 	ConceptsMap     map[string]*Concept
 	constructionMap map[string][]*Step
@@ -45,7 +47,11 @@ func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) {
 			//replace step with actual concept
 			conceptStep.ConceptSteps[i].ConceptSteps = nestedConcept.ConceptStep.ConceptSteps
 			conceptStep.ConceptSteps[i].IsConcept = nestedConcept.ConceptStep.IsConcept
-			conceptStep.ConceptSteps[i].Lookup = *nestedConcept.ConceptStep.Lookup.GetCopy()
+			lookupCopy, err := nestedConcept.ConceptStep.Lookup.GetCopy()
+			if err != nil {
+				logger.Fatalf(err.Error())
+			}
+			conceptStep.ConceptSteps[i].Lookup = *lookupCopy
 		} else {
 			dict.updateStep(stepInsideConcept)
 		}
@@ -60,7 +66,11 @@ func (dict *ConceptDictionary) updateStep(step *Step) {
 		for _, allSteps := range dict.constructionMap[step.Value] {
 			allSteps.IsConcept = step.IsConcept
 			allSteps.ConceptSteps = step.ConceptSteps
-			allSteps.Lookup = *step.Lookup.GetCopy()
+			lookupCopy, err := step.Lookup.GetCopy()
+			if err != nil {
+				logger.Fatalf(err.Error())
+			}
+			allSteps.Lookup = *lookupCopy
 		}
 	}
 }
@@ -71,7 +81,10 @@ func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() {
 			stepInsideConcept.Parent = concept.ConceptStep
 			if nestedConcept := dict.Search(stepInsideConcept.Value); nestedConcept != nil {
 				for i, arg := range nestedConcept.ConceptStep.Args {
-					stepInsideConcept.Lookup.AddArgValue(arg.Value, &StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value})
+					err := stepInsideConcept.Lookup.AddArgValue(arg.Value, &StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value})
+					if err != nil {
+						logger.Fatalf("Unable to update concept lookup: %s", err.Error())
+					}
 				}
 			}
 		}

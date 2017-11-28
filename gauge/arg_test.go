@@ -58,9 +58,9 @@ func (s *MySuite) TestAddArgValue(c *C) {
 
 func (s *MySuite) TestErrorForInvalidArg(c *C) {
 	lookup := new(ArgLookup)
-
-	c.Assert(func() { lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static}) }, Panics, "Accessing an invalid parameter (param1)")
-	_, err := lookup.GetArg("param1")
+	err := lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	c.Assert(err.Error(), Equals, "Accessing an invalid parameter (param1)")
+	_, err = lookup.GetArg("param1")
 	c.Assert(err.Error(), Equals, "Accessing an invalid parameter (param1)")
 }
 
@@ -69,7 +69,7 @@ func (s *MySuite) TestGetLookupCopy(c *C) {
 	originalLookup.AddArgName("param1")
 	originalLookup.AddArgValue("param1", &StepArg{Value: "oldValue", ArgType: Dynamic})
 
-	copiedLookup := originalLookup.GetCopy()
+	copiedLookup, _ := originalLookup.GetCopy()
 	copiedLookup.AddArgValue("param1", &StepArg{Value: "new value", ArgType: Static})
 	stepArg, err := copiedLookup.GetArg("param1")
 	c.Assert(err, IsNil)
@@ -85,10 +85,12 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable.AddRowValues([]string{"1", "admin"})
 	dataTable.AddRowValues([]string{"2", "root"})
 
-	emptyLookup := new(ArgLookup).FromDataTableRow(new(Table), 0)
+	emptyLookup, err := new(ArgLookup).FromDataTableRow(new(Table), 0)
+	c.Assert(err, IsNil)
 	c.Assert(emptyLookup.ParamIndexMap, IsNil)
 
-	lookup1 := new(ArgLookup).FromDataTableRow(dataTable, 0)
+	lookup1, err := new(ArgLookup).FromDataTableRow(dataTable, 0)
+	c.Assert(err, IsNil)
 	idArg1, err := lookup1.GetArg("id")
 	c.Assert(err, IsNil)
 	nameArg1, err := lookup1.GetArg("name")
@@ -98,7 +100,8 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	c.Assert(nameArg1.Value, Equals, "admin")
 	c.Assert(nameArg1.ArgType, Equals, Static)
 
-	lookup2 := new(ArgLookup).FromDataTableRow(dataTable, 1)
+	lookup2, err := new(ArgLookup).FromDataTableRow(dataTable, 1)
+	c.Assert(err, IsNil)
 	idArg2, err := lookup2.GetArg("id")
 	c.Assert(err, IsNil)
 	nameArg2, err := lookup2.GetArg("name")

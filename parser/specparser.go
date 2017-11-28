@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 )
 
 type SpecParser struct {
@@ -242,7 +243,7 @@ func (parser *SpecParser) nextLine() (string, bool) {
 		return parser.scanner.Text(), true
 	}
 	if err := parser.scanner.Err(); err != nil {
-		panic(err)
+		logger.Fatalf(err.Error())
 	}
 
 	return "", false
