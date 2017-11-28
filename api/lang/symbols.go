@@ -43,8 +43,8 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed")
 	}
-	var symbols = make([]*lsp.SymbolInformation, 0)
-	symbols = append(symbols, &lsp.SymbolInformation{
+	var symbols = make([]lsp.SymbolInformation, 0)
+	symbols = append(symbols, lsp.SymbolInformation{
 		ContainerName: file,
 		Name:          spec.Heading.Value,
 		Kind:          lsp.SKClass,
@@ -57,7 +57,7 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 		},
 	})
 	for _, scn := range spec.Scenarios {
-		symbols = append(symbols, &lsp.SymbolInformation{
+		symbols = append(symbols, lsp.SymbolInformation{
 			ContainerName: file,
 			Name:          scn.Heading.Value,
 			Kind:          lsp.SKFunction,

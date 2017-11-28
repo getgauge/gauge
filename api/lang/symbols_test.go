@@ -28,7 +28,7 @@ import (
 	"testing"
 )
 
-func TestGetWorkspaceSymbolsGetsFromAllSpecs(t *testing.T) {
+func TestWorkspaceSymbolsGetsFromAllSpecs(t *testing.T) {
 	provider = &dummyInfoProvider{
 		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
 			return []*infoGatherer.SpecDetail{
@@ -90,7 +90,7 @@ func TestGetWorkspaceSymbolsGetsFromAllSpecs(t *testing.T) {
 	}
 }
 
-func TestGetWorkspaceSymbolsGetsFromScenarios(t *testing.T) {
+func TestWorkspaceSymbolsGetsFromScenarios(t *testing.T) {
 	provider = &dummyInfoProvider{
 		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
 			return []*infoGatherer.SpecDetail{
@@ -220,4 +220,78 @@ func TestGetWorkspaceSymbolsGetsFromScenarios(t *testing.T) {
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
+}
+
+func TestDocumentSymbols(t *testing.T) {
+	provider = &dummyInfoProvider{}
+	specText := `Specification Heading
+=====================
+
+Scenario Heading
+----------------
+
+* Step text
+
+Scenario Heading2
+-----------------
+
+* Step text`
+
+	uri := "file:///foo.spec"
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, specText)
+	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
+	p := json.RawMessage(b)
+
+	got, err := documentSymbols(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
+	}
+
+	info := got.([]lsp.SymbolInformation)
+
+	want := []lsp.SymbolInformation{
+		{
+			ContainerName: "foo.spec",
+			Name:          "Specification Heading",
+			Kind:          lsp.SKClass,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI("foo.spec"),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: 1, Character: 0},
+					End:   lsp.Position{Line: 1, Character: len("Specification Heading")},
+				},
+			},
+		},
+		{
+			ContainerName: "foo.spec",
+			Name:          "Scenario Heading",
+			Kind:          lsp.SKFunction,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI("foo.spec"),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: 4, Character: 0},
+					End:   lsp.Position{Line: 4, Character: len("Scenario Heading")},
+				},
+			},
+		},
+		{
+			ContainerName: "foo.spec",
+			Name:          "Scenario Heading2",
+			Kind:          lsp.SKFunction,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI("foo.spec"),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: 9, Character: 0},
+					End:   lsp.Position{Line: 9, Character: len("Scenario Heading2")},
+				},
+			},
+		},
+	}
+	if !reflect.DeepEqual(info, want) {
+		t.Errorf("expected %v to be equal %v", info, want)
+	}
+
+	f.remove(uri)
 }
