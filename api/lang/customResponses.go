@@ -40,7 +40,7 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
-func getSpecs() (interface{}, error) {
+func specs() (interface{}, error) {
 	specDetails := provider.GetAvailableSpecDetails([]string{})
 	specs := make([]specInfo, 0)
 	for _, d := range specDetails {
@@ -49,7 +49,7 @@ func getSpecs() (interface{}, error) {
 	return specs, nil
 }
 
-func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
+func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {

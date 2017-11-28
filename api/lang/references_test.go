@@ -50,7 +50,7 @@ Scenario Heading
 			End:   lsp.Position{Line: 6, Character: 24},
 		}},
 	}
-	got, err := getStepReferences(&jsonrpc2.Request{Params: &params})
+	got, err := stepReferences(&jsonrpc2.Request{Params: &params})
 	if err != nil {
 		t.Fatalf("Got error %s", err.Error())
 	}
@@ -86,7 +86,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 		}
 		return response, nil
 	}
-	stepValue, err := getStepValueAt(&jsonrpc2.Request{Params: &p})
+	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Fatalf("Got error %s", err.Error())

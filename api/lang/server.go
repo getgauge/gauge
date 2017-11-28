@@ -141,17 +141,19 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return data, err
 	case "textDocument/codeLens":
-		return getCodeLenses(req)
-	case "gauge/stepReferences":
-		return getStepReferences(req)
-	case "gauge/stepValueAt":
-		return getStepValueAt(req)
+		return codeLenses(req)
 	case "textDocument/codeAction":
-		return getCodeActions(req)
+		return codeActions(req)
+	case "textDocument/documentSymbol":
+		return documentSymbols(req)
+	case "gauge/stepReferences":
+		return stepReferences(req)
+	case "gauge/stepValueAt":
+		return stepValueAt(req)
 	case "gauge/scenarios":
-		return getScenarios(req)
+		return scenarios(req)
 	case "gauge/specs":
-		return getSpecs()
+		return specs()
 	default:
 		return nil, nil
 	}
