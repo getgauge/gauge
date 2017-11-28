@@ -78,6 +78,11 @@ func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() {
 	}
 }
 
+func (dict *ConceptDictionary) Remove(stepValue string) {
+	delete(dict.ConceptsMap, stepValue)
+	delete(dict.constructionMap, stepValue)
+}
+
 type ByLineNo []*Concept
 
 func (s ByLineNo) Len() int {
