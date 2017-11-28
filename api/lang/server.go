@@ -146,6 +146,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return codeActions(req)
 	case "textDocument/documentSymbol":
 		return documentSymbols(req)
+	case "workspace/symbol":
+		return workspaceSymbols(req)
 	case "gauge/stepReferences":
 		return stepReferences(req)
 	case "gauge/stepValueAt":
@@ -169,6 +171,8 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
 			DefinitionProvider:         true,
 			CodeActionProvider:         true,
+			DocumentSymbolProvider:     true,
+			WorkspaceSymbolProvider:    true,
 		},
 	}
 }
