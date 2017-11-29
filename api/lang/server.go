@@ -234,11 +234,19 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	}}, result)
 }
 
+type lspWriter struct {
+}
+
+func (w lspWriter) Write(p []byte) (n int, err error){
+	logger.LspLog.Debug(string(p))
+	return os.Stderr.Write(p)
+}
+
 func (s *server) Start(logLevel string) {
 	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
 	if logLevel == "debug" {
-		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
+		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(lspWriter{}, "", 0)))
 	}
 	ctx := context.Background()
 	conn := jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
