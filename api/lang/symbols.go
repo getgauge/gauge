@@ -20,6 +20,7 @@ package lang
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
@@ -41,34 +42,12 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	content := getContent(params.TextDocument.URI)
 	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
 	if !parseResult.Ok {
-		return nil, fmt.Errorf("parsing failed")
+		return nil, fmt.Errorf("parsing failed for %s. %s", file, parseResult.Errors())
 	}
-	var symbols = make([]lsp.SymbolInformation, 0)
-	symbols = append(symbols, lsp.SymbolInformation{
-		ContainerName: file,
-		Name:          spec.Heading.Value,
-		Kind:          lsp.SKClass,
-		Location: lsp.Location{
-			URI: params.TextDocument.URI,
-			Range: lsp.Range{
-				Start: lsp.Position{Line: spec.Heading.LineNo, Character: 0},
-				End:   lsp.Position{Line: spec.Heading.LineNo, Character: len(spec.Heading.Value)},
-			},
-		},
-	})
+	var symbols = make([]*lsp.SymbolInformation, 0)
+	symbols = append(symbols, getSpecSymbol(spec))
 	for _, scn := range spec.Scenarios {
-		symbols = append(symbols, lsp.SymbolInformation{
-			ContainerName: file,
-			Name:          scn.Heading.Value,
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: params.TextDocument.URI,
-				Range: lsp.Range{
-					Start: lsp.Position{Line: scn.Heading.LineNo, Character: 0},
-					End:   lsp.Position{Line: scn.Heading.LineNo, Character: len(scn.Heading.Value)},
-				},
-			},
-		})
+		symbols = append(symbols, getScenarioSymbol(scn, file))
 	}
 	return symbols, nil
 }
@@ -80,43 +59,71 @@ func workspaceSymbols(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	var symbols = make([]lsp.SymbolInformation, 0)
+
+	if len(params.Query) < 2 {
+		return nil, nil
+	}
+
+	var specSymbols = make([]*lsp.SymbolInformation, 0)
+	var scnSymbols = make([]*lsp.SymbolInformation, 0)
 	specDetails := provider.GetAvailableSpecDetails([]string{})
 	for _, specDetail := range specDetails {
 		if !specDetail.HasSpec() {
 			continue
 		}
 		spec := specDetail.Spec
-		if strings.HasPrefix(strings.ToLower(specDetail.Spec.Heading.Value), strings.ToLower(params.Query)) {
-			symbols = append(symbols, lsp.SymbolInformation{
-				ContainerName: spec.FileName,
-				Name:          spec.Heading.Value,
-				Kind:          lsp.SKClass,
-				Location: lsp.Location{
-					URI: util.ConvertPathToURI(spec.FileName),
-					Range: lsp.Range{
-						Start: lsp.Position{Line: spec.Heading.LineNo, Character: 0},
-						End:   lsp.Position{Line: spec.Heading.LineNo, Character: len(spec.Heading.Value)},
-					},
-				},
-			})
+		if strings.Contains(strings.ToLower(specDetail.Spec.Heading.Value), strings.ToLower(params.Query)) {
+			specSymbols = append(specSymbols, getSpecSymbol(spec))
 		}
 		for _, scn := range spec.Scenarios {
-			if strings.HasPrefix(strings.ToLower(scn.Heading.Value), strings.ToLower(params.Query)) {
-				symbols = append(symbols, lsp.SymbolInformation{
-					ContainerName: spec.FileName,
-					Name:          scn.Heading.Value,
-					Kind:          lsp.SKFunction,
-					Location: lsp.Location{
-						URI: util.ConvertPathToURI(spec.FileName),
-						Range: lsp.Range{
-							Start: lsp.Position{Line: scn.Heading.LineNo, Character: 0},
-							End:   lsp.Position{Line: scn.Heading.LineNo, Character: len(scn.Heading.Value)},
-						},
-					},
-				})
+			if strings.Contains(strings.ToLower(scn.Heading.Value), strings.ToLower(params.Query)) {
+				scnSymbols = append(scnSymbols, getScenarioSymbol(scn, spec.FileName))
 			}
 		}
 	}
-	return symbols, nil
+	sort.Sort(byName(specSymbols))
+	sort.Sort(byName(scnSymbols))
+	return append(specSymbols, scnSymbols...), nil
+}
+
+func getSpecSymbol(s *gauge.Specification) *lsp.SymbolInformation {
+	return &lsp.SymbolInformation{
+		Name: fmt.Sprintf("# %s", s.Heading.Value),
+		Kind: lsp.SKNamespace,
+		Location: lsp.Location{
+			URI: util.ConvertPathToURI(s.FileName),
+			Range: lsp.Range{
+				Start: lsp.Position{Line: s.Heading.LineNo - 1, Character: 0},
+				End:   lsp.Position{Line: s.Heading.LineNo - 1, Character: len(s.Heading.Value)},
+			},
+		},
+	}
+}
+
+func getScenarioSymbol(s *gauge.Scenario, path string) *lsp.SymbolInformation {
+	return &lsp.SymbolInformation{
+		Name: fmt.Sprintf("## %s", s.Heading.Value),
+		Kind: lsp.SKNamespace,
+		Location: lsp.Location{
+			URI: util.ConvertPathToURI(path),
+			Range: lsp.Range{
+				Start: lsp.Position{Line: s.Heading.LineNo - 1, Character: 0},
+				End:   lsp.Position{Line: s.Heading.LineNo - 1, Character: len(s.Heading.Value)},
+			},
+		},
+	}
+}
+
+type byName []*lsp.SymbolInformation
+
+func (s byName) Len() int {
+	return len(s)
+}
+
+func (s byName) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s byName) Less(i, j int) bool {
+	return strings.Compare(s[i].Name, s[j].Name) < 0
 }

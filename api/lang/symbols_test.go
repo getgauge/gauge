@@ -48,42 +48,20 @@ func TestWorkspaceSymbolsGetsFromAllSpecs(t *testing.T) {
 		},
 	}
 
-	want := []lsp.SymbolInformation{
-		{
-			ContainerName: "foo1.spec",
-			Name:          "Specification 1",
-			Kind:          lsp.SKClass,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo1.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 1, Character: 0},
-					End:   lsp.Position{Line: 1, Character: len("Specification 1")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo2.spec",
-			Name:          "Specification 2",
-			Kind:          lsp.SKClass,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo2.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 2, Character: 0},
-					End:   lsp.Position{Line: 2, Character: len("Specification 2")},
-				},
-			},
-		},
+	want := []string{
+		"# Specification 1",
+		"# Specification 2",
 	}
+
 	b, _ := json.Marshal(lsp.WorkspaceSymbolParams{Limit: 5, Query: "Spec"})
 	p := json.RawMessage(b)
-
 	got, err := workspaceSymbols(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
 	}
 
-	info := got.([]lsp.SymbolInformation)
+	info := mapName(got.([]*lsp.SymbolInformation))
 
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
@@ -132,90 +110,145 @@ func TestWorkspaceSymbolsGetsFromScenarios(t *testing.T) {
 		},
 	}
 
-	want := []lsp.SymbolInformation{
-		{
-			ContainerName: "foo1.spec",
-			Name:          "Sample 1",
-			Kind:          lsp.SKClass,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo1.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 1, Character: 0},
-					End:   lsp.Position{Line: 1, Character: len("Sample 1")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo1.spec",
-			Name:          "Sample Scenario 1",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo1.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 10, Character: 0},
-					End:   lsp.Position{Line: 10, Character: len("Sample Scenario 1")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo1.spec",
-			Name:          "Sample Scenario 2",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo1.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 20, Character: 0},
-					End:   lsp.Position{Line: 20, Character: len("Sample Scenario 2")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo2.spec",
-			Name:          "Sample 2",
-			Kind:          lsp.SKClass,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo2.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 2, Character: 0},
-					End:   lsp.Position{Line: 2, Character: len("Sample 2")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo2.spec",
-			Name:          "Sample Scenario 5",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo2.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 10, Character: 0},
-					End:   lsp.Position{Line: 10, Character: len("Sample Scenario 5")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo2.spec",
-			Name:          "Sample Scenario 6",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo2.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 20, Character: 0},
-					End:   lsp.Position{Line: 20, Character: len("Sample Scenario 6")},
-				},
-			},
-		},
+	want := []string{
+		"# Sample 1",
+		"# Sample 2",
+		"## Sample Scenario 1",
+		"## Sample Scenario 2",
+		"## Sample Scenario 5",
+		"## Sample Scenario 6",
 	}
+
 	b, _ := json.Marshal(lsp.WorkspaceSymbolParams{Limit: 5, Query: "Sample"})
 	p := json.RawMessage(b)
-
 	got, err := workspaceSymbols(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
 	}
 
-	info := got.([]lsp.SymbolInformation)
+	info := mapName(got.([]*lsp.SymbolInformation))
+
+	if !reflect.DeepEqual(info, want) {
+		t.Errorf("expected %v to be equal %v", info, want)
+	}
+}
+
+func TestWorkspaceSymbolsEmptyWhenLessThanTwoCharsGiven(t *testing.T) {
+	provider = &dummyInfoProvider{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
+			return []*infoGatherer.SpecDetail{
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading:  &gauge.Heading{Value: "Sample 1", LineNo: 1},
+						FileName: "foo1.spec",
+						Scenarios: []*gauge.Scenario{
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 1", LineNo: 10},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 2", LineNo: 20},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Random Scenario 1", LineNo: 30},
+							},
+						},
+					},
+				},
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading:  &gauge.Heading{Value: "Sample 2", LineNo: 2},
+						FileName: "foo2.spec",
+						Scenarios: []*gauge.Scenario{
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 5", LineNo: 10},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 6", LineNo: 20},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Random Scenario 9", LineNo: 30},
+							},
+						},
+					},
+				},
+			}
+		},
+	}
+
+	b, _ := json.Marshal(lsp.WorkspaceSymbolParams{Limit: 5, Query: "S"})
+	p := json.RawMessage(b)
+	got, err := workspaceSymbols(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
+	}
+
+	if got != nil {
+		t.Errorf("expected %v to be nil", got)
+	}
+}
+
+func TestWorkspaceSymbolsSortsAndGroupsBySpecsAndScenarios(t *testing.T) {
+	provider = &dummyInfoProvider{
+		specsFunc: func(specs []string) []*infoGatherer.SpecDetail {
+			return []*infoGatherer.SpecDetail{
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading:  &gauge.Heading{Value: "Sample 1", LineNo: 1},
+						FileName: "foo1.spec",
+						Scenarios: []*gauge.Scenario{
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 1", LineNo: 10},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Scenario Sample 2", LineNo: 20},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Random Scenario 1", LineNo: 30},
+							},
+						},
+					},
+				},
+				&infoGatherer.SpecDetail{
+					Spec: &gauge.Specification{
+						Heading:  &gauge.Heading{Value: "Sample 2", LineNo: 2},
+						FileName: "foo2.spec",
+						Scenarios: []*gauge.Scenario{
+							{
+								Heading: &gauge.Heading{Value: "Scenario Sample 5", LineNo: 10},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Sample Scenario 6", LineNo: 20},
+							},
+							{
+								Heading: &gauge.Heading{Value: "Random Scenario 9", LineNo: 30},
+							},
+						},
+					},
+				},
+			}
+		},
+	}
+
+	want := []string{
+		"# Sample 1",
+		"# Sample 2",
+		"## Sample Scenario 1",
+		"## Sample Scenario 6",
+		"## Scenario Sample 2",
+		"## Scenario Sample 5",
+	}
+
+	b, _ := json.Marshal(lsp.WorkspaceSymbolParams{Limit: 5, Query: "Sample"})
+	p := json.RawMessage(b)
+	got, err := workspaceSymbols(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
+	}
+
+	info := mapName(got.([]*lsp.SymbolInformation))
 
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
@@ -249,49 +282,73 @@ Scenario Heading2
 		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
 	}
 
-	info := got.([]lsp.SymbolInformation)
+	info := mapName(got.([]*lsp.SymbolInformation))
 
-	want := []lsp.SymbolInformation{
-		{
-			ContainerName: "foo.spec",
-			Name:          "Specification Heading",
-			Kind:          lsp.SKClass,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 1, Character: 0},
-					End:   lsp.Position{Line: 1, Character: len("Specification Heading")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo.spec",
-			Name:          "Scenario Heading",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 4, Character: 0},
-					End:   lsp.Position{Line: 4, Character: len("Scenario Heading")},
-				},
-			},
-		},
-		{
-			ContainerName: "foo.spec",
-			Name:          "Scenario Heading2",
-			Kind:          lsp.SKFunction,
-			Location: lsp.Location{
-				URI: util.ConvertPathToURI("foo.spec"),
-				Range: lsp.Range{
-					Start: lsp.Position{Line: 9, Character: 0},
-					End:   lsp.Position{Line: 9, Character: len("Scenario Heading2")},
-				},
-			},
-		},
+	want := []string{
+		"# Specification Heading",
+		"## Scenario Heading",
+		"## Scenario Heading2",
 	}
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
 
 	f.remove(uri)
+}
+
+func TestGetSpecSymbol(t *testing.T) {
+	spec := &gauge.Specification{
+		Heading:  &gauge.Heading{Value: "Sample 1", LineNo: 1},
+		FileName: "foo1.spec",
+	}
+
+	want := &lsp.SymbolInformation{
+		Name: "# Sample 1",
+		Kind: lsp.SKNamespace,
+		Location: lsp.Location{
+			URI: util.ConvertPathToURI("foo1.spec"),
+			Range: lsp.Range{
+				Start: lsp.Position{Line: 0, Character: 0},
+				End:   lsp.Position{Line: 0, Character: len("Sample 1")},
+			},
+		},
+	}
+
+	got := getSpecSymbol(spec)
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v to be equal %v", got, want)
+	}
+}
+
+func TestGetScenarioSymbol(t *testing.T) {
+	scenario := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Sample Scenario 5", LineNo: 10},
+	}
+
+	want := &lsp.SymbolInformation{
+		Name: "## Sample Scenario 5",
+		Kind: lsp.SKNamespace,
+		Location: lsp.Location{
+			URI: util.ConvertPathToURI("foo.spec"),
+			Range: lsp.Range{
+				Start: lsp.Position{Line: 9, Character: 0},
+				End:   lsp.Position{Line: 9, Character: len("Scenario Heading2")},
+			},
+		},
+	}
+
+	got := getScenarioSymbol(scenario, "foo.spec")
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v to be equal %v", got, want)
+	}
+}
+
+func mapName(vs []*lsp.SymbolInformation) []string {
+	vsm := make([]string, len(vs))
+	for i, v := range vs {
+		vsm[i] = v.Name
+	}
+	return vsm
 }
