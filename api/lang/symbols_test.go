@@ -237,7 +237,7 @@ Scenario Heading2
 
 * Step text`
 
-	uri := "file:///foo.spec"
+	uri := util.ConvertPathToURI("foo.spec")
 	f = &files{cache: make(map[string][]string)}
 	f.add(uri, specText)
 	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
