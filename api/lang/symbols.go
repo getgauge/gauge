@@ -40,6 +40,9 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	content := getContent(params.TextDocument.URI)
+	if util.IsConcept(file) {
+		return getConceptSymbols(content, file), nil
+	}
 	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed for %s. %s", file, parseResult.Errors())
@@ -112,6 +115,25 @@ func getScenarioSymbol(s *gauge.Scenario, path string) *lsp.SymbolInformation {
 			},
 		},
 	}
+}
+
+func getConceptSymbols(content, file string) []*lsp.SymbolInformation {
+	concepts, _ := new(parser.ConceptParser).Parse(content, file)
+	var symbols = make([]*lsp.SymbolInformation, 0)
+	for _, cpt := range concepts {
+		symbols = append(symbols, &lsp.SymbolInformation{
+			Name: fmt.Sprintf("# %s", cpt.LineText),
+			Kind: lsp.SKNamespace,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI(file),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: cpt.LineNo - 1, Character: 0},
+					End:   lsp.Position{Line: cpt.LineNo - 1, Character: len(cpt.LineText)},
+				},
+			},
+		})
+	}
+	return symbols
 }
 
 type byName []*lsp.SymbolInformation

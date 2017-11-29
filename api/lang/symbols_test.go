@@ -296,6 +296,45 @@ Scenario Heading2
 	f.remove(uri)
 }
 
+func TestDocumentSymbolsForConcept(t *testing.T) {
+	provider = &dummyInfoProvider{}
+	cptText := `
+	# Concept 1
+	
+	* foo
+	* bar
+	
+	Concept 2 <param1>
+	==================
+	
+	* baz
+	`
+
+	uri := util.ConvertPathToURI("foo.cpt")
+	f = &files{cache: make(map[string][]string)}
+	f.add(uri, cptText)
+	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
+	p := json.RawMessage(b)
+
+	got, err := documentSymbols(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
+	}
+
+	info := mapName(got.([]*lsp.SymbolInformation))
+
+	want := []string{
+		"# Concept 1",
+		"# Concept 2 <param1>",
+	}
+	if !reflect.DeepEqual(info, want) {
+		t.Errorf("expected %v to be equal %v", info, want)
+	}
+
+	f.remove(uri)
+}
+
 func TestGetSpecSymbol(t *testing.T) {
 	spec := &gauge.Specification{
 		Heading:  &gauge.Heading{Value: "Sample 1", LineNo: 1},
@@ -345,10 +384,53 @@ func TestGetScenarioSymbol(t *testing.T) {
 	}
 }
 
-func mapName(vs []*lsp.SymbolInformation) []string {
-	vsm := make([]string, len(vs))
-	for i, v := range vs {
-		vsm[i] = v.Name
+func TestGetConceptSymbols(t *testing.T) {
+	conceptText := `
+	# Concept 1
+	
+	* foo
+	* bar
+	
+	Concept 2 <param1>
+	==================
+	
+	* baz
+	`
+	want := []*lsp.SymbolInformation{
+		{
+			Name: "# Concept 1",
+			Kind: lsp.SKNamespace,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI("foo.cpt"),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: 1, Character: 0},
+					End:   lsp.Position{Line: 1, Character: len("Concept 1")},
+				},
+			},
+		},
+		{
+			Name: "# Concept 2 <param1>",
+			Kind: lsp.SKNamespace,
+			Location: lsp.Location{
+				URI: util.ConvertPathToURI("foo.cpt"),
+				Range: lsp.Range{
+					Start: lsp.Position{Line: 6, Character: 0},
+					End:   lsp.Position{Line: 6, Character: len("Concept 2 <param1>")},
+				},
+			},
+		},
 	}
-	return vsm
+	got := getConceptSymbols(conceptText, "foo.cpt")
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("expected %v to be equal %v", got, want)
+	}
+}
+
+func mapName(vs []*lsp.SymbolInformation) []string {
+	val := make([]string, len(vs))
+	for i, v := range vs {
+		val[i] = v.Name
+	}
+	return val
 }
