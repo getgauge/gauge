@@ -215,7 +215,7 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 }
 
 // CreateConceptsDictionary generates a ConceptDictionary which is map of concept text to concept. ConceptDictionary is used to search for a concept.
-func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
+func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult, error) {
 	cptFilesMap := make(map[string]bool, 0)
 	for _, cpt := range util.GetConceptFiles() {
 		cptFilesMap[cpt] = true
@@ -226,7 +226,10 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 	}
 	conceptsDictionary := gauge.NewConceptDictionary()
 	res := &ParseResult{Ok: true}
-	if _, errs := AddConcepts(conceptFiles, conceptsDictionary); len(errs) > 0 {
+	if _, errs, e := AddConcepts(conceptFiles, conceptsDictionary); len(errs) > 0 {
+		if e != nil {
+			return nil, nil, e
+		}
 		for _, err := range errs {
 			logger.APILog.Errorf("Concept parse failure: %s %s", conceptFiles[0], err)
 		}
@@ -238,10 +241,10 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult) {
 		res.Ok = false
 		res.ParseErrors = append(res.ParseErrors, vRes.ParseErrors...)
 	}
-	return conceptsDictionary, res
+	return conceptsDictionary, res, nil
 }
 
-func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) []ParseError {
+func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) ([]ParseError, error) {
 	parseErrors := make([]ParseError, 0)
 	for _, conceptStep := range concepts {
 		if dupConcept, exists := conceptDictionary.ConceptsMap[conceptStep.Value]; exists {
@@ -259,14 +262,16 @@ func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.Co
 			})
 		}
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, file}
-		conceptDictionary.ReplaceNestedConceptSteps(conceptStep)
+		if err := conceptDictionary.ReplaceNestedConceptSteps(conceptStep); err != nil {
+			return nil, err
+		}
 	}
-	conceptDictionary.UpdateLookupForNestedConcepts()
-	return parseErrors
+	err := conceptDictionary.UpdateLookupForNestedConcepts()
+	return parseErrors, err
 }
 
 // AddConcepts parses the given concept file and adds each concept to the concept dictionary.
-func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError) {
+func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictionary) ([]*gauge.Step, []ParseError, error) {
 	var conceptSteps []*gauge.Step
 	var parseResults []*ParseResult
 	for _, conceptFile := range conceptFiles {
@@ -276,12 +281,16 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 				logger.Warningf(warning.String())
 			}
 		}
-		parseRes.ParseErrors = append(parseRes.ParseErrors, AddConcept(concepts, conceptFile, conceptDictionary)...)
+		parseErrors, err := AddConcept(concepts, conceptFile, conceptDictionary)
+		if err != nil {
+			return nil, nil, err
+		}
+		parseRes.ParseErrors = append(parseRes.ParseErrors, parseErrors...)
 		conceptSteps = append(conceptSteps, concepts...)
 		parseResults = append(parseResults, parseRes)
 	}
 	errs := collectAllParseErrors(parseResults)
-	return conceptSteps, errs
+	return conceptSteps, errs, nil
 }
 
 func collectAllParseErrors(results []*ParseResult) (errs []ParseError) {

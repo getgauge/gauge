@@ -40,7 +40,7 @@ func (dict *ConceptDictionary) Search(stepValue string) *Concept {
 	return nil
 }
 
-func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) {
+func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) error {
 	dict.updateStep(conceptStep)
 	for i, stepInsideConcept := range conceptStep.ConceptSteps {
 		if nestedConcept := dict.Search(stepInsideConcept.Value); nestedConcept != nil {
@@ -49,13 +49,14 @@ func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) {
 			conceptStep.ConceptSteps[i].IsConcept = nestedConcept.ConceptStep.IsConcept
 			lookupCopy, err := nestedConcept.ConceptStep.Lookup.GetCopy()
 			if err != nil {
-				logger.Fatalf(err.Error())
+				return err
 			}
 			conceptStep.ConceptSteps[i].Lookup = *lookupCopy
 		} else {
 			dict.updateStep(stepInsideConcept)
 		}
 	}
+	return nil
 }
 
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
@@ -75,20 +76,21 @@ func (dict *ConceptDictionary) updateStep(step *Step) {
 	}
 }
 
-func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() {
+func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() error {
 	for _, concept := range dict.ConceptsMap {
 		for _, stepInsideConcept := range concept.ConceptStep.ConceptSteps {
 			stepInsideConcept.Parent = concept.ConceptStep
 			if nestedConcept := dict.Search(stepInsideConcept.Value); nestedConcept != nil {
 				for i, arg := range nestedConcept.ConceptStep.Args {
-					err := stepInsideConcept.Lookup.AddArgValue(arg.Value, &StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value})
-					if err != nil {
-						logger.Fatalf("Unable to update concept lookup: %s", err.Error())
+					stepArg := StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value}
+					if err := stepInsideConcept.Lookup.AddArgValue(arg.Value, &stepArg); err != nil {
+						return err
 					}
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func (dict *ConceptDictionary) Remove(stepValue string) {

@@ -68,15 +68,18 @@ func (parser *SpecParser) initialize() {
 }
 
 // Parse generates tokens for the given spec text and creates the specification.
-func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
+func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult, error) {
 	tokens, errs := parser.GenerateTokens(specText, specFile)
-	spec, res := parser.CreateSpecification(tokens, conceptDictionary, specFile)
+	spec, res, err := parser.CreateSpecification(tokens, conceptDictionary, specFile)
+	if err != nil {
+		return nil, nil, err
+	}
 	res.FileName = specFile
 	if len(errs) > 0 {
 		res.Ok = false
 	}
 	res.ParseErrors = append(errs, res.ParseErrors...)
-	return spec, res
+	return spec, res, nil
 }
 
 // ParseSpecText without validating and replacing concepts.
@@ -254,16 +257,18 @@ func (parser *SpecParser) clearState() {
 }
 
 // CreateSpecification creates specification from the given set of tokens.
-func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
+func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult, error) {
 	parser.conceptDictionary = conceptDictionary
 	specification, finalResult := parser.createSpecification(tokens, specFile)
-	specification.ProcessConceptStepsFrom(conceptDictionary)
+	if err := specification.ProcessConceptStepsFrom(conceptDictionary); err != nil {
+		return nil, nil, err
+	}
 	err := parser.validateSpec(specification)
 	if err != nil {
 		finalResult.Ok = false
 		finalResult.ParseErrors = append([]ParseError{err.(ParseError)}, finalResult.ParseErrors...)
 	}
-	return specification, finalResult
+	return specification, finalResult, nil
 }
 
 func (parser *SpecParser) createSpecification(tokens []*Token, specFile string) (*gauge.Specification, *ParseResult) {

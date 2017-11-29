@@ -83,7 +83,10 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			return e.specResult
 		}
 	}
-	resolvedSpecItems := e.resolveItems(e.specification.GetSpecItems())
+	resolvedSpecItems, err := e.resolveItems(e.specification.GetSpecItems())
+	if err != nil {
+		logger.Fatalf("Failed to resolve Specifications : %s", err.Error())
+	}
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if executeBefore {
 		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
@@ -100,7 +103,10 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	if execute && !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
-			scenarioResults := e.executeScenarios(e.specification.Scenarios)
+			scenarioResults, err := e.executeScenarios(e.specification.Scenarios)
+			if err != nil {
+				logger.Fatalf("Failed to resolve Specifications : %s", err.Error())
+			}
 			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
 			e.executeSpec()
@@ -116,79 +122,113 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	return e.specResult
 }
 
-func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) {
+func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) error {
 	if len(scenarios) > 0 {
 		index := e.specification.Scenarios[0].DataTableRowIndex
-		result := [][]result.Result{e.executeScenarios(scenarios)}
+		sceRes, err := e.executeScenarios(scenarios)
+		if err != nil {
+			return err
+		}
+		result := [][]result.Result{sceRes}
 		e.specResult.AddTableRelatedScenarioResult(result, index)
 	}
+	return nil
 }
 
-func (e *specExecutor) executeSpec() {
+func (e *specExecutor) executeSpec() error {
 	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
 		return s.DataTableRow.IsInitialized()
 	})
-	res := e.executeScenarios(nonTableRelatedScenarios)
+	res, err := e.executeScenarios(nonTableRelatedScenarios)
+	if err != nil {
+		return err
+	}
 	e.specResult.AddScenarioResults(res)
 	e.executeTableRelatedScenarios(tableRelatedScenarios)
+	return nil
 }
 
-func (e *specExecutor) resolveItems(items []gauge.Item) []*gauge_messages.ProtoItem {
+func (e *specExecutor) resolveItems(items []gauge.Item) ([]*gauge_messages.ProtoItem, error) {
 	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range items {
 		if item.Kind() != gauge.TearDownKind {
-			protoItems = append(protoItems, e.resolveToProtoItem(item))
+			protoItem, err := e.resolveToProtoItem(item)
+			if err != nil {
+				return nil, err
+			}
+			protoItems = append(protoItems, protoItem)
 		}
 	}
-	return protoItems
+	return protoItems, nil
 }
 
-func (e *specExecutor) resolveToProtoItem(item gauge.Item) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoItem(item gauge.Item) (*gauge_messages.ProtoItem, error) {
 	var protoItem *gauge_messages.ProtoItem
+	var err error
 	switch item.Kind() {
 	case gauge.StepKind:
 		if (item.(*gauge.Step)).IsConcept {
 			concept := item.(*gauge.Step)
-			protoItem = e.resolveToProtoConceptItem(*concept, e.dataTableLookup())
+			lookup, err := e.dataTableLookup()
+			if err != nil {
+				return nil, err
+			}
+			protoItem, err = e.resolveToProtoConceptItem(*concept, lookup)
 		} else {
-			protoItem = e.resolveToProtoStepItem(item.(*gauge.Step))
+			protoItem, err = e.resolveToProtoStepItem(item.(*gauge.Step))
 		}
 		break
 
 	default:
 		protoItem = gauge.ConvertToProtoItem(item)
 	}
-	return protoItem
+	return protoItem, err
 }
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
-func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup) (*gauge_messages.ProtoItem, error) {
 	paramResolver := new(parser.ParamResolver)
-	parser.PopulateConceptDynamicParams(&concept, lookup)
+	if err := parser.PopulateConceptDynamicParams(&concept, lookup); err != nil {
+		return nil, err
+	}
 	protoConceptItem := gauge.ConvertToProtoItem(&concept)
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 	for stepIndex, step := range concept.ConceptSteps {
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
 			step.Parent = &concept
-			protoConceptItem.GetConcept().GetSteps()[stepIndex] = e.resolveToProtoConceptItem(*step, &concept.Lookup)
+			protoItem, err := e.resolveToProtoConceptItem(*step, &concept.Lookup)
+			if err != nil {
+				return nil, err
+			}
+			protoConceptItem.GetConcept().GetSteps()[stepIndex] = protoItem
 		} else {
-			stepParameters := paramResolver.GetResolvedParams(step, &concept, &concept.Lookup)
+			stepParameters, err := paramResolver.GetResolvedParams(step, &concept, &concept.Lookup)
+			if err != nil {
+				return nil, err
+			}
 			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
 			e.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
 		}
 	}
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = false
-	return protoConceptItem
+	return protoConceptItem, nil
 }
 
-func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) *gauge_messages.ProtoItem {
+func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) (*gauge_messages.ProtoItem, error) {
 	protoStepItem := gauge.ConvertToProtoItem(step)
 	paramResolver := new(parser.ParamResolver)
-	parameters := paramResolver.GetResolvedParams(step, nil, e.dataTableLookup())
+	lookup, err := e.dataTableLookup()
+	if err != nil {
+		return nil, err
+	}
+	parameters, err := paramResolver.GetResolvedParams(step, nil, lookup)
+	if err != nil {
+		return nil, err
+	}
 	updateProtoStepParameters(protoStepItem.Step, parameters)
 	e.setSkipInfo(protoStepItem.Step, step)
-	return protoStepItem
+	return protoStepItem, err
 }
 
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
@@ -274,7 +314,7 @@ func (e *specExecutor) setSkipInfo(protoStep *gauge_messages.ProtoStep, step *ga
 	}
 }
 
-func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) []*gauge_messages.ProtoItem {
+func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) ([]*gauge_messages.ProtoItem, error) {
 	items := make([]gauge.Item, len(steps))
 	for i, context := range steps {
 		items[i] = context
@@ -282,23 +322,23 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) []*gaug
 	return e.resolveItems(items)
 }
 
-func (e *specExecutor) dataTableLookup() *gauge.ArgLookup {
-	d, err := new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
-	if err != nil {
-		logger.Fatalf(err.Error())
-	}
-	return d
+func (e *specExecutor) dataTableLookup() (*gauge.ArgLookup, error) {
+	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
 }
 
-func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) []result.Result {
+func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) ([]result.Result, error) {
 	var scenarioResults []result.Result
 	for _, scenario := range scenarios {
-		scenarioResults = append(scenarioResults, e.executeScenario(scenario))
+		sceResult, err := e.executeScenario(scenario)
+		if err != nil {
+			return nil, err
+		}
+		scenarioResults = append(scenarioResults, sceResult)
 	}
-	return scenarioResults
+	return scenarioResults, nil
 }
 
-func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.ScenarioResult {
+func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.ScenarioResult, error) {
 	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
 		Name:     scenario.Heading.Value,
 		Tags:     getTagValue(scenario.Tags),
@@ -306,19 +346,34 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) *result.Scenari
 	}
 
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
-	e.addAllItemsForScenarioExecution(scenario, scenarioResult)
+	if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
+		return nil, err
+	}
 
 	e.scenarioExecutor.execute(scenario, scenarioResult)
 	if scenarioResult.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 		e.specResult.ScenarioSkippedCount++
 	}
-	return scenarioResult
+	return scenarioResult, nil
 }
 
-func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) {
-	scenarioResult.AddContexts(e.getItemsForScenarioExecution(e.specification.Contexts))
-	scenarioResult.AddTearDownSteps(e.getItemsForScenarioExecution(e.specification.TearDownSteps))
-	scenarioResult.AddItems(e.resolveItems(scenario.Items))
+func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario, scenarioResult *result.ScenarioResult) error {
+	contexts, err := e.getItemsForScenarioExecution(e.specification.Contexts)
+	if err != nil {
+		return err
+	}
+	scenarioResult.AddContexts(contexts)
+	tearDownSteps, err := e.getItemsForScenarioExecution(e.specification.TearDownSteps)
+	if err != nil {
+		return err
+	}
+	scenarioResult.AddTearDownSteps(tearDownSteps)
+	items, err := e.resolveItems(scenario.Items)
+	if err != nil {
+		return err
+	}
+	scenarioResult.AddItems(items)
+	return nil
 }
 
 func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters []*gauge_messages.Parameter) {

@@ -56,7 +56,10 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if !util.IsSpec(file) {
 		return nil, nil
 	}
-	spec, res := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
+	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
+	if err != nil {
+		return nil, err
+	}
 
 	if !res.Ok {
 		err := fmt.Errorf("failed to parse specification %s", file)

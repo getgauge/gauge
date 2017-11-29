@@ -44,8 +44,9 @@ func (s *MySuite) TestConceptDictionaryAdd(c *C) {
 	step2 := &gauge.Step{Value: step2Text, LineNo: 4, IsConcept: true, LineText: step2Text}
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 
-	concepts, errs := AddConcepts([]string{path}, dictionary)
+	concepts, errs, err := AddConcepts([]string{path}, dictionary)
 
+	c.Assert(err, IsNil)
 	c.Assert(len(concepts), Equals, 2)
 	c.Assert(len(errs), Equals, 0)
 	assertStepEqual(c, dictionary.ConceptsMap[step1Text].ConceptStep, step1)
@@ -58,7 +59,8 @@ func (s *MySuite) TestConceptDictionaryAddDuplicateConcept(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate_concept.cpt"))
 
-	concepts, errs := AddConcepts([]string{path}, dictionary)
+	concepts, errs, err := AddConcepts([]string{path}, dictionary)
+	c.Assert(err, IsNil)
 
 	c.Assert(len(concepts), Equals, 2)
 	c.Assert(len(errs) > 0, Equals, true)
@@ -81,7 +83,8 @@ func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
 	cpt2, _ := filepath.Abs(filepath.Join("testdata", "err", "cpt", "duplicate.cpt"))
 
 	AddConcepts([]string{cpt1}, dictionary)
-	concepts, errs := AddConcepts([]string{cpt2}, dictionary)
+	concepts, errs, err := AddConcepts([]string{cpt2}, dictionary)
+	c.Assert(err, IsNil)
 
 	c.Assert(len(concepts), Equals, 2)
 	c.Assert(len(errs), Equals, 4)
@@ -94,8 +97,9 @@ func (s *MySuite) TestDuplicateConceptsinMultipleFile(c *C) {
 func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "err", "cpt"))
 
-	_, res := CreateConceptsDictionary()
+	_, res, err := CreateConceptsDictionary()
 
+	c.Assert(err, IsNil)
 	c.Assert(res.Ok, Equals, false)
 	c.Assert(len(res.ParseErrors), Equals, 9)
 }
@@ -103,8 +107,9 @@ func (s *MySuite) TestCreateConceptDictionaryGivesAllParseErrors(c *C) {
 func (s *MySuite) TestCreateConceptDictionary(c *C) {
 	config.ProjectRoot, _ = filepath.Abs(filepath.Join("testdata", "dir1"))
 
-	dict, res := CreateConceptsDictionary()
+	dict, res, err := CreateConceptsDictionary()
 
+	c.Assert(err, IsNil)
 	c.Assert(res.Ok, Equals, true)
 	c.Assert(dict, NotNil)
 	c.Assert(len(dict.ConceptsMap), Equals, 1)
@@ -418,7 +423,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 
 	AddConcepts([]string{path}, dictionary)
 	tokens, _ := parser.GenerateTokens(specText, "")
-	spec, parseResult := parser.CreateSpecification(tokens, dictionary, "")
+	spec, parseResult, _ := parser.CreateSpecification(tokens, dictionary, "")
 
 	c.Assert(parseResult.Ok, Equals, true)
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
@@ -446,7 +451,7 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 	AddConcepts([]string{path}, dictionary)
 
 	tokens, _ := parser.GenerateTokens(specText, "")
-	spec, parseResult := parser.CreateSpecification(tokens, dictionary, "")
+	spec, parseResult, _ := parser.CreateSpecification(tokens, dictionary, "")
 
 	c.Assert(parseResult.Ok, Equals, true)
 
@@ -486,7 +491,7 @@ func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C)
 	AddConcepts([]string{path}, dictionary)
 
 	tokens, _ := parser.GenerateTokens(specText, "")
-	spec, parseResult := parser.CreateSpecification(tokens, dictionary, "")
+	spec, parseResult, _ := parser.CreateSpecification(tokens, dictionary, "")
 
 	c.Assert(parseResult.Ok, Equals, true)
 

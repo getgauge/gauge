@@ -49,7 +49,7 @@ Scenario 2
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 	errs := validationErrors{spec: []error{
 		NewStepValidationError(spec.Scenarios[0].Steps[0], "", "", &err, ""),
@@ -75,7 +75,7 @@ Scenario 2
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 	err := gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND
 
 	errs := validationErrors{spec: []error{
@@ -96,7 +96,7 @@ func (s *MySuite) TestSkipSpecIfNoScenariosPresent(c *C) {
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errs := validationErrors{spec: []error{}}
 
@@ -119,7 +119,7 @@ Scenario 2
 * say hello2
 `
 	p := new(parser.SpecParser)
-	spec, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errs := validationErrors{spec: []error{
 		NewSpecValidationError("Table row out of range", spec.FileName),

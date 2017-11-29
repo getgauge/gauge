@@ -46,7 +46,7 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 }
 
 // GetResolvedParams based on the arg type(static, dynamic, table, special_string, special_table) resolves the parameter of a step.
-func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) []*gauge_messages.Parameter {
+func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) ([]*gauge_messages.Parameter, error) {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
@@ -63,7 +63,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 				resolvedArg, err = lookup.GetArg(arg.Value)
 			}
 			if err != nil {
-				logger.Fatalf(err.Error())
+				return nil, err
 			}
 			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = resolvedArg.Name
@@ -88,7 +88,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 		parameters = append(parameters, parameter)
 	}
 
-	return parameters
+	return parameters, nil
 
 }
 
@@ -174,24 +174,24 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 }
 
 // Creating a copy of the lookup and populating table values
-func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.ArgLookup) {
+func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.ArgLookup) error {
 	//If it is a top level concept
 	lookup, err := concept.Lookup.GetCopy()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		return err
 	}
 	for key := range lookup.ParamIndexMap {
 		conceptLookupArg, err := lookup.GetArg(key)
 		if err != nil {
-			logger.Fatalf(err.Error())
+			return err
 		}
 		if conceptLookupArg.ArgType == gauge.Dynamic {
 			resolvedArg, err := dataTableLookup.GetArg(conceptLookupArg.Value)
 			if err != nil {
-				logger.Fatalf(err.Error())
+				return err
 			}
 			if err = lookup.AddArgValue(key, resolvedArg); err != nil {
-				logger.Fatalf(err.Error())
+				return err
 			}
 		}
 	}
@@ -202,7 +202,10 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	for _, arg := range concept.Args {
 		if arg.ArgType == gauge.Dynamic {
 			if concept.Parent != nil {
-				cArg, _ := concept.Parent.GetArg(arg.Value)
+				cArg, err := concept.Parent.GetArg(arg.Value)
+				if err != nil {
+					return err
+				}
 				newArgs = append(newArgs, cArg)
 			} else {
 				dArg, err := dataTableLookup.GetArg(arg.Value)
@@ -217,4 +220,5 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	}
 	concept.Args = newArgs
 	concept.PopulateFragments()
+	return nil
 }

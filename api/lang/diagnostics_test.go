@@ -84,8 +84,12 @@ Scenario Heading
 		},
 	}
 
-	got := getDiagnostics()[uri]
+	diagnostics, err := getDiagnostics()
+	if err != nil {
+		t.Errorf("Expected no error, got : %s", err.Error())
+	}
 
+	got := diagnostics[uri]
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want: `%+v`,\n got: `%+v`", want, got)
 	}
@@ -103,7 +107,10 @@ Scenario Heading
 `
 	uri := util.ConvertPathToURI(specFile)
 	f.add(uri, specText)
-	d := getDiagnostics()
+	d, err := getDiagnostics()
+	if err != nil {
+		t.Errorf("expected no error.\n Got: %s", err.Error())
+	}
 	if len(d[uri]) > 0 {
 		t.Errorf("expected no error.\n Got: %+v", d)
 	}
@@ -119,7 +126,10 @@ func TestParseConcept(t *testing.T) {
 
 	diagnostics := make(map[string][]lsp.Diagnostic, 0)
 
-	dictionary := validateConcepts(diagnostics)
+	dictionary, err := validateConcepts(diagnostics)
+	if err != nil {
+		t.Errorf("expected no error.\n Got: %s", err.Error())
+	}
 
 	if len(dictionary.ConceptsMap) == 0 {
 		t.Errorf("Concept dictionary is empty")
@@ -169,8 +179,12 @@ func TestDiagnosticOfConceptsWithCircularReference(t *testing.T) {
 	uri := util.ConvertPathToURI(conceptFile)
 	f.add(uri, cptText)
 
-	got := getDiagnostics()[uri]
+	diagnostics, err := getDiagnostics()
+	if err != nil {
+		t.Errorf("expected no error.\n Got: %s", err.Error())
+	}
 
+	got := diagnostics[uri]
 	containsDiagnostics(got, 1, 0, "Circular reference found in concept.", t)
 }
 

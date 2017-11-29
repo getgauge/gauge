@@ -112,11 +112,15 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts([]string{path}, conceptDictionary)
 
-	spec, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
+	spec, _, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	c.Assert(err, IsNil)
+	protoConcept := cItem.GetConcept()
 
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 	firstNestedStep := protoConcept.GetSteps()[0].GetConcept().GetSteps()[0].GetStep()
@@ -150,11 +154,15 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
-	spec, _ := specParser.Parse(specText, conceptDictionary, "")
+	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	c.Assert(err, IsNil)
+	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
@@ -193,11 +201,19 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "conceptTable.cpt"))
 	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
-	spec, _ := specParser.Parse(specText, conceptDictionary, "")
+	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
+	lookup, err := specExecutor.dataTableLookup()
+	if err != nil {
+		t.Errorf("Expected no error. Got : %s", err.Error())
+	}
+	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	if err != nil {
+		t.Errorf("Expected no error. Got : %s", err.Error())
+	}
+	protoConcept := cItem.GetConcept()
 	got := getParameters(protoConcept.GetSteps()[0].GetStep().GetFragments())[0].GetTable().GetRows()[1].Cells[0]
 
 	if want != got {
@@ -219,12 +235,16 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	parser.AddConcepts([]string{path}, conceptDictionary)
 	specParser := new(parser.SpecParser)
-	spec, _ := specParser.Parse(specText, conceptDictionary, "")
+	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	specExecutor.errMap = gauge.NewBuildErrors()
-	protoConcept := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup()).GetConcept()
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	c.Assert(err, IsNil)
+	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
 
 	c.Assert(protoConcept.GetSteps()[0].GetItemType(), Equals, gauge_messages.ProtoItem_Concept)
@@ -310,7 +330,7 @@ func anySpec() *gauge.Specification {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 
-	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 	spec.FileName = "FILE"
 	return spec
 }
@@ -341,7 +361,7 @@ func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 		step("create user <id> <name> and <phone>").
 		String()
 
-	spec, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
+	spec, _, _ := new(parser.SpecParser).Parse(specText, gauge.NewConceptDictionary(), "")
 
 	errMap := &gauge.BuildErrors{
 		SpecErrs:     make(map[*gauge.Specification][]error),

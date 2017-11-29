@@ -96,7 +96,10 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string, cptFileName string) (string, string, error) {
 	tokens, _ := new(parser.SpecParser).GenerateTokens("* "+conceptName.GetName(), cptFileName)
 	conceptStep, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
-	cptDict, _ := parser.ParseConcepts()
+	cptDict, _, err := parser.ParseConcepts()
+	if err != nil {
+		return "", "", err
+	}
 	if isDuplicateConcept(conceptStep, cptDict) {
 		return "", "", fmt.Errorf("Concept `%s` already present", conceptName.GetName())
 	}
@@ -105,7 +108,10 @@ func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messag
 		return "", "", err
 	}
 	extractor := &extractor{conceptName: "* " + conceptName.GetName(), stepsInConcept: "", stepsToExtract: steps, conceptStep: conceptStep, table: &gauge.Table{}, fileContent: specText, errors: make([]error, 0)}
-	extractor.extractSteps(cptFileName)
+	err = extractor.extractSteps(cptFileName)
+	if err != nil {
+		return "", "", err
+	}
 	if len(extractor.errors) != 0 {
 		return "", "", err
 	}
@@ -126,7 +132,10 @@ func addArgsFromTable(concept *gauge.Step, conceptName *string, args []string) {
 }
 
 func getContentWithDataTable(content, cptFileName string) (string, error) {
-	spec, result := new(parser.SpecParser).Parse(content, &gauge.ConceptDictionary{}, cptFileName)
+	spec, result, err := new(parser.SpecParser).Parse(content, &gauge.ConceptDictionary{}, cptFileName)
+	if err != nil {
+		return "", err
+	}
 	if !result.Ok {
 		return "", fmt.Errorf("Spec Parse failure: %s", result.ParseErrors)
 	}
@@ -146,31 +155,39 @@ func isDuplicateConcept(concept *gauge.Step, cptDict *gauge.ConceptDictionary) b
 	return false
 }
 
-func (e *extractor) extractSteps(cptFileName string) {
+func (e *extractor) extractSteps(cptFileName string) error {
 	for _, step := range e.stepsToExtract {
 		tokens, _ := new(parser.SpecParser).GenerateTokens("*"+step.GetName(), cptFileName)
 		stepInConcept, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
 		if step.GetTable() != "" {
-			e.handleTable(stepInConcept, step, cptFileName)
+			if err := e.handleTable(stepInConcept, step, cptFileName); err != nil {
+				return err
+			}
 		}
 		stepInConcept.ReplaceArgsWithDynamic(e.conceptStep.Args)
 		e.stepsInConcept += formatter.FormatStep(stepInConcept)
 	}
+	return nil
 }
 
-func (e *extractor) handleTable(stepInConcept *gauge.Step, step *gauge_messages.Step, cptFileName string) {
+func (e *extractor) handleTable(stepInConcept *gauge.Step, step *gauge_messages.Step, cptFileName string) error {
 	stepInConcept.Value += " {}"
 	specText := e.fileContent + step.GetTable()
-	spec, result := new(parser.SpecParser).Parse(specText, &gauge.ConceptDictionary{}, cptFileName)
+	spec, result, err := new(parser.SpecParser).Parse(specText, &gauge.ConceptDictionary{}, cptFileName)
+	if err != nil {
+		return err
+	}
+
 	if !result.Ok {
 		for _, err := range result.ParseErrors {
 			e.errors = append(e.errors, err)
 		}
-		return
+		return nil
 	}
 	stepArgs := []*gauge.StepArg{spec.Scenarios[0].Steps[0].Args[0]}
 	e.addTableAsParam(step, stepArgs)
 	stepInConcept.Args = append(stepInConcept.Args, stepArgs[0])
+	return nil
 }
 
 func (e *extractor) addTableAsParam(step *gauge_messages.Step, args []*gauge.StepArg) {

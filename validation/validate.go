@@ -186,7 +186,10 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		logger.Errorf(err.Error())
 		return NewValidationResult(nil, nil, nil, false, err)
 	}
-	conceptDict, res := parser.ParseConcepts()
+	conceptDict, res, err := parser.ParseConcepts()
+	if err != nil {
+		logger.Fatalf("Unable to validate : %s", err.Error())
+	}
 	errMap := gauge.NewBuildErrors()
 	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
 	r := startAPI(debug)

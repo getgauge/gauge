@@ -63,7 +63,10 @@ func getScenarios(req *jsonrpc2.Request) (interface{}, error) {
 		return getScenarioAt(specDetails[0].Spec.Scenarios, file, params.Position.Line), nil
 	}
 	content = getContent(params.TextDocument.URI)
-	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
+	spec, parseResult, err := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
+	if err != nil {
+		return nil, err
+	}
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed")
 	}
