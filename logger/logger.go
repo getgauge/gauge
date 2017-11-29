@@ -36,6 +36,7 @@ const (
 	logs             = "logs"
 	GaugeLogFileName = "gauge.log"
 	apiLogFileName   = "api.log"
+	lspLogFileName   = "lsp.log"
 )
 
 var level logging.Level
@@ -96,6 +97,8 @@ var GaugeLog = logging.MustGetLogger("gauge")
 // APILog is for logging API related messages
 var APILog = logging.MustGetLogger("gauge-api")
 
+var LspLog = logging.MustGetLogger("gauge-lsp")
+
 var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
 
 // Initialize initializes the logger object
@@ -103,6 +106,7 @@ func Initialize(logLevel string) {
 	level = loggingLevel(logLevel)
 	initFileLogger(GaugeLogFileName, GaugeLog)
 	initFileLogger(apiLogFileName, APILog)
+	initFileLogger(lspLogFileName, LspLog)
 	if runtime.GOOS == "windows" {
 		isWindows = true
 	}
