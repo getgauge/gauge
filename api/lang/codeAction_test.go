@@ -50,7 +50,7 @@ func TestGetCodeActionForUnimplementedStep(t *testing.T) {
 		},
 	}
 
-	got, err := getCodeActions(&jsonrpc2.Request{Params: &p})
+	got, err := codeActions(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected error to be nil. \nGot : %s", err)

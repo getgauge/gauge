@@ -27,7 +27,7 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-func getStepReferences(req *jsonrpc2.Request) (interface{}, error) {
+func stepReferences(req *jsonrpc2.Request) (interface{}, error) {
 	var params string
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
@@ -36,7 +36,7 @@ func getStepReferences(req *jsonrpc2.Request) (interface{}, error) {
 	return getLocationFor(params)
 }
 
-func getStepValueAt(req *jsonrpc2.Request) (interface{}, error) {
+func stepValueAt(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
