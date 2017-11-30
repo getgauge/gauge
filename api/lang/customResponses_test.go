@@ -53,7 +53,7 @@ Scenario Heading2
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
 	p := json.RawMessage(b)
 
-	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
+	got, err := scenarios(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
@@ -96,7 +96,7 @@ Scenario Heading2
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
 	p := json.RawMessage(b)
 
-	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
+	got, err := scenarios(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected errror to be nil. Got: \n%v", err.Error())
@@ -144,7 +144,7 @@ func TestGetScenariosShouldGiveTheScenariosIfDocumentIsNotOpened(t *testing.T) {
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}, Position: position})
 	p := json.RawMessage(b)
 
-	got, err := getScenarios(&jsonrpc2.Request{Params: &p})
+	got, err := scenarios(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())
@@ -199,7 +199,7 @@ func TestGetSpecsShouldReturnAllSpecsInDirectory(t *testing.T) {
 			ExecutionIdentifier: "foo2.spec",
 		},
 	}
-	got, err := getSpecs()
+	got, err := specs()
 
 	if err != nil {
 		t.Errorf("expected error to be nil. Got: \n%v", err.Error())

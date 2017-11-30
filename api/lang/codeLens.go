@@ -37,7 +37,7 @@ const (
 	referencesCommand = "gauge.showReferences"
 )
 
-func getCodeLenses(req *jsonrpc2.Request) (interface{}, error) {
+func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeLensParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())

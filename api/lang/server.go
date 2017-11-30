@@ -141,17 +141,21 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return data, err
 	case "textDocument/codeLens":
-		return getCodeLenses(req)
-	case "gauge/stepReferences":
-		return getStepReferences(req)
-	case "gauge/stepValueAt":
-		return getStepValueAt(req)
+		return codeLenses(req)
 	case "textDocument/codeAction":
-		return getCodeActions(req)
+		return codeActions(req)
+	case "textDocument/documentSymbol":
+		return documentSymbols(req)
+	case "workspace/symbol":
+		return workspaceSymbols(req)
+	case "gauge/stepReferences":
+		return stepReferences(req)
+	case "gauge/stepValueAt":
+		return stepValueAt(req)
 	case "gauge/scenarios":
-		return getScenarios(req)
+		return scenarios(req)
 	case "gauge/specs":
-		return getSpecs()
+		return specs()
 	default:
 		return nil, nil
 	}
@@ -167,6 +171,8 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
 			DefinitionProvider:         true,
 			CodeActionProvider:         true,
+			DocumentSymbolProvider:     true,
+			WorkspaceSymbolProvider:    true,
 		},
 	}
 }
@@ -234,11 +240,19 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	}}, result)
 }
 
+type lspWriter struct {
+}
+
+func (w lspWriter) Write(p []byte) (n int, err error){
+	logger.LspLog.Debug(string(p))
+	return os.Stderr.Write(p)
+}
+
 func (s *server) Start(logLevel string) {
 	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
 	if logLevel == "debug" {
-		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(os.Stderr, "", 0)))
+		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(lspWriter{}, "", 0)))
 	}
 	ctx := context.Background()
 	conn := jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)

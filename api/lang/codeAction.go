@@ -30,7 +30,7 @@ const (
 	copyStubTitle   = "Generate step implementation stub"
 )
 
-func getCodeActions(req *jsonrpc2.Request) (interface{}, error) {
+func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeActionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
