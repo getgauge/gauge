@@ -94,6 +94,8 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 	go startAPIServiceWithoutRunner(port, startChan, sig)
 	go checkParentIsAlive(startChan)
 
+	logger.Infof("Gauge daemon initialized and listening on port: %d", port)
+
 	for {
 		select {
 		case runner := <-startChan.RunnerChan:
