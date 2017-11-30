@@ -93,7 +93,10 @@ func (spec *Specification) processConceptStep(step *Step, conceptDictionary *Con
 }
 
 func (spec *Specification) createConceptStep(concept *Step, originalStep *Step) error {
-	stepCopy := concept.GetCopy()
+	stepCopy, err := concept.GetCopy()
+	if err != nil {
+		return err
+	}
 	originalArgs := originalStep.Args
 	originalStep.CopyFrom(stepCopy)
 	originalStep.Args = originalArgs

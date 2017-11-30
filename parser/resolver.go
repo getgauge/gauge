@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
 
@@ -69,7 +68,11 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Name = resolvedArg.Name
 			if resolvedArg.Table.IsInitialized() {
 				parameter.ParameterType = gauge_messages.Parameter_Special_Table
-				parameter.Table = paramResolver.createProtoStepTable(&resolvedArg.Table, lookup)
+				table, err := paramResolver.createProtoStepTable(&resolvedArg.Table, lookup)
+				if err != nil {
+					return nil, err
+				}
+				parameter.Table = table
 			} else {
 				parameter.ParameterType = gauge_messages.Parameter_Dynamic
 				parameter.Value = resolvedArg.Value
@@ -79,26 +82,32 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.SpecialTable {
 			parameter.ParameterType = gauge_messages.Parameter_Special_Table
-			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, lookup)
+			table, err := paramResolver.createProtoStepTable(&arg.Table, lookup)
+			if err != nil {
+				return nil, err
+			}
+			parameter.Table = table
 		} else {
 			parameter.ParameterType = gauge_messages.Parameter_Table
-			parameter.Table = paramResolver.createProtoStepTable(&arg.Table, lookup)
-
+			table, err := paramResolver.createProtoStepTable(&arg.Table, lookup)
+			if err != nil {
+				return nil, err
+			}
+			parameter.Table = table
 		}
 		parameters = append(parameters, parameter)
 	}
 
 	return parameters, nil
-
 }
 
-func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) *gauge_messages.ProtoTable {
+func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_messages.ProtoTable, error) {
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
 	if len(table.Columns) == 0 {
 		protoTable.Rows = tableRows
-		return protoTable
+		return protoTable, nil
 	}
 	for i := 0; i < len(table.Columns[0]); i++ {
 		row := make([]string, 0)
@@ -109,7 +118,7 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 				//if concept has a table with dynamic cell, fetch from datatable
 				arg, err := lookup.GetArg(tableCells[i].Value)
 				if err != nil {
-					logger.Fatalf(err.Error())
+					return nil, err
 				}
 				value = arg.Value
 			}
@@ -118,7 +127,7 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 		tableRows = append(tableRows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	protoTable.Rows = tableRows
-	return protoTable
+	return protoTable, nil
 }
 
 func newSpecialTypeResolver() *specialTypeResolver {
@@ -210,7 +219,7 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 			} else {
 				dArg, err := dataTableLookup.GetArg(arg.Value)
 				if err != nil {
-					logger.Fatalf(err.Error())
+					return err
 				}
 				newArgs = append(newArgs, dArg)
 			}

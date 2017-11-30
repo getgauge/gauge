@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 )
 
 type StepValue struct {
@@ -193,13 +192,17 @@ func (step *Step) InConcept() bool {
 
 // Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
 // are copied and their parent copying again comes back to copy the same concept.
-func (step *Step) GetCopy() *Step {
+func (step *Step) GetCopy() (*Step, error) {
 	if !step.IsConcept {
-		return step
+		return step, nil
 	}
 	nestedStepsCopy := make([]*Step, 0)
 	for _, nestedStep := range step.ConceptSteps {
-		nestedStepsCopy = append(nestedStepsCopy, nestedStep.GetCopy())
+		nestedStepCopy, err := nestedStep.GetCopy()
+		if err != nil {
+			return nil, err
+		}
+		nestedStepsCopy = append(nestedStepsCopy, nestedStepCopy)
 	}
 
 	copiedConceptStep := new(Step)
@@ -207,10 +210,10 @@ func (step *Step) GetCopy() *Step {
 	copiedConceptStep.ConceptSteps = nestedStepsCopy
 	lookupCopy, err := step.Lookup.GetCopy()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		return nil, err
 	}
 	copiedConceptStep.Lookup = *lookupCopy
-	return copiedConceptStep
+	return copiedConceptStep, nil
 }
 
 func (step *Step) CopyFrom(another *Step) {

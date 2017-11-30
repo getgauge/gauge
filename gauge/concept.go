@@ -17,8 +17,6 @@
 
 package gauge
 
-import "github.com/getgauge/gauge/logger"
-
 type ConceptDictionary struct {
 	ConceptsMap     map[string]*Concept
 	constructionMap map[string][]*Step
@@ -41,7 +39,9 @@ func (dict *ConceptDictionary) Search(stepValue string) *Concept {
 }
 
 func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) error {
-	dict.updateStep(conceptStep)
+	if err := dict.updateStep(conceptStep); err != nil {
+		return err
+	}
 	for i, stepInsideConcept := range conceptStep.ConceptSteps {
 		if nestedConcept := dict.Search(stepInsideConcept.Value); nestedConcept != nil {
 			//replace step with actual concept
@@ -53,14 +53,17 @@ func (dict *ConceptDictionary) ReplaceNestedConceptSteps(conceptStep *Step) erro
 			}
 			conceptStep.ConceptSteps[i].Lookup = *lookupCopy
 		} else {
-			dict.updateStep(stepInsideConcept)
+			if err := dict.updateStep(stepInsideConcept); err != nil {
+				return err
+			}
+
 		}
 	}
 	return nil
 }
 
 //mutates the step with concept steps so that anyone who is referencing the step will now refer a concept
-func (dict *ConceptDictionary) updateStep(step *Step) {
+func (dict *ConceptDictionary) updateStep(step *Step) error {
 	dict.constructionMap[step.Value] = append(dict.constructionMap[step.Value], step)
 	if !dict.constructionMap[step.Value][0].IsConcept {
 		dict.constructionMap[step.Value] = append(dict.constructionMap[step.Value], step)
@@ -69,11 +72,12 @@ func (dict *ConceptDictionary) updateStep(step *Step) {
 			allSteps.ConceptSteps = step.ConceptSteps
 			lookupCopy, err := step.Lookup.GetCopy()
 			if err != nil {
-				logger.Fatalf(err.Error())
+				return err
 			}
 			allSteps.Lookup = *lookupCopy
 		}
 	}
+	return nil
 }
 
 func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() error {

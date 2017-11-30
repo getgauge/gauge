@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 )
 
 type SpecParser struct {
@@ -101,7 +100,11 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 	parser.currentState = initial
 	var errors []ParseError
 	var newToken *Token
-	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
+	for line, hasLine, err := parser.nextLine(); hasLine; line, hasLine, err = parser.nextLine() {
+		if err != nil {
+			errors = append(errors, ParseError{Message: err.Error()})
+			return nil, errors
+		}
 		trimmedLine := strings.TrimSpace(line)
 		if len(trimmedLine) == 0 {
 			if newToken != nil && newToken.Kind == gauge.StepKind {
@@ -239,17 +242,17 @@ func (parser *SpecParser) accept(token *Token, fileName string) []ParseError {
 	return parseErrs
 }
 
-func (parser *SpecParser) nextLine() (string, bool) {
+func (parser *SpecParser) nextLine() (string, bool, error) {
 	scanned := parser.scanner.Scan()
 	if scanned {
 		parser.lineNo++
-		return parser.scanner.Text(), true
+		return parser.scanner.Text(), true, nil
 	}
 	if err := parser.scanner.Err(); err != nil {
-		logger.Fatalf(err.Error())
+		return "", false, err
 	}
 
-	return "", false
+	return "", false, nil
 }
 
 func (parser *SpecParser) clearState() {
