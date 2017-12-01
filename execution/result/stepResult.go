@@ -98,11 +98,10 @@ func (s *StepResult) ExecTime() int64 {
 
 // AddExecTime increments the execution time by the given value
 func (s *StepResult) AddExecTime(t int64) {
-	currentTime := s.protoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
 	if s.protoStep.StepExecutionResult.ExecutionResult == nil {
 		s.protoStep.StepExecutionResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: false}
 	}
-
+	currentTime := s.protoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
 	s.protoStep.StepExecutionResult.ExecutionResult.ExecutionTime = currentTime + t
 }
 

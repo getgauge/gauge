@@ -19,13 +19,14 @@ package lang
 
 import (
 	"encoding/json"
+	"reflect"
+	"testing"
+
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"reflect"
-	"testing"
 )
 
 func TestWorkspaceSymbolsGetsFromAllSpecs(t *testing.T) {
