@@ -72,8 +72,8 @@ func (s *MySuite) TestParsingThrowErrorForEmptySpecHeading(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("").text("dsfdsf").String()
 
-	_, res := parser.Parse(specText, gauge.NewConceptDictionary(), "foo.spec")
-
+	_, res, err := parser.Parse(specText, gauge.NewConceptDictionary(), "foo.spec")
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors) > 0, Equals, true)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading should have at least one character => ''")
 }
@@ -588,8 +588,8 @@ func (s *MySuite) TestToCheckTagsInSpecLevel(c *C) {
 		{Kind: gauge.StepKind, Value: "my step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Tags.Values()), Equals, 2)
@@ -605,8 +605,8 @@ func (s *MySuite) TestToCheckTagsInScenarioLevel(c *C) {
 		{Kind: gauge.StepKind, Value: "my step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios[0].Tags.Values()), Equals, 2)
@@ -625,8 +625,8 @@ func (s *MySuite) TestParsingConceptInSpec(c *C) {
 	AddConcepts([]string{path}, conceptDictionary)
 	tokens, err := parser.GenerateTokens(specText, "")
 	c.Assert(err, IsNil)
-	spec, parseResult := parser.CreateSpecification(tokens, conceptDictionary, "")
-
+	spec, parseResult, e := parser.CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(e, IsNil)
 	c.Assert(parseResult.Ok, Equals, true)
 	firstStepInSpec := spec.Scenarios[0].Steps[0]
 	secondStepInSpec := spec.Scenarios[0].Steps[1]
@@ -639,7 +639,8 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").text("comment").scenarioHeading("Sce heading").step("my step").String()
 
-	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	_, parseRes, err := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -648,7 +649,8 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: inputinvalid.csv").text("comment").scenarioHeading("Sce heading").step("my step").String()
 
-	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	_, parseRes, err := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -657,7 +659,8 @@ func (s *MySuite) TestTableInputFromFileIfPathNotSpecified(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("Table: ").scenarioHeading("Sce heading").step("my step").String()
 
-	_, parseRes := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	_, parseRes, err := parser.Parse(specText, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table location not specified")
 	c.Assert(parseRes.Ok, Equals, false)
 }
@@ -677,8 +680,8 @@ func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 		&Token{Kind: gauge.SpecKind, Value: "Another Heading", LineNo: 4},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 
 	c.Assert(result.ParseErrors[0].Message, Equals, "Multiple spec headings found in same file")
@@ -692,8 +695,8 @@ func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 		&Token{Kind: gauge.CommentKind, Value: "Comment", LineNo: 3},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(len(result.ParseErrors), Equals, 2)
 
@@ -712,8 +715,8 @@ func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 
 	c.Assert(result.ParseErrors[0].Message, Equals, "Duplicate scenario definition 'Scenario Heading' found in the same specification")
@@ -727,8 +730,8 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Items), Equals, 1)
 	c.Assert(spec.Items[0], Equals, spec.Scenarios[0])
 	scenarioItems := (spec.Items[0]).(*gauge.Scenario).Items
@@ -755,7 +758,8 @@ func (s *MySuite) TestStepsAndComments(c *C) {
 		&Token{Kind: gauge.CommentKind, Value: "Third comment", LineNo: 6},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Items), Equals, 2)
 	c.Assert(spec.Items[0], Equals, spec.Comments[0])
 	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
@@ -792,8 +796,8 @@ func (s *MySuite) TestTableFromInvalidFile(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("table: inputinvalid.csv").text("comment").scenarioHeading("Sce heading").step("my step").String()
 
 	tokens, _ := parser.GenerateTokens(specText, "")
-	_, res := parser.CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, res, err := parser.CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors) > 0, Equals, true)
 	c.Assert(res.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
 }
@@ -808,7 +812,8 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "sample \\{static\\}", LineNo: 6},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 	step := spec.Scenarios[0].Steps[0]
 	c.Assert(step.Value, Equals, "enter {} with {}")
@@ -832,8 +837,8 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "sample {static} and {dynamic}", LineNo: 3, Args: []string{"name"}},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result, NotNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Scenario should have atleast one step")
@@ -850,8 +855,8 @@ func (s *MySuite) TestContextWithKeywords(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result, NotNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
@@ -870,8 +875,8 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "my step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Items), Equals, 4)
 	c.Assert(spec.Items[0], Equals, spec.Comments[0])
 	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable)
@@ -879,16 +884,18 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(spec.DataTable, NotNil)
-	c.Assert(len(spec.DataTable.Table.Get("id")), Equals, 2)
-	c.Assert(len(spec.DataTable.Table.Get("name")), Equals, 2)
-	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.DataTable.Table.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "2")
-	c.Assert(spec.DataTable.Table.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("name")[0].Value, Equals, "foo")
-	c.Assert(spec.DataTable.Table.Get("name")[0].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("name")[1].Value, Equals, "bar")
-	c.Assert(spec.DataTable.Table.Get("name")[1].CellType, Equals, gauge.Static)
+	idCells, _ := spec.DataTable.Table.Get("id")
+	nameCells, _ := spec.DataTable.Table.Get("name")
+	c.Assert(len(idCells), Equals, 2)
+	c.Assert(len(nameCells), Equals, 2)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "foo")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "bar")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
@@ -904,8 +911,8 @@ func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "my step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Items), Equals, 4)
 	c.Assert(spec.Items[0], Equals, spec.Comments[0])
 	c.Assert(spec.Items[1], DeepEquals, &spec.DataTable)
@@ -914,20 +921,22 @@ func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(spec.DataTable, NotNil)
 	c.Assert(spec.DataTable.Table.GetRowCount(), Equals, 3)
-	c.Assert(len(spec.DataTable.Table.Get("id")), Equals, 3)
-	c.Assert(len(spec.DataTable.Table.Get("name")), Equals, 3)
-	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.DataTable.Table.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "")
-	c.Assert(spec.DataTable.Table.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("id")[2].Value, Equals, "2")
-	c.Assert(spec.DataTable.Table.Get("id")[2].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("name")[0].Value, Equals, "foo")
-	c.Assert(spec.DataTable.Table.Get("name")[0].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("name")[1].Value, Equals, "")
-	c.Assert(spec.DataTable.Table.Get("name")[1].CellType, Equals, gauge.Static)
-	c.Assert(spec.DataTable.Table.Get("name")[2].Value, Equals, "bar")
-	c.Assert(spec.DataTable.Table.Get("name")[2].CellType, Equals, gauge.Static)
+	idCells, _ := spec.DataTable.Table.Get("id")
+	nameCells, _ := spec.DataTable.Table.Get("name")
+	c.Assert(len(idCells), Equals, 3)
+	c.Assert(len(nameCells), Equals, 3)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(idCells[2].Value, Equals, "2")
+	c.Assert(idCells[2].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "foo")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[2].Value, Equals, "bar")
+	c.Assert(nameCells[2].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestStepWithInlineTable(c *C) {
@@ -940,8 +949,8 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 	step := spec.Scenarios[0].Steps[0]
 
@@ -951,16 +960,18 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 
 	c.Assert(step.Value, Equals, "Step with inline table {}")
 	c.Assert(step.HasInlineTable, Equals, true)
-	c.Assert(len(inlineTable.Get("id")), Equals, 2)
-	c.Assert(len(inlineTable.Get("name")), Equals, 2)
-	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")
-	c.Assert(inlineTable.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[1].Value, Equals, "2")
-	c.Assert(inlineTable.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[0].Value, Equals, "foo")
-	c.Assert(inlineTable.Get("name")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[1].Value, Equals, "bar")
-	c.Assert(inlineTable.Get("name")[1].CellType, Equals, gauge.Static)
+	idCells, _ := inlineTable.Get("id")
+	nameCells, _ := inlineTable.Get("name")
+	c.Assert(len(idCells), Equals, 2)
+	c.Assert(len(nameCells), Equals, 2)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "foo")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "bar")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
@@ -976,7 +987,8 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"<2>", "<type3>"}},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 
 	c.Assert(result.Ok, Equals, true)
 	step := spec.Scenarios[0].Steps[0]
@@ -986,21 +998,23 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 	c.Assert(inlineTable, NotNil)
 
 	c.Assert(step.Value, Equals, "Step with inline table {}")
-	c.Assert(len(inlineTable.Get("id")), Equals, 3)
-	c.Assert(len(inlineTable.Get("name")), Equals, 3)
-	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")
-	c.Assert(inlineTable.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[1].Value, Equals, "2")
-	c.Assert(inlineTable.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[2].Value, Equals, "<2>")
-	c.Assert(inlineTable.Get("id")[2].CellType, Equals, gauge.Static)
+	idCells, _ := inlineTable.Get("id")
+	nameCells, _ := inlineTable.Get("name")
+	c.Assert(len(idCells), Equals, 3)
+	c.Assert(len(nameCells), Equals, 3)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(idCells[2].Value, Equals, "<2>")
+	c.Assert(idCells[2].CellType, Equals, gauge.Static)
 
-	c.Assert(inlineTable.Get("name")[0].Value, Equals, "type1")
-	c.Assert(inlineTable.Get("name")[0].CellType, Equals, gauge.Dynamic)
-	c.Assert(inlineTable.Get("name")[1].Value, Equals, "type2")
-	c.Assert(inlineTable.Get("name")[1].CellType, Equals, gauge.Dynamic)
-	c.Assert(inlineTable.Get("name")[2].Value, Equals, "<type3>")
-	c.Assert(inlineTable.Get("name")[2].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "type1")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Dynamic)
+	c.Assert(nameCells[1].Value, Equals, "type2")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Dynamic)
+	c.Assert(nameCells[2].Value, Equals, "<type3>")
+	c.Assert(nameCells[2].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
@@ -1015,10 +1029,13 @@ func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"2", "<type2>"}},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
-	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Get("name")[0].Value, Equals, "<invalid>")
+	idCells, _ := spec.Scenarios[0].Steps[0].Args[0].Table.Get("id")
+	c.Assert(idCells[0].Value, Equals, "1")
+	nameCells, _ := spec.Scenarios[0].Steps[0].Args[0].Table.Get("name")
+	c.Assert(nameCells[0].Value, Equals, "<invalid>")
 	c.Assert(result.Warnings[0].Message, Equals, "Dynamic param <invalid> could not be resolved, Treating it as static param")
 }
 
@@ -1034,7 +1051,8 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Items), Equals, 2)
 	c.Assert(spec.Items[0], DeepEquals, spec.Contexts[0])
 	c.Assert(spec.Items[1], Equals, spec.Scenarios[0])
@@ -1047,20 +1065,22 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 	c.Assert(inlineTable, NotNil)
 	c.Assert(context.Value, Equals, "Context with inline table {}")
-	c.Assert(len(inlineTable.Get("id")), Equals, 3)
-	c.Assert(len(inlineTable.Get("name")), Equals, 3)
-	c.Assert(inlineTable.Get("id")[0].Value, Equals, "1")
-	c.Assert(inlineTable.Get("id")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[1].Value, Equals, "2")
-	c.Assert(inlineTable.Get("id")[1].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("id")[2].Value, Equals, "3")
-	c.Assert(inlineTable.Get("id")[2].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[0].Value, Equals, "foo")
-	c.Assert(inlineTable.Get("name")[0].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[1].Value, Equals, "bar")
-	c.Assert(inlineTable.Get("name")[1].CellType, Equals, gauge.Static)
-	c.Assert(inlineTable.Get("name")[2].Value, Equals, "not a <dynamic>")
-	c.Assert(inlineTable.Get("name")[2].CellType, Equals, gauge.Static)
+	idCells, _ := inlineTable.Get("id")
+	nameCells, _ := inlineTable.Get("name")
+	c.Assert(len(idCells), Equals, 3)
+	c.Assert(len(nameCells), Equals, 3)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(idCells[2].Value, Equals, "3")
+	c.Assert(idCells[2].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "foo")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "bar")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[2].Value, Equals, "not a <dynamic>")
+	c.Assert(nameCells[2].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
@@ -1070,8 +1090,8 @@ func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading"},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Data table should have at least 1 data row")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
@@ -1092,8 +1112,8 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "my step"},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(len(result.Warnings), Equals, 1)
 	c.Assert(result.Warnings[0].String(), Equals, "foo.spec:7 Multiple data table present, ignoring table")
@@ -1109,8 +1129,8 @@ func (s *MySuite) TestParseErrorWhenCouldNotResolveExternalDataTable(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step", LineNo: 5},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(len(result.Warnings), Equals, 0)
 	c.Assert(result.Errors()[0], Equals, "[ParseError] foo.spec:3 Could not resolve table from table: foo => 'table: foo'")
@@ -1131,7 +1151,8 @@ func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
 		&Token{Kind: gauge.TableRow, Args: []string{"2"}},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(len(result.Warnings), Equals, 2)
 	c.Assert(result.Warnings[0].String(), Equals, "foo.spec:3 Table not associated with a step, ignoring table")
@@ -1147,8 +1168,8 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 	c.Assert(len(spec.Tags.Values()), Equals, 2)
 	c.Assert(spec.Tags.Values()[0], Equals, "tag1")
@@ -1164,8 +1185,8 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Tags.Values()), Equals, 2)
@@ -1186,8 +1207,8 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
@@ -1204,8 +1225,8 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
-	_, result := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 5)
@@ -1222,7 +1243,8 @@ func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
 	AddConcepts([]string{path}, conceptDictionary)
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios[0].Steps), Equals, 1)
@@ -1243,7 +1265,8 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts([]string{path}, conceptDictionary)
 
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Scenarios[0].Steps), Equals, 2)
@@ -1254,8 +1277,10 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(firstConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
 	c.Assert(firstConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
 	c.Assert(firstConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
-	c.Assert(firstConceptStep.GetArg("username").Value, Equals, "foo1")
-	c.Assert(firstConceptStep.GetArg("userid").Value, Equals, "foo")
+	usernameArg, _ := firstConceptStep.GetArg("username")
+	c.Assert(usernameArg.Value, Equals, "foo1")
+	useridArg, _ := firstConceptStep.GetArg("userid")
+	c.Assert(useridArg.Value, Equals, "foo")
 
 	secondConceptStep := spec.Scenarios[0].Steps[1]
 	c.Assert(secondConceptStep.IsConcept, Equals, true)
@@ -1263,8 +1288,10 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	c.Assert(secondConceptStep.ConceptSteps[0].Args[0].Value, Equals, "userid")
 	c.Assert(secondConceptStep.ConceptSteps[1].Value, Equals, "add name {}")
 	c.Assert(secondConceptStep.ConceptSteps[1].Args[0].Value, Equals, "username")
-	c.Assert(secondConceptStep.GetArg("username").Value, Equals, "bar1")
-	c.Assert(secondConceptStep.GetArg("userid").Value, Equals, "bar")
+	usernameArg2, _ := secondConceptStep.GetArg("username")
+	c.Assert(usernameArg2.Value, Equals, "bar1")
+	useridArg2, _ := secondConceptStep.GetArg("userid")
+	c.Assert(useridArg2.Value, Equals, "bar")
 
 }
 
@@ -1280,7 +1307,8 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts([]string{path}, conceptDictionary)
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	c.Assert(len(spec.Items), Equals, 2)
@@ -1301,11 +1329,11 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	c.Assert(firstConcept.ConceptSteps[1].Args[0].Value, Equals, "username")
 	c.Assert(firstConcept.ConceptSteps[1].Args[0].ArgType, Equals, gauge.Dynamic)
 
-	arg1 := firstConcept.Lookup.GetArg("userid")
+	arg1, _ := firstConcept.Lookup.GetArg("userid")
 	c.Assert(arg1.Value, Equals, "id")
 	c.Assert(arg1.ArgType, Equals, gauge.Dynamic)
 
-	arg2 := firstConcept.Lookup.GetArg("username")
+	arg2, _ := firstConcept.Lookup.GetArg("username")
 	c.Assert(arg2.Value, Equals, "description")
 	c.Assert(arg2.ArgType, Equals, gauge.Dynamic)
 }
@@ -1323,7 +1351,8 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts([]string{path}, conceptDictionary)
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	steps := spec.Scenarios[0].Steps
@@ -1350,7 +1379,8 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
 	AddConcepts([]string{path}, conceptDictionary)
-	spec, result := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, true)
 
 	steps := spec.Scenarios[0].Steps
@@ -1360,12 +1390,15 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 	c.Assert(len(steps[0].Args), Equals, 2)
 	c.Assert(steps[0].Args[1].ArgType, Equals, gauge.TableArg)
 	table := steps[0].Args[1].Table
-	c.Assert(table.Get("user-id")[0].Value, Equals, "id")
-	c.Assert(table.Get("user-id")[0].CellType, Equals, gauge.Dynamic)
-	c.Assert(table.Get("description")[0].Value, Equals, "description")
-	c.Assert(table.Get("description")[0].CellType, Equals, gauge.Dynamic)
-	c.Assert(table.Get("name")[0].Value, Equals, "root")
-	c.Assert(table.Get("name")[0].CellType, Equals, gauge.Static)
+	userIdCells, _ := table.Get("user-id")
+	descriptionCells, _ := table.Get("description")
+	nameCells, _ := table.Get("name")
+	c.Assert(userIdCells[0].Value, Equals, "id")
+	c.Assert(userIdCells[0].CellType, Equals, gauge.Dynamic)
+	c.Assert(descriptionCells[0].Value, Equals, "description")
+	c.Assert(descriptionCells[0].CellType, Equals, gauge.Dynamic)
+	c.Assert(nameCells[0].Value, Equals, "root")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
 	c.Assert(len(steps[0].ConceptSteps), Equals, 2)
 }
 
@@ -1377,7 +1410,8 @@ func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
 		&Token{Kind: gauge.StepKind, Value: "Example {special} step", LineNo: 3, Args: []string{"unknown:foo"}},
 	}
-	spec, parseResults := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, parseResults, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].ArgType, Equals, gauge.Dynamic)
 	c.Assert(len(parseResults.Warnings), Equals, 1)
 	c.Assert(parseResults.Warnings[0].Message, Equals, "Could not resolve special param type <unknown:foo>. Treating it as dynamic param.")
@@ -1397,7 +1431,8 @@ func (s *MySuite) TestTearDownSteps(c *C) {
 		&Token{Kind: gauge.StepKind, Value: "Example step2", LineNo: 10},
 	}
 
-	spec, _ := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	spec, _, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.TearDownSteps), Equals, 2)
 	c.Assert(spec.TearDownSteps[0].Value, Equals, "Example step1")
 	c.Assert(spec.TearDownSteps[0].LineNo, Equals, 8)
@@ -1411,10 +1446,12 @@ func (s *MySuite) TestParsingOfTableWithHyphens(c *C) {
 	text := SpecBuilder().specHeading("My Spec Heading").text("|id|").text("|--|").text("|1 |").text("|- |").String()
 	tokens, _ := p.GenerateTokens(text, "")
 
-	spec, _ := p.CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert((len(spec.DataTable.Table.Get("id"))), Equals, 2)
-	c.Assert(spec.DataTable.Table.Get("id")[0].Value, Equals, "1")
-	c.Assert(spec.DataTable.Table.Get("id")[1].Value, Equals, "-")
+	spec, _, err := p.CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
+	idCells, _ := spec.DataTable.Table.Get("id")
+	c.Assert((len(idCells)), Equals, 2)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[1].Value, Equals, "-")
 }
 
 func (s *MySuite) TestCreateStepWithNewlineBetweenTextAndTable(c *C) {
@@ -1428,20 +1465,20 @@ func (s *MySuite) TestCreateStepWithNewlineBetweenTextAndTable(c *C) {
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
-	spec, _ := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
-
+	spec, _, err := new(SpecParser).CreateSpecification(tokens, conceptDictionary, "")
+	c.Assert(err, IsNil)
 	c.Assert(spec.Scenarios[0].Steps[0].HasInlineTable, Equals, true)
 }
 
 func (s *MySuite) TestSpecParsingWhenSpecHeadingIsNotPresentAndDynamicParseError(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse(`#
+	_, res, err := p.Parse(`#
 Scenario Heading
 ----------------
 * def <a>
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 2)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading should have at least one character => ''")
 	c.Assert(res.ParseErrors[1].Error(), Equals, "foo.spec:4 Dynamic parameter <a> could not be resolved => 'def <a>'")
@@ -1450,12 +1487,12 @@ Scenario Heading
 func (s *MySuite) TestSpecParsingWhenSpecHeadingIsNotPresent(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse(`#
+	_, res, err := p.Parse(`#
 Scenario Heading
 ----------------
 * def "sad"
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 1)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading should have at least one character => ''")
 }
@@ -1463,12 +1500,12 @@ Scenario Heading
 func (s *MySuite) TestSpecParsingWhenUnderlinedSpecHeadingIsNotPresent(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse(`======
+	_, res, err := p.Parse(`======
 Scenario Heading
 ----------------
 * def "sd"
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 2)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading not found => ''")
 	c.Assert(res.ParseErrors[1].Error(), Equals, "foo.spec:2 Scenario should be defined after the spec heading => 'Scenario Heading'")
@@ -1477,12 +1514,12 @@ Scenario Heading
 func (s *MySuite) TestProcessingTokensGivesErrorWhenSpecHeadingHasOnlySpaces(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse("#"+"           "+`
+	_, res, err := p.Parse("#"+"           "+`
 Scenario Heading
 ----------------
 * def "sd"
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 1)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:1 Spec heading should have at least one character => ''")
 }
@@ -1490,11 +1527,11 @@ Scenario Heading
 func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingIsEmpty(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse(`# dfgdfg
+	_, res, err := p.Parse(`# dfgdfg
 ##
 * def "sd"
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 1)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:2 Scenario heading should have at least one character => ''")
 }
@@ -1502,11 +1539,11 @@ func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingIsEmpty(c *C)
 func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingHasOnlySpaces(c *C) {
 	p := new(SpecParser)
 
-	_, res := p.Parse(`# dfgs
+	_, res, err := p.Parse(`# dfgs
 ##`+"           "+`
 * def "sd"
 `, gauge.NewConceptDictionary(), "foo.spec")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors), Equals, 1)
 	c.Assert(res.ParseErrors[0].Error(), Equals, "foo.spec:2 Scenario heading should have at least one character => ''")
 }
@@ -1514,7 +1551,7 @@ func (s *MySuite) TestProcessingTokensGivesErrorWhenScenarioHeadingHasOnlySpaces
 func (s *MySuite) TestScenarioProcessingToHaveScenarioSpan(c *C) {
 	p := new(SpecParser)
 
-	spec, _ := p.Parse(`# Spec 1
+	spec, _, err := p.Parse(`# Spec 1
 ## Scenario 1
 * def "sd"
 comment1
@@ -1532,7 +1569,7 @@ comment2
 comment3
 * def "sd"
 `, gauge.NewConceptDictionary(), "")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.Scenarios), Equals, 3)
 	c.Assert(spec.Scenarios[0].Span.Start, Equals, 2)
 	c.Assert(spec.Scenarios[0].Span.End, Equals, 7)
@@ -1545,7 +1582,7 @@ comment3
 func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {
 	p := new(SpecParser)
 
-	spec, _ := p.Parse(`Specification Heading
+	spec, _, err := p.Parse(`Specification Heading
 =====================
 * Vowels in English language are "aeiou".
 Vowel counts in single word
@@ -1561,14 +1598,14 @@ ___
      |Rhythm|0          |
 
 `, gauge.NewConceptDictionary(), "")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(spec.TearDownSteps), Equals, 0)
 	c.Assert(len(spec.Comments), Equals, 7)
 }
 
 func (s *MySuite) TestSpecWithRepeatedTagDefinitions(c *C) {
 	p := new(SpecParser)
-	spec, parseRes := p.Parse(`Spec Heading
+	spec, parseRes, err := p.Parse(`Spec Heading
 ==============
 tags: foo, bar
 
@@ -1579,6 +1616,7 @@ Scenario
 --------
 * step
 	`, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per specification")
 	c.Assert(len(spec.Tags.Values()), Equals, 2)
@@ -1588,7 +1626,7 @@ Scenario
 
 func (s *MySuite) TestScenarioWithRepeatedTagDefinitions(c *C) {
 	p := new(SpecParser)
-	spec, parseRes := p.Parse(`Spec Heading
+	spec, parseRes, err := p.Parse(`Spec Heading
 ==============
 tags: tag1
 
@@ -1600,6 +1638,7 @@ tags: foo, bar
 * step
 tags: blah
 	`, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Tags can be defined only once per scenario")
 	c.Assert(len(spec.Scenarios[0].Tags.Values()), Equals, 2)
@@ -1611,7 +1650,7 @@ tags: blah
 
 func (s *MySuite) TestDatatTableWithEmptyHeaders(c *C) {
 	p := new(SpecParser)
-	_, parseRes := p.Parse(`Something
+	_, parseRes, err := p.Parse(`Something
 =========
 
      ||a|||a|
@@ -1622,7 +1661,7 @@ Scenario Heading
 ----------------
 * Vowels in English language are "aeiou".
 `, gauge.NewConceptDictionary(), "")
-
+	c.Assert(err, IsNil)
 	c.Assert(len(parseRes.ParseErrors), Equals, 4)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table header should not be blank")
 	c.Assert(parseRes.ParseErrors[1].Message, Equals, "Table header should not be blank")

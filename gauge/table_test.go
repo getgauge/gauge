@@ -61,21 +61,21 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	table.AddRowValues([]string{"john", "jim"})
 
 	c.Assert(table.GetRowCount(), Equals, 2)
-	column1 := table.Get("one")
+	column1, _ := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].Value, Equals, "foo")
 	c.Assert(column1[0].CellType, Equals, Static)
 	c.Assert(column1[1].Value, Equals, "john")
 	c.Assert(column1[1].CellType, Equals, Static)
 
-	column2 := table.Get("two")
+	column2, _ := table.Get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].Value, Equals, "bar")
 	c.Assert(column2[0].CellType, Equals, Static)
 	c.Assert(column2[1].Value, Equals, "jim")
 	c.Assert(column2[1].CellType, Equals, Static)
 
-	column3 := table.Get("three")
+	column3, _ := table.Get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].Value, Equals, "baz")
 	c.Assert(column3[0].CellType, Equals, Static)
@@ -91,21 +91,21 @@ func (s *MySuite) TestShouldAddRows(c *C) {
 	table.addRows([]TableCell{TableCell{"john", Static}, TableCell{"jim", Static}})
 
 	c.Assert(table.GetRowCount(), Equals, 2)
-	column1 := table.Get("one")
+	column1, _ := table.Get("one")
 	c.Assert(len(column1), Equals, 2)
 	c.Assert(column1[0].Value, Equals, "foo")
 	c.Assert(column1[0].CellType, Equals, Static)
 	c.Assert(column1[1].Value, Equals, "john")
 	c.Assert(column1[1].CellType, Equals, Static)
 
-	column2 := table.Get("two")
+	column2, _ := table.Get("two")
 	c.Assert(len(column2), Equals, 2)
 	c.Assert(column2[0].Value, Equals, "bar")
 	c.Assert(column2[0].CellType, Equals, Static)
 	c.Assert(column2[1].Value, Equals, "jim")
 	c.Assert(column2[1].CellType, Equals, Static)
 
-	column3 := table.Get("three")
+	column3, _ := table.Get("three")
 	c.Assert(len(column3), Equals, 2)
 	c.Assert(column3[0].Value, Equals, "baz")
 	c.Assert(column3[0].CellType, Equals, Static)
@@ -123,16 +123,6 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 	c.Assert(table.headerExists("one"), Equals, true)
 	c.Assert(table.headerExists("two"), Equals, true)
 	c.Assert(table.headerExists("four"), Equals, false)
-}
-
-func (s *MySuite) TestGetInvalidColumn(c *C) {
-	var table Table
-
-	table.AddHeaders([]string{"one", "two", "three"})
-	table.AddRowValues([]string{"foo", "bar", "baz"})
-	table.AddRowValues([]string{"john", "jim", "jack"})
-
-	c.Assert(func() { table.Get("four") }, Panics, "Table column four not found")
 }
 
 func (s *MySuite) TestGetRows(c *C) {

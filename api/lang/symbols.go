@@ -43,7 +43,10 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	if util.IsConcept(file) {
 		return getConceptSymbols(content, file), nil
 	}
-	spec, parseResult := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
+	spec, parseResult, err := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
+	if err != nil {
+		return nil, err
+	}
 	if !parseResult.Ok {
 		return nil, fmt.Errorf("parsing failed for %s. %s", file, parseResult.Errors())
 	}

@@ -48,16 +48,20 @@ func (s *MySuite) TestAddArgValue(c *C) {
 	lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
 	lookup.AddArgName("param2")
 	lookup.AddArgValue("param2", &StepArg{Value: "value2", ArgType: Dynamic})
-
-	c.Assert(lookup.GetArg("param1").Value, Equals, "value1")
-	c.Assert(lookup.GetArg("param2").Value, Equals, "value2")
+	stepArg, err := lookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "value1")
+	stepArg, err = lookup.GetArg("param2")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "value2")
 }
 
-func (s *MySuite) TestPanicForInvalidArg(c *C) {
+func (s *MySuite) TestErrorForInvalidArg(c *C) {
 	lookup := new(ArgLookup)
-
-	c.Assert(func() { lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static}) }, Panics, "Accessing an invalid parameter (param1)")
-	c.Assert(func() { lookup.GetArg("param1") }, Panics, "Accessing an invalid parameter (param1)")
+	err := lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	c.Assert(err.Error(), Equals, "Accessing an invalid parameter (param1)")
+	_, err = lookup.GetArg("param1")
+	c.Assert(err.Error(), Equals, "Accessing an invalid parameter (param1)")
 }
 
 func (s *MySuite) TestGetLookupCopy(c *C) {
@@ -65,11 +69,14 @@ func (s *MySuite) TestGetLookupCopy(c *C) {
 	originalLookup.AddArgName("param1")
 	originalLookup.AddArgValue("param1", &StepArg{Value: "oldValue", ArgType: Dynamic})
 
-	copiedLookup := originalLookup.GetCopy()
+	copiedLookup, _ := originalLookup.GetCopy()
 	copiedLookup.AddArgValue("param1", &StepArg{Value: "new value", ArgType: Static})
-
-	c.Assert(copiedLookup.GetArg("param1").Value, Equals, "new value")
-	c.Assert(originalLookup.GetArg("param1").Value, Equals, "oldValue")
+	stepArg, err := copiedLookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "new value")
+	stepArg, err = originalLookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "oldValue")
 }
 
 func (s *MySuite) TestGetLookupFromTableRow(c *C) {
@@ -78,19 +85,29 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable.AddRowValues([]string{"1", "admin"})
 	dataTable.AddRowValues([]string{"2", "root"})
 
-	emptyLookup := new(ArgLookup).FromDataTableRow(new(Table), 0)
-	lookup1 := new(ArgLookup).FromDataTableRow(dataTable, 0)
-	lookup2 := new(ArgLookup).FromDataTableRow(dataTable, 1)
-
+	emptyLookup, err := new(ArgLookup).FromDataTableRow(new(Table), 0)
+	c.Assert(err, IsNil)
 	c.Assert(emptyLookup.ParamIndexMap, IsNil)
 
-	c.Assert(lookup1.GetArg("id").Value, Equals, "1")
-	c.Assert(lookup1.GetArg("id").ArgType, Equals, Static)
-	c.Assert(lookup1.GetArg("name").Value, Equals, "admin")
-	c.Assert(lookup1.GetArg("name").ArgType, Equals, Static)
+	lookup1, err := new(ArgLookup).FromDataTableRow(dataTable, 0)
+	c.Assert(err, IsNil)
+	idArg1, err := lookup1.GetArg("id")
+	c.Assert(err, IsNil)
+	nameArg1, err := lookup1.GetArg("name")
+	c.Assert(err, IsNil)
+	c.Assert(idArg1.Value, Equals, "1")
+	c.Assert(idArg1.ArgType, Equals, Static)
+	c.Assert(nameArg1.Value, Equals, "admin")
+	c.Assert(nameArg1.ArgType, Equals, Static)
 
-	c.Assert(lookup2.GetArg("id").Value, Equals, "2")
-	c.Assert(lookup2.GetArg("id").ArgType, Equals, Static)
-	c.Assert(lookup2.GetArg("name").Value, Equals, "root")
-	c.Assert(lookup2.GetArg("name").ArgType, Equals, Static)
+	lookup2, err := new(ArgLookup).FromDataTableRow(dataTable, 1)
+	c.Assert(err, IsNil)
+	idArg2, err := lookup2.GetArg("id")
+	c.Assert(err, IsNil)
+	nameArg2, err := lookup2.GetArg("name")
+	c.Assert(err, IsNil)
+	c.Assert(idArg2.Value, Equals, "2")
+	c.Assert(idArg2.ArgType, Equals, Static)
+	c.Assert(nameArg2.Value, Equals, "root")
+	c.Assert(nameArg2.ArgType, Equals, Static)
 }

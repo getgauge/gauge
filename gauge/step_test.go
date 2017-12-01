@@ -38,8 +38,9 @@ func (s *MySuite) TestGetArgForStep(c *C) {
 	lookup.AddArgName("param1")
 	lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
 	step := &Step{Lookup: *lookup}
-
-	c.Assert(step.GetArg("param1").Value, Equals, "value1")
+	stepArg, err := step.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "value1")
 }
 
 func (s *MySuite) TestGetArgForConceptStep(c *C) {
@@ -52,7 +53,9 @@ func (s *MySuite) TestGetArgForConceptStep(c *C) {
 	stepLookup.AddArgValue("param1", &StepArg{Value: "param1", ArgType: Dynamic})
 	step := &Step{Parent: concept, Lookup: *stepLookup}
 
-	c.Assert(step.GetArg("param1").Value, Equals, "value1")
+	stepArg, err := step.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.Value, Equals, "value1")
 }
 
 func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {

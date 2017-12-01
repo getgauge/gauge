@@ -248,7 +248,7 @@ func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) 
 
 func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
+		s.conceptDictionary.Remove(c.ConceptStep.Value)
 	}
 }
 
@@ -281,7 +281,11 @@ func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
 
 func (s *SpecInfoGatherer) getParsedConcepts() map[string]*gauge.Concept {
 	var result *parser.ParseResult
-	s.conceptDictionary, result = parser.CreateConceptsDictionary()
+	var err error
+	s.conceptDictionary, result, err = parser.CreateConceptsDictionary()
+	if err != nil {
+		logger.Fatalf("Unable to parse concepts : %s", err.Error())
+	}
 	handleParseFailures([]*parser.ParseResult{result})
 	return s.conceptDictionary.ConceptsMap
 }
@@ -343,7 +347,10 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 
 	logger.APILog.Infof("Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
-	concepts, parseErrors := parser.AddConcepts([]string{file}, s.conceptDictionary)
+	concepts, parseErrors, err := parser.AddConcepts([]string{file}, s.conceptDictionary)
+	if err != nil {
+		logger.Fatalf("Unable to update concepts : %s", err.Error())
+	}
 	if len(parseErrors) > 0 {
 		res := &parser.ParseResult{}
 		res.ParseErrors = append(res.ParseErrors, parseErrors...)

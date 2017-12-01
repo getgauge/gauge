@@ -67,15 +67,18 @@ func (parser *SpecParser) initialize() {
 }
 
 // Parse generates tokens for the given spec text and creates the specification.
-func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
+func (parser *SpecParser) Parse(specText string, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult, error) {
 	tokens, errs := parser.GenerateTokens(specText, specFile)
-	spec, res := parser.CreateSpecification(tokens, conceptDictionary, specFile)
+	spec, res, err := parser.CreateSpecification(tokens, conceptDictionary, specFile)
+	if err != nil {
+		return nil, nil, err
+	}
 	res.FileName = specFile
 	if len(errs) > 0 {
 		res.Ok = false
 	}
 	res.ParseErrors = append(errs, res.ParseErrors...)
-	return spec, res
+	return spec, res, nil
 }
 
 // ParseSpecText without validating and replacing concepts.
@@ -97,7 +100,11 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 	parser.currentState = initial
 	var errors []ParseError
 	var newToken *Token
-	for line, hasLine := parser.nextLine(); hasLine; line, hasLine = parser.nextLine() {
+	for line, hasLine, err := parser.nextLine(); hasLine; line, hasLine, err = parser.nextLine() {
+		if err != nil {
+			errors = append(errors, ParseError{Message: err.Error()})
+			return nil, errors
+		}
 		trimmedLine := strings.TrimSpace(line)
 		if len(trimmedLine) == 0 {
 			if newToken != nil && newToken.Kind == gauge.StepKind {
@@ -235,17 +242,17 @@ func (parser *SpecParser) accept(token *Token, fileName string) []ParseError {
 	return parseErrs
 }
 
-func (parser *SpecParser) nextLine() (string, bool) {
+func (parser *SpecParser) nextLine() (string, bool, error) {
 	scanned := parser.scanner.Scan()
 	if scanned {
 		parser.lineNo++
-		return parser.scanner.Text(), true
+		return parser.scanner.Text(), true, nil
 	}
 	if err := parser.scanner.Err(); err != nil {
-		panic(err)
+		return "", false, err
 	}
 
-	return "", false
+	return "", false, nil
 }
 
 func (parser *SpecParser) clearState() {
@@ -253,16 +260,18 @@ func (parser *SpecParser) clearState() {
 }
 
 // CreateSpecification creates specification from the given set of tokens.
-func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult) {
+func (parser *SpecParser) CreateSpecification(tokens []*Token, conceptDictionary *gauge.ConceptDictionary, specFile string) (*gauge.Specification, *ParseResult, error) {
 	parser.conceptDictionary = conceptDictionary
 	specification, finalResult := parser.createSpecification(tokens, specFile)
-	specification.ProcessConceptStepsFrom(conceptDictionary)
+	if err := specification.ProcessConceptStepsFrom(conceptDictionary); err != nil {
+		return nil, nil, err
+	}
 	err := parser.validateSpec(specification)
 	if err != nil {
 		finalResult.Ok = false
 		finalResult.ParseErrors = append([]ParseError{err.(ParseError)}, finalResult.ParseErrors...)
 	}
-	return specification, finalResult
+	return specification, finalResult, nil
 }
 
 func (parser *SpecParser) createSpecification(tokens []*Token, specFile string) (*gauge.Specification, *ParseResult) {

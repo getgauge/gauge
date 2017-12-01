@@ -48,16 +48,19 @@ type Step struct {
 	Suffix         string
 }
 
-func (step *Step) GetArg(name string) *StepArg {
-	arg := step.Lookup.GetArg(name)
+func (step *Step) GetArg(name string) (*StepArg, error) {
+	arg, err := step.Lookup.GetArg(name)
+	if err != nil {
+		return nil, err
+	}
 	// Return static values
 	if arg != nil && arg.ArgType != Dynamic {
-		return arg
+		return arg, nil
 	}
 	if step.Parent == nil {
-		return step.Lookup.GetArg(name)
+		return arg, nil
 	}
-	return step.Parent.GetArg(step.Lookup.GetArg(name).Value)
+	return step.Parent.GetArg(arg.Value)
 }
 
 func (step *Step) GetFragments() []*gauge_messages.Fragment {
@@ -189,20 +192,28 @@ func (step *Step) InConcept() bool {
 
 // Not copying parent as it enters an infinite loop in case of nested concepts. This is because the steps under the concept
 // are copied and their parent copying again comes back to copy the same concept.
-func (step *Step) GetCopy() *Step {
+func (step *Step) GetCopy() (*Step, error) {
 	if !step.IsConcept {
-		return step
+		return step, nil
 	}
 	nestedStepsCopy := make([]*Step, 0)
 	for _, nestedStep := range step.ConceptSteps {
-		nestedStepsCopy = append(nestedStepsCopy, nestedStep.GetCopy())
+		nestedStepCopy, err := nestedStep.GetCopy()
+		if err != nil {
+			return nil, err
+		}
+		nestedStepsCopy = append(nestedStepsCopy, nestedStepCopy)
 	}
 
 	copiedConceptStep := new(Step)
 	*copiedConceptStep = *step
 	copiedConceptStep.ConceptSteps = nestedStepsCopy
-	copiedConceptStep.Lookup = *step.Lookup.GetCopy()
-	return copiedConceptStep
+	lookupCopy, err := step.Lookup.GetCopy()
+	if err != nil {
+		return nil, err
+	}
+	copiedConceptStep.Lookup = *lookupCopy
+	return copiedConceptStep, nil
 }
 
 func (step *Step) CopyFrom(another *Step) {

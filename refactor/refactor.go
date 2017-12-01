@@ -104,8 +104,10 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 		return result
 	}
 
-	conceptDictionary, parseResult := parser.CreateConceptsDictionary()
-
+	conceptDictionary, parseResult, err := parser.CreateConceptsDictionary()
+	if err != nil {
+		return rephraseFailure(err.Error())
+	}
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
 	if !result.Success {
 		return result

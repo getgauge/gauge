@@ -19,6 +19,7 @@ package lang
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/getgauge/common"
@@ -47,7 +48,11 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 
 		isInQueue = false
 
-		diagnosticsMap := getDiagnostics()
+		diagnosticsMap, err := getDiagnostics()
+		if err != nil {
+			logger.Errorf("Unable to publish diagnostics, error : %s", err.Error())
+			return
+		}
 		for uri, diagnostics := range diagnosticsMap {
 			publishDiagnostic(uri, diagnostics, conn, ctx)
 		}
@@ -58,11 +63,16 @@ func publishDiagnostic(uri string, diagnostics []lsp.Diagnostic, conn jsonrpc2.J
 	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
 }
 
-func getDiagnostics() map[string][]lsp.Diagnostic {
+func getDiagnostics() (map[string][]lsp.Diagnostic, error) {
 	diagnostics := make(map[string][]lsp.Diagnostic, 0)
-	conceptDictionary := validateConcepts(diagnostics)
-	validateSpecs(conceptDictionary, diagnostics)
-	return diagnostics
+	conceptDictionary, err := validateConcepts(diagnostics)
+	if err != nil {
+		return nil, err
+	}
+	if err = validateSpecs(conceptDictionary, diagnostics); err != nil {
+		return nil, err
+	}
+	return diagnostics, nil
 }
 
 func createValidationDiagnostics(errors []validation.StepValidationError, diagnostics map[string][]lsp.Diagnostic) {
@@ -86,7 +96,7 @@ func validateSpec(spec *gauge.Specification, conceptDictionary *gauge.ConceptDic
 	return
 }
 
-func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[string][]lsp.Diagnostic) {
+func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[string][]lsp.Diagnostic) error {
 	specFiles := util.GetSpecFiles(common.SpecsDirectoryName)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(specFile)
@@ -95,15 +105,19 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[s
 		}
 		content, err := getContentFromFileOrDisk(specFile)
 		if err != nil {
-			logger.Errorf("Unable to read file %s", err)
+			return fmt.Errorf("Unable to read file %s", err)
 		}
-		spec, res := new(parser.SpecParser).Parse(content, conceptDictionary, specFile)
+		spec, res, err := new(parser.SpecParser).Parse(content, conceptDictionary, specFile)
+		if err != nil {
+			return err
+		}
 		createDiagnostics(res, diagnostics)
 		createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
 	}
+	return nil
 }
 
-func validateConcepts(diagnostics map[string][]lsp.Diagnostic) *gauge.ConceptDictionary {
+func validateConcepts(diagnostics map[string][]lsp.Diagnostic) (*gauge.ConceptDictionary, error) {
 	conceptFiles := util.GetConceptFiles()
 	conceptDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
@@ -116,11 +130,15 @@ func validateConcepts(diagnostics map[string][]lsp.Diagnostic) *gauge.ConceptDic
 			logger.Errorf("Unable to read file %s", err)
 		}
 		cpts, pRes := new(parser.ConceptParser).Parse(content, conceptFile)
-		pRes.ParseErrors = append(pRes.ParseErrors, parser.AddConcept(cpts, conceptFile, conceptDictionary)...)
+		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary)
+		if err != nil {
+			return nil, err
+		}
+		pRes.ParseErrors = append(pRes.ParseErrors, pErrs...)
 		createDiagnostics(pRes, diagnostics)
 	}
 	createDiagnostics(parser.ValidateConcepts(conceptDictionary), diagnostics)
-	return conceptDictionary
+	return conceptDictionary, nil
 }
 
 func createDiagnostics(res *parser.ParseResult, diagnostics map[string][]lsp.Diagnostic) {

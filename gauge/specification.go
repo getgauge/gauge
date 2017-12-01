@@ -17,7 +17,9 @@
 
 package gauge
 
-import "reflect"
+import (
+	"reflect"
+)
 
 type HeadingType int
 
@@ -62,28 +64,39 @@ func (spec *Specification) Kind() TokenKind {
 	return SpecKind
 }
 
-func (spec *Specification) ProcessConceptStepsFrom(conceptDictionary *ConceptDictionary) {
+func (spec *Specification) ProcessConceptStepsFrom(conceptDictionary *ConceptDictionary) error {
 	for _, step := range spec.Contexts {
-		spec.processConceptStep(step, conceptDictionary)
+		if err := spec.processConceptStep(step, conceptDictionary); err != nil {
+			return err
+		}
 	}
 	for _, scenario := range spec.Scenarios {
 		for _, step := range scenario.Steps {
-			spec.processConceptStep(step, conceptDictionary)
+			if err := spec.processConceptStep(step, conceptDictionary); err != nil {
+				return err
+			}
 		}
 	}
 	for _, step := range spec.TearDownSteps {
-		spec.processConceptStep(step, conceptDictionary)
+		if err := spec.processConceptStep(step, conceptDictionary); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (spec *Specification) processConceptStep(step *Step, conceptDictionary *ConceptDictionary) {
+func (spec *Specification) processConceptStep(step *Step, conceptDictionary *ConceptDictionary) error {
 	if conceptFromDictionary := conceptDictionary.Search(step.Value); conceptFromDictionary != nil {
-		spec.createConceptStep(conceptFromDictionary.ConceptStep, step)
+		return spec.createConceptStep(conceptFromDictionary.ConceptStep, step)
 	}
+	return nil
 }
 
-func (spec *Specification) createConceptStep(concept *Step, originalStep *Step) {
-	stepCopy := concept.GetCopy()
+func (spec *Specification) createConceptStep(concept *Step, originalStep *Step) error {
+	stepCopy, err := concept.GetCopy()
+	if err != nil {
+		return err
+	}
 	originalArgs := originalStep.Args
 	originalStep.CopyFrom(stepCopy)
 	originalStep.Args = originalArgs
@@ -94,7 +107,7 @@ func (spec *Specification) createConceptStep(concept *Step, originalStep *Step) 
 		conceptStep.Parent = originalStep
 	}
 
-	spec.PopulateConceptLookup(&originalStep.Lookup, concept.Args, originalStep.Args)
+	return spec.PopulateConceptLookup(&originalStep.Lookup, concept.Args, originalStep.Args)
 }
 
 func (spec *Specification) AddItem(itemToAdd Item) {
@@ -184,10 +197,14 @@ func (spec *Specification) removeScenario(scenario *Scenario) {
 	}
 }
 
-func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs []*StepArg, stepArgs []*StepArg) {
+func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs []*StepArg, stepArgs []*StepArg) error {
 	for i, arg := range stepArgs {
-		lookup.AddArgValue(conceptArgs[i].Value, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
+		stepArg := StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name}
+		if err := lookup.AddArgValue(conceptArgs[i].Value, &stepArg); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {

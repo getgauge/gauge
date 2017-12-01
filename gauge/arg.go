@@ -17,7 +17,9 @@
 
 package gauge
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type ArgType string
 
@@ -49,12 +51,13 @@ func (lookup *ArgLookup) AddArgName(argName string) {
 	lookup.paramValue = append(lookup.paramValue, paramNameValue{name: argName})
 }
 
-func (lookup *ArgLookup) AddArgValue(param string, stepArg *StepArg) {
+func (lookup *ArgLookup) AddArgValue(param string, stepArg *StepArg) error {
 	paramIndex, ok := lookup.ParamIndexMap[param]
 	if !ok {
-		panic(fmt.Sprintf("Accessing an invalid parameter (%s)", param))
+		return fmt.Errorf("Accessing an invalid parameter (%s)", param)
 	}
 	lookup.paramValue[paramIndex].stepArg = stepArg
+	return nil
 }
 
 func (lookup *ArgLookup) ContainsArg(param string) bool {
@@ -62,36 +65,40 @@ func (lookup *ArgLookup) ContainsArg(param string) bool {
 	return ok
 }
 
-func (lookup *ArgLookup) GetArg(param string) *StepArg {
+func (lookup *ArgLookup) GetArg(param string) (*StepArg, error) {
 	paramIndex, ok := lookup.ParamIndexMap[param]
 	if !ok {
-		panic(fmt.Sprintf("Accessing an invalid parameter (%s)", param))
+		return nil, fmt.Errorf("Accessing an invalid parameter (%s)", param)
 	}
-	return lookup.paramValue[paramIndex].stepArg
+	return lookup.paramValue[paramIndex].stepArg, nil
 }
 
-func (lookup *ArgLookup) GetCopy() *ArgLookup {
+func (lookup *ArgLookup) GetCopy() (*ArgLookup, error) {
 	lookupCopy := new(ArgLookup)
+	var err error
 	for key, _ := range lookup.ParamIndexMap {
 		lookupCopy.AddArgName(key)
-		arg := lookup.GetArg(key)
+		var arg *StepArg
+		arg, err = lookup.GetArg(key)
 		if arg != nil {
-			lookupCopy.AddArgValue(key, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
+			err = lookupCopy.AddArgValue(key, &StepArg{Value: arg.Value, ArgType: arg.ArgType, Table: arg.Table, Name: arg.Name})
 		}
 	}
-	return lookupCopy
+	return lookupCopy, err
 }
 
-func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) *ArgLookup {
+func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) (*ArgLookup, error) {
 	dataTableLookup := new(ArgLookup)
+	var err error
 	if !datatable.IsInitialized() {
-		return dataTableLookup
+		return dataTableLookup, err
 	}
 	for _, header := range datatable.Headers {
 		dataTableLookup.AddArgName(header)
-		dataTableLookup.AddArgValue(header, &StepArg{Value: datatable.Get(header)[index].Value, ArgType: Static})
+		tableCells, _ := datatable.Get(header)
+		err = dataTableLookup.AddArgValue(header, &StepArg{Value: tableCells[index].Value, ArgType: Static})
 	}
-	return dataTableLookup
+	return dataTableLookup, err
 }
 
 //create an empty lookup with only args to resolve dynamic params for steps

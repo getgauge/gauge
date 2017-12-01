@@ -89,10 +89,13 @@ func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buil
 }
 
 // ParseConcepts creates concept dictionary and concept parse result.
-func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult) {
-	conceptsDictionary, conceptParseResult := CreateConceptsDictionary()
+func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
+	conceptsDictionary, conceptParseResult, err := CreateConceptsDictionary()
+	if err != nil {
+		return nil, nil, err
+	}
 	HandleParseResult(conceptParseResult)
-	return conceptsDictionary, conceptParseResult
+	return conceptsDictionary, conceptParseResult, nil
 }
 
 func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
@@ -102,7 +105,10 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 		parseResultChan <- &ParseResult{ParseErrors: []ParseError{ParseError{FileName: specFile, Message: err.Error()}}, Ok: false}
 		return
 	}
-	spec, parseResult := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
+	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
+	if err != nil {
+		logger.Fatalf(err.Error())
+	}
 	specChannel <- spec
 	parseResultChan <- parseResult
 }
