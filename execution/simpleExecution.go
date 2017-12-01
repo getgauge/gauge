@@ -150,6 +150,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	res := e.executeHook(m)
+	e.suiteResult.Message = append(e.suiteResult.Message, res.Message...)
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
@@ -159,6 +160,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
+	e.suiteResult.Message = append(e.suiteResult.Message, res.Message...)
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}

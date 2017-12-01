@@ -21,69 +21,62 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/gauge"
 
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
-func TestNotifyBeforeScenarioShouldAddBeforeScenarioHookMessages(t *testing.T) {
+func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookMessages(t *testing.T) {
 	r := &mockRunner{}
 	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_ScenarioExecutionStarting {
+		if m.MessageType == gauge_messages.Message_ExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Message:       []string{"Before Scenario Called"},
+				Message:       []string{"Before Suite Called"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
 	}
-	ei := &gauge_messages.ExecutionInfo{}
-	sce := newScenarioExecutor(r, h, ei, nil, nil, nil, 0)
-	scenario := &gauge.Scenario{
-		Heading: &gauge.Heading{Value: "A scenario"},
-		Span:    &gauge.Span{Start: 2, End: 10},
-	}
-	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
-	sce.notifyBeforeScenarioHook(scenarioResult)
-	gotMessages := scenarioResult.ProtoScenario.Message
+	ei := &executionInfo{runner: r, pluginHandler: h}
+	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
+	simpleExecution.notifyBeforeSuite()
+
+	gotMessages := simpleExecution.suiteResult.Message
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))
 	}
-	if gotMessages[0] != "Before Scenario Called" {
-		t.Errorf("Expected `Before Scenario Called` message, got : %s", gotMessages[0])
+	if gotMessages[0] != "Before Suite Called" {
+		t.Errorf("Expected `Before Suite Called` message, got : %s", gotMessages[0])
 	}
 }
 
-func TestNotifyAfterScenarioShouldAddAfterScenarioHookMessages(t *testing.T) {
+func TestNotifyAfterSuiteShouldAddsAfterSuiteHookMessages(t *testing.T) {
 	r := &mockRunner{}
 	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_ScenarioExecutionEnding {
+		if m.MessageType == gauge_messages.Message_ExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Message:       []string{"After Scenario Called"},
+				Message:       []string{"After Suite Called"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
 	}
-	ei := &gauge_messages.ExecutionInfo{}
-	sce := newScenarioExecutor(r, h, ei, nil, nil, nil, 0)
-	scenario := &gauge.Scenario{
-		Heading: &gauge.Heading{Value: "A scenario"},
-		Span:    &gauge.Span{Start: 2, End: 10},
-	}
-	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
-	sce.notifyAfterScenarioHook(scenarioResult)
-	gotMessages := scenarioResult.ProtoScenario.Message
+	ei := &executionInfo{runner: r, pluginHandler: h}
+	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
+	simpleExecution.notifyAfterSuite()
+
+	gotMessages := simpleExecution.suiteResult.Message
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))
 	}
-	if gotMessages[0] != "After Scenario Called" {
-		t.Errorf("Expected `After Scenario Called` message, got : %s", gotMessages[0])
+	if gotMessages[0] != "After Suite Called" {
+		t.Errorf("Expected `After Suite Called` message, got : %s", gotMessages[0])
 	}
 }
