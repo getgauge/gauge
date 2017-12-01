@@ -18,8 +18,8 @@
 package util
 
 import (
-	"strings"
 	"net/url"
+	"strings"
 )
 
 const (
@@ -41,12 +41,12 @@ func ConvertURItoFilePath(uri string) string {
 func convertURIToWindowsPath(uri string) string {
 	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
 	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	path,_ := url.PathUnescape(strings.Replace(uri, unixSep, windowsSep, -1))
+	path, _ := url.PathUnescape(strings.Replace(uri, unixSep, windowsSep, -1))
 	return path
 }
 
 func convertURIToUnixPath(uri string) string {
-	path,_ := url.PathUnescape(uri)
+	path, _ := url.PathUnescape(uri)
 	return strings.TrimPrefix(path, uriPrefix)
 }
 
@@ -66,6 +66,6 @@ func convertWindowsPathToURI(path string) string {
 }
 
 func convertUnixPathToURI(path string) string {
-	encodedPath := url.URL{Path:path}
+	encodedPath := url.URL{Path: path}
 	return uriPrefix + encodedPath.String()
 }
