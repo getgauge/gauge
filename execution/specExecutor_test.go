@@ -643,6 +643,43 @@ func TestExecuteAfterSpecHook(t *testing.T) {
 	}
 }
 
+func TestExecuteAddsSpecHookExecutionMessages(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+			return &gauge_messages.ProtoExecutionResult{
+				Message:       []string{"After Spec Called"},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+			return &gauge_messages.ProtoExecutionResult{
+				Message:       []string{"Before Spec Called"},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpecWithScenarios, r, h, errs, 0)
+	se.execute(true, false, true)
+
+	gotMessages := se.specResult.ProtoSpec.Message
+
+	if len(gotMessages) != 2 {
+		t.Errorf("Expected 2 messages, got : %d", len(gotMessages))
+	}
+	if gotMessages[0] != "Before Spec Called" {
+		t.Errorf("Expected `Before Spec Called` message, got : %s", gotMessages[0])
+	}
+	if gotMessages[1] != "After Spec Called" {
+		t.Errorf("Expected `After Spec Called` message, got : %s", gotMessages[1])
+	}
+}
+
 func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 	errs := gauge.NewBuildErrors()
 	r := &mockRunner{}
