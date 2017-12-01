@@ -19,6 +19,7 @@ package util
 
 import (
 	"strings"
+	"net/url"
 )
 
 const (
@@ -40,11 +41,13 @@ func ConvertURItoFilePath(uri string) string {
 func convertURIToWindowsPath(uri string) string {
 	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
 	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	return strings.Replace(uri, unixSep, windowsSep, -1)
+	path,_ := url.PathUnescape(strings.Replace(uri, unixSep, windowsSep, -1))
+	return path
 }
 
 func convertURIToUnixPath(uri string) string {
-	return strings.TrimPrefix(uri, uriPrefix)
+	path,_ := url.PathUnescape(uri)
+	return strings.TrimPrefix(path, uriPrefix)
 }
 
 // ConvertPathToURI - converts OS specific file paths to file uri (eg: file://example.spec).
@@ -56,10 +59,13 @@ func ConvertPathToURI(path string) string {
 }
 
 func convertWindowsPathToURI(path string) string {
-	path = strings.Replace(path, colon, windowColonRep, -1)
-	return uriPrefix + unixSep + strings.Replace(path, windowsSep, unixSep, -1)
+	path = strings.Replace(path, windowsSep, unixSep, -1)
+	encodedPath := url.URL{Path: path}
+	path = strings.Replace(strings.TrimPrefix(encodedPath.String(), "./"), colon, windowColonRep, -1)
+	return uriPrefix + unixSep + path
 }
 
 func convertUnixPathToURI(path string) string {
-	return uriPrefix + path
+	encodedPath := url.URL{Path:path}
+	return uriPrefix + encodedPath.String()
 }
