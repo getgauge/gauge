@@ -121,7 +121,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	e.pluginHandler.NotifyPlugins(message)
 	res := executeHook(message, scenarioResult, e.runner)
-	scenarioResult.ProtoScenario.Message = append(scenarioResult.ProtoScenario.Message, res.Message...)
+	scenarioResult.ProtoScenario.PreHookMessage = res.Message
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
@@ -132,7 +132,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding,
 		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(message, scenarioResult, e.runner)
-	scenarioResult.ProtoScenario.Message = append(scenarioResult.ProtoScenario.Message, res.Message...)
+	scenarioResult.ProtoScenario.PostHookMessage = res.Message
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)

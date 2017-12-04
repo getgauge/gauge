@@ -40,7 +40,8 @@ type SuiteResult struct {
 	ProjectName       string
 	Timestamp         string
 	SpecsSkippedCount int
-	Message           []string
+	PreHookMessage    []string
+	PostHookMessage   []string
 }
 
 // NewSuiteResult is a constructor for SuitResult
