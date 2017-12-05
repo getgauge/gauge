@@ -51,10 +51,10 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
 			setGlobalFlags()
-			skel.CreateSkelFilesIfRequired()
 			initPackageFlags()
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(e.Error())
