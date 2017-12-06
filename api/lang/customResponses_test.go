@@ -72,8 +72,7 @@ Scenario Heading2
 	f.remove(uri)
 }
 
-func TestGetScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
-	provider = &dummyInfoProvider{}
+func Test_getScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
 	specText := `Specification Heading
 =====================
 
