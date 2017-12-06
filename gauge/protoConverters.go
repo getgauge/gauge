@@ -189,8 +189,8 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		ProjectName:       suiteResult.ProjectName,
 		Timestamp:         suiteResult.Timestamp,
 		SpecsSkippedCount: int32(suiteResult.SpecsSkippedCount),
-		PreHookMessage:    suiteResult.PreHookMessage,
-		PostHookMessage:   suiteResult.PostHookMessage,
+		PreHookMessages:   suiteResult.PreHookMessages,
+		PostHookMessages:  suiteResult.PostHookMessages,
 	}
 	return protoSuiteResult
 }

@@ -47,7 +47,7 @@ func TestNotifyBeforeScenarioShouldAddBeforeScenarioHookMessages(t *testing.T) {
 	}
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	sce.notifyBeforeScenarioHook(scenarioResult)
-	gotMessages := scenarioResult.ProtoScenario.PreHookMessage
+	gotMessages := scenarioResult.ProtoScenario.PreHookMessages
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))
@@ -78,7 +78,7 @@ func TestNotifyAfterScenarioShouldAddAfterScenarioHookMessages(t *testing.T) {
 	}
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	sce.notifyAfterScenarioHook(scenarioResult)
-	gotMessages := scenarioResult.ProtoScenario.PostHookMessage
+	gotMessages := scenarioResult.ProtoScenario.PostHookMessages
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))

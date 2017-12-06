@@ -668,8 +668,8 @@ func TestExecuteAddsSpecHookExecutionMessages(t *testing.T) {
 	se := newSpecExecutor(exampleSpec, mockRunner, mockHandler, errs, 0)
 	se.execute(true, false, true)
 
-	gotPreHookMessages := se.specResult.ProtoSpec.PreHookMessage
-	gotPostHookMessages := se.specResult.ProtoSpec.PostHookMessage
+	gotPreHookMessages := se.specResult.ProtoSpec.PreHookMessages
+	gotPostHookMessages := se.specResult.ProtoSpec.PostHookMessages
 
 	if len(gotPreHookMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotPreHookMessages))

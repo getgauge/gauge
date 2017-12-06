@@ -43,7 +43,7 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookMessages(t *testing.T) {
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyBeforeSuite()
 
-	gotMessages := simpleExecution.suiteResult.PreHookMessage
+	gotMessages := simpleExecution.suiteResult.PreHookMessages
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))
@@ -71,7 +71,7 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookMessages(t *testing.T) {
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyAfterSuite()
 
-	gotMessages := simpleExecution.suiteResult.PostHookMessage
+	gotMessages := simpleExecution.suiteResult.PostHookMessages
 
 	if len(gotMessages) != 1 {
 		t.Errorf("Expected 1 message, got : %d", len(gotMessages))

@@ -37,8 +37,8 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 	suiteRes.ProjectName = sResult.ProjectName
 	suiteRes.Environment = sResult.Environment
 	suiteRes.Tags = sResult.Tags
-	suiteRes.PreHookMessage = append(suiteRes.PreHookMessage, sResult.PreHookMessage...)
-	suiteRes.PostHookMessage = append(suiteRes.PostHookMessage, sResult.PostHookMessage...)
+	suiteRes.PreHookMessages = append(suiteRes.PreHookMessages, sResult.PreHookMessages...)
+	suiteRes.PostHookMessages = append(suiteRes.PostHookMessages, sResult.PostHookMessages...)
 	combinedResults := make(map[string][]*result.SpecResult)
 	for _, res := range sResult.SpecResults {
 		fileName := res.ProtoSpec.GetFileName()
