@@ -108,6 +108,5 @@ func execute(args []string) {
 		logger.Fatalf(e.Error())
 	}
 	exitCode := execution.ExecuteSpecs(specs)
-	rerun.WriteLastRunInfo()
 	os.Exit(exitCode)
 }
