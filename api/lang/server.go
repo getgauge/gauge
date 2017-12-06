@@ -243,7 +243,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 type lspWriter struct {
 }
 
-func (w lspWriter) Write(p []byte) (n int, err error){
+func (w lspWriter) Write(p []byte) (n int, err error) {
 	logger.LspLog.Debug(string(p))
 	return os.Stderr.Write(p)
 }

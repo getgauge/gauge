@@ -622,6 +622,7 @@ func TestExecuteShouldNotifyBeforeSpecEvent(t *testing.T) {
 	if !eventRaised {
 		t.Error("Expected SpecStart event to be raised")
 	}
+	event.InitRegistry()
 }
 func TestExecuteAfterSpecHook(t *testing.T) {
 	errs := gauge.NewBuildErrors()
@@ -640,6 +641,47 @@ func TestExecuteAfterSpecHook(t *testing.T) {
 
 	if !afterSpecHookCalled {
 		t.Error("Expected runner to be called with SpecExecutionAfter")
+	}
+}
+
+func TestExecuteAddsSpecHookExecutionMessages(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	mockRunner := &mockRunner{}
+	mockHandler := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+
+	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+			return &gauge_messages.ProtoExecutionResult{
+				Message:       []string{"After Spec Called"},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+			return &gauge_messages.ProtoExecutionResult{
+				Message:       []string{"Before Spec Called"},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpec, mockRunner, mockHandler, errs, 0)
+	se.execute(true, false, true)
+
+	gotPreHookMessages := se.specResult.ProtoSpec.PreHookMessages
+	gotPostHookMessages := se.specResult.ProtoSpec.PostHookMessages
+
+	if len(gotPreHookMessages) != 1 {
+		t.Errorf("Expected 1 message, got : %d", len(gotPreHookMessages))
+	}
+	if gotPreHookMessages[0] != "Before Spec Called" {
+		t.Errorf("Expected `Before Spec Called` message, got : %s", gotPreHookMessages[0])
+	}
+	if len(gotPostHookMessages) != 1 {
+		t.Errorf("Expected 1 message, got : %d", len(gotPostHookMessages))
+	}
+	if gotPostHookMessages[0] != "After Spec Called" {
+		t.Errorf("Expected `After Spec Called` message, got : %s", gotPostHookMessages[0])
 	}
 }
 
@@ -676,6 +718,7 @@ func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 	if !eventRaised {
 		t.Error("Expected SpecEnd event to be raised")
 	}
+	event.InitRegistry()
 }
 
 type mockExecutor struct {
