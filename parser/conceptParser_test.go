@@ -526,7 +526,7 @@ func (s *MySuite) TestErrorOnCircularReferenceInConcept(c *C) {
 	c.Assert(containsAny(res.ParseErrors, "Circular reference found"), Equals, true)
 }
 
-func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(c *C) {
+func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsConceptStepFromDictionary(c *C) {
 	cd := gauge.NewConceptDictionary()
 	cd.ConceptsMap["concept"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
 	cd.ConceptsMap["concept2"] = &gauge.Concept{ConceptStep: &gauge.Step{LineText: "concept2", Value: "concept2", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}, FileName: "filename.cpt"}
@@ -535,6 +535,21 @@ func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(
 
 	c.Assert(cd.ConceptsMap["concept"], Equals, (*gauge.Concept)(nil))
 	c.Assert(len(cd.ConceptsMap["concept2"].ConceptStep.ConceptSteps), Equals, 0)
+	c.Assert(len(res.ParseErrors), Equals, 2)
+	c.Assert(strings.Contains(res.ParseErrors[0].Message, "Circular reference found"), Equals, true)
+	c.Assert(strings.Contains(res.ParseErrors[1].Message, "Circular reference found"), Equals, true)
+}
+
+func (s *MySuite) TestValidateConceptShouldRemoveCircularConceptsFromDictionary(c *C) {
+	cd := gauge.NewConceptDictionary()
+	c1 := &gauge.Step{LineText: "concept", Value: "concept", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept2", Value: "concept2", IsConcept: true}}}
+	c2 := &gauge.Step{LineText: "concept2", Value: "concept2", IsConcept: true, ConceptSteps: []*gauge.Step{&gauge.Step{LineText: "concept", Value: "concept", IsConcept: true}}}
+	AddConcept([]*gauge.Step{c1, c2}, "filename.cpt", cd)
+
+	res := ValidateConcepts(cd)
+
+	c.Assert(cd.ConceptsMap["concept"], Equals, (*gauge.Concept)(nil))
+	c.Assert(cd.ConceptsMap["concept2"], Equals, (*gauge.Concept)(nil))
 	c.Assert(len(res.ParseErrors), Equals, 2)
 	c.Assert(strings.Contains(res.ParseErrors[0].Message, "Circular reference found"), Equals, true)
 	c.Assert(strings.Contains(res.ParseErrors[1].Message, "Circular reference found"), Equals, true)

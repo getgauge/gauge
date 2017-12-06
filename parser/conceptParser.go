@@ -341,7 +341,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 	traversedSteps[concept.Value] = currentConceptFileName
 	for _, step := range concept.ConceptSteps {
 		if _, exists := traversedSteps[step.Value]; exists {
-			delete(conceptDictionary.ConceptsMap, step.Value)
+			conceptDictionary.Remove(concept.Value)
 			return []ParseError{
 				{
 					FileName: step.FileName,
@@ -359,6 +359,7 @@ func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concep
 		}
 		if step.IsConcept {
 			if errs := checkCircularReferencing(conceptDictionary, step, traversedSteps); errs != nil {
+				conceptDictionary.Remove(concept.Value)
 				return errs
 			}
 		}
