@@ -54,6 +54,7 @@ var (
 	verbose       bool
 	simpleConsole bool
 	failed        bool
+	repeat        bool
 	parallel      bool
 	sort          bool
 	environment   string
@@ -77,8 +78,14 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
+	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat last command")
 	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 }
+
+//This flag stores whether the command is gauge run --failed and if it is triggering another command.
+//The purpose is to only store commands given by user in the runInfo file.
+//We need this flag to stop the followup commands(non user given) from getting saved in that file.
+var prevFailed = false
 
 func loadLastState(cmd *cobra.Command) {
 	lastState, err := rerun.GetLastState()
@@ -89,11 +96,12 @@ func loadLastState(cmd *cobra.Command) {
 	cmd.Parent().SetArgs(lastState)
 	os.Args = append([]string{"gauge"}, lastState...)
 	resetFlags()
+	prevFailed = true
 	cmd.Execute()
 }
 
 func resetFlags() {
-	verbose, simpleConsole, failed, parallel, sort, hideSuggestion = false, false, false, false, false, false
+	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion = false, false, false, false, false, false, false
 	environment, tags, rows, strategy, logLevel, dir = "default", "", "", "lazy", "info", "."
 	streams, group = util.NumberOfCores(), -1
 }

@@ -20,6 +20,11 @@ package cmd
 import (
 	"fmt"
 
+	"encoding/json"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -34,6 +39,27 @@ import (
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
+
+const (
+	dotGauge        = ".gauge"
+	prevCmdFileName = "prevCmd.json"
+)
+
+type prevCommand struct {
+	Command []string
+}
+
+func newPrevCommand() *prevCommand {
+	return &prevCommand{Command: make([]string, 0)}
+}
+
+func getJSON(failedMeta *prevCommand) string {
+	j, err := json.MarshalIndent(failedMeta, "", "\t")
+	if err != nil {
+		logger.Warningf("Failed to save run info. Reason: %s", err.Error())
+	}
+	return string(j)
+}
 
 var (
 	GaugeCmd = &cobra.Command{
@@ -51,6 +77,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			handleRepeatCommand(cmd)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
@@ -66,6 +93,53 @@ var (
 	machineReadable bool
 	gaugeVersion    bool
 )
+
+func handleRepeatCommand(cmd *cobra.Command) {
+	if repeat {
+		prevCmd := readPrevCmd()
+		executeCmd(cmd, prevCmd.Command)
+	} else {
+		if prevFailed {
+			prevFailed = false
+			return
+		}
+		writePrevCmd()
+	}
+}
+
+func executeCmd(cmd *cobra.Command, lastState []string) {
+	cmd.Parent().SetArgs(lastState[1:])
+	os.Args = lastState
+	resetFlags()
+	cmd.Execute()
+}
+
+func readPrevCmd() *prevCommand {
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, prevCmdFileName))
+	if err != nil {
+		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
+	}
+	meta := newPrevCommand()
+	if err = json.Unmarshal([]byte(contents), meta); err != nil {
+		logger.Fatalf("Invalid previous command information. Reason: %s", err.Error())
+	}
+	return meta
+}
+
+func writePrevCmd() {
+	prevCmd := newPrevCommand()
+	prevCmd.Command = os.Args
+	contents := getJSON(prevCmd)
+	prevCmdFile := filepath.Join(config.ProjectRoot, dotGauge, prevCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
+	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+	}
+	err := ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
+	if err != nil {
+		logger.Fatalf("Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+	}
+}
 
 func init() {
 	GaugeCmd.SetUsageTemplate(`Usage:{{if .Runnable}}
