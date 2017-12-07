@@ -82,7 +82,7 @@ func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 }
 
 var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
-	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerConnectionTimeout())
+	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 }
 
 func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {

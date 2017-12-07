@@ -24,6 +24,7 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/getgauge/common"
@@ -31,11 +32,43 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func WriteDataAndGetResponse(conn net.Conn, messageBytes []byte) ([]byte, error) {
+type response struct {
+	result chan *gauge_messages.Message
+	err    chan error
+}
+
+func (r *response) close() {
+	close(r.result)
+	close(r.err)
+}
+
+type messages struct {
+	m map[int64]response
+	sync.Mutex
+}
+
+func (m *messages) get(k int64) response {
+	m.Lock()
+	defer m.Unlock()
+	return m.m[k]
+}
+func (m *messages) put(k int64, res response) {
+	m.Lock()
+	defer m.Unlock()
+	m.m[k] = res
+}
+func (m *messages) delete(k int64) {
+	m.Lock()
+	defer m.Unlock()
+	delete(m.m, k)
+}
+
+var m = &messages{m: make(map[int64]response)}
+
+func writeDataAndGetResponse(conn net.Conn, messageBytes []byte) ([]byte, error) {
 	if err := Write(conn, messageBytes); err != nil {
 		return nil, err
 	}
-
 	return readResponse(conn)
 }
 
@@ -50,7 +83,6 @@ func readResponse(conn net.Conn) ([]byte, error) {
 		}
 
 		buffer.Write(data[0:n])
-
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
 			return buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)], nil
@@ -66,8 +98,8 @@ func Write(conn net.Conn, messageBytes []byte) error {
 }
 
 func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
-	messageId := common.GetUniqueID()
-	message.MessageId = messageId
+	messageID := common.GetUniqueID()
+	message.MessageId = messageID
 
 	data, err := proto.Marshal(message)
 	if err != nil {
@@ -76,27 +108,30 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 	return Write(conn, data)
 }
 
-func GetResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn) (*gauge_messages.Message, error) {
-	messageId := common.GetUniqueID()
-	message.MessageId = messageId
-
+func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response) {
+	messageID := common.GetUniqueID()
+	message.MessageId = messageID
 	data, err := proto.Marshal(message)
 	if err != nil {
-		return nil, err
+		res.err <- err
 	}
-	responseBytes, err := WriteDataAndGetResponse(conn, data)
+	m.put(messageID, res)
+
+	responseBytes, err := writeDataAndGetResponse(conn, data)
 	if err != nil {
-		return nil, err
+		res.err <- err
 	}
 	responseMessage := &gauge_messages.Message{}
 	if err := proto.Unmarshal(responseBytes, responseMessage); err != nil {
-		return nil, err
+		res.err <- err
 	}
+	m.get(responseMessage.GetMessageId()).result <- responseMessage
+	m.delete(messageID)
 
-	if err := checkUnsupportedResponseMessage(responseMessage); err != nil {
-		return responseMessage, err
+	err = checkUnsupportedResponseMessage(responseMessage)
+	if err != nil {
+		res.err <- err
 	}
-	return responseMessage, err
 }
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
@@ -107,26 +142,17 @@ func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 }
 
 func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
-	responseChan := make(chan bool, 1)
-	errChan := make(chan bool, 1)
-
-	var response *gauge_messages.Message
-	var err error
-	go func() {
-		response, err = GetResponseForGaugeMessage(message, conn)
-		if err != nil {
-			errChan <- true
-			close(errChan)
-		} else {
-			responseChan <- true
-			close(responseChan)
-		}
-	}()
+	res := response{
+		result: make(chan *gauge_messages.Message),
+		err:    make(chan error),
+	}
+	go getResponseForGaugeMessage(message, conn, res)
+	defer res.close()
 	select {
-	case <-errChan:
+	case err := <-res.err:
 		return nil, err
-	case <-responseChan:
-		return response, nil
+	case res := <-res.result:
+		return res, nil
 	case <-time.After(t):
 		return nil, errors.New("Request Timeout")
 	}
