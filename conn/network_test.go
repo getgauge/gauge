@@ -49,7 +49,9 @@ func (m mockConn) Write(b []byte) (n int, err error) {
 	messageLength, bytesRead := proto.DecodeVarint(b)
 	b = b[bytesRead : messageLength+uint64(bytesRead)]
 	proto.Unmarshal(b, message)
-	id = message.MessageId
+	if id == 0 {
+		id = message.MessageId
+	}
 	return 0, nil
 }
 
@@ -77,7 +79,7 @@ func (m mockConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-func TestGetResponseForGaugeMessage(t *testing.T) {
+func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_StepNameRequest,
 		StepNameRequest: &gauge_messages.StepNameRequest{
@@ -105,5 +107,42 @@ func TestGetResponseForGaugeMessage(t *testing.T) {
 	}
 	if !reflect.DeepEqual(res, responseMessage) {
 		t.Errorf("expected : %v\ngot : %v", responseMessage, res)
+	}
+}
+
+func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
+	id = 1234
+	r := response{
+		err:    make(chan error),
+		result: make(chan *gauge_messages.Message),
+	}
+
+	m.put(id, r)
+
+	message := &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameRequest,
+		StepNameRequest: &gauge_messages.StepNameRequest{
+			StepValue: "The worrd {} has {} vowels.",
+		},
+	}
+
+	responseMessage = &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameResponse,
+		StepNameResponse: &gauge_messages.StepNameResponse{
+			FileName:      "foo.js",
+			HasAlias:      false,
+			IsStepPresent: true,
+			LineNumber:    2,
+			StepName:      []string{"The word {} has {} vowels."},
+		},
+	}
+
+	conn := mockConn{}
+
+	go getResponseForGaugeMessage(message, conn, response{})
+
+	response := <-r.result
+	if !reflect.DeepEqual(response, responseMessage) {
+		t.Errorf("expected : %v\ngot : %v", responseMessage, response)
 	}
 }

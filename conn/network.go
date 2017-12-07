@@ -19,7 +19,6 @@ package conn
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -35,11 +34,6 @@ import (
 type response struct {
 	result chan *gauge_messages.Message
 	err    chan error
-}
-
-func (r *response) close() {
-	close(r.result)
-	close(r.err)
 }
 
 type messages struct {
@@ -109,8 +103,7 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 }
 
 func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response) {
-	messageID := common.GetUniqueID()
-	message.MessageId = messageID
+	messageID := message.MessageId
 	data, err := proto.Marshal(message)
 	if err != nil {
 		res.err <- err
@@ -142,19 +135,30 @@ func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 }
 
 func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
-	res := response{
-		result: make(chan *gauge_messages.Message),
-		err:    make(chan error),
-	}
-	go getResponseForGaugeMessage(message, conn, res)
-	defer res.close()
+	done := make(chan bool)
+	start := make(chan bool)
+	res := response{result: make(chan *gauge_messages.Message), err: make(chan error)}
+	messageID := common.GetUniqueID()
+	go func() {
+		for i := 1; i <= 2; i++ {
+			select {
+			case <-done:
+				return
+			case <-start:
+				message.MessageId = messageID
+				getResponseForGaugeMessage(message, conn, res)
+			}
+		}
+	}()
+	start <- true
 	select {
 	case err := <-res.err:
 		return nil, err
 	case res := <-res.result:
 		return res, nil
 	case <-time.After(t):
-		return nil, errors.New("Request Timeout")
+		done <- true
+		return nil, fmt.Errorf("Request timedout for Message ID => %v", messageID)
 	}
 }
 
