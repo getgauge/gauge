@@ -52,14 +52,14 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 
 	writeFailedMeta(msg)
 
-	file := filepath.Join(config.ProjectRoot, DotGauge, failedFile)
+	file := filepath.Join(config.ProjectRoot, common.DotGauge, failedFile)
 	c.Assert(common.FileExists(file), Equals, true)
 	expected := msg
 
 	content, _ := ioutil.ReadFile(file)
 
 	c.Assert(string(content), Equals, expected)
-	os.RemoveAll(filepath.Join(config.ProjectRoot, DotGauge))
+	os.RemoveAll(filepath.Join(config.ProjectRoot, common.DotGauge))
 }
 
 func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {

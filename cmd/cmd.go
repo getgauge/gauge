@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
-	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/order"
@@ -115,7 +114,7 @@ func executeCmd(cmd *cobra.Command, lastState []string) {
 }
 
 func readPrevCmd() *prevCommand {
-	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, rerun.DotGauge, lastRunCmdFileName))
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
 	if err != nil {
 		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
 	}
@@ -133,8 +132,8 @@ func writePrevCmd() {
 	if err != nil {
 		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
 	}
-	prevCmdFile := filepath.Join(config.ProjectRoot, rerun.DotGauge, lastRunCmdFileName)
-	dotGaugeDir := filepath.Join(config.ProjectRoot, rerun.DotGauge)
+	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
