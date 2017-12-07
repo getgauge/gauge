@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
+	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/order"
@@ -41,8 +42,7 @@ import (
 )
 
 const (
-	dotGauge        = ".gauge"
-	prevCmdFileName = "prevCmd.json"
+	lastRunCmdFileName = "lastRunCmd.json"
 )
 
 type prevCommand struct {
@@ -53,12 +53,12 @@ func newPrevCommand() *prevCommand {
 	return &prevCommand{Command: make([]string, 0)}
 }
 
-func getJSON(failedMeta *prevCommand) string {
+func (failedMeta *prevCommand) getJSON() (string, error) {
 	j, err := json.MarshalIndent(failedMeta, "", "\t")
 	if err != nil {
-		logger.Warningf("Failed to save run info. Reason: %s", err.Error())
+		return "", err
 	}
-	return string(j)
+	return string(j), nil
 }
 
 var (
@@ -115,7 +115,7 @@ func executeCmd(cmd *cobra.Command, lastState []string) {
 }
 
 func readPrevCmd() *prevCommand {
-	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, prevCmdFileName))
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, rerun.DotGauge, lastRunCmdFileName))
 	if err != nil {
 		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
 	}
@@ -129,13 +129,16 @@ func readPrevCmd() *prevCommand {
 func writePrevCmd() {
 	prevCmd := newPrevCommand()
 	prevCmd.Command = os.Args
-	contents := getJSON(prevCmd)
-	prevCmdFile := filepath.Join(config.ProjectRoot, dotGauge, prevCmdFileName)
-	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
-	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+	contents, err := prevCmd.getJSON()
+	if err != nil {
+		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
+	}
+	prevCmdFile := filepath.Join(config.ProjectRoot, rerun.DotGauge, lastRunCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, rerun.DotGauge)
+	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
+	err = ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf("Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
 	}

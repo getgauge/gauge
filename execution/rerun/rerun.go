@@ -37,7 +37,7 @@ import (
 )
 
 const (
-	dotGauge   = ".gauge"
+	DotGauge   = ".gauge"
 	failedFile = "failures.json"
 )
 
@@ -142,8 +142,8 @@ func addFailedMetadata(res result.Result, args []string, add func(res result.Res
 }
 
 func writeFailedMeta(contents string) {
-	failuresFile := filepath.Join(config.ProjectRoot, dotGauge, failedFile)
-	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
+	failuresFile := filepath.Join(config.ProjectRoot, DotGauge, failedFile)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, DotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
@@ -187,7 +187,7 @@ func SaveState(args []string, specs []string) {
 }
 
 func readLastState() *failedMetadata {
-	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, dotGauge, failedFile))
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, DotGauge, failedFile))
 	if err != nil {
 		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
 	}

@@ -83,7 +83,7 @@ func init() {
 }
 
 //This flag stores whether the command is gauge run --failed and if it is triggering another command.
-//The purpose is to only store commands given by user in the runInfo file.
+//The purpose is to only store commands given by user in the lastRunCmd file.
 //We need this flag to stop the followup commands(non user given) from getting saved in that file.
 var prevFailed = false
 
