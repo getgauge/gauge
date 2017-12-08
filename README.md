@@ -24,7 +24,7 @@ Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) c
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
 [userdocs]:http://docs.getgauge.io
-[get-started]:https://github.com/getgauge/gauge/wiki/Setting-up-Gauge
+[get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
 
