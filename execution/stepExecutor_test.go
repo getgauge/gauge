@@ -25,7 +25,7 @@ import (
 	"github.com/getgauge/gauge/gauge_messages"
 )
 
-func TestStepExecutionShouldAddStepHookMessages(t *testing.T) {
+func TestStepExecutionShouldAddBeforeStepHookMessages(t *testing.T) {
 	r := &mockRunner{}
 	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
@@ -35,13 +35,44 @@ func TestStepExecutionShouldAddStepHookMessages(t *testing.T) {
 				Failed:        false,
 				ExecutionTime: 10,
 			}
-		} else if m.MessageType == gauge_messages.Message_ExecuteStep {
-			return &gauge_messages.ProtoExecutionResult{
-				Message:       []string{"Step Called"},
-				Failed:        false,
-				ExecutionTime: 10,
-			}
-		} else if m.MessageType == gauge_messages.Message_StepExecutionEnding {
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	ei := &gauge_messages.ExecutionInfo{
+		CurrentStep: &gauge_messages.StepInfo{
+			Step: &gauge_messages.ExecuteStepRequest{
+				ActualStepText:  "a simple step",
+				ParsedStepText:  "a simple step",
+				ScenarioFailing: false,
+			},
+			IsFailed: false,
+		},
+	}
+	se := &stepExecutor{runner: r, pluginHandler: h, currentExecutionInfo: ei, stream: 0}
+	step := &gauge.Step{
+		Value:     "a simple step",
+		LineText:  "a simple step",
+		Fragments: []*gauge_messages.Fragment{{FragmentType: gauge_messages.Fragment_Text, Text: "a simple step"}},
+	}
+	protoStep := gauge.ConvertToProtoItem(step).GetStep()
+	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
+
+	stepResult := se.executeStep(step, protoStep)
+	beforeStepMsg := stepResult.ProtoStep.PreHookMessages
+
+	if len(beforeStepMsg) != 1 {
+		t.Errorf("Expected 1 message, got : %d", len(beforeStepMsg))
+	}
+	if beforeStepMsg[0] != "Before Step Called" {
+		t.Errorf("Expected `Before Step Called` message, got : %s", beforeStepMsg[0])
+	}
+}
+
+func TestStepExecutionShouldAddAfterStepHookMessages(t *testing.T) {
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_StepExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
 				Message:       []string{"After Step Called"},
 				Failed:        false,
@@ -70,18 +101,12 @@ func TestStepExecutionShouldAddStepHookMessages(t *testing.T) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 
 	stepResult := se.executeStep(step, protoStep)
-	gotMessages := stepResult.ProtoStepExecResult().ExecutionResult.Message
+	afterStepMsg := stepResult.ProtoStep.PostHookMessages
 
-	if len(gotMessages) != 3 {
-		t.Errorf("Expected 3 message, got : %d", len(gotMessages))
+	if len(afterStepMsg) != 1 {
+		t.Errorf("Expected 1 message, got : %d", len(afterStepMsg))
 	}
-	if gotMessages[0] != "Before Step Called" {
-		t.Errorf("Expected `Before Step Called` message, got : %s", gotMessages[0])
-	}
-	if gotMessages[1] != "Step Called" {
-		t.Errorf("Expected `Step Called` message, got : %s", gotMessages[1])
-	}
-	if gotMessages[2] != "After Step Called" {
-		t.Errorf("Expected `After Step Called` message, got : %s", gotMessages[2])
+	if afterStepMsg[0] != "After Step Called" {
+		t.Errorf("Expected `After Step Called` message, got : %s", afterStepMsg[0])
 	}
 }
