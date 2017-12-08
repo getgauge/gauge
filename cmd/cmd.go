@@ -76,7 +76,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			handleRepeatCommand(cmd)
+			handleRepeatCommand(cmd, os.Args)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
@@ -93,7 +93,7 @@ var (
 	gaugeVersion    bool
 )
 
-func handleRepeatCommand(cmd *cobra.Command) {
+func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
 	if repeat {
 		prevCmd := readPrevCmd()
 		executeCmd(cmd, prevCmd.Command)
@@ -102,7 +102,9 @@ func handleRepeatCommand(cmd *cobra.Command) {
 			prevFailed = false
 			return
 		}
-		writePrevCmd()
+		if cmd.Name() == "run" {
+			writePrevCmd(cmdArgs)
+		}
 	}
 }
 
@@ -125,18 +127,9 @@ func readPrevCmd() *prevCommand {
 	return meta
 }
 
-func writePrevCmd() {
-	isRunCommand := false
-	for _, arg := range os.Args {
-		if arg == "run" {
-			isRunCommand = true
-		}
-	}
-	if !isRunCommand {
-		return
-	}
+func writePrevCmd(cmdArgs []string) {
 	prevCmd := newPrevCommand()
-	prevCmd.Command = os.Args
+	prevCmd.Command = cmdArgs
 	contents, err := prevCmd.getJSON()
 	if err != nil {
 		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
