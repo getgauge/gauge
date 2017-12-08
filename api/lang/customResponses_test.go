@@ -72,7 +72,7 @@ Scenario Heading2
 	f.remove(uri)
 }
 
-func Test_getScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
+func TestGetScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
 	specText := `Specification Heading
 =====================
 

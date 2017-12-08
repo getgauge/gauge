@@ -126,6 +126,15 @@ func readPrevCmd() *prevCommand {
 }
 
 func writePrevCmd() {
+	isRunCommand := false
+	for _, arg := range os.Args {
+		if arg == "run" {
+			isRunCommand = true
+		}
+	}
+	if !isRunCommand {
+		return
+	}
 	prevCmd := newPrevCommand()
 	prevCmd.Command = os.Args
 	contents, err := prevCmd.getJSON()
