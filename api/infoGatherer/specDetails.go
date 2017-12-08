@@ -374,6 +374,12 @@ func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
 	s.specsCache.mutex.Lock()
 	defer s.specsCache.mutex.Unlock()
 	delete(s.specsCache.specDetails, file)
+	s.removeStepsFromCache(file)
+}
+func (s *SpecInfoGatherer) removeStepsFromCache(fileName string) {
+	s.stepsCache.mutex.Lock()
+	defer s.stepsCache.mutex.Unlock()
+	delete(s.stepsCache.steps, fileName)
 }
 
 func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
