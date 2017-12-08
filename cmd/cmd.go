@@ -52,8 +52,8 @@ func newPrevCommand() *prevCommand {
 	return &prevCommand{Command: make([]string, 0)}
 }
 
-func (failedMeta *prevCommand) getJSON() (string, error) {
-	j, err := json.MarshalIndent(failedMeta, "", "\t")
+func (cmd *prevCommand) getJSON() (string, error) {
+	j, err := json.MarshalIndent(cmd, "", "\t")
 	if err != nil {
 		return "", err
 	}
