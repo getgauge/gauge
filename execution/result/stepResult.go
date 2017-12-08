@@ -21,45 +21,45 @@ import "github.com/getgauge/gauge/gauge_messages"
 
 // StepResult represents the result of step execution
 type StepResult struct {
-	protoStep  *gauge_messages.ProtoStep
+	ProtoStep  *gauge_messages.ProtoStep
 	StepFailed bool
 }
 
 // NewStepResult is a constructor for StepResult
 func NewStepResult(ps *gauge_messages.ProtoStep) *StepResult {
-	return &StepResult{protoStep: ps}
+	return &StepResult{ProtoStep: ps}
 }
 
 func (s *StepResult) GetPreHook() []*gauge_messages.ProtoHookFailure {
-	if s.protoStep.StepExecutionResult.PreHookFailure == nil {
+	if s.ProtoStep.StepExecutionResult.PreHookFailure == nil {
 		return []*gauge_messages.ProtoHookFailure{}
 	}
-	return []*gauge_messages.ProtoHookFailure{s.protoStep.StepExecutionResult.PreHookFailure}
+	return []*gauge_messages.ProtoHookFailure{s.ProtoStep.StepExecutionResult.PreHookFailure}
 }
 
 func (s *StepResult) GetPostHook() []*gauge_messages.ProtoHookFailure {
-	if s.protoStep.StepExecutionResult.PostHookFailure == nil {
+	if s.ProtoStep.StepExecutionResult.PostHookFailure == nil {
 		return []*gauge_messages.ProtoHookFailure{}
 	}
-	return []*gauge_messages.ProtoHookFailure{s.protoStep.StepExecutionResult.PostHookFailure}
+	return []*gauge_messages.ProtoHookFailure{s.ProtoStep.StepExecutionResult.PostHookFailure}
 }
 
 func (s *StepResult) AddPreHook(f ...*gauge_messages.ProtoHookFailure) {
-	s.protoStep.StepExecutionResult.PreHookFailure = f[0]
+	s.ProtoStep.StepExecutionResult.PreHookFailure = f[0]
 }
 
 func (s *StepResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
-	s.protoStep.StepExecutionResult.PostHookFailure = f[0]
+	s.ProtoStep.StepExecutionResult.PostHookFailure = f[0]
 }
 
 // SetFailure sets the result to failed
 func (s *StepResult) SetFailure() {
-	s.protoStep.StepExecutionResult.ExecutionResult.Failed = true
+	s.ProtoStep.StepExecutionResult.ExecutionResult.Failed = true
 }
 
 // GetFailed returns the state of the result
 func (s *StepResult) GetFailed() bool {
-	return s.protoStep.StepExecutionResult.ExecutionResult.GetFailed()
+	return s.ProtoStep.StepExecutionResult.ExecutionResult.GetFailed()
 }
 
 // GetFailed returns true if the actual step failed, and not step hook.
@@ -69,17 +69,17 @@ func (s *StepResult) GetStepFailed() bool {
 
 // GetStackTrace returns the stacktrace for step failure
 func (s *StepResult) GetStackTrace() string {
-	return s.protoStep.GetStepExecutionResult().GetExecutionResult().GetStackTrace()
+	return s.ProtoStep.GetStepExecutionResult().GetExecutionResult().GetStackTrace()
 }
 
 // GetErrorMessage returns the error message for step failure
 func (s *StepResult) GetErrorMessage() string {
-	return s.protoStep.GetStepExecutionResult().GetExecutionResult().GetErrorMessage()
+	return s.ProtoStep.GetStepExecutionResult().GetExecutionResult().GetErrorMessage()
 }
 
 // GetStepActualText returns the Actual text of step from step result
 func (s *StepResult) GetStepActualText() string {
-	return s.protoStep.GetActualText()
+	return s.ProtoStep.GetActualText()
 }
 
 // SetStepFailure sets the actual step as failed. StepResult.ProtoStep.GetFailed() returns true even if hook failed and not actual step.
@@ -88,29 +88,29 @@ func (s *StepResult) SetStepFailure() {
 }
 
 func (s *StepResult) Item() interface{} {
-	return s.protoStep
+	return s.ProtoStep
 }
 
 // ExecTime returns the time taken to execute the step
 func (s *StepResult) ExecTime() int64 {
-	return s.protoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
+	return s.ProtoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
 }
 
 // AddExecTime increments the execution time by the given value
 func (s *StepResult) AddExecTime(t int64) {
-	if s.protoStep.StepExecutionResult.ExecutionResult == nil {
-		s.protoStep.StepExecutionResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: false}
+	if s.ProtoStep.StepExecutionResult.ExecutionResult == nil {
+		s.ProtoStep.StepExecutionResult.ExecutionResult = &gauge_messages.ProtoExecutionResult{Failed: false}
 	}
-	currentTime := s.protoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
-	s.protoStep.StepExecutionResult.ExecutionResult.ExecutionTime = currentTime + t
+	currentTime := s.ProtoStep.StepExecutionResult.ExecutionResult.GetExecutionTime()
+	s.ProtoStep.StepExecutionResult.ExecutionResult.ExecutionTime = currentTime + t
 }
 
 // ProtoStepExecResult returns the step execution result used at the proto layer
 func (s *StepResult) ProtoStepExecResult() *gauge_messages.ProtoStepExecutionResult {
-	return s.protoStep.StepExecutionResult
+	return s.ProtoStep.StepExecutionResult
 }
 
 // SetProtoExecResult sets the execution result
 func (s *StepResult) SetProtoExecResult(r *gauge_messages.ProtoExecutionResult) {
-	s.protoStep.StepExecutionResult.ExecutionResult = r
+	s.ProtoStep.StepExecutionResult.ExecutionResult = r
 }

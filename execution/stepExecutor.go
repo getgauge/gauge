@@ -74,7 +74,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	}
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, stepResult, e.runner)
-	stepResult.ProtoStepExecResult().GetExecutionResult().Message = res.Message
+	stepResult.ProtoStep.PreHookMessages = res.Message
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPreHook)
@@ -89,7 +89,7 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 
 	res := executeHook(m, stepResult, e.runner)
 	messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
-	stepResult.ProtoStepExecResult().GetExecutionResult().Message = messages
+	stepResult.ProtoStep.PostHookMessages = messages
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
