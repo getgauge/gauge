@@ -102,29 +102,39 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 	return Write(conn, data)
 }
 
-func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response) {
-	messageID := message.MessageId
-	data, err := proto.Marshal(message)
-	if err != nil {
-		res.err <- err
+func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response, timeout time.Duration) {
+	message.MessageId = common.GetUniqueID()
+
+	t := time.AfterFunc(timeout, func() {
+		res.err <- fmt.Errorf("Request timedout for Message ID => %v", message.GetMessageId())
+	})
+
+	handle := func(err error) {
+		if err != nil {
+			t.Stop()
+			res.err <- err
+
+		}
 	}
-	m.put(messageID, res)
+
+	data, err := proto.Marshal(message)
+
+	handle(err)
+	m.put(message.GetMessageId(), res)
 
 	responseBytes, err := writeDataAndGetResponse(conn, data)
-	if err != nil {
-		res.err <- err
-	}
+	handle(err)
+
 	responseMessage := &gauge_messages.Message{}
-	if err := proto.Unmarshal(responseBytes, responseMessage); err != nil {
-		res.err <- err
-	}
-	m.get(responseMessage.GetMessageId()).result <- responseMessage
-	m.delete(messageID)
+	err = proto.Unmarshal(responseBytes, responseMessage)
+	handle(err)
 
 	err = checkUnsupportedResponseMessage(responseMessage)
-	if err != nil {
-		res.err <- err
-	}
+	handle(err)
+
+	m.get(responseMessage.GetMessageId()).result <- responseMessage
+	m.delete(responseMessage.GetMessageId())
+	t.Stop()
 }
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
@@ -135,30 +145,13 @@ func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 }
 
 func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
-	done := make(chan bool)
-	start := make(chan bool)
 	res := response{result: make(chan *gauge_messages.Message), err: make(chan error)}
-	messageID := common.GetUniqueID()
-	go func() {
-		for i := 1; i <= 2; i++ {
-			select {
-			case <-done:
-				return
-			case <-start:
-				message.MessageId = messageID
-				getResponseForGaugeMessage(message, conn, res)
-			}
-		}
-	}()
-	start <- true
+	go getResponseForGaugeMessage(message, conn, res, t)
 	select {
 	case err := <-res.err:
 		return nil, err
 	case res := <-res.result:
 		return res, nil
-	case <-time.After(t):
-		done <- true
-		return nil, fmt.Errorf("Request timedout for Message ID => %v", messageID)
 	}
 }
 

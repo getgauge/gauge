@@ -18,6 +18,8 @@
 package conn
 
 import (
+	"errors"
+	"fmt"
 	"net"
 	"reflect"
 	"testing"
@@ -30,12 +32,16 @@ import (
 var id int64
 
 type mockConn struct {
+	sleepDuration time.Duration
 }
 
 var responseMessage *gauge_messages.Message
 
 func (m mockConn) Read(b []byte) (n int, err error) {
-	responseMessage.MessageId = id
+	time.Sleep(m.sleepDuration)
+	if responseMessage.MessageId == 0 {
+		responseMessage.MessageId = id
+	}
 	messageBytes, err := proto.Marshal(responseMessage)
 	data := append(proto.EncodeVarint(uint64(len(messageBytes))), messageBytes...)
 	for i := 0; i < len(data); i++ {
@@ -77,6 +83,11 @@ func (m mockConn) SetReadDeadline(t time.Time) error {
 
 func (m mockConn) SetWriteDeadline(t time.Time) error {
 	return nil
+}
+
+func TestMain(m *testing.M) {
+	id = 0
+	responseMessage = &gauge_messages.Message{}
 }
 
 func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
@@ -139,10 +150,64 @@ func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 
 	conn := mockConn{}
 
-	go getResponseForGaugeMessage(message, conn, response{})
+	go getResponseForGaugeMessage(message, conn, response{}, 3*time.Second)
 
 	response := <-r.result
 	if !reflect.DeepEqual(response, responseMessage) {
 		t.Errorf("expected : %v\ngot : %v", responseMessage, response)
+	}
+}
+
+func TestGetResponseForGaugeMessageShoudGiveErrorForUnsupportedMessage(t *testing.T) {
+
+	message := &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameRequest,
+		StepNameRequest: &gauge_messages.StepNameRequest{
+			StepValue: "The worrd {} has {} vowels.",
+		},
+	}
+
+	responseMessage = &gauge_messages.Message{
+		MessageType:                gauge_messages.Message_UnsupportedMessageResponse,
+		UnsupportedMessageResponse: &gauge_messages.UnsupportedMessageResponse{},
+	}
+
+	conn := mockConn{}
+
+	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
+
+	expected := errors.New("Unsupported Message response received. Message not supported.")
+
+	if reflect.DeepEqual(err, expected) {
+		t.Errorf("expected %v\n got %v", expected, err)
+	}
+
+}
+
+func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
+	message := &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameRequest,
+		StepNameRequest: &gauge_messages.StepNameRequest{
+			StepValue: "The worrd {} has {} vowels.",
+		},
+	}
+
+	responseMessage = &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameResponse,
+		StepNameResponse: &gauge_messages.StepNameResponse{
+			FileName:      "foo.js",
+			HasAlias:      false,
+			IsStepPresent: true,
+			LineNumber:    2,
+			StepName:      []string{"The word {} has {} vowels."},
+		},
+	}
+
+	conn := mockConn{sleepDuration: 2 * time.Second}
+	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
+
+	expected := fmt.Errorf("Request timedout for Message ID => %v", id)
+	if !reflect.DeepEqual(err, expected) {
+		t.Errorf("expected %v\n got %v", expected, err)
 	}
 }
