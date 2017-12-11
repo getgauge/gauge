@@ -107,7 +107,7 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
-	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat last command")
+	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat last run")
 	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 }
 
@@ -157,6 +157,13 @@ func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
 		}
 		writePrevCmd(cmdArgs)
 	}
+}
+
+func executeCmd(cmd *cobra.Command, lastState []string) {
+	cmd.Parent().SetArgs(lastState[1:])
+	os.Args = lastState
+	resetFlags()
+	cmd.Execute()
 }
 
 func readPrevCmd() *prevCommand {

@@ -20,8 +20,6 @@ package cmd
 import (
 	"fmt"
 
-	"os"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -64,13 +62,6 @@ var (
 	machineReadable bool
 	gaugeVersion    bool
 )
-
-func executeCmd(cmd *cobra.Command, lastState []string) {
-	cmd.Parent().SetArgs(lastState[1:])
-	os.Args = lastState
-	resetFlags()
-	cmd.Execute()
-}
 
 func init() {
 	GaugeCmd.SetUsageTemplate(`Usage:{{if .Runnable}}
