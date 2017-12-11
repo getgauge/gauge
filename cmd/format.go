@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
@@ -31,6 +32,9 @@ var formatCmd = &cobra.Command{
 	Long:    `Formats the specified spec files.`,
 	Example: "  gauge format specs/",
 	Run: func(cmd *cobra.Command, args []string) {
+		if e := env.LoadEnv(environment); e != nil {
+			logger.Fatalf(e.Error())
+		}
 		if err := config.SetProjectRoot(args); err != nil {
 			logger.Fatalf(err.Error())
 		}

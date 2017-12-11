@@ -22,6 +22,11 @@ import (
 
 	"strings"
 
+	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
@@ -32,6 +37,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	lastRunCmdFileName = "lastRunCmd.json"
+)
+
+type prevCommand struct {
+	Command []string
+}
+
+func newPrevCommand() *prevCommand {
+	return &prevCommand{Command: make([]string, 0)}
+}
+
+func (cmd *prevCommand) getJSON() (string, error) {
+	j, err := json.MarshalIndent(cmd, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
+}
+
 var (
 	runCmd = &cobra.Command{
 		Use:   "run [flags] [args]",
@@ -40,6 +65,10 @@ var (
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
+			handleRepeatCommand(cmd, os.Args)
+			if e := env.LoadEnv(environment); e != nil {
+				logger.Fatalf(e.Error())
+			}
 			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
@@ -115,4 +144,49 @@ func execute(args []string) {
 	}
 	exitCode := execution.ExecuteSpecs(specs)
 	os.Exit(exitCode)
+}
+
+func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
+	if repeat {
+		prevCmd := readPrevCmd()
+		executeCmd(cmd, prevCmd.Command)
+	} else {
+		if prevFailed {
+			prevFailed = false
+			return
+		}
+		if cmd.Name() == "run" {
+			writePrevCmd(cmdArgs)
+		}
+	}
+}
+
+func readPrevCmd() *prevCommand {
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
+	if err != nil {
+		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
+	}
+	meta := newPrevCommand()
+	if err = json.Unmarshal([]byte(contents), meta); err != nil {
+		logger.Fatalf("Invalid previous command information. Reason: %s", err.Error())
+	}
+	return meta
+}
+
+func writePrevCmd(cmdArgs []string) {
+	prevCmd := newPrevCommand()
+	prevCmd.Command = cmdArgs
+	contents, err := prevCmd.getJSON()
+	if err != nil {
+		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
+	}
+	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
+	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+	}
+	err = ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
+	if err != nil {
+		logger.Fatalf("Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+	}
 }

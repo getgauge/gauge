@@ -20,14 +20,10 @@ package cmd
 import (
 	"fmt"
 
-	"encoding/json"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
@@ -39,26 +35,6 @@ import (
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
-
-const (
-	lastRunCmdFileName = "lastRunCmd.json"
-)
-
-type prevCommand struct {
-	Command []string
-}
-
-func newPrevCommand() *prevCommand {
-	return &prevCommand{Command: make([]string, 0)}
-}
-
-func (cmd *prevCommand) getJSON() (string, error) {
-	j, err := json.MarshalIndent(cmd, "", "\t")
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
 
 var (
 	GaugeCmd = &cobra.Command{
@@ -76,15 +52,11 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			handleRepeatCommand(cmd, os.Args)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
 			setGlobalFlags()
 			initPackageFlags()
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(e.Error())
-			}
 		},
 	}
 	logLevel        string
@@ -93,56 +65,11 @@ var (
 	gaugeVersion    bool
 )
 
-func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
-	if repeat {
-		prevCmd := readPrevCmd()
-		executeCmd(cmd, prevCmd.Command)
-	} else {
-		if prevFailed {
-			prevFailed = false
-			return
-		}
-		if cmd.Name() == "run" {
-			writePrevCmd(cmdArgs)
-		}
-	}
-}
-
 func executeCmd(cmd *cobra.Command, lastState []string) {
 	cmd.Parent().SetArgs(lastState[1:])
 	os.Args = lastState
 	resetFlags()
 	cmd.Execute()
-}
-
-func readPrevCmd() *prevCommand {
-	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
-	if err != nil {
-		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
-	}
-	meta := newPrevCommand()
-	if err = json.Unmarshal([]byte(contents), meta); err != nil {
-		logger.Fatalf("Invalid previous command information. Reason: %s", err.Error())
-	}
-	return meta
-}
-
-func writePrevCmd(cmdArgs []string) {
-	prevCmd := newPrevCommand()
-	prevCmd.Command = cmdArgs
-	contents, err := prevCmd.getJSON()
-	if err != nil {
-		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
-	}
-	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
-	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
-	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
-	}
-	err = ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
-	if err != nil {
-		logger.Fatalf("Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
-	}
 }
 
 func init() {
