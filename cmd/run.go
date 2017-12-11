@@ -155,9 +155,7 @@ func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
 			prevFailed = false
 			return
 		}
-		if cmd.Name() == "run" {
-			writePrevCmd(cmdArgs)
-		}
+		writePrevCmd(cmdArgs)
 	}
 }
 
