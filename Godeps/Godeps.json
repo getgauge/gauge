@@ -30,7 +30,7 @@
 		},
 		{
 			"ImportPath": "github.com/getgauge/common",
-			"Rev": "e1a222fc520f8c21335fe7d8d0208637014ad661"
+			"Rev": "3a8014a93bba49af43f0bb1f891df9ce7aee1a49"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",

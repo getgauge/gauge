@@ -47,7 +47,7 @@ const (
 	EnvDirectoryName        = "env"
 	DefaultEnvDir           = "default"
 	ProductName             = "gauge"
-	dotGauge                = ".gauge"
+	DotGauge                = ".gauge"
 	config                  = "config"
 	SpecsDirectoryName      = "specs"
 	ConceptFileExtension    = ".cpt"
@@ -196,7 +196,7 @@ func GetConfigurationDir() (string, error) {
 		configDir = filepath.Join(appDataPath, ProductName, config)
 	} else {
 		home := os.Getenv("HOME")
-		configDir = filepath.Join(home, dotGauge, config)
+		configDir = filepath.Join(home, DotGauge, config)
 	}
 
 	if configDir != "" {
@@ -304,7 +304,7 @@ func GetGaugeHomeDirectory() (string, error) {
 		return filepath.Join(appDataDir, ProductName), nil
 	}
 	userHome := getUserHomeFromEnv()
-	return filepath.Join(userHome, dotGauge), nil
+	return filepath.Join(userHome, DotGauge), nil
 }
 
 // GetPrimaryPluginsInstallDir returns the primary plugin installation dir

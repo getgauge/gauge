@@ -22,7 +22,6 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
@@ -56,9 +55,6 @@ var (
 			config.SetProjectRoot(args)
 			setGlobalFlags()
 			initPackageFlags()
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(e.Error())
-			}
 		},
 	}
 	logLevel        string
