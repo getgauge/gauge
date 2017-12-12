@@ -159,7 +159,7 @@ func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
 	}
 }
 
-func executeCmd(cmd *cobra.Command, lastState []string) {
+var executeCmd = func(cmd *cobra.Command, lastState []string) {
 	cmd.Parent().SetArgs(lastState[1:])
 	os.Args = lastState
 	resetFlags()
