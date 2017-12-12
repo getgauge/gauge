@@ -250,7 +250,7 @@ func (r *LanguageRunner) Pid() int {
 }
 
 func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-	response, err := conn.GetResponseForGaugeMessage(message, r.connection)
+	response, err := conn.GetResponseForMessageWithTimeout(message, r.connection, config.RunnerRequestTimeout())
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
