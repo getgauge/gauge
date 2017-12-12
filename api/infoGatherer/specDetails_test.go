@@ -452,10 +452,27 @@ func (s *MySuite) TestParamsForConceptFile(c *C) {
 	}
 }
 
+func (s *MySuite) TestAllStepsOnFileRename(c *C) {
+	file, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
+	file, _ = filepath.Abs(file)
+	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
+	specInfoGatherer.initSpecsCache()
+	specInfoGatherer.initStepsCache()
+
+	c.Assert(len(specInfoGatherer.AllSteps()), Equals, 2)
+	renameFileIn(s.specsDir, "spec1.spec", "spec42.spec")
+	c.Assert(len(specInfoGatherer.AllSteps()), Equals, 2)
+}
+
 func createFileIn(dir string, fileName string, data []byte) (string, error) {
 	os.MkdirAll(dir, 0755)
 	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
+}
+
+func renameFileIn(dir string, oldFileName string, newFileName string) (string, error) {
+	err := os.Rename(filepath.Join(dir, oldFileName), filepath.Join(dir, newFileName))
+	return filepath.Join(dir, newFileName), err
 }
 
 func createDirIn(dir string, dirName string) (string, error) {
