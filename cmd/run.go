@@ -22,6 +22,11 @@ import (
 
 	"strings"
 
+	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
@@ -32,6 +37,26 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	lastRunCmdFileName = "lastRunCmd.json"
+)
+
+type prevCommand struct {
+	Command []string
+}
+
+func newPrevCommand() *prevCommand {
+	return &prevCommand{Command: make([]string, 0)}
+}
+
+func (cmd *prevCommand) getJSON() (string, error) {
+	j, err := json.MarshalIndent(cmd, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
+}
+
 var (
 	runCmd = &cobra.Command{
 		Use:   "run [flags] [args]",
@@ -40,10 +65,14 @@ var (
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
+			handleRepeatCommand(cmd, os.Args)
+			if e := env.LoadEnv(environment); e != nil {
+				logger.Fatalf(e.Error())
+			}
 			if err := config.SetProjectRoot(args); err != nil {
 				logger.Fatalf(err.Error())
 			}
-			if failed || repeat {
+			if failed {
 				loadLastState(cmd)
 				return
 			}
@@ -78,12 +107,17 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
-	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat the previous run")
+	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat last run")
 	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
 }
 
+//This flag stores whether the command is gauge run --failed and if it is triggering another command.
+//The purpose is to only store commands given by user in the lastRunCmd file.
+//We need this flag to stop the followup commands(non user given) from getting saved in that file.
+var prevFailed = false
+
 func loadLastState(cmd *cobra.Command) {
-	lastState, err := rerun.GetLastState(repeat)
+	lastState, err := rerun.GetLastState()
 	if err != nil {
 		logger.Fatalf(err.Error())
 	}
@@ -91,6 +125,7 @@ func loadLastState(cmd *cobra.Command) {
 	cmd.Parent().SetArgs(lastState)
 	os.Args = append([]string{"gauge"}, lastState...)
 	resetFlags()
+	prevFailed = true
 	cmd.Execute()
 }
 
@@ -108,6 +143,55 @@ func execute(args []string) {
 		logger.Fatalf(e.Error())
 	}
 	exitCode := execution.ExecuteSpecs(specs)
-	rerun.WriteLastRunInfo()
 	os.Exit(exitCode)
+}
+
+func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
+	if repeat {
+		prevCmd := readPrevCmd()
+		executeCmd(cmd, prevCmd.Command)
+	} else {
+		if prevFailed {
+			prevFailed = false
+			return
+		}
+		writePrevCmd(cmdArgs)
+	}
+}
+
+var executeCmd = func(cmd *cobra.Command, lastState []string) {
+	cmd.Parent().SetArgs(lastState[1:])
+	os.Args = lastState
+	resetFlags()
+	cmd.Execute()
+}
+
+func readPrevCmd() *prevCommand {
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
+	if err != nil {
+		logger.Fatalf("Failed to read previous command information. Reason: %s", err.Error())
+	}
+	meta := newPrevCommand()
+	if err = json.Unmarshal([]byte(contents), meta); err != nil {
+		logger.Fatalf("Invalid previous command information. Reason: %s", err.Error())
+	}
+	return meta
+}
+
+func writePrevCmd(cmdArgs []string) {
+	prevCmd := newPrevCommand()
+	prevCmd.Command = cmdArgs
+	contents, err := prevCmd.getJSON()
+	if err != nil {
+		logger.Fatalf("Unable to parse last run command. Error : %v", err.Error())
+	}
+	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
+	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+	}
+	err = ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
+	if err != nil {
+		logger.Fatalf("Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+	}
 }

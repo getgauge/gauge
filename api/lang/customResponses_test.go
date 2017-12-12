@@ -73,7 +73,6 @@ Scenario Heading2
 }
 
 func TestGetScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
-	provider = &dummyInfoProvider{}
 	specText := `Specification Heading
 =====================
 
