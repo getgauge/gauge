@@ -113,7 +113,6 @@ func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, 
 		if err != nil {
 			t.Stop()
 			res.err <- err
-
 		}
 	}
 

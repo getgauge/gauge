@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
@@ -42,13 +43,46 @@ func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
 		list.Items = append(list.Items, newStepCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, fText, editRange))
 	}
-	for _, s := range provider.Steps() {
-		sv := parser.CreateStepValue(s)
+	allSteps := append(allUsedStepValues(), allImplementedStepValues()...)
+	for _, sv := range removeDuplicates(allSteps) {
 		fText := prefix + getStepFilterText(sv.StepValue, sv.Args, givenArgs)
 		cText := prefix + addPlaceHolders(sv.StepValue, sv.Args)
 		list.Items = append(list.Items, newStepCompletionItem(sv.ParameterizedStepValue, cText, step, fText, editRange))
 	}
 	return list, nil
+}
+
+func removeDuplicates(steps []gauge.StepValue) []gauge.StepValue {
+	encountered := map[string]bool{}
+	result := []gauge.StepValue{}
+	for _, v := range steps {
+		if encountered[v.StepValue] != true {
+			encountered[v.StepValue] = true
+			result = append(result, v)
+		}
+	}
+	return result
+}
+
+func allUsedStepValues() []gauge.StepValue {
+	var stepValues []gauge.StepValue
+	for _, s := range provider.Steps() {
+		stepValues = append(stepValues, parser.CreateStepValue(s))
+	}
+	return stepValues
+}
+func allImplementedStepValues() []gauge.StepValue {
+	var stepValues []gauge.StepValue
+	res, err := getAllStepsResponse()
+	if err != nil {
+		logger.APILog.Debugf("failed to get steps from runner. %v", err.Error())
+		return stepValues
+	}
+	for _, stepText := range res.GetSteps() {
+		stepValue, _ := parser.ExtractStepValueAndParams(stepText, false)
+		stepValues = append(stepValues, *stepValue)
+	}
+	return stepValues
 }
 
 func getStepArgs(line string) ([]gauge.StepArg, error) {

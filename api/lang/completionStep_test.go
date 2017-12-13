@@ -18,9 +18,11 @@
 package lang
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
@@ -138,4 +140,86 @@ func TestGetEditPosition(t *testing.T) {
 			t.Errorf(`Incorrect Edit End Position got: %+v , want : %+v, input : "%s"`, gotRange.End, test.wantEnd, test.input)
 		}
 	}
+}
+
+func TestGetAllImplementedStepValues(t *testing.T) {
+	stepValues := []gauge.StepValue{
+		{
+			StepValue: "hello world",
+			Args:      []string{},
+			ParameterizedStepValue: "hello world",
+		},
+		{
+			StepValue: "hello {}",
+			Args:      []string{"world"},
+			ParameterizedStepValue: "hello <world>",
+		},
+	}
+
+	GetResponseFromRunner = func(r *gauge_messages.Message) (*gauge_messages.Message, error) {
+		return &gauge_messages.Message{
+			MessageType: gauge_messages.Message_StepNamesResponse,
+			StepNamesResponse: &gauge_messages.StepNamesResponse{
+				Steps: []string{
+					"hello world",
+					"hello <world>",
+				},
+			},
+		}, nil
+	}
+
+	got := allImplementedStepValues()
+
+	for _, sv := range stepValues {
+		if !contains(got, sv) {
+			t.Errorf("expected getAllImplementedStepValues() to contain %v.\ngetAllImplementedStepValues() == %v", sv, got)
+		}
+	}
+}
+
+func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *testing.T) {
+
+	GetResponseFromRunner = func(r *gauge_messages.Message) (*gauge_messages.Message, error) {
+		return nil, fmt.Errorf("can't get steps")
+	}
+
+	got := allImplementedStepValues()
+
+	if len(got) > 0 {
+		t.Errorf("expected 0 values. got %v", len(got))
+	}
+}
+
+func TestRemoveDuplicateStepValues(t *testing.T) {
+	stepValues := []gauge.StepValue{
+		{
+			Args: []string{},
+			ParameterizedStepValue: "hello world",
+			StepValue:              "hello world",
+		}, {
+			Args: []string{"world"},
+			ParameterizedStepValue: "hello <world>",
+			StepValue:              "hello {}",
+		},
+		{
+			Args: []string{"gauge"},
+			ParameterizedStepValue: "hello <gauge>",
+			StepValue:              "hello {}",
+		},
+	}
+
+	result := removeDuplicates(stepValues)
+
+	if len(result) != 2 {
+		t.Errorf("exppected 2 steps got %v", len(result))
+	}
+}
+
+func contains(list []gauge.StepValue, v gauge.StepValue) bool {
+	for _, e := range list {
+		if e.ParameterizedStepValue == v.ParameterizedStepValue && e.StepValue == v.StepValue && len(e.Args) == len(v.Args) {
+			return true
+		}
+	}
+	return false
 }
