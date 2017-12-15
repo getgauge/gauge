@@ -88,6 +88,7 @@ func (m mockConn) SetWriteDeadline(t time.Time) error {
 func TestMain(m *testing.M) {
 	id = 0
 	responseMessage = &gauge_messages.Message{}
+	m.Run()
 }
 
 func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
@@ -206,7 +207,7 @@ func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
 	conn := mockConn{sleepDuration: 2 * time.Second}
 	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
 
-	expected := fmt.Errorf("Request timedout for Message ID => %v", id)
+	expected := fmt.Errorf("Request timedout for Message ID => %v", message.MessageId)
 	if !reflect.DeepEqual(err, expected) {
 		t.Errorf("expected %v\n got %v", expected, err)
 	}
