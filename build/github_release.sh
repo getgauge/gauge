@@ -15,7 +15,7 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-if [ -z "$githubUser"]; then
+if [ -z "$githubUser" ]; then
   echo "userName is not set. using getgauge as default."
   githubUser="getgauge"
 fi
