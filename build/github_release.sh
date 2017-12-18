@@ -15,6 +15,11 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
+if [-z "$githubUser"]; then
+  echo "userName is not set. using getgauge as default."
+  githubUser="getgauge"
+fi
+
 if [ -z "$repoName" ]; then
   echo "repoName is not set"
   exit 1
@@ -39,10 +44,10 @@ echo "------------------------------"
 
 release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" $repoName)
 
-$GOPATH/bin/github-release release -u getgauge -r $repoName --draft -t "v$version" -d "$release_description" -n "$repoName $version"
+$GOPATH/bin/github-release release -u $githubUser -r $repoName --draft -t "v$version" -d "$release_description" -n "$repoName $version"
 
 for i in `ls`; do
-    $GOPATH/bin/github-release -v upload -u getgauge -r $repoName -t "v$version" -n $i -f $i
+    $GOPATH/bin/github-release -v upload -u $githubUser -r $repoName -t "v$version" -n $i -f $i
     if [$? -ne 0];then
         exit 1
     fi
