@@ -24,6 +24,7 @@ import (
 
 	"fmt"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
@@ -65,7 +66,7 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 }
 
 func search(step *gauge.Step) (interface{}, error) {
-	if loc := searchConcept(step); loc != nil {
+	if loc, _ := searchConcept(step); loc != nil {
 		return loc, nil
 	}
 	return searchStep(step)
@@ -86,22 +87,48 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 		logger.APILog.Debugf("Step implementation not found for step : %s", step.Value)
 		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
 	}
-	return getLspLocation(responseMessage.GetStepNameResponse().GetFileName(), int(responseMessage.GetStepNameResponse().GetLineNumber())), nil
+	return getLspLocationForStep(responseMessage.GetStepNameResponse().GetFileName(), responseMessage.GetStepNameResponse().GetSpan()), nil
 }
 
-func searchConcept(step *gauge.Step) interface{} {
+func searchConcept(step *gauge.Step) (interface{}, error) {
 	if concept := provider.SearchConceptDictionary(step.Value); concept != nil {
-		return getLspLocation(concept.FileName, concept.ConceptStep.LineNo)
+		return getLspLocationForConcept(concept.FileName, concept.ConceptStep.LineNo)
 	}
-	return nil
+	return nil, nil
 }
 
-func getLspLocation(fileName string, lineNumber int) lsp.Location {
+func getLspLocationForStep(fileName string, span *gauge_messages.Span) lsp.Location {
 	return lsp.Location{
 		URI: util.ConvertPathToURI(fileName),
 		Range: lsp.Range{
-			Start: lsp.Position{Line: lineNumber - 1, Character: 0},
-			End:   lsp.Position{Line: lineNumber - 1, Character: 0},
+			Start: lsp.Position{Line: int(span.Start - 1), Character: int(span.StartChar)},
+			End:   lsp.Position{Line: int(span.End - 1), Character: int(span.EndChar)},
 		},
 	}
+}
+
+func getLspLocationForConcept(fileName string, lineNumber int) (interface{}, error) {
+	uri := util.ConvertPathToURI(fileName)
+	var endPos int
+	diskFileCache := &files{cache: make(map[string][]string)}
+	lineNo := lineNumber - 1
+	if isOpen(uri) {
+		endPos = len(getLine(uri, lineNo))
+	} else {
+		if !diskFileCache.exists(uri) {
+			contents, err := common.ReadFileContents(fileName)
+			if err != nil {
+				return nil, err
+			}
+			diskFileCache.add(uri, contents)
+		}
+		endPos = len(diskFileCache.line(uri, lineNo))
+	}
+	return lsp.Location{
+		URI: util.ConvertPathToURI(fileName),
+		Range: lsp.Range{
+			Start: lsp.Position{Line: lineNo, Character: 0},
+			End:   lsp.Position{Line: lineNo, Character: endPos},
+		},
+	}, nil
 }
