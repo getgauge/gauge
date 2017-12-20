@@ -115,13 +115,11 @@ func getLspLocationForConcept(fileName string, lineNumber int) (interface{}, err
 	if isOpen(uri) {
 		endPos = len(getLine(uri, lineNo))
 	} else {
-		if !diskFileCache.exists(uri) {
-			contents, err := common.ReadFileContents(fileName)
-			if err != nil {
-				return nil, err
-			}
-			diskFileCache.add(uri, contents)
+		contents, err := common.ReadFileContents(fileName)
+		if err != nil {
+			return nil, err
 		}
+		diskFileCache.add(uri, contents)
 		endPos = len(diskFileCache.line(uri, lineNo))
 	}
 	return lsp.Location{
