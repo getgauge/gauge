@@ -27,13 +27,14 @@ Example: ruby create_release_text.rb gauge.
 end
 
 repo_name = ARGV[0]
-uri = URI("https://api.github.com/repos/getgauge/#{repo_name}/releases/latest")
+user_name = ARGV[1]
+uri = URI("https://api.github.com/repos/#{user_name}/#{repo_name}/releases/latest")
 timestamp = JSON.parse(Net::HTTP.get(uri))['published_at']
 
 if timestamp.nil? || timestamp.empty? 
-    uri = URI("https://api.github.com/search/issues?q=repo:getgauge/#{repo_name}+state:closed")
+    uri = URI("https://api.github.com/search/issues?q=repo:#{user_name}/#{repo_name}+state:closed")
 else
-    uri = URI("https://api.github.com/search/issues?q=repo:getgauge/#{repo_name}+closed:>#{timestamp}")
+    uri = URI("https://api.github.com/search/issues?q=repo:#{user_name}/#{repo_name}+closed:>#{timestamp}")
 end
 response = Net::HTTP.get(uri)
 
