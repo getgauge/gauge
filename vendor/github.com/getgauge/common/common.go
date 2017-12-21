@@ -447,15 +447,15 @@ func isExecMode(mode os.FileMode) bool {
 	return (mode & 0111) != 0
 }
 
-var uniqeID = int64(1)
+var id = int64(1)
 var m = sync.Mutex{}
 
 // GetUniqueID returns a unique id for the proto messages
 func GetUniqueID() int64 {
 	m.Lock()
 	defer m.Unlock()
-	uniqeID++
-	return uniqeID
+	id++
+	return id
 }
 
 // CopyFile creates a copy of source file to destination file

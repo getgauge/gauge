@@ -99,6 +99,16 @@ func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
 	return stepPositionsResponse, nil
 }
 
+func getAllStepsResponse() (*gm.StepNamesResponse, error) {
+	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
+	response, err := GetResponseFromRunner(getAllStepsRequest)
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	return response.GetStepNamesResponse(), nil
+}
+
 func killRunner() {
 	lRunner.runner.Kill()
 }
