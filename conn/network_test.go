@@ -104,7 +104,7 @@ func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 			FileName:      "foo.js",
 			HasAlias:      false,
 			IsStepPresent: true,
-			LineNumber:    2,
+			Span:          &gauge_messages.Span{Start: 2, End: 6, StartChar: 0, EndChar: 2},
 			StepName:      []string{"The word {} has {} vowels."},
 		},
 	}
@@ -143,7 +143,7 @@ func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 			FileName:      "foo.js",
 			HasAlias:      false,
 			IsStepPresent: true,
-			LineNumber:    2,
+			Span:          &gauge_messages.Span{Start: 2, End: 2, StartChar: 0, EndChar: 2},
 			StepName:      []string{"The word {} has {} vowels."},
 		},
 	}
@@ -198,7 +198,7 @@ func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
 			FileName:      "foo.js",
 			HasAlias:      false,
 			IsStepPresent: true,
-			LineNumber:    2,
+			Span:          &gauge_messages.Span{Start: 2, End: 2, StartChar: 0, EndChar: 2},
 			StepName:      []string{"The word {} has {} vowels."},
 		},
 	}

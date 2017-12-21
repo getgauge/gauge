@@ -28,10 +28,15 @@ import (
 
 func TestConceptDefinitionInSpecFile(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri.spec", "# Specification \n## Scenario \n * concept1")
+	uri := util.ConvertPathToURI("uri.spec")
+	f.add(uri, "# Specification \n## Scenario \n * concept1")
+
+	conUri := util.ConvertPathToURI("concept_uri.cpt")
+	f.add(conUri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
+
 	provider = &dummyInfoProvider{}
 	position := lsp.Position{Line: 2, Character: len(" * conce")}
-	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri.spec"}, Position: position})
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
 	p := json.RawMessage(b)
 
 	got, err := definition(&jsonrpc2.Request{Params: &p})
@@ -39,7 +44,7 @@ func TestConceptDefinitionInSpecFile(t *testing.T) {
 		t.Errorf("Failed to find definition, err: `%v`", err)
 	}
 
-	want := lsp.Location{URI: util.ConvertPathToURI("concept_uri"), Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
+	want := lsp.Location{URI: conUri, Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 10}}}
 	if got != want {
 		t.Errorf("Wrong definition found, got: `%v`, want: `%v`", got, want)
 	}
@@ -47,18 +52,18 @@ func TestConceptDefinitionInSpecFile(t *testing.T) {
 
 func TestConceptDefinitionInConceptFile(t *testing.T) {
 	f = &files{cache: make(map[string][]string)}
-	f.add("uri.cpt", "# Concept \n* a step \n \n # Another Concept \n*concept1")
+	uri := util.ConvertPathToURI("concept_uri.cpt")
+	f.add(uri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
 	provider = &dummyInfoProvider{}
 	position := lsp.Position{Line: 4, Character: len("*conce")}
-	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri.cpt"}, Position: position})
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
 	p := json.RawMessage(b)
 
 	got, err := definition(&jsonrpc2.Request{Params: &p})
 	if err != nil {
 		t.Errorf("Failed to find definition, err: `%v`", err)
 	}
-
-	want := lsp.Location{URI: util.ConvertPathToURI("concept_uri"), Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 0}}}
+	want := lsp.Location{URI: uri, Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 10}}}
 	if got != want {
 		t.Errorf("Wrong definition found, got: `%v`, want: `%v`", got, want)
 	}
