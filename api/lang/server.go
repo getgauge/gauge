@@ -114,10 +114,12 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		go publishDiagnostics(ctx, conn)
 		return nil, nil
 	case "shutdown":
+		killRunner()
 		return nil, nil
 	case "exit":
 		if c, ok := conn.(*jsonrpc2.Conn); ok {
 			c.Close()
+			os.Exit(0)
 		}
 		return nil, nil
 	case "$/cancelRequest":
