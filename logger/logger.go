@@ -19,7 +19,6 @@ package logger
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -112,18 +111,9 @@ func Initialize(logLevel string) {
 	}
 }
 
-func GetLogFilePath(logFileName string) string {
-	customLogsDir := os.Getenv(logsDirectory)
-	if customLogsDir == "" {
-		return filepath.Join(logs, logFileName)
-	} else {
-		return filepath.Join(customLogsDir, logFileName)
-	}
-}
-
 func initFileLogger(logFileName string, fileLogger *logging.Logger) {
 	var backend logging.Backend
-	backend = createFileLogger(GetLogFilePath(logFileName), 10)
+	backend = createFileLogger(GetLogFile(logFileName), 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
@@ -132,7 +122,7 @@ func initFileLogger(logFileName string, fileLogger *logging.Logger) {
 }
 
 func createFileLogger(name string, size int) logging.Backend {
-	name = getLogFile(name)
+	name = GetLogFile(name)
 	return logging.NewLogBackend(&lumberjack.Logger{
 		Filename:   name,
 		MaxSize:    size, // megabytes
@@ -141,7 +131,7 @@ func createFileLogger(name string, size int) logging.Backend {
 	}, "", 0)
 }
 
-func getLogFile(fileName string) string {
+func GetLogFile(fileName string) string {
 	if filepath.IsAbs(fileName) {
 		return fileName
 	}

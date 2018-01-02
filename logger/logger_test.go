@@ -71,21 +71,21 @@ func (s *MySuite) TestGetLogFileGivenRelativePathInGaugeProject(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
 
-	c.Assert(getLogFile(apiLogFileName), Equals, expected)
+	c.Assert(GetLogFile(apiLogFileName), Equals, expected)
 }
 
 func (s *MySuite) TestGetLogFileInGaugeProject(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
 
-	c.Assert(getLogFile(filepath.Join(config.ProjectRoot, apiLogFileName)), Equals, expected)
+	c.Assert(GetLogFile(filepath.Join(config.ProjectRoot, apiLogFileName)), Equals, expected)
 }
 
 func (s *MySuite) TestGetLogFileInGaugeProjectGivenAbsPath(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
 
-	logFile := getLogFile(filepath.Join(customLogsDir, apiLogFileName))
+	logFile := GetLogFile(filepath.Join(customLogsDir, apiLogFileName))
 
 	c.Assert(logFile, Equals, filepath.Join(customLogsDir, apiLogFileName))
 }
