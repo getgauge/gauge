@@ -260,7 +260,6 @@ func (s *server) Start(logLevel string) {
 	conn := jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
 	logger.SetCustomLogger(lspLogger{conn, ctx})
 	<-conn.DisconnectNotify()
-	killRunner()
 	logger.APILog.Info("Connection closed")
 }
 

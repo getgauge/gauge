@@ -110,5 +110,8 @@ func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 }
 
 func killRunner() {
-	lRunner.runner.Kill()
+	if lRunner.runner != nil {
+		lRunner.runner.Kill()
+	}
+
 }
