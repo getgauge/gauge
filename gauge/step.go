@@ -74,9 +74,9 @@ func (step *Step) GetLineText() string {
 	return step.LineText
 }
 
-func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
+func (step *Step) Rename(oldStep Step, newStep Step, orderMap map[int]int, isConcept *bool) bool {
 	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
-		return isRefactored
+		return false
 	}
 	if step.IsConcept {
 		*isConcept = true

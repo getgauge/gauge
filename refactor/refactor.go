@@ -58,7 +58,8 @@ type refactoringResult struct {
 	conceptsChanged    []string
 	runnerFilesChanged []string
 	Errors             []string
-	warnings           []string
+	Warnings           []string
+	StepsChanged       []*gauge.Step
 }
 
 func (refactoringResult *refactoringResult) String() string {
@@ -66,7 +67,7 @@ func (refactoringResult *refactoringResult) String() string {
 	result += fmt.Sprintf("Specs changed        : %s\n", refactoringResult.specsChanged)
 	result += fmt.Sprintf("Concepts changed     : %s\n", refactoringResult.conceptsChanged)
 	result += fmt.Sprintf("Source files changed : %s\n", refactoringResult.runnerFilesChanged)
-	result += fmt.Sprintf("Warnings             : %s\n", refactoringResult.warnings)
+	result += fmt.Sprintf("Warnings             : %s\n", refactoringResult.Warnings)
 	return result
 }
 
@@ -87,7 +88,42 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 		return rephraseFailure(messages...)
 	}
 
-	result := &refactoringResult{Success: true, Errors: make([]string, 0), warnings: make([]string, 0)}
+	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
+	if !result.Success {
+		return result
+	}
+
+	refactorResult := agent.performRefactoringOn(specs, conceptDictionary)
+	refactorResult.Warnings = append(refactorResult.Warnings, result.Warnings...)
+	return refactorResult
+}
+
+func GetRefactoredSteps(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) *refactoringResult {
+	if newStep == oldStep {
+		return &refactoringResult{Success: true}
+	}
+	agent, errs := getRefactorAgent(oldStep, newStep, startChan)
+
+	if len(errs) > 0 {
+		var messages []string
+		for _, err := range errs {
+			messages = append(messages, err.Error())
+		}
+		return rephraseFailure(messages...)
+	}
+
+	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
+	if !result.Success {
+		return result
+	}
+
+	refactorResult := agent.getRefactoredSteps(specs, conceptDictionary)
+	refactorResult.Warnings = append(refactorResult.Warnings, result.Warnings...)
+	return refactorResult
+}
+
+func parseSpecsAndConcepts(specDirs []string) (*refactoringResult, []*gauge.Specification, *gauge.ConceptDictionary) {
+	result := &refactoringResult{Success: true, Errors: make([]string, 0), Warnings: make([]string, 0)}
 
 	var specs []*gauge.Specification
 	var specParseResults []*parser.ParseResult
@@ -101,21 +137,15 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 
 	addErrorsAndWarningsToRefactoringResult(result, specParseResults...)
 	if !result.Success {
-		return result
+		return result, nil, nil
 	}
 
 	conceptDictionary, parseResult, err := parser.CreateConceptsDictionary()
 	if err != nil {
-		return rephraseFailure(err.Error())
+		return rephraseFailure(err.Error()), nil, nil
 	}
 	addErrorsAndWarningsToRefactoringResult(result, parseResult)
-	if !result.Success {
-		return result
-	}
-
-	refactorResult := agent.performRefactoringOn(specs, conceptDictionary)
-	refactorResult.warnings = append(refactorResult.warnings, result.warnings...)
-	return refactorResult
+	return result, specs, conceptDictionary
 }
 
 func killRunner(startChan *runner.StartChannels) {
@@ -139,9 +169,25 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 }
 
 func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) *refactoringResult {
-	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
-	result := &refactoringResult{Success: false, Errors: make([]string, 0), warnings: make([]string, 0)}
+	specsRefactored, conceptFilesRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
+	result := agent.refactorStepImplementations()
+	if !result.Success {
+		return result
+	}
+	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
+	result.specsChanged = specFiles
+	result.conceptsChanged = conceptFiles
+	return result
+}
 
+func (agent *rephraseRefactorer) getRefactoredSteps(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) *refactoringResult {
+	_, _, stepsRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
+	result := &refactoringResult{Success: true, Errors: make([]string, 0), Warnings: make([]string, 0), StepsChanged: stepsRefactored}
+	return result
+}
+
+func (agent *rephraseRefactorer) refactorStepImplementations() *refactoringResult {
+	result := &refactoringResult{Success: false, Errors: make([]string, 0), Warnings: make([]string, 0)}
 	var runner runner.Runner
 	select {
 	case runner = <-agent.startChan.RunnerChan:
@@ -163,36 +209,38 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specificati
 			}
 			result.runnerFilesChanged = runnerFilesChanged
 		} else {
-			result.warnings = append(result.warnings, warning.Message)
+			result.Warnings = append(result.Warnings, warning.Message)
 		}
 	}
-	specFiles, conceptFiles := writeToConceptAndSpecFiles(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	result.specsChanged = specFiles
 	result.Success = true
-	result.conceptsChanged = conceptFiles
 	return result
 }
 
-func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification]bool, map[string]bool) {
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification]bool, map[string]bool, []*gauge.Step) {
 	specsRefactored := make(map[*gauge.Specification]bool, 0)
 	conceptFilesRefactored := make(map[string]bool, 0)
 	orderMap := agent.createOrderOfArgs()
+	refactoredSteps := make([]*gauge.Step, 0)
 	for _, spec := range *specs {
-		specsRefactored[spec] = spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		rSteps := make([]*gauge.Step, 0)
+		specsRefactored[spec], rSteps = spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		refactoredSteps = append(refactoredSteps, rSteps...)
 	}
 	isConcept := false
 	for _, concept := range conceptDictionary.ConceptsMap {
 		_, ok := conceptFilesRefactored[concept.FileName]
 		conceptFilesRefactored[concept.FileName] = !ok && false || conceptFilesRefactored[concept.FileName]
 		for _, item := range concept.ConceptStep.Items {
-			isRefactored := conceptFilesRefactored[concept.FileName]
-			conceptFilesRefactored[concept.FileName] = item.Kind() == gauge.StepKind &&
-				item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) ||
-				isRefactored
+			if item.Kind() == gauge.StepKind {
+				if item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, orderMap, &isConcept) {
+					conceptFilesRefactored[concept.FileName] = true
+					refactoredSteps = append(refactoredSteps, item.(*gauge.Step))
+				}
+			}
 		}
 	}
 	agent.isConcept = isConcept
-	return specsRefactored, conceptFilesRefactored
+	return specsRefactored, conceptFilesRefactored, refactoredSteps
 }
 
 func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
@@ -332,11 +380,11 @@ func writeToConceptAndSpecFiles(specs []*gauge.Specification, conceptDictionary 
 }
 
 func (refactoringResult *refactoringResult) appendWarnings(warnings []*parser.Warning) {
-	if refactoringResult.warnings == nil {
-		refactoringResult.warnings = make([]string, 0)
+	if refactoringResult.Warnings == nil {
+		refactoringResult.Warnings = make([]string, 0)
 	}
 	for _, warning := range warnings {
-		refactoringResult.warnings = append(refactoringResult.warnings, warning.Message)
+		refactoringResult.Warnings = append(refactoringResult.Warnings, warning.Message)
 	}
 }
 
@@ -356,7 +404,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 			logger.Errorf("%s \n", err)
 		}
 	}
-	for _, warning := range refactoringResult.warnings {
+	for _, warning := range refactoringResult.Warnings {
 		logger.Warningf("%s \n", warning)
 	}
 	logger.Infof("%d specifications changed.\n", len(refactoringResult.specsChanged))
