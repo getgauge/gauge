@@ -139,9 +139,6 @@ func execute(args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
-	if e := env.LoadEnv(environment); e != nil {
-		logger.Fatalf(e.Error())
-	}
 	exitCode := execution.ExecuteSpecs(specs)
 	os.Exit(exitCode)
 }
