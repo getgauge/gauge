@@ -7,11 +7,11 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/gauge"
 )
 
 func rename(req *jsonrpc2.Request) (interface{}, error) {
@@ -21,13 +21,24 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	line := strings.TrimSpace(getLine(params.TextDocument.URI, params.Position.Line))
-	if !parser.IsStep(line) {
-		return nil, fmt.Errorf("rename is supported only for Steps")
+
+	specDetail := provider.GetAvailableSpecDetails([]string{util.ConvertURItoFilePath(params.TextDocument.URI)})[0]
+	if len(specDetail.Errs) > 0 {
+		return nil, fmt.Errorf("refactoring failed due to parse errors")
 	}
-	oldName := strings.TrimSpace(strings.TrimPrefix(line, "*"))
-	newName := strings.TrimSpace(strings.TrimPrefix(params.NewName, "*"))
-	refactortingResult := refactor.GetRefactoredSteps(oldName, newName, nil, []string{common.SpecsDirectoryName})
+	var step *gauge.Step
+	for _, item := range specDetail.Spec.AllItems() {
+		if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
+			step = item.(*gauge.Step)
+			break
+		}
+	}
+	if step == nil {
+		return nil, fmt.Errorf("refactoring is supported for steps only")
+	}
+	newName := getNewStepName(params, step)
+
+	refactortingResult := refactor.GetRefactoredSteps(step.GetLineText(), newName, nil, []string{common.SpecsDirectoryName})
 	for _, warning := range refactortingResult.Warnings {
 		logger.Warningf(warning)
 	}
@@ -43,6 +54,13 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, err
 	}
 	return result, nil
+}
+func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
+	newName := strings.TrimSpace(strings.TrimPrefix(params.NewName, "*"))
+	if step.HasInlineTable {
+		newName = fmt.Sprintf("%s <%s>", newName, gauge.TableArg)
+	}
+	return newName
 }
 
 func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanged map[string]string) error {
