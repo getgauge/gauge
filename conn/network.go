@@ -34,6 +34,7 @@ import (
 type response struct {
 	result chan *gauge_messages.Message
 	err    chan error
+	t      *time.Timer
 }
 
 type messages struct {
@@ -46,11 +47,13 @@ func (m *messages) get(k int64) response {
 	defer m.Unlock()
 	return m.m[k]
 }
+
 func (m *messages) put(k int64, res response) {
 	m.Lock()
 	defer m.Unlock()
 	m.m[k] = res
 }
+
 func (m *messages) delete(k int64) {
 	m.Lock()
 	defer m.Unlock()
@@ -104,14 +107,13 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 
 func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response, timeout time.Duration) {
 	message.MessageId = common.GetUniqueID()
-
-	t := time.AfterFunc(timeout, func() {
+	res.t = time.AfterFunc(timeout, func() {
 		res.err <- fmt.Errorf("Request timedout for Message ID => %v", message.GetMessageId())
 	})
 
 	handle := func(err error) {
 		if err != nil {
-			t.Stop()
+			res.t.Stop()
 			res.err <- err
 		}
 	}
@@ -133,7 +135,7 @@ func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, 
 
 	m.get(responseMessage.GetMessageId()).result <- responseMessage
 	m.delete(responseMessage.GetMessageId())
-	t.Stop()
+	res.t.Stop()
 }
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
