@@ -69,15 +69,13 @@ func (scenario *Scenario) InSpan(lineNumber int) bool {
 	return scenario.Span.isInRange(lineNumber)
 }
 
-func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) (bool, []*Step) {
+func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
+	isRefactored := false
 	isConcept := false
-	refactoredSteps := make([]*Step, 0)
 	for _, step := range scenario.Steps {
-		if step.Rename(oldStep, newStep, orderMap, &isConcept) {
-			refactoredSteps = append(refactoredSteps, step)
-		}
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
-	return len(refactoredSteps) > 0, refactoredSteps
+	return isRefactored
 }
 
 func (scenario *Scenario) AddItem(itemToAdd Item) {

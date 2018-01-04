@@ -207,29 +207,23 @@ func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs 
 	return nil
 }
 
-func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) (bool, []*Step) {
-	refactoredSteps := make([]*Step, 0)
-	rSteps := spec.rename(spec.Contexts, oldStep, newStep, orderMap)
-	refactoredSteps = append(refactoredSteps, rSteps...)
+func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
+	isRefactored := spec.rename(spec.Contexts, oldStep, newStep, false, orderMap)
 	for _, scenario := range spec.Scenarios {
-		if refactor, rSteps := scenario.renameSteps(oldStep, newStep, orderMap); refactor {
-			refactoredSteps = append(refactoredSteps, rSteps...)
+		refactor := scenario.renameSteps(oldStep, newStep, orderMap)
+		if refactor {
+			isRefactored = refactor
 		}
 	}
-	rSteps = spec.rename(spec.TearDownSteps, oldStep, newStep, orderMap)
-	refactoredSteps = append(refactoredSteps, rSteps...)
-	return len(refactoredSteps) > 0, refactoredSteps
+	return spec.rename(spec.TearDownSteps, oldStep, newStep, isRefactored, orderMap)
 }
 
-func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, orderMap map[int]int) []*Step {
+func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) bool {
 	isConcept := false
-	refactoredSteps := make([]*Step, 0)
 	for _, step := range steps {
-		if step.Rename(oldStep, newStep, orderMap, &isConcept) {
-			refactoredSteps = append(refactoredSteps, step)
-		}
+		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
 	}
-	return refactoredSteps
+	return isRefactored
 }
 
 func (spec *Specification) GetSpecItems() []Item {

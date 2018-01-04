@@ -116,8 +116,8 @@ func (p dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Conc
 }
 
 func TestCompletion(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", " * ")
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("uri", " * ")
 	position := lsp.Position{Line: 0, Character: len(" * ")}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
 		{
@@ -164,8 +164,8 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestCompletionForLineWithText(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", " * step")
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("uri", " * step")
 	position := lsp.Position{Line: 0, Character: len(` *`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(` *`)}
 	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step`)}
@@ -210,8 +210,8 @@ func TestCompletionForLineWithText(t *testing.T) {
 }
 
 func TestCompletionInBetweenLine(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
-	f.add("uri", "* step")
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("uri", "* step")
 	position := lsp.Position{Line: 0, Character: len(`* s`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(`* `)}
 	wantEndPos := lsp.Position{Line: position.Line, Character: len(`* step`)}
@@ -256,9 +256,9 @@ func TestCompletionInBetweenLine(t *testing.T) {
 }
 
 func TestCompletionInBetweenLineHavingParams(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[string][]string)}
 	line := "*step with a <param> and more"
-	f.add("uri", line)
+	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(`*step with a <param> and`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
 	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
@@ -303,9 +303,9 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 }
 
 func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[string][]string)}
 	line := "*step with a <file:test.txt> and more"
-	f.add("uri", line)
+	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(`*step with a <file:test.txt>`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(`*`)}
 	wantEndPos := lsp.Position{Line: position.Line, Character: len(line)}
@@ -350,9 +350,9 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 }
 
 func TestParamCompletion(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[string][]string)}
 	line := ` * step with a "param`
-	f.add("uri", line)
+	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(` * step with a "pa`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(` * step with a "`)}
 	wantEndPos := lsp.Position{Line: position.Line, Character: len(` * step with a "param`)}
@@ -481,8 +481,8 @@ tags: blah,abc
 * step
 `
 	uri := "foo.spec"
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 	got := isInTagsContext(2, uri)
 	if !got {
 		t.Errorf("want : %v\n Got : %v", true, got)
@@ -501,8 +501,8 @@ tags: blah,abc
 * step
 `
 	uri := "foo.spec"
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 	got := isInTagsContext(3, uri)
 	if !got {
 		t.Errorf("want : %v\n Got : %v", true, got)
@@ -520,8 +520,8 @@ tags: blah,abc
 * step
 `
 	uri := "foo.spec"
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 	got := isInTagsContext(3, uri)
 	if got {
 		t.Errorf("want : %v\n Got : %v", false, got)

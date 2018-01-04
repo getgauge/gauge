@@ -46,8 +46,8 @@ Scenario Heading2
 * Step text`
 
 	uri := "foo.spec"
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 
 	position := lsp.Position{Line: 5, Character: 1}
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
@@ -69,7 +69,7 @@ Scenario Heading2
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
-	f.remove(uri)
+	openFilesCache.remove(uri)
 }
 
 func TestGetScenariosShouldGiveTheScenariosIfCursorPositionIsNotInSpan(t *testing.T) {
@@ -88,8 +88,8 @@ Scenario Heading2
 `
 
 	uri := "foo.spec"
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 
 	position := lsp.Position{Line: 2, Character: 1}
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
@@ -118,7 +118,7 @@ Scenario Heading2
 	if !reflect.DeepEqual(info, want) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
-	f.remove(uri)
+	openFilesCache.remove(uri)
 }
 
 func TestGetScenariosShouldGiveTheScenariosIfDocumentIsNotOpened(t *testing.T) {

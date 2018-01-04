@@ -96,7 +96,7 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	specs := append(make([]*gauge.Specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, errs := getRefactorAgent(oldStep, newStep, nil)
-	specRefactored, _, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	for _, isRefactored := range specRefactored {
 		c.Assert(true, Equals, isRefactored)
@@ -151,7 +151,7 @@ func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 	specs := append(make([]*gauge.Specification, 0), spec)
 	specs = append(specs, spec1)
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
-	specRefactored, _, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
+	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
 	c.Assert(true, Equals, specRefactored[specs[0]])
 	c.Assert(false, Equals, specRefactored[specs[1]])
@@ -177,7 +177,7 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 	dictionary.ConceptsMap[step2.Value] = &gauge.Concept{ConceptStep: step2, FileName: fileName}
 	dictionary.ConceptsMap[step3.Value] = &gauge.Concept{ConceptStep: step3, FileName: "e" + fileName}
 
-	_, filesRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
+	_, filesRefactored := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
 	c.Assert(filesRefactored[fileName], Equals, false)
 	c.Assert(filesRefactored["e"+fileName], Equals, true)

@@ -27,12 +27,12 @@ import (
 )
 
 func TestConceptDefinitionInSpecFile(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[string][]string)}
 	uri := util.ConvertPathToURI("uri.spec")
-	f.add(uri, "# Specification \n## Scenario \n * concept1")
+	openFilesCache.add(uri, "# Specification \n## Scenario \n * concept1")
 
 	conUri := util.ConvertPathToURI("concept_uri.cpt")
-	f.add(conUri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
+	openFilesCache.add(conUri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
 
 	provider = &dummyInfoProvider{}
 	position := lsp.Position{Line: 2, Character: len(" * conce")}
@@ -51,9 +51,9 @@ func TestConceptDefinitionInSpecFile(t *testing.T) {
 }
 
 func TestConceptDefinitionInConceptFile(t *testing.T) {
-	f = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[string][]string)}
 	uri := util.ConvertPathToURI("concept_uri.cpt")
-	f.add(uri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
+	openFilesCache.add(uri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
 	provider = &dummyInfoProvider{}
 	position := lsp.Position{Line: 4, Character: len("*conce")}
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})

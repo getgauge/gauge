@@ -174,7 +174,7 @@ func (s *MySuite) TestRenameStep(c *C) {
 	orderMap[0] = 1
 	orderMap[1] = 0
 	IsConcept := false
-	isRefactored := originalStep.Rename(*originalStep, *newStep, orderMap, &IsConcept)
+	isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
 
 	c.Assert(isRefactored, Equals, true)
 	c.Assert(originalStep.Value, Equals, "step from {} {}")
