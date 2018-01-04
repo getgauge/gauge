@@ -19,6 +19,7 @@ package logger
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -122,7 +123,6 @@ func initFileLogger(logFileName string, fileLogger *logging.Logger) {
 }
 
 func createFileLogger(name string, size int) logging.Backend {
-	name = GetLogFile(name)
 	return logging.NewLogBackend(&lumberjack.Logger{
 		Filename:   name,
 		MaxSize:    size, // megabytes
@@ -131,10 +131,20 @@ func createFileLogger(name string, size int) logging.Backend {
 	}, "", 0)
 }
 
+func addLogsDirPath(logFileName string) string {
+	customLogsDir := os.Getenv(logsDirectory)
+	if customLogsDir == "" {
+		return filepath.Join(logs, logFileName)
+	} else {
+		return filepath.Join(customLogsDir, logFileName)
+	}
+}
+
 func GetLogFile(fileName string) string {
 	if filepath.IsAbs(fileName) {
 		return fileName
 	}
+	fileName = addLogsDirPath(fileName)
 	if config.ProjectRoot != "" {
 		return filepath.Join(config.ProjectRoot, fileName)
 	}
