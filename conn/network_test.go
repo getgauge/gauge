@@ -85,12 +85,9 @@ func (m mockConn) SetWriteDeadline(t time.Time) error {
 	return nil
 }
 
-func TestMain(m *testing.M) {
+func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 	id = 0
 	responseMessage = &gauge_messages.Message{}
-}
-
-func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_StepNameRequest,
 		StepNameRequest: &gauge_messages.StepNameRequest{
@@ -159,7 +156,7 @@ func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 }
 
 func TestGetResponseForGaugeMessageShoudGiveErrorForUnsupportedMessage(t *testing.T) {
-
+	id = 0
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_StepNameRequest,
 		StepNameRequest: &gauge_messages.StepNameRequest{
@@ -185,6 +182,7 @@ func TestGetResponseForGaugeMessageShoudGiveErrorForUnsupportedMessage(t *testin
 }
 
 func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
+	id = 0
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_StepNameRequest,
 		StepNameRequest: &gauge_messages.StepNameRequest{
@@ -206,8 +204,40 @@ func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
 	conn := mockConn{sleepDuration: 2 * time.Second}
 	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
 
-	expected := fmt.Errorf("Request timedout for Message ID => %v", id)
+	expected := fmt.Errorf("StepNameRequest request timed out.")
 	if !reflect.DeepEqual(err, expected) {
 		t.Errorf("expected %v\n got %v", expected, err)
+	}
+}
+
+func TestGetResponseForGaugeMessageShoudNotErrorIfNoTimeoutIsSpecified(t *testing.T) {
+	id = 0
+	message := &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameRequest,
+		StepNameRequest: &gauge_messages.StepNameRequest{
+			StepValue: "The worrd {} has {} vowels.",
+		},
+	}
+
+	responseMessage = &gauge_messages.Message{
+		MessageType: gauge_messages.Message_StepNameResponse,
+		StepNameResponse: &gauge_messages.StepNameResponse{
+			FileName:      "foo.js",
+			HasAlias:      false,
+			IsStepPresent: true,
+			Span:          &gauge_messages.Span{Start: 2, End: 6, StartChar: 0, EndChar: 2},
+			StepName:      []string{"The word {} has {} vowels."},
+		},
+	}
+
+	conn := mockConn{}
+
+	res, err := GetResponseForMessageWithTimeout(message, conn, 0)
+
+	if err != nil {
+		t.Errorf("expected err to be nil. got %v", err)
+	}
+	if !reflect.DeepEqual(res, responseMessage) {
+		t.Errorf("expected : %v\ngot : %v", responseMessage, res)
 	}
 }

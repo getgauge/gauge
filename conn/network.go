@@ -34,7 +34,21 @@ import (
 type response struct {
 	result chan *gauge_messages.Message
 	err    chan error
-	t      *time.Timer
+	timer  *time.Timer
+}
+
+func (r *response) stopTimer() {
+	if r.timer != nil {
+		r.timer.Stop()
+	}
+}
+
+func (r *response) addTimer(timeout time.Duration, messageType string) {
+	if timeout > 0 {
+		r.timer = time.AfterFunc(timeout, func() {
+			r.err <- fmt.Errorf("%s request timed out.", messageType)
+		})
+	}
 }
 
 type messages struct {
@@ -107,13 +121,10 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 
 func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response, timeout time.Duration) {
 	message.MessageId = common.GetUniqueID()
-	res.t = time.AfterFunc(timeout, func() {
-		res.err <- fmt.Errorf("Request timedout for Message ID => %v", message.GetMessageId())
-	})
-
+	res.addTimer(timeout, message.GetMessageType().String())
 	handle := func(err error) {
 		if err != nil {
-			res.t.Stop()
+			res.stopTimer()
 			res.err <- err
 		}
 	}
@@ -135,7 +146,7 @@ func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, 
 
 	m.get(responseMessage.GetMessageId()).result <- responseMessage
 	m.delete(responseMessage.GetMessageId())
-	res.t.Stop()
+	res.stopTimer()
 }
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
@@ -145,9 +156,11 @@ func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, t time.Duration) (*gauge_messages.Message, error) {
+// Sends request to plugin for a message. If response is not received for the given message within the configured timeout, an error is thrown
+// To wait indefinitely for the response from the plugin, set timeout value as 0.
+func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, timeout time.Duration) (*gauge_messages.Message, error) {
 	res := response{result: make(chan *gauge_messages.Message), err: make(chan error)}
-	go getResponseForGaugeMessage(message, conn, res, t)
+	go getResponseForGaugeMessage(message, conn, res, timeout)
 	select {
 	case err := <-res.err:
 		return nil, err
