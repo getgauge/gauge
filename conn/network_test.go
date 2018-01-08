@@ -204,7 +204,7 @@ func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
 	conn := mockConn{sleepDuration: 2 * time.Second}
 	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
 
-	expected := fmt.Errorf("StepNameRequest request timed out.")
+	expected := fmt.Errorf("Request timed out for Message with ID => %v and Type => StepNameRequest", id)
 	if !reflect.DeepEqual(err, expected) {
 		t.Errorf("expected %v\n got %v", expected, err)
 	}
