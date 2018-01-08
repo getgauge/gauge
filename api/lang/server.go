@@ -19,6 +19,7 @@ package lang
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"os"
@@ -27,6 +28,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -90,7 +92,9 @@ type codeLensRegistrationOptions struct {
 }
 
 type documentSelector struct {
+	Scheme   string `json:"scheme"`
 	Language string `json:"language"`
+	Pattern  string `json:"pattern"`
 }
 
 func newHandler() jsonrpc2.Handler {
@@ -234,11 +238,16 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	var result string
 	// TODO : fetch the language dynamically
+	ds := documentSelector{
+		Language: "javascript",
+		Pattern:  fmt.Sprintf("%s/**/*", config.ProjectRoot),
+		Scheme:   "file",
+	}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
-		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
-		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}},
-		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, SyncKind: lsp.TDSKFull}},
-		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelector{Language: "javascript"}}, ResolveProvider: false}},
+		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
+		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
+		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, SyncKind: lsp.TDSKFull}},
+		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, ResolveProvider: false}},
 	}}, result)
 }
 

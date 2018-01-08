@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
+	"os"
 )
 
 func Test(t *testing.T) { TestingT(t) }
@@ -69,23 +70,36 @@ func (s *MySuite) TestLoggerInitWithErrorLevel(c *C) {
 
 func (s *MySuite) TestGetLogFileGivenRelativePathInGaugeProject(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
+	expected := filepath.Join(config.ProjectRoot, logs, apiLogFileName)
 
 	c.Assert(GetLogFile(apiLogFileName), Equals, expected)
 }
 
-func (s *MySuite) TestGetLogFileInGaugeProject(c *C) {
+func (s *MySuite) TestGetLogFileInGaugeProjectGivenAbsPath(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
 
 	c.Assert(GetLogFile(filepath.Join(config.ProjectRoot, apiLogFileName)), Equals, expected)
 }
 
-func (s *MySuite) TestGetLogFileInGaugeProjectGivenAbsPath(c *C) {
+func (s *MySuite) TestGetLogFileInGaugeProjectCustomPath(c *C) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
 
 	logFile := GetLogFile(filepath.Join(customLogsDir, apiLogFileName))
 
 	c.Assert(logFile, Equals, filepath.Join(customLogsDir, apiLogFileName))
+}
+
+func (s *MySuite) TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(c *C) {
+	myLogsDir := "my_logs"
+	os.Setenv(logsDirectory, myLogsDir)
+	defer os.Unsetenv(logsDirectory)
+
+	config.ProjectRoot, _ = filepath.Abs("_testdata")
+	expected := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
+
+	logFile := GetLogFile(apiLogFileName)
+
+	c.Assert(logFile, Equals, expected)
 }
