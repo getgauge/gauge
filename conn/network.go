@@ -43,10 +43,10 @@ func (r *response) stopTimer() {
 	}
 }
 
-func (r *response) addTimer(timeout time.Duration, messageType string) {
+func (r *response) addTimer(timeout time.Duration, message *gauge_messages.Message,) {
 	if timeout > 0 {
 		r.timer = time.AfterFunc(timeout, func() {
-			r.err <- fmt.Errorf("%s request timed out.", messageType)
+			r.err <- fmt.Errorf("Request timed out for Message with ID => %v and Type => %s", message.GetMessageId(), message.GetMessageType().String())
 		})
 	}
 }
@@ -121,7 +121,7 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 
 func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response, timeout time.Duration) {
 	message.MessageId = common.GetUniqueID()
-	res.addTimer(timeout, message.GetMessageType().String())
+	res.addTimer(timeout, message)
 	handle := func(err error) {
 		if err != nil {
 			res.stopTimer()
