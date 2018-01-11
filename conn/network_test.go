@@ -120,7 +120,7 @@ func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 
 func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 	id = 1234
-	r := response{
+	r := &response{
 		err:    make(chan error),
 		result: make(chan *gauge_messages.Message),
 	}
@@ -147,7 +147,7 @@ func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 
 	conn := mockConn{}
 
-	go getResponseForGaugeMessage(message, conn, response{}, 3*time.Second)
+	go getResponseForGaugeMessage(message, conn, &response{}, 3*time.Second)
 
 	response := <-r.result
 	if !reflect.DeepEqual(response, responseMessage) {
