@@ -124,7 +124,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.Kind = gauge.ScenarioKind
 			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
-		} else if IsStep(trimmedLine) {
+		} else if parser.isStep(trimmedLine) {
 			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
 			if isInState(parser.currentState, tagsScope) {
@@ -192,11 +192,8 @@ func (parser *SpecParser) isScenarioHeading(text string) bool {
 	return false
 }
 
-func IsStep(text string) bool {
-	text = strings.TrimSpace(text)
-	if len(text) == 0 {
-		return false
-	} else if len(text) > 1 {
+func (parser *SpecParser) isStep(text string) bool {
+	if len(text) > 1 {
 		return text[0] == '*' && text[1] != '*'
 	} else {
 		return text[0] == '*'
