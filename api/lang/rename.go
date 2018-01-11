@@ -6,12 +6,12 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"github.com/getgauge/gauge/gauge"
 )
 
 func rename(req *jsonrpc2.Request) (interface{}, error) {
@@ -38,7 +38,7 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 	}
 	newName := getNewStepName(params, step)
 
-	refactortingResult := refactor.GetRefactoredSteps(step.GetLineText(), newName, nil, []string{common.SpecsDirectoryName})
+	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{common.SpecsDirectoryName})
 	for _, warning := range refactortingResult.Warnings {
 		logger.Warningf(warning)
 	}
@@ -53,8 +53,12 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 	if err := addWorkspaceEdits(&result, refactortingResult.ConceptsChanged); err != nil {
 		return nil, err
 	}
+	if err := addWorkspaceEdits(&result, refactortingResult.RunnerFilesChanged); err != nil {
+		return nil, err
+	}
 	return result, nil
 }
+
 func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
 	newName := strings.TrimSpace(strings.TrimPrefix(params.NewName, "*"))
 	if step.HasInlineTable {

@@ -61,6 +61,7 @@ It has these top-level messages:
 	SuiteDataStoreInitRequest
 	ParameterPosition
 	RefactorRequest
+	FileChanges
 	RefactorResponse
 	StepNameRequest
 	StepNameResponse
