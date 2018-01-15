@@ -170,6 +170,7 @@ func (parser *SpecParser) checkTag(text string) (bool, int) {
 	}
 	return false, -1
 }
+
 func (parser *SpecParser) isTagEndingWithComma(text string) bool {
 	return strings.HasSuffix(strings.ToLower(text), ",")
 }

@@ -36,8 +36,8 @@ Scenario Heading
 
 * Step text`
 
-	f = &files{cache: make(map[string][]string)}
-	f.add("foo.spec", specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
 	p := json.RawMessage(b)
@@ -92,8 +92,8 @@ Another Scenario
 * another step
 `
 
-	f = &files{cache: make(map[string][]string)}
-	f.add("foo.spec", specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
 	p := json.RawMessage(b)
@@ -164,8 +164,8 @@ Scenario Heading
 
 `
 
-	f = &files{cache: make(map[string][]string)}
-	f.add("foo.spec", specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
 	p := json.RawMessage(b)

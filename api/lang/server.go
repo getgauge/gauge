@@ -150,6 +150,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return codeLenses(req)
 	case "textDocument/codeAction":
 		return codeActions(req)
+	case "textDocument/rename":
+		return rename(req)
 	case "textDocument/documentSymbol":
 		return documentSymbols(req)
 	case "workspace/symbol":
@@ -179,6 +181,7 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 			CodeActionProvider:         true,
 			DocumentSymbolProvider:     true,
 			WorkspaceSymbolProvider:    true,
+			RenameProvider:             true,
 		},
 	}
 }

@@ -30,60 +30,64 @@ type files struct {
 	sync.Mutex
 }
 
-func (f *files) add(uri, text string) {
-	f.Lock()
-	defer f.Unlock()
+func (file *files) add(uri, text string) {
+	file.Lock()
+	defer file.Unlock()
 	text = strings.Replace(text, "\r\n", "\n", -1)
-	f.cache[uri] = strings.Split(text, "\n")
+	file.cache[uri] = strings.Split(text, "\n")
 }
 
-func (f *files) remove(uri string) {
-	f.Lock()
-	defer f.Unlock()
-	delete(f.cache, uri)
+func (file *files) remove(uri string) {
+	file.Lock()
+	defer file.Unlock()
+	delete(file.cache, uri)
 }
 
-func (f *files) line(uri string, lineNo int) string {
-	f.Lock()
-	defer f.Unlock()
-	return f.cache[uri][lineNo]
+func (file *files) line(uri string, lineNo int) string {
+	file.Lock()
+	defer file.Unlock()
+	return file.cache[uri][lineNo]
 }
 
-func (files *files) content(uri string) []string {
-	f.Lock()
-	defer f.Unlock()
-	return f.cache[uri]
+func (file *files) content(uri string) []string {
+	file.Lock()
+	defer file.Unlock()
+	return file.cache[uri]
 }
 
-func (files *files) exists(uri string) bool {
-	f.Lock()
-	defer f.Unlock()
-	_, ok := f.cache[uri]
+func (file *files) exists(uri string) bool {
+	file.Lock()
+	defer file.Unlock()
+	_, ok := file.cache[uri]
 	return ok
 }
 
-var f = &files{cache: make(map[string][]string)}
+var openFilesCache = &files{cache: make(map[string][]string)}
 
 func openFile(params lsp.DidOpenTextDocumentParams) {
-	f.add(params.TextDocument.URI, params.TextDocument.Text)
+	openFilesCache.add(params.TextDocument.URI, params.TextDocument.Text)
 }
 
 func closeFile(params lsp.DidCloseTextDocumentParams) {
-	f.remove(params.TextDocument.URI)
+	openFilesCache.remove(params.TextDocument.URI)
 }
 
 func changeFile(params lsp.DidChangeTextDocumentParams) {
-	f.add(params.TextDocument.URI, params.ContentChanges[0].Text)
+	openFilesCache.add(params.TextDocument.URI, params.ContentChanges[0].Text)
 }
 
 func getLine(uri string, line int) string {
-	return f.line(uri, line)
+	return openFilesCache.line(uri, line)
 }
 
 func getContent(uri string) string {
-	return strings.Join(f.content(uri), "\n")
+	return strings.Join(openFilesCache.content(uri), "\n")
+}
+
+func getLineCount(uri string) int {
+	return len(openFilesCache.content(uri))
 }
 
 func isOpen(uri string) bool {
-	return f.exists(uri)
+	return openFilesCache.exists(uri)
 }

@@ -37,8 +37,8 @@ Scenario Heading
 
 * Step text`
 
-	f = &files{cache: make(map[string][]string)}
-	f.add("foo.spec", specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("foo.spec", specText)
 
 	want := []lsp.TextEdit{
 		{
@@ -72,8 +72,8 @@ func TestFormatParseError(t *testing.T) {
 
 * Step text`
 
-	f = &files{cache: make(map[string][]string)}
-	f.add("foo.spec", specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add("foo.spec", specText)
 
 	specFile := "foo.spec"
 

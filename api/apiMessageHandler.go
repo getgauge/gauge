@@ -214,7 +214,7 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	} else {
 		logger.APILog.Errorf("Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
 	}
-	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanges()}
+	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanged()}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
 }
 

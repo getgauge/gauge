@@ -272,8 +272,8 @@ Scenario Heading2
 * Step text`
 
 	uri := util.ConvertPathToURI("foo.spec")
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
 	p := json.RawMessage(b)
 
@@ -294,7 +294,7 @@ Scenario Heading2
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
 
-	f.remove(uri)
+	openFilesCache.remove(uri)
 }
 
 func TestDocumentSymbolsForConcept(t *testing.T) {
@@ -312,8 +312,8 @@ func TestDocumentSymbolsForConcept(t *testing.T) {
 	`
 
 	uri := util.ConvertPathToURI("foo.cpt")
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, cptText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, cptText)
 	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
 	p := json.RawMessage(b)
 
@@ -333,7 +333,7 @@ func TestDocumentSymbolsForConcept(t *testing.T) {
 		t.Errorf("expected %v to be equal %v", info, want)
 	}
 
-	f.remove(uri)
+	openFilesCache.remove(uri)
 }
 
 func TestGetSpecSymbol(t *testing.T) {

@@ -39,8 +39,8 @@ Scenario Heading
 * Say <hello> to <gauge>`
 
 	uri := util.ConvertPathToURI("foo.spec")
-	f = &files{cache: make(map[string][]string)}
-	f.add(uri, specText)
+	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache.add(uri, specText)
 
 	b, _ := json.Marshal("Say {} to {}")
 	params := json.RawMessage(b)
