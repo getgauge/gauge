@@ -52,17 +52,17 @@ func (r *response) addTimer(timeout time.Duration, message *gauge_messages.Messa
 }
 
 type messages struct {
-	m map[int64]*response
+	m map[int64]response
 	sync.Mutex
 }
 
-func (m *messages) get(k int64) *response {
+func (m *messages) get(k int64) response {
 	m.Lock()
 	defer m.Unlock()
 	return m.m[k]
 }
 
-func (m *messages) put(k int64, res *response) {
+func (m *messages) put(k int64, res response) {
 	m.Lock()
 	defer m.Unlock()
 	m.m[k] = res
@@ -74,7 +74,7 @@ func (m *messages) delete(k int64) {
 	delete(m.m, k)
 }
 
-var m = &messages{m: make(map[int64]*response)}
+var m = &messages{m: make(map[int64]response)}
 
 func writeDataAndGetResponse(conn net.Conn, messageBytes []byte) ([]byte, error) {
 	if err := Write(conn, messageBytes); err != nil {
@@ -119,7 +119,7 @@ func WriteGaugeMessage(message *gauge_messages.Message, conn net.Conn) error {
 	return Write(conn, data)
 }
 
-func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res *response, timeout time.Duration) {
+func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, res response, timeout time.Duration) {
 	message.MessageId = common.GetUniqueID()
 	res.addTimer(timeout, message)
 	handle := func(err error) {
@@ -145,10 +145,9 @@ func getResponseForGaugeMessage(message *gauge_messages.Message, conn net.Conn, 
 	handle(err)
 
 	responseRes := m.get(responseMessage.GetMessageId())
-	responseRes.result <- responseMessage
 	responseRes.stopTimer()
+	responseRes.result <- responseMessage
 	m.delete(responseMessage.GetMessageId())
-
 }
 
 func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
@@ -161,7 +160,7 @@ func checkUnsupportedResponseMessage(message *gauge_messages.Message) error {
 // Sends request to plugin for a message. If response is not received for the given message within the configured timeout, an error is thrown
 // To wait indefinitely for the response from the plugin, set timeout value as 0.
 func GetResponseForMessageWithTimeout(message *gauge_messages.Message, conn net.Conn, timeout time.Duration) (*gauge_messages.Message, error) {
-	res := &response{result: make(chan *gauge_messages.Message), err: make(chan error)}
+	res := response{result: make(chan *gauge_messages.Message), err: make(chan error)}
 	go getResponseForGaugeMessage(message, conn, res, timeout)
 	select {
 	case err := <-res.err:
