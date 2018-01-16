@@ -78,6 +78,9 @@ func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 }
 
 var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
+	if lRunner.runner == nil {
+		return nil, fmt.Errorf("Error while connecting to runner")
+	}
 	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 }
 
