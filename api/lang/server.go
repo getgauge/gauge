@@ -56,7 +56,6 @@ var provider infoProvider
 func Server(p infoProvider) *server {
 	provider = p
 	provider.Init()
-	startRunner()
 	return &server{}
 }
 
@@ -240,12 +239,12 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	var result string
-	// TODO : fetch the language dynamically
-	ds := documentSelector{
-		Language: "javascript",
-		Pattern:  fmt.Sprintf("%s/**/*", config.ProjectRoot),
-		Scheme:   "file",
+	id, err := getLanugeIdetifier()
+	if err != nil || id == "" {
+		return
 	}
+	startRunner()
+	ds := documentSelector{"file", id, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
 		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},

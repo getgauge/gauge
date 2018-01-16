@@ -144,6 +144,7 @@ type RunnerInfo struct {
 	Lib                 string
 	Multithreaded       bool
 	GaugeVersionSupport version.VersionSupport
+	LspLangId           string
 }
 
 func ExecuteInitHookForRunner(language string) error {

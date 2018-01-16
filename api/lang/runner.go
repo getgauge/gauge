@@ -49,10 +49,6 @@ func startRunner() {
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
-	m, _ := manifest.ProjectManifest()
-	if m.Language != "js" {
-		return nil, nil
-	}
 	logger.GaugeLog.Infof("Starting language runner")
 	outfile, err := os.OpenFile(logger.GetLogFile(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
@@ -113,5 +109,16 @@ func killRunner() {
 	if lRunner.runner != nil {
 		lRunner.runner.Kill()
 	}
+}
 
+func getLanugeIdetifier() (string, error) {
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		return "", err
+	}
+	info, err := runner.GetRunnerInfo(m.Language)
+	if err != nil {
+		return "", err
+	}
+	return info.LspLangId, nil
 }
