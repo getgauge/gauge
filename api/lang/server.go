@@ -244,7 +244,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 		return
 	}
 	startRunner()
-	ds := documentSelector{"file", id, fmt.Sprintf("%s/*/**", config.ProjectRoot)}
+	ds := documentSelector{"file", id, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
 		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
