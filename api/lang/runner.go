@@ -114,7 +114,7 @@ func killRunner() {
 	}
 }
 
-func getLanugeIdetifier() (string, error) {
+func getLanguageIdentifier() (string, error) {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		return "", err

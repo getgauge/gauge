@@ -52,6 +52,7 @@ type infoProvider interface {
 }
 
 var provider infoProvider
+var clientCapabilities ClientCapabilities
 
 func Server(p infoProvider) *server {
 	provider = p
@@ -96,6 +97,15 @@ type documentSelector struct {
 	Pattern  string `json:"pattern"`
 }
 
+type InitializeParams struct {
+	RootPath     string             `json:"rootPath,omitempty"`
+	Capabilities ClientCapabilities `json:"capabilities,omitempty"`
+}
+
+type ClientCapabilities struct {
+	SaveFiles bool `json:"saveFiles,omitempty"`
+}
+
 func newHandler() jsonrpc2.Handler {
 	return lspHandler{jsonrpc2.HandlerWithError((&LangHandler{}).handle)}
 }
@@ -111,9 +121,14 @@ func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
 	switch req.Method {
 	case "initialize":
+		if err := cacheInitializeParams(req); err != nil {
+			return nil, err
+		}
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
-		registerRunnerCapabilities(conn, ctx)
+		if err := registerRunnerCapabilities(conn, ctx); err != nil {
+			return nil, err
+		}
 		go publishDiagnostics(ctx, conn)
 		return nil, nil
 	case "shutdown":
@@ -150,6 +165,9 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/codeAction":
 		return codeActions(req)
 	case "textDocument/rename":
+		if err := sendSaveFilesRequest(ctx, conn); err != nil {
+			return nil, err
+		}
 		return rename(req)
 	case "textDocument/documentSymbol":
 		return documentSymbols(req)
@@ -166,6 +184,24 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	default:
 		return nil, nil
 	}
+}
+
+func sendSaveFilesRequest(ctx context.Context, conn jsonrpc2.JSONRPC2) error {
+	if clientCapabilities.SaveFiles {
+		var result interface{}
+		return conn.Call(ctx, "workspace/saveFiles", nil, &result)
+	}
+	return nil
+}
+
+func cacheInitializeParams(req *jsonrpc2.Request) error {
+	var params InitializeParams
+	var err error
+	if err = json.Unmarshal(*req.Params, &params); err != nil {
+		return err
+	}
+	clientCapabilities = params.Capabilities
+	return nil
 }
 
 func gaugeLSPCapabilities() lsp.InitializeResult {
@@ -237,11 +273,11 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	return err
 }
 
-func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
-	var result string
-	id, err := getLanugeIdetifier()
+func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
+	var result interface{}
+	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
-		return
+		return err
 	}
 	startRunner()
 	ds := documentSelector{"file", id, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
@@ -250,7 +286,8 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
 		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, SyncKind: lsp.TDSKFull}},
 		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, ResolveProvider: false}},
-	}}, result)
+	}}, &result)
+	return nil
 }
 
 type lspWriter struct {
