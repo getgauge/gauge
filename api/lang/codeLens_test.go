@@ -59,6 +59,18 @@ Scenario Heading
 		},
 	}
 
+	specDebugCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Spec",
+			Arguments: getExecutionArgs("foo.spec"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{0, 0},
+			End:   lsp.Position{0, 10},
+		},
+	}
+
 	scenCodeLens := lsp.CodeLens{
 		Command: lsp.Command{
 			Command:   "gauge.execute",
@@ -70,7 +82,20 @@ Scenario Heading
 			End:   lsp.Position{3, 12},
 		},
 	}
-	want := []lsp.CodeLens{scenCodeLens, specCodeLens}
+
+	scenDebugCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Scenario",
+			Arguments: getExecutionArgs("foo.spec:4"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{3, 0},
+			End:   lsp.Position{3, 14},
+		},
+	}
+
+	want := []lsp.CodeLens{scenCodeLens, scenDebugCodeLens, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)
@@ -114,6 +139,18 @@ Another Scenario
 		},
 	}
 
+	specDebugCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Spec",
+			Arguments: getExecutionArgs("foo.spec"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{0, 0},
+			End:   lsp.Position{0, 10},
+		},
+	}
+
 	scenCodeLens1 := lsp.CodeLens{
 		Command: lsp.Command{
 			Command:   "gauge.execute",
@@ -123,6 +160,18 @@ Another Scenario
 		Range: lsp.Range{
 			Start: lsp.Position{3, 0},
 			End:   lsp.Position{3, 12},
+		},
+	}
+
+	scenDebugCodeLens1 := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Scenario",
+			Arguments: getExecutionArgs("foo.spec:4"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{3, 0},
+			End:   lsp.Position{3, 14},
 		},
 	}
 
@@ -138,7 +187,19 @@ Another Scenario
 		},
 	}
 
-	want := []lsp.CodeLens{scenCodeLens1, scenCodeLens2, specCodeLens}
+	scenDebugCodeLens2 := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Scenario",
+			Arguments: getExecutionArgs("foo.spec:9"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{8, 0},
+			End:   lsp.Position{8, 14},
+		},
+	}
+
+	want := []lsp.CodeLens{scenCodeLens1, scenDebugCodeLens1, scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)
@@ -187,6 +248,18 @@ Scenario Heading
 		},
 	}
 
+	specDebugCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Spec",
+			Arguments: getExecutionArgs("foo.spec"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{0, 0},
+			End:   lsp.Position{0, 10},
+		},
+	}
+
 	specCodeLens2 := lsp.CodeLens{
 		Command: lsp.Command{
 			Command:   "gauge.execute.inParallel",
@@ -211,7 +284,19 @@ Scenario Heading
 		},
 	}
 
-	want := []lsp.CodeLens{scenCodeLens2, specCodeLens, specCodeLens2}
+	scenDebugCodeLens2 := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.debug",
+			Title:     "Debug Scenario",
+			Arguments: getExecutionArgs("foo.spec:12"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{11, 0},
+			End:   lsp.Position{11, 14},
+		},
+	}
+
+	want := []lsp.CodeLens{scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens, specCodeLens2}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)

@@ -33,8 +33,15 @@ import (
 
 const (
 	executeCommand    = "gauge.execute"
+	debugCommand      = "gauge.debug"
 	inParallelCommand = "gauge.execute.inParallel"
 	referencesCommand = "gauge.showReferences"
+
+	runSpecCodeLens       = "Run Spec"
+	debugSpecCodeLens     = "Debug Spec"
+	runInParallelCodeLens = "Run in parallel"
+	runScenarioCodeLens   = "Run Scenario"
+	debugScenarioCodeLens = "Debug Scenario"
 )
 
 func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
@@ -67,8 +74,10 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 		return nil, err
 	}
 	var codeLenses []lsp.CodeLens
-	specLenses := createCodeLens(spec.Heading.LineNo-1, "Run Spec", executeCommand, getExecutionArgs(spec.FileName))
-	codeLenses = append(codeLenses, specLenses)
+	runCodeLens := createCodeLens(spec.Heading.LineNo-1, runSpecCodeLens, executeCommand, getExecutionArgs(spec.FileName))
+	codeLenses = append(codeLenses, runCodeLens)
+	debugCodeLens := createCodeLens(spec.Heading.LineNo-1, debugSpecCodeLens, debugCommand, getExecutionArgs(spec.FileName))
+	codeLenses = append(codeLenses, debugCodeLens)
 	if spec.DataTable.IsInitialized() {
 		codeLenses = append(codeLenses, getDataTableLenses(spec)...)
 	}
@@ -108,7 +117,7 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 
 func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
-	lenses = append(lenses, createCodeLens(spec.Heading.LineNo-1, "Run in parallel", inParallelCommand, getExecutionArgs(spec.FileName)))
+	lenses = append(lenses, createCodeLens(spec.Heading.LineNo-1, runInParallelCodeLens, inParallelCommand, getExecutionArgs(spec.FileName)))
 	return lenses
 }
 
@@ -116,8 +125,11 @@ func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {
 	var lenses []lsp.CodeLens
 	for _, sce := range spec.Scenarios {
 		args := getExecutionArgs(fmt.Sprintf("%s:%d", spec.FileName, sce.Heading.LineNo))
-		lens := createCodeLens(sce.Heading.LineNo-1, "Run Scenario", executeCommand, args)
+		lens := createCodeLens(sce.Heading.LineNo-1, runScenarioCodeLens, executeCommand, args)
 		lenses = append(lenses, lens)
+		debugCodeLens := createCodeLens(sce.Heading.LineNo-1, debugScenarioCodeLens, debugCommand, args)
+		lenses = append(lenses, debugCodeLens)
+
 	}
 	return lenses
 }
