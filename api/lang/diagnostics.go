@@ -24,6 +24,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
@@ -79,7 +80,9 @@ func createValidationDiagnostics(errors []validation.StepValidationError, diagno
 	for _, err := range errors {
 		uri := util.ConvertPathToURI(err.FileName())
 		d := createDiagnostic(uri, err.Message(), err.Step().LineNo-1, 1)
-		d.Code = err.Suggestion()
+		if err.ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
+			d.Code = err.Suggestion()
+		}
 		diagnostics[uri] = append(diagnostics[uri], d)
 	}
 	return
