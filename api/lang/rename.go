@@ -8,6 +8,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -18,16 +19,16 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.RenameParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		logger.APILog.Debugf("failed to parse rename request %s", err.Error())
 		return nil, err
 	}
 
-	specDetail := provider.GetAvailableSpecDetails([]string{util.ConvertURItoFilePath(params.TextDocument.URI)})[0]
-	if len(specDetail.Errs) > 0 {
+	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), util.ConvertURItoFilePath(params.TextDocument.URI))
+	if !pResult.Ok {
 		return nil, fmt.Errorf("refactoring failed due to parse errors")
 	}
 	var step *gauge.Step
-	for _, item := range specDetail.Spec.AllItems() {
+	for _, item := range spec.AllItems() {
 		if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
 			step = item.(*gauge.Step)
 			break
