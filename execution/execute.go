@@ -49,6 +49,7 @@ import (
 	"runtime/debug"
 
 	"encoding/json"
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
@@ -65,7 +66,6 @@ import (
 	"github.com/getgauge/gauge/validation"
 	"io/ioutil"
 	"path/filepath"
-	"github.com/getgauge/common"
 )
 
 const (
@@ -168,14 +168,18 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 }
 
 type executionStatus struct {
-	Executed int
-	Passed   int
-	Failed   int
-	Skipped  int
+	SpecsExecuted int
+	SpecsPassed   int
+	SpecsFailed   int
+	SpecsSkipped  int
+	SceExecuted   int
+	ScePassed     int
+	SceFailed     int
+	SceSkipped    int
 }
 
 func newExecutionStatus() *executionStatus {
-	return &executionStatus{Executed: 0, Passed: 0, Failed: 0, Skipped: 0}
+	return &executionStatus{SpecsExecuted: 0, SpecsPassed: 0, SpecsFailed: 0, SpecsSkipped: 0, SceExecuted: 0, ScePassed: 0, SceFailed: 0, SceSkipped: 0}
 }
 
 func (status *executionStatus) getJSON() (string, error) {
@@ -186,12 +190,16 @@ func (status *executionStatus) getJSON() (string, error) {
 	return string(j), nil
 }
 
-func writeExecutionStatus(executedScenarios int, passedScenarios int, failedScenarios int, skippedScenarios int) {
+func writeExecutionStatus(executedSpecs int, passedSpecs int, failedSpecs int, skippedSpecs int, executedScenarios int, passedScenarios int, failedScenarios int, skippedScenarios int) {
 	executionStatus := newExecutionStatus()
-	executionStatus.Executed = executedScenarios
-	executionStatus.Passed = passedScenarios
-	executionStatus.Failed = failedScenarios
-	executionStatus.Skipped = skippedScenarios
+	executionStatus.SpecsExecuted = executedSpecs
+	executionStatus.SpecsPassed = passedSpecs
+	executionStatus.SpecsFailed = failedSpecs
+	executionStatus.SpecsSkipped = skippedSpecs
+	executionStatus.SceExecuted = executedScenarios
+	executionStatus.ScePassed = passedScenarios
+	executionStatus.SceFailed = failedScenarios
+	executionStatus.SceSkipped = skippedScenarios
 	contents, err := executionStatus.getJSON()
 	if err != nil {
 		logger.Fatalf("Unable to parse execution status information : %v", err.Error())
@@ -207,7 +215,7 @@ func writeExecutionStatus(executedScenarios int, passedScenarios int, failedScen
 	}
 }
 
-func ReadExecutionStatus() (interface{}, error){
+func ReadExecutionStatus() (interface{}, error) {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile))
 	if err != nil {
 		logger.Fatalf("Failed to read execution status information. Reason: %s", err.Error())
@@ -252,7 +260,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	logger.Infof("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Infof("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
-	writeExecutionStatus(nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	writeExecutionStatus(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 
 	if suiteResult.IsFailed || !isParsingOk {
 		return 1
