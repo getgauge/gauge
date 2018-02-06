@@ -49,6 +49,26 @@ func specs() (interface{}, error) {
 	return specs, nil
 }
 
+func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
+	var cwd string
+	if err := json.Unmarshal(*req.Params, &cwd); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return nil, err
+	}
+	return getImplementationFiles(cwd)
+}
+
+func getImplementationFiles(cwd string) (interface{}, error) {
+	if lRunner.runner == nil {
+		return nil, nil
+	}
+	implementationFileListResponse, err := getImplementationFileList(cwd)
+	if err != nil {
+		return nil, nil
+	}
+	return implementationFileListResponse.ImplementationFilePaths, nil
+}
+
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	var err error

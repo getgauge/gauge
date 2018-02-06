@@ -69,6 +69,8 @@ It has these top-level messages:
 	CacheFileRequest
 	StepPositionsRequest
 	StepPositionsResponse
+	ImplementationFileListRequest
+	ImplementationFileListResponse
 	Message
 	ProtoSpec
 	ProtoItem

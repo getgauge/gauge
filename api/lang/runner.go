@@ -100,6 +100,17 @@ func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
 	return stepPositionsResponse, nil
 }
 
+func getImplementationFileList(cwd string) (*gm.ImplementationFileListResponse, error) {
+	implementationFileListRequest := &gm.Message{MessageType: gm.Message_ImplementationFileListRequest, ImplementationFileListRequest: &gm.ImplementationFileListRequest{FolderPath: cwd}}
+	response, err := GetResponseFromRunner(implementationFileListRequest)
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	implementationFileListResponse := response.GetImplementationFileListResponse()
+	return implementationFileListResponse, nil
+}
+
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
 	response, err := GetResponseFromRunner(getAllStepsRequest)
