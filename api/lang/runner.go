@@ -111,6 +111,17 @@ func getImplementationFileList(cwd string) (*gm.ImplementationFileListResponse, 
 	return implementationFileListResponse, nil
 }
 
+func putStubImplementation(filePath string, code string) (*gm.StubImplementationCodeResponse, error) {
+	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{FilePath: filePath, Code: code}}
+	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
+	if err != nil {
+		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return nil, err
+	}
+	stubImplementationCodeResponse := response.GetStubImplementationCodeResponse()
+	return stubImplementationCodeResponse, nil
+}
+
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
 	response, err := GetResponseFromRunner(getAllStepsRequest)

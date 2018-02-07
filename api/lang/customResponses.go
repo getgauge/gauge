@@ -40,6 +40,11 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
+type StubImpl struct {
+	FilePath string `json:"filePath"`
+	Code     string `json:"code"`
+}
+
 func specs() (interface{}, error) {
 	specDetails := provider.GetAvailableSpecDetails([]string{})
 	specs := make([]specInfo, 0)
@@ -64,9 +69,25 @@ func getImplementationFiles(cwd string) (interface{}, error) {
 	}
 	implementationFileListResponse, err := getImplementationFileList(cwd)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	return implementationFileListResponse.ImplementationFilePaths, nil
+}
+
+func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
+	var stubImplParams StubImpl
+	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return nil, err
+	}
+	if lRunner.runner == nil {
+		return nil, nil
+	}
+	putStubImplementationResponse, err := putStubImplementation(stubImplParams.FilePath, stubImplParams.Code)
+	if err != nil {
+		return nil, err
+	}
+	return putStubImplementationResponse, nil
 }
 
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {
