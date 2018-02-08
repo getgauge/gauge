@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/gauge"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
@@ -41,8 +42,8 @@ type specInfo struct {
 }
 
 type StubImpl struct {
-	FilePath string `json:"filePath"`
-	Code     string `json:"code"`
+	ImplementationFilePath string   `json:"implementationFilePath"`
+	StepTexts              []string `json:"stepTexts"`
 }
 
 func specs() (interface{}, error) {
@@ -54,20 +55,11 @@ func specs() (interface{}, error) {
 	return specs, nil
 }
 
-func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
-	var cwd string
-	if err := json.Unmarshal(*req.Params, &cwd); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
-	}
-	return getImplementationFiles(cwd)
-}
-
-func getImplementationFiles(cwd string) (interface{}, error) {
+func getImplFiles() (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	implementationFileListResponse, err := getImplementationFileList(cwd)
+	implementationFileListResponse, err := getImplementationFileList()
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +75,17 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	putStubImplementationResponse, err := putStubImplementation(stubImplParams.FilePath, stubImplParams.Code)
+	var stepVals []*gm.StepValidateRequest
+	for _, stepText := range stubImplParams.StepTexts {
+		stepValue, err := parser.ExtractStepValueAndParams(stepText, false)
+		if err != nil {
+			return nil, err
+		}
+		protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
+
+		stepVals = append(stepVals, &gm.StepValidateRequest{StepText: stepValue.StepValue, NumberOfParameters: int32(len(stepValue.Args)), StepValue: protoStepValue})
+	}
+	putStubImplementationResponse, err := putStubImplementation(stubImplParams.ImplementationFilePath, stepVals)
 	if err != nil {
 		return nil, err
 	}

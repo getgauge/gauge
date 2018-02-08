@@ -72,7 +72,6 @@ It has these top-level messages:
 	ImplementationFileListRequest
 	ImplementationFileListResponse
 	StubImplementationCodeRequest
-	StubImplementationCodeResponse
 	Message
 	ProtoSpec
 	ProtoItem
