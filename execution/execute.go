@@ -49,6 +49,9 @@ import (
 	"runtime/debug"
 
 	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -64,8 +67,6 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
-	"io/ioutil"
-	"path/filepath"
 )
 
 const (
@@ -168,18 +169,14 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 }
 
 type executionStatus struct {
-	SpecsExecuted int
-	SpecsPassed   int
-	SpecsFailed   int
-	SpecsSkipped  int
-	SceExecuted   int
-	ScePassed     int
-	SceFailed     int
-	SceSkipped    int
-}
-
-func newExecutionStatus() *executionStatus {
-	return &executionStatus{SpecsExecuted: 0, SpecsPassed: 0, SpecsFailed: 0, SpecsSkipped: 0, SceExecuted: 0, ScePassed: 0, SceFailed: 0, SceSkipped: 0}
+	SpecsExecuted int `json:"specsExecuted"`
+	SpecsPassed   int `json:"specsPassesd"`
+	SpecsFailed   int `json:"specsFailed"`
+	SpecsSkipped  int `json:"specsSkipped"`
+	SceExecuted   int `json:"sceExecuted"`
+	ScePassed     int `json:"scePassed"`
+	SceFailed     int `json:"sceFailed"`
+	SceSkipped    int `json:"sceSkipped"`
 }
 
 func (status *executionStatus) getJSON() (string, error) {
@@ -190,8 +187,8 @@ func (status *executionStatus) getJSON() (string, error) {
 	return string(j), nil
 }
 
-func writeExecutionStatus(executedSpecs int, passedSpecs int, failedSpecs int, skippedSpecs int, executedScenarios int, passedScenarios int, failedScenarios int, skippedScenarios int) {
-	executionStatus := newExecutionStatus()
+func writeExecutionStatus(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) {
+	executionStatus := &executionStatus{}
 	executionStatus.SpecsExecuted = executedSpecs
 	executionStatus.SpecsPassed = passedSpecs
 	executionStatus.SpecsFailed = failedSpecs
@@ -220,7 +217,7 @@ func ReadExecutionStatus() (interface{}, error) {
 	if err != nil {
 		logger.Fatalf("Failed to read execution status information. Reason: %s", err.Error())
 	}
-	meta := newExecutionStatus()
+	meta := &executionStatus{}
 	if err = json.Unmarshal([]byte(contents), meta); err != nil {
 		logger.Fatalf("Invalid execution status information. Reason: %s", err.Error())
 		return meta, err
