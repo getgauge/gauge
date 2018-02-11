@@ -75,7 +75,7 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	var stepVals []*gm.StepValidateRequest
+	var stepVals []*gm.ProtoStepValue
 	for _, stepText := range stubImplParams.StepTexts {
 		stepValue, err := parser.ExtractStepValueAndParams(stepText, false)
 		if err != nil {
@@ -83,7 +83,7 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 		}
 		protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
 
-		stepVals = append(stepVals, &gm.StepValidateRequest{StepText: stepValue.StepValue, NumberOfParameters: int32(len(stepValue.Args)), StepValue: protoStepValue})
+		stepVals = append(stepVals, protoStepValue)
 	}
 	putStubImplementationResponse, err := putStubImplementation(stubImplParams.ImplementationFilePath, stepVals)
 	if err != nil {

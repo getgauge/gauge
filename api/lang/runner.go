@@ -111,7 +111,7 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(filePath string, stepTexts []*gm.StepValidateRequest) (*gm.FileChanges, error) {
+func putStubImplementation(filePath string, stepTexts []*gm.ProtoStepValue) (*gm.FileChanges, error) {
 	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Steps: stepTexts}}
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
