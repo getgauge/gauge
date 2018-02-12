@@ -1034,7 +1034,7 @@ func (*ImplementationFileListRequest) Descriptor() ([]byte, []int) { return file
 
 // / Response for getting Implementation file list
 type ImplementationFileListResponse struct {
-	// / Get the implementation directory list for folder path
+	// / List of implementation files
 	ImplementationFilePaths []string `protobuf:"bytes,1,rep,name=implementationFilePaths" json:"implementationFilePaths,omitempty"`
 }
 
