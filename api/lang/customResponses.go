@@ -41,7 +41,7 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
-type StubImpl struct {
+type stubImpl struct {
 	ImplementationFilePath string   `json:"implementationFilePath"`
 	StepTexts              []string `json:"stepTexts"`
 }
@@ -67,7 +67,7 @@ func getImplFiles() (interface{}, error) {
 }
 
 func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
-	var stubImplParams StubImpl
+	var stubImplParams stubImpl
 	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
