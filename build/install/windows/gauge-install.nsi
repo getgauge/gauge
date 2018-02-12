@@ -91,7 +91,7 @@ BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
-InstallDir "$PROGRAMFILES\Gauge"
+;InstallDir "$PROGRAMFILES\Gauge"
 InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowUnInstDetails show
 
@@ -142,6 +142,9 @@ function .onInit
   ${EndIf}
   ;Only if it is silent install
   ${If} ${Silent}
+    ${If} $InstDir == ""
+      StrCpy $INSTDIR "$PROGRAMFILES\Gauge"
+    ${EndIf}
     ${GetParameters} $R0
     ;See if PLUGINS to install are specified via cmd line arg
     ${GetOptions} $R0 "/PLUGINS" $0
