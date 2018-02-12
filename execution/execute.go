@@ -48,6 +48,11 @@ import (
 
 	"runtime/debug"
 
+	"encoding/json"
+	"io/ioutil"
+	"path/filepath"
+
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
@@ -62,6 +67,10 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
+)
+
+const (
+	executionStatusFile = "executionStatus.json"
 )
 
 // NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
@@ -159,6 +168,63 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 	return newSimpleExecution(executionInfo, true)
 }
 
+type executionStatus struct {
+	SpecsExecuted int `json:"specsExecuted"`
+	SpecsPassed   int `json:"specsPassesd"`
+	SpecsFailed   int `json:"specsFailed"`
+	SpecsSkipped  int `json:"specsSkipped"`
+	SceExecuted   int `json:"sceExecuted"`
+	ScePassed     int `json:"scePassed"`
+	SceFailed     int `json:"sceFailed"`
+	SceSkipped    int `json:"sceSkipped"`
+}
+
+func (status *executionStatus) getJSON() (string, error) {
+	j, err := json.MarshalIndent(status, "", "\t")
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
+}
+
+func writeExecutionStatus(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) {
+	executionStatus := &executionStatus{}
+	executionStatus.SpecsExecuted = executedSpecs
+	executionStatus.SpecsPassed = passedSpecs
+	executionStatus.SpecsFailed = failedSpecs
+	executionStatus.SpecsSkipped = skippedSpecs
+	executionStatus.SceExecuted = executedScenarios
+	executionStatus.ScePassed = passedScenarios
+	executionStatus.SceFailed = failedScenarios
+	executionStatus.SceSkipped = skippedScenarios
+	contents, err := executionStatus.getJSON()
+	if err != nil {
+		logger.Fatalf("Unable to parse execution status information : %v", err.Error())
+	}
+	executionStatusFile := filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
+	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+	}
+	err = ioutil.WriteFile(executionStatusFile, []byte(contents), common.NewFilePermissions)
+	if err != nil {
+		logger.Fatalf("Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
+	}
+}
+
+func ReadExecutionStatus() (interface{}, error) {
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile))
+	if err != nil {
+		logger.Fatalf("Failed to read execution status information. Reason: %s", err.Error())
+	}
+	meta := &executionStatus{}
+	if err = json.Unmarshal([]byte(contents), meta); err != nil {
+		logger.Fatalf("Invalid execution status information. Reason: %s", err.Error())
+		return meta, err
+	}
+	return meta, nil
+}
+
 func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int {
 	nSkippedSpecs := suiteResult.SpecsSkippedCount
 	var nExecutedSpecs int
@@ -190,6 +256,8 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	logger.Infof("Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
 	logger.Infof("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Infof("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+
+	writeExecutionStatus(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 
 	if suiteResult.IsFailed || !isParsingOk {
 		return 1

@@ -36,6 +36,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"github.com/getgauge/gauge/execution"
 )
 
 type server struct{}
@@ -181,6 +182,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return scenarios(req)
 	case "gauge/specs":
 		return specs()
+	case "gauge/executionStatus":
+		return execution.ReadExecutionStatus()
 	default:
 		return nil, nil
 	}
