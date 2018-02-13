@@ -20,6 +20,8 @@ package lang
 import (
 	"os"
 
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
+
 	"fmt"
 
 	"github.com/getgauge/gauge/api"
@@ -111,15 +113,28 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(filePath string, stepTexts []*gm.ProtoStepValue) (*gm.FileChanges, error) {
+func putStubImplementation(result *lsp.WorkspaceEdit, filePath string, stepTexts []*gm.ProtoStepValue) error {
 	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Steps: stepTexts}}
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return err
 	}
-	fileChangesResponse := response.GetFileChanges()
-	return fileChangesResponse, nil
+	fileEditResponse := response.GetFileEditResponse()
+	uri := util.ConvertPathToURI(fileEditResponse.FilePath)
+	fileEdits := fileEditResponse.FileEdits
+
+	for _, elem := range fileEdits {
+		textEdit := lsp.TextEdit{
+			NewText: elem.Content,
+			Range: lsp.Range{
+				Start: lsp.Position{Line: int(elem.LineNumber), Character: 0},
+				End:   lsp.Position{Line: int(elem.LineNumber), Character: 0},
+			},
+		}
+		result.Changes[uri] = append(result.Changes[uri], textEdit)
+	}
+	return nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
