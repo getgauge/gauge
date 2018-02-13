@@ -170,7 +170,7 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 
 type executionStatus struct {
 	SpecsExecuted int `json:"specsExecuted"`
-	SpecsPassed   int `json:"specsPassesd"`
+	SpecsPassed   int `json:"specsPassed"`
 	SpecsFailed   int `json:"specsFailed"`
 	SpecsSkipped  int `json:"specsSkipped"`
 	SceExecuted   int `json:"sceExecuted"`
