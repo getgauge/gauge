@@ -136,15 +136,16 @@ SectionGroupEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 function .onInit
-  ${If} ${RunningX64}
-    SetRegView 64
-    StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
+  ${If} $INSTDIR == ""
+    ${If} ${RunningX64}
+      SetRegView 64
+      StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
+    ${Else}
+      StrCpy $INSTDIR "$PROGRAMFILES\Gauge"
+    ${EndIf}
   ${EndIf}
   ;Only if it is silent install
   ${If} ${Silent}
-    ${If} $InstDir == ""
-      StrCpy $INSTDIR "$PROGRAMFILES\Gauge"
-    ${EndIf}
     ${GetParameters} $R0
     ;See if PLUGINS to install are specified via cmd line arg
     ${GetOptions} $R0 "/PLUGINS" $0
