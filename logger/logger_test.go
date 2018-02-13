@@ -21,10 +21,11 @@ import (
 	"path/filepath"
 	"testing"
 
+	"os"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
-	"os"
 )
 
 func Test(t *testing.T) { TestingT(t) }
