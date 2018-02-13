@@ -72,8 +72,6 @@ It has these top-level messages:
 	ImplementationFileListRequest
 	ImplementationFileListResponse
 	StubImplementationCodeRequest
-	FileEditParam
-	FileEditResponse
 	Message
 	ProtoSpec
 	ProtoItem

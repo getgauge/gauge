@@ -24,6 +24,7 @@ import (
 
 	"fmt"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -120,20 +121,27 @@ func putStubImplementation(result *lsp.WorkspaceEdit, filePath string, stepTexts
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 		return err
 	}
-	fileEditResponse := response.GetFileEditResponse()
-	uri := util.ConvertPathToURI(fileEditResponse.FilePath)
-	fileEdits := fileEditResponse.FileEdits
+	fileEditResponse := response.GetFileChanges()
+	uri := util.ConvertPathToURI(fileEditResponse.FileName)
+	fileContent := fileEditResponse.FileContent
 
-	for _, elem := range fileEdits {
-		textEdit := lsp.TextEdit{
-			NewText: elem.Content,
-			Range: lsp.Range{
-				Start: lsp.Position{Line: int(elem.LineNumber), Character: 0},
-				End:   lsp.Position{Line: int(elem.LineNumber), Character: 0},
-			},
-		}
-		result.Changes[uri] = append(result.Changes[uri], textEdit)
+	var lastLineNo int
+	contents, err := common.ReadFileContents(filePath)
+	if err != nil {
+		lastLineNo = 0
+	} else {
+		lastLineNo = len(contents)
 	}
+
+	textEdit := lsp.TextEdit{
+		NewText: fileContent,
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: lastLineNo, Character: 0},
+		},
+	}
+	result.Changes[uri] = append(result.Changes[uri], textEdit)
+
 	return nil
 }
 
