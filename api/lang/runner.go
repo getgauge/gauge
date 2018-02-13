@@ -35,17 +35,19 @@ import (
 type langRunner struct {
 	runner   runner.Runner
 	killChan chan bool
+	lspID    string
 }
 
 var lRunner langRunner
 
-func startRunner() {
+func startRunner() error {
 	lRunner.killChan = make(chan bool)
 	var err error
 	lRunner.runner, err = connectToRunner(lRunner.killChan)
 	if err != nil {
-		logger.APILog.Infof("Unable to connect to runner : %s", err.Error())
+		return fmt.Errorf("Unable to connect to runner : %s", err.Error())
 	}
+	return nil
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {

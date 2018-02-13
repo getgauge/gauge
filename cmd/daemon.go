@@ -44,7 +44,7 @@ var (
 			}
 			if lsp {
 				track.Lsp()
-				lang.Server(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}).Start(logLevel)
+				lang.Start(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}, logLevel)
 				return
 			}
 			track.Daemon()

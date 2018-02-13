@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -36,10 +37,7 @@ import (
 	"github.com/op/go-logging"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"github.com/getgauge/gauge/execution"
 )
-
-type server struct{}
 
 type infoProvider interface {
 	Init()
@@ -54,12 +52,6 @@ type infoProvider interface {
 
 var provider infoProvider
 var clientCapabilities ClientCapabilities
-
-func Server(p infoProvider) *server {
-	provider = p
-	provider.Init()
-	return &server{}
-}
 
 type lspHandler struct {
 	jsonrpc2.Handler
@@ -127,11 +119,9 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
-		if err := registerRunnerCapabilities(conn, ctx); err != nil {
-			return nil, err
-		}
+		err := registerRunnerCapabilities(conn, ctx)
 		go publishDiagnostics(ctx, conn)
-		return nil, nil
+		return nil, err
 	case "shutdown":
 		killRunner()
 		return nil, nil
@@ -277,13 +267,11 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 }
 
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
-	var result interface{}
-	id, err := getLanguageIdentifier()
-	if err != nil || id == "" {
-		return err
+	if lRunner.lspID == "" {
+		return fmt.Errorf("current runner is not compatible with gauge LSP")
 	}
-	startRunner()
-	ds := documentSelector{"file", id, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
+	var result interface{}
+	ds := documentSelector{"file", lRunner.lspID, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
 		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
@@ -301,14 +289,33 @@ func (w lspWriter) Write(p []byte) (n int, err error) {
 	return os.Stderr.Write(p)
 }
 
-func (s *server) Start(logLevel string) {
+func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
 	if logLevel == "debug" {
 		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(lspWriter{}, "", 0)))
 	}
 	ctx := context.Background()
-	conn := jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
+	return ctx, jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
+}
+
+func initializeRunner() {
+	id, err := getLanguageIdentifier()
+	if err != nil || id == "" {
+		logger.APILog.Debug("Current runner is not compatible with gauge LSP.")
+	}
+	err = startRunner()
+	if err != nil {
+		logger.APILog.Debugf("%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
+	}
+	lRunner.lspID = id
+}
+
+func Start(p infoProvider, logLevel string) {
+	provider = p
+	provider.Init()
+	initializeRunner()
+	ctx, conn := startLsp(logLevel)
 	logger.SetCustomLogger(lspLogger{conn, ctx})
 	<-conn.DisconnectNotify()
 	logger.APILog.Info("Connection closed")
