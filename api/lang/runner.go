@@ -20,11 +20,8 @@ package lang
 import (
 	"os"
 
-	"github.com/sourcegraph/go-langserver/pkg/lsp"
-
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -114,37 +111,14 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(filePath string, stepTexts []*gm.ProtoStepValue) (*lsp.WorkspaceEdit, error) {
-	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Steps: stepTexts}}
-	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
+func putStubImplementation(filePath string, codes []string) (*gm.FileChanges, error) {
+	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Codes: codes}}
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
 		return nil, err
 	}
-	fileEditResponse := response.GetFileChanges()
-	uri := util.ConvertPathToURI(fileEditResponse.FileName)
-	fileContent := fileEditResponse.FileContent
-
-	var lastLineNo int
-	contents, err := common.ReadFileContents(filePath)
-	if err != nil {
-		lastLineNo = 0
-	} else {
-		lastLineNo = len(contents)
-	}
-
-	textEdit := lsp.TextEdit{
-		NewText: fileContent,
-		Range: lsp.Range{
-			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: lastLineNo, Character: 0},
-		},
-	}
-	result.Changes[uri] = append(result.Changes[uri], textEdit)
-
-	return &result, nil
+	return response.GetFileChanges(), nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {

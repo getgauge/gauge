@@ -44,8 +44,8 @@ func TestGetCodeActionForUnimplementedStep(t *testing.T) {
 
 	want := []lsp.Command{
 		{
-			Command:   copyStubCommand,
-			Title:     copyStubTitle,
+			Command:   generateStubCommand,
+			Title:     generateStubTitle,
 			Arguments: []interface{}{stub},
 		},
 	}

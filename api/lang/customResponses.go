@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -43,7 +44,7 @@ type specInfo struct {
 
 type stubImpl struct {
 	ImplementationFilePath string   `json:"implementationFilePath"`
-	StepTexts              []string `json:"stepTexts"`
+	Codes                  []string `json:"codes"`
 }
 
 func specs() (interface{}, error) {
@@ -75,21 +76,37 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	var stepVals []*gm.ProtoStepValue
-	for _, stepText := range stubImplParams.StepTexts {
-		stepValue, err := parser.ExtractStepValueAndParams(stepText, false)
-		if err != nil {
-			return nil, err
-		}
-		protoStepValue := gauge.ConvertToProtoStepValue(stepValue)
-
-		stepVals = append(stepVals, protoStepValue)
-	}
-	workspaceEdit, err := putStubImplementation(stubImplParams.ImplementationFilePath, stepVals)
+	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
 	if err != nil {
 		return nil, err
 	}
-	return workspaceEdit, nil
+
+	return getWorkspaceEditForStubImpl(fileChanges, stubImplParams.ImplementationFilePath), nil
+}
+
+func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
+	var result lsp.WorkspaceEdit
+	result.Changes = make(map[string][]lsp.TextEdit, 0)
+	uri := util.ConvertPathToURI(fileChanges.FileName)
+	fileContent := fileChanges.FileContent
+
+	var lastLineNo int
+	contents, err := common.ReadFileContents(filePath)
+	if err != nil {
+		lastLineNo = 0
+	} else {
+		lastLineNo = len(contents)
+	}
+
+	textEdit := lsp.TextEdit{
+		NewText: fileContent,
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: lastLineNo, Character: 0},
+		},
+	}
+	result.Changes[uri] = append(result.Changes[uri], textEdit)
+	return result
 }
 
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {

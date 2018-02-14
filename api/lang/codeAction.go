@@ -26,8 +26,8 @@ import (
 )
 
 const (
-	copyStubCommand = "gauge.copy.unimplemented.stub"
-	copyStubTitle   = "Generate step implementation stub"
+	generateStubCommand = "gauge.generate.unimplemented.stub"
+	generateStubTitle   = "Generate step implementation stub"
 )
 
 func codeActions(req *jsonrpc2.Request) (interface{}, error) {
@@ -44,8 +44,8 @@ func getSpecCodeAction(params lsp.CodeActionParams) interface{} {
 	for _, d := range params.Context.Diagnostics {
 		if d.Code != "" {
 			actions = append(actions, lsp.Command{
-				Command:   copyStubCommand,
-				Title:     copyStubTitle,
+				Command:   generateStubCommand,
+				Title:     generateStubTitle,
 				Arguments: []interface{}{d.Code},
 			})
 		}
