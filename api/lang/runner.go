@@ -114,12 +114,14 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(result *lsp.WorkspaceEdit, filePath string, stepTexts []*gm.ProtoStepValue) error {
+func putStubImplementation(filePath string, stepTexts []*gm.ProtoStepValue) (*lsp.WorkspaceEdit, error) {
 	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Steps: stepTexts}}
+	var result lsp.WorkspaceEdit
+	result.Changes = make(map[string][]lsp.TextEdit, 0)
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return err
+		return nil, err
 	}
 	fileEditResponse := response.GetFileChanges()
 	uri := util.ConvertPathToURI(fileEditResponse.FileName)
@@ -142,7 +144,7 @@ func putStubImplementation(result *lsp.WorkspaceEdit, filePath string, stepTexts
 	}
 	result.Changes[uri] = append(result.Changes[uri], textEdit)
 
-	return nil
+	return &result, nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {

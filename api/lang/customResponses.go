@@ -85,13 +85,11 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 
 		stepVals = append(stepVals, protoStepValue)
 	}
-	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	err := putStubImplementation(&result, stubImplParams.ImplementationFilePath, stepVals)
+	workspaceEdit, err := putStubImplementation(stubImplParams.ImplementationFilePath, stepVals)
 	if err != nil {
 		return nil, err
 	}
-	return result, nil
+	return workspaceEdit, nil
 }
 
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {
