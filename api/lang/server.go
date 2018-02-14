@@ -170,6 +170,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return stepValueAt(req)
 	case "gauge/scenarios":
 		return scenarios(req)
+	case "gauge/getImplFiles":
+		return getImplFiles()
+	case "gauge/putStubImpl":
+		return putStubImpl(req)
 	case "gauge/specs":
 		return specs()
 	case "gauge/executionStatus":
