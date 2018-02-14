@@ -1054,7 +1054,7 @@ func (m *ImplementationFileListResponse) GetImplementationFilePaths() []string {
 type StubImplementationCodeRequest struct {
 	// / Path of the file where the new stub implementation will be added
 	ImplementationFilePath string `protobuf:"bytes,1,opt,name=implementationFilePath" json:"implementationFilePath,omitempty"`
-	// / List of step texts for which we want to generate stub implementation
+	// / List of implementation codes to be appended to implementation file.
 	Codes []string `protobuf:"bytes,2,rep,name=codes" json:"codes,omitempty"`
 }
 
