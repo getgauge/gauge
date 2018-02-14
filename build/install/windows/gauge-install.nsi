@@ -7,12 +7,12 @@
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Gauge"
 !define PRODUCT_PUBLISHER "ThoughtWorks Inc."
-!define PRODUCT_WEB_SITE "http://getgauge.io"
+!define PRODUCT_WEB_SITE "https://gauge.org"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gauge.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
 !define MUI_FINISHPAGE_LINK "Click here to read the Gauge Reference Documentation"
-!define MUI_FINISHPAGE_LINK_LOCATION "https://docs.getgauge.io"
+!define MUI_FINISHPAGE_LINK_LOCATION "https://docs.gauge.org"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
 !define TELEMETRY_PAGE_TITLE "Gauge Telemetry"
@@ -91,8 +91,6 @@ BrandingText "${PRODUCT_NAME} ${PRODUCT_VERSION}  |  ${PRODUCT_PUBLISHER}"
 
 Name "${PRODUCT_NAME} ${PRODUCT_VERSION}"
 OutFile "${OUTPUT_FILE_NAME}"
-;InstallDir "$PROGRAMFILES\Gauge"
-InstallDirRegKey HKLM "${PRODUCT_DIR_REGKEY}" ""
 ShowUnInstDetails show
 
 Section "Gauge" SEC_GAUGE
