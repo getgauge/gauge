@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2018 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -156,10 +156,12 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/codeAction":
 		return codeActions(req)
 	case "textDocument/rename":
-		if err := sendSaveFilesRequest(ctx, conn); err != nil {
+		result, err := rename(ctx, conn, req)
+		if err != nil {
+			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
 		}
-		return rename(req)
+		return result, nil
 	case "textDocument/documentSymbol":
 		return documentSymbols(req)
 	case "workspace/symbol":
@@ -181,14 +183,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	default:
 		return nil, nil
 	}
-}
-
-func sendSaveFilesRequest(ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	if clientCapabilities.SaveFiles {
-		var result interface{}
-		return conn.Call(ctx, "workspace/saveFiles", nil, &result)
-	}
-	return nil
 }
 
 func cacheInitializeParams(req *jsonrpc2.Request) error {

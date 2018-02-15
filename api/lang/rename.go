@@ -1,6 +1,24 @@
+// Copyright 2018 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -15,7 +33,10 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-func rename(req *jsonrpc2.Request) (interface{}, error) {
+func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
+	if err := sendSaveFilesRequest(ctx, conn); err != nil {
+		return nil, err
+	}
 	var params lsp.RenameParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
@@ -44,7 +65,7 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 		logger.Warningf(warning)
 	}
 	if !refactortingResult.Success {
-		return nil, fmt.Errorf("Refactoring failed due to errors:\n%s", strings.Join(refactortingResult.Errors, "\n"))
+		return nil, fmt.Errorf("Refactoring failed due to errors: %s", strings.Join(refactortingResult.Errors, "\t"))
 	}
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
