@@ -345,7 +345,7 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 
 	r, err := GetResponseFromRunner(m, v)
 	if err != nil {
-		return NewStepValidationError(s, err.Error(), v.specification.FileName, nil, "")
+		return NewStepValidationError(s, err.Error(), v.specification.FileName, &invalidResponse, "")
 	}
 	if r.GetMessageType() == gm.Message_StepValidateResponse {
 		res := r.GetStepValidateResponse()
