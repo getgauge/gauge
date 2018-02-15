@@ -115,7 +115,9 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[s
 			return err
 		}
 		createDiagnostics(res, diagnostics)
-		createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
+		if res.Ok {
+			createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
+		}
 	}
 	return nil
 }
