@@ -750,6 +750,7 @@ func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLooku
 
 func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 	stepText := ""
+	var i int
 	for _, fragment := range fragments {
 		value := ""
 		if fragment.GetFragmentType() == gauge_messages.Fragment_Text {
@@ -761,6 +762,10 @@ func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 				break
 			case gauge_messages.Parameter_Dynamic:
 				value = fmt.Sprintf("<%s>", fragment.GetParameter().GetValue())
+				break
+			case gauge_messages.Parameter_Special_String:
+				i++
+				value = fmt.Sprintf("<%s%d>", "file", i)
 				break
 			}
 		}
