@@ -87,7 +87,7 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(fileChanges.FileName)
+	uri := util.ConvertPathToURI(lsp.DocumentURI(fileChanges.FileName))
 	fileContent := fileChanges.FileContent
 
 	var lastLineNo int
@@ -105,7 +105,7 @@ func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) l
 			End:   lsp.Position{Line: lastLineNo, Character: 0},
 		},
 	}
-	result.Changes[uri] = append(result.Changes[uri], textEdit)
+	result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 	return result
 }
 
@@ -119,11 +119,11 @@ func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	content := ""
 	if !isOpen(params.TextDocument.URI) {
-		specDetails := provider.GetAvailableSpecDetails([]string{file})
+		specDetails := provider.GetAvailableSpecDetails([]string{string(file)})
 		return getScenarioAt(specDetails[0].Spec.Scenarios, file, params.Position.Line), nil
 	}
 	content = getContent(params.TextDocument.URI)
-	spec, parseResult, err := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), file)
+	spec, parseResult, err := new(parser.SpecParser).Parse(content, gauge.NewConceptDictionary(), string(file))
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	return getScenarioAt(spec.Scenarios, file, params.Position.Line), nil
 }
 
-func getScenarioAt(scenarios []*gauge.Scenario, file string, line int) interface{} {
+func getScenarioAt(scenarios []*gauge.Scenario, file lsp.DocumentURI, line int) interface{} {
 	var ifs []ScenarioInfo
 	for _, sce := range scenarios {
 		info := getScenarioInfo(sce, file)
@@ -144,7 +144,7 @@ func getScenarioAt(scenarios []*gauge.Scenario, file string, line int) interface
 	}
 	return ifs
 }
-func getScenarioInfo(sce *gauge.Scenario, file string) ScenarioInfo {
+func getScenarioInfo(sce *gauge.Scenario, file lsp.DocumentURI) ScenarioInfo {
 	return ScenarioInfo{
 		Heading:             sce.Heading.Value,
 		LineNo:              sce.Heading.LineNo,

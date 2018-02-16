@@ -272,7 +272,7 @@ Scenario Heading2
 * Step text`
 
 	uri := util.ConvertPathToURI("foo.spec")
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
 	p := json.RawMessage(b)
@@ -301,18 +301,18 @@ func TestDocumentSymbolsForConcept(t *testing.T) {
 	provider = &dummyInfoProvider{}
 	cptText := `
 	# Concept 1
-	
+
 	* foo
 	* bar
-	
+
 	Concept 2 <param1>
 	==================
-	
+
 	* baz
 	`
 
 	uri := util.ConvertPathToURI("foo.cpt")
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, cptText)
 	b, _ := json.Marshal(lsp.DocumentSymbolParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}})
 	p := json.RawMessage(b)
@@ -388,13 +388,13 @@ func TestGetScenarioSymbol(t *testing.T) {
 func TestGetConceptSymbols(t *testing.T) {
 	conceptText := `
 	# Concept 1
-	
+
 	* foo
 	* bar
-	
+
 	Concept 2 <param1>
 	==================
-	
+
 	* baz
 	`
 	want := []*lsp.SymbolInformation{

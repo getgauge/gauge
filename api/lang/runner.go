@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 type langRunner struct {
@@ -65,8 +66,8 @@ func connectToRunner(killChan chan bool) (runner.Runner, error) {
 	return runner, nil
 }
 
-func cacheFileOnRunner(uri, text string) error {
-	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: util.ConvertURItoFilePath(uri), IsClosed: false}}
+func cacheFileOnRunner(uri lsp.DocumentURI, text string) error {
+	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: string(util.ConvertURItoFilePath(uri)), IsClosed: false}}
 	err := sendMessageToRunner(cacheFileRequest)
 	return err
 }
@@ -86,8 +87,8 @@ var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
 	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 }
 
-func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
-	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
+func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, error) {
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: string(util.ConvertURItoFilePath(uri))}}
 	response, err := GetResponseFromRunner(stepPositionsRequest)
 	if err != nil {
 		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())

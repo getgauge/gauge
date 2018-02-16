@@ -29,7 +29,7 @@ func paramCompletion(line, pLine string, params lsp.TextDocumentPositionParams) 
 	list := completionList{IsIncomplete: false, Items: []completionItem{}}
 	argType, suffix, editRange := getParamArgTypeAndEditRange(line, pLine, params.Position)
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
-	for _, param := range provider.Params(file, argType) {
+	for _, param := range provider.Params(string(file), argType) {
 		if !shouldAddParam(param.ArgType) {
 			continue
 		}
@@ -40,7 +40,7 @@ func paramCompletion(line, pLine string, params lsp.TextDocumentPositionParams) 
 				FilterText: argValue + suffix,
 				Detail:     string(argType),
 				Kind:       lsp.CIKVariable,
-				TextEdit:   lsp.TextEdit{Range: editRange, NewText: argValue + suffix},
+				TextEdit:   &lsp.TextEdit{Range: editRange, NewText: argValue + suffix},
 			},
 			InsertTextFormat: text,
 		})

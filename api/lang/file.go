@@ -26,43 +26,43 @@ import (
 )
 
 type files struct {
-	cache map[string][]string
+	cache map[lsp.DocumentURI][]string
 	sync.Mutex
 }
 
-func (file *files) add(uri, text string) {
+func (file *files) add(uri lsp.DocumentURI, text string) {
 	file.Lock()
 	defer file.Unlock()
 	text = strings.Replace(text, "\r\n", "\n", -1)
 	file.cache[uri] = strings.Split(text, "\n")
 }
 
-func (file *files) remove(uri string) {
+func (file *files) remove(uri lsp.DocumentURI) {
 	file.Lock()
 	defer file.Unlock()
 	delete(file.cache, uri)
 }
 
-func (file *files) line(uri string, lineNo int) string {
+func (file *files) line(uri lsp.DocumentURI, lineNo int) string {
 	file.Lock()
 	defer file.Unlock()
 	return file.cache[uri][lineNo]
 }
 
-func (file *files) content(uri string) []string {
+func (file *files) content(uri lsp.DocumentURI) []string {
 	file.Lock()
 	defer file.Unlock()
 	return file.cache[uri]
 }
 
-func (file *files) exists(uri string) bool {
+func (file *files) exists(uri lsp.DocumentURI) bool {
 	file.Lock()
 	defer file.Unlock()
 	_, ok := file.cache[uri]
 	return ok
 }
 
-var openFilesCache = &files{cache: make(map[string][]string)}
+var openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 
 func openFile(params lsp.DidOpenTextDocumentParams) {
 	openFilesCache.add(params.TextDocument.URI, params.TextDocument.Text)
@@ -76,18 +76,18 @@ func changeFile(params lsp.DidChangeTextDocumentParams) {
 	openFilesCache.add(params.TextDocument.URI, params.ContentChanges[0].Text)
 }
 
-func getLine(uri string, line int) string {
+func getLine(uri lsp.DocumentURI, line int) string {
 	return openFilesCache.line(uri, line)
 }
 
-func getContent(uri string) string {
+func getContent(uri lsp.DocumentURI) string {
 	return strings.Join(openFilesCache.content(uri), "\n")
 }
 
-func getLineCount(uri string) int {
+func getLineCount(uri lsp.DocumentURI) int {
 	return len(openFilesCache.content(uri))
 }
 
-func isOpen(uri string) bool {
+func isOpen(uri lsp.DocumentURI) bool {
 	return openFilesCache.exists(uri)
 }

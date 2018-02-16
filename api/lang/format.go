@@ -38,8 +38,8 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 	}
 	logger.APILog.Debugf("LangServer: request received : Type: Format Document URI: %s", params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
-	if util.IsValidSpecExtension(file) {
-		spec, parseResult, err := new(parser.SpecParser).Parse(getContent(params.TextDocument.URI), gauge.NewConceptDictionary(), file)
+	if util.IsValidSpecExtension(string(file)) {
+		spec, parseResult, err := new(parser.SpecParser).Parse(getContent(params.TextDocument.URI), gauge.NewConceptDictionary(), string(file))
 		if err != nil {
 			return nil, err
 		}

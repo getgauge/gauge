@@ -52,7 +52,7 @@ func TestGetTagsCompletion(t *testing.T) {
 					FilterText: "hello",
 					Detail:     tag,
 					Kind:       lsp.CIKVariable,
-					TextEdit: lsp.TextEdit{
+					TextEdit: &lsp.TextEdit{
 						Range: lsp.Range{
 							Start: lsp.Position{
 								Line:      lineNumber,
@@ -101,7 +101,7 @@ func TestGetTagsCompletionWhenEditingInMiddle(t *testing.T) {
 					FilterText: "hello,",
 					Detail:     tag,
 					Kind:       lsp.CIKVariable,
-					TextEdit: lsp.TextEdit{
+					TextEdit: &lsp.TextEdit{
 						Range: lsp.Range{
 							Start: lsp.Position{
 								Line:      lineNumber,

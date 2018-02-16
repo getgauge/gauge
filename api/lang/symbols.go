@@ -38,7 +38,7 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	file := util.ConvertURItoFilePath(params.TextDocument.URI)
+	file := string(util.ConvertURItoFilePath(params.TextDocument.URI))
 	content := getContent(params.TextDocument.URI)
 	if util.IsConcept(file) {
 		return getConceptSymbols(content, file), nil
@@ -97,7 +97,7 @@ func getSpecSymbol(s *gauge.Specification) *lsp.SymbolInformation {
 		Name: fmt.Sprintf("# %s", s.Heading.Value),
 		Kind: lsp.SKNamespace,
 		Location: lsp.Location{
-			URI: util.ConvertPathToURI(s.FileName),
+			URI: util.ConvertPathToURI(lsp.DocumentURI(s.FileName)),
 			Range: lsp.Range{
 				Start: lsp.Position{Line: s.Heading.LineNo - 1, Character: 0},
 				End:   lsp.Position{Line: s.Heading.LineNo - 1, Character: len(s.Heading.Value)},
@@ -111,7 +111,7 @@ func getScenarioSymbol(s *gauge.Scenario, path string) *lsp.SymbolInformation {
 		Name: fmt.Sprintf("## %s", s.Heading.Value),
 		Kind: lsp.SKNamespace,
 		Location: lsp.Location{
-			URI: util.ConvertPathToURI(path),
+			URI: util.ConvertPathToURI(lsp.DocumentURI(path)),
 			Range: lsp.Range{
 				Start: lsp.Position{Line: s.Heading.LineNo - 1, Character: 0},
 				End:   lsp.Position{Line: s.Heading.LineNo - 1, Character: len(s.Heading.Value)},
@@ -128,7 +128,7 @@ func getConceptSymbols(content, file string) []*lsp.SymbolInformation {
 			Name: fmt.Sprintf("# %s", cpt.LineText),
 			Kind: lsp.SKNamespace,
 			Location: lsp.Location{
-				URI: util.ConvertPathToURI(file),
+				URI: util.ConvertPathToURI(lsp.DocumentURI(file)),
 				Range: lsp.Range{
 					Start: lsp.Position{Line: cpt.LineNo - 1, Character: 0},
 					End:   lsp.Position{Line: cpt.LineNo - 1, Character: len(cpt.LineText)},

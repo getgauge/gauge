@@ -50,7 +50,7 @@ func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	if util.IsGaugeFile(params.TextDocument.URI) {
+	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		return getExecutionCodeLenses(params)
 	} else {
 		return getReferenceCodeLenses(params)
@@ -58,12 +58,12 @@ func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 }
 
 func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
-	uri := string(params.TextDocument.URI)
+	uri := params.TextDocument.URI
 	file := util.ConvertURItoFilePath(uri)
-	if !util.IsSpec(file) {
+	if !util.IsSpec(string(file)) {
 		return nil, nil
 	}
-	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
+	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), string(file))
 	if err != nil {
 		return nil, err
 	}

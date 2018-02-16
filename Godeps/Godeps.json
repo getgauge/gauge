@@ -37,6 +37,10 @@
 			"Rev": "8ee79997227bf9b34611aee7946ae64735e6fd93"
 		},
 		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
 			"ImportPath": "github.com/jpillora/go-ogle-analytics",
 			"Rev": "14b04e0594ef6a9fd943363b135656f0ec8c9d0e"
 		},
@@ -46,7 +50,7 @@
 		},
 		{
 			"ImportPath": "github.com/natefinch/lumberjack",
-			"Comment": "v2.0",
+			"Comment": "v1.0-23-gdd45e6a",
 			"Rev": "dd45e6a67c53f673bb49ca8a001fd3a63ceb640e"
 		},
 		{
@@ -65,9 +69,13 @@
 			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
 		},
 		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "1dba4b3954bc059efc3991ec364f9f9a35f597d2"
+		},
+		{
 			"ImportPath": "github.com/sourcegraph/go-langserver/pkg/lsp",
-			"Comment": "v1.0.0-223-g66ff4f5",
-			"Rev": "66ff4f536c4fe4a5c525472820a563939a0ab00f"
+			"Comment": "v1.0.0-302-g1e571d6",
+			"Rev": "1e571d690e259cdb944b96c5d3596dff9e6cb13d"
 		},
 		{
 			"ImportPath": "github.com/sourcegraph/jsonrpc2",
@@ -83,7 +91,6 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
-			"Comment": "v1.0.0",
 			"Rev": "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
 		},
 		{
@@ -97,15 +104,6 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "25c4ec802a7d637f88d584ab26798e94ad14c13b"
-		},
-		{
-			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
-			"Rev": "1dba4b3954bc059efc3991ec364f9f9a35f597d2"
-		},
-		{
-			"ImportPath": "github.com/inconshreveable/mousetrap",
-			"Comment": "v1.0",
-			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
 		}
 	]
 }

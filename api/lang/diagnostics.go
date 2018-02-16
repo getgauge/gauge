@@ -59,13 +59,13 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 		}
 	}
 }
-func publishDiagnostic(uri string, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
+func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
 	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
 }
 
-func getDiagnostics() (map[string][]lsp.Diagnostic, error) {
-	diagnostics := make(map[string][]lsp.Diagnostic, 0)
+func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
+	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
 	conceptDictionary, err := validateConcepts(diagnostics)
 	if err != nil {
 		return nil, err
@@ -76,9 +76,9 @@ func getDiagnostics() (map[string][]lsp.Diagnostic, error) {
 	return diagnostics, nil
 }
 
-func createValidationDiagnostics(errors []validation.StepValidationError, diagnostics map[string][]lsp.Diagnostic) {
+func createValidationDiagnostics(errors []validation.StepValidationError, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range errors {
-		uri := util.ConvertPathToURI(err.FileName())
+		uri := util.ConvertPathToURI(lsp.DocumentURI(err.FileName()))
 		d := createDiagnostic(uri, err.Message(), err.Step().LineNo-1, 1)
 		if err.ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
 			d.Code = err.Suggestion()
@@ -99,10 +99,10 @@ func validateSpec(spec *gauge.Specification, conceptDictionary *gauge.ConceptDic
 	return
 }
 
-func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[string][]lsp.Diagnostic) error {
+func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
 	specFiles := util.GetSpecFiles(common.SpecsDirectoryName)
 	for _, specFile := range specFiles {
-		uri := util.ConvertPathToURI(specFile)
+		uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
 		if _, ok := diagnostics[uri]; !ok {
 			diagnostics[uri] = make([]lsp.Diagnostic, 0)
 		}
@@ -122,11 +122,11 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[s
 	return nil
 }
 
-func validateConcepts(diagnostics map[string][]lsp.Diagnostic) (*gauge.ConceptDictionary, error) {
+func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.ConceptDictionary, error) {
 	conceptFiles := util.GetConceptFiles()
 	conceptDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
-		uri := util.ConvertPathToURI(conceptFile)
+		uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
 		if _, ok := diagnostics[uri]; !ok {
 			diagnostics[uri] = make([]lsp.Diagnostic, 0)
 		}
@@ -146,18 +146,18 @@ func validateConcepts(diagnostics map[string][]lsp.Diagnostic) (*gauge.ConceptDi
 	return conceptDictionary, nil
 }
 
-func createDiagnostics(res *parser.ParseResult, diagnostics map[string][]lsp.Diagnostic) {
+func createDiagnostics(res *parser.ParseResult, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range res.ParseErrors {
-		uri := util.ConvertPathToURI(err.FileName)
+		uri := util.ConvertPathToURI(lsp.DocumentURI(err.FileName))
 		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, 1))
 	}
 	for _, warning := range res.Warnings {
-		uri := util.ConvertPathToURI(warning.FileName)
+		uri := util.ConvertPathToURI(lsp.DocumentURI(warning.FileName))
 		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, warning.Message, warning.LineNo-1, 2))
 	}
 }
 
-func createDiagnostic(uri, message string, line int, severity lsp.DiagnosticSeverity) lsp.Diagnostic {
+func createDiagnostic(uri lsp.DocumentURI, message string, line int, severity lsp.DiagnosticSeverity) lsp.Diagnostic {
 	endChar := 10000
 	if isOpen(uri) {
 		endChar = len(getLine(uri, line))
@@ -173,7 +173,7 @@ func createDiagnostic(uri, message string, line int, severity lsp.DiagnosticSeve
 }
 
 func getContentFromFileOrDisk(fileName string) (string, error) {
-	uri := util.ConvertPathToURI(fileName)
+	uri := util.ConvertPathToURI(lsp.DocumentURI(fileName))
 	if isOpen(uri) {
 		return getContent(uri), nil
 	} else {

@@ -71,7 +71,7 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	return stepCompletion(line, pLine, params)
 }
 
-func isInTagsContext(line int, uri string) bool {
+func isInTagsContext(line int, uri lsp.DocumentURI) bool {
 	if strings.HasPrefix(strings.ToLower(strings.Join(strings.Fields(getLine(uri, line)), "")), tagIdentifier) {
 		return true
 	} else if line != 0 && (endsWithComma(getLine(uri, line-1)) && isInTagsContext(line-1, uri)) {

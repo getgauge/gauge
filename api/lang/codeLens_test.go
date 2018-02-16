@@ -36,7 +36,7 @@ Scenario Heading
 
 * Step text`
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
@@ -117,7 +117,7 @@ Another Scenario
 * another step
 `
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
@@ -225,7 +225,7 @@ Scenario Heading
 
 `
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
 	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})

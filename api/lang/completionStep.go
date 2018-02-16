@@ -166,7 +166,7 @@ func newStepCompletionItem(stepText, text, kind, fText string, editRange lsp.Ran
 			Label:         stepText,
 			Detail:        kind,
 			Kind:          lsp.CIKFunction,
-			TextEdit:      lsp.TextEdit{Range: editRange, NewText: text},
+			TextEdit:      &lsp.TextEdit{Range: editRange, NewText: text},
 			FilterText:    fText,
 			Documentation: stepText,
 		},

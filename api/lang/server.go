@@ -219,7 +219,7 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return err
 	}
-	if util.IsGaugeFile(params.TextDocument.URI) {
+	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		openFile(params)
 	} else if lRunner.runner != nil {
 		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
@@ -235,10 +235,11 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return err
 	}
-	if util.IsGaugeFile(params.TextDocument.URI) {
+	file := params.TextDocument.URI
+	if util.IsGaugeFile(string(file)) {
 		changeFile(params)
 	} else if lRunner.runner != nil {
-		err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text)
+		err = cacheFileOnRunner(file, params.ContentChanges[0].Text)
 	}
 	go publishDiagnostics(ctx, conn)
 	return err
@@ -251,13 +252,13 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return err
 	}
-	if util.IsGaugeFile(params.TextDocument.URI) {
+	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		closeFile(params)
-		if !common.FileExists(util.ConvertPathToURI(params.TextDocument.URI)) {
+		if !common.FileExists(string(util.ConvertPathToURI(params.TextDocument.URI))) {
 			publishDiagnostic(params.TextDocument.URI, []lsp.Diagnostic{}, conn, ctx)
 		}
 	} else if lRunner.runner != nil {
-		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: util.ConvertURItoFilePath(params.TextDocument.URI), IsClosed: true}}
+		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: string(util.ConvertURItoFilePath(params.TextDocument.URI)), IsClosed: true}}
 		err = sendMessageToRunner(cacheFileRequest)
 	}
 	go publishDiagnostics(ctx, conn)

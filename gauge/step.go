@@ -114,7 +114,7 @@ func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg 
 	for key, value := range orderMap {
 		arg := &StepArg{Value: newStep.Args[key].Value, ArgType: Static}
 		if newStep.Args[key].ArgType == SpecialString {
-			arg = &StepArg{Name:newStep.Args[key].Name, Value: newStep.Args[key].Value, ArgType: newStep.Args[key].ArgType}
+			arg = &StepArg{Name: newStep.Args[key].Name, Value: newStep.Args[key].Value, ArgType: newStep.Args[key].ArgType}
 		}
 		if step.IsConcept {
 			arg = &StepArg{Value: newStep.Args[key].Value, ArgType: Dynamic}

@@ -27,11 +27,11 @@ import (
 )
 
 func TestConceptDefinitionInSpecFile(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
-	uri := util.ConvertPathToURI("uri.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	uri := lsp.DocumentURI(util.ConvertPathToURI("uri.spec"))
 	openFilesCache.add(uri, "# Specification \n## Scenario \n * concept1")
 
-	conUri := util.ConvertPathToURI("concept_uri.cpt")
+	conUri := lsp.DocumentURI(util.ConvertPathToURI("concept_uri.cpt"))
 	openFilesCache.add(conUri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
 
 	provider = &dummyInfoProvider{}
@@ -51,8 +51,8 @@ func TestConceptDefinitionInSpecFile(t *testing.T) {
 }
 
 func TestConceptDefinitionInConceptFile(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
-	uri := util.ConvertPathToURI("concept_uri.cpt")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	uri := lsp.DocumentURI(util.ConvertPathToURI("concept_uri.cpt"))
 	openFilesCache.add(uri, "# Concept \n* a step \n \n # Another Concept \n*concept1")
 	provider = &dummyInfoProvider{}
 	position := lsp.Position{Line: 4, Character: len("*conce")}

@@ -37,7 +37,7 @@ Scenario Heading
 
 * Step text`
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
 	want := []lsp.TextEdit{
@@ -72,10 +72,10 @@ func TestFormatParseError(t *testing.T) {
 
 * Step text`
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
-	specFile := "foo.spec"
+	specFile := lsp.DocumentURI("foo.spec")
 
 	b, _ := json.Marshal(lsp.DocumentFormattingParams{TextDocument: lsp.TextDocumentIdentifier{URI: specFile}, Options: lsp.FormattingOptions{}})
 	p := json.RawMessage(b)
