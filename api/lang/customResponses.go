@@ -56,7 +56,18 @@ func specs() (interface{}, error) {
 	return specs, nil
 }
 
-func getImplFiles() (interface{}, error) {
+func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
+	var info = struct {
+		Concept bool `json:"concept"`
+	}{}
+	if err := json.Unmarshal(*req.Params, &info); err != nil {
+		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		return nil, err
+	}
+	logger.APILog.Info(info)
+	if info.Concept {
+		return util.GetConceptFiles(), nil
+	}
 	if lRunner.runner == nil {
 		return nil, nil
 	}
