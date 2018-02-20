@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -116,7 +117,7 @@ type UpdateInfo struct {
 
 func checkPluginUpdates() []UpdateInfo {
 	var pluginsToUpdate []UpdateInfo
-	plugins, err := plugin.GetAllInstalledPluginsWithVersion()
+	plugins, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		return pluginsToUpdate
 	}

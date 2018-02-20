@@ -34,6 +34,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/version"
@@ -480,7 +481,12 @@ func AllPlugins() {
 // UpdatePlugins updates all the currently installed plugins to its latest version
 func UpdatePlugins() {
 	var failedPlugin []string
-	for _, pluginInfo := range plugin.GetPluginsInfo() {
+	pluginInfos, err := pluginInfo.GetPluginsInfo()
+	if err != nil {
+		logger.Infof(err.Error())
+		os.Exit(0)
+	}
+	for _, pluginInfo := range pluginInfos {
 		logger.Debugf("Updating plugin '%s'", pluginInfo.Name)
 		passed := HandleUpdateResult(Plugin(pluginInfo.Name, ""), pluginInfo.Name, false)
 		if !passed {
