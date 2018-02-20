@@ -26,9 +26,16 @@ import (
 )
 
 const (
-	generateStubCommand = "gauge.generate.unimplemented.stub"
-	generateStubTitle   = "Generate step implementation stub"
+	generateStubCommand   = "gauge.generate.unimplemented.stub"
+	generateStubTitle     = "Generate step implementation stub"
+	extractConceptCommand = "gauge.extract.concept"
+	extractConceptTitle   = "Etract to concpet"
 )
+
+type extractConceptInfo struct {
+	Uri   lsp.DocumentURI `json:"uri"`
+	Range lsp.Range       `json:"range`
+}
 
 func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeActionParams
@@ -36,10 +43,23 @@ func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	return getSpecCodeAction(params), nil
+	return append(getSpecCodeAction(params), getExtractConceptCodeAction(params)...), nil
 }
 
-func getSpecCodeAction(params lsp.CodeActionParams) interface{} {
+func getExtractConceptCodeAction(params lsp.CodeActionParams) []lsp.Command {
+	if len(params.Context.Diagnostics) > 0 {
+		return []lsp.Command{}
+	}
+	return []lsp.Command{
+		{
+			Command:   extractConceptCommand,
+			Title:     extractConceptTitle,
+			Arguments: []interface{}{extractConceptInfo{params.TextDocument.URI, params.Range}},
+		},
+	}
+}
+
+func getSpecCodeAction(params lsp.CodeActionParams) []lsp.Command {
 	var actions []lsp.Command
 	for _, d := range params.Context.Diagnostics {
 		if d.Code != "" {
