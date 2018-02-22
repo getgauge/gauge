@@ -23,6 +23,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/getgauge/gauge/plugin/pluginInfo"
+	"github.com/getgauge/gauge/version"
+
 	"runtime"
 
 	"github.com/getgauge/common"
@@ -71,8 +74,39 @@ func Warningf(msg string, args ...interface{}) {
 
 // Fatalf logs CRITICAL messages and exits
 func Fatalf(msg string, args ...interface{}) {
-	write(logging.CRITICAL, msg, args...)
-	GaugeLog.Fatalf(msg, args...)
+	message := getErrorText(msg, args...)
+	write(logging.CRITICAL, message)
+	GaugeLog.Fatalf(message)
+}
+
+func getErrorText(msg string, args ...interface{}) string {
+	envText := strings.Join([]string{runtime.GOOS, version.FullVersion(), version.GetCommitHash()}, ", ")
+	return fmt.Sprintf(`Error ----------------------------------
+
+%s
+
+Get Support ----------------------------
+	Docs:          https://docs.gauge.org
+	Bugs:          https://github.com/getgauge/gauge/issues
+	Chat:          https://gitter.im/getgauge/chat
+
+Your Environment Information -----------
+	%s
+	%s`, fmt.Sprintf(msg, args),
+		envText,
+		getPluginVersions())
+}
+
+func getPluginVersions() string {
+	pis, err := pluginInfo.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		return fmt.Sprintf("Could not retrieve plugin information.")
+	}
+	pluginVersions := make([]string, 0, 0)
+	for _, pi := range pis {
+		pluginVersions = append(pluginVersions, fmt.Sprintf(`%s (%s)`, pi.Name, pi.Version))
+	}
+	return strings.Join(pluginVersions, ", ")
 }
 
 // Debugf logs DEBUG messages

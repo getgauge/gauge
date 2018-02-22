@@ -36,6 +36,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/skel"
 
 	"fmt"
@@ -61,7 +62,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
