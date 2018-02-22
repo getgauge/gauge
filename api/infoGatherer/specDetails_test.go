@@ -357,6 +357,30 @@ func (s *MySuite) TestGetAvailableSpecDetails(c *C) {
 	c.Assert(details[0].Spec.Heading.Value, Equals, "Specification Heading")
 }
 
+func (s *MySuite) TestGetSpec(c *C) {
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
+	c.Assert(err, Equals, nil)
+	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}, specsCache: specsCache{specDetails: make(map[string]*SpecDetail)}}
+	specFiles := util.FindSpecFilesIn(s.specsDir)
+	sig.specsCache.specDetails[specFiles[0]] = &SpecDetail{Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Specification Heading"}}}
+
+	spec := sig.Spec(specFiles[0])
+
+	c.Assert(spec, NotNil)
+	c.Assert(spec.Heading.Value, Equals, "Specification Heading")
+}
+
+func (s *MySuite) TestGetSpecIfNotPresentInCache(c *C) {
+	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
+	c.Assert(err, Equals, nil)
+	sig := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}, specsCache: specsCache{specDetails: make(map[string]*SpecDetail)}}
+	specFiles := util.FindSpecFilesIn(s.specsDir)
+	sig.specsCache.specDetails[specFiles[0]] = &SpecDetail{Spec: &gauge.Specification{Heading: &gauge.Heading{Value: "Specification Heading"}}}
+
+	spec := sig.Spec("somefile.spec")
+	c.Assert(spec, IsNil)
+}
+
 func (s *MySuite) TestGetAvailableSpecDetailsInDefaultDir(c *C) {
 	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)

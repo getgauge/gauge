@@ -566,6 +566,16 @@ func (s *SpecInfoGatherer) Tags() []string {
 	return removeDuplicateTags(allTags)
 }
 
+// Spec returns a Specification form cache if exists
+func (s *SpecInfoGatherer) Spec(file string) *gauge.Specification {
+	s.specsCache.mutex.RLock()
+	defer s.specsCache.mutex.RUnlock()
+	if detail, ok := s.specsCache.specDetails[file]; ok {
+		return detail.Spec
+	}
+	return nil
+}
+
 // SearchConceptDictionary searches for a concept in concept dictionary
 func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Concept {
 	return s.conceptDictionary.Search(stepValue)
