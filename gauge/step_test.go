@@ -275,3 +275,26 @@ func (s *MySuite) TestInlineTableUsageDynamicArgs(c *C) {
 	c.Assert(usesDynamicArgs, Equals, true)
 
 }
+
+func (s *MySuite) TestLastArgs(c *C) {
+	headers := []string{"header"}
+	cells := [][]TableCell{
+		{
+			{
+				CellType: Dynamic,
+				Value:    "first",
+			},
+		},
+	}
+
+	table := NewTable(headers, cells, 1)
+
+	dArg := &StepArg{Name: "hello", ArgType: TableArg, Table: *table}
+
+	step := &Step{Value: "step with {}", Args: []*StepArg{dArg}}
+
+	la := step.GetLastArg()
+
+	c.Assert(la, DeepEquals, dArg)
+
+}
