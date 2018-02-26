@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/getgauge/gauge/config"
@@ -36,7 +37,7 @@ var (
 				exit(config.List(machineReadable))
 			}
 			if len(args) == 0 {
-				logger.Fatalf("Error: Config command needs argument(s).\n%s", cmd.UsageString())
+				exitWithError(fmt.Errorf("Error: Config command needs argument(s)."), cmd.UsageString())
 			}
 			if len(args) == 1 {
 				exit(config.GetProperty(args[0]))

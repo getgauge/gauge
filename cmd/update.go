@@ -18,7 +18,8 @@
 package cmd
 
 import (
-	"github.com/getgauge/gauge/logger"
+	"fmt"
+
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
@@ -43,7 +44,7 @@ var (
 				return
 			}
 			if len(args) < 1 {
-				logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
+				exitWithError(fmt.Errorf("Error: Missing argument <plugin name>."), cmd.UsageString())
 			}
 			track.Update(args[0])
 			install.HandleUpdateResult(install.Plugin(args[0], pVersion), args[0], true)

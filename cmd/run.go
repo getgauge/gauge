@@ -70,7 +70,7 @@ var (
 				logger.Fatalf(e.Error())
 			}
 			if err := config.SetProjectRoot(args); err != nil {
-				logger.Fatalf(err.Error())
+				exitWithError(err, cmd.UsageString())
 			}
 			if failed {
 				loadLastState(cmd)
@@ -119,7 +119,7 @@ var prevFailed = false
 func loadLastState(cmd *cobra.Command) {
 	lastState, err := rerun.GetLastState()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		exitWithError(err, "")
 	}
 	logger.Infof("Executing => gauge %s\n", strings.Join(lastState, " "))
 	cmd.Parent().SetArgs(lastState)
