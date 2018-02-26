@@ -190,6 +190,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			showErrorMessageOnClient(ctx, conn, err)
 		}
 		return edits, err
+	case "gauge/getRunnerLanguage":
+		return getRunnerLanguage()
 	default:
 		return nil, nil
 	}

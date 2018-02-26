@@ -94,6 +94,10 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	return getWorkspaceEditForStubImpl(fileChanges, stubImplParams.ImplementationFilePath), nil
 }
 
+func getRunnerLanguage() (interface{}, error) {
+	return lRunner.lspID, nil
+}
+
 func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
