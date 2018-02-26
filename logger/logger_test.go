@@ -24,6 +24,8 @@ import (
 	"os"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/plugin/pluginInfo"
+	"github.com/getgauge/gauge/version"
 	"github.com/op/go-logging"
 	. "gopkg.in/check.v1"
 )
@@ -103,4 +105,84 @@ func (s *MySuite) TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(c *C) {
 	logFile := GetLogFile(apiLogFileName)
 
 	c.Assert(logFile, Equals, expected)
+}
+
+func TestGetErrorText(t *testing.T) {
+	tests := []struct {
+		gaugeVersion *version.Version
+		commitHash   string
+		pluginInfos  []pluginInfo.PluginInfo
+		expectedText string
+	}{
+		{
+			gaugeVersion: &version.Version{0, 9, 8},
+			commitHash:   "",
+			pluginInfos:  []pluginInfo.PluginInfo{{Name: "java", Version: &version.Version{0, 6, 6}}},
+			expectedText: `Error ----------------------------------
+
+An Error has Occurred: some error
+
+Get Support ----------------------------
+	Docs:          https://docs.gauge.org
+	Bugs:          https://github.com/getgauge/gauge/issues
+	Chat:          https://gitter.im/getgauge/chat
+
+Your Environment Information -----------
+	darwin, 0.9.8
+	java (0.6.6)`,
+		},
+		{
+			gaugeVersion: &version.Version{0, 9, 8},
+			commitHash:   "",
+			pluginInfos: []pluginInfo.PluginInfo{
+				{Name: "java", Version: &version.Version{0, 6, 6}},
+				{Name: "html-report", Version: &version.Version{0, 4, 0}},
+			},
+			expectedText: `Error ----------------------------------
+
+An Error has Occurred: some error
+
+Get Support ----------------------------
+	Docs:          https://docs.gauge.org
+	Bugs:          https://github.com/getgauge/gauge/issues
+	Chat:          https://gitter.im/getgauge/chat
+
+Your Environment Information -----------
+	darwin, 0.9.8
+	java (0.6.6), html-report (0.4.0)`,
+		},
+		{
+			gaugeVersion: &version.Version{0, 9, 8},
+			commitHash:   "59effa",
+			pluginInfos: []pluginInfo.PluginInfo{
+				{Name: "java", Version: &version.Version{0, 6, 6}},
+				{Name: "html-report", Version: &version.Version{0, 4, 0}},
+			},
+			expectedText: `Error ----------------------------------
+
+An Error has Occurred: some error
+
+Get Support ----------------------------
+	Docs:          https://docs.gauge.org
+	Bugs:          https://github.com/getgauge/gauge/issues
+	Chat:          https://gitter.im/getgauge/chat
+
+Your Environment Information -----------
+	darwin, 0.9.8, 59effa
+	java (0.6.6), html-report (0.4.0)`,
+		},
+	}
+
+	for _, test := range tests {
+		version.CurrentGaugeVersion = test.gaugeVersion
+		version.CommitHash = test.commitHash
+		pluginInfo.GetAllInstalledPluginsWithVersion = func() ([]pluginInfo.PluginInfo, error) {
+			return test.pluginInfos, nil
+		}
+		actualText := getErrorText("An Error has Occurred: %s", "some error")
+
+		if test.expectedText != actualText {
+			t.Errorf("Expected error text is not equal to actual error text, \nExpected error text : \n%s\nActual error text : \n%s", test.expectedText, actualText)
+		}
+	}
 }

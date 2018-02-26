@@ -59,7 +59,8 @@ func GetPluginsInfo() ([]PluginInfo, error) {
 	return allPluginsWithVersion, nil
 }
 
-func GetAllInstalledPluginsWithVersion() ([]PluginInfo, error) {
+// GetAllInstalledPluginsWithVersion Fetches Latest version of all installed plugins.
+var GetAllInstalledPluginsWithVersion = func() ([]PluginInfo, error) {
 	pluginInstallPrefixes, err := common.GetPluginInstallPrefixes()
 	if err != nil {
 		return nil, err

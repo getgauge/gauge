@@ -80,7 +80,11 @@ func Fatalf(msg string, args ...interface{}) {
 }
 
 func getErrorText(msg string, args ...interface{}) string {
-	envText := strings.Join([]string{runtime.GOOS, version.FullVersion(), version.GetCommitHash()}, ", ")
+	env := []string{runtime.GOOS, version.FullVersion()}
+	if version.GetCommitHash() != "" {
+		env = append(env, version.GetCommitHash())
+	}
+	envText := strings.Join(env, ", ")
 	return fmt.Sprintf(`Error ----------------------------------
 
 %s
@@ -92,7 +96,7 @@ Get Support ----------------------------
 
 Your Environment Information -----------
 	%s
-	%s`, fmt.Sprintf(msg, args),
+	%s`, fmt.Sprintf(msg, args...),
 		envText,
 		getPluginVersions())
 }
