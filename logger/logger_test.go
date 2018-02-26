@@ -29,87 +29,95 @@ import (
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/op/go-logging"
-	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
+func TestLoggerInitWithInfoLevel(t *testing.T) {
+	Initialize("info", CLI)
 
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
-
-func (s *MySuite) TestLoggerInitWithInfoLevel(c *C) {
-	Initialize("info")
-
-	c.Assert(GaugeLog.IsEnabledFor(logging.INFO), Equals, true)
-	c.Assert(APILog.IsEnabledFor(logging.INFO), Equals, true)
+	if !activeLogger.IsEnabledFor(logging.INFO) {
+		t.Error("Expected gaugeLog to be enabled for INFO")
+	}
 }
 
-func (s *MySuite) TestLoggerInitWithDefaultLevel(c *C) {
-	Initialize("")
+func TestLoggerInitWithDefaultLevel(t *testing.T) {
+	Initialize("", CLI)
 
-	c.Assert(GaugeLog.IsEnabledFor(logging.INFO), Equals, true)
-	c.Assert(APILog.IsEnabledFor(logging.INFO), Equals, true)
+	if !activeLogger.IsEnabledFor(logging.INFO) {
+		t.Error("Expected gaugeLog to be enabled for default log level")
+	}
 }
 
-func (s *MySuite) TestLoggerInitWithDebugLevel(c *C) {
-	Initialize("debug")
+func TestLoggerInitWithDebugLevel(t *testing.T) {
+	Initialize("debug", CLI)
 
-	c.Assert(GaugeLog.IsEnabledFor(logging.DEBUG), Equals, true)
-	c.Assert(APILog.IsEnabledFor(logging.DEBUG), Equals, true)
+	if !activeLogger.IsEnabledFor(logging.DEBUG) {
+		t.Error("Expected gaugeLog to be enabled for DEBUG")
+	}
 }
 
-func (s *MySuite) TestLoggerInitWithWarningLevel(c *C) {
-	Initialize("warning")
+func TestLoggerInitWithWarningLevel(t *testing.T) {
+	Initialize("warning", CLI)
 
-	c.Assert(GaugeLog.IsEnabledFor(logging.WARNING), Equals, true)
-	c.Assert(APILog.IsEnabledFor(logging.WARNING), Equals, true)
+	if !activeLogger.IsEnabledFor(logging.WARNING) {
+		t.Error("Expected gaugeLog to be enabled for WARNING")
+	}
 }
 
-func (s *MySuite) TestLoggerInitWithErrorLevel(c *C) {
-	Initialize("error")
+func TestLoggerInitWithErrorLevel(t *testing.T) {
+	Initialize("error", CLI)
 
-	c.Assert(GaugeLog.IsEnabledFor(logging.ERROR), Equals, true)
-	c.Assert(APILog.IsEnabledFor(logging.ERROR), Equals, true)
+	if !activeLogger.IsEnabledFor(logging.ERROR) {
+		t.Error("Expected gaugeLog to be enabled for ERROR")
+	}
 }
 
-func (s *MySuite) TestGetLogFileGivenRelativePathInGaugeProject(c *C) {
+func TestGetLogFileGivenRelativePathInGaugeProject(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	expected := filepath.Join(config.ProjectRoot, logs, apiLogFileName)
+	want := filepath.Join(config.ProjectRoot, logs, apiLogFileName)
 
-	c.Assert(GetLogFile(apiLogFileName), Equals, expected)
+	got := GetLogFile(apiLogFileName)
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
 }
 
-func (s *MySuite) TestGetLogFileInGaugeProjectGivenAbsPath(c *C) {
+func TestGetLogFileInGaugeProjectGivenAbsPath(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	expected := filepath.Join(config.ProjectRoot, apiLogFileName)
+	want := filepath.Join(config.ProjectRoot, apiLogFileName)
 
-	c.Assert(GetLogFile(filepath.Join(config.ProjectRoot, apiLogFileName)), Equals, expected)
+	got := GetLogFile(filepath.Join(config.ProjectRoot, apiLogFileName))
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
 }
 
-func (s *MySuite) TestGetLogFileInGaugeProjectCustomPath(c *C) {
+func TestGetLogFileInGaugeProjectCustomPath(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
+	want := filepath.Join(customLogsDir, apiLogFileName)
+	got := GetLogFile(filepath.Join(customLogsDir, apiLogFileName))
 
-	logFile := GetLogFile(filepath.Join(customLogsDir, apiLogFileName))
-
-	c.Assert(logFile, Equals, filepath.Join(customLogsDir, apiLogFileName))
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
 }
 
-func (s *MySuite) TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(c *C) {
+func TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(t *testing.T) {
 	myLogsDir := "my_logs"
 	os.Setenv(logsDirectory, myLogsDir)
 	defer os.Unsetenv(logsDirectory)
 
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	expected := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
+	want := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
 
-	logFile := GetLogFile(apiLogFileName)
+	got := GetLogFile(apiLogFileName)
 
-	c.Assert(logFile, Equals, expected)
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
 }
 
-func (s *MySuite) TestGetErrorText(c *C) {
+func TestGetErrorText(t *testing.T) {
 	tests := []struct {
 		gaugeVersion *version.Version
 		commitHash   string
@@ -181,8 +189,11 @@ Your Environment Information -----------
 		pluginInfo.GetAllInstalledPluginsWithVersion = func() ([]pluginInfo.PluginInfo, error) {
 			return test.pluginInfos, nil
 		}
-		actualText := getErrorText("An Error has Occurred: %s", "some error")
+		got := getErrorText("An Error has Occurred: %s", "some error")
+		want := test.expectedText
 
-		c.Assert(actualText, Equals, test.expectedText)
+		if got != want {
+			t.Errorf("Got %s, want %s", got, want)
+		}
 	}
 }

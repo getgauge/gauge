@@ -37,7 +37,7 @@ var (
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
 			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(e.Error())
+				logger.Fatalf(true, e.Error())
 			}
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())

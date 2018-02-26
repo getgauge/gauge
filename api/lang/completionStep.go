@@ -75,7 +75,7 @@ func allImplementedStepValues() []gauge.StepValue {
 	var stepValues []gauge.StepValue
 	res, err := getAllStepsResponse()
 	if err != nil {
-		logger.APILog.Debugf("failed to get steps from runner. %v", err.Error())
+		logger.Debugf(false, "failed to get steps from runner. %v", err.Error())
 		return stepValues
 	}
 	for _, stepText := range res.GetSteps() {

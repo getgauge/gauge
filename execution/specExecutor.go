@@ -85,7 +85,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	resolvedSpecItems, err := e.resolveItems(e.specification.GetSpecItems())
 	if err != nil {
-		logger.Fatalf("Failed to resolve Specifications : %s", err.Error())
+		logger.Fatalf(true,"Failed to resolve Specifications : %s", err.Error())
 	}
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if executeBefore {
@@ -105,7 +105,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
 			scenarioResults, err := e.executeScenarios(e.specification.Scenarios)
 			if err != nil {
-				logger.Fatalf("Failed to resolve Specifications : %s", err.Error())
+				logger.Fatalf(true,"Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(scenarioResults)
 		} else {
@@ -269,7 +269,7 @@ func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTim
 }
 
 func (e *specExecutor) skipSpecForError(err error) {
-	logger.Errorf(err.Error())
+	logger.Errorf(true,err.Error())
 	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 		err.Error(), e.specification.FileName, nil, "")
 	for _, scenario := range e.specification.Scenarios {

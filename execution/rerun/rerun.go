@@ -144,18 +144,18 @@ func writeFailedMeta(contents string) {
 	failuresFile := filepath.Join(config.ProjectRoot, common.DotGauge, failedFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Fatalf(true,"Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	err := ioutil.WriteFile(failuresFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf("Failed to write to %s. Reason: %s", failuresFile, err.Error())
+		logger.Fatalf(true,"Failed to write to %s. Reason: %s", failuresFile, err.Error())
 	}
 }
 
 func getJSON(failedMeta *failedMetadata) string {
 	j, err := json.MarshalIndent(failedMeta, "", "\t")
 	if err != nil {
-		logger.Warningf("Failed to save run info. Reason: %s", err.Error())
+		logger.Warningf(true,"Failed to save run info. Reason: %s", err.Error())
 	}
 	return string(j)
 }
@@ -188,11 +188,11 @@ func SaveState(args []string, specs []string) {
 func readLastState() *failedMetadata {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, failedFile))
 	if err != nil {
-		logger.Fatalf("Failed to read last run information. Reason: %s", err.Error())
+		logger.Fatalf(true,"Failed to read last run information. Reason: %s", err.Error())
 	}
 	meta := newFailedMetaData()
 	if err = json.Unmarshal([]byte(contents), meta); err != nil {
-		logger.Fatalf("Invalid last run information. Reason: %s", err.Error())
+		logger.Fatalf(true,"Invalid last run information. Reason: %s", err.Error())
 	}
 	return meta
 }

@@ -40,7 +40,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	var params lsp.RenameParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse rename request %s", err.Error())
+		logger.Debugf(false, "failed to parse rename request %s", err.Error())
 		return nil, err
 	}
 
@@ -62,7 +62,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 
 	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{common.SpecsDirectoryName})
 	for _, warning := range refactortingResult.Warnings {
-		logger.Warningf(warning)
+		logger.Warningf(true, warning)
 	}
 	if !refactortingResult.Success {
 		return nil, fmt.Errorf("Refactoring failed due to errors: %s", strings.Join(refactortingResult.Errors, "\t"))
