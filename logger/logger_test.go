@@ -18,7 +18,9 @@
 package logger
 
 import (
+	"fmt"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"os"
@@ -107,7 +109,7 @@ func (s *MySuite) TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(c *C) {
 	c.Assert(logFile, Equals, expected)
 }
 
-func TestGetErrorText(t *testing.T) {
+func (s *MySuite) TestGetErrorText(c *C) {
 	tests := []struct {
 		gaugeVersion *version.Version
 		commitHash   string
@@ -118,7 +120,7 @@ func TestGetErrorText(t *testing.T) {
 			gaugeVersion: &version.Version{0, 9, 8},
 			commitHash:   "",
 			pluginInfos:  []pluginInfo.PluginInfo{{Name: "java", Version: &version.Version{0, 6, 6}}},
-			expectedText: `Error ----------------------------------
+			expectedText: fmt.Sprintf(`Error ----------------------------------
 
 An Error has Occurred: some error
 
@@ -128,8 +130,8 @@ Get Support ----------------------------
 	Chat:          https://gitter.im/getgauge/chat
 
 Your Environment Information -----------
-	darwin, 0.9.8
-	java (0.6.6)`,
+	%s, 0.9.8
+	java (0.6.6)`, runtime.GOOS),
 		},
 		{
 			gaugeVersion: &version.Version{0, 9, 8},
@@ -138,7 +140,7 @@ Your Environment Information -----------
 				{Name: "java", Version: &version.Version{0, 6, 6}},
 				{Name: "html-report", Version: &version.Version{0, 4, 0}},
 			},
-			expectedText: `Error ----------------------------------
+			expectedText: fmt.Sprintf(`Error ----------------------------------
 
 An Error has Occurred: some error
 
@@ -148,8 +150,8 @@ Get Support ----------------------------
 	Chat:          https://gitter.im/getgauge/chat
 
 Your Environment Information -----------
-	darwin, 0.9.8
-	java (0.6.6), html-report (0.4.0)`,
+	%s, 0.9.8
+	java (0.6.6), html-report (0.4.0)`, runtime.GOOS),
 		},
 		{
 			gaugeVersion: &version.Version{0, 9, 8},
@@ -158,7 +160,7 @@ Your Environment Information -----------
 				{Name: "java", Version: &version.Version{0, 6, 6}},
 				{Name: "html-report", Version: &version.Version{0, 4, 0}},
 			},
-			expectedText: `Error ----------------------------------
+			expectedText: fmt.Sprintf(`Error ----------------------------------
 
 An Error has Occurred: some error
 
@@ -168,8 +170,8 @@ Get Support ----------------------------
 	Chat:          https://gitter.im/getgauge/chat
 
 Your Environment Information -----------
-	darwin, 0.9.8, 59effa
-	java (0.6.6), html-report (0.4.0)`,
+	%s, 0.9.8, 59effa
+	java (0.6.6), html-report (0.4.0)`, runtime.GOOS),
 		},
 	}
 
@@ -181,8 +183,6 @@ Your Environment Information -----------
 		}
 		actualText := getErrorText("An Error has Occurred: %s", "some error")
 
-		if test.expectedText != actualText {
-			t.Errorf("Expected error text is not equal to actual error text, \nExpected error text : \n%s\nActual error text : \n%s", test.expectedText, actualText)
-		}
+		c.Assert(actualText, Equals, test.expectedText)
 	}
 }
