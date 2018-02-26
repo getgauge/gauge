@@ -29,13 +29,8 @@ const (
 	generateStubCommand   = "gauge.generate.unimplemented.stub"
 	generateStubTitle     = "Generate step implementation stub"
 	extractConceptCommand = "gauge.extract.concept"
-	extractConceptTitle   = "Etract to concpet"
+	extractConceptTitle   = "Extract to concept"
 )
-
-type extractConceptInfo struct {
-	Uri   lsp.DocumentURI `json:"uri"`
-	Range lsp.Range       `json:"range`
-}
 
 func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeActionParams
@@ -47,16 +42,17 @@ func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 }
 
 func getExtractConceptCodeAction(params lsp.CodeActionParams) []lsp.Command {
-	if len(params.Context.Diagnostics) > 0 {
+	if len(params.Context.Diagnostics) > 0 || params.Range.Start.Line == params.Range.End.Line {
 		return []lsp.Command{}
 	}
-	return []lsp.Command{
-		{
-			Command:   extractConceptCommand,
-			Title:     extractConceptTitle,
-			Arguments: []interface{}{extractConceptInfo{params.TextDocument.URI, params.Range}},
-		},
-	}
+	return []lsp.Command{{
+		Command: extractConceptCommand,
+		Title:   extractConceptTitle,
+		Arguments: []interface{}{extractConceptInfo{
+			Uri:   params.TextDocument.URI,
+			Range: params.Range,
+		}},
+	}}
 }
 
 func getSpecCodeAction(params lsp.CodeActionParams) []lsp.Command {

@@ -55,6 +55,12 @@ func (file *files) content(uri lsp.DocumentURI) []string {
 	return file.cache[uri]
 }
 
+func (file *files) contentRange(uri lsp.DocumentURI, start, end int) []string {
+	file.Lock()
+	defer file.Unlock()
+	return file.cache[uri][start-1 : end]
+}
+
 func (file *files) exists(uri lsp.DocumentURI) bool {
 	file.Lock()
 	defer file.Unlock()

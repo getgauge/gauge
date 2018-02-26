@@ -64,7 +64,6 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
 	}
-	logger.APILog.Info(info)
 	if info.Concept {
 		return util.GetConceptFiles(), nil
 	}

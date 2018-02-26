@@ -148,7 +148,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "textDocument/formatting":
 		data, err := format(req)
 		if err != nil {
-			conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: 1, Message: err.Error()})
+			showErrorMessageOnClient(ctx, conn, err)
 		}
 		return data, err
 	case "textDocument/codeLens":
@@ -180,6 +180,16 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return specs()
 	case "gauge/executionStatus":
 		return execution.ReadExecutionStatus()
+	case "gauge/extractConcept":
+		if err := sendSaveFilesRequest(ctx, conn); err != nil {
+			showErrorMessageOnClient(ctx, conn, err)
+			return nil, err
+		}
+		edits, err := extractConcept(req)
+		if err != nil {
+			showErrorMessageOnClient(ctx, conn, err)
+		}
+		return edits, err
 	default:
 		return nil, nil
 	}
