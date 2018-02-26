@@ -29,11 +29,9 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	specText := `Specification Heading
-=====================
+	specText := `# Specification Heading
 
-Scenario Heading
-----------------
+## Scenario Heading
 
 * Step text`
 
@@ -44,7 +42,7 @@ Scenario Heading
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{0, 0},
-				End:   lsp.Position{7, 91},
+				End:   lsp.Position{5, 57},
 			},
 			NewText: specText + "\n",
 		},

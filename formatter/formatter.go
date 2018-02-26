@@ -94,8 +94,7 @@ func FormatStep(step *gauge.Step) string {
 
 func FormatHeading(heading, headingChar string) string {
 	trimmedHeading := strings.TrimSpace(heading)
-	length := len(trimmedHeading)
-	return fmt.Sprintf("%s\n%s\n", trimmedHeading, getRepeatedChars(headingChar, length))
+	return fmt.Sprintf("%s %s\n", headingChar, trimmedHeading)
 }
 
 func FormatTable(table *gauge.Table) string {
