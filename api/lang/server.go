@@ -191,7 +191,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return edits, err
 	case "gauge/getRunnerLanguage":
-		return getRunnerLanguage()
+		return lRunner.lspID, nil
 	default:
 		return nil, nil
 	}
