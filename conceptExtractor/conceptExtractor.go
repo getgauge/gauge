@@ -29,7 +29,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 )
@@ -42,7 +42,7 @@ const (
 type extractor struct {
 	conceptName    string
 	conceptStep    *gauge.Step
-	stepsToExtract []*gauge_messages.Step
+	stepsToExtract []*gm.Step
 	stepsInConcept string
 	table          *gauge.Table
 	fileContent    string
@@ -50,27 +50,48 @@ type extractor struct {
 	errors         []error
 }
 
-// ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
-func ExtractConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, conceptFileName string, changeAcrossProject bool, selectedTextInfo *gauge_messages.TextInfo) (bool, error, []string) {
-	content := SPEC_HEADING_TEMPLATE
-	if util.IsSpec(selectedTextInfo.GetFileName()) {
-		content, _ = common.ReadFileContents(selectedTextInfo.GetFileName())
+// ExtractConceptWithoutSaving creates concept form the selected text and return the new text of spec and concpet files.
+func ExtractConceptWithoutSaving(conceptName *gm.Step, steps []*gm.Step, cptFile string, info *gm.TextInfo) (map[string]string, error) {
+	concept, cptText, err := performExtraction(conceptName, steps, info)
+	if err != nil {
+		return nil, err
 	}
-	concept, conceptUsageText, err := getExtractedConcept(conceptName, steps, content, selectedTextInfo.GetFileName())
+	edits := map[string]string{}
+	c, err := common.ReadFileContents(cptFile)
+	if err != nil {
+		edits[cptFile] = concept
+	} else {
+		edits[cptFile] = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(c), concept)
+	}
+	edits[info.GetFileName()] = ReplaceExtractedStepsWithConcept(info, cptText)
+	return edits, nil
+}
+
+// ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
+func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName string, changeAcrossProject bool, info *gm.TextInfo) (bool, error, []string) {
+	concept, cptText, err := performExtraction(conceptName, steps, info)
 	if err != nil {
 		return false, err, []string{}
 	}
-	writeConceptToFile(concept, conceptUsageText, conceptFileName, selectedTextInfo.GetFileName(), selectedTextInfo)
-	return true, errors.New(""), []string{conceptFileName, selectedTextInfo.GetFileName()}
+	writeConceptToFile(concept, cptText, conceptFileName, info.GetFileName(), info)
+	return true, errors.New(""), []string{conceptFileName, info.GetFileName()}
 }
 
 // ReplaceExtractedStepsWithConcept replaces the steps selected for concept extraction with the concept name given.
-func ReplaceExtractedStepsWithConcept(selectedTextInfo *gauge_messages.TextInfo, conceptText string) string {
+func ReplaceExtractedStepsWithConcept(selectedTextInfo *gm.TextInfo, conceptText string) string {
 	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
 	return replaceText(content, selectedTextInfo, conceptText)
 }
 
-func replaceText(content string, info *gauge_messages.TextInfo, replacement string) string {
+func performExtraction(cptName *gm.Step, steps []*gm.Step, info *gm.TextInfo) (string, string, error) {
+	content := SPEC_HEADING_TEMPLATE
+	if util.IsSpec(info.GetFileName()) {
+		content, _ = common.ReadFileContents(info.GetFileName())
+	}
+	return getExtractedConcept(cptName, steps, content, info.GetFileName())
+}
+
+func replaceText(content string, info *gm.TextInfo, replacement string) string {
 	parts := regexp.MustCompile("\r\n|\n").Split(content, -1)
 	for i := info.GetStartingLineNo(); i < info.GetEndLineNo(); i++ {
 		parts = append(parts[:info.GetStartingLineNo()], parts[info.GetStartingLineNo()+1:]...)
@@ -79,7 +100,7 @@ func replaceText(content string, info *gauge_messages.TextInfo, replacement stri
 	return strings.Join(parts, "\n")
 }
 
-func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string, info *gauge_messages.TextInfo) {
+func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string, info *gm.TextInfo) {
 	if _, err := os.Stat(conceptFileName); os.IsNotExist(err) {
 		basepath := path.Dir(conceptFileName)
 		if _, err := os.Stat(basepath); os.IsNotExist(err) {
@@ -93,7 +114,7 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 	util.SaveFile(fileName, text, true)
 }
 
-func getExtractedConcept(conceptName *gauge_messages.Step, steps []*gauge_messages.Step, content string, cptFileName string) (string, string, error) {
+func getExtractedConcept(conceptName *gm.Step, steps []*gm.Step, content string, cptFileName string) (string, string, error) {
 	tokens, _ := new(parser.SpecParser).GenerateTokens("* "+conceptName.GetName(), cptFileName)
 	conceptStep, _ := parser.CreateStepUsingLookup(tokens[0], nil, cptFileName)
 	cptDict, _, err := parser.ParseConcepts()
@@ -170,7 +191,7 @@ func (e *extractor) extractSteps(cptFileName string) error {
 	return nil
 }
 
-func (e *extractor) handleTable(stepInConcept *gauge.Step, step *gauge_messages.Step, cptFileName string) error {
+func (e *extractor) handleTable(stepInConcept *gauge.Step, step *gm.Step, cptFileName string) error {
 	stepInConcept.Value += " {}"
 	specText := e.fileContent + step.GetTable()
 	spec, result, err := new(parser.SpecParser).Parse(specText, &gauge.ConceptDictionary{}, cptFileName)
@@ -190,7 +211,7 @@ func (e *extractor) handleTable(stepInConcept *gauge.Step, step *gauge_messages.
 	return nil
 }
 
-func (e *extractor) addTableAsParam(step *gauge_messages.Step, args []*gauge.StepArg) {
+func (e *extractor) addTableAsParam(step *gm.Step, args []*gauge.StepArg) {
 	if step.GetParamTableName() != "" {
 		e.conceptName = strings.Replace(e.conceptName, fmt.Sprintf("<%s>", step.GetParamTableName()), "", 1)
 		e.table = &args[0].Table

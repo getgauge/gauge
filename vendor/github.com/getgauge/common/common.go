@@ -166,7 +166,7 @@ func AppendProperties(propertiesFile string, properties ...*Property) error {
 
 // FindFilesInDir returns a list of files for which isValidFile func returns true
 func FindFilesInDir(dirPath string, isValidFile func(path string) bool, shouldSkip func(path string, f os.FileInfo) bool) []string {
-	var files []string
+	files := []string{}
 	filepath.Walk(dirPath, func(path string, f os.FileInfo, err error) error {
 		if shouldSkip(path, f) {
 			return filepath.SkipDir
