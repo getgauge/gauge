@@ -65,6 +65,7 @@ func ExtractConceptWithoutSaving(conceptName *gm.Step, steps []*gm.Step, cptFile
 	edits := []*EditInfo{}
 	cpt, err := common.ReadFileContents(cptFile)
 	if err == nil && cpt != "" {
+		cpt = strings.Replace(cpt, "\r\n", "\n", -1)
 		concept = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(cpt), concept)
 	}
 	cptEdit := &EditInfo{FileName: cptFile, NewText: concept, EndLineNo: util.GetLineCount(concept)}
@@ -87,7 +88,7 @@ func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName stri
 func ReplaceExtractedStepsWithConcept(selectedTextInfo *gm.TextInfo, conceptText string) (string, int) {
 	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
 	newText := replaceText(content, selectedTextInfo, conceptText)
-	if len(content) > len(newText) {
+	if util.GetLineCount(content) > util.GetLineCount(newText) {
 		return newText, util.GetLineCount(content)
 	}
 	return newText, util.GetLineCount(newText)

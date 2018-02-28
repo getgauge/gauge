@@ -329,13 +329,7 @@ Scenario
 							Character: 0,
 						},
 					},
-					NewText: `# concept heading
-* with a step
-
-# new concept
-* some step
-* some step
-`,
+					NewText: "# concept heading\n* with a step\n\n# new concept\n* some step\n* some step\n",
 				},
 			},
 		},
