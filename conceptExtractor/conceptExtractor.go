@@ -50,21 +50,28 @@ type extractor struct {
 	errors         []error
 }
 
+type EditInfo struct {
+	FileName  string
+	NewText   string
+	EndLineNo int
+}
+
 // ExtractConceptWithoutSaving creates concept form the selected text and return the new text of spec and concpet files.
-func ExtractConceptWithoutSaving(conceptName *gm.Step, steps []*gm.Step, cptFile string, info *gm.TextInfo) (map[string]string, error) {
+func ExtractConceptWithoutSaving(conceptName *gm.Step, steps []*gm.Step, cptFile string, info *gm.TextInfo) ([]*EditInfo, error) {
 	concept, cptText, err := performExtraction(conceptName, steps, info)
 	if err != nil {
 		return nil, err
 	}
-	edits := map[string]string{}
-	c, err := common.ReadFileContents(cptFile)
-	if err != nil {
-		edits[cptFile] = concept
-	} else {
-		edits[cptFile] = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(c), concept)
+	edits := []*EditInfo{}
+	cpt, err := common.ReadFileContents(cptFile)
+	if err == nil && cpt != "" {
+		cpt = strings.Replace(cpt, "\r\n", "\n", -1)
+		concept = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(cpt), concept)
 	}
-	edits[info.GetFileName()] = ReplaceExtractedStepsWithConcept(info, cptText)
-	return edits, nil
+	cptEdit := &EditInfo{FileName: cptFile, NewText: concept, EndLineNo: util.GetLineCount(concept)}
+	spec, line := ReplaceExtractedStepsWithConcept(info, cptText)
+	specEdit := &EditInfo{FileName: info.GetFileName(), NewText: spec, EndLineNo: line}
+	return append(edits, []*EditInfo{cptEdit, specEdit}...), nil
 }
 
 // ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
@@ -78,9 +85,13 @@ func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName stri
 }
 
 // ReplaceExtractedStepsWithConcept replaces the steps selected for concept extraction with the concept name given.
-func ReplaceExtractedStepsWithConcept(selectedTextInfo *gm.TextInfo, conceptText string) string {
+func ReplaceExtractedStepsWithConcept(selectedTextInfo *gm.TextInfo, conceptText string) (string, int) {
 	content, _ := common.ReadFileContents(selectedTextInfo.GetFileName())
-	return replaceText(content, selectedTextInfo, conceptText)
+	newText := replaceText(content, selectedTextInfo, conceptText)
+	if util.GetLineCount(content) > util.GetLineCount(newText) {
+		return newText, util.GetLineCount(content)
+	}
+	return newText, util.GetLineCount(newText)
 }
 
 func performExtraction(cptName *gm.Step, steps []*gm.Step, info *gm.TextInfo) (string, string, error) {
@@ -110,7 +121,7 @@ func writeConceptToFile(concept string, conceptUsageText string, conceptFileName
 	}
 	content, _ := common.ReadFileContents(conceptFileName)
 	util.SaveFile(conceptFileName, content+"\n"+concept, true)
-	text := ReplaceExtractedStepsWithConcept(info, conceptUsageText)
+	text, _ := ReplaceExtractedStepsWithConcept(info, conceptUsageText)
 	util.SaveFile(fileName, text, true)
 }
 

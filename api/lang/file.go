@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2018 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -96,4 +96,8 @@ func getLineCount(uri lsp.DocumentURI) int {
 
 func isOpen(uri lsp.DocumentURI) bool {
 	return openFilesCache.exists(uri)
+}
+
+func getContentRange(uri lsp.DocumentURI, start, end int) []string {
+	return openFilesCache.contentRange(uri, start, end)
 }
