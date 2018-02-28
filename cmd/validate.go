@@ -38,7 +38,7 @@ var (
 			}
 			validation.HideSuggestion = hideSuggestion
 			if err := config.SetProjectRoot(args); err != nil {
-				logger.Fatalf(err.Error())
+				exit(err, cmd.UsageString())
 			}
 			track.Validation(hideSuggestion)
 			validation.Validate(args)

@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -37,11 +39,10 @@ var refactorCmd = &cobra.Command{
 			logger.Fatalf(e.Error())
 		}
 		if len(args) < 2 {
-			logger.Fatalf("Error: Refactor command needs at least two arguments.\n%s", cmd.UsageString())
-
+			exit(fmt.Errorf("Refactor command needs at least two arguments."), cmd.UsageString())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			logger.Fatalf(err.Error())
+			exit(err, cmd.UsageString())
 		}
 		track.Refactor()
 		refactorInit(args)

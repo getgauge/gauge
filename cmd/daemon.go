@@ -40,7 +40,7 @@ var (
 				logger.Fatalf(e.Error())
 			}
 			if err := config.SetProjectRoot(args); err != nil {
-				logger.Fatalf(err.Error())
+				exit(err, cmd.UsageString())
 			}
 			if lsp {
 				track.Lsp()

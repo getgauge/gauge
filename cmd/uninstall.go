@@ -18,7 +18,8 @@
 package cmd
 
 import (
-	"github.com/getgauge/gauge/logger"
+	"fmt"
+
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
@@ -31,7 +32,7 @@ var uninstallCmd = &cobra.Command{
 	Example: `  gauge uninstall java`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) < 1 {
-			logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
+			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
 		track.UninstallPlugin(args[0])
 		install.UninstallPlugin(args[0], pVersion)

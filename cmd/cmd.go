@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -149,4 +150,14 @@ func initPackageFlags() {
 	if group != -1 {
 		execution.Strategy = execution.Eager
 	}
+}
+
+func exit(err error, additionalText string) {
+	if err != nil {
+		logger.Errorf(err.Error())
+	}
+	if additionalText != "" {
+		logger.Infof(additionalText)
+	}
+	os.Exit(0)
 }

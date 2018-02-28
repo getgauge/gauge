@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -37,10 +39,10 @@ var docsCmd = &cobra.Command{
 			logger.Fatalf(e.Error())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			logger.Fatalf(err.Error())
+			exit(err, cmd.UsageString())
 		}
 		if len(args) < 1 {
-			logger.Fatalf("Error: Missing argument <plugin name>.\n%s", cmd.UsageString())
+			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
 		track.Docs(args[0])
 		specDirs := getSpecsDir(args[1:])
