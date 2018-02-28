@@ -36,7 +36,7 @@ var formatCmd = &cobra.Command{
 			logger.Fatalf(e.Error())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			exitWithError(err, cmd.UsageString())
+			exit(err, cmd.UsageString())
 		}
 		track.Format()
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])

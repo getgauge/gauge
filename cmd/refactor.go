@@ -39,10 +39,10 @@ var refactorCmd = &cobra.Command{
 			logger.Fatalf(e.Error())
 		}
 		if len(args) < 2 {
-			exitWithError(fmt.Errorf("Error: Refactor command needs at least two arguments."), cmd.UsageString())
+			exit(fmt.Errorf("Refactor command needs at least two arguments."), cmd.UsageString())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			exitWithError(err, cmd.UsageString())
+			exit(err, cmd.UsageString())
 		}
 		track.Refactor()
 		refactorInit(args)

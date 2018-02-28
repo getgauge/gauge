@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
@@ -34,13 +33,23 @@ var (
 		Example: `  gauge config check_updates false`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if list || machineReadable {
-				exit(config.List(machineReadable))
+				text, err := config.List(machineReadable)
+				if err != nil {
+					logger.Fatalf(err.Error())
+				}
+				logger.Infof(text)
+				return
 			}
 			if len(args) == 0 {
-				exitWithError(fmt.Errorf("Error: Config command needs argument(s)."), cmd.UsageString())
+				exit(fmt.Errorf("Config command needs argument(s)."), cmd.UsageString())
 			}
 			if len(args) == 1 {
-				exit(config.GetProperty(args[0]))
+				text, err := config.GetProperty(args[0])
+				if err != nil {
+					logger.Fatalf(err.Error())
+				}
+				logger.Infof(text)
+				return
 			}
 			if err := config.Update(args[0], args[1]); err != nil {
 				logger.Fatalf(err.Error())
@@ -55,12 +64,4 @@ func init() {
 	GaugeCmd.AddCommand(configCmd)
 	configCmd.Flags().BoolVarP(&list, "list", "", false, "List all global properties")
 	configCmd.Flags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Print all properties in JSON format")
-}
-
-func exit(text string, err error) {
-	if err != nil {
-		logger.Fatalf(err.Error())
-	}
-	logger.Infof(text)
-	os.Exit(0)
 }

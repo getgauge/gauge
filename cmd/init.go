@@ -38,7 +38,7 @@ var (
 				return
 			}
 			if len(args) < 1 {
-				exitWithError(fmt.Errorf("Error: Missing argument <template name>. To see all the templates, run 'gauge list-templates'"), cmd.UsageString())
+				exit(fmt.Errorf("Missing argument <template name>. To see all the templates, run 'gauge list-templates'"), cmd.UsageString())
 			}
 			track.ProjectInit(args[0])
 			projectInit.InitializeProject(args[0])

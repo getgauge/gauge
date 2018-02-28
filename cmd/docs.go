@@ -39,10 +39,10 @@ var docsCmd = &cobra.Command{
 			logger.Fatalf(e.Error())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			exitWithError(err, cmd.UsageString())
+			exit(err, cmd.UsageString())
 		}
 		if len(args) < 1 {
-			exitWithError(fmt.Errorf("Error: Missing argument <plugin name>."), cmd.UsageString())
+			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
 		track.Docs(args[0])
 		specDirs := getSpecsDir(args[1:])

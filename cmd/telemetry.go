@@ -51,7 +51,7 @@ var (
   gauge telemetry`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) != 0 {
-				exitWithError(nil, cmd.UsageString())
+				exit(nil, cmd.UsageString())
 			}
 			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
 		},
@@ -101,7 +101,7 @@ var (
 				return
 			}
 			if _, err := strconv.ParseBool(args[0]); err != nil {
-				exitWithError(fmt.Errorf("Error: Invalid argument. The valid options are true or false."), cmd.UsageString())
+				exit(fmt.Errorf("Invalid argument. The valid options are true or false."), cmd.UsageString())
 			}
 			config.UpdateTelemetryLoggging(args[0])
 		},

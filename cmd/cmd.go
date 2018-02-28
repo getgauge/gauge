@@ -152,7 +152,7 @@ func initPackageFlags() {
 	}
 }
 
-func exitWithError(err error, additionalText string) {
+func exit(err error, additionalText string) {
 	if err != nil {
 		logger.Errorf(err.Error())
 	}
