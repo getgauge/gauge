@@ -185,11 +185,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
 		}
-		edits, err := extractConcept(req)
-		if err != nil {
-			showErrorMessageOnClient(ctx, conn, err)
-		}
-		return edits, err
+		return extractConcept(req)
 	case "gauge/getRunnerLanguage":
 		return lRunner.lspID, nil
 	default:

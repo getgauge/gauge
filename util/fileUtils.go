@@ -207,3 +207,9 @@ func Remove(dir string) {
 func RemoveTempDir() {
 	Remove(common.GetTempDir())
 }
+
+// GetLineCount give no of lines in given text
+func GetLineCount(text string) int {
+	text = strings.Replace(text, "\r\n", "\n", -1)
+	return len(strings.Split(text, "\n"))
+}

@@ -1,3 +1,20 @@
+// Copyright 2015 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
@@ -50,10 +67,10 @@ func extractConcept(req *jsonrpc2.Request) (interface{}, error) {
 	return createWorkSpaceEdits(edits), nil
 }
 
-func createWorkSpaceEdits(edits map[string]string) lsp.WorkspaceEdit {
+func createWorkSpaceEdits(edits []*conceptExtractor.EditInfo) lsp.WorkspaceEdit {
 	var result = lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{}}
-	for file, edit := range edits {
-		result.Changes[file] = []lsp.TextEdit{
+	for _, edit := range edits {
+		result.Changes[edit.FileName] = []lsp.TextEdit{
 			lsp.TextEdit{
 				Range: lsp.Range{
 					Start: lsp.Position{
@@ -61,18 +78,18 @@ func createWorkSpaceEdits(edits map[string]string) lsp.WorkspaceEdit {
 						Character: 0,
 					},
 					End: lsp.Position{
-						Line:      len(strings.Split(edit, "\n")),
+						Line:      edit.EndLineNo,
 						Character: 0,
 					},
 				},
-				NewText: edit,
+				NewText: edit.NewText,
 			}}
 	}
 	return result
 }
 
 func getStepsInRange(uri lsp.DocumentURI, file string, info *gm.TextInfo) ([]*gm.Step, error) {
-	text := openFilesCache.contentRange(uri, int(info.StartingLineNo), int(info.EndLineNo))
+	text := getContentRange(uri, int(info.StartingLineNo), int(info.EndLineNo))
 	specText := fmt.Sprintf("%s\n%s", template, strings.Join(text, "\n"))
 	spec, res := new(parser.SpecParser).ParseSpecText(specText, file)
 	if !res.Ok {
