@@ -22,6 +22,7 @@ import (
 
 	"sync"
 
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
@@ -33,8 +34,7 @@ type files struct {
 func (file *files) add(uri lsp.DocumentURI, text string) {
 	file.Lock()
 	defer file.Unlock()
-	text = strings.Replace(text, "\r\n", "\n", -1)
-	file.cache[uri] = strings.Split(text, "\n")
+	file.cache[uri] = util.GetLinesFromText(text)
 }
 
 func (file *files) remove(uri lsp.DocumentURI) {

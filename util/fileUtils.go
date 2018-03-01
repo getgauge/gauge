@@ -208,8 +208,13 @@ func RemoveTempDir() {
 	Remove(common.GetTempDir())
 }
 
+// GetLinesFromText gets lines of a text in an array
+func GetLinesFromText(text string) []string {
+	text = strings.Replace(text, "\r\n", "\n", -1)
+	return strings.Split(text, "\n")
+}
+
 // GetLineCount give no of lines in given text
 func GetLineCount(text string) int {
-	text = strings.Replace(text, "\r\n", "\n", -1)
-	return len(strings.Split(text, "\n"))
+	return len(GetLinesFromText(text))
 }
