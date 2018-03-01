@@ -160,10 +160,10 @@ func initPackageFlags() {
 
 func exit(err error, additionalText string) {
 	if err != nil {
-		logger.Errorf(err.Error())
+		logger.Errorf(true, err.Error())
 	}
 	if additionalText != "" {
-		logger.Infof(additionalText)
+		logger.Infof(true, additionalText)
 	}
 	os.Exit(0)
 }

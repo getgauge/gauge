@@ -119,11 +119,7 @@ var prevFailed = false
 func loadLastState(cmd *cobra.Command) {
 	lastState, err := rerun.GetLastState()
 	if err != nil {
-<<<<<<< HEAD
 		exit(err, "")
-=======
-		logger.Fatalf(true, err.Error())
->>>>>>> hide api and lsp logs from consumers
 	}
 	logger.Infof(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
 	cmd.Parent().SetArgs(lastState)

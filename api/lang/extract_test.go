@@ -242,14 +242,14 @@ func TestExtractToConceptWithWithInvalidElements(t *testing.T) {
 
 	openFilesCache.add(lsp.DocumentURI(specFile), specText)
 
-	expectedError := "Can not extract to cencpet. Selected text contains invalid elements."
+	expectedError := "Failed to extract concept. Can not extract to concept. Selected text contains invalid elements."
 
 	_, err = extractConcept(request)
 
 	if err == nil {
 		t.Errorf("expected error but got nil")
 	} else if err.Error() != expectedError {
-		t.Errorf("\n\nExpected: %vGot: %v", expectedError, err.Error())
+		t.Errorf("\nExpected: %s\nGot: %s\n", expectedError, err.Error())
 	}
 }
 

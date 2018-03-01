@@ -60,8 +60,7 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		Concept bool `json:"concept"`
 	}{}
 	if err := json.Unmarshal(*req.Params, &info); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if info.Concept {
 		return util.GetConceptFiles(), nil

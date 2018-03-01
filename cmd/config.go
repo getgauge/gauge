@@ -35,24 +35,20 @@ var (
 			if list || machineReadable {
 				text, err := config.List(machineReadable)
 				if err != nil {
-					logger.Fatalf(err.Error())
+					logger.Fatalf(true, err.Error())
 				}
-				logger.Infof(text)
+				logger.Infof(true, text)
 				return
 			}
 			if len(args) == 0 {
-<<<<<<< HEAD
 				exit(fmt.Errorf("Config command needs argument(s)."), cmd.UsageString())
-=======
-				logger.Fatalf(true, "Error: Config command needs argument(s).\n%s", cmd.UsageString())
->>>>>>> hide api and lsp logs from consumers
 			}
 			if len(args) == 1 {
 				text, err := config.GetProperty(args[0])
 				if err != nil {
-					logger.Fatalf(err.Error())
+					logger.Fatalf(true, err.Error())
 				}
-				logger.Infof(text)
+				logger.Infof(true, text)
 				return
 			}
 			if err := config.Update(args[0], args[1]); err != nil {

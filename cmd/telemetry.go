@@ -101,11 +101,7 @@ var (
 				return
 			}
 			if _, err := strconv.ParseBool(args[0]); err != nil {
-<<<<<<< HEAD
 				exit(fmt.Errorf("Invalid argument. The valid options are true or false."), cmd.UsageString())
-=======
-				logger.Fatalf(true, "Error: Invalid argument. The valid options are true or false.")
->>>>>>> hide api and lsp logs from consumers
 			}
 			config.UpdateTelemetryLoggging(args[0])
 		},
