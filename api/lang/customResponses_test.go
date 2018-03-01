@@ -245,6 +245,33 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	}
 }
 
+func TestGetImplementationFilesShouldReturnFilePathsForConcept(t *testing.T) {
+	type implFileParam struct {
+		Concept bool `json:"concept"`
+	}
+
+	params := implFileParam{Concept: true}
+
+	b, _ := json.Marshal(params)
+	p := json.RawMessage(b)
+
+	util.GetConceptFiles = func() []string {
+		return []string{"file.cpt"}
+	}
+
+	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	want := []string{"file.cpt"}
+
+	if !reflect.DeepEqual(implFiles, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, implFiles)
+	}
+}
+
 func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 	type stubImpl struct {
 		ImplementationFilePath string   `json:"implementationFilePath"`
