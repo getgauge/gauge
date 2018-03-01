@@ -175,6 +175,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "gauge/getImplFiles":
 		return getImplFiles(req)
 	case "gauge/putStubImpl":
+		if err := sendSaveFilesRequest(ctx, conn); err != nil {
+			showErrorMessageOnClient(ctx, conn, err)
+			return nil, err
+		}
 		return putStubImpl(req)
 	case "gauge/specs":
 		return specs()
