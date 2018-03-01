@@ -213,3 +213,8 @@ func GetLineCount(text string) int {
 	text = strings.Replace(text, "\r\n", "\n", -1)
 	return len(strings.Split(text, "\n"))
 }
+
+// ReadFileContents returns the contents of the file
+var ReadFileContents = func(file string) (string, error) {
+	return common.ReadFileContents(file)
+}

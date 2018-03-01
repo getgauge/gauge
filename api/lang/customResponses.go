@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -67,9 +66,6 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 	if info.Concept {
 		return util.GetConceptFiles(), nil
 	}
-	if lRunner.runner == nil {
-		return nil, nil
-	}
 	implementationFileListResponse, err := getImplementationFileList()
 	if err != nil {
 		return nil, err
@@ -82,9 +78,6 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
 		logger.APILog.Debugf("failed to parse request %s", err.Error())
 		return nil, err
-	}
-	if lRunner.runner == nil {
-		return nil, nil
 	}
 	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
 	if err != nil {
@@ -101,11 +94,11 @@ func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) l
 	fileContent := fileChanges.FileContent
 
 	var lastLineNo int
-	contents, err := common.ReadFileContents(filePath)
+	contents, err := util.ReadFileContents(filePath)
 	if err != nil {
 		lastLineNo = 0
 	} else {
-		lastLineNo = len(contents)
+		lastLineNo = util.GetLineCount(contents)
 	}
 
 	textEdit := lsp.TextEdit{
