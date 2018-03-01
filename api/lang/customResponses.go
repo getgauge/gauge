@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -94,7 +95,7 @@ func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) l
 	fileContent := fileChanges.FileContent
 
 	var lastLineNo int
-	contents, err := util.ReadFileContents(filePath)
+	contents, err := common.ReadFileContents(filePath)
 	if err != nil {
 		lastLineNo = 0
 	} else {

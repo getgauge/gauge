@@ -19,6 +19,8 @@ package lang
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -248,8 +250,9 @@ func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 		ImplementationFilePath string   `json:"implementationFilePath"`
 		Codes                  []string `json:"codes"`
 	}
-
-	stubImplParams := stubImpl{ImplementationFilePath: "file", Codes: []string{"code"}}
+	cwd, _ := os.Getwd()
+	dummyFilePath := filepath.Join(filepath.Join(cwd, "_testdata"), "dummyFile.txt")
+	stubImplParams := stubImpl{ImplementationFilePath: dummyFilePath, Codes: []string{"code"}}
 
 	b, _ := json.Marshal(stubImplParams)
 	p := json.RawMessage(b)
@@ -266,9 +269,6 @@ func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 	}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
-	util.ReadFileContents = func(file string) (string, error) {
-		return "", nil
-	}
 
 	if err != nil {
 		t.Fatalf("Got error %s", err.Error())
@@ -281,7 +281,7 @@ func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 		NewText: "file content",
 		Range: lsp.Range{
 			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 1, Character: 0},
 		},
 	}
 	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)
