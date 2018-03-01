@@ -33,10 +33,16 @@ go get github.com/tools/godep
 
 Push-Location "$pwd\bin\windows_amd64"
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
+if ($LastExitCode -ne 0) {
+     throw "gauge.exe signing failed"
+}
 Pop-Location
 
 Push-Location "$pwd\bin\windows_386"
 signtool sign /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
+if ($LastExitCode -ne 0) {
+     throw "gauge.exe signing failed"
+}
 Pop-Location
 
 $nightlyFlag = If ($nightly) {"--nightly"} Else {""}
