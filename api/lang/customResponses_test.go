@@ -272,7 +272,7 @@ func TestGetImplementationFilesShouldReturnFilePathsForConcept(t *testing.T) {
 	}
 }
 
-func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
+func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 	type stubImpl struct {
 		ImplementationFilePath string   `json:"implementationFilePath"`
 		Codes                  []string `json:"codes"`
@@ -286,10 +286,20 @@ func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 
 	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
 		response := &gauge_messages.Message{
-			MessageType: gauge_messages.Message_FileChanges,
-			FileChanges: &gauge_messages.FileChanges{
-				FileName:    "file",
-				FileContent: "file content",
+			MessageType: gauge_messages.Message_FileDiff,
+			FileDiff: &gauge_messages.FileDiff{
+				FilePath: "file",
+				TextDiffs: []*gauge_messages.TextDiff{
+					{
+						Span: &gauge_messages.Span{
+							Start:     1,
+							StartChar: 2,
+							End:       3,
+							EndChar:   4,
+						},
+						Content: "file content",
+					},
+				},
 			},
 		}
 		return response, nil
@@ -307,8 +317,8 @@ func TestPutStubImplementationShouldReturnNewFileContent(t *testing.T) {
 	textEdit := lsp.TextEdit{
 		NewText: "file content",
 		Range: lsp.Range{
-			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: 1, Character: 0},
+			Start: lsp.Position{Line: 1, Character: 2},
+			End:   lsp.Position{Line: 3, Character: 4},
 		},
 	}
 	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)

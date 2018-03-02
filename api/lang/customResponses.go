@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
@@ -77,36 +76,30 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
 		return nil, fmt.Errorf("failed to parse request %s", err)
 	}
-	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
+	fileDiff, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
 	if err != nil {
 		return nil, err
 	}
 
-	return getWorkspaceEditForStubImpl(fileChanges, stubImplParams.ImplementationFilePath), nil
+	return getWorkspaceEditForStubImpl(fileDiff), nil
 }
 
-func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
+func getWorkspaceEditForStubImpl(fileDiff *gm.FileDiff) lsp.WorkspaceEdit {
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(lsp.DocumentURI(fileChanges.FileName))
-	fileContent := fileChanges.FileContent
+	uri := util.ConvertPathToURI(lsp.DocumentURI(fileDiff.FilePath))
 
-	var lastLineNo int
-	contents, err := common.ReadFileContents(filePath)
-	if err != nil {
-		lastLineNo = 0
-	} else {
-		lastLineNo = util.GetLineCount(contents)
+	var textDiffs = fileDiff.TextDiffs
+	for _, textDiff := range textDiffs {
+		textEdit := lsp.TextEdit{
+			NewText: textDiff.Content,
+			Range: lsp.Range{
+				Start: lsp.Position{Line: int(textDiff.Span.Start), Character: int(textDiff.Span.StartChar)},
+				End:   lsp.Position{Line: int(textDiff.Span.End), Character: int(textDiff.Span.EndChar)},
+			},
+		}
+		result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 	}
-
-	textEdit := lsp.TextEdit{
-		NewText: fileContent,
-		Range: lsp.Range{
-			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: lastLineNo, Character: 0},
-		},
-	}
-	result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 	return result
 }
 

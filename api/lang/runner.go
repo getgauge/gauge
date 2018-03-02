@@ -107,13 +107,13 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(filePath string, codes []string) (*gm.FileChanges, error) {
+func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error) {
 	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Codes: codes}}
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
-	return response.GetFileChanges(), nil
+	return response.GetFileDiff(), nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
