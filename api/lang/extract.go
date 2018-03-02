@@ -90,11 +90,7 @@ func getStepsInRange(uri lsp.DocumentURI, file string, info *gm.TextInfo) ([]*gm
 	specText := fmt.Sprintf("%s\n%s", template, strings.Join(text, "\n"))
 	spec, res := new(parser.SpecParser).ParseSpecText(specText, file)
 	if !res.Ok {
-		er := "Can not extract to concept."
-		for e := range res.Errors() {
-			er = fmt.Sprintf("%s\n%s", er, e)
-		}
-		return nil, fmt.Errorf("Can not extract to concept. Selected text contains invalid elements. %s", er)
+		return nil, fmt.Errorf("Can not extract to concept. Selected text contains invalid elements. %s", strings.Join(res.Errors(), "\n"))
 	}
 	return convertToAPIStep(spec.Steps()), nil
 }
