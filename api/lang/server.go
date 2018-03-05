@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -257,7 +256,7 @@ func cacheInitializeParams(req *jsonrpc2.Request) error {
 }
 
 func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
-	logger.Info(false, "LangServer: reading on stdin, writing on stdout")
+	logInfo(nil, "LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
 	if logLevel == "debug" {
 		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(lspWriter{}, "", 0)))
@@ -269,11 +268,11 @@ func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 func initializeRunner() {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
-		logger.Debug(false, "Current runner is not compatible with gauge LSP.")
+		logDebug(nil, "Current runner is not compatible with gauge LSP.")
 	}
 	err = startRunner()
 	if err != nil {
-		logger.Debugf(false, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
+		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
 	}
 	lRunner.lspID = id
 }
@@ -283,7 +282,7 @@ func Start(p infoProvider, logLevel string) {
 	provider.Init()
 	initializeRunner()
 	ctx, conn := startLsp(logLevel)
-	logger.SetCustomLogger(lspLogger{conn, ctx})
+	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
-	logger.Info(false, "Connection closed")
+	logInfo(nil, "Connection closed")
 }

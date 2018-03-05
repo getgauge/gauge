@@ -52,7 +52,7 @@ func startRunner() error {
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
-	logger.Infof(false, "Starting language runner")
+	logInfo(nil, "Starting language runner")
 	outfile, err := os.OpenFile(logger.GetLogFile(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
 		return nil, err

@@ -52,19 +52,10 @@ const (
 )
 
 var level logging.Level
-var customLogger CustomLogger
 var activeLogger *logging.Logger
 var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
 var isLSP bool
 var initialized bool
-
-type CustomLogger interface {
-	Log(logLevel logging.Level, msg string)
-}
-
-func SetCustomLogger(l CustomLogger) {
-	customLogger = l
-}
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Info(stdout bool, msg string) {
@@ -76,7 +67,7 @@ func Infof(stdout bool, msg string, args ...interface{}) {
 	if !initialized {
 		return
 	}
-	write(logging.INFO, stdout, msg, args...)
+	write(stdout, msg, args...)
 	activeLogger.Infof(msg, args...)
 }
 
@@ -91,7 +82,7 @@ func Errorf(stdout bool, msg string, args ...interface{}) {
 		fmt.Fprintf(os.Stderr, msg, args)
 		return
 	}
-	write(logging.ERROR, stdout, msg, args...)
+	write(stdout, msg, args...)
 	activeLogger.Errorf(msg, args...)
 }
 
@@ -105,7 +96,7 @@ func Warningf(stdout bool, msg string, args ...interface{}) {
 	if !initialized {
 		return
 	}
-	write(logging.WARNING, stdout, msg, args...)
+	write(stdout, msg, args...)
 	activeLogger.Warningf(msg, args...)
 }
 
@@ -121,7 +112,7 @@ func Fatalf(stdout bool, msg string, args ...interface{}) {
 		fmt.Fprintf(os.Stderr, msg, args)
 		return
 	}
-	write(logging.CRITICAL, stdout, message)
+	write(stdout, message)
 	activeLogger.Fatalf(msg, args...)
 }
 
@@ -137,7 +128,7 @@ func Debugf(stdout bool, msg string, args ...interface{}) {
 	}
 	activeLogger.Debugf(msg, args...)
 	if level == logging.DEBUG {
-		write(logging.DEBUG, stdout, msg, args...)
+		write(stdout, msg, args...)
 	}
 }
 
@@ -175,10 +166,8 @@ func getPluginVersions() string {
 	return strings.Join(pluginVersions, ", ")
 }
 
-func write(logLevel logging.Level, stdout bool, msg string, args ...interface{}) {
-	if customLogger != nil {
-		customLogger.Log(logLevel, fmt.Sprintf(msg, args...))
-	} else if !isLSP && stdout {
+func write(stdout bool, msg string, args ...interface{}) {
+	if !isLSP && stdout {
 		fmt.Println(fmt.Sprintf(msg, args...))
 	}
 }

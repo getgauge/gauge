@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/getgauge/gauge/logger"
-	"github.com/op/go-logging"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 	"os"
@@ -56,38 +55,49 @@ type lspLogger struct {
 	ctx  context.Context
 }
 
-func (c lspLogger) Log(logLevel logging.Level, msg string) {
-	var level lsp.MessageType
-	switch logLevel {
-	case logging.DEBUG:
-		level = lsp.Log
-	case logging.INFO:
-		level = lsp.Info
-	case logging.WARNING:
-		level = lsp.MTWarning
-	case logging.ERROR:
-		level = lsp.MTError
-	case logging.CRITICAL:
-		level = lsp.MTError
-	default:
-		level = lsp.Info
-	}
+func (c *lspLogger) Log(level lsp.MessageType, msg string) {
 	c.conn.Notify(c.ctx, "window/logMessage", lsp.LogMessageParams{Type: level, Message: msg})
 }
 
+var lspLog *lspLogger
+
+func initialize(ctx context.Context, conn *jsonrpc2.Conn) {
+	lspLog = &lspLogger{conn: conn, ctx: ctx}
+}
+
 func logDebug(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	logger.Debugf(false, getLogFormatFor(req, msg), args...)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	logger.Debugf(false, m)
+	logToLsp(lsp.Log, m)
+}
+
+func logInfo(req *jsonrpc2.Request, msg string, args ...interface{}) {
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	logger.Infof(false, m)
+	logToLsp(lsp.Info, m)
 }
 
 func logWarning(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	logger.Warningf(false, getLogFormatFor(req, msg), args...)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	logger.Warningf(false, m)
+	logToLsp(lsp.MTWarning, m)
 }
 
 func logError(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	logger.Errorf(false, getLogFormatFor(req, msg), args...)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	logger.Errorf(false, m)
+	logToLsp(lsp.MTError, m)
 }
 
+func logToLsp(level lsp.MessageType, m string) {
+	if lspLog != nil {
+		lspLog.Log(level, m)
+	}
+}
 func getLogFormatFor(req *jsonrpc2.Request, msg string) string {
+	if req == nil {
+		return msg
+	}
 	formattedMsg := fmt.Sprintf("#%d: %s: ", req.ID, req.Method) + msg
 	if req.Notif {
 		return "notif " + formattedMsg
