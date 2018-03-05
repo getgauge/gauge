@@ -76,7 +76,7 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 		}
 
 		if err != nil {
-			logger.Debugf("Unable to create ga client, %s", err)
+			logger.Debugf(true,"Unable to create ga client, %s", err)
 		}
 
 		ev := ga.NewEvent(category, action)
@@ -86,7 +86,7 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 
 		err = client.Send(ev)
 		if err != nil {
-			logger.Debugf("Unable to send analytics data, %s", err)
+			logger.Debugf(true,"Unable to send analytics data, %s", err)
 		}
 		c <- true
 	}(sendChan)
@@ -97,7 +97,7 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 			wg.Done()
 			return true
 		case <-time.After(timeout * time.Second):
-			logger.Debugf("Unable to send analytics data, timed out")
+			logger.Debugf(true,"Unable to send analytics data, timed out")
 			wg.Done()
 			return false
 		}
@@ -273,9 +273,9 @@ type logEnabledRoundTripper struct {
 func (r logEnabledRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	dump, err := httputil.DumpRequestOut(req, true)
 	if err != nil {
-		logger.Debugf("Unable to dump analytics request, %s", err)
+		logger.Debugf(true,"Unable to dump analytics request, %s", err)
 	}
 
-	logger.Debugf(fmt.Sprintf("%q", dump))
+	logger.Debugf(true,fmt.Sprintf("%q", dump))
 	return http.DefaultTransport.RoundTrip(req)
 }

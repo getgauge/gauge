@@ -24,7 +24,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -61,8 +60,7 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		Concept bool `json:"concept"`
 	}{}
 	if err := json.Unmarshal(*req.Params, &info); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if info.Concept {
 		return util.GetConceptFiles(), nil
@@ -77,8 +75,7 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	var stubImplParams stubImpl
 	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err)
 	}
 	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
 	if err != nil {
@@ -117,8 +114,7 @@ func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err)
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	content := ""

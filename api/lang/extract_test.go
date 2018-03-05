@@ -19,6 +19,7 @@ package lang
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -242,14 +243,15 @@ func TestExtractToConceptWithWithInvalidElements(t *testing.T) {
 
 	openFilesCache.add(lsp.DocumentURI(specFile), specText)
 
-	expectedError := "Can not extract to cencpet. Selected text contains invalid elements."
+	expectedError := fmt.Sprintf("Can not extract to concept. Selected text contains invalid elements. "+
+		"[ParseError] %s:4 Multiple spec headings found in same file => ''", specFile)
 
 	_, err = extractConcept(request)
 
 	if err == nil {
 		t.Errorf("expected error but got nil")
 	} else if err.Error() != expectedError {
-		t.Errorf("\n\nExpected: %vGot: %v", expectedError, err.Error())
+		t.Errorf("\nExpected: %s\nGot: %s\n", expectedError, err.Error())
 	}
 }
 

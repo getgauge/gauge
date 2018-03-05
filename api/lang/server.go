@@ -19,23 +19,16 @@ package lang
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"os"
 
 	"encoding/json"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/util"
-	"github.com/op/go-logging"
-	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -51,7 +44,6 @@ type infoProvider interface {
 }
 
 var provider infoProvider
-var clientCapabilities ClientCapabilities
 
 type lspHandler struct {
 	jsonrpc2.Handler
@@ -70,33 +62,14 @@ type registration struct {
 	RegisterOptions interface{} `json:"registerOptions"`
 }
 
-type textDocumentRegistrationOptions struct {
-	DocumentSelector documentSelector `json:"documentSelector"`
-}
-
-type textDocumentChangeRegistrationOptions struct {
-	textDocumentRegistrationOptions
-	SyncKind lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
-}
-
 type codeLensRegistrationOptions struct {
 	textDocumentRegistrationOptions
 	ResolveProvider bool `json:"resolveProvider,omitempty"`
 }
 
-type documentSelector struct {
-	Scheme   string `json:"scheme"`
-	Language string `json:"language"`
-	Pattern  string `json:"pattern"`
-}
-
 type InitializeParams struct {
 	RootPath     string             `json:"rootPath,omitempty"`
 	Capabilities ClientCapabilities `json:"capabilities,omitempty"`
-}
-
-type ClientCapabilities struct {
-	SaveFiles bool `json:"saveFiles,omitempty"`
 }
 
 func newHandler() jsonrpc2.Handler {
@@ -115,11 +88,15 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	switch req.Method {
 	case "initialize":
 		if err := cacheInitializeParams(req); err != nil {
+			logError(req, err.Error())
 			return nil, err
 		}
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
 		err := registerRunnerCapabilities(conn, ctx)
+		if err != nil {
+			logError(req, err.Error())
+		}
 		go publishDiagnostics(ctx, conn)
 		return nil, err
 	case "shutdown":
@@ -134,56 +111,127 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "$/cancelRequest":
 		return nil, nil
 	case "textDocument/didOpen":
-		return nil, documentOpened(req, ctx, conn)
+		err := documentOpened(req, ctx, conn)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return nil, err
 	case "textDocument/didClose":
-		return nil, documentClosed(req, ctx, conn)
+		err := documentClosed(req, ctx, conn)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return nil, err
 	case "textDocument/didChange":
-		return nil, documentChange(req, ctx, conn)
+		err := documentChange(req, ctx, conn)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return nil, err
 	case "textDocument/completion":
-		return completion(req)
+		val, err := completion(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "completionItem/resolve":
-		return resolveCompletion(req)
+		val, err := resolveCompletion(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "textDocument/definition":
-		return definition(req)
+		val, err := definition(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "textDocument/formatting":
 		data, err := format(req)
 		if err != nil {
+			logDebug(req, err.Error())
 			showErrorMessageOnClient(ctx, conn, err)
 		}
 		return data, err
 	case "textDocument/codeLens":
-		return codeLenses(req)
+		val, err := codeLenses(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "textDocument/codeAction":
-		return codeActions(req)
+		val, err := codeActions(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "textDocument/rename":
 		result, err := rename(ctx, conn, req)
 		if err != nil {
+			logDebug(req, err.Error())
 			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
 		}
 		return result, nil
 	case "textDocument/documentSymbol":
-		return documentSymbols(req)
+		val, err := documentSymbols(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "workspace/symbol":
-		return workspaceSymbols(req)
+		val, err := workspaceSymbols(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/stepReferences":
-		return stepReferences(req)
+		val, err := stepReferences(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/stepValueAt":
-		return stepValueAt(req)
+		val, err := stepValueAt(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/scenarios":
-		return scenarios(req)
+		val, err := scenarios(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/getImplFiles":
-		return getImplFiles(req)
+		val, err := getImplFiles(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/putStubImpl":
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
+			logDebug(req, err.Error())
 			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
 		}
-		return putStubImpl(req)
+		val, err := putStubImpl(req)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/specs":
-		return specs()
+		val, err := specs()
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/executionStatus":
-		return execution.ReadExecutionStatus()
+		val, err := execution.ReadExecutionStatus()
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return val, err
 	case "gauge/extractConcept":
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			showErrorMessageOnClient(ctx, conn, err)
@@ -207,101 +255,8 @@ func cacheInitializeParams(req *jsonrpc2.Request) error {
 	return nil
 }
 
-func gaugeLSPCapabilities() lsp.InitializeResult {
-	kind := lsp.TDSKFull
-	return lsp.InitializeResult{
-		Capabilities: lsp.ServerCapabilities{
-			TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind, Options: &lsp.TextDocumentSyncOptions{Save: &lsp.SaveOptions{IncludeText: true}}},
-			CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
-			DocumentFormattingProvider: true,
-			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
-			DefinitionProvider:         true,
-			CodeActionProvider:         true,
-			DocumentSymbolProvider:     true,
-			WorkspaceSymbolProvider:    true,
-			RenameProvider:             true,
-		},
-	}
-}
-
-func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var params lsp.DidOpenTextDocumentParams
-	var err error
-	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return err
-	}
-	if util.IsGaugeFile(string(params.TextDocument.URI)) {
-		openFile(params)
-	} else if lRunner.runner != nil {
-		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text)
-	}
-	go publishDiagnostics(ctx, conn)
-	return err
-}
-
-func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var params lsp.DidChangeTextDocumentParams
-	var err error
-	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return err
-	}
-	file := params.TextDocument.URI
-	if util.IsGaugeFile(string(file)) {
-		changeFile(params)
-	} else if lRunner.runner != nil {
-		err = cacheFileOnRunner(file, params.ContentChanges[0].Text)
-	}
-	go publishDiagnostics(ctx, conn)
-	return err
-}
-
-func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var params lsp.DidCloseTextDocumentParams
-	var err error
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return err
-	}
-	if util.IsGaugeFile(string(params.TextDocument.URI)) {
-		closeFile(params)
-		if !common.FileExists(string(util.ConvertPathToURI(params.TextDocument.URI))) {
-			publishDiagnostic(params.TextDocument.URI, []lsp.Diagnostic{}, conn, ctx)
-		}
-	} else if lRunner.runner != nil {
-		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{FilePath: string(util.ConvertURItoFilePath(params.TextDocument.URI)), IsClosed: true}}
-		err = sendMessageToRunner(cacheFileRequest)
-	}
-	go publishDiagnostics(ctx, conn)
-	return err
-}
-
-func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
-	if lRunner.lspID == "" {
-		return fmt.Errorf("current runner is not compatible with gauge LSP")
-	}
-	var result interface{}
-	ds := documentSelector{"file", lRunner.lspID, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
-	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
-		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
-		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
-		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, SyncKind: lsp.TDSKFull}},
-		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, ResolveProvider: false}},
-	}}, &result)
-	return nil
-}
-
-type lspWriter struct {
-}
-
-func (w lspWriter) Write(p []byte) (n int, err error) {
-	logger.LspLog.Debug(string(p))
-	return os.Stderr.Write(p)
-}
-
 func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
-	logger.APILog.Info("LangServer: reading on stdin, writing on stdout")
+	logInfo(nil, "LangServer: reading on stdin, writing on stdout")
 	var connOpt []jsonrpc2.ConnOpt
 	if logLevel == "debug" {
 		connOpt = append(connOpt, jsonrpc2.LogMessages(log.New(lspWriter{}, "", 0)))
@@ -313,11 +268,11 @@ func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 func initializeRunner() {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
-		logger.APILog.Debug("Current runner is not compatible with gauge LSP.")
+		logDebug(nil, "Current runner is not compatible with gauge LSP.")
 	}
 	err = startRunner()
 	if err != nil {
-		logger.APILog.Debugf("%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
+		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
 	}
 	lRunner.lspID = id
 }
@@ -327,49 +282,7 @@ func Start(p infoProvider, logLevel string) {
 	provider.Init()
 	initializeRunner()
 	ctx, conn := startLsp(logLevel)
-	logger.SetCustomLogger(lspLogger{conn, ctx})
+	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
-	logger.APILog.Info("Connection closed")
-}
-
-type stdRWC struct{}
-
-func (stdRWC) Read(p []byte) (int, error) {
-	return os.Stdin.Read(p)
-}
-
-func (stdRWC) Write(p []byte) (int, error) {
-	return os.Stdout.Write(p)
-}
-
-func (stdRWC) Close() error {
-	if err := os.Stdin.Close(); err != nil {
-		return err
-	}
-	return os.Stdout.Close()
-}
-
-type lspLogger struct {
-	conn *jsonrpc2.Conn
-	ctx  context.Context
-}
-
-func (c lspLogger) Log(logLevel logging.Level, msg string) {
-	logger.APILog.Info(logLevel)
-	var level lsp.MessageType
-	switch logLevel {
-	case logging.DEBUG:
-		level = lsp.Log
-	case logging.INFO:
-		level = lsp.Info
-	case logging.WARNING:
-		level = lsp.MTWarning
-	case logging.ERROR:
-		level = lsp.MTError
-	case logging.CRITICAL:
-		level = lsp.MTError
-	default:
-		level = lsp.Info
-	}
-	c.conn.Notify(c.ctx, "window/logMessage", lsp.LogMessageParams{Type: level, Message: msg})
+	logInfo(nil, "Connection closed")
 }

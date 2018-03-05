@@ -48,11 +48,11 @@ func FormatSpecFiles(specFiles ...string) []*parser.ParseResult {
 		if err := formatAndSave(spec); err != nil {
 			result.ParseErrors = []parser.ParseError{parser.ParseError{Message: err.Error()}}
 		} else {
-			logger.Debugf("Successfully formatted spec: %s", util.RelPathToProjectRoot(spec.FileName))
+			logger.Debugf(true,"Successfully formatted spec: %s", util.RelPathToProjectRoot(spec.FileName))
 		}
 	}
 	if len(filesSkipped) > 0 {
-		logger.Errorf("Skipping %d file(s), due to following error(s):", len(filesSkipped))
+		logger.Errorf(true,"Skipping %d file(s), due to following error(s):", len(filesSkipped))
 	}
 	return results
 }

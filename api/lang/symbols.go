@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -35,8 +34,7 @@ func documentSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.DocumentSymbolParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 	file := string(util.ConvertURItoFilePath(params.TextDocument.URI))
 	content := getContent(params.TextDocument.URI)
@@ -62,8 +60,7 @@ func workspaceSymbols(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.WorkspaceSymbolParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 
 	if len(params.Query) < 2 {

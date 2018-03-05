@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -48,8 +47,7 @@ type extractConceptInfo struct {
 func extractConcept(req *jsonrpc2.Request) (interface{}, error) {
 	var params extractConceptInfo
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("Failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Failed to parse request %s", err.Error())
 	}
 	specFile := util.ConvertURItoFilePath(params.Uri)
 	cptFileName := string(util.ConvertURItoFilePath(params.ConceptFile))
@@ -61,8 +59,7 @@ func extractConcept(req *jsonrpc2.Request) (interface{}, error) {
 
 	edits, err := conceptExtractor.ExtractConceptWithoutSaving(&gm.Step{Name: params.ConceptName}, steps, cptFileName, textInfo)
 	if err != nil {
-		logger.APILog.Debugf("Failed to extract concpet. %v", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Failed to extract concept. %s", err.Error())
 	}
 	return createWorkSpaceEdits(edits), nil
 }
@@ -93,8 +90,7 @@ func getStepsInRange(uri lsp.DocumentURI, file string, info *gm.TextInfo) ([]*gm
 	specText := fmt.Sprintf("%s\n%s", template, strings.Join(text, "\n"))
 	spec, res := new(parser.SpecParser).ParseSpecText(specText, file)
 	if !res.Ok {
-		logger.APILog.Debugf("Can not extract to cencpet.", res.Errors())
-		return nil, fmt.Errorf("Can not extract to cencpet. Selected text contains invalid elements.")
+		return nil, fmt.Errorf("Can not extract to concept. Selected text contains invalid elements. %s", strings.Join(res.Errors(), "\n"))
 	}
 	return convertToAPIStep(spec.Steps()), nil
 }

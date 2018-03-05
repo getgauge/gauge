@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
@@ -51,7 +50,7 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 
 		diagnosticsMap, err := getDiagnostics()
 		if err != nil {
-			logger.Errorf("Unable to publish diagnostics, error : %s", err.Error())
+			logError(nil, "Unable to publish diagnostics, error : %s", err.Error())
 			return
 		}
 		for uri, diagnostics := range diagnosticsMap {
@@ -132,7 +131,7 @@ func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.
 		}
 		content, err := getContentFromFileOrDisk(conceptFile)
 		if err != nil {
-			logger.Errorf("Unable to read file %s", err)
+			return nil, fmt.Errorf("Unable to read file %s", err)
 		}
 		cpts, pRes := new(parser.ConceptParser).Parse(content, conceptFile)
 		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary)

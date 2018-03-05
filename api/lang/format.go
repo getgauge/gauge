@@ -24,7 +24,6 @@ import (
 
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -36,7 +35,7 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*request.Params, &params); err != nil {
 		return nil, err
 	}
-	logger.APILog.Debugf("LangServer: request received : Type: Format Document URI: %s", params.TextDocument.URI)
+	logDebug(request, "LangServer: request received : Type: Format Document URI: %s", params.TextDocument.URI)
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	if util.IsValidSpecExtension(string(file)) {
 		spec, parseResult, err := new(parser.SpecParser).Parse(getContent(params.TextDocument.URI), gauge.NewConceptDictionary(), string(file))

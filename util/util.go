@@ -44,19 +44,19 @@ func IsWindows() bool {
 // DownloadAndUnzip downloads the zip file from given download link and unzips it.
 // Returns the unzipped file path.
 func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
-	logger.Infof("Downloading %s", filepath.Base(downloadLink))
-	logger.Debugf("Download URL %s", downloadLink)
+	logger.Infof(true,"Downloading %s", filepath.Base(downloadLink))
+	logger.Debugf(true,"Download URL %s", downloadLink)
 	downloadedFile, err := Download(downloadLink, tempDir, "", false)
 	if err != nil {
 		return "", err
 	}
-	logger.Debugf("Downloaded to %s", downloadedFile)
+	logger.Debugf(true,"Downloaded to %s", downloadedFile)
 
 	unzippedPluginDir, err := common.UnzipArchive(downloadedFile, tempDir)
 	if err != nil {
 		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
 	}
-	logger.Debugf("Unzipped to => %s\n", unzippedPluginDir)
+	logger.Debugf(true,"Unzipped to => %s\n", unzippedPluginDir)
 
 	return unzippedPluginDir, nil
 }
@@ -87,32 +87,32 @@ func IsProcessRunning(pid int) bool {
 func SetWorkingDir(workingDir string) {
 	targetDir, err := filepath.Abs(workingDir)
 	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
+		logger.Fatalf(true,"Unable to set working directory : %s", err.Error())
 	}
 
 	if !common.DirExists(targetDir) {
 		err = os.Mkdir(targetDir, 0777)
 		if err != nil {
-			logger.Fatalf("Unable to set working directory : %s", err.Error())
+			logger.Fatalf(true,"Unable to set working directory : %s", err.Error())
 		}
 	}
 
 	err = os.Chdir(targetDir)
 	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
+		logger.Fatalf(true,"Unable to set working directory : %s", err.Error())
 	}
 
 	_, err = os.Getwd()
 	if err != nil {
-		logger.Fatalf("Unable to set working directory : %s", err.Error())
+		logger.Fatalf(true,"Unable to set working directory : %s", err.Error())
 	}
 }
 
 func ConvertToBool(value, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
-		logger.Warningf("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
-		logger.Warningf("Using default value %v for property %s.", defaultValue, property)
+		logger.Warningf(true,"Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
+		logger.Warningf(true,"Using default value %v for property %s.", defaultValue, property)
 		return defaultValue
 	}
 	return boolValue

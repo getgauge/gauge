@@ -98,13 +98,13 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 		select {
 		case done := <-exited:
 			if done {
-				logger.Debugf("Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
+				logger.Debugf(true, "Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			logger.Warningf("Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
+			logger.Warningf(true, "Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
 			err := p.pluginCmd.Process.Kill()
 			if err != nil {
-				logger.Warningf("Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
+				logger.Warningf(true, "Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
 			}
 			return err
 		}
@@ -279,13 +279,13 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 func GenerateDoc(pluginName string, specDirs []string, port int) {
 	pd, err := GetPluginDescriptor(pluginName, "")
 	if err != nil {
-		logger.Fatalf("Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge install %s`.", pluginName, err.Error(), pluginName)
+		logger.Fatalf(true, "Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge install %s`.", pluginName, err.Error(), pluginName)
 	}
 	if err := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport); err != nil {
-		logger.Fatalf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion)
+		logger.Fatalf(true, "Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion)
 	}
 	if !isPluginValidFor(pd, docScope) {
-		logger.Fatalf("Invalid plugin name: %s, this plugin cannot generate documentation.", pd.Name)
+		logger.Fatalf(true, "Invalid plugin name: %s, this plugin cannot generate documentation.", pd.Name)
 	}
 	var sources []string
 	for _, src := range specDirs {
@@ -297,7 +297,7 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
 	p, err := StartPlugin(pd, docScope)
 	if err != nil {
-		logger.Fatalf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
+		logger.Fatalf(true, "Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
 	}
 	for p.IsProcessRunning() {
 	}
@@ -328,7 +328,7 @@ func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 
 func StartPlugins(manifest *manifest.Manifest) Handler {
 	pluginHandler, warnings := startPluginsForExecution(manifest)
-	logger.HandleWarningMessages(warnings)
+	logger.HandleWarningMessages(true, warnings)
 	return pluginHandler
 }
 

@@ -108,11 +108,11 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	e.start()
 
 	nStreams := e.numberOfStreams()
-	logger.Infof("Executing in %s parallel streams.", strconv.Itoa(nStreams))
+	logger.Infof(true,"Executing in %s parallel streams.", strconv.Itoa(nStreams))
 
 	resChan := make(chan *result.SuiteResult)
 	if e.isMultithreaded() {
-		logger.Debugf("Using multithreading for parallel execution.")
+		logger.Debugf(true,"Using multithreading for parallel execution.")
 		go e.executeMultithreaded(nStreams, resChan)
 	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
@@ -195,7 +195,7 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *r
 	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge-bin"))
 	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
-		logger.Errorf("Failed to start runner. %s", err.Error())
+		logger.Errorf(true,"Failed to start runner. %s", err.Error())
 		resChan <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
 		return
 	}
@@ -207,8 +207,8 @@ func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan
 	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge-bin"))
 	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
-		logger.Errorf("Failed to start runner. %s", err.Error())
-		logger.Debugf("Skipping %d specifications", s.Size())
+		logger.Errorf(true,"Failed to start runner. %s", err.Error())
+		logger.Debugf(true,"Skipping %d specifications", s.Size())
 		resChan <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
 		return
 	}
@@ -274,7 +274,7 @@ func (e *parallelExecution) isMultithreaded() bool {
 		return false
 	}
 	if !e.runner.IsMultithreaded() {
-		logger.Warningf("Runner doesn't support mutithreading, using multiprocess parallel execution.")
+		logger.Warningf(true,"Runner doesn't support mutithreading, using multiprocess parallel execution.")
 		return false
 	}
 	return true

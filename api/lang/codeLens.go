@@ -24,7 +24,6 @@ import (
 	"strconv"
 
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -47,14 +46,12 @@ const (
 func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeLensParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		return getExecutionCodeLenses(params)
-	} else {
-		return getReferenceCodeLenses(params)
 	}
+	return getReferenceCodeLenses(params)
 }
 
 func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
@@ -69,8 +66,11 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	}
 
 	if !res.Ok {
-		err := fmt.Errorf("failed to parse specification %s", file)
-		logger.APILog.Debugf(err.Error())
+		errs := ""
+		for _, e := range res.ParseErrors {
+			errs = fmt.Sprintf("%s%s:%d %s\n", errs, e.FileName, e.LineNo, e.Message)
+		}
+		err := fmt.Errorf("failed to parse specification %s\n%s", file, errs)
 		return nil, err
 	}
 	var codeLenses []lsp.CodeLens

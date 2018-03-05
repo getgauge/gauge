@@ -51,6 +51,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			initLogger(cmd.Name())
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
@@ -63,6 +64,16 @@ var (
 	machineReadable bool
 	gaugeVersion    bool
 )
+
+func initLogger(n string) {
+	if lsp {
+		logger.Initialize(logLevel, logger.LSP)
+	} else if n == "daemon" {
+		logger.Initialize(logLevel, logger.API)
+	} else {
+		logger.Initialize(logLevel, logger.CLI)
+	}
+}
 
 func init() {
 	GaugeCmd.SetUsageTemplate(`Usage:{{if .Runnable}}
@@ -117,13 +128,8 @@ func getSpecsDir(args []string) []string {
 }
 
 func setGlobalFlags() {
-	logger.Initialize(logLevel)
 	msg := fmt.Sprintf("Gauge Install ID: %s", config.UniqueID())
-	if !lsp {
-		logger.Debugf(msg)
-	} else {
-		logger.GaugeLog.Debugf(msg)
-	}
+	logger.Debugf(true, msg)
 	util.SetWorkingDir(dir)
 }
 
@@ -154,10 +160,10 @@ func initPackageFlags() {
 
 func exit(err error, additionalText string) {
 	if err != nil {
-		logger.Errorf(err.Error())
+		logger.Errorf(true, err.Error())
 	}
 	if additionalText != "" {
-		logger.Infof(additionalText)
+		logger.Infof(true, additionalText)
 	}
 	os.Exit(0)
 }

@@ -19,8 +19,8 @@ package lang
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -35,8 +35,7 @@ const (
 func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeActionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 	return append(getSpecCodeAction(params), getExtractConceptCodeAction(params)...), nil
 }

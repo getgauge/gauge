@@ -57,7 +57,7 @@ var (
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			if v, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
-				logger.Infof("ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
+				logger.Infof(true, "ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
 			}
 		},
 		DisableAutoGenTag: true,
@@ -70,7 +70,7 @@ var (
 		Example: "  gauge telemetry on",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := config.UpdateTelemetry("true"); err != nil {
-				logger.Fatalf(err.Error())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
@@ -83,7 +83,7 @@ var (
 		Example: "  gauge telemetry off",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := config.UpdateTelemetry("false"); err != nil {
-				logger.Fatalf(err.Error())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
