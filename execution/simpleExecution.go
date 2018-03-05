@@ -111,7 +111,7 @@ func (e *simpleExecution) finish() {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.Kill(); err != nil {
-		logger.Errorf(true,"Failed to kill Runner: %s", err.Error())
+		logger.Errorf(true, "Failed to kill Runner: %s", err.Error())
 	}
 }
 

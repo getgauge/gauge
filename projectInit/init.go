@@ -52,7 +52,7 @@ func initializeTemplate(templateName string) error {
 		}
 	}
 
-	logger.Infof(true,"Copying Gauge template %s to current directory ...", templateName)
+	logger.Infof(true, "Copying Gauge template %s to current directory ...", templateName)
 	filesAdded, err := common.MirrorDir(filepath.Join(unzippedTemplate, templateName), wd)
 	if err != nil {
 		return fmt.Errorf("Failed to copy Gauge template: %s", err.Error())
@@ -101,7 +101,7 @@ func getTemplateLanguage(templateName string) string {
 func isGaugeProject() bool {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Debugf(true,"Gauge manifest file doesn't exist. %s", err.Error())
+		logger.Debugf(true, "Gauge manifest file doesn't exist. %s", err.Error())
 		return false
 	}
 	return m.Language != ""
@@ -110,7 +110,7 @@ func isGaugeProject() bool {
 func installRunner(templateName string) {
 	language := getTemplateLanguage(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
-		logger.Infof(true,"Compatible language plugin %s is not installed. Installing plugin...", language)
+		logger.Infof(true, "Compatible language plugin %s is not installed. Installing plugin...", language)
 
 		install.HandleInstallResult(install.Plugin(language, ""), language, true)
 	}
@@ -120,11 +120,11 @@ func installRunner(templateName string) {
 func InitializeProject(templateName string) {
 	wd, err := os.Getwd()
 	if err != nil {
-		logger.Fatalf(true,"Failed to find working directory. %s", err.Error())
+		logger.Fatalf(true, "Failed to find working directory. %s", err.Error())
 	}
 	config.ProjectRoot = wd
 	if isGaugeProject() {
-		logger.Fatalf(true,"This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
+		logger.Fatalf(true, "This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
 	}
 	exists, _ := common.UrlExists(getTemplateURL(templateName))
 	if exists {
@@ -135,12 +135,12 @@ func InitializeProject(templateName string) {
 		err = createProjectTemplate(templateName)
 	}
 	if err != nil {
-		logger.Fatalf(true,"Failed to initialize project. %s", err.Error())
+		logger.Fatalf(true, "Failed to initialize project. %s", err.Error())
 	}
 }
 
 func showMessage(action, filename string) {
-	logger.Infof(true," %s  %s", action, filename)
+	logger.Infof(true, " %s  %s", action, filename)
 }
 
 func createProjectTemplate(language string) error {
