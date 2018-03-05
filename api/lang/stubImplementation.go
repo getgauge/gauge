@@ -19,9 +19,9 @@ package lang
 
 import (
 	"encoding/json"
+	"fmt"
 
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -37,8 +37,7 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		Concept bool `json:"concept"`
 	}{}
 	if err := json.Unmarshal(*req.Params, &info); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if info.Concept {
 		return util.GetConceptFiles(), nil
@@ -53,8 +52,7 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 	var stubImplParams stubImpl
 	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	fileDiff, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
 	if err != nil {
