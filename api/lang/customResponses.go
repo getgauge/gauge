@@ -21,9 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -41,11 +39,6 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
-type stubImpl struct {
-	ImplementationFilePath string   `json:"implementationFilePath"`
-	Codes                  []string `json:"codes"`
-}
-
 func specs() (interface{}, error) {
 	specDetails := provider.GetAvailableSpecDetails([]string{})
 	specs := make([]specInfo, 0)
@@ -53,61 +46,6 @@ func specs() (interface{}, error) {
 		specs = append(specs, specInfo{Heading: d.Spec.Heading.Value, ExecutionIdentifier: d.Spec.FileName})
 	}
 	return specs, nil
-}
-
-func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
-	var info = struct {
-		Concept bool `json:"concept"`
-	}{}
-	if err := json.Unmarshal(*req.Params, &info); err != nil {
-		return nil, fmt.Errorf("failed to parse request %s", err.Error())
-	}
-	if info.Concept {
-		return util.GetConceptFiles(), nil
-	}
-	implementationFileListResponse, err := getImplementationFileList()
-	if err != nil {
-		return nil, err
-	}
-	return implementationFileListResponse.ImplementationFilePaths, nil
-}
-
-func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
-	var stubImplParams stubImpl
-	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
-		return nil, fmt.Errorf("failed to parse request %s", err)
-	}
-	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
-	if err != nil {
-		return nil, err
-	}
-
-	return getWorkspaceEditForStubImpl(fileChanges, stubImplParams.ImplementationFilePath), nil
-}
-
-func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
-	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(lsp.DocumentURI(fileChanges.FileName))
-	fileContent := fileChanges.FileContent
-
-	var lastLineNo int
-	contents, err := common.ReadFileContents(filePath)
-	if err != nil {
-		lastLineNo = 0
-	} else {
-		lastLineNo = util.GetLineCount(contents)
-	}
-
-	textEdit := lsp.TextEdit{
-		NewText: fileContent,
-		Range: lsp.Range{
-			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: lastLineNo, Character: 0},
-		},
-	}
-	result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
-	return result
 }
 
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {

@@ -20,10 +20,11 @@ package lang
 import (
 	"context"
 	"fmt"
+	"os"
+
 	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"os"
 )
 
 type lspWriter struct {

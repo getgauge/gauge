@@ -107,7 +107,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	}
 	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	if err != nil {
-		logger.Fatalf(true,err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	specChannel <- spec
 	parseResultChan <- parseResult
@@ -245,13 +245,13 @@ func HandleParseResult(results ...*ParseResult) bool {
 	for _, result := range results {
 		if !result.Ok {
 			for _, err := range result.Errors() {
-				logger.Errorf(true,err)
+				logger.Errorf(true, err)
 			}
 			failed = true
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Warningf(true,"[ParseWarning] %s", warning)
+				logger.Warningf(true, "[ParseWarning] %s", warning)
 			}
 		}
 	}
