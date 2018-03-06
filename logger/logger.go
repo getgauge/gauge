@@ -40,9 +40,9 @@ type channel int
 const (
 	logsDirectory    = "logs_directory"
 	logs             = "logs"
-	GaugeLogFileName = "gauge.log"
+	gaugeLogFileName = "gauge.log"
 	apiLogFileName   = "api.log"
-	lspLogFileName   = "lsp.log"
+	LspLogFileName   = "lsp.log"
 	// CLI indicates gauge is used as a CLI.
 	CLI channel = iota
 	// API indicates gauge is in daemon mode. Used in IDEs.
@@ -184,7 +184,7 @@ func logger(c channel) *logging.Logger {
 	switch c {
 	case LSP:
 		l = logging.MustGetLogger("gauge-lsp")
-		initFileLogger(lspLogFileName, l)
+		initFileLogger(LspLogFileName, l)
 		isLSP = true
 		break
 	case API:
@@ -193,7 +193,7 @@ func logger(c channel) *logging.Logger {
 		break
 	default:
 		l = logging.MustGetLogger("gauge")
-		initFileLogger(GaugeLogFileName, l)
+		initFileLogger(gaugeLogFileName, l)
 	}
 	return l
 }
