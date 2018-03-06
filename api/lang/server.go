@@ -20,6 +20,7 @@ package lang
 import (
 	"context"
 	"log"
+	"runtime/debug"
 
 	"os"
 
@@ -81,6 +82,7 @@ func (h lspHandler) Handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrp
 }
 
 func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *jsonrpc2.Request) (interface{}, error) {
+	defer recoverPanic(req)
 	return h.Handle(ctx, conn, req)
 }
 
@@ -285,4 +287,10 @@ func Start(p infoProvider, logLevel string) {
 	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
 	logInfo(nil, "Connection closed")
+}
+
+func recoverPanic(req *jsonrpc2.Request) {
+	if r := recover(); r != nil {
+		logFatal(req, "%v\n%s", r, string(debug.Stack()))
+	}
 }

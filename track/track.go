@@ -20,6 +20,7 @@ package track
 import (
 	"net/http"
 	"net/http/httputil"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -61,6 +62,7 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 	}
 	sendChan := make(chan bool, 1)
 	go func(c chan<- bool) {
+		defer recoverPanic()
 		client, err := ga.NewClient(gaTrackingID)
 		client.HttpClient = &http.Client{}
 		client.ClientID(config.UniqueID())
@@ -101,6 +103,12 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 			wg.Done()
 			return false
 		}
+	}
+}
+
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Errorf(true, "%v\n%s", r, string(debug.Stack()))
 	}
 }
 
