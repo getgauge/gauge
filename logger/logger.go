@@ -38,7 +38,7 @@ import (
 type channel int
 
 const (
-	logsDirectory    = "logs_directory"
+	LogsDirectory    = "logs_directory"
 	logs             = "logs"
 	gaugeLogFileName = "gauge.log"
 	apiLogFileName   = "api.log"
@@ -218,7 +218,7 @@ func createFileLogger(name string, size int) logging.Backend {
 }
 
 func addLogsDirPath(logFileName string) string {
-	customLogsDir := os.Getenv(logsDirectory)
+	customLogsDir := os.Getenv(LogsDirectory)
 	if customLogsDir == "" {
 		return filepath.Join(logs, logFileName)
 	}
