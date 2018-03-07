@@ -299,13 +299,16 @@ func (v *SpecValidator) Validate() []error {
 // Validates a step. If validation result from runner is not valid then it creates a new validation error.
 // If the error type is StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND then gives suggestion with step implementation stub.
 func (v *SpecValidator) Step(s *gauge.Step) {
+	val, ok := v.stepValidationCache[s.Value]
 	if s.IsConcept {
-		for _, c := range s.ConceptSteps {
-			v.Step(c)
+		if !ok {
+			for _, c := range s.ConceptSteps {
+				v.Step(c)
+			}
+			v.stepValidationCache[s.Value] = nil
 		}
 		return
 	}
-	val, ok := v.stepValidationCache[s.Value]
 	if !ok {
 		err := v.validateStep(s)
 		if err != nil {
