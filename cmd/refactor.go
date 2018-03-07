@@ -20,6 +20,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/reporter"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -55,6 +57,6 @@ func init() {
 }
 
 func refactorInit(args []string) {
-	startChan := api.StartAPI(false)
+	startChan := api.StartAPI(false, reporter.Current())
 	refactor.RefactorSteps(args[0], args[1], startChan, getSpecsDir(args[2:]))
 }

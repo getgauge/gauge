@@ -18,8 +18,6 @@
 package lang
 
 import (
-	"os"
-
 	"fmt"
 
 	"github.com/getgauge/gauge/api"
@@ -53,11 +51,11 @@ func startRunner() error {
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
 	logInfo(nil, "Starting language runner")
-	outfile, err := os.OpenFile(logger.GetLogFile(logger.LspLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
+	outFile, err := util.OpenFile(logger.ActiveLogFile)
 	if err != nil {
 		return nil, err
 	}
-	runner, err := api.ConnectToRunner(killChan, false, outfile)
+	runner, err := api.ConnectToRunner(killChan, false, outFile)
 	if err != nil {
 		return nil, err
 	}

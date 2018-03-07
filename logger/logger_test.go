@@ -75,7 +75,7 @@ func TestGetLogFileGivenRelativePathInGaugeProject(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	want := filepath.Join(config.ProjectRoot, logs, apiLogFileName)
 
-	got := GetLogFile(apiLogFileName)
+	got := getLogFile(apiLogFileName)
 	if got != want {
 		t.Errorf("Got %s, want %s", got, want)
 	}
@@ -85,7 +85,7 @@ func TestGetLogFileInGaugeProjectGivenAbsPath(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	want := filepath.Join(config.ProjectRoot, apiLogFileName)
 
-	got := GetLogFile(filepath.Join(config.ProjectRoot, apiLogFileName))
+	got := getLogFile(filepath.Join(config.ProjectRoot, apiLogFileName))
 	if got != want {
 		t.Errorf("Got %s, want %s", got, want)
 	}
@@ -95,7 +95,7 @@ func TestGetLogFileInGaugeProjectCustomPath(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
 	want := filepath.Join(customLogsDir, apiLogFileName)
-	got := GetLogFile(filepath.Join(customLogsDir, apiLogFileName))
+	got := getLogFile(filepath.Join(customLogsDir, apiLogFileName))
 
 	if got != want {
 		t.Errorf("Got %s, want %s", got, want)
@@ -110,7 +110,7 @@ func TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	want := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
 
-	got := GetLogFile(apiLogFileName)
+	got := getLogFile(apiLogFileName)
 
 	if got != want {
 		t.Errorf("Got %s, want %s", got, want)

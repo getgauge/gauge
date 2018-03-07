@@ -56,6 +56,7 @@ var activeLogger *logging.Logger
 var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
 var isLSP bool
 var initialized bool
+var ActiveLogFile string
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Info(stdout bool, msg string) {
@@ -200,7 +201,8 @@ func logger(c channel) *logging.Logger {
 
 func initFileLogger(logFileName string, fileLogger *logging.Logger) {
 	var backend logging.Backend
-	backend = createFileLogger(GetLogFile(logFileName), 10)
+	ActiveLogFile = getLogFile(logFileName)
+	backend = createFileLogger(ActiveLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
@@ -225,7 +227,7 @@ func addLogsDirPath(logFileName string) string {
 	return filepath.Join(customLogsDir, logFileName)
 }
 
-func GetLogFile(fileName string) string {
+func getLogFile(fileName string) string {
 	if filepath.IsAbs(fileName) {
 		return fileName
 	}

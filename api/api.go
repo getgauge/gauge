@@ -19,11 +19,10 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"time"
-
-	"io"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -31,24 +30,23 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 )
 
 // StartAPI calls StartAPIService and returns the channels
-func StartAPI(debug bool) *runner.StartChannels {
+func StartAPI(debug bool, outputStreamWriter io.Writer) *runner.StartChannels {
 	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
-	go startAPIService(0, startChan, sig, debug)
+	go startAPIService(0, startChan, sig, debug, outputStreamWriter)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
+func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool, outputStreamWriter io.Writer) {
 	startAPIServiceWithoutRunner(port, startChannels, sig)
 
-	runner, err := ConnectToRunner(startChannels.KillChan, debug, reporter.Current())
+	runner, err := ConnectToRunner(startChannels.KillChan, debug, outputStreamWriter)
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
