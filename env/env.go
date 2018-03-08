@@ -36,6 +36,7 @@ const (
 	OverwriteReports    = "overwrite_reports"
 	ScreenshotOnFailure = "screenshot_on_failure"
 	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
+	IsDaemon            = "IsDaemon"
 )
 
 var envVars map[string]string

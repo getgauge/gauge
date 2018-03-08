@@ -33,6 +33,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/gauge/reporter"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
@@ -156,7 +158,7 @@ func Validate(args []string) {
 
 //TODO : duplicate in execute.go. Need to fix runner init.
 func startAPI(debug bool) runner.Runner {
-	sc := api.StartAPI(debug)
+	sc := api.StartAPI(debug, reporter.Current())
 	select {
 	case runner := <-sc.RunnerChan:
 		return runner

@@ -18,6 +18,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -39,6 +41,7 @@ var (
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(true, e.Error())
 			}
+			os.Setenv(env.IsDaemon, "true")
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}

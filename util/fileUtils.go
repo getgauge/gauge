@@ -18,6 +18,7 @@
 package util
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -217,4 +218,8 @@ func GetLinesFromText(text string) []string {
 // GetLineCount give no of lines in given text
 func GetLineCount(text string) int {
 	return len(GetLinesFromText(text))
+}
+
+func OpenFile(fileName string) (io.Writer, error) {
+	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0600)
 }
