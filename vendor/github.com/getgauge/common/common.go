@@ -168,13 +168,16 @@ func AppendProperties(propertiesFile string, properties ...*Property) error {
 func FindFilesInDir(dirPath string, isValidFile func(path string) bool, shouldSkip func(path string, f os.FileInfo) bool) []string {
 	files := []string{}
 	filepath.Walk(dirPath, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if shouldSkip(path, f) {
 			return filepath.SkipDir
 		}
-		if err == nil && !f.IsDir() && isValidFile(path) {
+		if !f.IsDir() && isValidFile(path) {
 			files = append(files, path)
 		}
-		return err
+		return nil
 	})
 	return files
 }
