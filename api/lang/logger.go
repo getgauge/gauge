@@ -31,6 +31,7 @@ type lspWriter struct {
 }
 
 func (w lspWriter) Write(p []byte) (n int, err error) {
+	logger.Debugf(false, string(p))
 	return os.Stderr.Write(p)
 }
 
