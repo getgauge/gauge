@@ -31,6 +31,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	isDaemon = "IS_DAEMON"
+)
+
 var (
 	daemonCmd = &cobra.Command{
 		Use:     "daemon [flags] <port> [args]",
@@ -41,7 +45,7 @@ var (
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(true, e.Error())
 			}
-			os.Setenv(env.IsDaemon, "true")
+			os.Setenv(isDaemon, "true")
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
