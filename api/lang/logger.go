@@ -31,6 +31,7 @@ type lspWriter struct {
 }
 
 func (w lspWriter) Write(p []byte) (n int, err error) {
+	logger.Debugf(false, string(p))
 	return os.Stderr.Write(p)
 }
 
@@ -67,25 +68,25 @@ func initialize(ctx context.Context, conn *jsonrpc2.Conn) {
 }
 
 func logDebug(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args...)
 	logger.Debugf(false, m)
 	logToLsp(lsp.Log, m)
 }
 
 func logInfo(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args...)
 	logger.Infof(false, m)
 	logToLsp(lsp.Info, m)
 }
 
 func logWarning(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args...)
 	logger.Warningf(false, m)
 	logToLsp(lsp.MTWarning, m)
 }
 
 func logError(req *jsonrpc2.Request, msg string, args ...interface{}) {
-	m := fmt.Sprintf(getLogFormatFor(req, msg), args)
+	m := fmt.Sprintf(getLogFormatFor(req, msg), args...)
 	logger.Errorf(false, m)
 	logToLsp(lsp.MTError, m)
 }
