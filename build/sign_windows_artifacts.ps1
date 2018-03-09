@@ -46,11 +46,11 @@ if ($LastExitCode -ne 0) {
 Pop-Location
 
 $nightlyFlag = If ($nightly) {"--nightly"} Else {""}
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64 $nightlyFlag
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386 $nightlyFlag
+& go run build/make.go --distro --bin-dir bin\windows_amd64 $nightlyFlag
+& go run build/make.go --distro --bin-dir bin\windows_386 $nightlyFlag
 
 mkdir test_installers 
 
 & cmd "/c" "copy /B deploy\gauge-*-darwin.x86_64.zip test_installers\gauge-darwin.x86_64.zip"
 & cmd "/c" "copy /B deploy\gauge-*-linux.x86_64.zip test_installers\gauge-linux.x86_64.zip"
-& cmd "/c" "copy /B deploy\gauge-*-windows.x86_64.exe test_installers\gauge-windows.x86_64.exe"
+& cmd "/c" "copy /B deploy\gauge-*-windows.x86_64.zip test_installers\gauge-windows.x86_64.zip"
