@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -65,9 +66,17 @@ func checkUpdates() []UpdateInfo {
 	return append(checkGaugeUpdate(), checkPluginUpdates()...)
 }
 
+func recoverPanic() {
+	logger.Info(true, "Main defer")
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
+	}
+}
+
 func printUpdateInfo(print chan bool, wg *sync.WaitGroup) {
 	message := make(chan string)
 	go func() {
+		defer recoverPanic()
 		updates := checkUpdates()
 		if len(updates) > 0 {
 			message <- "Updates are available. Run `gauge update -c` for more info."

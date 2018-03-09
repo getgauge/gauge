@@ -40,6 +40,7 @@ var diagnosticsLock sync.Mutex
 var isInQueue = false
 
 func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
+	defer recoverPanic(nil)
 	if !isInQueue {
 		isInQueue = true
 
@@ -58,6 +59,7 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 		}
 	}
 }
+
 func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
 	conn.Notify(ctx, "textDocument/publishDiagnostics", params)

@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime/debug"
 
 	"sync"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 )
 
 // IsParallel represents console reporting format based on simple/parallel execution
@@ -133,6 +135,7 @@ func ListenExecutionEvents(wg *sync.WaitGroup) {
 	wg.Add(1)
 
 	go func() {
+		defer recoverPanic()
 		for {
 			e := <-ch
 			r = reporter(e)
@@ -167,4 +170,11 @@ func ListenExecutionEvents(wg *sync.WaitGroup) {
 			}
 		}
 	}()
+}
+
+func recoverPanic() {
+	logger.Info(true, "Main defer")
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
+	}
 }

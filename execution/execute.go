@@ -47,8 +47,6 @@ import (
 
 	"sync"
 
-	"runtime/debug"
-
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
@@ -148,17 +146,9 @@ func ExecuteSpecs(specDirs []string) int {
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()
-	defer recoverPanic()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ParseOk)
-}
-
-func recoverPanic() {
-	if r := recover(); r != nil {
-		logger.Infof(true, "%v\n%s", r, string(debug.Stack()))
-		os.Exit(1)
-	}
 }
 
 func newExecution(executionInfo *executionInfo) suiteExecutor {
