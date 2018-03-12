@@ -1,33 +1,54 @@
+// Copyright 2018 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package lang
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-func rename(req *jsonrpc2.Request) (interface{}, error) {
+func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
+	if err := sendSaveFilesRequest(ctx, conn); err != nil {
+		return nil, err
+	}
 	var params lsp.RenameParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
+		logDebug(req, "failed to parse rename request %s", err.Error())
 		return nil, err
 	}
 
-	specDetail := provider.GetAvailableSpecDetails([]string{util.ConvertURItoFilePath(params.TextDocument.URI)})[0]
-	if len(specDetail.Errs) > 0 {
+	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), string(util.ConvertURItoFilePath(params.TextDocument.URI)))
+	if !pResult.Ok {
 		return nil, fmt.Errorf("refactoring failed due to parse errors")
 	}
 	var step *gauge.Step
-	for _, item := range specDetail.Spec.AllItems() {
+	for _, item := range spec.AllItems() {
 		if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
 			step = item.(*gauge.Step)
 			break
@@ -40,10 +61,10 @@ func rename(req *jsonrpc2.Request) (interface{}, error) {
 
 	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{common.SpecsDirectoryName})
 	for _, warning := range refactortingResult.Warnings {
-		logger.Warningf(warning)
+		logWarning(req, warning)
 	}
 	if !refactortingResult.Success {
-		return nil, fmt.Errorf("Refactoring failed due to errors:\n%s", strings.Join(refactortingResult.Errors, "\n"))
+		return nil, fmt.Errorf("Refactoring failed due to errors: %s", strings.Join(refactortingResult.Errors, "\t"))
 	}
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
@@ -68,9 +89,9 @@ func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
 }
 
 func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanged map[string]string) error {
-	diskFileCache := &files{cache: make(map[string][]string)}
+	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	for fileName, text := range filesChanged {
-		uri := util.ConvertPathToURI(fileName)
+		uri := util.ConvertPathToURI(lsp.DocumentURI(fileName))
 		var lastLineNo int
 		var lastLineLength int
 		if isOpen(uri) {
@@ -94,7 +115,7 @@ func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanged map[string]string
 				End:   lsp.Position{Line: lastLineNo, Character: lastLineLength},
 			},
 		}
-		result.Changes[uri] = append(result.Changes[uri], textEdit)
+		result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 	}
 	return nil
 }

@@ -35,7 +35,7 @@ func tagsCompletion(line string, pLine string, params lsp.TextDocumentPositionPa
 				FilterText: t + suffix,
 				Detail:     tag,
 				Kind:       lsp.CIKVariable,
-				TextEdit:   lsp.TextEdit{Range: editRange, NewText: " " + t + suffix},
+				TextEdit:   &lsp.TextEdit{Range: editRange, NewText: " " + t + suffix},
 			},
 		}
 		list.Items = append(list.Items, item)

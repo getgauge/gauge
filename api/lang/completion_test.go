@@ -116,7 +116,7 @@ func (p dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Conc
 }
 
 func TestCompletion(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("uri", " * ")
 	position := lsp.Position{Line: 0, Character: len(" * ")}
 	want := completionList{IsIncomplete: false, Items: []completionItem{
@@ -125,7 +125,7 @@ func TestCompletion(t *testing.T) {
 				Label:         "concept1",
 				Detail:        "Concept",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: position, End: position}, NewText: `concept1`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: position, End: position}, NewText: `concept1`},
 				FilterText:    `concept1`,
 				Documentation: "concept1",
 			},
@@ -136,7 +136,7 @@ func TestCompletion(t *testing.T) {
 				Label:         "Say <hello> to <gauge>",
 				Detail:        "Step",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: position, End: position}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: position, End: position}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
 				FilterText:    "Say <hello> to <gauge>",
 				Documentation: "Say <hello> to <gauge>",
 			},
@@ -164,7 +164,7 @@ func TestCompletion(t *testing.T) {
 }
 
 func TestCompletionForLineWithText(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("uri", " * step")
 	position := lsp.Position{Line: 0, Character: len(` *`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(` *`)}
@@ -175,7 +175,7 @@ func TestCompletionForLineWithText(t *testing.T) {
 				Label:         "concept1",
 				Detail:        "Concept",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
 				FilterText:    ` concept1`,
 				Documentation: "concept1",
 			},
@@ -186,7 +186,7 @@ func TestCompletionForLineWithText(t *testing.T) {
 				Label:         "Say <hello> to <gauge>",
 				Detail:        "Step",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
 				FilterText:    " Say <hello> to <gauge>",
 				Documentation: "Say <hello> to <gauge>",
 			},
@@ -210,7 +210,7 @@ func TestCompletionForLineWithText(t *testing.T) {
 }
 
 func TestCompletionInBetweenLine(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("uri", "* step")
 	position := lsp.Position{Line: 0, Character: len(`* s`)}
 	wantStartPos := lsp.Position{Line: position.Line, Character: len(`* `)}
@@ -221,7 +221,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 				Label:         "concept1",
 				Detail:        "Concept",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: `concept1`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: `concept1`},
 				FilterText:    `concept1`,
 				Documentation: "concept1",
 			},
@@ -232,7 +232,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 				Label:         "Say <hello> to <gauge>",
 				Detail:        "Step",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: `Say "${1:hello}" to "${0:gauge}"`},
 				FilterText:    "Say <hello> to <gauge>",
 				Documentation: "Say <hello> to <gauge>",
 			},
@@ -256,7 +256,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 }
 
 func TestCompletionInBetweenLineHavingParams(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	line := "*step with a <param> and more"
 	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(`*step with a <param> and`)}
@@ -268,7 +268,7 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 				Label:         "concept1",
 				Detail:        "Concept",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
 				FilterText:    ` concept1`,
 				Documentation: "concept1",
 			},
@@ -279,7 +279,7 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 				Label:         "Say <hello> to <gauge>",
 				Detail:        "Step",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
 				FilterText:    " Say <param> to <gauge>",
 				Documentation: "Say <hello> to <gauge>",
 			},
@@ -303,7 +303,7 @@ func TestCompletionInBetweenLineHavingParams(t *testing.T) {
 }
 
 func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	line := "*step with a <file:test.txt> and more"
 	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(`*step with a <file:test.txt>`)}
@@ -315,7 +315,7 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 				Label:         "concept1",
 				Detail:        "Concept",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` concept1`},
 				FilterText:    ` concept1`,
 				Documentation: "concept1",
 			},
@@ -326,7 +326,7 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 				Label:         "Say <hello> to <gauge>",
 				Detail:        "Step",
 				Kind:          lsp.CIKFunction,
-				TextEdit:      lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
+				TextEdit:      &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: ` Say "${1:hello}" to "${0:gauge}"`},
 				FilterText:    " Say <file:test.txt> to <gauge>",
 				Documentation: "Say <hello> to <gauge>",
 			},
@@ -350,7 +350,7 @@ func TestCompletionInBetweenLineHavingSpecialParams(t *testing.T) {
 }
 
 func TestParamCompletion(t *testing.T) {
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	line := ` * step with a "param`
 	openFilesCache.add("uri", line)
 	position := lsp.Position{Line: 0, Character: len(` * step with a "pa`)}
@@ -363,7 +363,7 @@ func TestParamCompletion(t *testing.T) {
 				FilterText: "hello\"",
 				Detail:     "static",
 				Kind:       lsp.CIKVariable,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "hello\""},
+				TextEdit:   &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "hello\""},
 			},
 			InsertTextFormat: text,
 		},
@@ -373,7 +373,7 @@ func TestParamCompletion(t *testing.T) {
 				FilterText: "gauge\"",
 				Detail:     "static",
 				Kind:       lsp.CIKVariable,
-				TextEdit:   lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "gauge\""},
+				TextEdit:   &lsp.TextEdit{Range: lsp.Range{Start: wantStartPos, End: wantEndPos}, NewText: "gauge\""},
 			},
 			InsertTextFormat: text,
 		},
@@ -480,8 +480,8 @@ Scenario Heading
 tags: blah,abc
 * step
 `
-	uri := "foo.spec"
-	openFilesCache = &files{cache: make(map[string][]string)}
+	uri := lsp.DocumentURI("foo.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 	got := isInTagsContext(2, uri)
 	if !got {
@@ -500,8 +500,8 @@ Scenario Heading
 tags: blah,abc
 * step
 `
-	uri := "foo.spec"
-	openFilesCache = &files{cache: make(map[string][]string)}
+	uri := lsp.DocumentURI("foo.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 	got := isInTagsContext(3, uri)
 	if !got {
@@ -519,8 +519,8 @@ Scenario Heading
 tags: blah,abc
 * step
 `
-	uri := "foo.spec"
-	openFilesCache = &files{cache: make(map[string][]string)}
+	uri := lsp.DocumentURI("foo.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 	got := isInTagsContext(3, uri)
 	if got {

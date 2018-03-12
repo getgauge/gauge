@@ -50,15 +50,14 @@ var (
   gauge telemetry off
   gauge telemetry`,
 		Run: func(cmd *cobra.Command, args []string) {
-
 			if len(args) != 0 {
-				logger.Fatalf(cmd.UsageString())
+				exit(nil, cmd.UsageString())
 			}
 			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
 			if v, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
-				logger.Infof("ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
+				logger.Infof(true, "ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
 			}
 		},
 		DisableAutoGenTag: true,
@@ -71,7 +70,7 @@ var (
 		Example: "  gauge telemetry on",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := config.UpdateTelemetry("true"); err != nil {
-				logger.Fatalf(err.Error())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
@@ -84,7 +83,7 @@ var (
 		Example: "  gauge telemetry off",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := config.UpdateTelemetry("false"); err != nil {
-				logger.Fatalf(err.Error())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
@@ -102,7 +101,7 @@ var (
 				return
 			}
 			if _, err := strconv.ParseBool(args[0]); err != nil {
-				logger.Fatalf("Error: Invalid argument. The valid options are true or false.")
+				exit(fmt.Errorf("Invalid argument. The valid options are true or false."), cmd.UsageString())
 			}
 			config.UpdateTelemetryLoggging(args[0])
 		},

@@ -166,15 +166,18 @@ func AppendProperties(propertiesFile string, properties ...*Property) error {
 
 // FindFilesInDir returns a list of files for which isValidFile func returns true
 func FindFilesInDir(dirPath string, isValidFile func(path string) bool, shouldSkip func(path string, f os.FileInfo) bool) []string {
-	var files []string
+	files := []string{}
 	filepath.Walk(dirPath, func(path string, f os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if shouldSkip(path, f) {
 			return filepath.SkipDir
 		}
-		if err == nil && !f.IsDir() && isValidFile(path) {
+		if !f.IsDir() && isValidFile(path) {
 			files = append(files, path)
 		}
-		return err
+		return nil
 	})
 	return files
 }
@@ -447,15 +450,15 @@ func isExecMode(mode os.FileMode) bool {
 	return (mode & 0111) != 0
 }
 
-var id = int64(1)
+var uniqeID = int64(1)
 var m = sync.Mutex{}
 
 // GetUniqueID returns a unique id for the proto messages
 func GetUniqueID() int64 {
 	m.Lock()
 	defer m.Unlock()
-	id++
-	return id
+	uniqeID++
+	return uniqeID
 }
 
 // CopyFile creates a copy of source file to destination file

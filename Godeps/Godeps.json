@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/getgauge/gauge",
 	"GoVersion": "go1.9",
-	"GodepVersion": "v79",
+	"GodepVersion": "v80",
 	"Packages": [
 		"./..."
 	],
@@ -30,11 +30,16 @@
 		},
 		{
 			"ImportPath": "github.com/getgauge/common",
-			"Rev": "70fd84f488c11940722e164798b7480e5ce934d1"
+			"Rev": "29b7a2fa87350242c4bc2ef1de5b51604bc2645a"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
 			"Rev": "8ee79997227bf9b34611aee7946ae64735e6fd93"
+		},
+		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Comment": "v1.0",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
 		},
 		{
 			"ImportPath": "github.com/jpillora/go-ogle-analytics",
@@ -65,9 +70,13 @@
 			"Rev": "5bf94b69c6b68ee1b541973bb8e1144db23a194b"
 		},
 		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "1dba4b3954bc059efc3991ec364f9f9a35f597d2"
+		},
+		{
 			"ImportPath": "github.com/sourcegraph/go-langserver/pkg/lsp",
-			"Comment": "v1.0.0-223-g66ff4f5",
-			"Rev": "66ff4f536c4fe4a5c525472820a563939a0ab00f"
+			"Comment": "v1.0.0-302-g1e571d6",
+			"Rev": "1e571d690e259cdb944b96c5d3596dff9e6cb13d"
 		},
 		{
 			"ImportPath": "github.com/sourcegraph/jsonrpc2",
@@ -99,13 +108,14 @@
 			"Rev": "25c4ec802a7d637f88d584ab26798e94ad14c13b"
 		},
 		{
-			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
-			"Rev": "1dba4b3954bc059efc3991ec364f9f9a35f597d2"
+			"ImportPath": "github.com/cpuguy83/go-md2man/vendor/github.com/russross/blackfriday",
+			"Comment": "v1.0.6-6-g23709d0",
+			"Rev": "23709d0847197db6021a51fdb193e66e9222d4e7"
 		},
 		{
-			"ImportPath": "github.com/inconshreveable/mousetrap",
-			"Comment": "v1.0",
-			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+			"ImportPath": "github.com/cpuguy83/go-md2man/vendor/github.com/shurcooL/sanitized_anchor_name",
+			"Comment": "v1.0.6-6-g23709d0",
+			"Rev": "23709d0847197db6021a51fdb193e66e9222d4e7"
 		}
 	]
 }

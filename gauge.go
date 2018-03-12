@@ -18,13 +18,21 @@
 package main
 
 import (
-	"os"
+	"runtime/debug"
 
 	"github.com/getgauge/gauge/cmd"
+	"github.com/getgauge/gauge/logger"
 )
 
 func main() {
+	defer recoverPanic()
 	if err := cmd.Parse(); err != nil {
-		os.Exit(1)
+		logger.Info(true, err.Error())
+	}
+}
+
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "Panicing : %v\n%s", r, string(debug.Stack()))
 	}
 }

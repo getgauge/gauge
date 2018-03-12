@@ -113,6 +113,9 @@ func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg 
 	args := make([]*StepArg, len(newStep.Args))
 	for key, value := range orderMap {
 		arg := &StepArg{Value: newStep.Args[key].Value, ArgType: Static}
+		if newStep.Args[key].ArgType == SpecialString {
+			arg = &StepArg{Name: newStep.Args[key].Name, Value: newStep.Args[key].Value, ArgType: newStep.Args[key].ArgType}
+		}
 		if step.IsConcept {
 			arg = &StepArg{Value: newStep.Args[key].Value, ArgType: Dynamic}
 		}
@@ -154,6 +157,10 @@ func (step *Step) AddInlineTableRow(row []TableCell) {
 	lastArg := step.Args[len(step.Args)-1]
 	lastArg.Table.addRows(row)
 	step.PopulateFragments()
+}
+
+func (step *Step) GetLastArg() *StepArg {
+	return step.Args[len(step.Args)-1]
 }
 
 func (step *Step) PopulateFragments() {

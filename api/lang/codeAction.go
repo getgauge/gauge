@@ -19,33 +19,48 @@ package lang
 
 import (
 	"encoding/json"
+	"fmt"
 
-	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
 const (
-	copyStubCommand = "gauge.copy.unimplemented.stub"
-	copyStubTitle   = "Generate step implementation stub"
+	generateStubCommand   = "gauge.generate.unimplemented.stub"
+	generateStubTitle     = "Generate step implementation stub"
+	extractConceptCommand = "gauge.extract.concept"
+	extractConceptTitle   = "Extract to concept"
 )
 
 func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.CodeActionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
-	return getSpecCodeAction(params), nil
+	return append(getSpecCodeAction(params), getExtractConceptCodeAction(params)...), nil
 }
 
-func getSpecCodeAction(params lsp.CodeActionParams) interface{} {
+func getExtractConceptCodeAction(params lsp.CodeActionParams) []lsp.Command {
+	if len(params.Context.Diagnostics) > 0 || params.Range.Start.Line == params.Range.End.Line {
+		return []lsp.Command{}
+	}
+	return []lsp.Command{{
+		Command: extractConceptCommand,
+		Title:   extractConceptTitle,
+		Arguments: []interface{}{extractConceptInfo{
+			Uri:   params.TextDocument.URI,
+			Range: params.Range,
+		}},
+	}}
+}
+
+func getSpecCodeAction(params lsp.CodeActionParams) []lsp.Command {
 	var actions []lsp.Command
 	for _, d := range params.Context.Diagnostics {
 		if d.Code != "" {
 			actions = append(actions, lsp.Command{
-				Command:   copyStubCommand,
-				Title:     copyStubTitle,
+				Command:   generateStubCommand,
+				Title:     generateStubTitle,
 				Arguments: []interface{}{d.Code},
 			})
 		}

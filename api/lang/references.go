@@ -19,9 +19,9 @@ package lang
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -30,8 +30,7 @@ import (
 func stepReferences(req *jsonrpc2.Request) (interface{}, error) {
 	var params string
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 	return getLocationFor(params)
 }
@@ -39,8 +38,7 @@ func stepReferences(req *jsonrpc2.Request) (interface{}, error) {
 func stepValueAt(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
 	stepPositionsResponse, err := getStepPositionResponse(params.TextDocument.URI)
 	if err != nil {
@@ -57,10 +55,10 @@ func stepValueAt(req *jsonrpc2.Request) (interface{}, error) {
 func getLocationFor(stepValue string) (interface{}, error) {
 	allSteps := provider.AllSteps()
 	var locations []lsp.Location
-	diskFileCache := &files{cache: make(map[string][]string)}
+	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	for _, step := range allSteps {
 		if stepValue == step.Value {
-			uri := util.ConvertPathToURI(step.FileName)
+			uri := util.ConvertPathToURI(lsp.DocumentURI(step.FileName))
 			var endPos int
 			lineNo := step.LineNo - 1
 			if isOpen(uri) {

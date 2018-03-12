@@ -29,22 +29,20 @@ import (
 )
 
 func TestFormat(t *testing.T) {
-	specText := `Specification Heading
-=====================
+	specText := `# Specification Heading
 
-Scenario Heading
-----------------
+## Scenario Heading
 
 * Step text`
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
 	want := []lsp.TextEdit{
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{0, 0},
-				End:   lsp.Position{7, 91},
+				End:   lsp.Position{5, 57},
 			},
 			NewText: specText + "\n",
 		},
@@ -72,10 +70,10 @@ func TestFormatParseError(t *testing.T) {
 
 * Step text`
 
-	openFilesCache = &files{cache: make(map[string][]string)}
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
-	specFile := "foo.spec"
+	specFile := lsp.DocumentURI("foo.spec")
 
 	b, _ := json.Marshal(lsp.DocumentFormattingParams{TextDocument: lsp.TextDocumentIdentifier{URI: specFile}, Options: lsp.FormattingOptions{}})
 	p := json.RawMessage(b)

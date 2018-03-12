@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -42,7 +41,7 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 	}
 
 	fileContent := getContent(params.TextDocument.URI)
-	if util.IsConcept(util.ConvertURItoFilePath(params.TextDocument.URI)) {
+	if util.IsConcept(string(util.ConvertURItoFilePath(params.TextDocument.URI))) {
 		concepts, _ := new(parser.ConceptParser).Parse(fileContent, "")
 		for _, concept := range concepts {
 			for _, step := range concept.ConceptSteps {
@@ -80,11 +79,9 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
 	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
 	if responseMessage == nil || !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		logger.APILog.Debugf("Step implementation not found for step : %s", step.Value)
 		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
 	}
 	return getLspLocationForStep(responseMessage.GetStepNameResponse().GetFileName(), responseMessage.GetStepNameResponse().GetSpan()), nil
@@ -92,14 +89,14 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 
 func searchConcept(step *gauge.Step) (interface{}, error) {
 	if concept := provider.SearchConceptDictionary(step.Value); concept != nil {
-		return getLspLocationForConcept(concept.FileName, concept.ConceptStep.LineNo)
+		return getLspLocationForConcept(lsp.DocumentURI(concept.FileName), concept.ConceptStep.LineNo)
 	}
 	return nil, nil
 }
 
 func getLspLocationForStep(fileName string, span *gauge_messages.Span) lsp.Location {
 	return lsp.Location{
-		URI: util.ConvertPathToURI(fileName),
+		URI: util.ConvertPathToURI(lsp.DocumentURI(fileName)),
 		Range: lsp.Range{
 			Start: lsp.Position{Line: int(span.Start - 1), Character: int(span.StartChar)},
 			End:   lsp.Position{Line: int(span.End - 1), Character: int(span.EndChar)},
@@ -107,15 +104,15 @@ func getLspLocationForStep(fileName string, span *gauge_messages.Span) lsp.Locat
 	}
 }
 
-func getLspLocationForConcept(fileName string, lineNumber int) (interface{}, error) {
+func getLspLocationForConcept(fileName lsp.DocumentURI, lineNumber int) (interface{}, error) {
 	uri := util.ConvertPathToURI(fileName)
 	var endPos int
-	diskFileCache := &files{cache: make(map[string][]string)}
+	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	lineNo := lineNumber - 1
 	if isOpen(uri) {
 		endPos = len(getLine(uri, lineNo))
 	} else {
-		contents, err := common.ReadFileContents(fileName)
+		contents, err := common.ReadFileContents(string(fileName))
 		if err != nil {
 			return nil, err
 		}

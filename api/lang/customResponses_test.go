@@ -45,8 +45,8 @@ Scenario Heading2
 
 * Step text`
 
-	uri := "foo.spec"
-	openFilesCache = &files{cache: make(map[string][]string)}
+	uri := lsp.DocumentURI("foo.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 
 	position := lsp.Position{Line: 5, Character: 1}
@@ -87,8 +87,8 @@ Scenario Heading2
 * Step text
 `
 
-	uri := "foo.spec"
-	openFilesCache = &files{cache: make(map[string][]string)}
+	uri := lsp.DocumentURI("foo.spec")
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(uri, specText)
 
 	position := lsp.Position{Line: 2, Character: 1}

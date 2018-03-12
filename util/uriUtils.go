@@ -20,6 +20,8 @@ package util
 import (
 	"net/url"
 	"strings"
+
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 const (
@@ -31,11 +33,11 @@ const (
 )
 
 // ConvertURItoFilePath - converts file uri (eg: file://example.spec) to OS specific file paths.
-func ConvertURItoFilePath(uri string) string {
+func ConvertURItoFilePath(uri lsp.DocumentURI) lsp.DocumentURI {
 	if IsWindows() {
-		return convertURIToWindowsPath(uri)
+		return lsp.DocumentURI(convertURIToWindowsPath(string(uri)))
 	}
-	return convertURIToUnixPath(uri)
+	return lsp.DocumentURI(convertURIToUnixPath(string(uri)))
 }
 
 func convertURIToWindowsPath(uri string) string {
@@ -51,11 +53,11 @@ func convertURIToUnixPath(uri string) string {
 }
 
 // ConvertPathToURI - converts OS specific file paths to file uri (eg: file://example.spec).
-func ConvertPathToURI(path string) string {
+func ConvertPathToURI(path lsp.DocumentURI) lsp.DocumentURI {
 	if IsWindows() {
-		return convertWindowsPathToURI(path)
+		return lsp.DocumentURI(convertWindowsPathToURI(string(path)))
 	}
-	return convertUnixPathToURI(path)
+	return lsp.DocumentURI(convertUnixPathToURI(string(path)))
 }
 
 func convertWindowsPathToURI(path string) string {

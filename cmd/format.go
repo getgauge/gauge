@@ -33,10 +33,10 @@ var formatCmd = &cobra.Command{
 	Example: "  gauge format specs/",
 	Run: func(cmd *cobra.Command, args []string) {
 		if e := env.LoadEnv(environment); e != nil {
-			logger.Fatalf(e.Error())
+			logger.Fatalf(true, e.Error())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
-			logger.Fatalf(err.Error())
+			exit(err, cmd.UsageString())
 		}
 		track.Format()
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])

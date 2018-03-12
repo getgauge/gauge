@@ -18,8 +18,6 @@
 package lang
 
 import (
-	"os"
-
 	"fmt"
 
 	"github.com/getgauge/gauge/api"
@@ -30,51 +28,51 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
+	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 type langRunner struct {
 	runner   runner.Runner
 	killChan chan bool
+	lspID    string
 }
 
 var lRunner langRunner
 
-func startRunner() {
+func startRunner() error {
 	lRunner.killChan = make(chan bool)
 	var err error
 	lRunner.runner, err = connectToRunner(lRunner.killChan)
 	if err != nil {
-		logger.APILog.Infof("Unable to connect to runner : %s", err.Error())
+		return fmt.Errorf("Unable to connect to runner : %s", err.Error())
 	}
+	return nil
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
-	logger.GaugeLog.Infof("Starting language runner")
-	outfile, err := os.OpenFile(logger.GetLogFile(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
+	logInfo(nil, "Starting language runner")
+	outFile, err := util.OpenFile(logger.ActiveLogFile)
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
-	runner, err := api.ConnectToRunner(killChan, false, outfile)
+	runner, err := api.ConnectToRunner(killChan, false, outFile)
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
 	return runner, nil
 }
 
-func cacheFileOnRunner(uri, text string) error {
-	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: util.ConvertURItoFilePath(uri), IsClosed: false}}
-	err := sendMessageToRunner(cacheFileRequest)
-	return err
+func cacheFileOnRunner(uri lsp.DocumentURI, text string) error {
+	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: string(util.ConvertURItoFilePath(uri)), IsClosed: false}}
+	return sendMessageToRunner(cacheFileRequest)
 }
 
 func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 	err := conn.WriteGaugeMessage(cacheFileRequest, lRunner.runner.Connection())
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return fmt.Errorf("Error while connecting to runner : %v", err)
 	}
-	return err
+	return nil
 }
 
 var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
@@ -84,12 +82,11 @@ var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
 	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 }
 
-func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
-	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
+func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, error) {
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: string(util.ConvertURItoFilePath(uri))}}
 	response, err := GetResponseFromRunner(stepPositionsRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
 	}
 	stepPositionsResponse := response.GetStepPositionsResponse()
 	if stepPositionsResponse.GetError() != "" {
@@ -98,12 +95,30 @@ func getStepPositionResponse(uri string) (*gm.StepPositionsResponse, error) {
 	return stepPositionsResponse, nil
 }
 
+func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
+	implementationFileListRequest := &gm.Message{MessageType: gm.Message_ImplementationFileListRequest, ImplementationFileListRequest: &gm.ImplementationFileListRequest{}}
+	response, err := GetResponseFromRunner(implementationFileListRequest)
+	if err != nil {
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
+	}
+	implementationFileListResponse := response.GetImplementationFileListResponse()
+	return implementationFileListResponse, nil
+}
+
+func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error) {
+	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Codes: codes}}
+	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
+	if err != nil {
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
+	}
+	return response.GetFileDiff(), nil
+}
+
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
 	response, err := GetResponseFromRunner(getAllStepsRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
 	return response.GetStepNamesResponse(), nil
 }
@@ -114,7 +129,7 @@ func killRunner() {
 	}
 }
 
-func getLanugeIdetifier() (string, error) {
+func getLanguageIdentifier() (string, error) {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
 		return "", err
