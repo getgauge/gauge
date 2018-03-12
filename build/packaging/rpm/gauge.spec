@@ -3,7 +3,7 @@ Version:        <version>
 Release:        <release>
 Summary:        Cross-platform test automation
 License:        GPLv3
-URL:            http://gauge.org/
+URL:            https://gauge.org/
 Prefix:         /usr/local
 
 Requires(post): /bin/sh

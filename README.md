@@ -23,7 +23,7 @@ Read more about [Why Gauge](https://docs.gauge.org/longstart.html#why-gauge) can
 [examples-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[userdocs]:http://docs.gauge.org
+[userdocs]:https://docs.gauge.org
 [get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
@@ -47,10 +47,10 @@ Please see below for the best place to ask a query:
 ## Add Gauge Badge to your project!
 Copy the text below and add it to the README.md of your project using Gauge, and show your support. It looks like this:
 
-[![Gauge Badge](http://gauge.org/Gauge_Badge.svg)](http://gauge.org)
+[![Gauge Badge](https://gauge.org/Gauge_Badge.svg)](https://gauge.org)
 
 ```
-[![Gauge Badge](http://gauge.org/Gauge_Badge.svg)](http://gauge.org)
+[![Gauge Badge](https://gauge.org/Gauge_Badge.svg)](https://gauge.org)
 ```
 
 ## License

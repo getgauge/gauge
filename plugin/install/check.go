@@ -113,7 +113,7 @@ func checkGaugeUpdate() []UpdateInfo {
 	}
 	isLatestVersion := version.CurrentGaugeVersion.IsLesserThan(latestVersion)
 	if isLatestVersion {
-		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from http://gauge.org/get-started/"})
+		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from https://gauge.org/get-started/"})
 	}
 	return updateInfos
 }

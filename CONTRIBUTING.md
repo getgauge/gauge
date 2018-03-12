@@ -12,7 +12,7 @@ So, depending on where you see your contribution fit, please focus on the respec
 
 ## Contribution process
 
-Please read about the Contribution Process [here](http://gauge.org/contribute/), if you are happy please sign the [Contributor's License Agreement](http://gauge.org/cla/).
+Please read about the Contribution Process [here](https://gauge.org/contribute/), if you are happy please sign the [Contributor's License Agreement](https://gauge.org/cla/).
 
 ## How can I contribute
 
