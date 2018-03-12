@@ -124,7 +124,7 @@ func TestParseConcept(t *testing.T) {
 	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
 	openFilesCache.add(uri, cptText)
 
-	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
+	diagnostics := diagnosticsMap{diagnostics: make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)}
 
 	dictionary, err := validateConcepts(diagnostics)
 	if err != nil {
@@ -135,7 +135,7 @@ func TestParseConcept(t *testing.T) {
 		t.Errorf("Concept dictionary is empty")
 	}
 
-	if len(diagnostics[uri]) > 0 {
+	if len(diagnostics.diagnostics[uri]) > 0 {
 		t.Errorf("Parsing failed, got : %+v", diagnostics)
 	}
 }
@@ -148,10 +148,10 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 
 	openFilesCache.add(uri, cptText)
 
-	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
+	diagnostics := diagnosticsMap{diagnostics: make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)}
 
 	validateConcepts(diagnostics)
-	if len(diagnostics[uri]) <= 0 {
+	if len(diagnostics.diagnostics[uri]) <= 0 {
 		t.Errorf("expected parse errors")
 	}
 
@@ -166,8 +166,8 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 		},
 	}
 
-	if !reflect.DeepEqual(want, diagnostics[uri]) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, diagnostics[uri])
+	if !reflect.DeepEqual(want, diagnostics.diagnostics[uri]) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, diagnostics.diagnostics[uri])
 	}
 }
 
