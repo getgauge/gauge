@@ -10,7 +10,7 @@
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 ## Get Started
-Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) can be used, its [terminologies](https://docs.getgauge.io/longstart.html#gauge-terminologies) and [**get started...**](https://getgauge.io/get-started.html)
+Read more about [Why Gauge](https://docs.gauge.org/longstart.html#why-gauge) can be used, its [terminologies](https://docs.gauge.org/longstart.html#gauge-terminologies) and [**get started...**](https://gauge.org/get-started.html)
 
 ## Find out more
 
@@ -23,7 +23,7 @@ Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) c
 [examples-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[userdocs]:http://docs.getgauge.io
+[userdocs]:http://docs.gauge.org
 [get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
@@ -31,7 +31,7 @@ Read more about [Why Gauge](https://docs.getgauge.io/longstart.html#why-gauge) c
 ## Questions or need help?
 
 ### Troubleshooting
-Refer our [Troubleshooting](https://docs.getgauge.io/troubleshooting.html) guide.
+Refer our [Troubleshooting](https://docs.gauge.org/troubleshooting.html) guide.
 
 ### Talk to us
 
@@ -47,10 +47,10 @@ Please see below for the best place to ask a query:
 ## Add Gauge Badge to your project!
 Copy the text below and add it to the README.md of your project using Gauge, and show your support. It looks like this:
 
-[![Gauge Badge](http://getgauge.io/Gauge_Badge.svg)](http://getgauge.io)
+[![Gauge Badge](http://gauge.org/Gauge_Badge.svg)](http://gauge.org)
 
 ```
-[![Gauge Badge](http://getgauge.io/Gauge_Badge.svg)](http://getgauge.io)
+[![Gauge Badge](http://gauge.org/Gauge_Badge.svg)](http://gauge.org)
 ```
 
 ## License
