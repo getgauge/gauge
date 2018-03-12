@@ -3,7 +3,7 @@ os:
   - osx
 language: go
 go:
-  - 1.8
+  - 1.9
 addons:
   apt:
     packages:
