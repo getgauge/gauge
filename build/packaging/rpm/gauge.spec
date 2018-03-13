@@ -3,7 +3,7 @@ Version:        <version>
 Release:        <release>
 Summary:        Cross-platform test automation
 License:        GPLv3
-URL:            http://getgauge.io/
+URL:            https://gauge.org/
 Prefix:         /usr/local
 
 Requires(post): /bin/sh
@@ -20,7 +20,7 @@ chmod +x %{buildroot}/usr/local/bin/*
 /usr/local/bin/gauge
 
 %post
-echo -e "\n\nWe are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.getgauge.io/gauge_telemetry_off.html on how to turn it off.\n"
+echo -e "\n\nWe are constantly looking to make Gauge better, and report usage statistics anonymously over time. If you do not want to participate please read instructions https://manpage.gauge.org/gauge_telemetry_off.html on how to turn it off.\n"
     
 %changelog
 * Fri Apr 1 2016 ThoughtWorks Inc. <studios@thoughtworks.com>
