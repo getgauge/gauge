@@ -48,6 +48,7 @@ type editInfo struct {
 }
 
 func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
+	fileList := []string{}
 	var info = struct {
 		Concept bool `json:"concept"`
 	}{}
@@ -55,13 +56,13 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if info.Concept {
-		return util.GetConceptFiles(), nil
+		return append(fileList, util.GetConceptFiles()...), nil
 	}
-	implementationFileListResponse, err := getImplementationFileList()
+	response, err := getImplementationFileList()
 	if err != nil {
 		return nil, err
 	}
-	return implementationFileListResponse.ImplementationFilePaths, nil
+	return append(fileList, response.GetImplementationFilePaths()...), nil
 }
 
 func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
