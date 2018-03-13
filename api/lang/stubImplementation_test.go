@@ -90,6 +90,33 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 	}
 }
 
+func TestGetImplementationFilesShouldReturnEmptyArrayForNoConceptFiles(t *testing.T) {
+	type cptParam struct {
+		Concept bool `json:"concept"`
+	}
+
+	params := cptParam{Concept: true}
+
+	b, _ := json.Marshal(params)
+	p := json.RawMessage(b)
+
+	util.GetConceptFiles = func() []string {
+		return nil
+	}
+
+	cptFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	want := []string{}
+
+	if !reflect.DeepEqual(cptFiles, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, cptFiles)
+	}
+}
+
 func TestGetImplementationFilesShouldReturnFilePathsForConcept(t *testing.T) {
 	type implFileParam struct {
 		Concept bool `json:"concept"`

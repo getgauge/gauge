@@ -33,7 +33,6 @@ type stubImpl struct {
 }
 
 func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
-	fileList := []string{}
 	var info = struct {
 		Concept bool `json:"concept"`
 	}{}
@@ -41,13 +40,13 @@ func getImplFiles(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if info.Concept {
-		return append(fileList, util.GetConceptFiles()...), nil
+		return append([]string{}, util.GetConceptFiles()...), nil
 	}
 	response, err := getImplementationFileList()
 	if err != nil {
 		return nil, err
 	}
-	return append(fileList, response.GetImplementationFilePaths()...), nil
+	return append([]string{}, response.GetImplementationFilePaths()...), nil
 }
 
 func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
