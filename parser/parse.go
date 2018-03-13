@@ -38,6 +38,7 @@
 package parser
 
 import (
+	"runtime/debug"
 	"strings"
 
 	"regexp"
@@ -98,7 +99,14 @@ func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
 	return conceptsDictionary, conceptParseResult, nil
 }
 
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
+	}
+}
+
 func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
+	defer recoverPanic()
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
 		specChannel <- nil
