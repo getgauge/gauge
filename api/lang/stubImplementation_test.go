@@ -19,11 +19,13 @@ package lang
 
 import (
 	"encoding/json"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -57,6 +59,63 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 
 	if !reflect.DeepEqual(implFiles, want) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, implFiles)
+	}
+}
+
+func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t *testing.T) {
+	var params = struct {
+		Concept bool
+	}{}
+
+	b, _ := json.Marshal(params)
+	p := json.RawMessage(b)
+
+	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+		response := &gauge_messages.Message{
+			MessageType: gauge_messages.Message_ImplementationFileListResponse,
+			ImplementationFileListResponse: &gauge_messages.ImplementationFileListResponse{
+				ImplementationFilePaths: nil,
+			},
+		}
+		return response, nil
+	}
+	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	want := []string{}
+
+	if !reflect.DeepEqual(implFiles, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, implFiles)
+	}
+}
+
+func TestGetImplementationFilesShouldReturnEmptyArrayForNoConceptFiles(t *testing.T) {
+	type cptParam struct {
+		Concept bool `json:"concept"`
+	}
+
+	params := cptParam{Concept: true}
+
+	b, _ := json.Marshal(params)
+	p := json.RawMessage(b)
+
+	util.GetConceptFiles = func() []string {
+		return nil
+	}
+
+	cptFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	want := []string{}
+
+	if !reflect.DeepEqual(cptFiles, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, cptFiles)
 	}
 }
 
@@ -139,6 +198,153 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)
 
 	if !reflect.DeepEqual(stubImplResponse, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, stubImplResponse)
+		t.Errorf("want: `%v`,\n got: `%v`", want, stubImplResponse)
+	}
+}
+
+func TestGenerateConceptShouldReturnFileDiff(t *testing.T) {
+	cwd, _ := os.Getwd()
+	testData := filepath.Join(cwd, "_testdata")
+
+	extractConcpetParam := concpetInfo{
+		ConceptName: "# foo bar\n* ",
+		ConceptFile: "New File",
+		Dir:         testData,
+	}
+	b, _ := json.Marshal(extractConcpetParam)
+	p := json.RawMessage(b)
+
+	response, err := generateConcept(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	var want lsp.WorkspaceEdit
+	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	uri := filepath.Join(testData, "concept1.cpt")
+	textEdit := lsp.TextEdit{
+		NewText: "# foo bar\n* ",
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 0},
+		},
+	}
+	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)
+
+	if !reflect.DeepEqual(want, response) {
+		t.Errorf("want: `%v`,\n got: `%v`", want, response)
+	}
+}
+
+func TestGenerateConceptWithParam(t *testing.T) {
+	cwd, _ := os.Getwd()
+	testData := filepath.Join(cwd, "_testdata")
+
+	extractConcpetParam := concpetInfo{
+		ConceptName: "# foo bar <some>\n* ",
+		ConceptFile: "New File",
+		Dir:         testData,
+	}
+	b, _ := json.Marshal(extractConcpetParam)
+	p := json.RawMessage(b)
+
+	response, err := generateConcept(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	var want lsp.WorkspaceEdit
+	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	uri := filepath.Join(testData, "concept1.cpt")
+	textEdit := lsp.TextEdit{
+		NewText: "# foo bar <some>\n* ",
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 0},
+		},
+	}
+	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)
+
+	if !reflect.DeepEqual(want, response) {
+		t.Errorf("want: `%v`,\n got: `%v`", want, response)
+	}
+}
+
+func TestGenerateConceptInExisitingFile(t *testing.T) {
+	cwd, _ := os.Getwd()
+	testData := filepath.Join(cwd, "_testdata")
+	cptFile := filepath.Join(testData, "some.cpt")
+
+	extractConcpetParam := concpetInfo{
+		ConceptName: "# foo bar <some>\n* ",
+		ConceptFile: cptFile,
+		Dir:         testData,
+	}
+	b, _ := json.Marshal(extractConcpetParam)
+	p := json.RawMessage(b)
+
+	response, err := generateConcept(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	var want lsp.WorkspaceEdit
+	want.Changes = make(map[string][]lsp.TextEdit, 0)
+
+	textEdit := lsp.TextEdit{
+		NewText: "# concept heading\n* with a step\n\n# foo bar <some>\n* ",
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 2, Character: 0},
+		},
+	}
+	want.Changes[string(cptFile)] = append(want.Changes[string(cptFile)], textEdit)
+
+	if !reflect.DeepEqual(want, response) {
+		t.Errorf("want: `%v`,\n got: `%v`", want, response)
+	}
+}
+
+func TestGenerateConceptInNewFileWhenDefaultExisits(t *testing.T) {
+	cwd, _ := os.Getwd()
+	testData := filepath.Join(cwd, "_testdata")
+
+	cptFile := filepath.Join(testData, "concept1.cpt")
+	ioutil.WriteFile(cptFile, []byte(""), common.NewFilePermissions)
+	defer common.Remove(cptFile)
+
+	extractConcpetParam := concpetInfo{
+		ConceptName: "# foo bar <some>\n* ",
+		ConceptFile: "New File",
+		Dir:         testData,
+	}
+	b, _ := json.Marshal(extractConcpetParam)
+	p := json.RawMessage(b)
+
+	response, err := generateConcept(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	uri := filepath.Join(testData, "concept2.cpt")
+
+	var want lsp.WorkspaceEdit
+	want.Changes = make(map[string][]lsp.TextEdit, 0)
+
+	textEdit := lsp.TextEdit{
+		NewText: "# foo bar <some>\n* ",
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 0},
+		},
+	}
+	want.Changes[string(uri)] = append(want.Changes[string(uri)], textEdit)
+
+	if !reflect.DeepEqual(want, response) {
+		t.Errorf("want: `%v`,\n got: `%v`", want, response)
 	}
 }

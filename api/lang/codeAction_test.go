@@ -25,63 +25,42 @@ import (
 )
 
 func TestGetCodeActionForUnimplementedStep(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add(lsp.DocumentURI("foo.spec"), "# spec heading\n## scenario heading\n* foo bar")
 
 	stub := "a stub for unimplemented step"
 	d := []lsp.Diagnostic{
 		{
 			Range: lsp.Range{
-				Start: lsp.Position{3, 0},
-				End:   lsp.Position{0, 10},
+				Start: lsp.Position{Line: 2, Character: 0},
+				End:   lsp.Position{Line: 2, Character: 9},
 			},
 			Message:  "Step implantation not found",
 			Severity: 1,
 			Code:     stub,
 		},
 	}
-
-	b, _ := json.Marshal(lsp.CodeActionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}, Context: lsp.CodeActionContext{Diagnostics: d}})
+	codeActionParams := lsp.CodeActionParams{
+		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
+		Context:      lsp.CodeActionContext{Diagnostics: d},
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 2, Character: 0},
+			End:   lsp.Position{Line: 2, Character: 9},
+		},
+	}
+	b, _ := json.Marshal(codeActionParams)
 	p := json.RawMessage(b)
 
 	want := []lsp.Command{
 		{
-			Command:   generateStubCommand,
+			Command:   generateStepCommand,
 			Title:     generateStubTitle,
 			Arguments: []interface{}{stub},
 		},
-	}
-
-	got, err := codeActions(&jsonrpc2.Request{Params: &p})
-
-	if err != nil {
-		t.Errorf("expected error to be nil. \nGot : %s", err)
-	}
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
-	}
-}
-
-func TestGetCodeActionForExtractConcept(t *testing.T) {
-	selection := lsp.Range{
-		Start: lsp.Position{Line: 3, Character: 0},
-		End:   lsp.Position{Line: 5, Character: 0},
-	}
-	params := lsp.CodeActionParams{
-		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
-		Range:        selection,
-		Context:      lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{}},
-	}
-	b, _ := json.Marshal(params)
-	p := json.RawMessage(b)
-
-	want := []lsp.Command{
 		{
-			Command: extractConceptCommand,
-			Title:   extractConceptTitle,
-			Arguments: []interface{}{extractConceptInfo{
-				Uri:   "foo.spec",
-				Range: selection,
-			}},
+			Command:   generateConceptCommand,
+			Title:     generateConceptTitle,
+			Arguments: []interface{}{concpetInfo{ConceptName: "# foo bar\n* "}},
 		},
 	}
 
@@ -96,31 +75,45 @@ func TestGetCodeActionForExtractConcept(t *testing.T) {
 	}
 }
 
-func TestGetCodeActionForExtractConceptShouldNotComeIfSelectionHasErrors(t *testing.T) {
-	selection := lsp.Range{
-		Start: lsp.Position{Line: 3, Character: 0},
-		End:   lsp.Position{Line: 5, Character: 0},
-	}
-	params := lsp.CodeActionParams{
-		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
-		Range:        selection,
-		Context: lsp.CodeActionContext{Diagnostics: []lsp.Diagnostic{
-			lsp.Diagnostic{
-				Range: lsp.Range{
-					Start: lsp.Position{
-						Line:      3,
-						Character: 1,
-					},
-					End: lsp.Position{
-						Line:      3,
-						Character: 10,
-					},
-				},
+func TestGetCodeActionForUnimplementedStepWithParam(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add(lsp.DocumentURI("foo.spec"), "# spec heading\n## scenario heading\n* foo bar \"some\"")
+
+	stub := "a stub for unimplemented step"
+	d := []lsp.Diagnostic{
+		{
+			Range: lsp.Range{
+				Start: lsp.Position{Line: 2, Character: 0},
+				End:   lsp.Position{Line: 2, Character: 9},
 			},
-		}},
+			Message:  "Step implantation not found",
+			Severity: 1,
+			Code:     stub,
+		},
 	}
-	b, _ := json.Marshal(params)
+	codeActionParams := lsp.CodeActionParams{
+		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
+		Context:      lsp.CodeActionContext{Diagnostics: d},
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 2, Character: 0},
+			End:   lsp.Position{Line: 2, Character: 9},
+		},
+	}
+	b, _ := json.Marshal(codeActionParams)
 	p := json.RawMessage(b)
+
+	want := []lsp.Command{
+		{
+			Command:   generateStepCommand,
+			Title:     generateStubTitle,
+			Arguments: []interface{}{stub},
+		},
+		{
+			Command:   generateConceptCommand,
+			Title:     generateConceptTitle,
+			Arguments: []interface{}{concpetInfo{ConceptName: "# foo bar <some>\n* "}},
+		},
+	}
 
 	got, err := codeActions(&jsonrpc2.Request{Params: &p})
 
@@ -128,7 +121,7 @@ func TestGetCodeActionForExtractConceptShouldNotComeIfSelectionHasErrors(t *test
 		t.Errorf("expected error to be nil. \nGot : %s", err)
 	}
 
-	if len(got.([]lsp.Command)) > 0 {
-		t.Errorf("want: `%s` to be empty but got `%s`", got, got)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, got)
 	}
 }
