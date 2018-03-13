@@ -260,21 +260,21 @@ func createWindowsInstaller() {
 	os.RemoveAll(distroDir)
 }
 
-func createLinuxPackage() {
-	distroDir := filepath.Join(deploy, packageName())
-	copyGaugeBinaries(distroDir)
-	createZipFromUtil(deploy, packageName(), packageName())
-	os.RemoveAll(distroDir)
-}
-
 func createDarwinPackage() {
-	distroDir := filepath.Join(deploy, packageName())
+	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeBinaries(distroDir)
 	if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
 		log.Printf("No singning identity found . Executable won't be signed.")
 	} else {
 		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
 	}
+	createZipFromUtil(deploy, gauge, packageName())
+	os.RemoveAll(distroDir)
+}
+
+func createLinuxPackage() {
+	distroDir := filepath.Join(deploy, packageName())
+	copyGaugeBinaries(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
 	os.RemoveAll(distroDir)
 }
