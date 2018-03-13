@@ -107,6 +107,7 @@ func generateConcept(req *jsonrpc2.Request) (interface{}, error) {
 	if err != nil {
 		edit.fileName = getFileName(params.Dir, 1)
 	} else if content != "" {
+		content = strings.Join(util.GetLinesFromText(content), "\n")
 		edit.newText = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(content), params.ConceptName)
 		edit.endLineNo = len(strings.Split(content, "\n"))
 	}
