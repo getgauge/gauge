@@ -46,25 +46,9 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 			return nil, fmt.Errorf("failed to format document. Fix all the problems first")
 		}
 		newString := formatter.FormatSpecification(spec)
-		return createTextEdit(getContent(params.TextDocument.URI), newString), nil
+		oldString := getContent(params.TextDocument.URI)
+		textEdit := createTextEdit(newString, 0, 0, len(strings.Split(oldString, "\n")), len(oldString))
+		return []lsp.TextEdit{textEdit}, nil
 	}
 	return nil, fmt.Errorf("failed to format document. %s is not a valid spec file", file)
-}
-
-func createTextEdit(oldContent string, newString string) []lsp.TextEdit {
-	return []lsp.TextEdit{
-		{
-			Range: lsp.Range{
-				Start: lsp.Position{
-					Line:      0,
-					Character: 0,
-				},
-				End: lsp.Position{
-					Line:      len(strings.Split(oldContent, "\n")),
-					Character: len(oldContent),
-				},
-			},
-			NewText: newString,
-		},
-	}
 }

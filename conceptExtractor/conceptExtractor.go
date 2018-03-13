@@ -50,33 +50,13 @@ type extractor struct {
 	errors         []error
 }
 
-type EditInfo struct {
-	FileName  string
-	NewText   string
-	EndLineNo int
-}
-
-// ExtractConceptWithoutSaving creates concept form the selected text and return the new text of spec and concpet files.
-func ExtractConceptWithoutSaving(conceptName *gm.Step, steps []*gm.Step, cptFile string, info *gm.TextInfo) ([]*EditInfo, error) {
-	concept, cptText, err := performExtraction(conceptName, steps, info)
-	if err != nil {
-		return nil, err
-	}
-	edits := []*EditInfo{}
-	cpt, err := common.ReadFileContents(cptFile)
-	if err == nil && cpt != "" {
-		cpt = strings.Replace(cpt, "\r\n", "\n", -1)
-		concept = fmt.Sprintf("%s\n\n%s", strings.TrimSpace(cpt), concept)
-	}
-	cptEdit := &EditInfo{FileName: cptFile, NewText: concept, EndLineNo: util.GetLineCount(concept)}
-	spec, line := ReplaceExtractedStepsWithConcept(info, cptText)
-	specEdit := &EditInfo{FileName: info.GetFileName(), NewText: spec, EndLineNo: line}
-	return append(edits, []*EditInfo{cptEdit, specEdit}...), nil
-}
-
 // ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
 func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName string, changeAcrossProject bool, info *gm.TextInfo) (bool, error, []string) {
-	concept, cptText, err := performExtraction(conceptName, steps, info)
+	content := SPEC_HEADING_TEMPLATE
+	if util.IsSpec(info.GetFileName()) {
+		content, _ = common.ReadFileContents(info.GetFileName())
+	}
+	concept, cptText, err := getExtractedConcept(conceptName, steps, content, info.GetFileName())
 	if err != nil {
 		return false, err, []string{}
 	}
@@ -92,14 +72,6 @@ func ReplaceExtractedStepsWithConcept(selectedTextInfo *gm.TextInfo, conceptText
 		return newText, util.GetLineCount(content)
 	}
 	return newText, util.GetLineCount(newText)
-}
-
-func performExtraction(cptName *gm.Step, steps []*gm.Step, info *gm.TextInfo) (string, string, error) {
-	content := SPEC_HEADING_TEMPLATE
-	if util.IsSpec(info.GetFileName()) {
-		content, _ = common.ReadFileContents(info.GetFileName())
-	}
-	return getExtractedConcept(cptName, steps, content, info.GetFileName())
 }
 
 func replaceText(content string, info *gm.TextInfo, replacement string) string {

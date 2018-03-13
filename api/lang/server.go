@@ -234,12 +234,12 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 		}
 		return val, err
-	case "gauge/extractConcept":
+	case "gauge/generateConcept":
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
 		}
-		return extractConcept(req)
+		return generateConcept(req)
 	case "gauge/getRunnerLanguage":
 		return lRunner.lspID, nil
 	default:
