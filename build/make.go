@@ -46,12 +46,8 @@ const (
 	gauge             = "gauge"
 	deploy            = "deploy"
 	CC                = "CC"
-	pkg               = ".pkg"
-	packagesBuild     = "packagesbuild"
 	nightlyDatelayout = "2006-01-02"
 )
-
-var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
 var deployDir = filepath.Join(deploy, gauge)
 
@@ -70,17 +66,6 @@ func runCommand(command string, arg ...string) (string, error) {
 	cmd := exec.Command(command, arg...)
 	bytes, err := cmd.Output()
 	return strings.TrimSpace(fmt.Sprintf("%s", bytes)), err
-}
-
-func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
-	if getGOOS() == windows {
-		if certFilePath != "" && certFilePwd != "" {
-			log.Printf("Signing: %s", exeFilePath)
-			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
-		} else {
-			log.Printf("No certificate file passed. Executable won't be signed.")
-		}
-	}
 }
 
 var buildMetadata string
@@ -275,18 +260,21 @@ func createWindowsInstaller() {
 	os.RemoveAll(distroDir)
 }
 
-func createDarwinPackage() {
-	distroDir := filepath.Join(deploy, gauge)
-	copyGaugeBinaries(distroDir)
-	createZipFromUtil(deploy, gauge, packageName())
-	runProcess(packagesBuild, "-v", darwinPackageProject)
-	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
-	os.RemoveAll(distroDir)
-}
-
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
+	createZipFromUtil(deploy, packageName(), packageName())
+	os.RemoveAll(distroDir)
+}
+
+func createDarwinPackage() {
+	distroDir := filepath.Join(deploy, packageName())
+	copyGaugeBinaries(distroDir)
+	if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
+		log.Printf("No singning identity found . Executable won't be signed.")
+	} else {
+		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
+	}
 	createZipFromUtil(deploy, packageName(), packageName())
 	os.RemoveAll(distroDir)
 }
