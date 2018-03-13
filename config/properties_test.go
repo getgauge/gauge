@@ -102,7 +102,7 @@ func TestPropertiesString(t *testing.T) {
 	propertiesContent := `# This file contains Gauge specific internal configurations. Do not delete
 
 # Url to get templates list
-gauge_templates_url = https://downloads.getgauge.io/templates
+gauge_templates_url = https://downloads.gauge.org/templates
 
 # Timeout in milliseconds for making a connection to plugins.
 plugin_connection_timeout = 10000
@@ -117,10 +117,10 @@ runner_request_timeout = 30000
 gauge_telemetry_log_enabled = false
 
 # Url to get plugin versions
-gauge_repository_url = https://downloads.getgauge.io/plugin
+gauge_repository_url = https://downloads.gauge.org/plugin
 
 # Url for latest gauge version
-gauge_update_url = https://downloads.getgauge.io/gauge
+gauge_update_url = https://downloads.gauge.org/gauge
 
 # Timeout in milliseconds for making a connection to the language runner.
 runner_connection_timeout = 30000

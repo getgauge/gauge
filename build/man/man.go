@@ -191,7 +191,7 @@ const html = `
 
 <head>
     <title>Gauge - Manual</title>
-    <link href="https://getgauge.io/assets/images/favicons/favicon.ico" rel="shortcut icon" type="image/ico" />
+    <link href="https://gauge.org/assets/images/favicons/favicon.ico" rel="shortcut icon" type="image/ico" />
     <style type='text/css' media='all'>
         body#manpage {
             margin: 0
@@ -433,7 +433,7 @@ const html = `
 <body id='manpage'>
     <div class='mp' id='man'>
         <!--CONTENT-->
-		<div><b>Complete documentation is available <a href="https://docs.getgauge.io/">here</a>.</b></div>
+		<div><b>Complete documentation is available <a href="https://docs.gauge.org/">here</a>.</b></div>
         <nav id="menu" class='man-navigation' style='display:none'>
             <!--NAV-->
         </nav>
