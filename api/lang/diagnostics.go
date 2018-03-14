@@ -89,19 +89,23 @@ func createValidationDiagnostics(errors []validation.StepValidationError, diagno
 	return
 }
 
-func validateSpec(spec *gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
+func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
 	if lRunner.runner == nil {
 		return
 	}
-	v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, map[string]error{})
-	for _, e := range v.Validate() {
-		vErrors = append(vErrors, e.(validation.StepValidationError))
+	specValidationCache := make(map[string]error)
+	for _, spec := range specs {
+		v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, specValidationCache)
+		for _, e := range v.Validate() {
+			vErrors = append(vErrors, e.(validation.StepValidationError))
+		}
 	}
 	return
 }
 
 func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
 	specFiles := util.GetSpecFiles(common.SpecsDirectoryName)
+	specs := make([]*gauge.Specification, 0)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
 		if _, ok := diagnostics[uri]; !ok {
@@ -117,9 +121,10 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[l
 		}
 		createDiagnostics(res, diagnostics)
 		if res.Ok {
-			createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
+			specs = append(specs, spec)
 		}
 	}
+	createValidationDiagnostics(validateSpecifications(specs, conceptDictionary), diagnostics)
 	return nil
 }
 
