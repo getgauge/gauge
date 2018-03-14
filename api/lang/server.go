@@ -130,6 +130,18 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 		}
 		return nil, err
+	case "textDocument/didCreate":
+		err := documentCreate(req, ctx, conn)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return nil, err
+	case "textDocument/didDelete":
+		err := documentDelete(req, ctx, conn)
+		if err != nil {
+			logDebug(req, err.Error())
+		}
+		return nil, err
 	case "textDocument/completion":
 		val, err := completion(req)
 		if err != nil {

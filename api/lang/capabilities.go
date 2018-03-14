@@ -54,7 +54,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 		return fmt.Errorf("current runner is not compatible with gauge LSP")
 	}
 	var result interface{}
-	ds := documentSelector{"file", lRunner.lspID, fmt.Sprintf("%s/**/*", config.ProjectRoot)}
+	ds := documentSelector{Scheme: "file", Language: lRunner.lspID, Pattern: fmt.Sprintf("%s/**/*", config.ProjectRoot)}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
 		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},

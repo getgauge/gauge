@@ -62,13 +62,8 @@ func connectToRunner(killChan chan bool) (runner.Runner, error) {
 	return runner, nil
 }
 
-func cacheFileOnRunner(uri lsp.DocumentURI, text string) error {
-	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: string(util.ConvertURItoFilePath(uri)), IsClosed: false}}
-	return sendMessageToRunner(cacheFileRequest)
-}
-
-func sendMessageToRunner(cacheFileRequest *gm.Message) error {
-	err := conn.WriteGaugeMessage(cacheFileRequest, lRunner.runner.Connection())
+func sendMessageToRunner(message *gm.Message) error {
+	err := conn.WriteGaugeMessage(message, lRunner.runner.Connection())
 	if err != nil {
 		return fmt.Errorf("Error while connecting to runner : %v", err)
 	}
