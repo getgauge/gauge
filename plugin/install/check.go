@@ -67,7 +67,6 @@ func checkUpdates() []UpdateInfo {
 }
 
 func recoverPanic() {
-	logger.Info(true, "Main defer")
 	if r := recover(); r != nil {
 		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
 	}
