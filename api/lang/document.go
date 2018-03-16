@@ -142,8 +142,9 @@ func documentDelete(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 			}}
 			err = sendMessageToRunner(cacheFileRequest)
 		}
+	} else {
+		publishDiagnostic(params.URI, []lsp.Diagnostic{}, conn, ctx)
 	}
-	publishDiagnostic(params.URI, []lsp.Diagnostic{}, conn, ctx)
 	go publishDiagnostics(ctx, conn)
 	return err
 }
