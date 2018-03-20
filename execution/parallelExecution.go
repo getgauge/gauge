@@ -192,7 +192,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge-bin"))
+	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
 	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
 		logger.Errorf(true, "Failed to start runner. %s", err.Error())
@@ -204,7 +204,7 @@ func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *r
 
 func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge-bin"))
+	os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
 	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
 	if err != nil {
 		logger.Errorf(true, "Failed to start runner. %s", err.Error())
