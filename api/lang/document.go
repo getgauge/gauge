@@ -47,7 +47,7 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	var params lsp.DidOpenTextDocumentParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request %v", err)
+		return fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		openFile(params)
@@ -68,7 +68,7 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	var params lsp.DidChangeTextDocumentParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request %v", err)
+		return fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	file := params.TextDocument.URI
 	if util.IsGaugeFile(string(file)) {
@@ -90,7 +90,7 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	var params lsp.DidCloseTextDocumentParams
 	var err error
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request. %v", err)
+		return fmt.Errorf("failed to parse request. %s", err.Error())
 	}
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		closeFile(params)
@@ -110,7 +110,7 @@ func documentCreate(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	var params lsp.TextDocumentIdentifier
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request %v", err)
+		return fmt.Errorf("failed to parse request %s", err.Error())
 	}
 	if !util.IsGaugeFile(string(params.URI)) {
 		if lRunner.runner != nil {
@@ -131,7 +131,7 @@ func documentDelete(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	var params lsp.TextDocumentIdentifier
 	var err error
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request. %v", err)
+		return fmt.Errorf("failed to parse request. %s", err.Error())
 	}
 	if !util.IsGaugeFile(string(params.URI)) {
 		if lRunner.runner != nil {
