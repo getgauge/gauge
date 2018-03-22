@@ -483,7 +483,6 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 // GetAvailableSpecs returns the list of all the specs in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail {
 	if len(specs) < 1 {
-		logger.Errorf("SO LETS LOOK %s", env.GetSpecDir())
 		specs = []string{env.GetSpecDir()}
 	}
 	specFiles := getSpecFiles(specs)
