@@ -123,7 +123,7 @@ func getSpecsDir(args []string) []string {
 	if len(args) > 0 {
 		return args
 	}
-	return []string{util.GetSpecDir()}
+	return util.GetSpecDirs()
 }
 
 func setGlobalFlags() {

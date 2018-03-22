@@ -59,7 +59,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	}
 	newName := getNewStepName(params, step)
 
-	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{util.GetSpecDir()})
+	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, util.GetSpecDirs())
 	for _, warning := range refactortingResult.Warnings {
 		logWarning(req, warning)
 	}

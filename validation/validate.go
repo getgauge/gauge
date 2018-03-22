@@ -134,7 +134,7 @@ func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidat
 // Validate validates specs and if it has any errors, it exits.
 func Validate(args []string) {
 	if len(args) == 0 {
-		args = append(args, util.GetSpecDir())
+		args = append(args, util.GetSpecDirs()...)
 	}
 	res := ValidateSpecs(args, false)
 	if len(res.Errs) > 0 {

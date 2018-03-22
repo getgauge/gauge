@@ -55,7 +55,7 @@ var (
 			}
 			track.Daemon()
 			port := ""
-			specs := []string{util.GetSpecDir()}
+			specs := util.GetSpecDirs()
 			if len(args) > 0 {
 				port = args[0]
 				specs = getSpecsDir(args[1:])

@@ -152,15 +152,22 @@ func IsDir(path string) bool {
 
 // GetSpecFiles returns the list of spec files present at the given path.
 // If the path itself represents a spec file, it returns the same.
-var GetSpecFiles = func(path string) []string {
+var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
-	if common.DirExists(path) {
-		specFiles = append(specFiles, FindSpecFilesIn(path)...)
-	} else if common.FileExists(path) && IsValidSpecExtension(path) {
-		f, _ := filepath.Abs(path)
-		specFiles = append(specFiles, f)
+	for _, path := range paths {
+		if common.DirExists(path) {
+			specFiles = append(specFiles, FindSpecFilesIn(path)...)
+		} else if common.FileExists(path) && IsValidSpecExtension(path) {
+			f, _ := filepath.Abs(path)
+			specFiles = append(specFiles, f)
+		}
 	}
+
 	return specFiles
+}
+
+var GetSpecFilesFrom = func(path string) [] string{
+	return GetSpecFiles([]string{path})
 }
 
 // GetConceptFiles returns the list of concept files present in the PROJECTROOT

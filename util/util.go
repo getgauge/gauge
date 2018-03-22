@@ -119,13 +119,17 @@ func ConvertToBool(value, property string, defaultValue bool) bool {
 	return boolValue
 }
 
-// GetSpecDir returns the specification directory.
+// GetSpecDirs returns the specification directory.
 // It checks whether the environment variable for gauge_specs_dir is set.
 // It returns 'specs' otherwise
-func GetSpecDir() string {
+func GetSpecDirs() []string {
 	var specFromProperties = os.Getenv(env.SpecsDir)
 	if specFromProperties != "" {
-		return specFromProperties
+		var specDirectories = strings.Split(specFromProperties, ",")
+		for index,ele := range specDirectories {
+			specDirectories[index] = strings.TrimSpace(ele)
+		}
+		return specDirectories
 	}
-	return common.SpecsDirectoryName
+	return  []string{common.SpecsDirectoryName}
 }

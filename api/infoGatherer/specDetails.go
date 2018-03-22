@@ -482,7 +482,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 // GetAvailableSpecs returns the list of all the specs in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail {
 	if len(specs) < 1 {
-		specs = []string{util.GetSpecDir()}
+		specs = util.GetSpecDirs()
 	}
 	specFiles := getSpecFiles(specs)
 	s.specsCache.mutex.RLock()
