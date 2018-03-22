@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"os"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"

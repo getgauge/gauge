@@ -37,6 +37,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/reporter"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
