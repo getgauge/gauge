@@ -50,7 +50,7 @@ const (
 	ProductName             = "gauge"
 	DotGauge                = ".gauge"
 	config                  = "config"
-	//SpecsDirectoryName      = "specs"
+	SpecsDirectoryName      = "specs"
 	ConceptFileExtension    = ".cpt"
 	Plugins                 = "plugins"
 	appData                 = "APPDATA"

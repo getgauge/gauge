@@ -30,7 +30,6 @@ import (
 	"github.com/getgauge/gauge/validation"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"github.com/getgauge/gauge/env"
 )
 
 // Diagnostics lock ensures only one goroutine publishes diagnostics at a time.
@@ -105,7 +104,7 @@ func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gau
 }
 
 func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
-  specFiles := util.GetSpecFiles(env.GetSpecDir())
+  specFiles := util.GetSpecFiles(util.GetSpecDir())
 	specs := make([]*gauge.Specification, 0)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))

@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/env"
 )
 
 // SpecInfoGatherer contains the caches for specs, concepts, and steps
@@ -483,7 +482,7 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 // GetAvailableSpecs returns the list of all the specs in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail {
 	if len(specs) < 1 {
-		specs = []string{env.GetSpecDir()}
+		specs = []string{util.GetSpecDir()}
 	}
 	specFiles := getSpecFiles(specs)
 	s.specsCache.mutex.RLock()

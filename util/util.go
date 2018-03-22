@@ -29,6 +29,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/env"
 )
 
 // NumberOfCores returns the number of CPU cores on the system
@@ -116,4 +117,15 @@ func ConvertToBool(value, property string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return boolValue
+}
+
+// GetSpecDir returns the specification directory.
+// It checks whether the environment variable for gauge_specs_dir is set.
+// It returns 'specs' otherwise
+func GetSpecDir() string {
+	var specFromProperties = os.Getenv(env.SpecsDir)
+	if specFromProperties != "" {
+		return specFromProperties
+	}
+	return common.SpecsDirectoryName
 }

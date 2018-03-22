@@ -32,7 +32,6 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
-	"github.com/getgauge/gauge/env"
 )
 
 var (
@@ -124,7 +123,7 @@ func getSpecsDir(args []string) []string {
 	if len(args) > 0 {
 		return args
 	}
-	return []string{env.GetSpecDir()}
+	return []string{util.GetSpecDir()}
 }
 
 func setGlobalFlags() {

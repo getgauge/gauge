@@ -30,7 +30,6 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
-	"github.com/getgauge/gauge/env"
 )
 
 func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
@@ -60,7 +59,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	}
 	newName := getNewStepName(params, step)
 
-	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{env.GetSpecDir()})
+	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{util.GetSpecDir()})
 	for _, warning := range refactortingResult.Warnings {
 		logWarning(req, warning)
 	}

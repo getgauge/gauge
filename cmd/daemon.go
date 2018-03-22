@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
@@ -54,7 +55,7 @@ var (
 			}
 			track.Daemon()
 			port := ""
-			specs := []string{env.GetSpecDir()}
+			specs := []string{util.GetSpecDir()}
 			if len(args) > 0 {
 				port = args[0]
 				specs = getSpecsDir(args[1:])
