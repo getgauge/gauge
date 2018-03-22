@@ -47,10 +47,8 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 	formatted := FormatSpecification(spec)
 
 	c.Assert(formatted, Equals,
-		`Spec Heading
-============
-Scenario Heading
-----------------
+		`# Spec Heading
+## Scenario Heading
 * Example step
 * Step with inline table`+" "+`
 
@@ -111,19 +109,16 @@ func (s *MySuite) TestFormatSpecificationWithTags(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 tags: tag1, tag2
 
-Scenario Heading
-----------------
+## Scenario Heading
 
 tags: tag3, tag4
 
 * Example step
-Scenario Heading1
------------------
+## Scenario Heading1
 
 tags: tag3, tag4
 
@@ -149,19 +144,16 @@ func (s *MySuite) TestFormatSpecificationWithTagsInMutipleLines(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 tags: tag1, tag2,`+string(" \n      ")+`tag3, tag4,`+string(" \n      ")+`tag5
 
-Scenario Heading
-----------------
+## Scenario Heading
 
 tags: tag3, tag4
 
 * Example step
-Scenario Heading1
------------------
+## Scenario Heading1
 
 tags: tag3, tag4
 
@@ -187,19 +179,16 @@ func (s *MySuite) TestFormatSpecificationWithTeardownSteps(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 tags: tag1, tag2
 
-Scenario Heading
-----------------
+## Scenario Heading
 
 tags: tag3, tag4
 
 * Example step
-Scenario Heading1
------------------
+## Scenario Heading1
 
 tags: tag3, tag4
 
@@ -234,10 +223,8 @@ func (s *MySuite) TestFormattingWithTableAsAComment(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
-Scenario Heading
-----------------
+		`# My Spec Heading
+## Scenario Heading
  |id|name|
  |1|foo|
 |2|bar|
@@ -263,13 +250,11 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
 	formatted := FormatSpecification(spec)
 
 	c.Assert(formatted, Equals,
-		`Spec Heading
-============
+		`# Spec Heading
    |id|foo|
    |--|---|
    |1 |f  |
-Scenario Heading
-----------------
+## Scenario Heading
 * Example step
 * Step with inline table `+`
 
@@ -298,12 +283,10 @@ func (s *MySuite) TestFormatShouldRetainNewlines(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 
-Scenario Heading
-----------------
+## Scenario Heading
  |id|name|
  |1|foo|
 |2|bar|
@@ -327,10 +310,8 @@ func (s *MySuite) TestFormatShouldRetainNewlinesBetweenSteps(c *C) {
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
-Scenario Heading
-----------------
+		`# My Spec Heading
+## Scenario Heading
 * Example step
 
 
@@ -358,12 +339,10 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTable(c *C) 
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 
-Scenario Heading
-----------------
+## Scenario Heading
  |id|name|
  |1|foo|
 |2|bar|
@@ -401,12 +380,10 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTableInTeard
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`My Spec Heading
-===============
+		`# My Spec Heading
 
 
-Scenario Heading
-----------------
+## Scenario Heading
  |id|name|
  |1|foo|
 |2|bar|
@@ -429,8 +406,7 @@ ____
 }
 
 func (s *MySuite) TestFormatShouldNotAddExtraNewLinesBeforeDataTable(c *C) {
-	spec, _, _ := new(parser.SpecParser).Parse(`Specification Heading
-=====================
+	spec, _, _ := new(parser.SpecParser).Parse(`# Specification Heading
 
      |Word  |Vowel Count|
      |------|-----------|
@@ -442,8 +418,7 @@ func (s *MySuite) TestFormatShouldNotAddExtraNewLinesBeforeDataTable(c *C) {
 `, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,
-		`Specification Heading
-=====================
+		`# Specification Heading
 
    |Word  |Vowel Count|
    |------|-----------|

@@ -159,6 +159,10 @@ func (step *Step) AddInlineTableRow(row []TableCell) {
 	step.PopulateFragments()
 }
 
+func (step *Step) GetLastArg() *StepArg {
+	return step.Args[len(step.Args)-1]
+}
+
 func (step *Step) PopulateFragments() {
 	r := regexp.MustCompile(ParameterPlaceholder)
 	/*

@@ -26,7 +26,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
@@ -112,7 +111,7 @@ func (e *simpleExecution) finish() {
 func (e *simpleExecution) stopAllPlugins() {
 	e.notifyExecutionStop()
 	if err := e.runner.Kill(); err != nil {
-		logger.Errorf("Failed to kill Runner: %s", err.Error())
+		logger.Errorf(true, "Failed to kill Runner: %s", err.Error())
 	}
 }
 

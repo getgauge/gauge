@@ -23,7 +23,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/spf13/cobra"
 )
@@ -36,11 +36,7 @@ var (
 		Example: `  gauge version
   gauge version -m`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if machineReadable {
-				printJSONVersion()
-				return
-			}
-			printTextVersion()
+			printVersion()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -69,7 +65,7 @@ func printJSONVersion() {
 		Plugins    []*pluginJSON `json:"plugins"`
 	}
 	gaugeVersion := versionJSON{version.FullVersion(), version.GetCommitHash(), make([]*pluginJSON, 0)}
-	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
+	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
 	}
@@ -88,7 +84,7 @@ func printTextVersion() {
 
 	}
 	fmt.Printf("\nPlugins\n-------\n")
-	allPluginsWithVersion, err := plugin.GetAllInstalledPluginsWithVersion()
+	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		fmt.Println("No plugins found")
 		fmt.Println("Plugins can be installed with `gauge install {plugin-name}`")

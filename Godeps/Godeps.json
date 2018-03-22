@@ -1,7 +1,7 @@
 {
 	"ImportPath": "github.com/getgauge/gauge",
 	"GoVersion": "go1.9",
-	"GodepVersion": "v79",
+	"GodepVersion": "v80",
 	"Packages": [
 		"./..."
 	],
@@ -30,7 +30,7 @@
 		},
 		{
 			"ImportPath": "github.com/getgauge/common",
-			"Rev": "70fd84f488c11940722e164798b7480e5ce934d1"
+			"Rev": "29b7a2fa87350242c4bc2ef1de5b51604bc2645a"
 		},
 		{
 			"ImportPath": "github.com/golang/protobuf/proto",
@@ -38,6 +38,7 @@
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Comment": "v1.0",
 			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
 		},
 		{
@@ -50,7 +51,7 @@
 		},
 		{
 			"ImportPath": "github.com/natefinch/lumberjack",
-			"Comment": "v1.0-23-gdd45e6a",
+			"Comment": "v2.0",
 			"Rev": "dd45e6a67c53f673bb49ca8a001fd3a63ceb640e"
 		},
 		{
@@ -91,6 +92,7 @@
 		},
 		{
 			"ImportPath": "github.com/spf13/pflag",
+			"Comment": "v1.0.0",
 			"Rev": "e57e3eeb33f795204c1ca35f56c44f83227c6e66"
 		},
 		{
@@ -104,6 +106,16 @@
 		{
 			"ImportPath": "gopkg.in/yaml.v2",
 			"Rev": "25c4ec802a7d637f88d584ab26798e94ad14c13b"
+		},
+		{
+			"ImportPath": "github.com/cpuguy83/go-md2man/vendor/github.com/russross/blackfriday",
+			"Comment": "v1.0.6-6-g23709d0",
+			"Rev": "23709d0847197db6021a51fdb193e66e9222d4e7"
+		},
+		{
+			"ImportPath": "github.com/cpuguy83/go-md2man/vendor/github.com/shurcooL/sanitized_anchor_name",
+			"Comment": "v1.0.6-6-g23709d0",
+			"Rev": "23709d0847197db6021a51fdb193e66e9222d4e7"
 		}
 	]
 }

@@ -51,7 +51,7 @@ func (c *verboseColoredConsole) SpecStart(spec *gauge.Specification, res result.
 		return
 	}
 	msg := formatSpec(spec.Heading.Value)
-	logger.GaugeLog.Info(msg)
+	logger.Info(false, msg)
 	c.displayMessage(msg+newline, ct.Cyan)
 	c.writer.Reset()
 }
@@ -72,7 +72,7 @@ func (c *verboseColoredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_
 	}
 	c.indentation += scenarioIndentation
 	msg := formatScenario(scenario.Heading.Value)
-	logger.GaugeLog.Info(msg)
+	logger.Info(false, msg)
 
 	indentedText := indent(msg+"\t", c.indentation)
 	c.displayMessage(indentedText+newline, ct.Yellow)
@@ -95,7 +95,7 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 	c.writer.Reset()
 
 	c.indentation += stepIndentation
-	logger.GaugeLog.Debug(stepText)
+	logger.Debug(false, stepText)
 	c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
 	c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 }
@@ -117,13 +117,13 @@ func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, exec
 	c.displayMessage(c.errorMessagesBuffer.String(), ct.Red)
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
-		logger.GaugeLog.Error(stepText)
+		logger.Error(false, stepText)
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
-		logger.GaugeLog.Error(errMsg)
+		logger.Error(false, errMsg)
 		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo, step.InConcept())
-		logger.GaugeLog.Error(specInfo)
+		logger.Error(false, specInfo)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
-		logger.GaugeLog.Error(stacktrace)
+		logger.Error(false, stacktrace)
 
 		msg := formatErrorFragment(stepText, c.indentation) + formatErrorFragment(specInfo, c.indentation) + formatErrorFragment(errMsg, c.indentation) + formatErrorFragment(stacktrace, c.indentation)
 
@@ -137,7 +137,7 @@ func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, exec
 
 func (c *verboseColoredConsole) ConceptStart(conceptHeading string) {
 	c.indentation += stepIndentation
-	logger.GaugeLog.Debug(conceptHeading)
+	logger.Debug(false, conceptHeading)
 	c.displayMessage(indent(strings.TrimSpace(conceptHeading), c.indentation)+newline, ct.Magenta)
 	c.writer.Reset()
 }
@@ -151,20 +151,20 @@ func (c *verboseColoredConsole) SuiteEnd(res result.Result) {
 	printHookFailureVCC(c, res, res.GetPreHook)
 	printHookFailureVCC(c, res, res.GetPostHook)
 	for _, e := range suiteRes.UnhandledErrors {
-		logger.GaugeLog.Error(e.Error())
+		logger.Error(false, e.Error())
 		c.displayMessage(indent(e.Error(), c.indentation+errorIndentation)+newline, ct.Red)
 	}
 }
 
 func (c *verboseColoredConsole) DataTable(table string) {
-	logger.GaugeLog.Debug(table)
+	logger.Debug(false, table)
 	c.displayMessage(table, ct.Yellow)
 	c.writer.Reset()
 }
 
 func (c *verboseColoredConsole) Errorf(text string, args ...interface{}) {
 	msg := fmt.Sprintf(text, args...)
-	logger.GaugeLog.Error(msg)
+	logger.Error(false, msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline
 	c.displayMessage(msg, ct.Red)
 	c.errorMessagesBuffer.WriteString(msg)
@@ -195,9 +195,9 @@ func (c *verboseColoredConsole) resetBuffers() {
 func printHookFailureVCC(c *verboseColoredConsole, res result.Result, hookFailure func() []*gauge_messages.ProtoHookFailure) bool {
 	if hookFailed(hookFailure) {
 		errMsg := prepErrorMessage(hookFailure()[0].GetErrorMessage())
-		logger.GaugeLog.Error(errMsg)
+		logger.Error(false, errMsg)
 		stacktrace := prepStacktrace(hookFailure()[0].GetStackTrace())
-		logger.GaugeLog.Error(stacktrace)
+		logger.Error(false, stacktrace)
 		c.displayMessage(formatErrorFragment(errMsg, c.indentation)+formatErrorFragment(stacktrace, c.indentation), ct.Red)
 		return false
 	}

@@ -64,6 +64,15 @@ func (spec *Specification) Kind() TokenKind {
 	return SpecKind
 }
 
+// Steps gives all the steps present in Specification
+func (spec *Specification) Steps() []*Step {
+	steps := spec.Contexts
+	for _, scen := range spec.Scenarios {
+		steps = append(steps, scen.Steps...)
+	}
+	return append(steps, spec.TearDownSteps...)
+}
+
 func (spec *Specification) ProcessConceptStepsFrom(conceptDictionary *ConceptDictionary) error {
 	for _, step := range spec.Contexts {
 		if err := spec.processConceptStep(step, conceptDictionary); err != nil {

@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
@@ -53,6 +54,7 @@ var (
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
+			initLogger(cmd.Name())
 			setGlobalFlags()
 			initPackageFlags()
 		},
@@ -62,6 +64,16 @@ var (
 	machineReadable bool
 	gaugeVersion    bool
 )
+
+func initLogger(n string) {
+	if lsp {
+		logger.Initialize(logLevel, logger.LSP)
+	} else if n == "daemon" {
+		logger.Initialize(logLevel, logger.API)
+	} else {
+		logger.Initialize(logLevel, logger.CLI)
+	}
+}
 
 func init() {
 	GaugeCmd.SetUsageTemplate(`Usage:{{if .Runnable}}
@@ -86,7 +98,7 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
   {{rpad .CommandPath .CommandPathPadding}} {{.Short}}{{end}}{{end}}{{end}}{{if .HasAvailableSubCommands}}
 
 Use "{{.CommandPath}} [command] --help" for more information about a command.
-Complete manual is available at https://manpage.getgauge.io/.{{end}}
+Complete manual is available at https://manpage.gauge.org/.{{end}}
 `)
 	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical")
 	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory")
@@ -116,13 +128,8 @@ func getSpecsDir(args []string) []string {
 }
 
 func setGlobalFlags() {
-	logger.Initialize(logLevel)
 	msg := fmt.Sprintf("Gauge Install ID: %s", config.UniqueID())
-	if !lsp {
-		logger.Debugf(msg)
-	} else {
-		logger.GaugeLog.Debugf(msg)
-	}
+	logger.Debugf(true, msg)
 	util.SetWorkingDir(dir)
 }
 
@@ -149,4 +156,14 @@ func initPackageFlags() {
 	if group != -1 {
 		execution.Strategy = execution.Eager
 	}
+}
+
+func exit(err error, additionalText string) {
+	if err != nil {
+		logger.Errorf(true, err.Error())
+	}
+	if additionalText != "" {
+		logger.Infof(true, additionalText)
+	}
+	os.Exit(0)
 }

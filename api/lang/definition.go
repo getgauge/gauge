@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -80,11 +79,9 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
 	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
 	if responseMessage == nil || !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
-		logger.APILog.Debugf("Step implementation not found for step : %s", step.Value)
 		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
 	}
 	return getLspLocationForStep(responseMessage.GetStepNameResponse().GetFileName(), responseMessage.GetStepNameResponse().GetSpan()), nil

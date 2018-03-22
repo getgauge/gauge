@@ -18,6 +18,7 @@
 package util
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,7 +47,7 @@ func add(value string) {
 	if !filepath.IsAbs(value) {
 		path, err := filepath.Abs(filepath.Join(config.ProjectRoot, value))
 		if err != nil {
-			logger.Errorf("Error getting absolute path. %v", err)
+			logger.Errorf(true, "Error getting absolute path. %v", err)
 			return
 		}
 		value = path
@@ -166,11 +167,11 @@ var GetSpecFiles = func(path string) []string {
 var GetConceptFiles = func() []string {
 	projRoot := config.ProjectRoot
 	if projRoot == "" {
-		logger.Fatalf("Failed to get project root.")
+		logger.Fatalf(true, "Failed to get project root.")
 	}
 	absPath, err := filepath.Abs(projRoot)
 	if err != nil {
-		logger.Fatalf("Error getting absolute path. %v", err)
+		logger.Fatalf(true, "Error getting absolute path. %v", err)
 	}
 	return FindConceptFilesIn(absPath)
 }
@@ -179,7 +180,7 @@ var GetConceptFiles = func() []string {
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		logger.Errorf("Failed to refactor '%s': %s\n", fileName, err.Error())
+		logger.Errorf(true, "Failed to refactor '%s': %s\n", fileName, err.Error())
 	}
 }
 
@@ -199,11 +200,26 @@ func GetPathToFile(path string) string {
 func Remove(dir string) {
 	err := common.Remove(dir)
 	if err != nil {
-		logger.Warningf("Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+		logger.Warningf(true, "Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
 	}
 }
 
 // RemoveTempDir removes the temp dir
 func RemoveTempDir() {
 	Remove(common.GetTempDir())
+}
+
+// GetLinesFromText gets lines of a text in an array
+func GetLinesFromText(text string) []string {
+	text = strings.Replace(text, "\r\n", "\n", -1)
+	return strings.Split(text, "\n")
+}
+
+// GetLineCount give no of lines in given text
+func GetLineCount(text string) int {
+	return len(GetLinesFromText(text))
+}
+
+func OpenFile(fileName string) (io.Writer, error) {
+	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0600)
 }

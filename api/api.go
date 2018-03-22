@@ -19,11 +19,10 @@ package api
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strconv"
 	"time"
-
-	"io"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api/infoGatherer"
@@ -31,24 +30,23 @@ import (
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 )
 
 // StartAPI calls StartAPIService and returns the channels
-func StartAPI(debug bool) *runner.StartChannels {
+func StartAPI(debug bool, outputStreamWriter io.Writer) *runner.StartChannels {
 	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
-	go startAPIService(0, startChan, sig, debug)
+	go startAPIService(0, startChan, sig, debug, outputStreamWriter)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
+func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool, outputStreamWriter io.Writer) {
 	startAPIServiceWithoutRunner(port, startChannels, sig)
 
-	runner, err := ConnectToRunner(startChannels.KillChan, debug, reporter.Current())
+	runner, err := ConnectToRunner(startChannels.KillChan, debug, outputStreamWriter)
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
@@ -94,15 +92,15 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 	go startAPIServiceWithoutRunner(port, startChan, sig)
 	go checkParentIsAlive(startChan)
 
-	logger.Infof("Gauge daemon initialized and listening on port: %d", port)
+	logger.Infof(true, "Gauge daemon initialized and listening on port: %d", port)
 
 	for {
 		select {
 		case runner := <-startChan.RunnerChan:
-			logger.Infof("Got a kill message. Killing runner.")
+			logger.Infof(true, "Got a kill message. Killing runner.")
 			runner.Kill()
 		case err := <-startChan.ErrorChan:
-			logger.Fatalf("Killing Gauge daemon. %v", err.Error())
+			logger.Fatalf(true, "Killing Gauge daemon. %v", err.Error())
 		}
 	}
 }
@@ -125,13 +123,13 @@ func RunInBackground(apiPort string, specDirs []string) {
 	if apiPort != "" {
 		port, err = strconv.Atoi(apiPort)
 		if err != nil {
-			logger.Fatalf(fmt.Sprintf("Invalid port number: %s", apiPort))
+			logger.Fatalf(true, fmt.Sprintf("Invalid port number: %s", apiPort))
 		}
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			logger.Fatalf(fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
+			logger.Fatalf(true, fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
 		}
 	}
 	runAPIServiceIndefinitely(port, specDirs)
@@ -143,13 +141,13 @@ func Start(specsDir []string) *conn.GaugeConnectionHandler {
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, apiHandler)
 	if err != nil {
-		logger.Fatalf(err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	errChan := make(chan error)
 	go gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), errChan)
 	go func() {
 		e := <-errChan
-		logger.Fatalf(e.Error())
+		logger.Fatalf(true, e.Error())
 	}()
 	return gaugeConnectionHandler
 }

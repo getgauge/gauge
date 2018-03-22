@@ -168,8 +168,11 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 		}, nil
 	}
 
-	got := allImplementedStepValues()
+	got, err := allImplementedStepValues()
 
+	if err != nil {
+		t.Errorf("expected getAllImplementedStepValues() to not have errors, got %v", err)
+	}
 	for _, sv := range stepValues {
 		if !contains(got, sv) {
 			t.Errorf("expected getAllImplementedStepValues() to contain %v.\ngetAllImplementedStepValues() == %v", sv, got)
@@ -183,8 +186,11 @@ func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *
 		return nil, fmt.Errorf("can't get steps")
 	}
 
-	got := allImplementedStepValues()
+	got, err := allImplementedStepValues()
 
+	if err == nil {
+		t.Error("expected getAllImplementedStepValues() to have errors, got nil")
+	}
 	if len(got) > 0 {
 		t.Errorf("expected 0 values. got %v", len(got))
 	}

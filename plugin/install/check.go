@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -28,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
+	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 )
 
@@ -53,10 +55,10 @@ func PrintUpdateInfoWithDetails() {
 	updates := checkUpdates()
 	if len(updates) > 0 {
 		for _, update := range updates {
-			logger.Infof(fmt.Sprintf("%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message))
+			logger.Infof(true, fmt.Sprintf("%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message))
 		}
 	} else {
-		logger.Infof("No Updates available.")
+		logger.Infof(true, "No Updates available.")
 	}
 }
 
@@ -64,9 +66,16 @@ func checkUpdates() []UpdateInfo {
 	return append(checkGaugeUpdate(), checkPluginUpdates()...)
 }
 
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
+	}
+}
+
 func printUpdateInfo(print chan bool, wg *sync.WaitGroup) {
 	message := make(chan string)
 	go func() {
+		defer recoverPanic()
 		updates := checkUpdates()
 		if len(updates) > 0 {
 			message <- "Updates are available. Run `gauge update -c` for more info."
@@ -79,7 +88,7 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 	select {
 	case <-printChan:
 		if message != "" {
-			logger.Infof(message)
+			logger.Infof(true, message)
 		}
 		wg.Done()
 	case message = <-messageChan:
@@ -103,7 +112,7 @@ func checkGaugeUpdate() []UpdateInfo {
 	}
 	isLatestVersion := version.CurrentGaugeVersion.IsLesserThan(latestVersion)
 	if isLatestVersion {
-		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from http://getgauge.io/get-started/"})
+		updateInfos = append(updateInfos, UpdateInfo{"Gauge", latestVersion.String(), "Download the installer from https://gauge.org/get-started/"})
 	}
 	return updateInfos
 }
@@ -116,11 +125,11 @@ type UpdateInfo struct {
 
 func checkPluginUpdates() []UpdateInfo {
 	var pluginsToUpdate []UpdateInfo
-	plugins, err := plugin.GetAllInstalledPluginsWithVersion()
+	plugins, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		return pluginsToUpdate
 	}
-	logger.Debugf("Checking updates...")
+	logger.Debugf(true, "Checking updates...")
 	for _, plugin := range plugins {
 		desc, result := getInstallDescription(plugin.Name, true)
 		if result.Error != nil {

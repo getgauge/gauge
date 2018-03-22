@@ -34,11 +34,11 @@ var (
 		Example: "  gauge validate specs/",
 		Run: func(cmd *cobra.Command, args []string) {
 			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(e.Error())
+				logger.Fatalf(true, e.Error())
 			}
 			validation.HideSuggestion = hideSuggestion
 			if err := config.SetProjectRoot(args); err != nil {
-				logger.Fatalf(err.Error())
+				exit(err, cmd.UsageString())
 			}
 			track.Validation(hideSuggestion)
 			validation.Validate(args)

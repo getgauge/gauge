@@ -46,12 +46,8 @@ const (
 	gauge             = "gauge"
 	deploy            = "deploy"
 	CC                = "CC"
-	pkg               = ".pkg"
-	packagesBuild     = "packagesbuild"
 	nightlyDatelayout = "2006-01-02"
 )
-
-var darwinPackageProject = filepath.Join("build", "install", "macosx", "gauge-pkg.pkgproj")
 
 var deployDir = filepath.Join(deploy, gauge)
 
@@ -70,17 +66,6 @@ func runCommand(command string, arg ...string) (string, error) {
 	cmd := exec.Command(command, arg...)
 	bytes, err := cmd.Output()
 	return strings.TrimSpace(fmt.Sprintf("%s", bytes)), err
-}
-
-func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
-	if getGOOS() == windows {
-		if certFilePath != "" && certFilePwd != "" {
-			log.Printf("Signing: %s", exeFilePath)
-			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
-		} else {
-			log.Printf("No certificate file passed. Executable won't be signed.")
-		}
-	}
 }
 
 var buildMetadata string
@@ -159,8 +144,6 @@ var targetLinux = flag.Bool("target-linux", false, "Compiles for linux only, bot
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
-var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
-var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -269,27 +252,23 @@ func createWindowsDistro() {
 func createWindowsInstaller() {
 	pName := packageName()
 	distroDir, err := filepath.Abs(filepath.Join(deploy, pName))
-	installerFileName := filepath.Join(filepath.Dir(distroDir), pName)
 	if err != nil {
 		panic(err)
 	}
 	copyGaugeBinaries(distroDir)
-	runProcess("makensis.exe",
-		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
-		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
-		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
-		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
 	os.RemoveAll(distroDir)
-	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
 }
 
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeBinaries(distroDir)
+	if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
+		log.Printf("No singning identity found . Executable won't be signed.")
+	} else {
+		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
+	}
 	createZipFromUtil(deploy, gauge, packageName())
-	runProcess(packagesBuild, "-v", darwinPackageProject)
-	runProcess("mv", filepath.Join(deploy, gauge+pkg), filepath.Join(deploy, fmt.Sprintf("%s-%s-%s.%s%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix(), pkg)))
 	os.RemoveAll(distroDir)
 }
 

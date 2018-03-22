@@ -140,7 +140,7 @@ func Validate(args []string) {
 		os.Exit(1)
 	}
 	if res.SpecCollection.Size() < 1 {
-		logger.Infof("No specifications found in %s.", strings.Join(args, ", "))
+		logger.Infof(true, "No specifications found in %s.", strings.Join(args, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
 			os.Exit(0)
@@ -151,17 +151,17 @@ func Validate(args []string) {
 	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
-	logger.Infof("No error found.")
+	logger.Infof(true, "No error found.")
 }
 
 //TODO : duplicate in execute.go. Need to fix runner init.
 func startAPI(debug bool) runner.Runner {
-	sc := api.StartAPI(debug)
+	sc := api.StartAPI(debug, reporter.Current())
 	select {
 	case runner := <-sc.RunnerChan:
 		return runner
 	case err := <-sc.ErrorChan:
-		logger.Fatalf("Failed to start gauge API: %s", err.Error())
+		logger.Fatalf(true, "Failed to start gauge API: %s", err.Error())
 	}
 	return nil
 }
@@ -183,12 +183,12 @@ func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r r
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Errorf(err.Error())
+		logger.Errorf(true, err.Error())
 		return NewValidationResult(nil, nil, nil, false, err)
 	}
 	conceptDict, res, err := parser.ParseConcepts()
 	if err != nil {
-		logger.Fatalf("Unable to validate : %s", err.Error())
+		logger.Fatalf(true, "Unable to validate : %s", err.Error())
 	}
 	errMap := gauge.NewBuildErrors()
 	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
@@ -263,7 +263,7 @@ func fillSpecErrors(spec *gauge.Specification, errMap *gauge.BuildErrors, steps 
 func printValidationFailures(validationErrors validationErrors) {
 	for _, errs := range validationErrors {
 		for _, e := range errs {
-			logger.Errorf("[ValidationError] %s", e.Error())
+			logger.Errorf(true, "[ValidationError] %s", e.Error())
 		}
 	}
 }
@@ -299,13 +299,16 @@ func (v *SpecValidator) Validate() []error {
 // Validates a step. If validation result from runner is not valid then it creates a new validation error.
 // If the error type is StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND then gives suggestion with step implementation stub.
 func (v *SpecValidator) Step(s *gauge.Step) {
+	val, ok := v.stepValidationCache[s.Value]
 	if s.IsConcept {
-		for _, c := range s.ConceptSteps {
-			v.Step(c)
+		if !ok {
+			for _, c := range s.ConceptSteps {
+				v.Step(c)
+			}
+			v.stepValidationCache[s.Value] = nil
 		}
 		return
 	}
-	val, ok := v.stepValidationCache[s.Value]
 	if !ok {
 		err := v.validateStep(s)
 		if err != nil {

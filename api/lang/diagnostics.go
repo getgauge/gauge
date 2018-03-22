@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
@@ -42,6 +41,7 @@ var diagnosticsLock sync.Mutex
 var isInQueue = false
 
 func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
+	defer recoverPanic(nil)
 	if !isInQueue {
 		isInQueue = true
 
@@ -52,7 +52,7 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 
 		diagnosticsMap, err := getDiagnostics()
 		if err != nil {
-			logger.Errorf("Unable to publish diagnostics, error : %s", err.Error())
+			logError(nil, "Unable to publish diagnostics, error : %s", err.Error())
 			return
 		}
 		for uri, diagnostics := range diagnosticsMap {
@@ -60,6 +60,7 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 		}
 	}
 }
+
 func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
 	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
@@ -89,19 +90,23 @@ func createValidationDiagnostics(errors []validation.StepValidationError, diagno
 	return
 }
 
-func validateSpec(spec *gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
+func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
 	if lRunner.runner == nil {
 		return
 	}
-	v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, map[string]error{})
-	for _, e := range v.Validate() {
-		vErrors = append(vErrors, e.(validation.StepValidationError))
+	specValidationCache := make(map[string]error)
+	for _, spec := range specs {
+		v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, specValidationCache)
+		for _, e := range v.Validate() {
+			vErrors = append(vErrors, e.(validation.StepValidationError))
+		}
 	}
 	return
 }
 
 func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
-	specFiles := util.GetSpecFiles(env.GetSpecDir())
+  specFiles := util.GetSpecFiles(env.GetSpecDir())
+	specs := make([]*gauge.Specification, 0)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
 		if _, ok := diagnostics[uri]; !ok {
@@ -117,9 +122,10 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[l
 		}
 		createDiagnostics(res, diagnostics)
 		if res.Ok {
-			createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
+			specs = append(specs, spec)
 		}
 	}
+	createValidationDiagnostics(validateSpecifications(specs, conceptDictionary), diagnostics)
 	return nil
 }
 
@@ -133,7 +139,7 @@ func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.
 		}
 		content, err := getContentFromFileOrDisk(conceptFile)
 		if err != nil {
-			logger.Errorf("Unable to read file %s", err)
+			return nil, fmt.Errorf("Unable to read file %s", err)
 		}
 		cpts, pRes := new(parser.ConceptParser).Parse(content, conceptFile)
 		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary)

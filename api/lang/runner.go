@@ -18,8 +18,6 @@
 package lang
 
 import (
-	"os"
-
 	"fmt"
 
 	"github.com/getgauge/gauge/api"
@@ -52,15 +50,13 @@ func startRunner() error {
 }
 
 func connectToRunner(killChan chan bool) (runner.Runner, error) {
-	logger.GaugeLog.Infof("Starting language runner")
-	outfile, err := os.OpenFile(logger.GetLogFile(logger.GaugeLogFileName), os.O_APPEND|os.O_WRONLY, 0600)
+	logInfo(nil, "Starting language runner")
+	outFile, err := util.OpenFile(logger.ActiveLogFile)
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
-	runner, err := api.ConnectToRunner(killChan, false, outfile)
+	runner, err := api.ConnectToRunner(killChan, false, outFile)
 	if err != nil {
-		logger.APILog.Infof("%s", err.Error())
 		return nil, err
 	}
 	return runner, nil
@@ -68,16 +64,15 @@ func connectToRunner(killChan chan bool) (runner.Runner, error) {
 
 func cacheFileOnRunner(uri lsp.DocumentURI, text string) error {
 	cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{Content: text, FilePath: string(util.ConvertURItoFilePath(uri)), IsClosed: false}}
-	err := sendMessageToRunner(cacheFileRequest)
-	return err
+	return sendMessageToRunner(cacheFileRequest)
 }
 
 func sendMessageToRunner(cacheFileRequest *gm.Message) error {
 	err := conn.WriteGaugeMessage(cacheFileRequest, lRunner.runner.Connection())
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
+		return fmt.Errorf("Error while connecting to runner : %v", err)
 	}
-	return err
+	return nil
 }
 
 var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
@@ -91,8 +86,7 @@ func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, er
 	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: string(util.ConvertURItoFilePath(uri))}}
 	response, err := GetResponseFromRunner(stepPositionsRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
 	}
 	stepPositionsResponse := response.GetStepPositionsResponse()
 	if stepPositionsResponse.GetError() != "" {
@@ -105,29 +99,26 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	implementationFileListRequest := &gm.Message{MessageType: gm.Message_ImplementationFileListRequest, ImplementationFileListRequest: &gm.ImplementationFileListRequest{}}
 	response, err := GetResponseFromRunner(implementationFileListRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
 	implementationFileListResponse := response.GetImplementationFileListResponse()
 	return implementationFileListResponse, nil
 }
 
-func putStubImplementation(filePath string, codes []string) (*gm.FileChanges, error) {
+func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error) {
 	stubImplementationCodeRequest := &gm.Message{MessageType: gm.Message_StubImplementationCodeRequest, StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Codes: codes}}
 	response, err := GetResponseFromRunner(stubImplementationCodeRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
-	return response.GetFileChanges(), nil
+	return response.GetFileDiff(), nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
 	response, err := GetResponseFromRunner(getAllStepsRequest)
 	if err != nil {
-		logger.APILog.Infof("Error while connecting to runner : %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
 	return response.GetStepNamesResponse(), nil
 }

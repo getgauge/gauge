@@ -38,6 +38,7 @@
 package parser
 
 import (
+	"runtime/debug"
 	"strings"
 
 	"regexp"
@@ -98,7 +99,14 @@ func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
 	return conceptsDictionary, conceptParseResult, nil
 }
 
+func recoverPanic() {
+	if r := recover(); r != nil {
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
+	}
+}
+
 func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
+	defer recoverPanic()
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
 		specChannel <- nil
@@ -107,7 +115,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, spec
 	}
 	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	if err != nil {
-		logger.Fatalf(err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	specChannel <- spec
 	parseResultChan <- parseResult
@@ -245,13 +253,13 @@ func HandleParseResult(results ...*ParseResult) bool {
 	for _, result := range results {
 		if !result.Ok {
 			for _, err := range result.Errors() {
-				logger.Errorf(err)
+				logger.Errorf(true, err)
 			}
 			failed = true
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Warningf("[ParseWarning] %s", warning)
+				logger.Warningf(true, "[ParseWarning] %s", warning)
 			}
 		}
 	}
