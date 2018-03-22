@@ -36,6 +36,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/skel"
 
 	"fmt"
@@ -45,8 +46,6 @@ import (
 	"os"
 
 	"sync"
-
-	"runtime/debug"
 
 	"encoding/json"
 	"io/ioutil"
@@ -61,7 +60,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
@@ -101,7 +99,7 @@ type executionInfo struct {
 func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	return &executionInfo{
 		manifest:        m,
@@ -120,7 +118,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 func ExecuteSpecs(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
-		logger.Fatalf(err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}
@@ -133,7 +131,7 @@ func ExecuteSpecs(specDirs []string) int {
 		return 1
 	}
 	if res.SpecCollection.Size() < 1 {
-		logger.Infof("No specifications found in %s.", strings.Join(specDirs, ", "))
+		logger.Infof(true, "No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
 			return 0
@@ -148,17 +146,9 @@ func ExecuteSpecs(specDirs []string) int {
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()
-	defer recoverPanic()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
 	return printExecutionStatus(e.run(), res.ParseOk)
-}
-
-func recoverPanic() {
-	if r := recover(); r != nil {
-		logger.Infof("%v\n%s", r, string(debug.Stack()))
-		os.Exit(1)
-	}
 }
 
 func newExecution(executionInfo *executionInfo) suiteExecutor {
@@ -199,27 +189,27 @@ func writeExecutionStatus(executedSpecs, passedSpecs, failedSpecs, skippedSpecs,
 	executionStatus.SceSkipped = skippedScenarios
 	contents, err := executionStatus.getJSON()
 	if err != nil {
-		logger.Fatalf("Unable to parse execution status information : %v", err.Error())
+		logger.Fatalf(true, "Unable to parse execution status information : %v", err.Error())
 	}
 	executionStatusFile := filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf("Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	err = ioutil.WriteFile(executionStatusFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf("Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
+		logger.Fatalf(true, "Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
 	}
 }
 
 func ReadExecutionStatus() (interface{}, error) {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile))
 	if err != nil {
-		logger.Fatalf("Failed to read execution status information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Failed to read execution status information. Reason: %s", err.Error())
 	}
 	meta := &executionStatus{}
 	if err = json.Unmarshal([]byte(contents), meta); err != nil {
-		logger.Fatalf("Invalid execution status information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Invalid execution status information. Reason: %s", err.Error())
 		return meta, err
 	}
 	return meta, nil
@@ -253,9 +243,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 		nPassedScenarios = 0
 	}
 
-	logger.Infof("Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Infof("Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Infof("\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 
 	writeExecutionStatus(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 

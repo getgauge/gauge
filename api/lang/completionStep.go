@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
@@ -32,9 +31,7 @@ func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (
 	list := completionList{IsIncomplete: false, Items: make([]completionItem, 0)}
 	editRange := getStepEditRange(line, params.Position)
 	prefix := getPrefix(pLine)
-	var givenArgs []gauge.StepArg
-	var err error
-	givenArgs, err = getStepArgs(strings.TrimSpace(pLine))
+	givenArgs, err := getStepArgs(strings.TrimSpace(pLine))
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +40,14 @@ func stepCompletion(line, pLine string, params lsp.TextDocumentPositionParams) (
 		cText := prefix + addPlaceHolders(c.StepValue.StepValue, c.StepValue.Parameters)
 		list.Items = append(list.Items, newStepCompletionItem(c.StepValue.ParameterizedStepValue, cText, concept, fText, editRange))
 	}
-	allSteps := append(allUsedStepValues(), allImplementedStepValues()...)
+	s, err := allImplementedStepValues()
+	allSteps := append(allUsedStepValues(), s...)
 	for _, sv := range removeDuplicates(allSteps) {
 		fText := prefix + getStepFilterText(sv.StepValue, sv.Args, givenArgs)
 		cText := prefix + addPlaceHolders(sv.StepValue, sv.Args)
 		list.Items = append(list.Items, newStepCompletionItem(sv.ParameterizedStepValue, cText, step, fText, editRange))
 	}
-	return list, nil
+	return list, err
 }
 
 func removeDuplicates(steps []gauge.StepValue) []gauge.StepValue {
@@ -71,18 +69,17 @@ func allUsedStepValues() []gauge.StepValue {
 	}
 	return stepValues
 }
-func allImplementedStepValues() []gauge.StepValue {
+func allImplementedStepValues() ([]gauge.StepValue, error) {
 	var stepValues []gauge.StepValue
 	res, err := getAllStepsResponse()
 	if err != nil {
-		logger.APILog.Debugf("failed to get steps from runner. %v", err.Error())
-		return stepValues
+		return stepValues, fmt.Errorf("failed to get steps from runner. %s", err.Error())
 	}
 	for _, stepText := range res.GetSteps() {
 		stepValue, _ := parser.ExtractStepValueAndParams(stepText, false)
 		stepValues = append(stepValues, *stepValue)
 	}
-	return stepValues
+	return stepValues, nil
 }
 
 func getStepArgs(line string) ([]gauge.StepArg, error) {

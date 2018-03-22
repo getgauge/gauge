@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2018 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -22,6 +22,7 @@ import (
 
 	"sync"
 
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
@@ -33,8 +34,7 @@ type files struct {
 func (file *files) add(uri lsp.DocumentURI, text string) {
 	file.Lock()
 	defer file.Unlock()
-	text = strings.Replace(text, "\r\n", "\n", -1)
-	file.cache[uri] = strings.Split(text, "\n")
+	file.cache[uri] = util.GetLinesFromText(text)
 }
 
 func (file *files) remove(uri lsp.DocumentURI) {
@@ -53,6 +53,12 @@ func (file *files) content(uri lsp.DocumentURI) []string {
 	file.Lock()
 	defer file.Unlock()
 	return file.cache[uri]
+}
+
+func (file *files) contentRange(uri lsp.DocumentURI, start, end int) []string {
+	file.Lock()
+	defer file.Unlock()
+	return file.cache[uri][start-1 : end]
 }
 
 func (file *files) exists(uri lsp.DocumentURI) bool {
@@ -90,4 +96,8 @@ func getLineCount(uri lsp.DocumentURI) int {
 
 func isOpen(uri lsp.DocumentURI) bool {
 	return openFilesCache.exists(uri)
+}
+
+func getContentRange(uri lsp.DocumentURI, start, end int) []string {
+	return openFilesCache.contentRange(uri, start, end)
 }

@@ -68,7 +68,13 @@ func completion(req *jsonrpc2.Request) (interface{}, error) {
 	if inParameterContext(line, params.Position.Character) {
 		return paramCompletion(line, pLine, params)
 	}
-	return stepCompletion(line, pLine, params)
+	v, err := stepCompletion(line, pLine, params)
+	if err != nil && v != nil {
+		// there were errors, but gauge will return completions on a best effort promise.
+		logError(req, err.Error())
+		return v, nil
+	}
+	return v, err
 }
 
 func isInTagsContext(line int, uri lsp.DocumentURI) bool {

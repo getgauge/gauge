@@ -21,10 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -42,11 +39,6 @@ type specInfo struct {
 	ExecutionIdentifier string `json:"executionIdentifier"`
 }
 
-type stubImpl struct {
-	ImplementationFilePath string   `json:"implementationFilePath"`
-	Codes                  []string `json:"codes"`
-}
-
 func specs() (interface{}, error) {
 	specDetails := provider.GetAvailableSpecDetails([]string{})
 	specs := make([]specInfo, 0)
@@ -56,65 +48,11 @@ func specs() (interface{}, error) {
 	return specs, nil
 }
 
-func getImplFiles() (interface{}, error) {
-	if lRunner.runner == nil {
-		return nil, nil
-	}
-	implementationFileListResponse, err := getImplementationFileList()
-	if err != nil {
-		return nil, err
-	}
-	return implementationFileListResponse.ImplementationFilePaths, nil
-}
-
-func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
-	var stubImplParams stubImpl
-	if err := json.Unmarshal(*req.Params, &stubImplParams); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
-	}
-	if lRunner.runner == nil {
-		return nil, nil
-	}
-	fileChanges, err := putStubImplementation(stubImplParams.ImplementationFilePath, stubImplParams.Codes)
-	if err != nil {
-		return nil, err
-	}
-
-	return getWorkspaceEditForStubImpl(fileChanges, stubImplParams.ImplementationFilePath), nil
-}
-
-func getWorkspaceEditForStubImpl(fileChanges *gm.FileChanges, filePath string) lsp.WorkspaceEdit {
-	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(lsp.DocumentURI(fileChanges.FileName))
-	fileContent := fileChanges.FileContent
-
-	var lastLineNo int
-	contents, err := common.ReadFileContents(filePath)
-	if err != nil {
-		lastLineNo = 0
-	} else {
-		lastLineNo = len(contents)
-	}
-
-	textEdit := lsp.TextEdit{
-		NewText: fileContent,
-		Range: lsp.Range{
-			Start: lsp.Position{Line: 0, Character: 0},
-			End:   lsp.Position{Line: lastLineNo, Character: 0},
-		},
-	}
-	result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
-	return result
-}
-
 func scenarios(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.TextDocumentPositionParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		logger.APILog.Debugf("failed to parse request %s", err.Error())
-		return nil, err
+		return nil, fmt.Errorf("failed to parse request %s", err)
 	}
 	file := util.ConvertURItoFilePath(params.TextDocument.URI)
 	content := ""

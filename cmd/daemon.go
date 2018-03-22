@@ -28,6 +28,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	isDaemon = "IS_DAEMON"
+)
+
 var (
 	daemonCmd = &cobra.Command{
 		Use:     "daemon [flags] <port> [args]",
@@ -36,10 +40,11 @@ var (
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
 			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(e.Error())
+				logger.Fatalf(true, e.Error())
 			}
+			os.Setenv(isDaemon, "true")
 			if err := config.SetProjectRoot(args); err != nil {
-				logger.Fatalf(err.Error())
+				exit(err, cmd.UsageString())
 			}
 			if lsp {
 				track.Lsp()

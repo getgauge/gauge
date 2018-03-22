@@ -35,4 +35,4 @@ go run build/make.go --all-platforms $1
 
 chmod +x bin/**/* && rm -rf deploy
 
-security unlock-keychain -p $KEYCHAIN_PASSWORD login.keychain && security import /vagrant/Gauge_Osx_Cert.p12 -P "$CERT_PASSWORD" -A -k login.keychain && go run build/make.go --distro --all-platforms --skip-windows $1
+go run build/make.go --distro --all-platforms --skip-windows $1

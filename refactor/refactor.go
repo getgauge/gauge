@@ -216,7 +216,7 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specificati
 	select {
 	case runner = <-startChan.RunnerChan:
 	case err := <-startChan.ErrorChan:
-		logger.Debugf("Cannot perform refactoring: Unable to connect to runner." + err.Error())
+		logger.Debugf(true, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
 		return &refactoringResult{Success: false, Errors: make([]string, 0), Warnings: make([]string, 0)}
 	}
 	agent.runner = runner
@@ -343,7 +343,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 	refactorResponse := agent.sendRefactorRequest(testRunner, refactorRequest)
 	var runnerError error
 	if !refactorResponse.GetSuccess() {
-		logger.APILog.Errorf("Refactoring error response from runner: %v", refactorResponse.GetError())
+		logger.Errorf(false, "Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
 	fileChanges := make(map[string]string, 0)
@@ -449,15 +449,15 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 	if !refactoringResult.Success {
 		exitCode = 1
 		for _, err := range refactoringResult.Errors {
-			logger.Errorf("%s \n", err)
+			logger.Errorf(true, "%s \n", err)
 		}
 	}
 	for _, warning := range refactoringResult.Warnings {
-		logger.Warningf("%s \n", warning)
+		logger.Warningf(true, "%s \n", warning)
 	}
-	logger.Infof("%d specifications changed.\n", len(refactoringResult.specFilesChanged()))
-	logger.Infof("%d concepts changed.\n", len(refactoringResult.conceptFilesChanged()))
-	logger.Infof("%d files in code changed.\n", len(refactoringResult.RunnerFilesChanged))
+	logger.Infof(true, "%d specifications changed.\n", len(refactoringResult.specFilesChanged()))
+	logger.Infof(true, "%d concepts changed.\n", len(refactoringResult.conceptFilesChanged()))
+	logger.Infof(true, "%d files in code changed.\n", len(refactoringResult.RunnerFilesChanged))
 	os.Exit(exitCode)
 }
 
