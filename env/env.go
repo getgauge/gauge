@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	SpecsDir			= "gauge_specs_dir"
 	GaugeReportsDir     = "gauge_reports_dir"
 	LogsDirectory       = "logs_directory"
 	OverwriteReports    = "overwrite_reports"
@@ -41,6 +42,17 @@ const (
 var envVars map[string]string
 
 var currentEnv = "default"
+
+// GetSpecDir returns the specification directory.
+// It checks whether the environment variable for gauge_specs_dir is set.
+// It returns 'specs' otherwise
+func GetSpecDir() string {
+	var specFromProperties = os.Getenv(SpecsDir)
+	if specFromProperties != "" {
+		return specFromProperties
+	}
+	return "specs"
+}
 
 // LoadEnv first generates the map of the env vars that needs to be set.
 // It starts by populating the map with the env passed by the user in --env flag.
@@ -79,6 +91,7 @@ func LoadEnv(envName string) error {
 }
 
 func loadDefaultEnvVars() {
+	addEnvVar(SpecsDir, "specs")
 	addEnvVar(GaugeReportsDir, "reports")
 	addEnvVar(LogsDirectory, "logs")
 	addEnvVar(OverwriteReports, "true")

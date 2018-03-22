@@ -20,7 +20,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
@@ -32,6 +31,7 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
+	"github.com/getgauge/gauge/env"
 )
 
 var (
@@ -112,7 +112,7 @@ func getSpecsDir(args []string) []string {
 	if len(args) > 0 {
 		return args
 	}
-	return []string{common.SpecsDirectoryName}
+	return []string{env.GetSpecDir()}
 }
 
 func setGlobalFlags() {

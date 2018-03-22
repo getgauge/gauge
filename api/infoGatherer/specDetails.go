@@ -23,13 +23,13 @@ import (
 	"sync"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/env"
 )
 
 // SpecInfoGatherer contains the caches for specs, concepts, and steps
@@ -483,7 +483,8 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 // GetAvailableSpecs returns the list of all the specs in the gauge project
 func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail {
 	if len(specs) < 1 {
-		specs = []string{common.SpecsDirectoryName}
+		logger.Errorf("SO LETS LOOK %s", env.GetSpecDir())
+		specs = []string{env.GetSpecDir()}
 	}
 	specFiles := getSpecFiles(specs)
 	s.specsCache.mutex.RLock()

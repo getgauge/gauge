@@ -18,7 +18,6 @@
 package cmd
 
 import (
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
@@ -49,7 +48,7 @@ var (
 			}
 			track.Daemon()
 			port := ""
-			specs := []string{common.SpecsDirectoryName}
+			specs := []string{env.GetSpecDir()}
 			if len(args) > 0 {
 				port = args[0]
 				specs = getSpecsDir(args[1:])

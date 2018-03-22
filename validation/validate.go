@@ -33,7 +33,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
@@ -43,6 +42,7 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/env"
 )
 
 // TableRows is used to check for table rows range validation.
@@ -133,7 +133,7 @@ func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidat
 // Validate validates specs and if it has any errors, it exits.
 func Validate(args []string) {
 	if len(args) == 0 {
-		args = append(args, common.SpecsDirectoryName)
+		args = append(args, env.GetSpecDir())
 	}
 	res := ValidateSpecs(args, false)
 	if len(res.Errs) > 0 {
