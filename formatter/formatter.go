@@ -264,7 +264,7 @@ func getRepeatedChars(character string, repeatCount int) string {
 }
 
 func FormatSpecFilesIn(filesLocation string) {
-	specFiles := util.GetSpecFilesFrom(filesLocation)
+	specFiles := util.GetSpecFiles([]string{filesLocation})
 	parseResults := FormatSpecFiles(specFiles...)
 	if parser.HandleParseResult(parseResults...) {
 		os.Exit(1)

@@ -166,10 +166,6 @@ var GetSpecFiles = func(paths []string) []string {
 	return specFiles
 }
 
-var GetSpecFilesFrom = func(path string) [] string{
-	return GetSpecFiles([]string{path})
-}
-
 // GetConceptFiles returns the list of concept files present in the PROJECTROOT
 var GetConceptFiles = func() []string {
 	projRoot := config.ProjectRoot
