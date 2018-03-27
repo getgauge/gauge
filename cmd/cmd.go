@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
@@ -124,7 +123,7 @@ func getSpecsDir(args []string) []string {
 	if len(args) > 0 {
 		return args
 	}
-	return []string{common.SpecsDirectoryName}
+	return util.GetSpecDirs()
 }
 
 func setGlobalFlags() {
