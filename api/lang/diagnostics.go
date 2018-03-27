@@ -104,7 +104,7 @@ func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gau
 }
 
 func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
-	specFiles := util.GetSpecFiles(common.SpecsDirectoryName)
+  specFiles := util.GetSpecFiles(util.GetSpecDirs())
 	specs := make([]*gauge.Specification, 0)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))

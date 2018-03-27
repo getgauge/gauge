@@ -171,7 +171,7 @@ func parseSpecsAndConcepts(specDirs []string) (*refactoringResult, []*gauge.Spec
 	var specParseResults []*parser.ParseResult
 
 	for _, dir := range specDirs {
-		specFiles := util.GetSpecFiles(filepath.Join(config.ProjectRoot, dir))
+		specFiles := util.GetSpecFiles([]string{filepath.Join(config.ProjectRoot, dir)})
 		specSlice, specParseResultsSlice := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{}, gauge.NewBuildErrors())
 		specs = append(specs, specSlice...)
 		specParseResults = append(specParseResults, specParseResultsSlice...)

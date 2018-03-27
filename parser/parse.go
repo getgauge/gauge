@@ -152,7 +152,7 @@ func getAllSpecFiles(specDirs []string) (givenSpecs []string, specFiles []*specF
 		if isIndexedSpec(specSource) {
 			var specName string
 			specName, index := getIndexedSpecName(specSource)
-			files := util.GetSpecFiles(specName)
+			files := util.GetSpecFiles([]string{specName})
 			if len(files) < 1 {
 				continue
 			}
@@ -162,7 +162,7 @@ func getAllSpecFiles(specDirs []string) (givenSpecs []string, specFiles []*specF
 			}
 			givenSpecs = append(givenSpecs, files[0])
 		} else {
-			files := util.GetSpecFiles(specSource)
+			files := util.GetSpecFiles([]string{specSource})
 			for _, file := range files {
 				specificationFile, _ := addSpecFile(&specFiles, file)
 				specificationFile.indices = specificationFile.indices[0:0]
