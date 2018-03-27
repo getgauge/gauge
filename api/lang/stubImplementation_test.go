@@ -222,7 +222,7 @@ func TestGenerateConceptShouldReturnFileDiff(t *testing.T) {
 
 	var want lsp.WorkspaceEdit
 	want.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := filepath.Join(testData, "concept1.cpt")
+	uri := util.ConvertPathToURI(filepath.Join(testData, "concept1.cpt"))
 	textEdit := lsp.TextEdit{
 		NewText: "# foo bar\n* ",
 		Range: lsp.Range{
@@ -257,7 +257,7 @@ func TestGenerateConceptWithParam(t *testing.T) {
 
 	var want lsp.WorkspaceEdit
 	want.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := filepath.Join(testData, "concept1.cpt")
+	uri := util.ConvertPathToURI(filepath.Join(testData, "concept1.cpt"))
 	textEdit := lsp.TextEdit{
 		NewText: "# foo bar <some>\n* ",
 		Range: lsp.Range{
@@ -301,7 +301,9 @@ func TestGenerateConceptInExisitingFile(t *testing.T) {
 			End:   lsp.Position{Line: 2, Character: 0},
 		},
 	}
-	want.Changes[string(cptFile)] = append(want.Changes[string(cptFile)], textEdit)
+	uri := string(util.ConvertPathToURI(cptFile))
+
+	want.Changes[uri] = append(want.Changes[uri], textEdit)
 
 	if !reflect.DeepEqual(want, response) {
 		t.Errorf("want: `%v`,\n got: `%v`", want, response)
@@ -330,7 +332,7 @@ func TestGenerateConceptInNewFileWhenDefaultExisits(t *testing.T) {
 		t.Fatalf("Got error %s", err.Error())
 	}
 
-	uri := filepath.Join(testData, "concept2.cpt")
+	uri := util.ConvertPathToURI(filepath.Join(testData, "concept2.cpt"))
 
 	var want lsp.WorkspaceEdit
 	want.Changes = make(map[string][]lsp.TextEdit, 0)

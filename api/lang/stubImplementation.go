@@ -117,7 +117,8 @@ func generateConcept(req *jsonrpc2.Request) (interface{}, error) {
 func createWorkSpaceEdits(edit editInfo) lsp.WorkspaceEdit {
 	var result = lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{}}
 	textEdiit := createTextEdit(edit.newText, 0, 0, edit.endLineNo, 0)
-	result.Changes[edit.fileName] = []lsp.TextEdit{textEdiit}
+	uri := util.ConvertPathToURI(edit.fileName)
+	result.Changes[string(uri)] = []lsp.TextEdit{textEdiit}
 	return result
 }
 
