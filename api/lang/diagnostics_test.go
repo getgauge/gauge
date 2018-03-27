@@ -47,7 +47,7 @@ func setup() {
 		return []string{conceptFile}
 	}
 
-	util.GetSpecFiles = func(path string) []string {
+	util.GetSpecFiles = func(paths []string) []string {
 		return []string{specFile}
 	}
 }
