@@ -19,14 +19,15 @@ package cmd
 
 import (
 	"os"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
+	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
 )
 

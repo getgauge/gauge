@@ -31,7 +31,7 @@ import (
 )
 
 const (
-	SpecsDir			= "gauge_specs_dir"
+	SpecsDir            = "gauge_specs_dir"
 	GaugeReportsDir     = "gauge_reports_dir"
 	LogsDirectory       = "logs_directory"
 	OverwriteReports    = "overwrite_reports"

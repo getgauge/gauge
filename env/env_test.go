@@ -148,7 +148,6 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "custom_specs_dir")
 }
 
-
 func (s *MySuite) TestEnvPropertyIsSet(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")

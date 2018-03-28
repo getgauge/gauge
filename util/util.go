@@ -28,8 +28,8 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/env"
+	"github.com/getgauge/gauge/logger"
 )
 
 // NumberOfCores returns the number of CPU cores on the system
@@ -126,10 +126,10 @@ func GetSpecDirs() []string {
 	var specFromProperties = os.Getenv(env.SpecsDir)
 	if specFromProperties != "" {
 		var specDirectories = strings.Split(specFromProperties, ",")
-		for index,ele := range specDirectories {
+		for index, ele := range specDirectories {
 			specDirectories[index] = strings.TrimSpace(ele)
 		}
 		return specDirectories
 	}
-	return  []string{common.SpecsDirectoryName}
+	return []string{common.SpecsDirectoryName}
 }

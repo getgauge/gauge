@@ -54,7 +54,7 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	} else if lRunner.runner != nil {
 		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
 			Content:  params.TextDocument.Text,
-			FilePath: string(util.ConvertURItoFilePath(params.TextDocument.URI)),
+			FilePath: util.ConvertURItoFilePath(params.TextDocument.URI),
 			IsClosed: false,
 			Status:   gm.CacheFileRequest_OPENED,
 		}}
@@ -76,7 +76,7 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	} else if lRunner.runner != nil {
 		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
 			Content:  params.ContentChanges[0].Text,
-			FilePath: string(util.ConvertURItoFilePath(file)),
+			FilePath: util.ConvertURItoFilePath(file),
 			IsClosed: false,
 			Status:   gm.CacheFileRequest_CHANGED,
 		}}
@@ -96,7 +96,7 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 		closeFile(params)
 	} else if lRunner.runner != nil {
 		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-			FilePath: string(util.ConvertURItoFilePath(params.TextDocument.URI)),
+			FilePath: util.ConvertURItoFilePath(params.TextDocument.URI),
 			IsClosed: true,
 			Status:   gm.CacheFileRequest_CLOSED,
 		}}
@@ -106,16 +106,28 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	return err
 }
 
-func documentCreate(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var params lsp.TextDocumentIdentifier
+func documentChangeWatchedFiles(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
+	var params lsp.DidChangeWatchedFilesParams
 	var err error
-	if err = json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request %s", err.Error())
+	if err := json.Unmarshal(*req.Params, &params); err != nil {
+		return fmt.Errorf("failed to parse request. %s", err.Error())
 	}
-	if !util.IsGaugeFile(string(params.URI)) {
+	for _, fileEvent := range params.Changes {
+		if fileEvent.Type == int(lsp.Created) {
+			return documentCreate(fileEvent.URI, ctx, conn)
+		} else if fileEvent.Type == int(lsp.Deleted) {
+			return documentDelete(fileEvent.URI, ctx, conn)
+		}
+	}
+	return nil
+}
+
+func documentCreate(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
+	var err error
+	if !util.IsGaugeFile(string(uri)) {
 		if lRunner.runner != nil {
 			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-				FilePath: string(util.ConvertURItoFilePath(params.URI)),
+				FilePath: util.ConvertURItoFilePath(uri),
 				IsClosed: false,
 				Status:   gm.CacheFileRequest_CREATED,
 			}}
@@ -127,23 +139,19 @@ func documentCreate(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	return err
 }
 
-func documentDelete(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var params lsp.TextDocumentIdentifier
+func documentDelete(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
 	var err error
-	if err := json.Unmarshal(*req.Params, &params); err != nil {
-		return fmt.Errorf("failed to parse request. %s", err.Error())
-	}
-	if !util.IsGaugeFile(string(params.URI)) {
+	if !util.IsGaugeFile(string(uri)) {
 		if lRunner.runner != nil {
 			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-				FilePath: string(util.ConvertURItoFilePath(params.URI)),
+				FilePath: util.ConvertURItoFilePath(uri),
 				IsClosed: true,
 				Status:   gm.CacheFileRequest_DELETED,
 			}}
 			err = sendMessageToRunner(cacheFileRequest)
 		}
 	} else {
-		publishDiagnostic(params.URI, []lsp.Diagnostic{}, conn, ctx)
+		publishDiagnostic(uri, []lsp.Diagnostic{}, conn, ctx)
 	}
 	go publishDiagnostics(ctx, conn)
 	return err

@@ -53,21 +53,6 @@ type lspHandler struct {
 type LangHandler struct {
 }
 
-type registrationParams struct {
-	Registrations []registration `json:"registrations"`
-}
-
-type registration struct {
-	Id              string      `json:"id"`
-	Method          string      `json:"method"`
-	RegisterOptions interface{} `json:"registerOptions"`
-}
-
-type codeLensRegistrationOptions struct {
-	textDocumentRegistrationOptions
-	ResolveProvider bool `json:"resolveProvider,omitempty"`
-}
-
 type InitializeParams struct {
 	RootPath     string             `json:"rootPath,omitempty"`
 	Capabilities ClientCapabilities `json:"capabilities,omitempty"`
@@ -95,6 +80,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
+		registerFileWatcher(conn, ctx)
 		err := registerRunnerCapabilities(conn, ctx)
 		if err != nil {
 			logError(req, err.Error())
@@ -130,14 +116,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 		}
 		return nil, err
-	case "textDocument/didCreate":
-		err := documentCreate(req, ctx, conn)
-		if err != nil {
-			logDebug(req, err.Error())
-		}
-		return nil, err
-	case "textDocument/didDelete":
-		err := documentDelete(req, ctx, conn)
+	case "workspace/didChangeWatchedFiles":
+		err := documentChangeWatchedFiles(req, ctx, conn)
 		if err != nil {
 			logDebug(req, err.Error())
 		}

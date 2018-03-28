@@ -20,11 +20,37 @@ package lang
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
+
+type registrationParams struct {
+	Registrations []registration `json:"registrations"`
+}
+
+type registration struct {
+	Id              string      `json:"id"`
+	Method          string      `json:"method"`
+	RegisterOptions interface{} `json:"registerOptions"`
+}
+
+type codeLensRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	ResolveProvider bool `json:"resolveProvider,omitempty"`
+}
+
+type didChangeWatchedFilesRegistrationOptions struct {
+	Watchers []fileSystemWatcher `json:"watchers"`
+}
+
+type fileSystemWatcher struct {
+	GlobPattern string `json:"globPattern"`
+	Kind        int    `json:"kind"`
+}
 
 var clientCapabilities ClientCapabilities
 
@@ -47,6 +73,20 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 			RenameProvider:             true,
 		},
 	}
+}
+
+func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) {
+	fileExtensions := strings.Join(util.GaugeFileExtensions(), ",")
+	regParams := didChangeWatchedFilesRegistrationOptions{
+		Watchers: []fileSystemWatcher{{
+			GlobPattern: config.ProjectRoot + "/**/*.{" + fileExtensions + "}",
+			Kind:        int(lsp.Created) + int(lsp.Deleted),
+		}},
+	}
+	var result interface{}
+	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
+		{Id: "gauge-runner-didOpen", Method: "workspace/didChangeWatchedFiles", RegisterOptions: regParams},
+	}}, &result)
 }
 
 func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
