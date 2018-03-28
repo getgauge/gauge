@@ -187,7 +187,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 
 	var want lsp.WorkspaceEdit
 	want.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(lsp.DocumentURI("file"))
+	uri := util.ConvertPathToURI("file")
 	textEdit := lsp.TextEdit{
 		NewText: "file content",
 		Range: lsp.Range{

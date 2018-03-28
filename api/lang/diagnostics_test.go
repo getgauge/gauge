@@ -35,8 +35,8 @@ var specFile = "foo.spec"
 
 func setup() {
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
-	openFilesCache.add(util.ConvertPathToURI(lsp.DocumentURI(conceptFile)), "")
-	openFilesCache.add(util.ConvertPathToURI(lsp.DocumentURI(specFile)), "")
+	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
+	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 
 	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
 		res := &gauge_messages.StepValidateResponse{IsValid: true}
@@ -62,7 +62,7 @@ Scenario Heading
 
 * Step text`
 
-	uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
+	uri := util.ConvertPathToURI(specFile)
 	openFilesCache.add(uri, specText)
 
 	want := []lsp.Diagnostic{
@@ -105,7 +105,7 @@ Scenario Heading
 
 * Step text
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
+	uri := util.ConvertPathToURI(specFile)
 	openFilesCache.add(uri, specText)
 	d, err := getDiagnostics()
 	if err != nil {
@@ -121,7 +121,7 @@ func TestParseConcept(t *testing.T) {
 	cptText := `# concept
 * foo
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 	openFilesCache.add(uri, cptText)
 
 	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
@@ -144,7 +144,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	setup()
 	cptText := `# concept`
 
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 
 	openFilesCache.add(uri, cptText)
 
@@ -176,7 +176,7 @@ func TestDiagnosticOfConceptsWithCircularReference(t *testing.T) {
 	cptText := `# concept
 * concept
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 	openFilesCache.add(uri, cptText)
 
 	diagnostics, err := getDiagnostics()

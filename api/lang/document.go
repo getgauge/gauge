@@ -83,7 +83,7 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	}
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		closeFile(params)
-		if !common.FileExists(string(util.ConvertPathToURI(params.TextDocument.URI))) {
+		if !common.FileExists(util.ConvertURItoFilePath(params.TextDocument.URI)) {
 			publishDiagnostic(params.TextDocument.URI, []lsp.Diagnostic{}, conn, ctx)
 		}
 	} else if lRunner.runner != nil {

@@ -57,10 +57,10 @@ func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := params.TextDocument.URI
 	file := util.ConvertURItoFilePath(uri)
-	if !util.IsSpec(string(file)) {
+	if !util.IsSpec(file) {
 		return nil, nil
 	}
-	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), string(file))
+	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
 	if err != nil {
 		return nil, err
 	}
