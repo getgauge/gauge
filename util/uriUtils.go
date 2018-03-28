@@ -33,11 +33,11 @@ const (
 )
 
 // ConvertURItoFilePath - converts file uri (eg: file://example.spec) to OS specific file paths.
-func ConvertURItoFilePath(uri lsp.DocumentURI) lsp.DocumentURI {
+func ConvertURItoFilePath(uri lsp.DocumentURI) string {
 	if IsWindows() {
-		return lsp.DocumentURI(convertURIToWindowsPath(string(uri)))
+		return convertURIToWindowsPath(string(uri))
 	}
-	return lsp.DocumentURI(convertURIToUnixPath(string(uri)))
+	return convertURIToUnixPath(string(uri))
 }
 
 func convertURIToWindowsPath(uri string) string {
@@ -53,11 +53,11 @@ func convertURIToUnixPath(uri string) string {
 }
 
 // ConvertPathToURI - converts OS specific file paths to file uri (eg: file://example.spec).
-func ConvertPathToURI(path lsp.DocumentURI) lsp.DocumentURI {
+func ConvertPathToURI(path string) lsp.DocumentURI {
 	if IsWindows() {
-		return lsp.DocumentURI(convertWindowsPathToURI(string(path)))
+		return lsp.DocumentURI(convertWindowsPathToURI(path))
 	}
-	return lsp.DocumentURI(convertUnixPathToURI(string(path)))
+	return lsp.DocumentURI(convertUnixPathToURI(path))
 }
 
 func convertWindowsPathToURI(path string) string {

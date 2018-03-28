@@ -78,7 +78,7 @@ var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
 }
 
 func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, error) {
-	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: string(util.ConvertURItoFilePath(uri))}}
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
 	response, err := GetResponseFromRunner(stepPositionsRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
