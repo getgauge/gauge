@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -78,7 +79,7 @@ var GetResponseFromRunner = func(message *gm.Message) (*gm.Message, error) {
 	if lRunner.runner == nil {
 		return nil, fmt.Errorf("Error while connecting to runner")
 	}
-	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), 0)
+	return conn.GetResponseForMessageWithTimeout(message, lRunner.runner.Connection(), config.RunnerRequestTimeout())
 }
 
 func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, error) {
