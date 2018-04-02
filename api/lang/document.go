@@ -37,13 +37,7 @@ func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		openFile(params)
 	} else if lRunner.runner != nil {
-		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-			Content:  params.TextDocument.Text,
-			FilePath: util.ConvertURItoFilePath(params.TextDocument.URI),
-			IsClosed: false,
-			Status:   gm.CacheFileRequest_OPENED,
-		}}
-		err = sendMessageToRunner(cacheFileRequest)
+		err = cacheFileOnRunner(params.TextDocument.URI, params.TextDocument.Text, false, gm.CacheFileRequest_OPENED)
 	}
 	go publishDiagnostics(ctx, conn)
 	return err
@@ -59,13 +53,7 @@ func documentChange(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	if util.IsGaugeFile(string(file)) {
 		changeFile(params)
 	} else if lRunner.runner != nil {
-		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-			Content:  params.ContentChanges[0].Text,
-			FilePath: util.ConvertURItoFilePath(file),
-			IsClosed: false,
-			Status:   gm.CacheFileRequest_CHANGED,
-		}}
-		err = sendMessageToRunner(cacheFileRequest)
+		err = cacheFileOnRunner(params.TextDocument.URI, params.ContentChanges[0].Text, false, gm.CacheFileRequest_CHANGED)
 	}
 	go publishDiagnostics(ctx, conn)
 	return err
@@ -80,12 +68,7 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 	if util.IsGaugeFile(string(params.TextDocument.URI)) {
 		closeFile(params)
 	} else if lRunner.runner != nil {
-		cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-			FilePath: util.ConvertURItoFilePath(params.TextDocument.URI),
-			IsClosed: true,
-			Status:   gm.CacheFileRequest_CLOSED,
-		}}
-		err = sendMessageToRunner(cacheFileRequest)
+		err = cacheFileOnRunner(params.TextDocument.URI, "", true, gm.CacheFileRequest_CLOSED)
 	}
 	go publishDiagnostics(ctx, conn)
 	return err
@@ -115,13 +98,7 @@ func documentCreate(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSON
 	var err error
 	if !util.IsGaugeFile(string(uri)) {
 		if lRunner.runner != nil {
-			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-				FilePath: util.ConvertURItoFilePath(uri),
-				IsClosed: false,
-				Status:   gm.CacheFileRequest_CREATED,
-			}}
-			err = sendMessageToRunner(cacheFileRequest)
-
+			err = cacheFileOnRunner(uri, "", false, gm.CacheFileRequest_CREATED)
 		}
 	}
 	return err
@@ -131,12 +108,7 @@ func documentDelete(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSON
 	var err error
 	if !util.IsGaugeFile(string(uri)) {
 		if lRunner.runner != nil {
-			cacheFileRequest := &gm.Message{MessageType: gm.Message_CacheFileRequest, CacheFileRequest: &gm.CacheFileRequest{
-				FilePath: util.ConvertURItoFilePath(uri),
-				IsClosed: true,
-				Status:   gm.CacheFileRequest_DELETED,
-			}}
-			err = sendMessageToRunner(cacheFileRequest)
+			err = cacheFileOnRunner(uri, "", false, gm.CacheFileRequest_DELETED)
 		}
 	} else {
 		publishDiagnostic(uri, []lsp.Diagnostic{}, conn, ctx)
