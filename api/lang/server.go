@@ -86,7 +86,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logError(req, err.Error())
 		}
 		go publishDiagnostics(ctx, conn)
-		return nil, err
+		return nil, nil
 	case "shutdown":
 		killRunner()
 		return nil, nil

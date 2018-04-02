@@ -28,21 +28,6 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-type textDocumentRegistrationOptions struct {
-	DocumentSelector documentSelector `json:"documentSelector"`
-}
-
-type textDocumentChangeRegistrationOptions struct {
-	textDocumentRegistrationOptions
-	SyncKind lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
-}
-
-type documentSelector struct {
-	Scheme   string `json:"scheme"`
-	Language string `json:"language"`
-	Pattern  string `json:"pattern"`
-}
-
 func documentOpened(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
 	var params lsp.DidOpenTextDocumentParams
 	var err error
@@ -108,7 +93,6 @@ func documentClosed(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JS
 
 func documentChangeWatchedFiles(req *jsonrpc2.Request, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
 	var params lsp.DidChangeWatchedFilesParams
-	var err error
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return fmt.Errorf("failed to parse request. %s", err.Error())
 	}

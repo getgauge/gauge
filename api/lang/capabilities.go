@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -50,6 +51,21 @@ type didChangeWatchedFilesRegistrationOptions struct {
 type fileSystemWatcher struct {
 	GlobPattern string `json:"globPattern"`
 	Kind        int    `json:"kind"`
+}
+
+type textDocumentRegistrationOptions struct {
+	DocumentSelector []documentSelector `json:"documentSelector"`
+}
+
+type textDocumentChangeRegistrationOptions struct {
+	textDocumentRegistrationOptions
+	SyncKind lsp.TextDocumentSyncKind `json:"syncKind,omitempty"`
+}
+
+type documentSelector struct {
+	Scheme   string `json:"scheme"`
+	Language string `json:"language"`
+	Pattern  string `json:"pattern"`
 }
 
 var clientCapabilities ClientCapabilities
@@ -85,7 +101,7 @@ func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	}
 	var result interface{}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
-		{Id: "gauge-runner-didOpen", Method: "workspace/didChangeWatchedFiles", RegisterOptions: regParams},
+		{Id: "gauge-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: regParams},
 	}}, &result)
 }
 
@@ -93,13 +109,31 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 	if lRunner.lspID == "" {
 		return fmt.Errorf("current runner is not compatible with gauge LSP")
 	}
+	implFileGlobPatternRequest := &gm.Message{MessageType: gm.Message_ImplementationFileGlobPatternRequest, ImplementationFileGlobPatternRequest: &gm.ImplementationFileGlobPatternRequest{}}
+	implFileGlobPatternResponse, err := GetResponseFromRunner(implFileGlobPatternRequest)
+	if err != nil {
+		return err
+	}
+	filePatterns := make([]fileSystemWatcher, 0)
+	documentSelectors := make([]documentSelector, 0)
+	for _, globPattern := range implFileGlobPatternResponse.GetImplementationFileGlobPatternResponse().GlobPatterns {
+		filePatterns = append(filePatterns, fileSystemWatcher{
+			GlobPattern: globPattern,
+			Kind:        int(lsp.Created) + int(lsp.Deleted),
+		})
+		documentSelectors = append(documentSelectors, documentSelector{
+			Scheme:   "file",
+			Language: lRunner.lspID,
+			Pattern:  globPattern,
+		})
+	}
 	var result interface{}
-	ds := documentSelector{Scheme: "file", Language: lRunner.lspID, Pattern: fmt.Sprintf("%s/**/*", config.ProjectRoot)}
 	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
-		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
-		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: ds}},
-		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, SyncKind: lsp.TDSKFull}},
-		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: ds}, ResolveProvider: false}},
+		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}},
+		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}},
+		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}, SyncKind: lsp.TDSKFull}},
+		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}, ResolveProvider: false}},
+		{Id: "gauge-runner-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: didChangeWatchedFilesRegistrationOptions{Watchers: filePatterns}},
 	}}, &result)
 	return nil
 }
