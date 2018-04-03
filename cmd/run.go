@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
@@ -80,18 +81,19 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	verbose       bool
-	simpleConsole bool
-	failed        bool
-	repeat        bool
-	parallel      bool
-	sort          bool
-	environment   string
-	tags          string
-	rows          string
-	strategy      string
-	streams       int
-	group         int
+	verbose        bool
+	simpleConsole  bool
+	failed         bool
+	repeat         bool
+	parallel       bool
+	sort           bool
+	installPlugins bool
+	environment    string
+	tags           string
+	rows           string
+	strategy       string
+	streams        int
+	group          int
 )
 
 func init() {
@@ -106,6 +108,7 @@ func init() {
 	runCmd.Flags().IntVarP(&group, "group", "g", -1, "Specify which group of specification to execute based on -n flag")
 	runCmd.Flags().StringVarP(&strategy, "strategy", "", "lazy", "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, "sort", "s", false, "Run specs in Alphabetical Order")
+	runCmd.Flags().BoolVarP(&installPlugins, "install-plugins", "i", true, "Install All Missing Plugins")
 	runCmd.Flags().BoolVarP(&failed, "failed", "f", false, "Run only the scenarios failed in previous run")
 	runCmd.Flags().BoolVarP(&repeat, "repeat", "", false, "Repeat last run")
 	runCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
@@ -130,15 +133,22 @@ func loadLastState(cmd *cobra.Command) {
 }
 
 func resetFlags() {
-	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion = false, false, false, false, false, false, false
+	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion, installPlugins = false, false, false, false, false, false, false, true
 	environment, tags, rows, strategy, logLevel, dir = "default", "", "", "lazy", "info", "."
 	streams, group = util.NumberOfCores(), -1
+}
+
+func installMissingPlugins(flag bool) {
+	if flag {
+		install.AllPlugins()
+	}
 }
 
 func execute(args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
+	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
 	os.Exit(exitCode)
 }
