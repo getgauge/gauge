@@ -32,7 +32,7 @@ func (x StepValidateResponse_ErrorType) String() string {
 	return proto.EnumName(StepValidateResponse_ErrorType_name, int32(x))
 }
 func (StepValidateResponse_ErrorType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{16, 0}
+	return fileDescriptor2, []int{16, 0}
 }
 
 type CacheFileRequest_FileStatus int32
@@ -69,7 +69,7 @@ func (x CacheFileRequest_FileStatus) String() string {
 	return proto.EnumName(CacheFileRequest_FileStatus_name, int32(x))
 }
 func (CacheFileRequest_FileStatus) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{30, 0}
+	return fileDescriptor2, []int{30, 0}
 }
 
 type Message_MessageType int32
@@ -184,7 +184,7 @@ var Message_MessageType_value = map[string]int32{
 func (x Message_MessageType) String() string {
 	return proto.EnumName(Message_MessageType_name, int32(x))
 }
-func (Message_MessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor1, []int{40, 0} }
+func (Message_MessageType) EnumDescriptor() ([]byte, []int) { return fileDescriptor2, []int{40, 0} }
 
 // / Default request. Tells the runner to shutdown.
 type KillProcessRequest struct {
@@ -193,7 +193,7 @@ type KillProcessRequest struct {
 func (m *KillProcessRequest) Reset()                    { *m = KillProcessRequest{} }
 func (m *KillProcessRequest) String() string            { return proto.CompactTextString(m) }
 func (*KillProcessRequest) ProtoMessage()               {}
-func (*KillProcessRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{0} }
+func (*KillProcessRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{0} }
 
 // / Sends to any request which needs a execution status as response
 // / usually step execution, hooks etc will return this
@@ -204,7 +204,7 @@ type ExecutionStatusResponse struct {
 func (m *ExecutionStatusResponse) Reset()                    { *m = ExecutionStatusResponse{} }
 func (m *ExecutionStatusResponse) String() string            { return proto.CompactTextString(m) }
 func (*ExecutionStatusResponse) ProtoMessage()               {}
-func (*ExecutionStatusResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{1} }
+func (*ExecutionStatusResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{1} }
 
 func (m *ExecutionStatusResponse) GetExecutionResult() *ProtoExecutionResult {
 	if m != nil {
@@ -221,7 +221,7 @@ type ExecutionStartingRequest struct {
 func (m *ExecutionStartingRequest) Reset()                    { *m = ExecutionStartingRequest{} }
 func (m *ExecutionStartingRequest) String() string            { return proto.CompactTextString(m) }
 func (*ExecutionStartingRequest) ProtoMessage()               {}
-func (*ExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{2} }
+func (*ExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{2} }
 
 func (m *ExecutionStartingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -238,7 +238,7 @@ type ExecutionEndingRequest struct {
 func (m *ExecutionEndingRequest) Reset()                    { *m = ExecutionEndingRequest{} }
 func (m *ExecutionEndingRequest) String() string            { return proto.CompactTextString(m) }
 func (*ExecutionEndingRequest) ProtoMessage()               {}
-func (*ExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{3} }
+func (*ExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{3} }
 
 func (m *ExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -255,7 +255,7 @@ type SpecExecutionStartingRequest struct {
 func (m *SpecExecutionStartingRequest) Reset()                    { *m = SpecExecutionStartingRequest{} }
 func (m *SpecExecutionStartingRequest) String() string            { return proto.CompactTextString(m) }
 func (*SpecExecutionStartingRequest) ProtoMessage()               {}
-func (*SpecExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{4} }
+func (*SpecExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{4} }
 
 func (m *SpecExecutionStartingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -272,7 +272,7 @@ type SpecExecutionEndingRequest struct {
 func (m *SpecExecutionEndingRequest) Reset()                    { *m = SpecExecutionEndingRequest{} }
 func (m *SpecExecutionEndingRequest) String() string            { return proto.CompactTextString(m) }
 func (*SpecExecutionEndingRequest) ProtoMessage()               {}
-func (*SpecExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{5} }
+func (*SpecExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{5} }
 
 func (m *SpecExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -290,7 +290,7 @@ func (m *ScenarioExecutionStartingRequest) Reset()         { *m = ScenarioExecut
 func (m *ScenarioExecutionStartingRequest) String() string { return proto.CompactTextString(m) }
 func (*ScenarioExecutionStartingRequest) ProtoMessage()    {}
 func (*ScenarioExecutionStartingRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{6}
+	return fileDescriptor2, []int{6}
 }
 
 func (m *ScenarioExecutionStartingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
@@ -308,7 +308,7 @@ type ScenarioExecutionEndingRequest struct {
 func (m *ScenarioExecutionEndingRequest) Reset()                    { *m = ScenarioExecutionEndingRequest{} }
 func (m *ScenarioExecutionEndingRequest) String() string            { return proto.CompactTextString(m) }
 func (*ScenarioExecutionEndingRequest) ProtoMessage()               {}
-func (*ScenarioExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{7} }
+func (*ScenarioExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{7} }
 
 func (m *ScenarioExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -325,7 +325,7 @@ type StepExecutionStartingRequest struct {
 func (m *StepExecutionStartingRequest) Reset()                    { *m = StepExecutionStartingRequest{} }
 func (m *StepExecutionStartingRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepExecutionStartingRequest) ProtoMessage()               {}
-func (*StepExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{8} }
+func (*StepExecutionStartingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{8} }
 
 func (m *StepExecutionStartingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -342,7 +342,7 @@ type StepExecutionEndingRequest struct {
 func (m *StepExecutionEndingRequest) Reset()                    { *m = StepExecutionEndingRequest{} }
 func (m *StepExecutionEndingRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepExecutionEndingRequest) ProtoMessage()               {}
-func (*StepExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{9} }
+func (*StepExecutionEndingRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{9} }
 
 func (m *StepExecutionEndingRequest) GetCurrentExecutionInfo() *ExecutionInfo {
 	if m != nil {
@@ -367,7 +367,7 @@ type ExecutionInfo struct {
 func (m *ExecutionInfo) Reset()                    { *m = ExecutionInfo{} }
 func (m *ExecutionInfo) String() string            { return proto.CompactTextString(m) }
 func (*ExecutionInfo) ProtoMessage()               {}
-func (*ExecutionInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{10} }
+func (*ExecutionInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{10} }
 
 func (m *ExecutionInfo) GetCurrentSpec() *SpecInfo {
 	if m != nil {
@@ -412,7 +412,7 @@ type SpecInfo struct {
 func (m *SpecInfo) Reset()                    { *m = SpecInfo{} }
 func (m *SpecInfo) String() string            { return proto.CompactTextString(m) }
 func (*SpecInfo) ProtoMessage()               {}
-func (*SpecInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{11} }
+func (*SpecInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{11} }
 
 func (m *SpecInfo) GetName() string {
 	if m != nil {
@@ -455,7 +455,7 @@ type ScenarioInfo struct {
 func (m *ScenarioInfo) Reset()                    { *m = ScenarioInfo{} }
 func (m *ScenarioInfo) String() string            { return proto.CompactTextString(m) }
 func (*ScenarioInfo) ProtoMessage()               {}
-func (*ScenarioInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{12} }
+func (*ScenarioInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{12} }
 
 func (m *ScenarioInfo) GetName() string {
 	if m != nil {
@@ -493,7 +493,7 @@ type StepInfo struct {
 func (m *StepInfo) Reset()                    { *m = StepInfo{} }
 func (m *StepInfo) String() string            { return proto.CompactTextString(m) }
 func (*StepInfo) ProtoMessage()               {}
-func (*StepInfo) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{13} }
+func (*StepInfo) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{13} }
 
 func (m *StepInfo) GetStep() *ExecuteStepRequest {
 	if m != nil {
@@ -540,7 +540,7 @@ type ExecuteStepRequest struct {
 func (m *ExecuteStepRequest) Reset()                    { *m = ExecuteStepRequest{} }
 func (m *ExecuteStepRequest) String() string            { return proto.CompactTextString(m) }
 func (*ExecuteStepRequest) ProtoMessage()               {}
-func (*ExecuteStepRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{14} }
+func (*ExecuteStepRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{14} }
 
 func (m *ExecuteStepRequest) GetActualStepText() string {
 	if m != nil {
@@ -584,7 +584,7 @@ type StepValidateRequest struct {
 func (m *StepValidateRequest) Reset()                    { *m = StepValidateRequest{} }
 func (m *StepValidateRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepValidateRequest) ProtoMessage()               {}
-func (*StepValidateRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{15} }
+func (*StepValidateRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{15} }
 
 func (m *StepValidateRequest) GetStepText() string {
 	if m != nil {
@@ -621,7 +621,7 @@ type StepValidateResponse struct {
 func (m *StepValidateResponse) Reset()                    { *m = StepValidateResponse{} }
 func (m *StepValidateResponse) String() string            { return proto.CompactTextString(m) }
 func (*StepValidateResponse) ProtoMessage()               {}
-func (*StepValidateResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{16} }
+func (*StepValidateResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{16} }
 
 func (m *StepValidateResponse) GetIsValid() bool {
 	if m != nil {
@@ -659,7 +659,7 @@ type SuiteExecutionResult struct {
 func (m *SuiteExecutionResult) Reset()                    { *m = SuiteExecutionResult{} }
 func (m *SuiteExecutionResult) String() string            { return proto.CompactTextString(m) }
 func (*SuiteExecutionResult) ProtoMessage()               {}
-func (*SuiteExecutionResult) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{17} }
+func (*SuiteExecutionResult) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{17} }
 
 func (m *SuiteExecutionResult) GetSuiteResult() *ProtoSuiteResult {
 	if m != nil {
@@ -675,7 +675,7 @@ type StepNamesRequest struct {
 func (m *StepNamesRequest) Reset()                    { *m = StepNamesRequest{} }
 func (m *StepNamesRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepNamesRequest) ProtoMessage()               {}
-func (*StepNamesRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{18} }
+func (*StepNamesRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{18} }
 
 // / Response to StepNamesRequest
 type StepNamesResponse struct {
@@ -686,7 +686,7 @@ type StepNamesResponse struct {
 func (m *StepNamesResponse) Reset()                    { *m = StepNamesResponse{} }
 func (m *StepNamesResponse) String() string            { return proto.CompactTextString(m) }
 func (*StepNamesResponse) ProtoMessage()               {}
-func (*StepNamesResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{19} }
+func (*StepNamesResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{19} }
 
 func (m *StepNamesResponse) GetSteps() []string {
 	if m != nil {
@@ -703,7 +703,7 @@ type ScenarioDataStoreInitRequest struct {
 func (m *ScenarioDataStoreInitRequest) Reset()                    { *m = ScenarioDataStoreInitRequest{} }
 func (m *ScenarioDataStoreInitRequest) String() string            { return proto.CompactTextString(m) }
 func (*ScenarioDataStoreInitRequest) ProtoMessage()               {}
-func (*ScenarioDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{20} }
+func (*ScenarioDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{20} }
 
 // / Request runner to initialize Spec DataStore
 // / Spec Datastore is reset after every Spec execution.
@@ -713,7 +713,7 @@ type SpecDataStoreInitRequest struct {
 func (m *SpecDataStoreInitRequest) Reset()                    { *m = SpecDataStoreInitRequest{} }
 func (m *SpecDataStoreInitRequest) String() string            { return proto.CompactTextString(m) }
 func (*SpecDataStoreInitRequest) ProtoMessage()               {}
-func (*SpecDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{21} }
+func (*SpecDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{21} }
 
 // / Request runner to initialize Suite DataStore
 // / Suite Datastore is reset after every Suite execution.
@@ -723,7 +723,7 @@ type SuiteDataStoreInitRequest struct {
 func (m *SuiteDataStoreInitRequest) Reset()                    { *m = SuiteDataStoreInitRequest{} }
 func (m *SuiteDataStoreInitRequest) String() string            { return proto.CompactTextString(m) }
 func (*SuiteDataStoreInitRequest) ProtoMessage()               {}
-func (*SuiteDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{22} }
+func (*SuiteDataStoreInitRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{22} }
 
 // / Holds the new and old positions of a parameter.
 // / Used when refactoring a Step.
@@ -735,7 +735,7 @@ type ParameterPosition struct {
 func (m *ParameterPosition) Reset()                    { *m = ParameterPosition{} }
 func (m *ParameterPosition) String() string            { return proto.CompactTextString(m) }
 func (*ParameterPosition) ProtoMessage()               {}
-func (*ParameterPosition) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{23} }
+func (*ParameterPosition) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{23} }
 
 func (m *ParameterPosition) GetOldPosition() int32 {
 	if m != nil {
@@ -766,7 +766,7 @@ type RefactorRequest struct {
 func (m *RefactorRequest) Reset()                    { *m = RefactorRequest{} }
 func (m *RefactorRequest) String() string            { return proto.CompactTextString(m) }
 func (*RefactorRequest) ProtoMessage()               {}
-func (*RefactorRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{24} }
+func (*RefactorRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{24} }
 
 func (m *RefactorRequest) GetOldStepValue() *ProtoStepValue {
 	if m != nil {
@@ -805,7 +805,7 @@ type FileChanges struct {
 func (m *FileChanges) Reset()                    { *m = FileChanges{} }
 func (m *FileChanges) String() string            { return proto.CompactTextString(m) }
 func (*FileChanges) ProtoMessage()               {}
-func (*FileChanges) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{25} }
+func (*FileChanges) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{25} }
 
 func (m *FileChanges) GetFileName() string {
 	if m != nil {
@@ -836,7 +836,7 @@ type RefactorResponse struct {
 func (m *RefactorResponse) Reset()                    { *m = RefactorResponse{} }
 func (m *RefactorResponse) String() string            { return proto.CompactTextString(m) }
 func (*RefactorResponse) ProtoMessage()               {}
-func (*RefactorResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{26} }
+func (*RefactorResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{26} }
 
 func (m *RefactorResponse) GetSuccess() bool {
 	if m != nil {
@@ -876,7 +876,7 @@ type StepNameRequest struct {
 func (m *StepNameRequest) Reset()                    { *m = StepNameRequest{} }
 func (m *StepNameRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepNameRequest) ProtoMessage()               {}
-func (*StepNameRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{27} }
+func (*StepNameRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{27} }
 
 func (m *StepNameRequest) GetStepValue() string {
 	if m != nil {
@@ -902,7 +902,7 @@ type StepNameResponse struct {
 func (m *StepNameResponse) Reset()                    { *m = StepNameResponse{} }
 func (m *StepNameResponse) String() string            { return proto.CompactTextString(m) }
 func (*StepNameResponse) ProtoMessage()               {}
-func (*StepNameResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{28} }
+func (*StepNameResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{28} }
 
 func (m *StepNameResponse) GetIsStepPresent() bool {
 	if m != nil {
@@ -947,7 +947,7 @@ type UnsupportedMessageResponse struct {
 func (m *UnsupportedMessageResponse) Reset()                    { *m = UnsupportedMessageResponse{} }
 func (m *UnsupportedMessageResponse) String() string            { return proto.CompactTextString(m) }
 func (*UnsupportedMessageResponse) ProtoMessage()               {}
-func (*UnsupportedMessageResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{29} }
+func (*UnsupportedMessageResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{29} }
 
 func (m *UnsupportedMessageResponse) GetMessage() string {
 	if m != nil {
@@ -973,7 +973,7 @@ type CacheFileRequest struct {
 func (m *CacheFileRequest) Reset()                    { *m = CacheFileRequest{} }
 func (m *CacheFileRequest) String() string            { return proto.CompactTextString(m) }
 func (*CacheFileRequest) ProtoMessage()               {}
-func (*CacheFileRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{30} }
+func (*CacheFileRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{30} }
 
 func (m *CacheFileRequest) GetContent() string {
 	if m != nil {
@@ -1012,7 +1012,7 @@ type StepPositionsRequest struct {
 func (m *StepPositionsRequest) Reset()                    { *m = StepPositionsRequest{} }
 func (m *StepPositionsRequest) String() string            { return proto.CompactTextString(m) }
 func (*StepPositionsRequest) ProtoMessage()               {}
-func (*StepPositionsRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{31} }
+func (*StepPositionsRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{31} }
 
 func (m *StepPositionsRequest) GetFilePath() string {
 	if m != nil {
@@ -1032,7 +1032,7 @@ type StepPositionsResponse struct {
 func (m *StepPositionsResponse) Reset()                    { *m = StepPositionsResponse{} }
 func (m *StepPositionsResponse) String() string            { return proto.CompactTextString(m) }
 func (*StepPositionsResponse) ProtoMessage()               {}
-func (*StepPositionsResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{32} }
+func (*StepPositionsResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{32} }
 
 func (m *StepPositionsResponse) GetStepPositions() []*StepPositionsResponse_StepPosition {
 	if m != nil {
@@ -1060,7 +1060,7 @@ func (m *StepPositionsResponse_StepPosition) Reset()         { *m = StepPosition
 func (m *StepPositionsResponse_StepPosition) String() string { return proto.CompactTextString(m) }
 func (*StepPositionsResponse_StepPosition) ProtoMessage()    {}
 func (*StepPositionsResponse_StepPosition) Descriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{32, 0}
+	return fileDescriptor2, []int{32, 0}
 }
 
 func (m *StepPositionsResponse_StepPosition) GetStepValue() string {
@@ -1085,7 +1085,7 @@ func (m *ImplementationFileGlobPatternRequest) Reset()         { *m = Implementa
 func (m *ImplementationFileGlobPatternRequest) String() string { return proto.CompactTextString(m) }
 func (*ImplementationFileGlobPatternRequest) ProtoMessage()    {}
 func (*ImplementationFileGlobPatternRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{33}
+	return fileDescriptor2, []int{33}
 }
 
 // / Response for getting Implementation file glob pattern
@@ -1098,7 +1098,7 @@ func (m *ImplementationFileGlobPatternResponse) Reset()         { *m = Implement
 func (m *ImplementationFileGlobPatternResponse) String() string { return proto.CompactTextString(m) }
 func (*ImplementationFileGlobPatternResponse) ProtoMessage()    {}
 func (*ImplementationFileGlobPatternResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor1, []int{34}
+	return fileDescriptor2, []int{34}
 }
 
 func (m *ImplementationFileGlobPatternResponse) GetGlobPatterns() []string {
@@ -1115,7 +1115,7 @@ type ImplementationFileListRequest struct {
 func (m *ImplementationFileListRequest) Reset()                    { *m = ImplementationFileListRequest{} }
 func (m *ImplementationFileListRequest) String() string            { return proto.CompactTextString(m) }
 func (*ImplementationFileListRequest) ProtoMessage()               {}
-func (*ImplementationFileListRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{35} }
+func (*ImplementationFileListRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{35} }
 
 // / Response for getting Implementation file list
 type ImplementationFileListResponse struct {
@@ -1126,7 +1126,7 @@ type ImplementationFileListResponse struct {
 func (m *ImplementationFileListResponse) Reset()                    { *m = ImplementationFileListResponse{} }
 func (m *ImplementationFileListResponse) String() string            { return proto.CompactTextString(m) }
 func (*ImplementationFileListResponse) ProtoMessage()               {}
-func (*ImplementationFileListResponse) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{36} }
+func (*ImplementationFileListResponse) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{36} }
 
 func (m *ImplementationFileListResponse) GetImplementationFilePaths() []string {
 	if m != nil {
@@ -1146,7 +1146,7 @@ type StubImplementationCodeRequest struct {
 func (m *StubImplementationCodeRequest) Reset()                    { *m = StubImplementationCodeRequest{} }
 func (m *StubImplementationCodeRequest) String() string            { return proto.CompactTextString(m) }
 func (*StubImplementationCodeRequest) ProtoMessage()               {}
-func (*StubImplementationCodeRequest) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{37} }
+func (*StubImplementationCodeRequest) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{37} }
 
 func (m *StubImplementationCodeRequest) GetImplementationFilePath() string {
 	if m != nil {
@@ -1173,7 +1173,7 @@ type TextDiff struct {
 func (m *TextDiff) Reset()                    { *m = TextDiff{} }
 func (m *TextDiff) String() string            { return proto.CompactTextString(m) }
 func (*TextDiff) ProtoMessage()               {}
-func (*TextDiff) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{38} }
+func (*TextDiff) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{38} }
 
 func (m *TextDiff) GetSpan() *Span {
 	if m != nil {
@@ -1200,7 +1200,7 @@ type FileDiff struct {
 func (m *FileDiff) Reset()                    { *m = FileDiff{} }
 func (m *FileDiff) String() string            { return proto.CompactTextString(m) }
 func (*FileDiff) ProtoMessage()               {}
-func (*FileDiff) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{39} }
+func (*FileDiff) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{39} }
 
 func (m *FileDiff) GetFilePath() string {
 	if m != nil {
@@ -1295,7 +1295,7 @@ type Message struct {
 func (m *Message) Reset()                    { *m = Message{} }
 func (m *Message) String() string            { return proto.CompactTextString(m) }
 func (*Message) ProtoMessage()               {}
-func (*Message) Descriptor() ([]byte, []int) { return fileDescriptor1, []int{40} }
+func (*Message) Descriptor() ([]byte, []int) { return fileDescriptor2, []int{40} }
 
 func (m *Message) GetMessageType() Message_MessageType {
 	if m != nil {
@@ -1590,9 +1590,9 @@ func init() {
 	proto.RegisterEnum("gauge.messages.Message_MessageType", Message_MessageType_name, Message_MessageType_value)
 }
 
-func init() { proto.RegisterFile("messages.proto", fileDescriptor1) }
+func init() { proto.RegisterFile("messages.proto", fileDescriptor2) }
 
-var fileDescriptor1 = []byte{
+var fileDescriptor2 = []byte{
 	// 2212 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x5a, 0x4f, 0x6f, 0x1b, 0xb9,
 	0x15, 0xdf, 0x91, 0x1d, 0x5b, 0x7e, 0x72, 0x2c, 0x9a, 0x96, 0x6d, 0x5a, 0xb1, 0x1d, 0x79, 0xf2,
