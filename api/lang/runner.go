@@ -20,9 +20,7 @@ package lang
 import (
 	"context"
 	"fmt"
-	"net"
 	"os"
-	"strconv"
 
 	"google.golang.org/grpc"
 
@@ -48,26 +46,32 @@ var lRunner langRunner
 func startRunner() error {
 	lRunner.killChan = make(chan bool)
 	var err error
-	lRunner.runner, err = connectToRunner(lRunner.killChan)
+	err = connectToRunner(lRunner.killChan)
 	if err != nil {
 		return fmt.Errorf("Unable to connect to runner : %s", err.Error())
 	}
 	return nil
 }
 
-func connectToRunner(killChan chan bool) (runner.Runner, error) {
+func connectToRunner(killChan chan bool) error {
 	logInfo(nil, "Starting language runner")
 	outFile, err := util.OpenFile(logger.ActiveLogFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	address, err := net.ResolveTCPAddr("tcp", "127.0.0.1:0")
-	os.Setenv("GAUGE_LSP_GRPC_PORT", strconv.Itoa(address.Port))
-	runner, err := api.ConnectToRunner(killChan, false, outFile)
+	os.Setenv("GAUGE_LSP_GRPC", "true")
+	lRunner.runner, err = api.ConnectToRunner(killChan, false, outFile)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return runner, nil
+	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:54545"), grpc.WithInsecure())
+	if err != nil {
+		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected. gRPC client not connected.", err.Error())
+	}
+	lRunner.conn = conn
+	client := gm.NewLspServiceClient(conn)
+	lRunner.lspClient = client
+	return nil
 }
 
 func cacheFileOnRunner(uri lsp.DocumentURI, text string, isClosed bool, status gm.CacheFileRequest_FileStatus) error {

@@ -19,7 +19,6 @@ package lang
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"runtime/debug"
 
@@ -32,7 +31,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/jsonrpc2"
-	"google.golang.org/grpc"
 )
 
 type infoProvider interface {
@@ -271,14 +269,6 @@ func initializeRunner() {
 		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
 	}
 	lRunner.lspID = id
-
-	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:%s", os.Getenv("GAUGE_LSP_GRPC_PORT")))
-	if err != nil {
-		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected. gRPC client not connected.", err.Error())
-	}
-	lRunner.conn = conn
-	client := gm.NewLspServiceClient(conn)
-	lRunner.lspClient = client
 }
 
 func Start(p infoProvider, logLevel string) {
