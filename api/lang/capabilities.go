@@ -53,6 +53,14 @@ type fileSystemWatcher struct {
 	Kind        int    `json:"kind"`
 }
 
+type watchKind int
+
+const (
+	created watchKind = 1
+	changed           = 2
+	deleted           = 4
+)
+
 type textDocumentRegistrationOptions struct {
 	DocumentSelector []documentSelector `json:"documentSelector"`
 }
@@ -95,8 +103,8 @@ func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 	fileExtensions := strings.Join(util.GaugeFileExtensions(), ",")
 	regParams := didChangeWatchedFilesRegistrationOptions{
 		Watchers: []fileSystemWatcher{{
-			GlobPattern: config.ProjectRoot + "/**/*.{" + fileExtensions + "}",
-			Kind:        int(lsp.Created) + int(lsp.Deleted),
+			GlobPattern: strings.Replace(config.ProjectRoot, util.WindowsSep, util.UnixSep, -1) + "/**/*{" + fileExtensions + "}",
+			Kind:        int(created) + int(deleted),
 		}},
 	}
 	var result interface{}
@@ -119,7 +127,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 	for _, globPattern := range implFileGlobPatternResponse.GetImplementationFileGlobPatternResponse().GlobPatterns {
 		filePatterns = append(filePatterns, fileSystemWatcher{
 			GlobPattern: globPattern,
-			Kind:        int(lsp.Created) + int(lsp.Deleted),
+			Kind:        int(created) + int(deleted),
 		})
 		documentSelectors = append(documentSelectors, documentSelector{
 			Scheme:   "file",

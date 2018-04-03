@@ -98,11 +98,16 @@ func documentChangeWatchedFiles(req *jsonrpc2.Request, ctx context.Context, conn
 	}
 	for _, fileEvent := range params.Changes {
 		if fileEvent.Type == int(lsp.Created) {
-			return documentCreate(fileEvent.URI, ctx, conn)
-		} else if fileEvent.Type == int(lsp.Deleted) {
-			return documentDelete(fileEvent.URI, ctx, conn)
+			if err := documentCreate(fileEvent.URI, ctx, conn); err != nil {
+				return err
+			}
+		} else {
+			if err := documentCreate(fileEvent.URI, ctx, conn); err != nil {
+				return err
+			}
 		}
 	}
+	go publishDiagnostics(ctx, conn)
 	return nil
 }
 
@@ -119,7 +124,6 @@ func documentCreate(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSON
 
 		}
 	}
-	go publishDiagnostics(ctx, conn)
 	return err
 }
 
@@ -137,6 +141,5 @@ func documentDelete(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSON
 	} else {
 		publishDiagnostic(uri, []lsp.Diagnostic{}, conn, ctx)
 	}
-	go publishDiagnostics(ctx, conn)
 	return err
 }
