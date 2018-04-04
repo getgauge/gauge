@@ -20,6 +20,7 @@ package lang
 import (
 	"context"
 	"fmt"
+	"net"
 	"os"
 
 	"google.golang.org/grpc"
@@ -37,8 +38,62 @@ type langRunner struct {
 	runner    runner.Runner
 	killChan  chan bool
 	lspID     string
-	conn      *grpc.ClientConn
-	lspClient gm.LspServiceClient
+	lspClient *lspRunner
+}
+
+type lspRunner struct {
+	client gm.LspServiceClient
+	conn   *grpc.ClientConn
+}
+
+func (r *lspRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
+	switch message.MessageType {
+	case gm.Message_CacheFileRequest:
+		r.client.CacheFile(context.Background(), message.CacheFileRequest)
+		return &gm.Message{}, nil
+	case gm.Message_StepNamesRequest:
+		response, err := r.client.GetStepNames(context.Background(), message.StepNamesRequest)
+		return &gm.Message{StepNamesResponse: response}, err
+	case gm.Message_StepPositionsRequest:
+		response, err := r.client.GetStepPositions(context.Background(), message.StepPositionsRequest)
+		return &gm.Message{StepPositionsResponse: response}, err
+	case gm.Message_ImplementationFileListRequest:
+		response, err := r.client.GetImplementationFiles(context.Background(), &gm.Empty{})
+		return &gm.Message{ImplementationFileListResponse: response}, err
+	case gm.Message_StubImplementationCodeRequest:
+		response, err := r.client.ImplementStub(context.Background(), message.StubImplementationCodeRequest)
+		return &gm.Message{FileDiff: response}, err
+	case gm.Message_StepValidateRequest:
+		response, err := r.client.ValidateStep(context.Background(), message.StepValidateRequest)
+		return &gm.Message{MessageType: gm.Message_StepValidateResponse, StepValidateResponse: response}, err
+	case gm.Message_RefactorRequest:
+		response, err := r.client.Refactor(context.Background(), message.RefactorRequest)
+		return &gm.Message{MessageType: gm.Message_RefactorResponse, RefactorResponse: response}, err
+	case gm.Message_StepNameRequest:
+		response, err := r.client.GetStepName(context.Background(), message.StepNameRequest)
+		return &gm.Message{MessageType: gm.Message_StepNameResponse, StepNameResponse: response}, err
+	default:
+		return nil, nil
+	}
+}
+
+func (r *lspRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
+	return nil
+}
+func (r *lspRunner) IsProcessRunning() bool {
+	return false
+}
+func (r *lspRunner) Kill() error {
+	return nil
+}
+func (r *lspRunner) Connection() net.Conn {
+	return nil
+}
+func (r *lspRunner) IsMultithreaded() bool {
+	return false
+}
+func (r *lspRunner) Pid() int {
+	return 0
 }
 
 var lRunner langRunner
@@ -68,7 +123,6 @@ func connectToRunner(killChan chan bool) error {
 	if err != nil {
 		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected. gRPC client not connected.", err.Error())
 	}
-	lRunner.conn = conn
 	client := gm.NewLspServiceClient(conn)
 	lRunner.lspClient = client
 	return nil
@@ -81,42 +135,48 @@ func cacheFileOnRunner(uri lsp.DocumentURI, text string, isClosed bool, status g
 }
 
 func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, error) {
-	stepPositionsRequest := &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}
-	response, err := lRunner.lspClient.GetStepPositions(context.Background(), stepPositionsRequest)
+	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
+	response, err := lRunner.lspClient.ExecuteMessageWithTimeout(stepPositionsRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
 	}
-	if response.GetError() != "" {
-		return nil, fmt.Errorf("error while connecting to runner : %s", response.GetError())
+	if response.GetStepPositionsResponse().GetError() != "" {
+		return nil, fmt.Errorf("error while connecting to runner : %s", response.GetStepPositionsResponse().GetError())
 	}
-	return response, nil
+	return response.GetStepPositionsResponse(), nil
 }
 
 func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
-	implementationFileListRequest := &gm.Empty{}
-	response, err := lRunner.lspClient.GetImplementationFiles(context.Background(), implementationFileListRequest)
+	implementationFileListRequest := &gm.Message{MessageType: gm.Message_ImplementationFileListRequest}
+	response, err := lRunner.lspClient.ExecuteMessageWithTimeout(implementationFileListRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
-	return response, nil
+	return response.GetImplementationFileListResponse(), nil
 }
 
 func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error) {
-	stubImplementationCodeRequest := &gm.StubImplementationCodeRequest{ImplementationFilePath: filePath, Codes: codes}
-	response, err := lRunner.lspClient.ImplementStub(context.Background(), stubImplementationCodeRequest)
+	stubImplementationCodeRequest := &gm.Message{
+		MessageType: gm.Message_StubImplementationCodeRequest,
+		StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{
+			ImplementationFilePath: filePath,
+			Codes: codes,
+		},
+	}
+	response, err := lRunner.lspClient.ExecuteMessageWithTimeout(stubImplementationCodeRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
-	return response, nil
+	return response.GetFileDiff(), nil
 }
 
 func getAllStepsResponse() (*gm.StepNamesResponse, error) {
-	getAllStepsRequest := &gm.StepNamesRequest{}
-	response, err := lRunner.lspClient.GetStepNames(context.Background(), getAllStepsRequest)
+	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
+	response, err := lRunner.lspClient.ExecuteMessageWithTimeout(getAllStepsRequest)
 	if err != nil {
 		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
 	}
-	return response, nil
+	return response.GetStepNamesResponse(), nil
 }
 
 func killRunner() {

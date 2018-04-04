@@ -95,7 +95,7 @@ func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gau
 	}
 	specValidationCache := make(map[string]error)
 	for _, spec := range specs {
-		v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, specValidationCache)
+		v := validation.NewSpecValidator(spec, lRunner.lspClient, conceptDictionary, []error{}, specValidationCache)
 		for _, e := range v.Validate() {
 			vErrors = append(vErrors, e.(validation.StepValidationError))
 		}

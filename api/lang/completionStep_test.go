@@ -155,18 +155,13 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 			ParameterizedStepValue: "hello <world>",
 		},
 	}
-
-	GetResponseFromRunner = func(r *gauge_messages.Message) (*gauge_messages.Message, error) {
-		return &gauge_messages.Message{
-			MessageType: gauge_messages.Message_StepNamesResponse,
-			StepNamesResponse: &gauge_messages.StepNamesResponse{
-				Steps: []string{
-					"hello world",
-					"hello <world>",
-				},
-			},
-		}, nil
+	res := &gauge_messages.StepNamesResponse{
+		Steps: []string{
+			"hello world",
+			"hello <world>",
+		},
 	}
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: res}}
 
 	got, err := allImplementedStepValues()
 
@@ -181,11 +176,7 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 }
 
 func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *testing.T) {
-
-	GetResponseFromRunner = func(r *gauge_messages.Message) (*gauge_messages.Message, error) {
-		return nil, fmt.Errorf("can't get steps")
-	}
-
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: &gauge_messages.StepNamesResponse{}, err: fmt.Errorf("can't get steps")}}
 	got, err := allImplementedStepValues()
 
 	if err == nil {

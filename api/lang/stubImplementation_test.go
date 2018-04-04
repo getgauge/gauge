@@ -26,13 +26,46 @@ import (
 	"testing"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
+type mockLspClient struct {
+	response interface{}
+	err      error
+}
+
+func (r *mockLspClient) GetStepNames(ctx context.Context, in *gm.StepNamesRequest, opts ...grpc.CallOption) (*gm.StepNamesResponse, error) {
+	return r.response.(*gm.StepNamesResponse), r.err
+}
+func (r *mockLspClient) CacheFile(ctx context.Context, in *gm.CacheFileRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return r.response.(*gm.Empty), r.err
+}
+func (r *mockLspClient) GetStepPositions(ctx context.Context, in *gm.StepPositionsRequest, opts ...grpc.CallOption) (*gm.StepPositionsResponse, error) {
+	return r.response.(*gm.StepPositionsResponse), r.err
+}
+func (r *mockLspClient) GetImplementationFiles(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileListResponse, error) {
+	return r.response.(*gm.ImplementationFileListResponse), r.err
+}
+func (r *mockLspClient) ImplementStub(ctx context.Context, in *gm.StubImplementationCodeRequest, opts ...grpc.CallOption) (*gm.FileDiff, error) {
+	return r.response.(*gm.FileDiff), r.err
+}
+func (r *mockLspClient) ValidateStep(ctx context.Context, in *gm.StepValidateRequest, opts ...grpc.CallOption) (*gm.StepValidateResponse, error) {
+	return r.response.(*gm.StepValidateResponse), r.err
+}
+func (r *mockLspClient) Refactor(ctx context.Context, in *gm.RefactorRequest, opts ...grpc.CallOption) (*gm.RefactorResponse, error) {
+	return r.response.(*gm.RefactorResponse), r.err
+}
+func (r *mockLspClient) GetStepName(ctx context.Context, in *gm.StepNameRequest, opts ...grpc.CallOption) (*gm.StepNameResponse, error) {
+	return r.response.(*gm.StepNameResponse), r.err
+}
+
 func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
+
 	var params = struct {
 		Concept bool
 	}{}
@@ -40,15 +73,10 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
 
-	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
-		response := &gauge_messages.Message{
-			MessageType: gauge_messages.Message_ImplementationFileListResponse,
-			ImplementationFileListResponse: &gauge_messages.ImplementationFileListResponse{
-				ImplementationFilePaths: []string{"file"},
-			},
-		}
-		return response, nil
+	response := &gm.ImplementationFileListResponse{
+		ImplementationFilePaths: []string{"file"},
 	}
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -69,16 +97,11 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
-
-	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
-		response := &gauge_messages.Message{
-			MessageType: gauge_messages.Message_ImplementationFileListResponse,
-			ImplementationFileListResponse: &gauge_messages.ImplementationFileListResponse{
-				ImplementationFilePaths: nil,
-			},
-		}
-		return response, nil
+	response := &gm.ImplementationFileListResponse{
+		ImplementationFilePaths: nil,
 	}
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
+
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -157,27 +180,21 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 
 	b, _ := json.Marshal(stubImplParams)
 	p := json.RawMessage(b)
-
-	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
-		response := &gauge_messages.Message{
-			MessageType: gauge_messages.Message_FileDiff,
-			FileDiff: &gauge_messages.FileDiff{
-				FilePath: "file",
-				TextDiffs: []*gauge_messages.TextDiff{
-					{
-						Span: &gauge_messages.Span{
-							Start:     1,
-							StartChar: 2,
-							End:       3,
-							EndChar:   4,
-						},
-						Content: "file content",
-					},
+	response := &gm.FileDiff{
+		FilePath: "file",
+		TextDiffs: []*gm.TextDiff{
+			{
+				Span: &gm.Span{
+					Start:     1,
+					StartChar: 2,
+					End:       3,
+					EndChar:   4,
 				},
+				Content: "file content",
 			},
-		}
-		return response, nil
+		},
 	}
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 

@@ -45,6 +45,7 @@ import (
 
 type Runner interface {
 	ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
+	ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error)
 	IsProcessRunning() bool
 	Kill() error
 	Connection() net.Conn
@@ -124,6 +125,10 @@ func (r *MultithreadedRunner) Pid() int {
 
 func (r *MultithreadedRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	return r.r.ExecuteAndGetStatus(message)
+}
+
+func (r *MultithreadedRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(message, r.r.Connection(), config.RunnerRequestTimeout())
 }
 
 type RunnerInfo struct {
@@ -268,6 +273,10 @@ func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *g
 	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
 	logger.Errorf(true, errMsg)
 	return errorResult(errMsg)
+}
+
+func (r *LanguageRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(message, r.Connection(), config.RunnerRequestTimeout())
 }
 
 func errorResult(message string) *gauge_messages.ProtoExecutionResult {

@@ -149,9 +149,7 @@ func TestCompletion(t *testing.T) {
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
 
-	GetResponseFromRunner = func(req *gm.Message) (*gm.Message, error) {
-		return &gm.Message{StepNamesResponse: &gm.StepNamesResponse{Steps: []string{}}}, nil
-	}
+	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 
