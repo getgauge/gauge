@@ -110,7 +110,7 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer) (*GrpcR
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:54545"), grpc.WithInsecure())
+	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:54545"), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}

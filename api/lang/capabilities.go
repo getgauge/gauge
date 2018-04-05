@@ -116,6 +116,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 	if lRunner.lspID == "" {
 		return fmt.Errorf("current runner is not compatible with gauge LSP")
 	}
+
 	implFileGlobPatternResponse, err := globPatternRequest()
 	if err != nil {
 		return err
