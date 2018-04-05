@@ -23,10 +23,16 @@ import (
 	"io"
 	"net"
 	"os/exec"
+	"strings"
 
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
+)
+
+const (
+	portPrefix = "Listening on port:"
+	host       = "127.0.0.1"
 )
 
 // GrpcRunner handles grpc messages.
@@ -103,14 +109,28 @@ func (r *GrpcRunner) Pid() int {
 	return 0
 }
 
+type customWriter struct {
+	file io.Writer
+	port chan string
+}
+
+func (w customWriter) Write(p []byte) (n int, err error) {
+	if strings.Contains(string(p), portPrefix) {
+		w.port <- strings.TrimSuffix(strings.Split(string(p), portPrefix)[1], "\n")
+	}
+	return w.file.Write(p)
+}
+
 // ConnectToGrpcRunner makes a connection with grpc server
 func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer) (*GrpcRunner, error) {
-	// TODO: Remove hardcoded port
-	cmd, _, err := runRunnerCommand(manifest, "54545", false, outFile)
+	portChan := make(chan string)
+	cmd, _, err := runRunnerCommand(manifest, "0", false, customWriter{file: outFile, port: portChan})
 	if err != nil {
 		return nil, err
 	}
-	conn, err := grpc.Dial(fmt.Sprintf("127.0.0.1:54545"), grpc.WithInsecure(), grpc.WithBlock())
+	port := <-portChan
+	close(portChan)
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
 	}
