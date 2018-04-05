@@ -25,8 +25,6 @@ import (
 	"fmt"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
@@ -76,15 +74,14 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
-	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: step.Value}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, lRunner.runner.Connection(), config.RunnerRequestTimeout())
+	responseMessage, err := getStepNameResponse(step.Value)
 	if err != nil {
 		return nil, err
 	}
-	if responseMessage == nil || !(responseMessage.GetStepNameResponse().GetIsStepPresent()) {
+	if responseMessage == nil || !(responseMessage.GetIsStepPresent()) {
 		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
 	}
-	return getLspLocationForStep(responseMessage.GetStepNameResponse().GetFileName(), responseMessage.GetStepNameResponse().GetSpan()), nil
+	return getLspLocationForStep(responseMessage.GetFileName(), responseMessage.GetSpan()), nil
 }
 
 func searchConcept(step *gauge.Step) (interface{}, error) {

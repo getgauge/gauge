@@ -25,6 +25,7 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -149,7 +150,7 @@ func TestCompletion(t *testing.T) {
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
 
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 

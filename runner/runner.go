@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2018 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -283,21 +283,26 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 	return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, RecoverableError: false}
 }
 
-// Looks for a runner configuration inside the runner directory
-// finds the runner configuration matching to the manifest and executes the commands for the current OS
-func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter io.Writer, killChannel chan bool, debug bool) (*LanguageRunner, error) {
+func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, outputStreamWriter io.Writer) (*exec.Cmd, *RunnerInfo, error) {
 	var r RunnerInfo
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
 	if compatibilityErr != nil {
-		return nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
+		return nil, nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, outputStreamWriter, outputStreamWriter, env)
+	return cmd, &r, err
+}
+
+// Looks for a runner configuration inside the runner directory
+// finds the runner configuration matching to the manifest and executes the commands for the current OS
+func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter io.Writer, killChannel chan bool, debug bool) (*LanguageRunner, error) {
+	cmd, r, err := runRunnerCommand(manifest, port, debug, outputStreamWriter)
 	if err != nil {
 		return nil, err
 	}

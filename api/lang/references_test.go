@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -80,7 +81,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 			},
 		},
 	}
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
 
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 

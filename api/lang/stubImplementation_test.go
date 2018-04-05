@@ -27,6 +27,7 @@ import (
 
 	"github.com/getgauge/common"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -64,6 +65,14 @@ func (r *mockLspClient) GetStepName(ctx context.Context, in *gm.StepNameRequest,
 	return r.response.(*gm.StepNameResponse), r.err
 }
 
+func (r *mockLspClient) GetGlobPatterns(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileGlobPatternResponse, error) {
+	return r.response.(*gm.ImplementationFileGlobPatternResponse), r.err
+}
+
+func (r *mockLspClient) KillProcess(ctx context.Context, in *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
 func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 
 	var params = struct {
@@ -76,7 +85,7 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: []string{"file"},
 	}
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -100,7 +109,7 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: nil,
 	}
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
 
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
@@ -194,7 +203,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 			},
 		},
 	}
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 

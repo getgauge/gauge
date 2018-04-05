@@ -23,7 +23,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -117,14 +116,13 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 	if lRunner.lspID == "" {
 		return fmt.Errorf("current runner is not compatible with gauge LSP")
 	}
-	implFileGlobPatternRequest := &gm.Message{MessageType: gm.Message_ImplementationFileGlobPatternRequest, ImplementationFileGlobPatternRequest: &gm.ImplementationFileGlobPatternRequest{}}
-	implFileGlobPatternResponse, err := GetResponseFromRunner(implFileGlobPatternRequest)
+	implFileGlobPatternResponse, err := globPatternRequest()
 	if err != nil {
 		return err
 	}
 	filePatterns := make([]fileSystemWatcher, 0)
 	documentSelectors := make([]documentSelector, 0)
-	for _, globPattern := range implFileGlobPatternResponse.GetImplementationFileGlobPatternResponse().GlobPatterns {
+	for _, globPattern := range implFileGlobPatternResponse.GlobPatterns {
 		filePatterns = append(filePatterns, fileSystemWatcher{
 			GlobPattern: globPattern,
 			Kind:        int(created) + int(deleted),

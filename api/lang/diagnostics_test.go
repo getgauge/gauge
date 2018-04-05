@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
@@ -37,7 +38,7 @@ func setup() {
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 	res := &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.lspClient = &lspRunner{client: &mockLspClient{response: res}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}
