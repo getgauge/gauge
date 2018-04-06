@@ -44,11 +44,11 @@ func (file *files) remove(uri lsp.DocumentURI) {
 }
 
 func (file *files) line(uri lsp.DocumentURI, lineNo int) string {
-	file.Lock()
-	defer file.Unlock()
-	if len(file.cache[uri]) <= lineNo {
+	if !file.exists(uri) || (getLineCount(uri) <= lineNo) {
 		return ""
 	}
+	file.Lock()
+	defer file.Unlock()
 	return file.cache[uri][lineNo]
 }
 
