@@ -35,7 +35,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -354,7 +353,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner runner.Runner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
-	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.Connection(), config.RefactorTimeout())
+	response, err := testRunner.ExecuteMessageWithTimeout(refactorRequest)
 	if err != nil {
 		return &gauge_messages.RefactorResponse{Success: false, Error: err.Error()}
 	}
@@ -401,7 +400,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: agent.oldStep.Value}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.Connection(), config.RunnerRequestTimeout())
+	responseMessage, err := runner.ExecuteMessageWithTimeout(stepNameMessage)
 	if err != nil {
 		return "", err, nil
 	}

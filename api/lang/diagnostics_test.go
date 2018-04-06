@@ -25,8 +25,8 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/validation"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
@@ -37,11 +37,8 @@ func setup() {
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
-
-	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: true}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
-	}
+	res := &gauge_messages.StepValidateResponse{IsValid: true}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}
@@ -167,7 +164,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(want, diagnostics[uri]) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, diagnostics[uri])
+		t.Errorf("want: `%v`,\n got: `%v`", want, diagnostics[uri])
 	}
 }
 

@@ -98,7 +98,7 @@ Scenario Heading
 	want := []lsp.CodeLens{scenCodeLens, scenDebugCodeLens, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }
 
@@ -202,7 +202,7 @@ Another Scenario
 	want := []lsp.CodeLens{scenCodeLens1, scenDebugCodeLens1, scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }
 
@@ -299,6 +299,6 @@ Scenario Heading
 	want := []lsp.CodeLens{scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens, specCodeLens2}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }

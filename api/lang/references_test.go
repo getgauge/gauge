@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
@@ -55,7 +56,7 @@ Scenario Heading
 		t.Fatalf("Got error %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("get step references failed, want: `%s`, got: `%s`", want, got)
+		t.Errorf("get step references failed, want: `%v`, got: `%v`", want, got)
 	}
 }
 
@@ -72,20 +73,16 @@ func TestStepValueAtShouldGive(t *testing.T) {
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
 
-	GetResponseFromRunner = func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
-		response := &gauge_messages.Message{
-			MessageType: gauge_messages.Message_StepPositionsResponse,
-			StepPositionsResponse: &gauge_messages.StepPositionsResponse{
-				StepPositions: []*gauge_messages.StepPositionsResponse_StepPosition{
-					{
-						Span:      &gauge_messages.Span{Start: 2, End: 4},
-						StepValue: "Step value at line {} and character {}",
-					},
-				},
+	response := &gauge_messages.StepPositionsResponse{
+		StepPositions: []*gauge_messages.StepPositionsResponse_StepPosition{
+			{
+				Span:      &gauge_messages.Span{Start: 2, End: 4},
+				StepValue: "Step value at line {} and character {}",
 			},
-		}
-		return response, nil
+		},
 	}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
