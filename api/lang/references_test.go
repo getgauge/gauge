@@ -56,7 +56,7 @@ Scenario Heading
 		t.Fatalf("Got error %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("get step references failed, want: `%s`, got: `%s`", want, got)
+		t.Errorf("get step references failed, want: `%v`, got: `%v`", want, got)
 	}
 }
 

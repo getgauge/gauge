@@ -164,7 +164,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(want, diagnostics[uri]) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, diagnostics[uri])
+		t.Errorf("want: `%v`,\n got: `%v`", want, diagnostics[uri])
 	}
 }
 

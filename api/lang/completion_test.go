@@ -158,7 +158,7 @@ func TestCompletion(t *testing.T) {
 		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -250,7 +250,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -413,7 +413,7 @@ func TestCompletionResolve(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete resolve request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete resolve request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -464,7 +464,7 @@ func TestIsInParamContext(t *testing.T) {
 	for _, test := range paramContextTest {
 		got := inParameterContext(test.input, test.charPos)
 		if test.want != got {
-			t.Errorf("got : %s, want : %s", got, test.want)
+			t.Errorf("got : %v, want : %v", got, test.want)
 		}
 	}
 }

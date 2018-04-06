@@ -57,7 +57,7 @@ func TestFormat(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("format failed, want: `%s`, got: `%s`", want, got)
+		t.Errorf("format failed, want: `%v`, got: `%v`", want, got)
 	}
 }
 

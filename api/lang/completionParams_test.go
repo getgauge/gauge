@@ -127,7 +127,7 @@ func TestShouldAddParam(t *testing.T) {
 	for _, test := range shouldAddParamTests {
 		got := shouldAddParam(test.aType)
 		if got != test.want {
-			t.Errorf(`want %s for shouldAddParam for ArgType "%s"", but got %s`, test.want, test.aType, got)
+			t.Errorf(`want %v for shouldAddParam for ArgType "%v"", but got %v`, test.want, test.aType, got)
 		}
 	}
 }
