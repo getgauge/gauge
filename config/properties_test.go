@@ -113,6 +113,9 @@ plugin_kill_timeout = 4000
 # Timeout in milliseconds for requests from the language runner.
 runner_request_timeout = 30000
 
+# Timeout in milliseconds for requests from the grpc runner.
+grpc_runner_request_timeout = 30000
+
 # Log request sent to Gauge telemetry engine
 gauge_telemetry_log_enabled = false
 

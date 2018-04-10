@@ -24,6 +24,9 @@ import (
 	"net"
 	"os/exec"
 	"strings"
+	"time"
+
+	"github.com/getgauge/gauge/config"
 
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/manifest"
@@ -42,8 +45,7 @@ type GrpcRunner struct {
 	Client gm.LspServiceClient
 }
 
-// ExecuteMessageWithTimeout process reuqest and give back the response
-func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) execute(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_CacheFileRequest:
 		r.Client.CacheFile(context.Background(), message.CacheFileRequest)
@@ -72,8 +74,34 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 	case gm.Message_ImplementationFileGlobPatternRequest:
 		response, err := r.Client.GetGlobPatterns(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ImplementationFileGlobPatternRequest, ImplementationFileGlobPatternResponse: response}, err
+	case gm.Message_KillProcessRequest:
+		_, err := r.Client.KillProcess(context.Background(), message.KillProcessRequest)
+		return &gm.Message{}, err
 	default:
 		return nil, nil
+	}
+}
+
+// ExecuteMessageWithTimeout process reuqest and give back the response
+func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
+	resChan := make(chan *gm.Message)
+	errChan := make(chan error)
+	go func() {
+		res, err := r.execute(message)
+		if err != nil {
+			errChan <- err
+		} else {
+			resChan <- res
+		}
+	}()
+
+	select {
+	case response := <-resChan:
+		return response, nil
+	case err := <-errChan:
+		return nil, err
+	case <-time.After(config.GrpcRunnerRequestTimeout()):
+		return nil, fmt.Errorf("Request Timed out for message %s", message.GetMessageType().String())
 	}
 }
 
@@ -86,7 +114,7 @@ func (r *GrpcRunner) IsProcessRunning() bool {
 
 // Kill closes the grpc connection and kills the process
 func (r *GrpcRunner) Kill() error {
-	r.Client.KillProcess(context.Background(), &gm.KillProcessRequest{})
+	r.ExecuteMessageWithTimeout(&gm.Message{MessageType: gm.Message_KillProcessRequest, KillProcessRequest: &gm.KillProcessRequest{}})
 	if err := r.conn.Close(); err != nil {
 		return err
 	}
