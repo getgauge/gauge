@@ -104,17 +104,19 @@ func getLspLocationForStep(fileName string, span *gauge_messages.Span) lsp.Locat
 func getLspLocationForConcept(fileName string, lineNumber int) (interface{}, error) {
 	uri := util.ConvertPathToURI(fileName)
 	var endPos int
-	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	lineNo := lineNumber - 1
 	if isOpen(uri) {
 		endPos = len(getLine(uri, lineNo))
 	} else {
-		contents, err := common.ReadFileContents(string(fileName))
+		contents, err := common.ReadFileContents(fileName)
 		if err != nil {
 			return nil, err
 		}
-		diskFileCache.add(uri, contents)
-		endPos = len(diskFileCache.line(uri, lineNo))
+		lines := util.GetLinesFromText(contents)
+		if len(lines) < lineNo {
+			return nil, fmt.Errorf("unable to read line %d from disk", lineNo+1)
+		}
+		endPos = len(lines[lineNo])
 	}
 	return lsp.Location{
 		URI: util.ConvertPathToURI(fileName),
