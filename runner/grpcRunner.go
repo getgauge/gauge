@@ -26,8 +26,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getgauge/gauge/config"
-
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
@@ -40,9 +38,10 @@ const (
 
 // GrpcRunner handles grpc messages.
 type GrpcRunner struct {
-	cmd    *exec.Cmd
-	conn   *grpc.ClientConn
-	Client gm.LspServiceClient
+	cmd     *exec.Cmd
+	conn    *grpc.ClientConn
+	Client  gm.LspServiceClient
+	Timeout time.Duration
 }
 
 func (r *GrpcRunner) execute(message *gm.Message) (*gm.Message, error) {
@@ -100,7 +99,7 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 		return response, nil
 	case err := <-errChan:
 		return nil, err
-	case <-time.After(config.GrpcRunnerRequestTimeout()):
+	case <-time.After(r.Timeout):
 		return nil, fmt.Errorf("Request Timed out for message %s", message.GetMessageType().String())
 	}
 }
@@ -150,7 +149,7 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 }
 
 // ConnectToGrpcRunner makes a connection with grpc server
-func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer) (*GrpcRunner, error) {
+func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer, timeout time.Duration) (*GrpcRunner, error) {
 	portChan := make(chan string)
 	cmd, _, err := runRunnerCommand(manifest, "0", false, customWriter{file: outFile, port: portChan})
 	if err != nil {
@@ -162,5 +161,5 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer) (*GrpcR
 	if err != nil {
 		return nil, err
 	}
-	return &GrpcRunner{Client: gm.NewLspServiceClient(conn), cmd: cmd, conn: conn}, nil
+	return &GrpcRunner{Client: gm.NewLspServiceClient(conn), cmd: cmd, conn: conn, Timeout: timeout}, nil
 }

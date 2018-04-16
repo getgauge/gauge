@@ -30,25 +30,25 @@ import (
 )
 
 const (
-	gaugeRepositoryURL       = "gauge_repository_url"
-	gaugeUpdateURL           = "gauge_update_url"
-	gaugeTemplatesURL        = "gauge_templates_url"
-	runnerConnectionTimeout  = "runner_connection_timeout"
-	pluginConnectionTimeout  = "plugin_connection_timeout"
-	pluginKillTimeOut        = "plugin_kill_timeout"
-	runnerRequestTimeout     = "runner_request_timeout"
-	grpcRunnerRequestTimeout = "grpc_runner_request_timeout"
-	checkUpdates             = "check_updates"
-	telemetryEnabled         = "gauge_telemetry_enabled"
-	telemetryLoggingEnabled  = "gauge_telemetry_log_enabled"
+	gaugeRepositoryURL      = "gauge_repository_url"
+	gaugeUpdateURL          = "gauge_update_url"
+	gaugeTemplatesURL       = "gauge_templates_url"
+	runnerConnectionTimeout = "runner_connection_timeout"
+	pluginConnectionTimeout = "plugin_connection_timeout"
+	pluginKillTimeOut       = "plugin_kill_timeout"
+	runnerRequestTimeout    = "runner_request_timeout"
+	ideRequestTimeout       = "ide_request_timeout"
+	checkUpdates            = "check_updates"
+	telemetryEnabled        = "gauge_telemetry_enabled"
+	telemetryLoggingEnabled = "gauge_telemetry_log_enabled"
 
-	defaultRunnerConnectionTimeout  = time.Second * 25
-	defaultPluginConnectionTimeout  = time.Second * 10
-	defaultPluginKillTimeout        = time.Second * 4
-	defaultRefactorTimeout          = time.Second * 10
-	defaultRunnerRequestTimeout     = time.Second * 30
-	defaultGrpcRunnerRequestTimeout = time.Second * 30
-	LayoutForTimeStamp              = "Jan 2, 2006 at 3:04pm"
+	defaultRunnerConnectionTimeout = time.Second * 25
+	defaultPluginConnectionTimeout = time.Second * 10
+	defaultPluginKillTimeout       = time.Second * 4
+	defaultRefactorTimeout         = time.Second * 10
+	defaultRunnerRequestTimeout    = time.Second * 30
+	defaultIdeRequestTimeout       = time.Second * 30
+	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
 var APILog = logging.MustGetLogger("gauge-api")
@@ -93,12 +93,12 @@ func RunnerRequestTimeout() time.Duration {
 }
 
 // Timeout in milliseconds for requests from the grpc language runner.
-func GrpcRunnerRequestTimeout() time.Duration {
-	intervalString := os.Getenv(grpcRunnerRequestTimeout)
+func IdeRequestTimeout() time.Duration {
+	intervalString := os.Getenv(ideRequestTimeout)
 	if intervalString == "" {
-		intervalString = getFromConfig(grpcRunnerRequestTimeout)
+		intervalString = getFromConfig(ideRequestTimeout)
 	}
-	return convertToTime(intervalString, defaultGrpcRunnerRequestTimeout, grpcRunnerRequestTimeout)
+	return convertToTime(intervalString, defaultIdeRequestTimeout, ideRequestTimeout)
 }
 
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
