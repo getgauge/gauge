@@ -402,6 +402,26 @@ func TestCompletionWithError(t *testing.T) {
 	}
 }
 
+func TestCompletionForInvalidPosition(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add("uri", " * step")
+	position := lsp.Position{Line: 1, Character: 2}
+	want := completionList{IsIncomplete: false, Items: []completionItem{}}
+	provider = &dummyInfoProvider{}
+
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
+	p := json.RawMessage(b)
+
+	got, err := completion(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Autocomplete request failed, got: `%+v`, want: `%+v`", got, want)
+	}
+}
+
 func TestCompletionResolve(t *testing.T) {
 	want := completionItem{CompletionItem: lsp.CompletionItem{Label: "step"}}
 	b, _ := json.Marshal(want)
