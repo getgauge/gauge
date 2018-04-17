@@ -34,6 +34,7 @@ func TestJSONFormatter(t *testing.T) {
 		"gauge_telemetry_log_enabled   	false                              ",
 		"gauge_templates_url           	https://downloads.gauge.org/templates",
 		"gauge_update_url              	https://downloads.gauge.org/gauge  ",
+		"ide_request_timeout           	30000                              ",
 		"plugin_connection_timeout     	10000                              ",
 		"plugin_kill_timeout           	4000                               ",
 		"runner_connection_timeout     	30000                              ",

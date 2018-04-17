@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/getgauge/gauge/config"
+
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -57,7 +59,7 @@ func connectToRunner() error {
 		return err
 	}
 
-	lRunner.runner, err = runner.ConnectToGrpcRunner(manifest, outFile)
+	lRunner.runner, err = runner.ConnectToGrpcRunner(manifest, outFile, config.IdeRequestTimeout())
 	return err
 }
 

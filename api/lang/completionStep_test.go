@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
@@ -162,7 +163,7 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 			"hello <world>",
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}}
+	lRunner.runner = &runner.GrpcRunner{Timeout: config.IdeRequestTimeout(), Client: &mockLspClient{response: res}}
 
 	got, err := allImplementedStepValues()
 
@@ -177,7 +178,7 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 }
 
 func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *testing.T) {
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gauge_messages.StepNamesResponse{}, err: fmt.Errorf("can't get steps")}}
+	lRunner.runner = &runner.GrpcRunner{Timeout: config.IdeRequestTimeout(), Client: &mockLspClient{response: &gauge_messages.StepNamesResponse{}, err: fmt.Errorf("can't get steps")}}
 	got, err := allImplementedStepValues()
 
 	if err == nil {
