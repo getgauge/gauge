@@ -24,9 +24,9 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/config"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
