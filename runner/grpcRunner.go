@@ -143,7 +143,8 @@ type customWriter struct {
 
 func (w customWriter) Write(p []byte) (n int, err error) {
 	if strings.Contains(string(p), portPrefix) {
-		w.port <- strings.TrimSuffix(strings.Split(string(p), portPrefix)[1], "\n")
+		text := strings.Replace(string(p), "\r\n", "\n", -1)
+		w.port <- strings.TrimSuffix(strings.Split(text, portPrefix)[1], "\n")
 	}
 	return w.file.Write(p)
 }
