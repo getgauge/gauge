@@ -20,12 +20,12 @@ package lang
 import (
 	"os"
 	"testing"
+	"time"
 
 	"reflect"
 
 	"strings"
 
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
@@ -46,7 +46,7 @@ func setup() {
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 	res := &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}, Timeout: config.IdeRequestTimeout()}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}

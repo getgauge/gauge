@@ -86,7 +86,7 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: []string{"file"},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -110,7 +110,7 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: nil,
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
 
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
@@ -204,7 +204,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 
