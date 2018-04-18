@@ -18,6 +18,7 @@
 package lang
 
 import (
+	"os"
 	"testing"
 
 	"reflect"
@@ -33,6 +34,12 @@ import (
 var conceptFile = "foo.cpt"
 var specFile = "foo.spec"
 
+func TestMain(m *testing.M) {
+	exitCode := m.Run()
+	tearDown()
+	os.Exit(exitCode)
+}
+
 func setup() {
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
@@ -47,6 +54,9 @@ func setup() {
 	util.GetSpecFiles = func(paths []string) []string {
 		return []string{specFile}
 	}
+}
+func tearDown() {
+	lRunner.runner = nil
 }
 
 func TestDiagnosticWithParseErrorsInSpec(t *testing.T) {
