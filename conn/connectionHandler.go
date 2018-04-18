@@ -37,7 +37,7 @@ type GaugeConnectionHandler struct {
 
 func NewGaugeConnectionHandler(port int, messageHandler messageHandler) (*GaugeConnectionHandler, error) {
 	// port = 0 means GO will find a unused port
-	address, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("localhost:%d", port))
+	address, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("127.0.0.1:%d", port))
 	if err != nil {
 		return nil, err
 	}
