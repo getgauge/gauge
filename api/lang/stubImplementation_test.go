@@ -26,6 +26,7 @@ import (
 	"testing"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/config"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
@@ -85,7 +86,7 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: []string{"file"},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -109,7 +110,7 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 	response := &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: nil,
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
 
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
@@ -203,7 +204,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 

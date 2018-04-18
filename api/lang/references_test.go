@@ -22,6 +22,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
@@ -81,7 +82,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: config.IdeRequestTimeout()}
 
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 
