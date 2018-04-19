@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getgauge/gauge/config"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
@@ -156,8 +157,14 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer, timeout
 	if err != nil {
 		return nil, err
 	}
-	port := <-portChan
-	close(portChan)
+	var port string
+	select {
+	case port = <-portChan:
+		close(portChan)
+	case <-time.After(config.RunnerConnectionTimeout()):
+		return nil, fmt.Errorf("Timed out connecting to %s", manifest.Language)
+	}
+
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port), grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		return nil, err
