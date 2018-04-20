@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
@@ -81,7 +82,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
 
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 

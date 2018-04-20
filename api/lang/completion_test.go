@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
@@ -150,7 +151,7 @@ func TestCompletion(t *testing.T) {
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
 
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}, Timeout: time.Second * 30}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 

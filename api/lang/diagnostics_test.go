@@ -20,6 +20,7 @@ package lang
 import (
 	"os"
 	"testing"
+	"time"
 
 	"reflect"
 
@@ -45,7 +46,7 @@ func setup() {
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 	res := &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}
