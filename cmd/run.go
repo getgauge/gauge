@@ -67,15 +67,18 @@ var (
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
 			handleRepeatCommand(cmd, os.Args)
+			if repeat {
+				return
+			}
+			if failed {
+				loadLastState(cmd)
+				return
+			}
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(true, e.Error())
 			}
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
-			}
-			if failed {
-				loadLastState(cmd)
-				return
 			}
 			execute(args)
 		},
