@@ -199,6 +199,33 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 		"}")
 }
 
+func (s *MySuite) TestFilterDuplicateValidationErrors(c *C) {
+	step := gauge.Step{
+		Value: "abc",
+	}
+	step1 := gauge.Step{
+		Value: "helo",
+	}
+	implNotFoundError := StepValidationError{
+		step:       &step,
+		errorType:  &implNotFound,
+		suggestion: "suggestion",
+	}
+	dupImplFoundError := StepValidationError{
+		step:       &step1,
+		errorType:  &dupImplFound,
+		suggestion: "suggestion1",
+	}
+
+	errs := []error{implNotFoundError, implNotFoundError, dupImplFoundError}
+
+	want := []error{implNotFoundError, dupImplFoundError}
+
+	got := filterDuplicates(errs, make(map[string]bool))
+
+	c.Assert(got, DeepEquals, want)
+}
+
 type tableRow struct {
 	name           string
 	input          string

@@ -260,11 +260,23 @@ func fillSpecErrors(spec *gauge.Specification, errMap *gauge.BuildErrors, steps 
 }
 
 func printValidationFailures(validationErrors validationErrors) {
+	exists := make(map[string]bool)
 	for _, errs := range validationErrors {
-		for _, e := range errs {
+		for _, e := range filterDuplicates(errs, exists) {
 			logger.Errorf(true, "[ValidationError] %s", e.Error())
 		}
 	}
+}
+
+func filterDuplicates(errs []error, exists map[string]bool) []error {
+	filteredErrs := make([]error, 0)
+	for _, e := range errs {
+		if _, ok := exists[e.(StepValidationError).step.Value]; !ok {
+			exists[e.(StepValidationError).step.Value] = true
+			filteredErrs = append(filteredErrs, e)
+		}
+	}
+	return filteredErrs
 }
 
 type validationErrors map[*gauge.Specification][]error
@@ -298,16 +310,13 @@ func (v *SpecValidator) Validate() []error {
 // Validates a step. If validation result from runner is not valid then it creates a new validation error.
 // If the error type is StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND then gives suggestion with step implementation stub.
 func (v *SpecValidator) Step(s *gauge.Step) {
-	val, ok := v.stepValidationCache[s.Value]
 	if s.IsConcept {
-		if !ok {
-			for _, c := range s.ConceptSteps {
-				v.Step(c)
-			}
-			v.stepValidationCache[s.Value] = nil
+		for _, c := range s.ConceptSteps {
+			v.Step(c)
 		}
 		return
 	}
+	val, ok := v.stepValidationCache[s.Value]
 	if !ok {
 		err := v.validateStep(s)
 		if err != nil {
