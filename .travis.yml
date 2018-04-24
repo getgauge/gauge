@@ -25,5 +25,5 @@ script:
   - $GAUGE_PREFIX/bin/gauge install
   - java -version
   - echo $JAVA_HOME
-  - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" mvn clean -q install -Denv=ci-java -Dtags=java -DinParallel=false
+  - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java
 
