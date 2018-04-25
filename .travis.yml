@@ -18,12 +18,13 @@ install:
 script:
   - go run build/make.go
   - go run build/make.go --test
-  - echo "gauge_repository_url = https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/" >> skel/gauge.properties
   - go run build/make.go --install --prefix=$GAUGE_PREFIX
+  - $GAUGE_PREFIX/bin/gauge config gauge_repository_url https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/
   - git clone --depth=1 https://github.com/getgauge/gauge-tests
   - cd gauge-tests
   - $GAUGE_PREFIX/bin/gauge install
   - java -version
   - echo $JAVA_HOME
+  - $GAUGE_PREFIX/bin/gauge version
   - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java
 
