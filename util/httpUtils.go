@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/logger"
 )
 
 // progressReader is for indicating the download / upload progress on the console
@@ -70,6 +71,10 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	if resp.StatusCode >= 400 {
 		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
 	}
+	if resp.StatusCode != 200 {
+		logger.Debugf(true, "Unexpected status code while download. downloading file: %s.\n%s", url, resp.Status)
+	}
+
 	defer resp.Body.Close()
 
 	out, err := os.Create(targetFile)
