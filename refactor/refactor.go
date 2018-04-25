@@ -88,7 +88,7 @@ func (refactoringResult *refactoringResult) AllFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.ConceptsChanged {
+	for fileName := range refactoringResult.ConceptsChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -96,7 +96,7 @@ func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) specFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.SpecsChanged {
+	for fileName := range refactoringResult.SpecsChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -104,7 +104,7 @@ func (refactoringResult *refactoringResult) specFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) runnerFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.RunnerFilesChanged {
+	for fileName := range refactoringResult.RunnerFilesChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -408,7 +408,7 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (st
 		return "", nil, &parser.Warning{Message: fmt.Sprintf("Step implementation not found: %s", agent.oldStep.LineText)}
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
-		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
+		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
 	}
 	return responseMessage.GetStepNameResponse().GetStepName()[0], nil, nil
 }

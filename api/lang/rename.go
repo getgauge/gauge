@@ -45,7 +45,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 
 	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), util.ConvertURItoFilePath(params.TextDocument.URI))
 	if !pResult.Ok {
-		return nil, fmt.Errorf("refactoring failed due to parse errors")
+		return nil, fmt.Errorf("refactoring failed due to parse errors: \n%s", strings.Join(pResult.Errors(), "\n"))
 	}
 	var step *gauge.Step
 	for _, item := range spec.AllItems() {
