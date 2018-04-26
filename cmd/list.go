@@ -40,13 +40,19 @@ var (
 				return
 			}
 			if specsFlag {
+				logger.Info(true, "[Specifications]")
 				listSpecifications(res.SpecCollection)
-			} else if scenariosFlag {
+			}
+			if scenariosFlag {
+				logger.Info(true, "[Scenarios]")
 				listScenarios(res.SpecCollection)
-			} else if tagsFlag {
+			}
+			if tagsFlag {
+				logger.Info(true, "[Tags]")
 				listTags(res.SpecCollection)
-			} else {
-				exit(fmt.Errorf("Missing flag"), cmd.UsageString())
+			}
+			if !specsFlag && !scenariosFlag && !tagsFlag {
+				exit(fmt.Errorf("Missing flag, nothing to list"), cmd.UsageString())
 			}
 		},
 		DisableAutoGenTag: true,
@@ -65,12 +71,10 @@ func init() {
 
 func listTags(s *gauge.SpecCollection) {
 	allTags := []string{}
-	for s.HasNext() {
-		for _, spec := range s.Next() {
-			allTags = appendTags(allTags, spec.Tags)
-			for _, scenario := range spec.Scenarios {
-				allTags = appendTags(allTags, scenario.Tags)
-			}
+	for _, spec := range s.Specs() {
+		allTags = appendTags(allTags, spec.Tags)
+		for _, scenario := range spec.Scenarios {
+			allTags = appendTags(allTags, scenario.Tags)
 		}
 	}
 	printSortedDistinctElements(allTags)
@@ -78,11 +82,9 @@ func listTags(s *gauge.SpecCollection) {
 
 func listScenarios(s *gauge.SpecCollection) {
 	allScenarios := []string{}
-	for s.HasNext() {
-		for _, spec := range s.Next() {
-			for _, scenario := range spec.Scenarios {
-				allScenarios = append(allScenarios, scenario.Heading.Value)
-			}
+	for _, spec := range s.Specs() {
+		for _, scenario := range spec.Scenarios {
+			allScenarios = append(allScenarios, scenario.Heading.Value)
 		}
 	}
 	printSortedDistinctElements(allScenarios)
@@ -90,10 +92,8 @@ func listScenarios(s *gauge.SpecCollection) {
 
 func listSpecifications(s *gauge.SpecCollection) {
 	allSpecs := []string{}
-	for s.HasNext() {
-		for _, spec := range s.Next() {
-			allSpecs = append(allSpecs, spec.Heading.Value)
-		}
+	for _, spec := range s.Specs() {
+		allSpecs = append(allSpecs, spec.Heading.Value)
 	}
 	printSortedDistinctElements(allSpecs)
 }
@@ -102,7 +102,7 @@ func printSortedDistinctElements(s []string) {
 	unique := uniqueNonEmptyElementsOf(s)
 	supersort.Strings(unique)
 	for _, element := range unique {
-		logger.Info(true, element)
+		logger.Infof(true, element)
 	}
 }
 
