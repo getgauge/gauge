@@ -34,9 +34,6 @@ var (
 		Long:    `List specifications, scenarios or tags for a gauge project`,
 		Example: `  gauge list --tags specs`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				exit(fmt.Errorf("Missing argument <entity>"), cmd.UsageString())
-			}
 			res := validation.ValidateSpecs(getSpecsDir(args), false)
 			if len(res.Errs) > 0 {
 				// how to print nicely errors ?
@@ -46,8 +43,10 @@ var (
 				listSpecifications(res.SpecCollection)
 			} else if scenariosFlag {
 				listScenarios(res.SpecCollection)
-			} else {
+			} else if tagsFlag {
 				listTags(res.SpecCollection)
+			} else {
+				exit(fmt.Errorf("Missing flag"), cmd.UsageString())
 			}
 		},
 		DisableAutoGenTag: true,
