@@ -23,7 +23,7 @@ import (
 
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/validation"
+	"github.com/getgauge/gauge/parser"
 	"github.com/spf13/cobra"
 )
 
@@ -34,22 +34,21 @@ var (
 		Long:    `List specifications, scenarios or tags for a gauge project`,
 		Example: `  gauge list --tags specs`,
 		Run: func(cmd *cobra.Command, args []string) {
-			res := validation.ValidateSpecs(getSpecsDir(args), false)
-			if len(res.Errs) > 0 {
-				// how to print nicely errors ?
+			specs, failed := parser.ParseSpecs(getSpecsDir(args), gauge.NewConceptDictionary(), gauge.NewBuildErrors())
+			if failed {
 				return
 			}
 			if specsFlag {
 				logger.Info(true, "[Specifications]")
-				listSpecifications(res.SpecCollection)
+				listSpecifications(specs)
 			}
 			if scenariosFlag {
 				logger.Info(true, "[Scenarios]")
-				listScenarios(res.SpecCollection)
+				listScenarios(specs)
 			}
 			if tagsFlag {
 				logger.Info(true, "[Tags]")
-				listTags(res.SpecCollection)
+				listTags(specs)
 			}
 			if !specsFlag && !scenariosFlag && !tagsFlag {
 				exit(fmt.Errorf("Missing flag, nothing to list"), cmd.UsageString())
@@ -64,14 +63,14 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(listCmd)
-	listCmd.Flags().BoolVarP(&tagsFlag, "tags", "t", false, "List the tags in projects")
-	listCmd.Flags().BoolVarP(&specsFlag, "specs", "s", false, "List the specifications in projects")
-	listCmd.Flags().BoolVarP(&scenariosFlag, "scenarios", "c", false, "List the scenarios in projects")
+	listCmd.Flags().BoolVarP(&tagsFlag, "tags", "", false, "List the tags in projects")
+	listCmd.Flags().BoolVarP(&specsFlag, "specs", "", false, "List the specifications in projects")
+	listCmd.Flags().BoolVarP(&scenariosFlag, "scenarios", "", false, "List the scenarios in projects")
 }
 
-func listTags(s *gauge.SpecCollection) {
+func listTags(s []*gauge.Specification) {
 	allTags := []string{}
-	for _, spec := range s.Specs() {
+	for _, spec := range s {
 		allTags = appendTags(allTags, spec.Tags)
 		for _, scenario := range spec.Scenarios {
 			allTags = appendTags(allTags, scenario.Tags)
@@ -80,9 +79,9 @@ func listTags(s *gauge.SpecCollection) {
 	printSortedDistinctElements(allTags)
 }
 
-func listScenarios(s *gauge.SpecCollection) {
+func listScenarios(s []*gauge.Specification) {
 	allScenarios := []string{}
-	for _, spec := range s.Specs() {
+	for _, spec := range s {
 		for _, scenario := range spec.Scenarios {
 			allScenarios = append(allScenarios, scenario.Heading.Value)
 		}
@@ -90,9 +89,9 @@ func listScenarios(s *gauge.SpecCollection) {
 	printSortedDistinctElements(allScenarios)
 }
 
-func listSpecifications(s *gauge.SpecCollection) {
+func listSpecifications(s []*gauge.Specification) {
 	allSpecs := []string{}
-	for _, spec := range s.Specs() {
+	for _, spec := range s {
 		allSpecs = append(allSpecs, spec.Heading.Value)
 	}
 	printSortedDistinctElements(allSpecs)
