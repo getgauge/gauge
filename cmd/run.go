@@ -146,8 +146,8 @@ func init() {
 	runCmd.Flags().StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	runCmd.Flags().BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
 	runCmd.Flags().BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
-	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
-	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
+	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
+	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
 }
 
