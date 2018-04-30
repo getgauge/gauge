@@ -40,15 +40,15 @@ var (
 			}
 			if specsFlag {
 				logger.Info(true, "[Specifications]")
-				listSpecifications(specs)
+				listSpecifications(specs, print)
 			}
 			if scenariosFlag {
 				logger.Info(true, "[Scenarios]")
-				listScenarios(specs)
+				listScenarios(specs, print)
 			}
 			if tagsFlag {
 				logger.Info(true, "[Tags]")
-				listTags(specs)
+				listTags(specs, print)
 			}
 			if !specsFlag && !scenariosFlag && !tagsFlag {
 				exit(fmt.Errorf("Missing flag, nothing to list"), cmd.UsageString())
@@ -68,7 +68,15 @@ func init() {
 	listCmd.Flags().BoolVarP(&scenariosFlag, "scenarios", "", false, "List the scenarios in projects")
 }
 
-func listTags(s []*gauge.Specification) {
+type handleResult func([]string)
+
+func print(res []string) {
+	for _, element := range res {
+		logger.Infof(true, element)
+	}
+}
+
+func listTags(s []*gauge.Specification, f handleResult) {
 	allTags := []string{}
 	for _, spec := range s {
 		allTags = appendTags(allTags, spec.Tags)
@@ -76,33 +84,31 @@ func listTags(s []*gauge.Specification) {
 			allTags = appendTags(allTags, scenario.Tags)
 		}
 	}
-	printSortedDistinctElements(allTags)
+	f(sortedDistinctElements(allTags))
 }
 
-func listScenarios(s []*gauge.Specification) {
+func listScenarios(s []*gauge.Specification, f handleResult) {
 	allScenarios := []string{}
 	for _, spec := range s {
 		for _, scenario := range spec.Scenarios {
 			allScenarios = append(allScenarios, scenario.Heading.Value)
 		}
 	}
-	printSortedDistinctElements(allScenarios)
+	f(sortedDistinctElements(allScenarios))
 }
 
-func listSpecifications(s []*gauge.Specification) {
+func listSpecifications(s []*gauge.Specification, f handleResult) {
 	allSpecs := []string{}
 	for _, spec := range s {
 		allSpecs = append(allSpecs, spec.Heading.Value)
 	}
-	printSortedDistinctElements(allSpecs)
+	f(sortedDistinctElements(allSpecs))
 }
 
-func printSortedDistinctElements(s []string) {
+func sortedDistinctElements(s []string) []string {
 	unique := uniqueNonEmptyElementsOf(s)
 	supersort.Strings(unique)
-	for _, element := range unique {
-		logger.Infof(true, element)
-	}
+	return unique
 }
 
 func appendTags(s []string, tags *gauge.Tags) []string {
