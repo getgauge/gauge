@@ -263,6 +263,7 @@ func initializeRunner() {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
 		logDebug(nil, "Current runner is not compatible with gauge LSP.")
+		return
 	}
 	err = startRunner()
 	if err != nil {
