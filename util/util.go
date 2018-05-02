@@ -133,3 +133,12 @@ func GetSpecDirs() []string {
 	}
 	return []string{common.SpecsDirectoryName}
 }
+
+func ListContains(list []string, val string) bool {
+	for _, s := range list {
+		if s == val {
+			return true
+		}
+	}
+	return false
+}

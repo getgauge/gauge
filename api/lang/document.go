@@ -84,6 +84,10 @@ func documentChangeWatchedFiles(req *jsonrpc2.Request, ctx context.Context, conn
 			if err := documentCreate(fileEvent.URI, ctx, conn); err != nil {
 				return err
 			}
+		} else if fileEvent.Type == int(lsp.Deleted) {
+			if err := documentDelete(fileEvent.URI, ctx, conn); err != nil {
+				return err
+			}
 		} else {
 			if err := documentCreate(fileEvent.URI, ctx, conn); err != nil {
 				return err
