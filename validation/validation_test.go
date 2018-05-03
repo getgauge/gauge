@@ -200,6 +200,16 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 }
 
 func (s *MySuite) TestFilterDuplicateValidationErrors(c *C) {
+	specText := `Specification Heading
+=====================
+Scenario 1
+----------
+* abc
+
+Scenario 2
+----------
+* hello
+`
 	step := gauge.Step{
 		Value: "abc",
 	}
@@ -217,11 +227,18 @@ func (s *MySuite) TestFilterDuplicateValidationErrors(c *C) {
 		suggestion: "suggestion1",
 	}
 
-	errs := []error{implNotFoundError, implNotFoundError, dupImplFoundError}
+	p := new(parser.SpecParser)
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errs := validationErrors{spec: []error{
+		implNotFoundError,
+		implNotFoundError,
+		dupImplFoundError,
+	}}
 
 	want := []error{implNotFoundError, dupImplFoundError}
 
-	got := filterDuplicates(errs, make(map[string]bool))
+	got := FilterDuplicates(errs)
 
 	c.Assert(got, DeepEquals, want)
 }

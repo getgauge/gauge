@@ -20,7 +20,6 @@ package lang
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sync"
 
 	"github.com/getgauge/common"
@@ -39,32 +38,6 @@ var diagnosticsLock sync.Mutex
 // isInQueue ensures that only one other goroutine waits for the diagnostic lock.
 // Since diagnostics are published for all files, multiple threads need not wait to publish diagnostics.
 var isInQueue = false
-
-type diagnosticsMap struct {
-	diagnostics map[lsp.DocumentURI][]lsp.Diagnostic
-}
-
-func (dm diagnosticsMap) add(uri lsp.DocumentURI, d lsp.Diagnostic) {
-	if !dm.contains(uri, d) {
-		dm.diagnostics[uri] = append(dm.diagnostics[uri], d)
-	}
-}
-
-func (dm diagnosticsMap) contains(uri lsp.DocumentURI, d lsp.Diagnostic) bool {
-	for _, diagnostic := range dm.diagnostics[uri] {
-		if reflect.DeepEqual(diagnostic, d) {
-			return true
-		}
-	}
-	return false
-}
-
-func (dm diagnosticsMap) hasURI(uri lsp.DocumentURI) bool {
-	if _, ok := dm.diagnostics[uri]; !ok {
-		return false
-	}
-	return false
-}
 
 func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 	defer recoverPanic(nil)
@@ -93,7 +66,7 @@ func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn j
 }
 
 func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
-	diagnostics := diagnosticsMap{diagnostics: make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)}
+	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
 	conceptDictionary, err := validateConcepts(diagnostics)
 	if err != nil {
 		return nil, err
@@ -101,38 +74,36 @@ func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
 	if err = validateSpecs(conceptDictionary, diagnostics); err != nil {
 		return nil, err
 	}
-	return diagnostics.diagnostics, nil
+	return diagnostics, nil
 }
 
-func createValidationDiagnostics(errors []validation.StepValidationError, diagnostics diagnosticsMap) {
+func createValidationDiagnostics(errors []error, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range errors {
-		uri := util.ConvertPathToURI(err.FileName())
-		d := createDiagnostic(uri, err.Message(), err.Step().LineNo-1, 1)
-		if err.ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
-			d.Code = err.Suggestion()
+		uri := util.ConvertPathToURI(err.(validation.StepValidationError).FileName())
+		d := createDiagnostic(uri, err.(validation.StepValidationError).Message(), err.(validation.StepValidationError).Step().LineNo-1, 1)
+		if err.(validation.StepValidationError).ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
+			d.Code = err.(validation.StepValidationError).Suggestion()
 		}
-		diagnostics.add(uri, d)
+		diagnostics[uri] = append(diagnostics[uri], d)
 	}
 	return
 }
 
-func validateSpec(spec *gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
+func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) []error {
 	if lRunner.runner == nil {
-		return
+		return []error{}
 	}
-	v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, map[string]error{})
-	for _, e := range v.Validate() {
-		vErrors = append(vErrors, e.(validation.StepValidationError))
-	}
-	return
+	vErrs := validation.NewValidator(specs, lRunner.runner, conceptDictionary).Validate()
+	return validation.FilterDuplicates(vErrs)
 }
 
-func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics diagnosticsMap) error {
+func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
 	specFiles := util.GetSpecFiles(util.GetSpecDirs())
+	specs := make([]*gauge.Specification, 0)
 	for _, specFile := range specFiles {
 		uri := util.ConvertPathToURI(specFile)
-		if !diagnostics.hasURI(uri) {
-			diagnostics.diagnostics[uri] = make([]lsp.Diagnostic, 0)
+		if _, ok := diagnostics[uri]; !ok {
+			diagnostics[uri] = make([]lsp.Diagnostic, 0)
 		}
 		content, err := getContentFromFileOrDisk(specFile)
 		if err != nil {
@@ -144,19 +115,20 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics diagn
 		}
 		createDiagnostics(res, diagnostics)
 		if res.Ok {
-			createValidationDiagnostics(validateSpec(spec, conceptDictionary), diagnostics)
+			specs = append(specs, spec)
 		}
 	}
+	createValidationDiagnostics(validateSpecifications(specs, conceptDictionary), diagnostics)
 	return nil
 }
 
-func validateConcepts(diagnostics diagnosticsMap) (*gauge.ConceptDictionary, error) {
+func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.ConceptDictionary, error) {
 	conceptFiles := util.GetConceptFiles()
 	conceptDictionary := gauge.NewConceptDictionary()
 	for _, conceptFile := range conceptFiles {
 		uri := util.ConvertPathToURI(conceptFile)
-		if !diagnostics.hasURI(uri) {
-			diagnostics.diagnostics[uri] = make([]lsp.Diagnostic, 0)
+		if _, ok := diagnostics[uri]; !ok {
+			diagnostics[uri] = make([]lsp.Diagnostic, 0)
 		}
 		content, err := getContentFromFileOrDisk(conceptFile)
 		if err != nil {
@@ -174,14 +146,14 @@ func validateConcepts(diagnostics diagnosticsMap) (*gauge.ConceptDictionary, err
 	return conceptDictionary, nil
 }
 
-func createDiagnostics(res *parser.ParseResult, diagnostics diagnosticsMap) {
+func createDiagnostics(res *parser.ParseResult, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range res.ParseErrors {
 		uri := util.ConvertPathToURI(err.FileName)
-		diagnostics.add(uri, createDiagnostic(uri, err.Message, err.LineNo-1, 1))
+		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, 1))
 	}
 	for _, warning := range res.Warnings {
 		uri := util.ConvertPathToURI(warning.FileName)
-		diagnostics.add(uri, createDiagnostic(uri, warning.Message, warning.LineNo-1, 2))
+		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, warning.Message, warning.LineNo-1, 2))
 	}
 }
 
