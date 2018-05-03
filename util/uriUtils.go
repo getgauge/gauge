@@ -26,24 +26,24 @@ import (
 
 const (
 	uriPrefix      = "file://"
-	unixSep        = "/"
+	UnixSep        = "/"
 	windowColonRep = "%3A"
 	colon          = ":"
-	windowsSep     = "\\"
+	WindowsSep     = "\\"
 )
 
 // ConvertURItoFilePath - converts file uri (eg: file://example.spec) to OS specific file paths.
-func ConvertURItoFilePath(uri lsp.DocumentURI) lsp.DocumentURI {
+func ConvertURItoFilePath(uri lsp.DocumentURI) string {
 	if IsWindows() {
-		return lsp.DocumentURI(convertURIToWindowsPath(string(uri)))
+		return convertURIToWindowsPath(string(uri))
 	}
-	return lsp.DocumentURI(convertURIToUnixPath(string(uri)))
+	return convertURIToUnixPath(string(uri))
 }
 
 func convertURIToWindowsPath(uri string) string {
-	uri = strings.TrimPrefix(uri, uriPrefix+unixSep)
+	uri = strings.TrimPrefix(uri, uriPrefix+UnixSep)
 	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	path, _ := url.PathUnescape(strings.Replace(uri, unixSep, windowsSep, -1))
+	path, _ := url.PathUnescape(strings.Replace(uri, UnixSep, WindowsSep, -1))
 	return path
 }
 
@@ -53,18 +53,18 @@ func convertURIToUnixPath(uri string) string {
 }
 
 // ConvertPathToURI - converts OS specific file paths to file uri (eg: file://example.spec).
-func ConvertPathToURI(path lsp.DocumentURI) lsp.DocumentURI {
+func ConvertPathToURI(path string) lsp.DocumentURI {
 	if IsWindows() {
-		return lsp.DocumentURI(convertWindowsPathToURI(string(path)))
+		return lsp.DocumentURI(convertWindowsPathToURI(path))
 	}
-	return lsp.DocumentURI(convertUnixPathToURI(string(path)))
+	return lsp.DocumentURI(convertUnixPathToURI(path))
 }
 
 func convertWindowsPathToURI(path string) string {
-	path = strings.Replace(path, windowsSep, unixSep, -1)
+	path = strings.Replace(path, WindowsSep, UnixSep, -1)
 	encodedPath := url.URL{Path: path}
 	path = strings.Replace(strings.TrimPrefix(encodedPath.String(), "./"), colon, windowColonRep, -1)
-	return uriPrefix + unixSep + path
+	return uriPrefix + UnixSep + path
 }
 
 func convertUnixPathToURI(path string) string {

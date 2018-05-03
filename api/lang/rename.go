@@ -43,9 +43,9 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 		return nil, err
 	}
 
-	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), string(util.ConvertURItoFilePath(params.TextDocument.URI)))
+	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), util.ConvertURItoFilePath(params.TextDocument.URI))
 	if !pResult.Ok {
-		return nil, fmt.Errorf("refactoring failed due to parse errors")
+		return nil, fmt.Errorf("refactoring failed due to parse errors: \n%s", strings.Join(pResult.Errors(), "\n"))
 	}
 	var step *gauge.Step
 	for _, item := range spec.AllItems() {
@@ -59,7 +59,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	}
 	newName := getNewStepName(params, step)
 
-	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, []string{common.SpecsDirectoryName})
+	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, util.GetSpecDirs())
 	for _, warning := range refactortingResult.Warnings {
 		logWarning(req, warning)
 	}
@@ -91,7 +91,7 @@ func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
 func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanged map[string]string) error {
 	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	for fileName, text := range filesChanged {
-		uri := util.ConvertPathToURI(lsp.DocumentURI(fileName))
+		uri := util.ConvertPathToURI(fileName)
 		var lastLineNo int
 		var lastLineLength int
 		if isOpen(uri) {

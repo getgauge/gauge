@@ -18,38 +18,46 @@
 package lang
 
 import (
+	"os"
 	"testing"
+	"time"
 
 	"reflect"
 
 	"strings"
 
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/validation"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 )
 
 var conceptFile = "foo.cpt"
 var specFile = "foo.spec"
 
+func TestMain(m *testing.M) {
+	exitCode := m.Run()
+	tearDown()
+	os.Exit(exitCode)
+}
+
 func setup() {
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
-	openFilesCache.add(util.ConvertPathToURI(lsp.DocumentURI(conceptFile)), "")
-	openFilesCache.add(util.ConvertPathToURI(lsp.DocumentURI(specFile)), "")
-
-	validation.GetResponseFromRunner = func(m *gauge_messages.Message, v *validation.SpecValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: true}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
-	}
+	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
+	openFilesCache.add(util.ConvertPathToURI(specFile), "")
+	res := &gauge_messages.StepValidateResponse{IsValid: true}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}
 	}
 
-	util.GetSpecFiles = func(path string) []string {
+	util.GetSpecFiles = func(paths []string) []string {
 		return []string{specFile}
 	}
+}
+func tearDown() {
+	lRunner.runner = nil
 }
 
 func TestDiagnosticWithParseErrorsInSpec(t *testing.T) {
@@ -62,7 +70,7 @@ Scenario Heading
 
 * Step text`
 
-	uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
+	uri := util.ConvertPathToURI(specFile)
 	openFilesCache.add(uri, specText)
 
 	want := []lsp.Diagnostic{
@@ -105,7 +113,7 @@ Scenario Heading
 
 * Step text
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(specFile))
+	uri := util.ConvertPathToURI(specFile)
 	openFilesCache.add(uri, specText)
 	d, err := getDiagnostics()
 	if err != nil {
@@ -121,7 +129,7 @@ func TestParseConcept(t *testing.T) {
 	cptText := `# concept
 * foo
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 	openFilesCache.add(uri, cptText)
 
 	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
@@ -144,7 +152,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	setup()
 	cptText := `# concept`
 
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 
 	openFilesCache.add(uri, cptText)
 
@@ -167,7 +175,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(want, diagnostics[uri]) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, diagnostics[uri])
+		t.Errorf("want: `%v`,\n got: `%v`", want, diagnostics[uri])
 	}
 }
 
@@ -176,7 +184,7 @@ func TestDiagnosticOfConceptsWithCircularReference(t *testing.T) {
 	cptText := `# concept
 * concept
 `
-	uri := util.ConvertPathToURI(lsp.DocumentURI(conceptFile))
+	uri := util.ConvertPathToURI(conceptFile)
 	openFilesCache.add(uri, cptText)
 
 	diagnostics, err := getDiagnostics()

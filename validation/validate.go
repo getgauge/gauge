@@ -33,18 +33,15 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/getgauge/gauge/reporter"
-
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/api"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/util"
 )
 
 // TableRows is used to check for table rows range validation.
@@ -135,7 +132,7 @@ func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidat
 // Validate validates specs and if it has any errors, it exits.
 func Validate(args []string) {
 	if len(args) == 0 {
-		args = append(args, common.SpecsDirectoryName)
+		args = append(args, util.GetSpecDirs()...)
 	}
 	res := ValidateSpecs(args, false)
 	if len(res.Errs) > 0 {
@@ -334,10 +331,6 @@ func (v *SpecValidator) Step(s *gauge.Step) {
 
 var invalidResponse gm.StepValidateResponse_ErrorType = -1
 
-var GetResponseFromRunner = func(m *gm.Message, v *SpecValidator) (*gm.Message, error) {
-	return conn.GetResponseForMessageWithTimeout(m, v.runner.Connection(), config.RunnerRequestTimeout())
-}
-
 func (v *SpecValidator) validateStep(s *gauge.Step) error {
 	stepValue, err := parser.ExtractStepValueAndParams(s.LineText, s.HasInlineTable)
 	if err != nil {
@@ -348,7 +341,7 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 	m := &gm.Message{MessageType: gm.Message_StepValidateRequest,
 		StepValidateRequest: &gm.StepValidateRequest{StepText: s.Value, NumberOfParameters: int32(len(s.Args)), StepValue: protoStepValue}}
 
-	r, err := GetResponseFromRunner(m, v)
+	r, err := v.runner.ExecuteMessageWithTimeout(m)
 	if err != nil {
 		return NewStepValidationError(s, err.Error(), v.specification.FileName, &invalidResponse, "")
 	}

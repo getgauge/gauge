@@ -57,10 +57,10 @@ func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := params.TextDocument.URI
 	file := util.ConvertURItoFilePath(uri)
-	if !util.IsSpec(string(file)) {
+	if !util.IsSpec(file) {
 		return nil, nil
 	}
-	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), string(file))
+	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
 	if err != nil {
 		return nil, err
 	}
@@ -76,13 +76,14 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	var codeLenses []lsp.CodeLens
 	runCodeLens := createCodeLens(spec.Heading.LineNo-1, runSpecCodeLens, executeCommand, getExecutionArgs(spec.FileName))
 	codeLenses = append(codeLenses, runCodeLens)
-	debugCodeLens := createCodeLens(spec.Heading.LineNo-1, debugSpecCodeLens, debugCommand, getExecutionArgs(spec.FileName))
-	codeLenses = append(codeLenses, debugCodeLens)
+	if lRunner.lspID != "" {
+		debugCodeLens := createCodeLens(spec.Heading.LineNo-1, debugSpecCodeLens, debugCommand, getExecutionArgs(spec.FileName))
+		codeLenses = append(codeLenses, debugCodeLens)
+	}
 	if spec.DataTable.IsInitialized() {
 		codeLenses = append(codeLenses, getDataTableLenses(spec)...)
 	}
 	return append(getScenarioCodeLenses(spec), codeLenses...), nil
-
 }
 
 func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
@@ -127,9 +128,10 @@ func getScenarioCodeLenses(spec *gauge.Specification) []lsp.CodeLens {
 		args := getExecutionArgs(fmt.Sprintf("%s:%d", spec.FileName, sce.Heading.LineNo))
 		lens := createCodeLens(sce.Heading.LineNo-1, runScenarioCodeLens, executeCommand, args)
 		lenses = append(lenses, lens)
-		debugCodeLens := createCodeLens(sce.Heading.LineNo-1, debugScenarioCodeLens, debugCommand, args)
-		lenses = append(lenses, debugCodeLens)
-
+		if lRunner.lspID != "" {
+			debugCodeLens := createCodeLens(sce.Heading.LineNo-1, debugScenarioCodeLens, debugCommand, args)
+			lenses = append(lenses, debugCodeLens)
+		}
 	}
 	return lenses
 }

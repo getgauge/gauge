@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -116,4 +117,28 @@ func ConvertToBool(value, property string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return boolValue
+}
+
+// GetSpecDirs returns the specification directory.
+// It checks whether the environment variable for gauge_specs_dir is set.
+// It returns 'specs' otherwise
+func GetSpecDirs() []string {
+	var specFromProperties = os.Getenv(env.SpecsDir)
+	if specFromProperties != "" {
+		var specDirectories = strings.Split(specFromProperties, ",")
+		for index, ele := range specDirectories {
+			specDirectories[index] = strings.TrimSpace(ele)
+		}
+		return specDirectories
+	}
+	return []string{common.SpecsDirectoryName}
+}
+
+func ListContains(list []string, val string) bool {
+	for _, s := range list {
+		if s == val {
+			return true
+		}
+	}
+	return false
 }

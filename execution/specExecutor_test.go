@@ -432,6 +432,9 @@ type mockRunner struct {
 	ExecuteAndGetStatusFunc func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
 }
 
+func (r *mockRunner) ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return nil, nil
+}
 func (r *mockRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	return r.ExecuteAndGetStatusFunc(m)
 }

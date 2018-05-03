@@ -21,10 +21,12 @@ import (
 	"encoding/json"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -149,9 +151,7 @@ func TestCompletion(t *testing.T) {
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
 
-	GetResponseFromRunner = func(req *gm.Message) (*gm.Message, error) {
-		return &gm.Message{StepNamesResponse: &gm.StepNamesResponse{Steps: []string{}}}, nil
-	}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}, Timeout: time.Second * 30}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 
@@ -159,7 +159,7 @@ func TestCompletion(t *testing.T) {
 		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -251,7 +251,7 @@ func TestCompletionInBetweenLine(t *testing.T) {
 		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
 	}
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -403,6 +403,26 @@ func TestCompletionWithError(t *testing.T) {
 	}
 }
 
+func TestCompletionForInvalidPosition(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add("uri", " * step")
+	position := lsp.Position{Line: 1, Character: 2}
+	want := completionList{IsIncomplete: false, Items: []completionItem{}}
+	provider = &dummyInfoProvider{}
+
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
+	p := json.RawMessage(b)
+
+	got, err := completion(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Fatalf("Expected error == nil in Completion, got %s", err.Error())
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Autocomplete request failed, got: `%+v`, want: `%+v`", got, want)
+	}
+}
+
 func TestCompletionResolve(t *testing.T) {
 	want := completionItem{CompletionItem: lsp.CompletionItem{Label: "step"}}
 	b, _ := json.Marshal(want)
@@ -414,7 +434,7 @@ func TestCompletionResolve(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Autocomplete resolve request failed, got: `%s`, want: `%s`", got, want)
+		t.Errorf("Autocomplete resolve request failed, got: `%v`, want: `%v`", got, want)
 	}
 }
 
@@ -465,7 +485,7 @@ func TestIsInParamContext(t *testing.T) {
 	for _, test := range paramContextTest {
 		got := inParameterContext(test.input, test.charPos)
 		if test.want != got {
-			t.Errorf("got : %s, want : %s", got, test.want)
+			t.Errorf("got : %v, want : %v", got, test.want)
 		}
 	}
 }

@@ -31,11 +31,14 @@ import (
 
 const (
 	gaugeExcludeDirectories = "gauge_exclude_dirs"
+	cptFileExtension        = ".cpt"
+	specFileExtension       = ".spec"
+	mdFileExtension         = ".md"
 )
 
 func init() {
-	AcceptedExtensions[".spec"] = true
-	AcceptedExtensions[".md"] = true
+	AcceptedExtensions[specFileExtension] = true
+	AcceptedExtensions[mdFileExtension] = true
 }
 
 // AcceptedExtensions has all the file extensions that are supported by Gauge for its specs
@@ -111,7 +114,7 @@ func FindConceptFilesIn(dir string) []string {
 
 // IsValidConceptExtension Checks if the path has a concept file extension
 func IsValidConceptExtension(path string) bool {
-	return filepath.Ext(path) == ".cpt"
+	return filepath.Ext(path) == cptFileExtension
 }
 
 // IsConcept Returns true if concept file
@@ -127,6 +130,17 @@ func IsSpec(path string) bool {
 // IsGaugeFile Returns true if spec file or concept file
 func IsGaugeFile(path string) bool {
 	return IsConcept(path) || IsSpec(path)
+}
+
+// IsGaugeFile Returns true if spec file or concept file
+func GaugeFileExtensions() []string {
+	extensions := []string{cptFileExtension}
+	for ext, val := range AcceptedExtensions {
+		if val {
+			extensions = append(extensions, ext)
+		}
+	}
+	return extensions
 }
 
 // FindAllNestedDirs returns list of all nested directories in given path
@@ -152,14 +166,17 @@ func IsDir(path string) bool {
 
 // GetSpecFiles returns the list of spec files present at the given path.
 // If the path itself represents a spec file, it returns the same.
-var GetSpecFiles = func(path string) []string {
+var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
-	if common.DirExists(path) {
-		specFiles = append(specFiles, FindSpecFilesIn(path)...)
-	} else if common.FileExists(path) && IsValidSpecExtension(path) {
-		f, _ := filepath.Abs(path)
-		specFiles = append(specFiles, f)
+	for _, path := range paths {
+		if common.DirExists(path) {
+			specFiles = append(specFiles, FindSpecFilesIn(path)...)
+		} else if common.FileExists(path) && IsValidSpecExtension(path) {
+			f, _ := filepath.Abs(path)
+			specFiles = append(specFiles, f)
+		}
 	}
+
 	return specFiles
 }
 

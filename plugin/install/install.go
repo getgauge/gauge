@@ -339,7 +339,8 @@ func matchesUninstallVersion(pluginDirPath, uninstallVersion string) bool {
 func uninstallVersionOfPlugin(pluginDir, pluginName, uninstallVersion string) error {
 	gp, err := parsePluginJSON(pluginDir, pluginName)
 	if err != nil {
-		return err
+		logger.Infof(true, "Unable to read plugin's metadata, removing %s", pluginDir)
+		return os.RemoveAll(pluginDir)
 	}
 	if err := runPlatformCommands(gp.PreUnInstall, pluginDir); err != nil {
 		return err

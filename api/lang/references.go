@@ -58,7 +58,7 @@ func getLocationFor(stepValue string) (interface{}, error) {
 	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	for _, step := range allSteps {
 		if stepValue == step.Value {
-			uri := util.ConvertPathToURI(lsp.DocumentURI(step.FileName))
+			uri := util.ConvertPathToURI(step.FileName)
 			var endPos int
 			lineNo := step.LineNo - 1
 			if isOpen(uri) {

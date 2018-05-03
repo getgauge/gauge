@@ -35,7 +35,6 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -89,7 +88,7 @@ func (refactoringResult *refactoringResult) AllFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.ConceptsChanged {
+	for fileName := range refactoringResult.ConceptsChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -97,7 +96,7 @@ func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) specFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.SpecsChanged {
+	for fileName := range refactoringResult.SpecsChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -105,7 +104,7 @@ func (refactoringResult *refactoringResult) specFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) runnerFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName, _ := range refactoringResult.RunnerFilesChanged {
+	for fileName := range refactoringResult.RunnerFilesChanged {
 		filesChanged = append(filesChanged, fileName)
 	}
 	return filesChanged
@@ -171,7 +170,7 @@ func parseSpecsAndConcepts(specDirs []string) (*refactoringResult, []*gauge.Spec
 	var specParseResults []*parser.ParseResult
 
 	for _, dir := range specDirs {
-		specFiles := util.GetSpecFiles(filepath.Join(config.ProjectRoot, dir))
+		specFiles := util.GetSpecFiles([]string{filepath.Join(config.ProjectRoot, dir)})
 		specSlice, specParseResultsSlice := parser.ParseSpecFiles(specFiles, &gauge.ConceptDictionary{}, gauge.NewBuildErrors())
 		specs = append(specs, specSlice...)
 		specParseResults = append(specParseResults, specParseResultsSlice...)
@@ -354,7 +353,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner runner.Runner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {
-	response, err := conn.GetResponseForMessageWithTimeout(refactorRequest, testRunner.Connection(), config.RefactorTimeout())
+	response, err := testRunner.ExecuteMessageWithTimeout(refactorRequest)
 	if err != nil {
 		return &gauge_messages.RefactorResponse{Success: false, Error: err.Error()}
 	}
@@ -401,7 +400,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 
 func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: agent.oldStep.Value}}
-	responseMessage, err := conn.GetResponseForMessageWithTimeout(stepNameMessage, runner.Connection(), config.RunnerRequestTimeout())
+	responseMessage, err := runner.ExecuteMessageWithTimeout(stepNameMessage)
 	if err != nil {
 		return "", err, nil
 	}
@@ -409,7 +408,7 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (st
 		return "", nil, &parser.Warning{Message: fmt.Sprintf("Step implementation not found: %s", agent.oldStep.LineText)}
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
-		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored.", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
+		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
 	}
 	return responseMessage.GetStepNameResponse().GetStepName()[0], nil, nil
 }
