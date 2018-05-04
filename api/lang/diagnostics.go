@@ -77,30 +77,24 @@ func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
 	return diagnostics, nil
 }
 
-func createValidationDiagnostics(errors []validation.StepValidationError, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
+func createValidationDiagnostics(errors []error, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range errors {
-		uri := util.ConvertPathToURI(err.FileName())
-		d := createDiagnostic(uri, err.Message(), err.Step().LineNo-1, 1)
-		if err.ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
-			d.Code = err.Suggestion()
+		uri := util.ConvertPathToURI(err.(validation.StepValidationError).FileName())
+		d := createDiagnostic(uri, err.(validation.StepValidationError).Message(), err.(validation.StepValidationError).Step().LineNo-1, 1)
+		if err.(validation.StepValidationError).ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
+			d.Code = err.(validation.StepValidationError).Suggestion()
 		}
 		diagnostics[uri] = append(diagnostics[uri], d)
 	}
 	return
 }
 
-func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (vErrors []validation.StepValidationError) {
+func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) []error {
 	if lRunner.runner == nil {
-		return
+		return []error{}
 	}
-	specValidationCache := make(map[string]error)
-	for _, spec := range specs {
-		v := validation.NewSpecValidator(spec, lRunner.runner, conceptDictionary, []error{}, specValidationCache)
-		for _, e := range v.Validate() {
-			vErrors = append(vErrors, e.(validation.StepValidationError))
-		}
-	}
-	return
+	vErrs := validation.NewValidator(specs, lRunner.runner, conceptDictionary).Validate()
+	return validation.FilterDuplicates(vErrs)
 }
 
 func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) error {
