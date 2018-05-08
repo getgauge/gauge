@@ -18,6 +18,7 @@
 package validation
 
 import (
+	"net"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
@@ -136,12 +137,14 @@ func (s *MySuite) TestValidateStep(c *C) {
 	HideSuggestion = false
 	var suggestion bytes.Buffer
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
-	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
-		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	runner := &mockRunner{
+		ExecuteMessageFunc: func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+			suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
+			res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
+			return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+		},
 	}
-	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}, runner: runner}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
@@ -156,11 +159,13 @@ func (s *MySuite) TestValidateStep(c *C) {
 func (s *MySuite) TestShouldNotGiveSuggestionWhenHideSuggestionFlagIsFalse(c *C) {
 	HideSuggestion = true
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
-	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+	runner := &mockRunner{
+		ExecuteMessageFunc: func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+			res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND}
+			return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+		},
 	}
-	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}}
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}, runner: runner}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
@@ -173,14 +178,17 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 	var suggestion bytes.Buffer
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
-	GetResponseFromRunner = func(m *gauge_messages.Message, v *SpecValidator) (*gauge_messages.Message, error) {
-		suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
-		res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
-		return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
-	}
 	cptDict := gauge.NewConceptDictionary()
 	cptDict.ConceptsMap["my concept"] = &gauge.Concept{ConceptStep: parentStep, FileName: "concept.cpt"}
-	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}, conceptsDictionary: cptDict}
+	runner := &mockRunner{
+		ExecuteMessageFunc: func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+			suggestion.WriteString("\n\t@Step(\"my step\")\n\tpublic void implementation1(){\n\t\t// your code here...\n\t}")
+			res := &gauge_messages.StepValidateResponse{IsValid: false, ErrorMessage: "my err msg", ErrorType: gauge_messages.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND, Suggestion: suggestion.String()}
+			return &gauge_messages.Message{MessageType: gauge_messages.Message_StepValidateResponse, StepValidateResponse: res}, nil
+		},
+	}
+
+	specVal := &SpecValidator{specification: &gauge.Specification{FileName: "foo.spec"}, conceptsDictionary: cptDict, runner: runner}
 	valErr := specVal.validateStep(myStep)
 
 	c.Assert(valErr, Not(Equals), nil)
@@ -189,6 +197,50 @@ func (s *MySuite) TestValidateStepInConcept(c *C) {
 		"public void implementation1(){\n\t"+
 		"\t// your code here...\n\t"+
 		"}")
+}
+
+func (s *MySuite) TestFilterDuplicateValidationErrors(c *C) {
+	specText := `Specification Heading
+=====================
+Scenario 1
+----------
+* abc
+
+Scenario 2
+----------
+* hello
+`
+	step := gauge.Step{
+		Value: "abc",
+	}
+	step1 := gauge.Step{
+		Value: "helo",
+	}
+	implNotFoundError := StepValidationError{
+		step:       &step,
+		errorType:  &implNotFound,
+		suggestion: "suggestion",
+	}
+	dupImplFoundError := StepValidationError{
+		step:       &step1,
+		errorType:  &dupImplFound,
+		suggestion: "suggestion1",
+	}
+
+	p := new(parser.SpecParser)
+	spec, _, _ := p.Parse(specText, gauge.NewConceptDictionary(), "")
+
+	errs := validationErrors{spec: []error{
+		implNotFoundError,
+		implNotFoundError,
+		dupImplFoundError,
+	}}
+
+	want := []error{implNotFoundError, dupImplFoundError}
+
+	got := FilterDuplicates(errs)
+
+	c.Assert(got, DeepEquals, want)
 }
 
 type tableRow struct {
@@ -228,4 +280,35 @@ func (s *MySuite) TestToValidateDataTableRowsRangeFromInputFlag(c *C) {
 		want := test.err
 		c.Assert(got, DeepEquals, want, Commentf(test.name))
 	}
+}
+
+type mockRunner struct {
+	ExecuteMessageFunc func(m *gauge_messages.Message) (*gauge_messages.Message, error)
+}
+
+func (r *mockRunner) ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return r.ExecuteMessageFunc(m)
+}
+func (r *mockRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	return nil
+}
+
+func (r *mockRunner) IsProcessRunning() bool {
+	return false
+}
+
+func (r *mockRunner) Kill() error {
+	return nil
+}
+
+func (r *mockRunner) Connection() net.Conn {
+	return nil
+}
+
+func (r *mockRunner) IsMultithreaded() bool {
+	return false
+}
+
+func (r *mockRunner) Pid() int {
+	return -1
 }

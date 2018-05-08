@@ -690,12 +690,12 @@ func (property *Property) String() string {
 func UrlExists(url string) (bool, error) {
 	resp, err := http.Head(url)
 	if err != nil {
-		return false, fmt.Errorf("Failed to resolve host.")
+		return false, fmt.Errorf("Failed to resolve host")
 	}
-	if resp.StatusCode == 404 {
-		return false, fmt.Errorf("File does not exist.")
+	if resp.StatusCode == 200 {
+		return true, nil
 	}
-	return true, nil
+	return false, fmt.Errorf("Could not get %s, %d-%s", url, resp.StatusCode, resp.Status)
 }
 
 // GetPluginProperties returns the properties of the given plugin.

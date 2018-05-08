@@ -36,6 +36,7 @@ Scenario Heading
 
 * Step text`
 
+	lRunner.lspID = "python"
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
@@ -98,7 +99,7 @@ Scenario Heading
 	want := []lsp.CodeLens{scenCodeLens, scenDebugCodeLens, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }
 
@@ -117,6 +118,7 @@ Another Scenario
 * another step
 `
 
+	lRunner.lspID = "python"
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add("foo.spec", specText)
 
@@ -202,7 +204,7 @@ Another Scenario
 	want := []lsp.CodeLens{scenCodeLens1, scenDebugCodeLens1, scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }
 
@@ -299,6 +301,58 @@ Scenario Heading
 	want := []lsp.CodeLens{scenCodeLens2, scenDebugCodeLens2, specCodeLens, specDebugCodeLens, specCodeLens2}
 
 	if !reflect.DeepEqual(got, want) {
-		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
+	}
+}
+
+func TestGetDebugCodeLensForNonLspRunner(t *testing.T) {
+	specText := `Specification Heading
+=====================
+
+Scenario Heading
+----------------
+
+* Step text`
+
+	lRunner.lspID = ""
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add("foo.spec", specText)
+
+	b, _ := json.Marshal(lsp.CodeLensParams{TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"}})
+	p := json.RawMessage(b)
+
+	got, err := codeLenses(&jsonrpc2.Request{Params: &p})
+	if err != nil {
+		t.Errorf("Expected error to be nil. got : %s", err.Error())
+	}
+
+	specCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.execute",
+			Title:     "Run Spec",
+			Arguments: getExecutionArgs("foo.spec"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{0, 0},
+			End:   lsp.Position{0, 8},
+		},
+	}
+
+	scenCodeLens := lsp.CodeLens{
+		Command: lsp.Command{
+			Command:   "gauge.execute",
+			Title:     "Run Scenario",
+			Arguments: getExecutionArgs("foo.spec:4"),
+		},
+		Range: lsp.Range{
+			Start: lsp.Position{3, 0},
+			End:   lsp.Position{3, 12},
+		},
+	}
+
+	want := []lsp.CodeLens{scenCodeLens, specCodeLens}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%v`,\n got: `%v`", want, got)
 	}
 }

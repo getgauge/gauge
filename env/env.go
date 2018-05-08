@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	SpecsDir            = "gauge_specs_dir"
 	GaugeReportsDir     = "gauge_reports_dir"
 	LogsDirectory       = "logs_directory"
 	OverwriteReports    = "overwrite_reports"
@@ -79,6 +80,7 @@ func LoadEnv(envName string) error {
 }
 
 func loadDefaultEnvVars() {
+	addEnvVar(SpecsDir, "specs")
 	addEnvVar(GaugeReportsDir, "reports")
 	addEnvVar(LogsDirectory, "logs")
 	addEnvVar(OverwriteReports, "true")

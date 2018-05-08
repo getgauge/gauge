@@ -152,6 +152,10 @@ type fakeRunner struct {
 	isMultiThreaded bool
 }
 
+func (f *fakeRunner) ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return nil, nil
+}
+
 func (f *fakeRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	return nil
 }

@@ -81,7 +81,7 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 func getWorkspaceEditForStubImpl(fileDiff *gm.FileDiff) lsp.WorkspaceEdit {
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	uri := util.ConvertPathToURI(lsp.DocumentURI(fileDiff.FilePath))
+	uri := util.ConvertPathToURI(fileDiff.FilePath)
 
 	var textDiffs = fileDiff.TextDiffs
 	for _, textDiff := range textDiffs {
@@ -117,7 +117,8 @@ func generateConcept(req *jsonrpc2.Request) (interface{}, error) {
 func createWorkSpaceEdits(edit editInfo) lsp.WorkspaceEdit {
 	var result = lsp.WorkspaceEdit{Changes: map[string][]lsp.TextEdit{}}
 	textEdiit := createTextEdit(edit.newText, 0, 0, edit.endLineNo, 0)
-	result.Changes[edit.fileName] = []lsp.TextEdit{textEdiit}
+	uri := util.ConvertPathToURI(edit.fileName)
+	result.Changes[string(uri)] = []lsp.TextEdit{textEdiit}
 	return result
 }
 

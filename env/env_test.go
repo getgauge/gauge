@@ -42,6 +42,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
 }
 
 // If default env dir is present, the values present in there should overwrite
@@ -57,6 +58,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "anotherSpecDir")
 }
 
 // If default env dir is present, the values present in there should overwrite
@@ -73,6 +75,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirAndOverwritePassedEnv(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "bar/specs")
 }
 
 func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
@@ -86,12 +89,14 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")
 	os.Setenv("logs_directory", "custom_logs_dir")
+	os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
 	e := LoadEnv("default")
@@ -100,6 +105,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(os.Getenv("foo"), Equals, "bar")
 	c.Assert(os.Getenv("property1"), Equals, "value1")
 	c.Assert(os.Getenv("logs_directory"), Equals, "custom_logs_dir")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "custom_specs_dir")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
@@ -123,11 +129,13 @@ func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
 	c.Assert(os.Getenv("logs_directory"), Equals, "foo/logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "foo/specs")
 }
 
 func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	os.Clearenv()
 	os.Setenv("gauge_reports_dir", "custom_reports_dir")
+	os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
 	e := LoadEnv("foo")
@@ -137,6 +145,7 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
 	c.Assert(os.Getenv("logs_directory"), Equals, "foo/logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "custom_specs_dir")
 }
 
 func (s *MySuite) TestEnvPropertyIsSet(c *C) {

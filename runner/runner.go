@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2018 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -45,6 +45,7 @@ import (
 
 type Runner interface {
 	ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
+	ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error)
 	IsProcessRunning() bool
 	Kill() error
 	Connection() net.Conn
@@ -124,6 +125,10 @@ func (r *MultithreadedRunner) Pid() int {
 
 func (r *MultithreadedRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	return r.r.ExecuteAndGetStatus(message)
+}
+
+func (r *MultithreadedRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(message, r.r.Connection(), config.RunnerRequestTimeout())
 }
 
 type RunnerInfo struct {
@@ -270,25 +275,34 @@ func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *g
 	return errorResult(errMsg)
 }
 
+func (r *LanguageRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
+	return conn.GetResponseForMessageWithTimeout(message, r.Connection(), config.RunnerRequestTimeout())
+}
+
 func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 	return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, RecoverableError: false}
+}
+
+func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, outputStreamWriter io.Writer) (*exec.Cmd, *RunnerInfo, error) {
+	var r RunnerInfo
+	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
+	if err != nil {
+		return nil, nil, err
+	}
+	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
+	if compatibilityErr != nil {
+		return nil, nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
+	}
+	command := getOsSpecificCommand(r)
+	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
+	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, outputStreamWriter, outputStreamWriter, env)
+	return cmd, &r, err
 }
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter io.Writer, killChannel chan bool, debug bool) (*LanguageRunner, error) {
-	var r RunnerInfo
-	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
-	if err != nil {
-		return nil, err
-	}
-	compatibilityErr := version.CheckCompatibility(version.CurrentGaugeVersion, &r.GaugeVersionSupport)
-	if compatibilityErr != nil {
-		return nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
-	}
-	command := getOsSpecificCommand(r)
-	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
-	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, outputStreamWriter, outputStreamWriter, env)
+	cmd, r, err := runRunnerCommand(manifest, port, debug, outputStreamWriter)
 	if err != nil {
 		return nil, err
 	}

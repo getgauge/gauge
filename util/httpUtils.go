@@ -67,9 +67,10 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode >= 400 {
+	if resp.StatusCode != 200 {
 		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
 	}
+
 	defer resp.Body.Close()
 
 	out, err := os.Create(targetFile)

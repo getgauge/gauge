@@ -26,6 +26,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	hideSuggestionDefault = false
+	hideSuggestionName    = "hide-suggestion"
+)
+
 var (
 	validateCmd = &cobra.Command{
 		Use:     "validate [flags] [args]",

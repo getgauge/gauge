@@ -37,6 +37,7 @@ const (
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
+	ideRequestTimeout       = "ide_request_timeout"
 	checkUpdates            = "check_updates"
 	telemetryEnabled        = "gauge_telemetry_enabled"
 	telemetryLoggingEnabled = "gauge_telemetry_log_enabled"
@@ -45,7 +46,8 @@ const (
 	defaultPluginConnectionTimeout = time.Second * 10
 	defaultPluginKillTimeout       = time.Second * 4
 	defaultRefactorTimeout         = time.Second * 10
-	defaultRunnerRequestTimeout    = time.Second * 3
+	defaultRunnerRequestTimeout    = time.Second * 30
+	defaultIdeRequestTimeout       = time.Second * 30
 	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
@@ -88,6 +90,15 @@ func RunnerRequestTimeout() time.Duration {
 		intervalString = getFromConfig(runnerRequestTimeout)
 	}
 	return convertToTime(intervalString, defaultRunnerRequestTimeout, runnerRequestTimeout)
+}
+
+// Timeout in milliseconds for requests from the grpc language runner.
+func IdeRequestTimeout() time.Duration {
+	intervalString := os.Getenv(ideRequestTimeout)
+	if intervalString == "" {
+		intervalString = getFromConfig(ideRequestTimeout)
+	}
+	return convertToTime(intervalString, defaultIdeRequestTimeout, ideRequestTimeout)
 }
 
 // GaugeRepositoryUrl fetches the repository URL to locate plugins

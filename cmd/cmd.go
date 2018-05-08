@@ -18,10 +18,8 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
@@ -33,6 +31,18 @@ import (
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
+)
+
+const (
+	logLevelDefault        = "info"
+	dirDefault             = "."
+	machineReadableDefault = false
+	gaugeVersionDefault    = false
+
+	logLevelName        = "log-level"
+	dirName             = "dir"
+	machineReadableName = "machine-readable"
+	gaugeVersionName    = "version"
 )
 
 var (
@@ -100,10 +110,10 @@ Additional help topics:{{range .Commands}}{{if .IsAdditionalHelpTopicCommand}}
 Use "{{.CommandPath}} [command] --help" for more information about a command.
 Complete manual is available at https://manpage.gauge.org/.{{end}}
 `)
-	GaugeCmd.PersistentFlags().StringVarP(&logLevel, "log-level", "l", "info", "Set level of logging to debug, info, warning, error or critical")
-	GaugeCmd.PersistentFlags().StringVarP(&dir, "dir", "d", ".", "Set the working directory for the current command, accepts a path relative to current directory")
-	GaugeCmd.PersistentFlags().BoolVarP(&machineReadable, "machine-readable", "m", false, "Prints output in JSON format")
-	GaugeCmd.Flags().BoolVarP(&gaugeVersion, "version", "v", false, "Print Gauge and plugin versions")
+	GaugeCmd.PersistentFlags().StringVarP(&logLevel, logLevelName, "l", logLevelDefault, "Set level of logging to debug, info, warning, error or critical")
+	GaugeCmd.PersistentFlags().StringVarP(&dir, dirName, "d", dirDefault, "Set the working directory for the current command, accepts a path relative to current directory")
+	GaugeCmd.PersistentFlags().BoolVarP(&machineReadable, machineReadableName, "m", machineReadableDefault, "Prints output in JSON format")
+	GaugeCmd.Flags().BoolVarP(&gaugeVersion, gaugeVersionName, "v", gaugeVersionDefault, "Print Gauge and plugin versions")
 }
 
 func Parse() error {
@@ -124,12 +134,10 @@ func getSpecsDir(args []string) []string {
 	if len(args) > 0 {
 		return args
 	}
-	return []string{common.SpecsDirectoryName}
+	return util.GetSpecDirs()
 }
 
 func setGlobalFlags() {
-	msg := fmt.Sprintf("Gauge Install ID: %s", config.UniqueID())
-	logger.Debugf(true, msg)
 	util.SetWorkingDir(dir)
 }
 
