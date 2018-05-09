@@ -215,6 +215,18 @@ func Refactor() {
 	trackConsole("refactoring", "rephrase", "")
 }
 
+func ListScenarios() {
+	trackConsole("list", "scenarios", "")
+}
+
+func ListTags() {
+	trackConsole("list", "tags", "")
+}
+
+func ListSpecifications() {
+	trackConsole("list", "specifications", "")
+}
+
 func ListTemplates() {
 	trackConsole("init", "templates", "")
 }
