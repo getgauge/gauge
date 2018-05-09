@@ -19,7 +19,7 @@ package execution
 
 import (
 	"time"
-
+	
 	"strings"
 
 	"github.com/getgauge/gauge/execution/result"
@@ -73,6 +73,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		}
 		if res.GetFailed() {
 			specResult.IsFailed = true
+		}
+		if res.Skipped {
+			specResult.Skipped = true
 		}
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
@@ -149,7 +152,6 @@ func modifySpecStats(scn *m.ProtoScenario, specRes *result.SpecResult) {
 	switch scn.ExecutionStatus {
 	case m.ExecutionStatus_SKIPPED:
 		specRes.ScenarioSkippedCount++
-		return
 	case m.ExecutionStatus_FAILED:
 		specRes.ScenarioFailedCount++
 	}

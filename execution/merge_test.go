@@ -38,7 +38,7 @@ var statsTests = []struct {
 	message string
 }{
 	{gm.ExecutionStatus_FAILED, stat{failed: 1, total: 1}, "Scenario Failure"},
-	{gm.ExecutionStatus_SKIPPED, stat{skipped: 1}, "Scenario Skipped"},
+	{gm.ExecutionStatus_SKIPPED, stat{skipped: 1, total:1}, "Scenario Skipped"},
 	{gm.ExecutionStatus_PASSED, stat{total: 1}, "Scenario Passed"},
 }
 
@@ -143,6 +143,74 @@ func TestMergeResults(t *testing.T) {
 			}, IsTableDriven: true,
 		},
 		ScenarioCount: 2, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestMergeSkippedResults(t *testing.T) {
+	got := mergeResults([]*result.SpecResult{
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
+				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
+					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading1",SkipErrors: []string{"error"}}},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2", SkipErrors: []string{"error"}},
+							TableRowIndex: 0,
+						},
+					},
+				},
+			}, ExecutionTime: int64(1),
+			Skipped: true,
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
+				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2",SkipErrors: []string{"error"}},
+							TableRowIndex: 1,
+						},
+					},
+				},
+			}, ExecutionTime: int64(2),
+			Skipped: true,
+		},
+	})
+	want := &result.SpecResult{
+		ProtoSpec: &gm.ProtoSpec{
+			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
+			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
+			Items: []*gm.ProtoItem{
+				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
+				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED,SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading1"}},
+				{
+					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED,SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex: 0,
+					},
+				},
+				{
+					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED,SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex: 1,
+					},
+				},
+			}, IsTableDriven: true,
+		},
+		ScenarioCount: 2, ScenarioSkippedCount: 2, ScenarioFailedCount: 0, IsFailed: false, Skipped: true, ExecutionTime: int64(3),
 	}
 
 	if !reflect.DeepEqual(got, want) {
