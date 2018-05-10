@@ -19,7 +19,7 @@ package execution
 
 import (
 	"time"
-	
+
 	"strings"
 
 	"github.com/getgauge/gauge/execution/result"
@@ -137,7 +137,7 @@ func aggregateDataTableScnStats(results map[string][]*m.ProtoTableDrivenScenario
 			} else if res.Scenario.ExecutionStatus == m.ExecutionStatus_SKIPPED &&
 				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
 				isSkipped = 1
-				specResult.Skipped = true		
+				specResult.Skipped = true
 			}
 		}
 		specResult.ScenarioFailedCount += isFailed
