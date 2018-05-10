@@ -74,9 +74,6 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
-		if res.Skipped {
-			specResult.Skipped = true
-		}
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case m.ProtoItem_Scenario:
@@ -140,6 +137,7 @@ func aggregateDataTableScnStats(results map[string][]*m.ProtoTableDrivenScenario
 			} else if res.Scenario.ExecutionStatus == m.ExecutionStatus_SKIPPED &&
 				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
 				isSkipped = 1
+				specResult.Skipped = true		
 			}
 		}
 		specResult.ScenarioFailedCount += isFailed
