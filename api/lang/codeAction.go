@@ -60,20 +60,30 @@ func getSpecCodeAction(params lsp.CodeActionParams) ([]lsp.Command, error) {
 }
 
 func createConceptInfo(uri lsp.DocumentURI, line int) (interface{}, error) {
-	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), &gauge.ConceptDictionary{}, util.ConvertURItoFilePath(uri))
-	if err != nil {
-		return nil, err
-	}
-	if !res.Ok {
-		return nil, fmt.Errorf("parsing failed for %s. %s", uri, res.Errors())
-	}
+	file := util.ConvertURItoFilePath(uri)
+	linetext := getLine(uri, line)
 	var stepValue *gauge.StepValue
-	for _, step := range spec.Steps() {
-		if step.LineNo-1 == line {
-			if step.HasInlineTable {
-				stepValue, _ = parser.ExtractStepValueAndParams(step.LineText, true)
-			} else {
-				stepValue, _ = parser.ExtractStepValueAndParams(getLine(uri, line), false)
+	if util.IsConcept(file) {
+		steps, _ := new(parser.ConceptParser).Parse(getContent(uri), file)
+		for _, conStep := range steps {
+			for _, step := range conStep.ConceptSteps {
+				if step.LineNo-1 == line {
+					stepValue = extractStepValueAndParams(step, linetext)
+				}
+			}
+		}
+	}
+	if util.IsSpec(file) {
+		spec, res, err := new(parser.SpecParser).Parse(getContent(uri), &gauge.ConceptDictionary{}, file)
+		if err != nil {
+			return nil, err
+		}
+		if !res.Ok {
+			return nil, fmt.Errorf("parsing failed for %s. %s", uri, res.Errors())
+		}
+		for _, step := range spec.Steps() {
+			if step.LineNo-1 == line {
+				stepValue = extractStepValueAndParams(step, linetext)
 			}
 		}
 	}
@@ -81,6 +91,16 @@ func createConceptInfo(uri lsp.DocumentURI, line int) (interface{}, error) {
 	return concpetInfo{
 		ConceptName: fmt.Sprintf("# %s\n* ", strings.TrimSpace(cptName)),
 	}, nil
+}
+
+func extractStepValueAndParams(step *gauge.Step, linetext string) *gauge.StepValue {
+	var stepValue *gauge.StepValue
+	if step.HasInlineTable {
+		stepValue, _ = parser.ExtractStepValueAndParams(step.LineText, true)
+	} else {
+		stepValue, _ = parser.ExtractStepValueAndParams(linetext, false)
+	}
+	return stepValue
 }
 
 func createCodeAction(command, titlle string, params []interface{}) lsp.Command {
