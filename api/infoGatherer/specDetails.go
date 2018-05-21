@@ -357,12 +357,13 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 		handleParseFailures([]*parser.ParseResult{res})
 	}
 	s.conceptsCache.concepts[file] = make([]*gauge.Concept, 0)
+	var stepsFromConcept []*gauge.Step
 	for _, concept := range concepts {
 		c := gauge.Concept{ConceptStep: concept, FileName: file}
 		s.addToConceptsCache(file, &c)
-		stepsFromConcept := getStepsFromConcept(&c)
-		s.addToStepsCache(file, stepsFromConcept)
+		stepsFromConcept = append(stepsFromConcept, getStepsFromConcept(&c)...)
 	}
+	s.addToStepsCache(file, stepsFromConcept)
 	s.paramsCache.mutex.Lock()
 	defer s.paramsCache.mutex.Unlock()
 	s.updateParamsCacheFromConcepts(file, s.conceptsCache.concepts[file])
