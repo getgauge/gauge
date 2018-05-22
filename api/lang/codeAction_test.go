@@ -125,3 +125,62 @@ func TestGetCodeActionForUnimplementedStepWithParam(t *testing.T) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)
 	}
 }
+
+func TestGetCodeActionForUnimplementedStepWithTableParam(t *testing.T) {
+	specText := `#Specification Heading
+
+##Scenario Heading
+
+* Step text
+	|Head|
+   	|----|
+   	|some|`
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add(lsp.DocumentURI("foo.spec"), specText)
+
+	stub := "a stub for unimplemented step"
+	d := []lsp.Diagnostic{
+		{
+			Range: lsp.Range{
+				Start: lsp.Position{Line: 4, Character: 0},
+				End:   lsp.Position{Line: 4, Character: 12},
+			},
+			Message:  "Step implantation not found",
+			Severity: 1,
+			Code:     stub,
+		},
+	}
+	codeActionParams := lsp.CodeActionParams{
+		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
+		Context:      lsp.CodeActionContext{Diagnostics: d},
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 4, Character: 0},
+			End:   lsp.Position{Line: 4, Character: 12},
+		},
+	}
+	b, _ := json.Marshal(codeActionParams)
+	p := json.RawMessage(b)
+
+	want := []lsp.Command{
+		{
+			Command:   generateStepCommand,
+			Title:     generateStubTitle,
+			Arguments: []interface{}{stub},
+		},
+		{
+			Command:   generateConceptCommand,
+			Title:     generateConceptTitle,
+			Arguments: []interface{}{concpetInfo{ConceptName: "# Step text <table>\n* "}},
+		},
+	}
+
+	got, err := codeActions(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected error to be nil. \nGot : %s", err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	}
+}
