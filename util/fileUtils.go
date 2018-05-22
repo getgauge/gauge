@@ -97,7 +97,7 @@ func FindSpecFilesIn(dir string) []string {
 
 // IsValidSpecExtension Checks if the path has a spec file extension
 func IsValidSpecExtension(path string) bool {
-	return AcceptedExtensions[filepath.Ext(path)]
+	return AcceptedExtensions[strings.ToLower(filepath.Ext(path))]
 }
 
 // FindConceptFilesIn Finds the concept files in specified directory
