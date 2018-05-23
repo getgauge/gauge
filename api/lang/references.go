@@ -53,7 +53,7 @@ func stepValueAt(req *jsonrpc2.Request) (interface{}, error) {
 }
 
 func getLocationFor(stepValue string) (interface{}, error) {
-	allSteps := provider.AllSteps()
+	allSteps := provider.AllSteps(false)
 	var locations []lsp.Location
 	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
 	for _, step := range allSteps {
