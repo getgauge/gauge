@@ -202,11 +202,11 @@ ____
 
 func (s *MySuite) TestFormatStep(c *C) {
 	step := &gauge.Step{Value: "my step with {}, {}, {} and {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.Static},
-		&gauge.StepArg{Value: "dynamic \"foo\"", ArgType: gauge.Dynamic},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Dynamic},
 		&gauge.StepArg{Name: "file:user\".txt", ArgType: gauge.SpecialString},
 		&gauge.StepArg{Name: "table :hell\".csv", ArgType: gauge.SpecialTable}}}
 	formatted := FormatStep(step)
-	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic \"foo\">, <file:user\".txt> and <table :hell\".csv>
+	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic>, <file:user\".txt> and <table :hell\".csv>
 `)
 }
 

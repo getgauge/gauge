@@ -75,7 +75,7 @@ func FormatStep(step *gauge.Step) string {
 			formattedTable := FormatTable(&argument.Table)
 			formattedArg = fmt.Sprintf("\n%s", formattedTable)
 		} else if argument.ArgType == gauge.Dynamic {
-			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Value))
+			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
 		} else if argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable {
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
 		} else {
