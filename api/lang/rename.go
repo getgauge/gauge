@@ -87,10 +87,12 @@ func getStepToRefactor(params lsp.RenameParams) (*gauge.Step, error) {
 		}
 	}
 	if util.IsConcept(file) {
-		steps := provider.Steps()
-		for _, s := range steps {
-			if s.LineNo-1 == params.Position.Line {
-				return s, nil
+		steps, _ := new(parser.ConceptParser).Parse(getContent(params.TextDocument.URI), file)
+		for _, conStep := range steps {
+			for _, step := range conStep.ConceptSteps {
+				if step.LineNo-1 == params.Position.Line {
+					return step, nil
+				}
 			}
 		}
 	}
