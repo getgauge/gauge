@@ -42,6 +42,7 @@ type infoProvider interface {
 	Tags() []string
 	SearchConceptDictionary(string) *gauge.Concept
 	GetAvailableSpecDetails(specs []string) []*infoGatherer.SpecDetail
+	GetSpecDirs() []string
 }
 
 var provider infoProvider
@@ -234,6 +235,8 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return generateConcept(req)
 	case "gauge/getRunnerLanguage":
 		return lRunner.lspID, nil
+	case "gauge/specDirs":
+		return provider.GetSpecDirs(), nil
 	default:
 		return nil, nil
 	}
