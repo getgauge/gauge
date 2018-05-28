@@ -28,7 +28,10 @@ import (
 
 func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 	r := csv.NewReader(strings.NewReader(csvContents))
-	r.Comma = []rune(os.Getenv(env.CsvDelimiter))[0]
+	var de = os.Getenv(env.CsvDelimiter)
+	if de != "" {
+		r.Comma = []rune(os.Getenv(env.CsvDelimiter))[0]
+	}
 	r.Comment = '#'
 	lines, err := r.ReadAll()
 	if err != nil {
