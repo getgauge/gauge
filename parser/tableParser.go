@@ -19,13 +19,16 @@ package parser
 
 import (
 	"encoding/csv"
+	"os"
 	"strings"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 )
 
 func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 	r := csv.NewReader(strings.NewReader(csvContents))
+	r.Comma = []rune(os.Getenv(env.CsvDelimiter))[0]
 	r.Comment = '#'
 	lines, err := r.ReadAll()
 	if err != nil {
