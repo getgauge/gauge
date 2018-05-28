@@ -205,9 +205,9 @@ func (s *MySuite) TestReplaceArgsWithDynamicForSpecialParam(c *C) {
 
 	step.ReplaceArgsWithDynamic(stepArgs)
 	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[0].Value, Equals, "first/first.csv")
+	c.Assert(step.Args[0].Name, Equals, "first/first.csv")
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[1].Value, Equals, "second/second.txt")
+	c.Assert(step.Args[1].Name, Equals, "second/second.txt")
 }
 
 func (s *MySuite) TestReplaceArgs(c *C) {
@@ -219,9 +219,9 @@ func (s *MySuite) TestReplaceArgs(c *C) {
 
 	step.ReplaceArgsWithDynamic(stepArgs)
 	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[0].Value, Equals, "text from file")
+	c.Assert(step.Args[0].Name, Equals, "text from file")
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[1].Value, Equals, "text from file")
+	c.Assert(step.Args[1].Name, Equals, "text from file")
 }
 
 func (s *MySuite) TestUsageDynamicArgs(c *C) {

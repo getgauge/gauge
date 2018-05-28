@@ -44,17 +44,8 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 		return nil, err
 	}
 
-	spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), util.ConvertURItoFilePath(params.TextDocument.URI))
-	if !pResult.Ok {
-		return nil, fmt.Errorf("refactoring failed due to parse errors: \n%s", strings.Join(pResult.Errors(), "\n"))
-	}
-	var step *gauge.Step
-	for _, item := range spec.AllItems() {
-		if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
-			step = item.(*gauge.Step)
-			break
-		}
-	}
+	step, err := getStepToRefactor(params)
+
 	if step == nil {
 		return nil, fmt.Errorf("refactoring is supported for steps only")
 	}
@@ -79,6 +70,33 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 		return nil, err
 	}
 	return result, nil
+}
+
+func getStepToRefactor(params lsp.RenameParams) (*gauge.Step, error) {
+	file := util.ConvertURItoFilePath(params.TextDocument.URI)
+	if util.IsSpec(file) {
+		spec, pResult := new(parser.SpecParser).ParseSpecText(getContent(params.TextDocument.URI), util.ConvertURItoFilePath(params.TextDocument.URI))
+		if !pResult.Ok {
+			return nil, fmt.Errorf("refactoring failed due to parse errors: \n%s", strings.Join(pResult.Errors(), "\n"))
+		}
+		for _, item := range spec.AllItems() {
+			if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
+				return item.(*gauge.Step), nil
+
+			}
+		}
+	}
+	if util.IsConcept(file) {
+		steps, _ := new(parser.ConceptParser).Parse(getContent(params.TextDocument.URI), file)
+		for _, conStep := range steps {
+			for _, step := range conStep.ConceptSteps {
+				if step.LineNo-1 == params.Position.Line {
+					return step, nil
+				}
+			}
+		}
+	}
+	return nil, nil
 }
 
 func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
