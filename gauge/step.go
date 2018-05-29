@@ -118,7 +118,7 @@ func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg 
 		}
 		if step.IsConcept {
 			name := fmt.Sprintf("arg%d", key)
-			if newStep.Args[key].Value != "" {
+			if newStep.Args[key].Value != ""  && newStep.Args[key].ArgType != SpecialString {
 				name = newStep.Args[key].Value
 			}
 			arg = &StepArg{Name: name, Value: newStep.Args[key].Value, ArgType: Dynamic}
