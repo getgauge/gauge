@@ -182,6 +182,30 @@ func (s *MySuite) TestRenameStep(c *C) {
 	c.Assert(originalStep.Args[1].Name, Equals, "arg1")
 }
 
+func (s *MySuite) TestRenameConcept(c *C)  {
+	originalStep := &Step{
+		LineNo:         3,
+		Value:          "concept with text file",
+		IsConcept:      true,
+		HasInlineTable: false}
+
+	argsInStep := []*StepArg{&StepArg{Name: "file:foo.txt", Value: "text from file", ArgType: SpecialString}}
+	newStep := &Step{
+		LineNo:         3,
+		Value:          "concept with text file {}",
+		Args:           argsInStep,
+		IsConcept:      true,
+		HasInlineTable: false}
+	orderMap := make(map[int]int)
+	orderMap[0] = -1
+	IsConcept := true
+	isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
+	c.Assert(isRefactored, Equals, true)
+	c.Assert(originalStep.Value, Equals, "concept with text file {}")
+	c.Assert(originalStep.Args[0].Name,Equals,"arg0")
+	c.Assert(newStep.Args[0].Name,Equals,"file:foo.txt")
+}
+
 func (s *MySuite) TestGetLineTextForStep(c *C) {
 	step := &Step{LineText: "foo"}
 
