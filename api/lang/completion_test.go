@@ -109,6 +109,10 @@ func (p dummyInfoProvider) Tags() []string {
 	return []string{"hello"}
 }
 
+func (p dummyInfoProvider) GetSpecDirs() []string {
+	return []string{"specs"}
+}
+
 func (p dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {
 	return &(gauge.Concept{FileName: "concept_uri.cpt", ConceptStep: &gauge.Step{
 		Value:    "concept1",
