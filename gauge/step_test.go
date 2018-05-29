@@ -182,6 +182,30 @@ func (s *MySuite) TestRenameStep(c *C) {
 	c.Assert(originalStep.Args[1].Name, Equals, "arg1")
 }
 
+func (s *MySuite) TestRenameConcept(c *C)  {
+	originalStep := &Step{
+		LineNo:         3,
+		Value:          "concept with text file",
+		IsConcept:      true,
+		HasInlineTable: false}
+
+	argsInStep := []*StepArg{&StepArg{Name: "file:foo.txt", Value: "text from file", ArgType: SpecialString}}
+	newStep := &Step{
+		LineNo:         3,
+		Value:          "concept with text file {}",
+		Args:           argsInStep,
+		IsConcept:      true,
+		HasInlineTable: false}
+	orderMap := make(map[int]int)
+	orderMap[0] = -1
+	IsConcept := true
+	isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
+	c.Assert(isRefactored, Equals, true)
+	c.Assert(originalStep.Value, Equals, "concept with text file {}")
+	c.Assert(originalStep.Args[0].Name,Equals,"arg0")
+	c.Assert(newStep.Args[0].Name,Equals,"file:foo.txt")
+}
+
 func (s *MySuite) TestGetLineTextForStep(c *C) {
 	step := &Step{LineText: "foo"}
 
@@ -205,9 +229,9 @@ func (s *MySuite) TestReplaceArgsWithDynamicForSpecialParam(c *C) {
 
 	step.ReplaceArgsWithDynamic(stepArgs)
 	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[0].Value, Equals, "first/first.csv")
+	c.Assert(step.Args[0].Name, Equals, "first/first.csv")
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[1].Value, Equals, "second/second.txt")
+	c.Assert(step.Args[1].Name, Equals, "second/second.txt")
 }
 
 func (s *MySuite) TestReplaceArgs(c *C) {
@@ -219,9 +243,9 @@ func (s *MySuite) TestReplaceArgs(c *C) {
 
 	step.ReplaceArgsWithDynamic(stepArgs)
 	c.Assert(step.Args[0].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[0].Value, Equals, "text from file")
+	c.Assert(step.Args[0].Name, Equals, "text from file")
 	c.Assert(step.Args[1].ArgType, Equals, Dynamic)
-	c.Assert(step.Args[1].Value, Equals, "text from file")
+	c.Assert(step.Args[1].Name, Equals, "text from file")
 }
 
 func (s *MySuite) TestUsageDynamicArgs(c *C) {

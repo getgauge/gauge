@@ -492,6 +492,10 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 	return details
 }
 
+func (s *SpecInfoGatherer) GetSpecDirs() []string {
+	return s.SpecDirs
+}
+
 // Steps returns the list of all the steps in the gauge project. Duplicate steps are filtered
 func (s *SpecInfoGatherer) Steps(filterConcepts bool) []*gauge.Step {
 	s.stepsCache.mutex.RLock()
