@@ -40,6 +40,9 @@ enable_multithreading = false
 # Possible values for this property are 'suite', 'spec' or 'scenario'.
 # 'scenario' clears the objects after the execution of each scenario, new objects are created for next execution.
 gauge_clear_state_level = scenario
+
+# Set delimiter to read a table from CSV files
+csv_delimiter = ,
 `
 var ExampleSpec = `# Specification Heading
 

@@ -37,6 +37,7 @@ const (
 	OverwriteReports    = "overwrite_reports"
 	ScreenshotOnFailure = "screenshot_on_failure"
 	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
+	CsvDelimiter        = "csv_delimiter"
 )
 
 var envVars map[string]string
@@ -86,6 +87,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(OverwriteReports, "true")
 	addEnvVar(ScreenshotOnFailure, "true")
 	addEnvVar(SaveExecutionResult, "false")
+	addEnvVar(CsvDelimiter, ",")
 }
 
 func loadEnvDir(envName string) error {
