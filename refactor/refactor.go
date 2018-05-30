@@ -55,7 +55,7 @@ type refactoringResult struct {
 	Success            bool
 	SpecsChanged       map[string]string
 	ConceptsChanged    map[string]string
-	RunnerFilesChanged map[string]string
+	RunnerFilesChanged []*gauge_messages.FileChanges
 	Errors             []string
 	Warnings           []string
 }
@@ -104,8 +104,8 @@ func (refactoringResult *refactoringResult) specFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) runnerFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName := range refactoringResult.RunnerFilesChanged {
-		filesChanged = append(filesChanged, fileName)
+	for _, fileChange := range refactoringResult.RunnerFilesChanged {
+		filesChanged = append(filesChanged, fileChange.FileName)
 	}
 	return filesChanged
 }
@@ -334,7 +334,7 @@ func getRefactorAgent(oldStepText, newStepText string, runner runner.Runner) (*r
 	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], runner: runner}, []parser.ParseError{}
 }
 
-func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string, shouldSaveChanges bool) (map[string]string, error) {
+func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string, shouldSaveChanges bool) ([]*gauge_messages.FileChanges, error) {
 	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName, shouldSaveChanges)
 	if err != nil {
 		return nil, err
@@ -345,11 +345,7 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 		logger.Errorf(false, "Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
-	fileChanges := make(map[string]string, 0)
-	for _, fileChange := range refactorResponse.GetFileChanges() {
-		fileChanges[fileChange.FileName] = fileChange.FileContent
-	}
-	return fileChanges, runnerError
+	return refactorResponse.GetFileChanges(), runnerError
 }
 
 func (agent *rephraseRefactorer) sendRefactorRequest(testRunner runner.Runner, refactorRequest *gauge_messages.Message) *gauge_messages.RefactorResponse {

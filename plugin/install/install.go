@@ -168,6 +168,10 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 
+	if err = runPlatformCommands(gp.PostInstall, unzippedPluginDir); err != nil {
+		return installError(err)
+	}
+
 	pluginInstallDir, err := getPluginInstallDir(gp.ID, getVersionedPluginDirName(zipFile))
 	if err != nil {
 		return installError(err)
@@ -179,9 +183,6 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 
-	if err = runPlatformCommands(gp.PostInstall, pluginInstallDir); err != nil {
-		return installError(err)
-	}
 	return installSuccess("")
 }
 

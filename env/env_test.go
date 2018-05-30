@@ -43,6 +43,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
+	c.Assert(os.Getenv("csv_delimiter"), Equals, ",")
 }
 
 // If default env dir is present, the values present in there should overwrite

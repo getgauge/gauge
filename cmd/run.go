@@ -72,7 +72,7 @@ const (
 	dryRunName         = "dry-run"
 )
 
-var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName}
+var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName}
 var streamsDefault = util.NumberOfCores()
 
 type prevCommand struct {

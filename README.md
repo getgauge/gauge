@@ -10,7 +10,7 @@
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 ## Get Started
-Read more about [Why Gauge](https://docs.gauge.org/longstart.html#why-gauge) can be used, its [terminologies](https://docs.gauge.org/longstart.html#gauge-terminologies) and [**get started...**](https://gauge.org/get-started.html)
+Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb4848cd) can be used, its [terminologies](https://docs.gauge.org/longstart.html#gauge-terminologies) and [**get started...**](https://gauge.org/get-started.html)
 
 ## Find out more
 
@@ -60,4 +60,4 @@ Gauge is released under [GNU Public License version 3.0](http://www.gnu.org/lice
 
 ## Copyright
 
-Copyright 2017 ThoughtWorks, Inc.
+Copyright 2018 ThoughtWorks, Inc.

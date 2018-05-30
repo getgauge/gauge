@@ -767,6 +767,10 @@ func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 				i++
 				value = fmt.Sprintf("<%s%d>", "file", i)
 				break
+			case gauge_messages.Parameter_Special_Table:
+				i++
+				value = fmt.Sprintf("<%s%d>", "table", i)
+				break
 			}
 		}
 		stepText += value
