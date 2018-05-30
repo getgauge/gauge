@@ -114,7 +114,7 @@ func FindConceptFilesIn(dir string) []string {
 
 // IsValidConceptExtension Checks if the path has a concept file extension
 func IsValidConceptExtension(path string) bool {
-	return filepath.Ext(path) == cptFileExtension
+	return strings.ToLower(filepath.Ext(path)) == cptFileExtension
 }
 
 // IsConcept Returns true if concept file
