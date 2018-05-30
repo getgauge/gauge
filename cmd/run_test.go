@@ -161,13 +161,16 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 	os.Args = []string{"gauge", "run", "-f"}
 	config.ProjectRoot = ""
-	expectedErrorMessage := "Failed to find project directory"
+	currDir, _ := os.Getwd()
+	defer os.Chdir(currDir)
+	testdir := filepath.Join(currDir, "dotGauge")
+	dotgaugeDir := filepath.Join(testdir, ".gauge")
+	os.Chdir(testdir)
 	exit = func(err error, i string) {
-		if err.Error() != expectedErrorMessage {
-			t.Fatalf("Expected %v  Got %v", expectedErrorMessage, err.Error())
+		if _, e := os.Stat(dotgaugeDir); os.IsExist(e) {
+			t.Fatalf("Folder .gauge is created")
 		}
 		os.Exit(0)
 	}
 	runCmd.Execute()
-	t.Fatalf("Should not execute successfully")
 }
