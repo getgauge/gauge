@@ -77,6 +77,8 @@ var NumberOfExecutionStreams int
 // InParallel if true executes the specs in parallel else in serial.
 var InParallel bool
 
+var DryRun bool
+
 type suiteExecutor interface {
 	run() *result.SuiteResult
 }
@@ -216,6 +218,9 @@ func ReadExecutionStatus() (interface{}, error) {
 }
 
 func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int {
+	if DryRun {
+		return 1
+	}
 	nSkippedSpecs := suiteResult.SpecsSkippedCount
 	var nExecutedSpecs int
 	if len(suiteResult.SpecResults) != 0 {

@@ -49,6 +49,7 @@ const (
 	parallelDefault       = false
 	sortDefault           = false
 	installPluginsDefault = true
+	dryRunDefault         = false
 	environmentDefault    = "default"
 	tagsDefault           = ""
 	rowsDefault           = ""
@@ -68,6 +69,7 @@ const (
 	strategyName       = "strategy"
 	groupName          = "group"
 	streamsName        = "n"
+	dryRunName         = "dry-run"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName}
@@ -125,6 +127,7 @@ var (
 	parallel       bool
 	sort           bool
 	installPlugins bool
+	dryRun         bool
 	environment    string
 	tags           string
 	rows           string
@@ -149,6 +152,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	runCmd.Flags().BoolVarP(&dryRun, dryRunName, "", dryRunDefault, "Performs a dry run where no specifications are executed")
 }
 
 //This flag stores whether the command is gauge run --failed and if it is triggering another command.
@@ -175,7 +179,7 @@ func resetFlags() {
 		hideSuggestionDefault, installPluginsDefault
 	environment, tags, rows, strategy, logLevel, dir =
 		environmentDefault, tagsDefault, rowsDefault, strategyDefault, logLevelDefault, dirDefault
-	streams, group = streamsDefault, groupDefault
+	streams, group, dryRun = streamsDefault, groupDefault, dryRunDefault
 }
 
 func getFlagsToOverride(cmd *cobra.Command) map[string]string {
