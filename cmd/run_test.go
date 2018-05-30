@@ -157,3 +157,17 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		t.Errorf("Expected %v  Got %v", expectedFlag, overridenFlagValue)
 	}
 }
+
+func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
+	os.Args = []string{"gauge", "run", "-f"}
+	config.ProjectRoot = ""
+	expectedErrorMessage := "Failed to find project directory"
+	exit = func(err error, i string) {
+		if err.Error() != expectedErrorMessage {
+			t.Fatalf("Expected %v  Got %v", expectedErrorMessage, err.Error())
+		}
+		os.Exit(0)
+	}
+	runCmd.Execute()
+	t.Fatalf("Should not execute successfully")
+}
