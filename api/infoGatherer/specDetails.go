@@ -590,17 +590,7 @@ func getStepsFromSpec(spec *gauge.Specification) []*gauge.Step {
 }
 
 func getStepsFromConcept(concept *gauge.Concept) []*gauge.Step {
-	return filterConcepts(concept.ConceptStep.ConceptSteps)
-}
-
-func filterConcepts(steps []*gauge.Step) []*gauge.Step {
-	var filteredSteps []*gauge.Step
-	for _, step := range steps {
-		if !step.IsConcept {
-			filteredSteps = append(filteredSteps, step)
-		}
-	}
-	return filteredSteps
+	return concept.ConceptStep.ConceptSteps
 }
 
 func handleParseFailures(parseResults []*parser.ParseResult) {

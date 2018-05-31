@@ -200,24 +200,6 @@ func (s *MySuite) TestGetParsedConcepts(c *C) {
 	c.Assert(specInfoGatherer.conceptDictionary, NotNil)
 }
 
-func (s *MySuite) TestFilterConcepts(c *C) {
-	steps := []*gauge.Step{
-		&gauge.Step{Value: "Step with a {}", LineText: "Step with a <table>", IsConcept: true, HasInlineTable: true},
-		&gauge.Step{Value: "A context step", LineText: "A context step", IsConcept: false},
-		&gauge.Step{Value: "Say {} to {}", LineText: "Say \"hello\" to \"gauge\"", IsConcept: false,
-			Args: []*gauge.StepArg{
-				&gauge.StepArg{Name: "first", Value: "hello", ArgType: gauge.Static},
-				&gauge.StepArg{Name: "second", Value: "gauge", ArgType: gauge.Static}},
-		},
-	}
-
-	filteredSteps := filterConcepts(steps)
-
-	c.Assert(len(filteredSteps), Equals, 2)
-	c.Assert(filteredSteps[0].Value, Equals, "A context step")
-	c.Assert(filteredSteps[1].Value, Equals, "Say {} to {}")
-}
-
 func (s *MySuite) TestInitSpecsCache(c *C) {
 	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
