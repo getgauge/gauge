@@ -77,6 +77,22 @@ func (s *MySuite) TestFindAllConceptFiles(c *C) {
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
 }
 
+func (s *MySuite) TestIsValidSpecExension(c *C) {
+	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.spec"), Equals, true)
+	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.sPeC"), Equals, true)
+	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.SPEC"), Equals, true)
+	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.md"), Equals, true)
+	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.MD"), Equals, true)
+	c.Assert(IsValidSpecExtension("/home/user/foo/myconcept.cpt"), Equals, false)
+}
+
+func (s *MySuite) TestIsValidConcpetExension(c *C) {
+	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.cpt"), Equals, true)
+	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.CPT"), Equals, true)
+	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.cPt"), Equals, true)
+	c.Assert(IsValidConceptExtension("/home/user/foo/myspec.spC"), Equals, false)
+}
+
 func (s *MySuite) TestFindAllConceptFilesShouldFilterDirectoriesThatAreSkipped(c *C) {
 	config.ProjectRoot = dir
 	data := []byte(`#Concept Heading`)

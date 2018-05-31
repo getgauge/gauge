@@ -70,7 +70,7 @@ func (p dummyInfoProvider) GetAvailableSpecDetails(specs []string) []*infoGather
 	return p.specsFunc(specs)
 }
 func (p dummyInfoProvider) Init() {}
-func (p dummyInfoProvider) Steps() []*gauge.Step {
+func (p dummyInfoProvider) Steps(filterConcepts bool) []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
@@ -79,7 +79,7 @@ func (p dummyInfoProvider) Steps() []*gauge.Step {
 	}}
 }
 
-func (p dummyInfoProvider) AllSteps() []*gauge.Step {
+func (p dummyInfoProvider) AllSteps(filterConcepts bool) []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		LineNo:   7,
@@ -107,6 +107,10 @@ func (p dummyInfoProvider) Params(file string, argType gauge.ArgType) []gauge.St
 
 func (p dummyInfoProvider) Tags() []string {
 	return []string{"hello"}
+}
+
+func (p dummyInfoProvider) GetSpecDirs() []string {
+	return []string{"specs"}
 }
 
 func (p dummyInfoProvider) SearchConceptDictionary(stepValue string) *gauge.Concept {

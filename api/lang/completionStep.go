@@ -64,7 +64,7 @@ func removeDuplicates(steps []gauge.StepValue) []gauge.StepValue {
 
 func allUsedStepValues() []gauge.StepValue {
 	var stepValues []gauge.StepValue
-	for _, s := range provider.Steps() {
+	for _, s := range provider.Steps(true) {
 		stepValues = append(stepValues, parser.CreateStepValue(s))
 	}
 	return stepValues

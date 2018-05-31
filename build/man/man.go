@@ -194,7 +194,8 @@ const html = `
     <link href="https://gauge.org/assets/images/favicons/favicon.ico" rel="shortcut icon" type="image/ico" />
     <style type='text/css' media='all'>
         body#manpage {
-            margin: 0
+            margin: 0;
+            border-top: 3px solid #f5c10e;
         }
 
         .mp {
@@ -390,13 +391,13 @@ const html = `
         .man-navigation {
             display: block !important;
             position: fixed;
-            top: 0;
+            top: 3px;
             left: 113ex;
             height: 100%;
             width: 100%;
             padding: 48px 0 0 0;
             border-left: 1px solid #dbdbdb;
-            background: #eee;
+            background: #333333;
         }
 
         .man-navigation a,
@@ -406,12 +407,12 @@ const html = `
             display: block;
             margin: 0;
             padding: 5px 2px 5px 0px;
-            color: #999;
+            color: #ffffff;
             text-decoration: none;
         }
 
         .man-navigation a:hover {
-            color: #111;
+            color: #f5c10e;
             text-decoration: underline;
         }
 
@@ -425,7 +426,7 @@ const html = `
 
         a.active {
             font-weight: bolder;
-            color: #717171 !important;
+            color: #f5c10e !important;
         }
     </style>
 </head>
