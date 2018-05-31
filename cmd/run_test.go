@@ -157,3 +157,20 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		t.Errorf("Expected %v  Got %v", expectedFlag, overridenFlagValue)
 	}
 }
+
+func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
+	os.Args = []string{"gauge", "run", "-f"}
+	config.ProjectRoot = ""
+	currDir, _ := os.Getwd()
+	defer os.Chdir(currDir)
+	testdir := filepath.Join(currDir, "dotGauge")
+	dotgaugeDir := filepath.Join(testdir, ".gauge")
+	os.Chdir(testdir)
+	exit = func(err error, i string) {
+		if _, e := os.Stat(dotgaugeDir); os.IsExist(e) {
+			t.Fatalf("Folder .gauge is created")
+		}
+		os.Exit(0)
+	}
+	runCmd.Execute()
+}
