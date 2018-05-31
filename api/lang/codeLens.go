@@ -41,6 +41,7 @@ const (
 	runInParallelCodeLens = "Run in parallel"
 	runScenarioCodeLens   = "Run Scenario"
 	debugScenarioCodeLens = "Debug Scenario"
+	referenceCodeLens     = "%s reference(s)"
 )
 
 func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
@@ -48,30 +49,24 @@ func codeLenses(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
-	if util.IsGaugeFile(string(params.TextDocument.URI)) {
+	if util.IsSpec(string(params.TextDocument.URI)) {
 		return getExecutionCodeLenses(params)
 	}
-	return getReferenceCodeLenses(params)
+	if util.IsConcept(string(params.TextDocument.URI)) {
+		return getConceptReferenceCodeLenses(params)
+	}
+	return getImplementationReferenceCodeLenses(params)
 }
 
 func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	uri := params.TextDocument.URI
 	file := util.ConvertURItoFilePath(uri)
-	if !util.IsSpec(file) {
-		return nil, nil
-	}
 	spec, res, err := new(parser.SpecParser).Parse(getContent(uri), gauge.NewConceptDictionary(), file)
 	if err != nil {
 		return nil, err
 	}
-
 	if !res.Ok {
-		errs := ""
-		for _, e := range res.ParseErrors {
-			errs = fmt.Sprintf("%s%s:%d %s\n", errs, e.FileName, e.LineNo, e.Message)
-		}
-		err := fmt.Errorf("failed to parse specification %s\n%s", file, errs)
-		return nil, err
+		return nil, concatenateErrors(res, file)
 	}
 	var codeLenses []lsp.CodeLens
 	runCodeLens := createCodeLens(spec.Heading.LineNo-1, runSpecCodeLens, executeCommand, getExecutionArgs(spec.FileName))
@@ -86,7 +81,19 @@ func getExecutionCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	return append(getScenarioCodeLenses(spec), codeLenses...), nil
 }
 
-func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
+func getConceptReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
+	uri := params.TextDocument.URI
+	file := util.ConvertURItoFilePath(uri)
+	concepts, _ := new(parser.ConceptParser).Parse(getContent(uri), file)
+	allSteps := provider.AllSteps(false)
+	var lenses []lsp.CodeLens
+	for _, concept := range concepts {
+		lenses = append(lenses, createReferenceCodeLens(allSteps, uri, concept.Value, int(concept.LineNo)))
+	}
+	return lenses, nil
+}
+
+func getImplementationReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
@@ -95,25 +102,27 @@ func getReferenceCodeLenses(params lsp.CodeLensParams) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	allSteps := provider.AllSteps()
+	allSteps := provider.AllSteps(true)
 	var lenses []lsp.CodeLens
 	for _, stepPosition := range stepPositionsResponse.GetStepPositions() {
-		var count int
-		stepValue := stepPosition.GetStepValue()
-		for _, step := range allSteps {
-			if stepValue == step.Value {
-				count++
-			}
-		}
-		lensTitle := strconv.Itoa(count) + " reference(s)"
-		lensPosition := lsp.Position{Line: int(stepPosition.GetSpan().GetStart()) - 1, Character: 0}
-		lineNo := int(stepPosition.GetSpan().GetStart()) - 1
-		args := []interface{}{uri, lensPosition, stepValue}
-
-		lens := createCodeLens(lineNo, lensTitle, referencesCommand, args)
-		lenses = append(lenses, lens)
+		lenses = append(lenses, createReferenceCodeLens(allSteps, uri, stepPosition.GetStepValue(), int(stepPosition.GetSpan().GetStart())))
 	}
 	return lenses, nil
+}
+
+func createReferenceCodeLens(allSteps []*gauge.Step, uri lsp.DocumentURI, stepValue string, startPosition int) lsp.CodeLens {
+	var count int
+	for _, step := range allSteps {
+		if stepValue == step.Value {
+			count++
+		}
+	}
+	lensTitle := fmt.Sprintf(referenceCodeLens, strconv.Itoa(count))
+	lensPosition := lsp.Position{Line: startPosition - 1, Character: 0}
+	lineNo := startPosition - 1
+	args := []interface{}{uri, lensPosition, stepValue}
+
+	return createCodeLens(lineNo, lensTitle, referencesCommand, args)
 }
 
 func getDataTableLenses(spec *gauge.Specification) []lsp.CodeLens {
@@ -153,4 +162,12 @@ func createCodeLens(lineNo int, lensTitle, command string, args []interface{}) l
 func getExecutionArgs(id string) []interface{} {
 	var args []interface{}
 	return append(args, id)
+}
+
+func concatenateErrors(res *parser.ParseResult, file string) error {
+	errs := ""
+	for _, e := range res.ParseErrors {
+		errs = fmt.Sprintf("%s%s:%d %s\n", errs, e.FileName, e.LineNo, e.Message)
+	}
+	return fmt.Errorf("failed to parse %s\n%s", file, errs)
 }

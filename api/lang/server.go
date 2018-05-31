@@ -35,8 +35,8 @@ import (
 
 type infoProvider interface {
 	Init()
-	Steps() []*gauge.Step
-	AllSteps() []*gauge.Step
+	Steps(filterConcepts bool) []*gauge.Step
+	AllSteps(filterConcepts bool) []*gauge.Step
 	Concepts() []*gm.ConceptInfo
 	Params(file string, argType gauge.ArgType) []gauge.StepArg
 	Tags() []string
