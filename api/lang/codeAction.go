@@ -87,7 +87,11 @@ func createConceptInfo(uri lsp.DocumentURI, line int) (interface{}, error) {
 			}
 		}
 	}
-	cptName := strings.Replace(stepValue.ParameterizedStepValue, "*", "", -1)
+	count := strings.Count(stepValue.StepValue, "{}")
+	for i := 0; i < count; i++ {
+		stepValue.StepValue = strings.Replace(stepValue.StepValue, "{}", fmt.Sprintf("<arg%d>", i), 1)
+	}	
+	cptName := strings.Replace(stepValue.StepValue, "*", "", -1)
 	return concpetInfo{
 		ConceptName: fmt.Sprintf("# %s\n* ", strings.TrimSpace(cptName)),
 	}, nil
