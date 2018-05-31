@@ -98,8 +98,8 @@ func (s *MySuite) TestRefactoringOfStepsWithNoArgsAndWithMoreThanOneSpec(c *C) {
 	agent, errs := getRefactorAgent(oldStep, newStep, nil)
 	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
-	for _, isRefactored := range specRefactored {
-		c.Assert(true, Equals, isRefactored)
+	for _, diffs := range specRefactored {
+		c.Assert(1, Equals, len(diffs))
 	}
 	c.Assert(len(errs), Equals, 0)
 	c.Assert(len(specs[0].Scenarios[0].Steps), Equals, 1)
@@ -153,8 +153,8 @@ func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 	agent, _ := getRefactorAgent(oldStep, newStep, nil)
 	specRefactored, _ := agent.rephraseInSpecsAndConcepts(&specs, gauge.NewConceptDictionary())
 
-	c.Assert(true, Equals, specRefactored[specs[0]])
-	c.Assert(false, Equals, specRefactored[specs[1]])
+	c.Assert(1, Equals, len(specRefactored[specs[0]]))
+	c.Assert(0, Equals, len(specRefactored[specs[1]]))
 }
 
 func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c *C) {

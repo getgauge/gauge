@@ -60,7 +60,7 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	}
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	if err := addWorkspaceEdits(&result, refactortingResult.SpecsChanged); err != nil {
+	if err := addSrcWorkspaceEdits(&result, refactortingResult.SpecsChanged); err != nil {
 		return nil, err
 	}
 	if err := addWorkspaceEdits(&result, refactortingResult.ConceptsChanged); err != nil {
