@@ -10,7 +10,7 @@
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 ## Get Started
-Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb4848cd) can be used, its [terminologies](https://docs.gauge.org/longstart.html#gauge-terminologies) and [**get started...**](https://gauge.org/get-started.html)
+Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb4848cd) can be used, its [terminologies](https://docs.gauge.org/latest/writing-specifications.html) and [**get started...**](https://gauge.org/get-started.html)
 
 ## Find out more
 
@@ -23,7 +23,7 @@ Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb48
 [examples-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 
-[userdocs]:https://docs.gauge.org
+[userdocs]:https://docs.gauge.org/latest
 [get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
@@ -31,7 +31,7 @@ Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb48
 ## Questions or need help?
 
 ### Troubleshooting
-Refer our [Troubleshooting](https://docs.gauge.org/troubleshooting.html) guide.
+Context specific **Troubleshooting** guide is available in relevant pages of the [Gauge Documentation](https://docs.gauge.org/latest).
 
 ### Talk to us
 
