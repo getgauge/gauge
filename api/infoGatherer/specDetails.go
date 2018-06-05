@@ -321,12 +321,7 @@ func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
 	s.specsCache.mutex.Unlock()
 
 	var steps []*gauge.Step
-	for _, step := range getStepsFromSpec(details[0].Spec) {
-		con := s.conceptDictionary.Search(step.Value)
-		if con == nil {
-			steps = append(steps, step)
-		}
-	}
+	steps = append(steps, getStepsFromSpec(details[0].Spec)...)
 	s.stepsCache.mutex.Lock()
 	s.addToStepsCache(file, steps)
 	s.stepsCache.mutex.Unlock()
@@ -357,12 +352,13 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 		handleParseFailures([]*parser.ParseResult{res})
 	}
 	s.conceptsCache.concepts[file] = make([]*gauge.Concept, 0)
+	var stepsFromConcept []*gauge.Step
 	for _, concept := range concepts {
 		c := gauge.Concept{ConceptStep: concept, FileName: file}
 		s.addToConceptsCache(file, &c)
-		stepsFromConcept := getStepsFromConcept(&c)
-		s.addToStepsCache(file, stepsFromConcept)
+		stepsFromConcept = append(stepsFromConcept, getStepsFromConcept(&c)...)
 	}
+	s.addToStepsCache(file, stepsFromConcept)
 	s.paramsCache.mutex.Lock()
 	defer s.paramsCache.mutex.Unlock()
 	s.updateParamsCacheFromConcepts(file, s.conceptsCache.concepts[file])
@@ -496,14 +492,20 @@ func (s *SpecInfoGatherer) GetAvailableSpecDetails(specs []string) []*SpecDetail
 	return details
 }
 
+func (s *SpecInfoGatherer) GetSpecDirs() []string {
+	return s.SpecDirs
+}
+
 // Steps returns the list of all the steps in the gauge project. Duplicate steps are filtered
-func (s *SpecInfoGatherer) Steps() []*gauge.Step {
+func (s *SpecInfoGatherer) Steps(filterConcepts bool) []*gauge.Step {
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
 	filteredSteps := make(map[string]*gauge.Step)
 	for _, steps := range s.stepsCache.steps {
 		for _, s := range steps {
-			filteredSteps[s.Value] = s
+			if !filterConcepts || !s.IsConcept {
+				filteredSteps[s.Value] = s
+			}
 		}
 	}
 	var steps []*gauge.Step
@@ -514,12 +516,20 @@ func (s *SpecInfoGatherer) Steps() []*gauge.Step {
 }
 
 // Steps returns the list of all the steps in the gauge project including duplicate steps
-func (s *SpecInfoGatherer) AllSteps() []*gauge.Step {
+func (s *SpecInfoGatherer) AllSteps(filterConcepts bool) []*gauge.Step {
 	s.stepsCache.mutex.RLock()
 	defer s.stepsCache.mutex.RUnlock()
 	var allSteps []*gauge.Step
 	for _, steps := range s.stepsCache.steps {
-		allSteps = append(allSteps, steps...)
+		if filterConcepts {
+			for _, s := range steps {
+				if !s.IsConcept {
+					allSteps = append(allSteps, s)
+				}
+			}
+		} else {
+			allSteps = append(allSteps, steps...)
+		}
 	}
 	return allSteps
 }
@@ -571,26 +581,16 @@ func (s *SpecInfoGatherer) SearchConceptDictionary(stepValue string) *gauge.Conc
 }
 
 func getStepsFromSpec(spec *gauge.Specification) []*gauge.Step {
-	steps := filterConcepts(spec.Contexts)
+	steps := spec.Contexts
 	for _, scenario := range spec.Scenarios {
-		steps = append(steps, filterConcepts(scenario.Steps)...)
+		steps = append(steps, scenario.Steps...)
 	}
-	steps = append(steps, filterConcepts(spec.TearDownSteps)...)
+	steps = append(steps, spec.TearDownSteps...)
 	return steps
 }
 
 func getStepsFromConcept(concept *gauge.Concept) []*gauge.Step {
-	return filterConcepts(concept.ConceptStep.ConceptSteps)
-}
-
-func filterConcepts(steps []*gauge.Step) []*gauge.Step {
-	var filteredSteps []*gauge.Step
-	for _, step := range steps {
-		if !step.IsConcept {
-			filteredSteps = append(filteredSteps, step)
-		}
-	}
-	return filteredSteps
+	return concept.ConceptStep.ConceptSteps
 }
 
 func handleParseFailures(parseResults []*parser.ParseResult) {

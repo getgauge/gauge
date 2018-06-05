@@ -27,4 +27,3 @@ script:
   - echo $JAVA_HOME
   - $GAUGE_PREFIX/bin/gauge version
   - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java
-

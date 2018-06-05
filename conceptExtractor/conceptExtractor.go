@@ -198,7 +198,7 @@ func (e *extractor) addTableAsParam(step *gm.Step, args []*gauge.StepArg) {
 	if step.GetParamTableName() != "" {
 		e.conceptName = strings.Replace(e.conceptName, fmt.Sprintf("<%s>", step.GetParamTableName()), "", 1)
 		e.table = &args[0].Table
-		args[0] = &gauge.StepArg{Value: step.GetParamTableName(), ArgType: gauge.Dynamic}
+		args[0] = &gauge.StepArg{Name: step.GetParamTableName(), ArgType: gauge.Dynamic}
 	} else {
 		e.dynamicArgs = append(e.dynamicArgs, (&args[0].Table).GetDynamicArgs()...)
 	}

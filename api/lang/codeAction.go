@@ -22,7 +22,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -39,28 +41,70 @@ func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
-	return getSpecCodeAction(params), nil
+	return getSpecCodeAction(params)
 }
 
-func getSpecCodeAction(params lsp.CodeActionParams) []lsp.Command {
+func getSpecCodeAction(params lsp.CodeActionParams) ([]lsp.Command, error) {
 	var actions []lsp.Command
 	for _, d := range params.Context.Diagnostics {
 		if d.Code != "" {
 			actions = append(actions, createCodeAction(generateStepCommand, generateStubTitle, []interface{}{d.Code}))
-			cptInfo := createConceptInfo(params.TextDocument.URI, params.Range.Start.Line)
+			cptInfo, err := createConceptInfo(params.TextDocument.URI, params.Range.Start.Line)
+			if err != nil {
+				return nil, err
+			}
 			actions = append(actions, createCodeAction(generateConceptCommand, generateConceptTitle, []interface{}{cptInfo}))
 		}
 	}
-	return actions
+	return actions, nil
 }
 
-func createConceptInfo(uri lsp.DocumentURI, line int) concpetInfo {
-	lineText := getLine(uri, line)
-	stepValue, _ := parser.ExtractStepValueAndParams(lineText, false)
-	cptName := strings.Replace(stepValue.ParameterizedStepValue, "*", "", -1)
+func createConceptInfo(uri lsp.DocumentURI, line int) (interface{}, error) {
+	file := util.ConvertURItoFilePath(uri)
+	linetext := getLine(uri, line)
+	var stepValue *gauge.StepValue
+	if util.IsConcept(file) {
+		steps, _ := new(parser.ConceptParser).Parse(getContent(uri), file)
+		for _, conStep := range steps {
+			for _, step := range conStep.ConceptSteps {
+				if step.LineNo-1 == line {
+					stepValue = extractStepValueAndParams(step, linetext)
+				}
+			}
+		}
+	}
+	if util.IsSpec(file) {
+		spec, res, err := new(parser.SpecParser).Parse(getContent(uri), &gauge.ConceptDictionary{}, file)
+		if err != nil {
+			return nil, err
+		}
+		if !res.Ok {
+			return nil, fmt.Errorf("parsing failed for %s. %s", uri, res.Errors())
+		}
+		for _, step := range spec.Steps() {
+			if step.LineNo-1 == line {
+				stepValue = extractStepValueAndParams(step, linetext)
+			}
+		}
+	}
+	count := strings.Count(stepValue.StepValue, "{}")
+	for i := 0; i < count; i++ {
+		stepValue.StepValue = strings.Replace(stepValue.StepValue, "{}", fmt.Sprintf("<arg%d>", i), 1)
+	}	
+	cptName := strings.Replace(stepValue.StepValue, "*", "", -1)
 	return concpetInfo{
 		ConceptName: fmt.Sprintf("# %s\n* ", strings.TrimSpace(cptName)),
+	}, nil
+}
+
+func extractStepValueAndParams(step *gauge.Step, linetext string) *gauge.StepValue {
+	var stepValue *gauge.StepValue
+	if step.HasInlineTable {
+		stepValue, _ = parser.ExtractStepValueAndParams(step.LineText, true)
+	} else {
+		stepValue, _ = parser.ExtractStepValueAndParams(linetext, false)
 	}
+	return stepValue
 }
 
 func createCodeAction(command, titlle string, params []interface{}) lsp.Command {
