@@ -107,12 +107,11 @@ func (table *Table) AddHeaders(columnNames []string) {
 	}
 }
 
-func (table *Table) AddRowValues(rowValues []string) {
-	tableCells := table.createTableCells(rowValues)
+func (table *Table) AddRowValues(tableCells []TableCell) {
 	table.addRows(tableCells)
 }
 
-func (table *Table) createTableCells(rowValues []string) []TableCell {
+func (table *Table) CreateTableCells(rowValues []string) []TableCell {
 	tableCells := make([]TableCell, 0)
 	for _, value := range rowValues {
 		tableCells = append(tableCells, GetTableCell(value))

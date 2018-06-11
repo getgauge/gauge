@@ -65,7 +65,7 @@ func (s *MySuite) TestPopulateFragmentsForStepWithParameters(c *C) {
 	headers := []string{"header1", "header2"}
 	row1 := []string{"row1", "row2"}
 	argTable.AddHeaders(headers)
-	argTable.AddRowValues(row1)
+	argTable.AddRowValues(argTable.CreateTableCells(row1))
 	arg3 := &StepArg{ArgType: SpecialString, Value: "text from file", Name: "file:foo.txt"}
 	arg4 := &StepArg{Table: *argTable, ArgType: TableArg}
 	stepArgs := []*StepArg{arg1, arg2, arg3, arg4}

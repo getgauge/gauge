@@ -520,9 +520,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.AddComment(&gauge.Comment{token.LineText, token.LineNo})
 			}
 		} else {
-			//todo validate datatable rows also
-			spec.DataTable.Table.AddRowValues(token.Args)
-			result = ParseResult{Ok: true}
+			tableValues, warnings := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			spec.DataTable.Table.AddRowValues(tableValues)
+			result = ParseResult{Ok: true, Warnings: warnings}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope, tableSeparatorScope)
 		return result
@@ -727,11 +727,25 @@ func addInlineTableHeader(step *gauge.Step, token *Token) {
 }
 
 func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLookup, fileName string) ParseResult {
+	tableValues, warnings := validateTableRows(token, argLookup, fileName)
+	step.AddInlineTableRow(tableValues)
+	return ParseResult{Ok: true, Warnings: warnings}
+}
+
+func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string)([]gauge.TableCell, []*Warning){
 	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
+	specialArgMatcher := regexp.MustCompile("^<(file:.*)>$")
 	tableValues := make([]gauge.TableCell, 0)
 	warnings := make([]*Warning, 0)
 	for _, tableValue := range token.Args {
-		if dynamicArgMatcher.MatchString(tableValue) {
+		if specialArgMatcher.MatchString(tableValue) {
+			match := specialArgMatcher.FindAllStringSubmatch(tableValue, -1)
+			param := match[0][1]
+			argLookup.AddArgName(param)
+			resolvedArgValue, _ := newSpecialTypeResolver().resolve(param)
+			argLookup.AddArgValue(param, resolvedArgValue)	
+			tableValues = append(tableValues, gauge.TableCell{Value: resolvedArgValue.Value, CellType: gauge.SpecialString})
+		} else if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
 			if !argLookup.ContainsArg(param) {
@@ -744,8 +758,7 @@ func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLooku
 			tableValues = append(tableValues, gauge.TableCell{Value: tableValue, CellType: gauge.Static})
 		}
 	}
-	step.AddInlineTableRow(tableValues)
-	return ParseResult{Ok: true, Warnings: warnings}
+	return tableValues, warnings
 }
 
 func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
