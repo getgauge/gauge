@@ -247,7 +247,9 @@ func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) 
 
 func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 	for _, c := range s.conceptsCache.concepts[file] {
-		s.conceptDictionary.Remove(c.ConceptStep.Value)
+		if file == s.conceptDictionary.ConceptsMap[c.ConceptStep.Value].FileName {
+			s.conceptDictionary.Remove(c.ConceptStep.Value)
+		}
 	}
 }
 
@@ -381,9 +383,7 @@ func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
 	logger.Infof(false, "Concept file removed: %s", file)
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
-	for _, c := range s.conceptsCache.concepts[file] {
-		delete(s.conceptDictionary.ConceptsMap, c.ConceptStep.Value)
-	}
+	s.deleteFromConceptDictionary(file)
 	delete(s.conceptsCache.concepts, file)
 }
 
