@@ -182,7 +182,7 @@ func (s *MySuite) TestRenameStep(c *C) {
 	c.Assert(originalStep.Args[1].Name, Equals, "arg1")
 }
 
-func (s *MySuite) TestRenameConcept(c *C)  {
+func (s *MySuite) TestRenameConcept(c *C) {
 	originalStep := &Step{
 		LineNo:         3,
 		Value:          "concept with text file",
@@ -202,8 +202,8 @@ func (s *MySuite) TestRenameConcept(c *C)  {
 	isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
 	c.Assert(isRefactored, Equals, true)
 	c.Assert(originalStep.Value, Equals, "concept with text file {}")
-	c.Assert(originalStep.Args[0].Name,Equals,"arg0")
-	c.Assert(newStep.Args[0].Name,Equals,"file:foo.txt")
+	c.Assert(originalStep.Args[0].Name, Equals, "arg0")
+	c.Assert(newStep.Args[0].Name, Equals, "file:foo.txt")
 }
 
 func (s *MySuite) TestGetLineTextForStep(c *C) {

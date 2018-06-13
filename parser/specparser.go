@@ -732,7 +732,7 @@ func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLooku
 	return ParseResult{Ok: true, Warnings: warnings}
 }
 
-func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string)([]gauge.TableCell, []*Warning){
+func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string) ([]gauge.TableCell, []*Warning) {
 	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
 	specialArgMatcher := regexp.MustCompile("^<(file:.*)>$")
 	tableValues := make([]gauge.TableCell, 0)
@@ -741,10 +741,7 @@ func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string
 		if specialArgMatcher.MatchString(tableValue) {
 			match := specialArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
-			argLookup.AddArgName(param)
-			resolvedArgValue, _ := newSpecialTypeResolver().resolve(param)
-			argLookup.AddArgValue(param, resolvedArgValue)	
-			tableValues = append(tableValues, gauge.TableCell{Value: resolvedArgValue.Value, CellType: gauge.SpecialString})
+			tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
 		} else if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]

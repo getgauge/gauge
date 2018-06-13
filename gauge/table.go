@@ -58,7 +58,7 @@ func (table *Table) IsInitialized() bool {
 
 func (cell *TableCell) GetValue() string {
 	value := cell.Value
-	if cell.CellType == Dynamic {
+	if cell.CellType == Dynamic || cell.CellType == SpecialString {
 		value = fmt.Sprintf("<%s>", value)
 	}
 	return value

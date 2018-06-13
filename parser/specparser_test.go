@@ -1682,12 +1682,12 @@ func (s *MySuite) TestExtractStepArgsFromToken(c *C) {
 	c.Assert(args[1].ArgType, Equals, gauge.Dynamic)
 }
 
-func (s *MySuite)TestParsingTableParameterWithSpecialString(c *C)  {
+func (s *MySuite) TestParsingTableParameterWithSpecialString(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").String()
 
 	spec, res := parser.ParseSpecText(specText, "")
-	c.Assert(res.Ok, Equals , true)
+	c.Assert(res.Ok, Equals, true)
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].ArgType, Equals, gauge.TableArg)
 
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[0][0].Value, Equals, "john")
@@ -1699,7 +1699,7 @@ func (s *MySuite)TestParsingTableParameterWithSpecialString(c *C)  {
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[1][0].Value, Equals, "123")
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[1][0].CellType, Equals, gauge.Static)
 
-	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[1][1].Value, Equals, "007")
+	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[1][1].Value, Equals, "file:testdata/foo.txt")
 	c.Assert(spec.Scenarios[0].Steps[0].Args[0].Table.Columns[1][1].CellType, Equals, gauge.SpecialString)
 }
 
@@ -1708,7 +1708,7 @@ func (s *MySuite) TestParsingDataTableWithSpecialString(c *C) {
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").String()
 
 	specs, res := parser.ParseSpecText(specText, "")
-	c.Assert(res.Ok, Equals , true)
+	c.Assert(res.Ok, Equals, true)
 	c.Assert(specs.DataTable.Table.Columns[0][0].Value, Equals, "john")
 	c.Assert(specs.DataTable.Table.Columns[0][0].CellType, Equals, gauge.Static)
 
@@ -1718,6 +1718,6 @@ func (s *MySuite) TestParsingDataTableWithSpecialString(c *C) {
 	c.Assert(specs.DataTable.Table.Columns[1][0].Value, Equals, "123")
 	c.Assert(specs.DataTable.Table.Columns[1][0].CellType, Equals, gauge.Static)
 
-	c.Assert(specs.DataTable.Table.Columns[1][1].Value, Equals, "007")
+	c.Assert(specs.DataTable.Table.Columns[1][1].Value, Equals, "file:testdata/foo.txt")
 	c.Assert(specs.DataTable.Table.Columns[1][1].CellType, Equals, gauge.SpecialString)
 }
