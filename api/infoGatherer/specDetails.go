@@ -385,6 +385,7 @@ func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
 	defer s.conceptsCache.mutex.Unlock()
 	s.deleteFromConceptDictionary(file)
 	delete(s.conceptsCache.concepts, file)
+	s.removeStepsFromCache(file)
 }
 
 func (s *SpecInfoGatherer) onFileAdd(watcher *fsnotify.Watcher, file string) {
