@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
@@ -60,13 +59,8 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	}
 	var result lsp.WorkspaceEdit
 	result.Changes = make(map[string][]lsp.TextEdit, 0)
-	if err := addSrcWorkspaceEdits(&result, refactortingResult.SpecsChanged); err != nil {
-		return nil, err
-	}
-	if err := addWorkspaceEdits(&result, refactortingResult.ConceptsChanged); err != nil {
-		return nil, err
-	}
-	if err := addSrcWorkspaceEdits(&result, refactortingResult.RunnerFilesChanged); err != nil {
+	changes := append(refactortingResult.SpecsChanged, append(refactortingResult.ConceptsChanged, refactortingResult.RunnerFilesChanged...)...)
+	if err := addWorkspaceEdits(&result, changes); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -82,7 +76,6 @@ func getStepToRefactor(params lsp.RenameParams) (*gauge.Step, error) {
 		for _, item := range spec.AllItems() {
 			if item.Kind() == gauge.StepKind && item.(*gauge.Step).LineNo-1 == params.Position.Line {
 				return item.(*gauge.Step), nil
-
 			}
 		}
 	}
@@ -107,7 +100,7 @@ func getNewStepName(params lsp.RenameParams, step *gauge.Step) string {
 	return newName
 }
 
-func addSrcWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanges []*gm.FileChanges) error {
+func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanges []*gm.FileChanges) error {
 	for _, fileChange := range filesChanges {
 		uri := util.ConvertPathToURI(fileChange.FileName)
 		for _, diff := range fileChange.Diffs {
@@ -120,38 +113,6 @@ func addSrcWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanges []*gm.FileChan
 			}
 			result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 		}
-	}
-	return nil
-}
-
-func addWorkspaceEdits(result *lsp.WorkspaceEdit, filesChanged map[string]string) error {
-	diskFileCache := &files{cache: make(map[lsp.DocumentURI][]string)}
-	for fileName, text := range filesChanged {
-		uri := util.ConvertPathToURI(fileName)
-		var lastLineNo int
-		var lastLineLength int
-		if isOpen(uri) {
-			lastLineNo = getLineCount(uri) - 1
-			lastLineLength = len(getLine(uri, lastLineNo))
-		} else {
-			if !diskFileCache.exists(uri) {
-				contents, err := common.ReadFileContents(fileName)
-				if err != nil {
-					return err
-				}
-				diskFileCache.add(uri, contents)
-			}
-			lastLineNo = len(diskFileCache.content(uri)) - 1
-			lastLineLength = len(diskFileCache.line(uri, lastLineNo))
-		}
-		textEdit := lsp.TextEdit{
-			NewText: text,
-			Range: lsp.Range{
-				Start: lsp.Position{Line: 0, Character: 0},
-				End:   lsp.Position{Line: lastLineNo, Character: lastLineLength},
-			},
-		}
-		result.Changes[string(uri)] = append(result.Changes[string(uri)], textEdit)
 	}
 	return nil
 }

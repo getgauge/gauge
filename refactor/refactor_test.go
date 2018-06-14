@@ -155,6 +155,8 @@ func (s *MySuite) TestRefactoringGivesOnlySpecsThatAreRefactored(c *C) {
 
 	c.Assert(1, Equals, len(specRefactored[specs[0]]))
 	c.Assert(0, Equals, len(specRefactored[specs[1]]))
+	c.Assert(specRefactored[specs[0]][0].OldStep.Value, Equals, " first step")
+	c.Assert(specRefactored[specs[0]][0].NewStep.Value, Equals, "second step")
 }
 
 func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c *C) {
@@ -179,8 +181,8 @@ func (s *MySuite) TestRefactoringGivesOnlyThoseConceptFilesWhichAreRefactored(c 
 
 	_, filesRefactored := agent.rephraseInSpecsAndConcepts(&specs, dictionary)
 
-	c.Assert(filesRefactored[fileName], Equals, false)
-	c.Assert(filesRefactored["e"+fileName], Equals, true)
+	c.Assert(len(filesRefactored[fileName]), Equals, 0)
+	c.Assert(len(filesRefactored["e"+fileName]), Equals, 1)
 }
 
 func (s *MySuite) TestRenamingWhenNumberOfArgumentsAreSame(c *C) {

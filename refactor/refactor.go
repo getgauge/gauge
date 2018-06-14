@@ -54,7 +54,7 @@ type rephraseRefactorer struct {
 type refactoringResult struct {
 	Success            bool
 	SpecsChanged       []*gauge_messages.FileChanges
-	ConceptsChanged    map[string]string
+	ConceptsChanged    []*gauge_messages.FileChanges
 	RunnerFilesChanged []*gauge_messages.FileChanges
 	Errors             []string
 	Warnings           []string
@@ -88,8 +88,8 @@ func (refactoringResult *refactoringResult) AllFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName := range refactoringResult.ConceptsChanged {
-		filesChanged = append(filesChanged, fileName)
+	for _, fileChange := range refactoringResult.ConceptsChanged {
+		filesChanged = append(filesChanged, fileChange.FileName)
 	}
 	return filesChanged
 }
@@ -232,8 +232,8 @@ func writeFileChangesToDisk(result *refactoringResult) {
 	for _, fileChange := range result.SpecsChanged {
 		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
-	for fileName, text := range result.ConceptsChanged {
-		util.SaveFile(fileName, text, true)
+	for _, fileChange := range result.ConceptsChanged {
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
 }
 
@@ -270,9 +270,9 @@ func (agent *rephraseRefactorer) refactorStepImplementations(shouldSaveChanges b
 	return result
 }
 
-func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification][]*gauge.StepDiff, map[string]bool) {
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification][]*gauge.StepDiff, map[string][]*gauge.StepDiff) {
 	specsRefactored := make(map[*gauge.Specification][]*gauge.StepDiff, 0)
-	conceptFilesRefactored := make(map[string]bool, 0)
+	conceptsRefactored := make(map[string][]*gauge.StepDiff, 0)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
 		diffs, isRefactored := spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
@@ -282,19 +282,18 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Spec
 	}
 	isConcept := false
 	for _, concept := range conceptDictionary.ConceptsMap {
-		_, ok := conceptFilesRefactored[concept.FileName]
-		conceptFilesRefactored[concept.FileName] = !ok && false || conceptFilesRefactored[concept.FileName]
+		isRefactored := false
 		for _, item := range concept.ConceptStep.Items {
-			isRefactored := conceptFilesRefactored[concept.FileName]
 			if item.Kind() == gauge.StepKind {
-				if _, ok := item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept); ok {
-					conceptFilesRefactored[concept.FileName] = true
+				diff, isRefactored := item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept)
+				if isRefactored {
+					conceptsRefactored[concept.FileName] = append(conceptsRefactored[concept.FileName], diff)
 				}
 			}
 		}
 	}
 	agent.isConcept = isConcept
-	return specsRefactored, conceptFilesRefactored
+	return specsRefactored, conceptsRefactored
 }
 
 func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
@@ -423,14 +422,14 @@ func (agent *rephraseRefactorer) getStepValueFor(step *gauge.Step, stepName stri
 func createDiffs(diffs []*gauge.StepDiff) []*gauge_messages.TextDiff {
 	textDiffs := []*gauge_messages.TextDiff{}
 	for _, diff := range diffs {
-		newtext := formatter.FormatStep(diff.NewStep)
-		oldtext := formatter.FormatStep(&diff.OldStep)
+		newtext := strings.TrimSpace(formatter.FormatStep(diff.NewStep))
+		oldFragments := util.GetLinesFromText(strings.TrimSpace(formatter.FormatStep(&diff.OldStep)))
 		d := &gauge_messages.TextDiff{
 			Span: &gauge_messages.Span{
 				Start:     int64(diff.OldStep.LineNo),
 				StartChar: 0,
-				End:       int64(diff.OldStep.LineNo),
-				EndChar:   int64(len(oldtext)),
+				End:       int64(diff.OldStep.LineNo + len(oldFragments) - 1),
+				EndChar:   int64(len(oldFragments[len(oldFragments)-1])),
 			},
 			Content: newtext,
 		}
@@ -439,9 +438,9 @@ func createDiffs(diffs []*gauge.StepDiff) []*gauge_messages.TextDiff {
 	return textDiffs
 }
 
-func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, specsRefactored map[*gauge.Specification][]*gauge.StepDiff, conceptFilesRefactored map[string]bool) ([]*gauge_messages.FileChanges, map[string]string) {
+func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, specsRefactored map[*gauge.Specification][]*gauge.StepDiff, conceptsRefactored map[string][]*gauge.StepDiff) ([]*gauge_messages.FileChanges, []*gauge_messages.FileChanges) {
 	specFiles := []*gauge_messages.FileChanges{}
-	conceptFiles := make(map[string]string, 0)
+	conceptFiles := []*gauge_messages.FileChanges{}
 	for _, spec := range specs {
 		if stepDiffs, ok := specsRefactored[spec]; ok {
 			formatted := formatter.FormatSpecification(spec)
@@ -449,10 +448,8 @@ func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.Conce
 		}
 	}
 	conceptMap := formatter.FormatConcepts(conceptDictionary)
-	for fileName, text := range conceptMap {
-		if conceptFilesRefactored[fileName] {
-			conceptFiles[fileName] = text
-		}
+	for file, diffs := range conceptsRefactored {
+		conceptFiles = append(conceptFiles, &gauge_messages.FileChanges{FileName: file, FileContent: conceptMap[file], Diffs: createDiffs(diffs)})
 	}
 	return specFiles, conceptFiles
 }
