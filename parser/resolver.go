@@ -234,3 +234,14 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	concept.PopulateFragments()
 	return nil
 }
+
+func GetResolvedDataTablerows(table gauge.Table) {
+	for i, cells := range table.Columns {
+		for j, cell := range cells {
+			if cell.CellType == gauge.SpecialString {
+				resolvedArg, _ := newSpecialTypeResolver().resolve(cell.Value)
+				table.Columns[i][j].Value = resolvedArg.Value
+			}
+		}
+	}
+}
