@@ -82,8 +82,8 @@ func (s *MySuite) TestGetLookupCopy(c *C) {
 func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable := new(Table)
 	dataTable.AddHeaders([]string{"id", "name"})
-	dataTable.AddRowValues([]string{"1", "admin"})
-	dataTable.AddRowValues([]string{"2", "root"})
+	dataTable.AddRowValues(dataTable.CreateTableCells([]string{"1", "admin"}))
+	dataTable.AddRowValues(dataTable.CreateTableCells([]string{"2", "root"}))
 
 	emptyLookup, err := new(ArgLookup).FromDataTableRow(new(Table), 0)
 	c.Assert(err, IsNil)

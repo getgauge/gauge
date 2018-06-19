@@ -57,8 +57,8 @@ func (s *MySuite) TestShouldAddRowValues(c *C) {
 	var table Table
 
 	table.AddHeaders([]string{"one", "two", "three"})
-	table.AddRowValues([]string{"foo", "bar", "baz"})
-	table.AddRowValues([]string{"john", "jim"})
+	table.AddRowValues(table.CreateTableCells([]string{"foo", "bar", "baz"}))
+	table.AddRowValues(table.CreateTableCells([]string{"john", "jim"}))
 
 	c.Assert(table.GetRowCount(), Equals, 2)
 	column1, _ := table.Get("one")
@@ -117,8 +117,8 @@ func (s *MySuite) TestCoulmnNameExists(c *C) {
 	var table Table
 
 	table.AddHeaders([]string{"one", "two", "three"})
-	table.AddRowValues([]string{"foo", "bar", "baz"})
-	table.AddRowValues([]string{"john", "jim", "jack"})
+	table.AddRowValues(table.CreateTableCells([]string{"foo", "bar", "baz"}))
+	table.AddRowValues(table.CreateTableCells([]string{"john", "jim", "jack"}))
 
 	c.Assert(table.headerExists("one"), Equals, true)
 	c.Assert(table.headerExists("two"), Equals, true)
@@ -129,8 +129,8 @@ func (s *MySuite) TestGetRows(c *C) {
 	var table Table
 
 	table.AddHeaders([]string{"one", "two", "three"})
-	table.AddRowValues([]string{"foo", "bar", "baz"})
-	table.AddRowValues([]string{"john", "jim", "jack"})
+	table.AddRowValues(table.CreateTableCells([]string{"foo", "bar", "baz"}))
+	table.AddRowValues(table.CreateTableCells([]string{"john", "jim", "jack"}))
 
 	rows := table.Rows()
 	c.Assert(len(rows), Equals, 2)
@@ -169,7 +169,7 @@ func (s *MySuite) TestValuesBasedOnHeaders(c *C) {
 func (s *MySuite) TestCreateTableCells(c *C) {
 	var table Table
 	table.AddHeaders([]string{"id", "name"})
-	table.AddRowValues([]string{"cell 1", "cell 2   "})
+	table.AddRowValues(table.CreateTableCells([]string{"cell 1", "cell 2   "}))
 
 	c.Assert(table.Columns[0][0].Value, Equals, "cell 1")
 	c.Assert(table.Columns[1][0].Value, Equals, "cell 2   ")

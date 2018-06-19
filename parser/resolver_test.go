@@ -215,3 +215,37 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	useridArg1, _ := nestedConcept1.GetArg("userid")
 	c.Assert(useridArg1.Value, Equals, "sdf")
 }
+
+func (s *MySuite) TestGetResolveParameterFromTable(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").String()
+
+	specs, _ := parser.ParseSpecText(specText, "")
+
+	step := specs.Steps()[0]
+	paramResolver := new(ParamResolver)
+
+	parameters, err := paramResolver.GetResolvedParams(step, nil, nil)
+
+	c.Assert(len(parameters), Equals, 1)
+	c.Assert(parameters[0].Table.Rows[0].GetCells()[0], Equals, "john")
+	c.Assert(parameters[0].Table.Rows[0].GetCells()[1], Equals, "123")
+	c.Assert(parameters[0].Table.Rows[1].GetCells()[0], Equals, "james")
+	c.Assert(parameters[0].Table.Rows[1].GetCells()[1], Equals, "007")
+
+	c.Assert(err, IsNil)
+}
+
+
+func (s *MySuite) TestGetResolveParameterFromDataTable(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec Heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").scenarioHeading("First scenario").step("my step <id>").String()
+	spec, _ := parser.ParseSpecText(specText, "")
+
+	GetResolvedDataTablerows(spec.DataTable.Table)
+
+	c.Assert(spec.DataTable.Table.Columns[0][0].Value, Equals, "john")
+	c.Assert(spec.DataTable.Table.Columns[0][1].Value, Equals, "james")
+	c.Assert(spec.DataTable.Table.Columns[1][0].Value, Equals, "123")
+	c.Assert(spec.DataTable.Table.Columns[1][1].Value, Equals, "007")	
+}
