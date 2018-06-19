@@ -53,8 +53,8 @@ type rephraseRefactorer struct {
 
 type refactoringResult struct {
 	Success            bool
-	SpecsChanged       map[string]string
-	ConceptsChanged    map[string]string
+	SpecsChanged       []*gauge_messages.FileChanges
+	ConceptsChanged    []*gauge_messages.FileChanges
 	RunnerFilesChanged []*gauge_messages.FileChanges
 	Errors             []string
 	Warnings           []string
@@ -88,16 +88,16 @@ func (refactoringResult *refactoringResult) AllFilesChanged() []string {
 
 func (refactoringResult *refactoringResult) conceptFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName := range refactoringResult.ConceptsChanged {
-		filesChanged = append(filesChanged, fileName)
+	for _, fileChange := range refactoringResult.ConceptsChanged {
+		filesChanged = append(filesChanged, fileChange.FileName)
 	}
 	return filesChanged
 }
 
 func (refactoringResult *refactoringResult) specFilesChanged() []string {
 	filesChanged := make([]string, 0)
-	for fileName := range refactoringResult.SpecsChanged {
-		filesChanged = append(filesChanged, fileName)
+	for _, filesChange := range refactoringResult.SpecsChanged {
+		filesChanged = append(filesChanged, filesChange.FileName)
 	}
 	return filesChanged
 }
@@ -126,7 +126,6 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 		}
 		return rephraseFailure(messages...)
 	}
-
 	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
 	if !result.Success {
 		return result
@@ -152,7 +151,6 @@ func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDi
 		}
 		return rephraseFailure(messages...)
 	}
-
 	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
 	if !result.Success {
 		return result
@@ -229,11 +227,11 @@ func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specificati
 }
 
 func writeFileChangesToDisk(result *refactoringResult) {
-	for fileName, text := range result.SpecsChanged {
-		util.SaveFile(fileName, text, true)
+	for _, fileChange := range result.SpecsChanged {
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
-	for fileName, text := range result.ConceptsChanged {
-		util.SaveFile(fileName, text, true)
+	for _, fileChange := range result.ConceptsChanged {
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
 }
 
@@ -270,32 +268,30 @@ func (agent *rephraseRefactorer) refactorStepImplementations(shouldSaveChanges b
 	return result
 }
 
-func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification]bool, map[string]bool) {
-	specsRefactored := make(map[*gauge.Specification]bool, 0)
-	conceptFilesRefactored := make(map[string]bool, 0)
+func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification][]*gauge.StepDiff, map[string][]*gauge.StepDiff) {
+	specsRefactored := make(map[*gauge.Specification][]*gauge.StepDiff, 0)
+	conceptsRefactored := make(map[string][]*gauge.StepDiff, 0)
 	orderMap := agent.createOrderOfArgs()
-	refactoredSteps := make([]*gauge.Step, 0)
 	for _, spec := range *specs {
-		rSteps := make([]*gauge.Step, 0)
-		specsRefactored[spec] = spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
-		refactoredSteps = append(refactoredSteps, rSteps...)
+		diffs, isRefactored := spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		if isRefactored {
+			specsRefactored[spec] = diffs
+		}
 	}
 	isConcept := false
 	for _, concept := range conceptDictionary.ConceptsMap {
-		_, ok := conceptFilesRefactored[concept.FileName]
-		conceptFilesRefactored[concept.FileName] = !ok && false || conceptFilesRefactored[concept.FileName]
+		isRefactored := false
 		for _, item := range concept.ConceptStep.Items {
-			isRefactored := conceptFilesRefactored[concept.FileName]
 			if item.Kind() == gauge.StepKind {
-				if item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept) {
-					conceptFilesRefactored[concept.FileName] = true
-					refactoredSteps = append(refactoredSteps, item.(*gauge.Step))
+				diff, isRefactored := item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept)
+				if isRefactored {
+					conceptsRefactored[concept.FileName] = append(conceptsRefactored[concept.FileName], diff)
 				}
 			}
 		}
 	}
 	agent.isConcept = isConcept
-	return specsRefactored, conceptFilesRefactored
+	return specsRefactored, conceptsRefactored
 }
 
 func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
@@ -421,20 +417,40 @@ func (agent *rephraseRefactorer) getStepValueFor(step *gauge.Step, stepName stri
 	return parser.ExtractStepValueAndParams(stepName, false)
 }
 
-func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, specsRefactored map[*gauge.Specification]bool, conceptFilesRefactored map[string]bool) (map[string]string, map[string]string) {
-	specFiles := make(map[string]string, 0)
-	conceptFiles := make(map[string]string, 0)
+func createDiffs(diffs []*gauge.StepDiff) []*gauge_messages.TextDiff {
+	textDiffs := []*gauge_messages.TextDiff{}
+	for _, diff := range diffs {
+		newtext := strings.TrimSpace(formatter.FormatStep(diff.NewStep))
+		if diff.IsConcept {
+			newtext = strings.Replace(newtext, "*", "#", -1)
+		}
+		oldFragments := util.GetLinesFromText(strings.TrimSpace(formatter.FormatStep(&diff.OldStep)))
+		d := &gauge_messages.TextDiff{
+			Span: &gauge_messages.Span{
+				Start:     int64(diff.OldStep.LineNo),
+				StartChar: 0,
+				End:       int64(diff.OldStep.LineNo + len(oldFragments) - 1),
+				EndChar:   int64(len(oldFragments[len(oldFragments)-1])),
+			},
+			Content: newtext,
+		}
+		textDiffs = append(textDiffs, d)
+	}
+	return textDiffs
+}
+
+func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, specsRefactored map[*gauge.Specification][]*gauge.StepDiff, conceptsRefactored map[string][]*gauge.StepDiff) ([]*gauge_messages.FileChanges, []*gauge_messages.FileChanges) {
+	specFiles := []*gauge_messages.FileChanges{}
+	conceptFiles := []*gauge_messages.FileChanges{}
 	for _, spec := range specs {
-		if specsRefactored[spec] {
+		if stepDiffs, ok := specsRefactored[spec]; ok {
 			formatted := formatter.FormatSpecification(spec)
-			specFiles[spec.FileName] = formatted
+			specFiles = append(specFiles, &gauge_messages.FileChanges{FileName: spec.FileName, FileContent: formatted, Diffs: createDiffs(stepDiffs)})
 		}
 	}
 	conceptMap := formatter.FormatConcepts(conceptDictionary)
-	for fileName, text := range conceptMap {
-		if conceptFilesRefactored[fileName] {
-			conceptFiles[fileName] = text
-		}
+	for file, diffs := range conceptsRefactored {
+		conceptFiles = append(conceptFiles, &gauge_messages.FileChanges{FileName: file, FileContent: conceptMap[file], Diffs: createDiffs(diffs)})
 	}
 	return specFiles, conceptFiles
 }
