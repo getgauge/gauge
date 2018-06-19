@@ -206,12 +206,8 @@ func (s *MySuite) TestRenameConcept(c *C) {
 	c.Assert(originalStep.Value, Equals, "concept with text file {}")
 	c.Assert(originalStep.Args[0].Name, Equals, "arg0")
 	c.Assert(newStep.Args[0].Name, Equals, "file:foo.txt")
-<<<<<<< 1006_SpecialParameterInTable
-=======
 	c.Assert(diff.OldStep.Value, Equals, "concept with text file")
 	c.Assert(diff.NewStep.Value, Equals, "concept with text file {}")
-
->>>>>>> master
 }
 
 func (s *MySuite) TestGetLineTextForStep(c *C) {
