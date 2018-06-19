@@ -48,6 +48,12 @@ type Step struct {
 	Suffix         string
 }
 
+type StepDiff struct {
+	OldStep   Step
+	NewStep   *Step
+	IsConcept bool
+}
+
 func (step *Step) GetArg(name string) (*StepArg, error) {
 	arg, err := step.Lookup.GetArg(name)
 	if err != nil {
@@ -74,17 +80,19 @@ func (step *Step) GetLineText() string {
 	return step.LineText
 }
 
-func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) bool {
+func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) (*StepDiff, bool) {
+	diff := &StepDiff{OldStep: *step}
 	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
-		return isRefactored
+		return nil, isRefactored
 	}
 	if step.IsConcept {
 		*isConcept = true
 	}
 	step.Value = newStep.Value
-
+	diff.IsConcept = *isConcept
 	step.Args = step.getArgsInOrder(newStep, orderMap)
-	return true
+	diff.NewStep = step
+	return diff, true
 }
 
 func (step *Step) UsesDynamicArgs(args ...string) bool {

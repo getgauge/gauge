@@ -216,23 +216,32 @@ func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs 
 	return nil
 }
 
-func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) bool {
-	isRefactored := spec.rename(spec.Contexts, oldStep, newStep, false, orderMap)
+func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) ([]*StepDiff, bool) {
+	diffs, isRefactored := spec.rename(spec.Contexts, oldStep, newStep, false, orderMap)
 	for _, scenario := range spec.Scenarios {
-		refactor := scenario.renameSteps(oldStep, newStep, orderMap)
+		scenStepDiffs, refactor := scenario.renameSteps(oldStep, newStep, orderMap)
+		diffs = append(diffs, scenStepDiffs...)
 		if refactor {
 			isRefactored = refactor
 		}
 	}
-	return spec.rename(spec.TearDownSteps, oldStep, newStep, isRefactored, orderMap)
+	teardownStepdiffs, isRefactored := spec.rename(spec.TearDownSteps, oldStep, newStep, isRefactored, orderMap)
+	return append(diffs, teardownStepdiffs...), isRefactored
 }
 
-func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) bool {
+func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) ([]*StepDiff, bool) {
+	diffs := []*StepDiff{}
 	isConcept := false
 	for _, step := range steps {
-		isRefactored = step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
+		diff, refactor := step.Rename(oldStep, newStep, isRefactored, orderMap, &isConcept)
+		if diff != nil {
+			diffs = append(diffs, diff)
+		}
+		if refactor {
+			isRefactored = refactor
+		}
 	}
-	return isRefactored
+	return diffs, isRefactored
 }
 
 func (spec *Specification) GetSpecItems() []Item {
