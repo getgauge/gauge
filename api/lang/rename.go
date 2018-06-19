@@ -36,6 +36,10 @@ func rename(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) 
 	if err := sendSaveFilesRequest(ctx, conn); err != nil {
 		return nil, err
 	}
+	return renameStep(req)
+}
+
+func renameStep(req *jsonrpc2.Request) (interface{}, error) {
 	var params lsp.RenameParams
 	var err error
 	if err = json.Unmarshal(*req.Params, &params); err != nil {

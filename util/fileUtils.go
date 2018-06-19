@@ -176,7 +176,6 @@ var GetSpecFiles = func(paths []string) []string {
 			specFiles = append(specFiles, f)
 		}
 	}
-
 	return specFiles
 }
 

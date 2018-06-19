@@ -157,13 +157,14 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 			ParameterizedStepValue: "hello <world>",
 		},
 	}
-	res := &gauge_messages.StepNamesResponse{
+	responses := map[gauge_messages.Message_MessageType]interface{}{}
+	responses[gauge_messages.Message_StepNamesResponse] = &gauge_messages.StepNamesResponse{
 		Steps: []string{
 			"hello world",
 			"hello <world>",
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, Client: &mockLspClient{response: res}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	got, err := allImplementedStepValues()
 
@@ -178,7 +179,9 @@ func TestGetAllImplementedStepValues(t *testing.T) {
 }
 
 func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *testing.T) {
-	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, Client: &mockLspClient{response: &gauge_messages.StepNamesResponse{}, err: fmt.Errorf("can't get steps")}}
+	responses := map[gauge_messages.Message_MessageType]interface{}{}
+	responses[gauge_messages.Message_StepNamesResponse] = &gauge_messages.StepNamesResponse{}
+	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, Client: &mockLspClient{responses: responses, err: fmt.Errorf("can't get steps")}}
 	got, err := allImplementedStepValues()
 
 	if err == nil {

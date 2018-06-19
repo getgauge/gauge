@@ -49,8 +49,9 @@ type Step struct {
 }
 
 type StepDiff struct {
-	OldStep Step
-	NewStep *Step
+	OldStep   Step
+	NewStep   *Step
+	IsConcept bool
 }
 
 func (step *Step) GetArg(name string) (*StepArg, error) {
@@ -88,7 +89,7 @@ func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap
 		*isConcept = true
 	}
 	step.Value = newStep.Value
-
+	diff.IsConcept = *isConcept
 	step.Args = step.getArgsInOrder(newStep, orderMap)
 	diff.NewStep = step
 	return diff, true

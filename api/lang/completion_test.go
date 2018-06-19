@@ -154,8 +154,9 @@ func TestCompletion(t *testing.T) {
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
-
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}, Timeout: time.Second * 30}
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_StepNamesResponse] = &gm.StepNamesResponse{Steps: []string{}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 

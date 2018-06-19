@@ -126,7 +126,6 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 		}
 		return rephraseFailure(messages...)
 	}
-
 	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
 	if !result.Success {
 		return result
@@ -152,7 +151,6 @@ func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDi
 		}
 		return rephraseFailure(messages...)
 	}
-
 	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
 	if !result.Success {
 		return result
@@ -423,6 +421,9 @@ func createDiffs(diffs []*gauge.StepDiff) []*gauge_messages.TextDiff {
 	textDiffs := []*gauge_messages.TextDiff{}
 	for _, diff := range diffs {
 		newtext := strings.TrimSpace(formatter.FormatStep(diff.NewStep))
+		if diff.IsConcept {
+			newtext = strings.Replace(newtext, "*", "#", -1)
+		}
 		oldFragments := util.GetLinesFromText(strings.TrimSpace(formatter.FormatStep(&diff.OldStep)))
 		d := &gauge_messages.TextDiff{
 			Span: &gauge_messages.Span{
