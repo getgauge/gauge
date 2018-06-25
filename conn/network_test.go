@@ -113,7 +113,7 @@ func TestGetResponseForGaugeMessageWithTimeout(t *testing.T) {
 	if err != nil {
 		t.Errorf("expected err to be nil. got %v", err)
 	}
-	if !reflect.DeepEqual(res, responseMessage) {
+	if !proto.Equal(res, responseMessage) {
 		t.Errorf("expected : %v\ngot : %v", responseMessage, res)
 	}
 }
@@ -150,7 +150,7 @@ func TestGetResponseForGaugeMessageShoudGiveTheRightResponse(t *testing.T) {
 	go getResponseForGaugeMessage(message, conn, response{}, 3*time.Second)
 
 	response := <-r.result
-	if !reflect.DeepEqual(response, responseMessage) {
+	if !proto.Equal(response, responseMessage) {
 		t.Errorf("expected : %v\ngot : %v", responseMessage, response)
 	}
 }
@@ -237,7 +237,7 @@ func TestGetResponseForGaugeMessageShoudNotErrorIfNoTimeoutIsSpecified(t *testin
 	if err != nil {
 		t.Errorf("expected err to be nil. got %v", err)
 	}
-	if !reflect.DeepEqual(res, responseMessage) {
+	if !proto.Equal(res, responseMessage) {
 		t.Errorf("expected : %v\ngot : %v", responseMessage, res)
 	}
 }

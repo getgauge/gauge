@@ -55,7 +55,9 @@ func runProcess(command string, arg ...string) {
 	cmd := exec.Command(command, arg...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	log.Printf("Execute %v\n", cmd.Args)
+	if *verbose {
+		log.Printf("Execute %v\n", cmd.Args)
+	}
 	err := cmd.Run()
 	if err != nil {
 		panic(err)
@@ -97,7 +99,11 @@ func runTests(coverage bool) {
 			runProcess("go", "tool", "cover", "-html=count.out")
 		}
 	} else {
-		runProcess("go", "test", "./...", "-v")
+		if *verbose {
+			runProcess("go", "test", "./...", "-v")
+		} else {
+			runProcess("go", "test", "./...")
+		}
 	}
 }
 
@@ -106,7 +112,9 @@ func installFiles(files map[string]string, installDir string) {
 	for src, dst := range files {
 		base := filepath.Base(src)
 		installDst := filepath.Join(installDir, dst)
-		log.Printf("Install %s -> %s\n", src, installDst)
+		if *verbose {
+			log.Printf("Install %s -> %s\n", src, installDst)
+		}
 		stat, err := os.Stat(src)
 		if err != nil {
 			panic(err)
@@ -143,6 +151,7 @@ var allPlatforms = flag.Bool("all-platforms", false, "Compiles for all platforms
 var targetLinux = flag.Bool("target-linux", false, "Compiles for linux only, both x86 and x86_64")
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distro = flag.Bool("distro", false, "Create gauge distributable")
+var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
 
 // Defines all the compile targets
@@ -165,7 +174,11 @@ func main() {
 	if *nightly {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
 	}
-	fmt.Println("Build: " + buildMetadata)
+	if *verbose {
+		if *verbose {
+			fmt.Println("Build: " + buildMetadata)
+		}
+	}
 	if *test {
 		runTests(*coverage)
 	} else if *install {
@@ -212,7 +225,9 @@ func filteredPlatforms() []map[string]string {
 func crossCompileGauge() {
 	for _, platformEnv := range filteredPlatforms() {
 		setEnv(platformEnv)
-		log.Printf("Compiling for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+		if *verbose {
+			log.Printf("Compiling for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+		}
 		compileGauge()
 	}
 }
@@ -229,7 +244,9 @@ func createGaugeDistributables(forAllPlatforms bool) {
 	if forAllPlatforms {
 		for _, platformEnv := range filteredPlatforms() {
 			setEnv(platformEnv)
-			log.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+			if *verbose {
+				log.Printf("Creating distro for platform => OS:%s ARCH:%s \n", platformEnv[GOOS], platformEnv[GOARCH])
+			}
 			createDistro()
 		}
 	} else {
@@ -335,7 +352,9 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 		zipargs = []string{"-noprofile", "-executionpolicy", "bypass", "-file", windowsZipScript, filepath.Join(absdir, zipDir), filepath.Join(absdir, pkgName+".zip")}
 	}
 	output, err := runCommand(zipcmd, zipargs...)
-	fmt.Println(output)
+	if *verbose {
+		fmt.Println(output)
+	}
 	if err != nil {
 		panic(fmt.Sprintf("Failed to zip: %s", err))
 	}

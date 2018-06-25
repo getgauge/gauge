@@ -9,33 +9,27 @@ init:
         }
 environment:
   GOPATH: c:\gopath
+  GAUGE_PREFIX: c:\gauge
   GAUGE_TELEMETRY_ENABLED: false
 build_script:
 - ps: >-
-    $env:Path = "$env:GOPATH\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+    $env:Path = $env:GAUGE_PREFIX + "\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
+    go run build\make.go
 
-    go get github.com/tools/godep
+    go run build\make.go --test
 
+    go run build\make.go --install --prefix=$env:GAUGE_PREFIX
 
-    godep restore
-
-    go test ./...
-
-
-    go get github.com/getgauge/gauge
 test_script:
 - ps: >-
     git clone --depth=1 https://github.com/getgauge/gauge-tests ../gauge-tests
 
     cd ../gauge-tests
 
-
     gauge install
 
-
-    mvn -q clean install -Denv=ci-java -DinParallel=false
-
+    mvn -q clean install -Denv=ci-java
 
     $wc = New-Object 'System.Net.WebClient'
         $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\reports-java\xml-report\result.xml))
