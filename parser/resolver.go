@@ -121,6 +121,9 @@ func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *
 					return nil, err
 				}
 				value = arg.Value
+			} else if tableCells[i].CellType == gauge.SpecialString {
+				resolvedArg, _ := newSpecialTypeResolver().resolve(value)
+				value = resolvedArg.Value
 			}
 			row = append(row, value)
 		}
@@ -230,4 +233,15 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	concept.Args = newArgs
 	concept.PopulateFragments()
 	return nil
+}
+
+func GetResolvedDataTablerows(table gauge.Table) {
+	for i, cells := range table.Columns {
+		for j, cell := range cells {
+			if cell.CellType == gauge.SpecialString {
+				resolvedArg, _ := newSpecialTypeResolver().resolve(cell.Value)
+				table.Columns[i][j].Value = resolvedArg.Value
+			}
+		}
+	}
 }

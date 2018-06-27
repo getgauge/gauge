@@ -45,8 +45,9 @@ func setup() {
 	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
 	openFilesCache.add(util.ConvertPathToURI(conceptFile), "")
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
-	res := &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: res}, Timeout: time.Second * 30}
+	responses := map[gauge_messages.Message_MessageType]interface{}{}
+	responses[gauge_messages.Message_StepValidateResponse] = &gauge_messages.StepValidateResponse{IsValid: true}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}

@@ -37,37 +37,37 @@ import (
 )
 
 type mockLspClient struct {
-	response interface{}
-	err      error
+	responses map[gm.Message_MessageType]interface{}
+	err       error
 }
 
 func (r *mockLspClient) GetStepNames(ctx context.Context, in *gm.StepNamesRequest, opts ...grpc.CallOption) (*gm.StepNamesResponse, error) {
-	return r.response.(*gm.StepNamesResponse), r.err
+	return r.responses[gm.Message_StepNamesResponse].(*gm.StepNamesResponse), r.err
 }
 func (r *mockLspClient) CacheFile(ctx context.Context, in *gm.CacheFileRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
-	return r.response.(*gm.Empty), r.err
+	return &gm.Empty{}, r.err
 }
 func (r *mockLspClient) GetStepPositions(ctx context.Context, in *gm.StepPositionsRequest, opts ...grpc.CallOption) (*gm.StepPositionsResponse, error) {
-	return r.response.(*gm.StepPositionsResponse), r.err
+	return r.responses[gm.Message_StepPositionsResponse].(*gm.StepPositionsResponse), r.err
 }
 func (r *mockLspClient) GetImplementationFiles(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileListResponse, error) {
-	return r.response.(*gm.ImplementationFileListResponse), r.err
+	return r.responses[gm.Message_ImplementationFileListResponse].(*gm.ImplementationFileListResponse), r.err
 }
 func (r *mockLspClient) ImplementStub(ctx context.Context, in *gm.StubImplementationCodeRequest, opts ...grpc.CallOption) (*gm.FileDiff, error) {
-	return r.response.(*gm.FileDiff), r.err
+	return r.responses[gm.Message_FileDiff].(*gm.FileDiff), r.err
 }
 func (r *mockLspClient) ValidateStep(ctx context.Context, in *gm.StepValidateRequest, opts ...grpc.CallOption) (*gm.StepValidateResponse, error) {
-	return r.response.(*gm.StepValidateResponse), r.err
+	return r.responses[gm.Message_StepValidateResponse].(*gm.StepValidateResponse), r.err
 }
 func (r *mockLspClient) Refactor(ctx context.Context, in *gm.RefactorRequest, opts ...grpc.CallOption) (*gm.RefactorResponse, error) {
-	return r.response.(*gm.RefactorResponse), r.err
+	return r.responses[gm.Message_RefactorResponse].(*gm.RefactorResponse), r.err
 }
 func (r *mockLspClient) GetStepName(ctx context.Context, in *gm.StepNameRequest, opts ...grpc.CallOption) (*gm.StepNameResponse, error) {
-	return r.response.(*gm.StepNameResponse), r.err
+	return r.responses[gm.Message_StepNameResponse].(*gm.StepNameResponse), r.err
 }
 
 func (r *mockLspClient) GetGlobPatterns(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileGlobPatternResponse, error) {
-	return r.response.(*gm.ImplementationFileGlobPatternResponse), r.err
+	return r.responses[gm.Message_ImplementationFileGlobPatternResponse].(*gm.ImplementationFileGlobPatternResponse), r.err
 }
 
 func (r *mockLspClient) KillProcess(ctx context.Context, in *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
@@ -82,11 +82,11 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
-
-	response := &gm.ImplementationFileListResponse{
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_ImplementationFileListResponse] = &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: []string{"file"},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -107,10 +107,13 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
-	response := &gm.ImplementationFileListResponse{
+
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_ImplementationFileListResponse] = &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: nil,
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
+
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
@@ -190,7 +193,8 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 
 	b, _ := json.Marshal(stubImplParams)
 	p := json.RawMessage(b)
-	response := &gm.FileDiff{
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_FileDiff] = &gm.FileDiff{
 		FilePath: "file",
 		TextDiffs: []*gm.TextDiff{
 			{
@@ -204,7 +208,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 
