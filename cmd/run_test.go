@@ -174,3 +174,21 @@ func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 	}
 	runCmd.Execute()
 }
+
+func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
+	args := []string{}
+	var flags = pflag.FlagSet{}
+
+	flags.StringP("log-level","l","info","")
+	flags.Set("log-level", "debug")
+
+	flags.BoolP("repeat", "r", false, "")
+	flags.Set("repeat", "true")
+	repeat = true
+	
+	err := handleConflictingParams(&flags, args)
+
+	if err != nil {
+		t.Errorf("Expected %v  Got %v", nil, err.Error())
+	}
+}
