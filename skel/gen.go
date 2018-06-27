@@ -52,7 +52,12 @@ func CreateSkelFilesIfRequired() {
 
 	idFile := filepath.Join(p, "id")
 	if !common.FileExists(idFile) {
-		writeFile(idFile, uuid.NewV4().String(), false)
+		id, err := uuid.NewV4()
+		if err != nil {
+			logger.Debugf(true, "Unable to generate UUID. Error: %s", err.Error())
+			return
+		}
+		writeFile(idFile, id.String(), false)
 	}
 }
 

@@ -9,13 +9,13 @@ Docs: http://godoc.org/github.com/daviddengcn/go-colortext ([packages that impor
 
 Usage:
 ```go
-Foreground(Green, false)
+ct.Foreground(Green, false)
 fmt.Println("Green text starts here...")
-ChangeColor(Red, true, White, false)
+ct.ChangeColor(Red, true, White, false)
 fmt.Println(...)
-ResetColor()
+ct.ResetColor()
 ```
 
 LICENSE
 =======
-BSD license
+BSD/MIT license
