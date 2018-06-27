@@ -421,7 +421,7 @@ func createDiffs(diffs []*gauge.StepDiff) []*gauge_messages.TextDiff {
 	textDiffs := []*gauge_messages.TextDiff{}
 	for _, diff := range diffs {
 		newtext := strings.TrimSpace(formatter.FormatStep(diff.NewStep))
-		if diff.IsConcept {
+		if diff.IsConcept && !diff.OldStep.InConcept() {
 			newtext = strings.Replace(newtext, "*", "#", -1)
 		}
 		oldFragments := util.GetLinesFromText(strings.TrimSpace(formatter.FormatStep(&diff.OldStep)))
