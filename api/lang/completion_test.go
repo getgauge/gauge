@@ -70,7 +70,7 @@ func (p dummyInfoProvider) GetAvailableSpecDetails(specs []string) []*infoGather
 	return p.specsFunc(specs)
 }
 func (p dummyInfoProvider) Init() {}
-func (p dummyInfoProvider) Steps() []*gauge.Step {
+func (p dummyInfoProvider) Steps(filterConcepts bool) []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		Args:     []*gauge.StepArg{{Name: "hello", Value: "hello", ArgType: gauge.Dynamic}, {Name: "gauge", Value: "gauge", ArgType: gauge.Dynamic}},
@@ -79,7 +79,7 @@ func (p dummyInfoProvider) Steps() []*gauge.Step {
 	}}
 }
 
-func (p dummyInfoProvider) AllSteps() []*gauge.Step {
+func (p dummyInfoProvider) AllSteps(filterConcepts bool) []*gauge.Step {
 	return []*gauge.Step{{
 		FileName: "foo.spec",
 		LineNo:   7,
@@ -154,8 +154,9 @@ func TestCompletion(t *testing.T) {
 
 	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: "uri"}, Position: position})
 	p := json.RawMessage(b)
-
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: &gm.StepNamesResponse{Steps: []string{}}}, Timeout: time.Second * 30}
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_StepNamesResponse] = &gm.StepNamesResponse{Steps: []string{}}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 

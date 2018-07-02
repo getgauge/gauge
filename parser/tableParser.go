@@ -42,7 +42,7 @@ func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 		if i == 0 {
 			table.AddHeaders(line)
 		} else {
-			table.AddRowValues(line)
+			table.AddRowValues(table.CreateTableCells(line))
 		}
 	}
 	return table, nil

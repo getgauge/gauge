@@ -136,6 +136,7 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 }
 
 func (e *specExecutor) executeSpec() error {
+	parser.GetResolvedDataTablerows(e.specification.DataTable.Table)
 	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
 		return s.DataTableRow.IsInitialized()
 	})

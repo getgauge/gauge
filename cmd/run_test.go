@@ -157,3 +157,38 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		t.Errorf("Expected %v  Got %v", expectedFlag, overridenFlagValue)
 	}
 }
+
+func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
+	os.Args = []string{"gauge", "run", "-f"}
+	config.ProjectRoot = ""
+	currDir, _ := os.Getwd()
+	defer os.Chdir(currDir)
+	testdir := filepath.Join(currDir, "dotGauge")
+	dotgaugeDir := filepath.Join(testdir, ".gauge")
+	os.Chdir(testdir)
+	exit = func(err error, i string) {
+		if _, e := os.Stat(dotgaugeDir); os.IsExist(e) {
+			t.Fatalf("Folder .gauge is created")
+		}
+		os.Exit(0)
+	}
+	runCmd.Execute()
+}
+
+func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
+	args := []string{}
+	var flags = pflag.FlagSet{}
+
+	flags.StringP("log-level","l","info","")
+	flags.Set("log-level", "debug")
+
+	flags.BoolP("repeat", "r", false, "")
+	flags.Set("repeat", "true")
+	repeat = true
+	
+	err := handleConflictingParams(&flags, args)
+
+	if err != nil {
+		t.Errorf("Expected %v  Got %v", nil, err.Error())
+	}
+}

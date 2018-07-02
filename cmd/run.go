@@ -72,7 +72,7 @@ const (
 	dryRunName         = "dry-run"
 )
 
-var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName}
+var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
 var streamsDefault = util.NumberOfCores()
 
 type prevCommand struct {
@@ -99,6 +99,9 @@ var (
 		Example: `  gauge run specs/
   gauge run --tags "login" -s -p specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := config.SetProjectRoot(args); err != nil {
+				exit(err, cmd.UsageString())
+			}
 			if er := handleConflictingParams(cmd.Flags(), args); er != nil {
 				exit(er, "")
 			}
@@ -112,9 +115,6 @@ var (
 			}
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(true, e.Error())
-			}
-			if err := config.SetProjectRoot(args); err != nil {
-				exit(err, cmd.UsageString())
 			}
 			execute(args)
 		},

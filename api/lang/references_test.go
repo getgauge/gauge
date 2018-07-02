@@ -74,7 +74,8 @@ func TestStepValueAtShouldGive(t *testing.T) {
 	b, _ := json.Marshal(params)
 	p := json.RawMessage(b)
 
-	response := &gauge_messages.StepPositionsResponse{
+	responses := map[gauge_messages.Message_MessageType]interface{}{}
+	responses[gauge_messages.Message_StepPositionsResponse] = &gauge_messages.StepPositionsResponse{
 		StepPositions: []*gauge_messages.StepPositionsResponse_StepPosition{
 			{
 				Span:      &gauge_messages.Span{Start: 2, End: 4},
@@ -82,7 +83,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{response: response}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
 
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 
