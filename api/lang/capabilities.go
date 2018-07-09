@@ -20,6 +20,8 @@ package lang
 import (
 	"context"
 	"fmt"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/getgauge/gauge/config"
@@ -135,12 +137,28 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 		})
 	}
 	var result interface{}
-	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
+	var registrations = []registration{
 		{Id: "gauge-runner-didOpen", Method: "textDocument/didOpen", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}},
 		{Id: "gauge-runner-didClose", Method: "textDocument/didClose", RegisterOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}},
 		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}, SyncKind: lsp.TDSKFull}},
-		{Id: "gauge-runner-codelens", Method: "textDocument/codeLens", RegisterOptions: codeLensRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}, ResolveProvider: false}},
 		{Id: "gauge-runner-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: didChangeWatchedFilesRegistrationOptions{Watchers: filePatterns}},
-	}}, &result)
+	}
+	registrations = addReferenceCodeLenseRegistration(registrations, documentSelectors)
+	conn.Call(ctx, "client/registerCapability", registrationParams{registrations}, &result)
 	return nil
+}
+
+func addReferenceCodeLenseRegistration(registrations []registration, selectors []documentSelector) []registration {
+	if enabled, err := strconv.ParseBool(os.Getenv("gauge_lsp_reference_codelense")); err == nil && !enabled {
+		return registrations
+	}
+	codeLenseRegistration := registration{Id: "gauge-runner-codelens",
+		Method: "textDocument/codeLens",
+		RegisterOptions: codeLensRegistrationOptions{
+			textDocumentRegistrationOptions: textDocumentRegistrationOptions{
+				DocumentSelector: selectors,
+			},
+			ResolveProvider: false},
+	}
+	return append(registrations, codeLenseRegistration)
 }
