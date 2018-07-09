@@ -156,12 +156,12 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 	if !isPlatformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
-		err := fmt.Errorf("Provided plugin is not compatible with OS %s_%s.", runtime.GOOS, runtime.GOARCH)
+		err := fmt.Errorf("provided plugin is not compatible with OS %s %s. Error: %s", runtime.GOOS, runtime.GOARCH, err.Error())
 		return installError(err)
 	}
 	gp, err := parsePluginJSON(unzippedPluginDir, pluginName)
 	if err != nil || gp.ID != pluginName {
-		err := fmt.Errorf("Provided zip file is not a valid plugin of %s.", pluginName)
+		err := fmt.Errorf("provided zip file is not a valid plugin of %s %s", pluginName, err.Error())
 		return installError(err)
 	}
 	if err = runPlatformCommands(gp.PreInstall, unzippedPluginDir); err != nil {
