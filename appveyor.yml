@@ -14,14 +14,7 @@ build_script:
 - ps: >-
     $env:Path = "$env:GOPATH\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
 
-
-    go get github.com/tools/godep
-
-
-    godep restore
-
     go test ./...
-
 
     go get github.com/getgauge/gauge
 test_script:

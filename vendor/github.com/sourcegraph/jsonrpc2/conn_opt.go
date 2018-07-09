@@ -13,13 +13,13 @@ type ConnOpt func(*Conn)
 // OnRecv causes all requests received on conn to invoke f(req, nil)
 // and all responses to invoke f(req, resp),
 func OnRecv(f func(*Request, *Response)) ConnOpt {
-	return func(c *Conn) { c.onRecv = f }
+	return func(c *Conn) { c.onRecv = append(c.onRecv, f) }
 }
 
 // OnSend causes all requests sent on conn to invoke f(req, nil) and
 // all responses to invoke f(nil, resp),
 func OnSend(f func(*Request, *Response)) ConnOpt {
-	return func(c *Conn) { c.onSend = f }
+	return func(c *Conn) { c.onSend = append(c.onSend, f) }
 }
 
 // LogMessages causes all messages sent and received on conn to be

@@ -1,4 +1,4 @@
-# goterminal
+# goterminal [![GoDoc](https://godoc.org/github.com/apoorvam/goterminal?status.svg)](https://godoc.org/github.com/apoorvam/goterminal)
 A cross-platform Go-library for updating progress in terminal.
 
 ## Installation
@@ -7,7 +7,7 @@ A cross-platform Go-library for updating progress in terminal.
   go get -u github.com/apoorvam/goterminal
 ````
 
-## Example
+## Usage
 
 ```go
     func main() {
@@ -30,9 +30,17 @@ A cross-platform Go-library for updating progress in terminal.
     	fmt.Println("Download finished!")
     }
 ```
+## Example 
+
+![output](doc/download_progress.gif)
+
+Another example which uses the [go-colortext](github.com/daviddengcn/go-colortext) library to re-write text along with using colors. Here is output of example:
+
+![output](doc/color_terminal.gif)
+
 Examples can be found [here](https://github.com/apoorvam/goterminal/tree/master/examples).
 
-### Usage
+### More on usage
 
 * Create a `Writer` instance.
 * Add your text to writer's buffer and call `Print()` to print text on Terminal. This can be called any number of times.
