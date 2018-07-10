@@ -28,9 +28,6 @@ if ("$env:GOBIN" -eq "") {
 
 Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
 
-go get github.com/tools/godep 
-& "$env:GOBIN\godep.exe" "restore"
-
 Push-Location "$pwd\bin\windows_amd64"
 signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
 if ($LastExitCode -ne 0) {

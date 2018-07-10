@@ -22,11 +22,6 @@ if [[ -z $GOBIN ]]; then
     export GOBIN="$GOPATH/bin"
 fi
 
-setup(){
-    cd $GOPATH/src/github.com/getgauge/gauge
-    go get github.com/tools/godep && $GOBIN/godep restore
-}
-
 option="${1}"
 case ${option} in
     test)
