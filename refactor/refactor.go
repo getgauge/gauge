@@ -341,6 +341,11 @@ func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.R
 		logger.Errorf(false, "Refactoring error response from runner: %v", refactorResponse.GetError())
 		runnerError = errors.New(refactorResponse.GetError())
 	}
+	if len(refactorResponse.GetFileChanges()) == 0 {
+		for _, file := range refactorResponse.GetFilesChanged() {
+			refactorResponse.FileChanges = append(refactorResponse.FileChanges, &gauge_messages.FileChanges{FileName: file})
+		}
+	}
 	return refactorResponse.GetFileChanges(), runnerError
 }
 

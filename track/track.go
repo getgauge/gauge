@@ -18,6 +18,7 @@
 package track
 
 import (
+	"strconv"
 	"net/http"
 	"net/http/httputil"
 	"runtime/debug"
@@ -135,12 +136,17 @@ func trackAPI(category, action, label string) {
 
 func isCI() bool {
 	// Travis, AppVeyor, CircleCI, Wercket, drone.io, gitlab-ci
-	if os.Getenv("CI") == "true" {
+	if ci, _ := strconv.ParseBool(os.Getenv("CI")); ci {
 		return true
 	}
 
 	// GoCD
 	if os.Getenv("GO_SERVER_URL") != "" {
+		return true
+	}
+
+	// Jenkins
+	if os.Getenv("JENKINS_URL") != "" {
 		return true
 	}
 
@@ -150,7 +156,7 @@ func isCI() bool {
 	}
 
 	// TFS
-	if os.Getenv("TFS_BUILD") == "true" {
+	if ci, _ := strconv.ParseBool(os.Getenv("TFS_BUILD")); ci {
 		return true
 	}
 	return false
