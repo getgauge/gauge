@@ -175,9 +175,7 @@ func main() {
 		buildMetadata = fmt.Sprintf("nightly-%s", time.Now().Format(nightlyDatelayout))
 	}
 	if *verbose {
-		if *verbose {
-			fmt.Println("Build: " + buildMetadata)
-		}
+		fmt.Println("Build: " + buildMetadata)
 	}
 	if *test {
 		runTests(*coverage)
