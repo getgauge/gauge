@@ -104,7 +104,9 @@ func (e *simpleExecution) start() {
 func (e *simpleExecution) finish() {
 	e.suiteResult = mergeDataTableSpecResults(e.suiteResult)
 	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
-	e.notifyExecutionResult()
+	if !DryRun {
+		e.notifyExecutionResult()
+	}
 	e.stopAllPlugins()
 }
 
@@ -146,22 +148,26 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 }
 
 func (e *simpleExecution) notifyBeforeSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
-		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
-	res := e.executeHook(m)
-	e.suiteResult.PreHookMessages = res.Message
-	if res.GetFailed() {
-		handleHookFailure(e.suiteResult, res, result.AddPreHook)
+	if !DryRun {
+		m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
+			ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
+		res := e.executeHook(m)
+		e.suiteResult.PreHookMessages = res.Message
+		if res.GetFailed() {
+			handleHookFailure(e.suiteResult, res, result.AddPreHook)
+		}
 	}
 }
 
 func (e *simpleExecution) notifyAfterSuite() {
-	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
-		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
-	res := e.executeHook(m)
-	e.suiteResult.PostHookMessages = res.Message
-	if res.GetFailed() {
-		handleHookFailure(e.suiteResult, res, result.AddPostHook)
+	if !DryRun {
+		m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
+			ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		res := e.executeHook(m)
+		e.suiteResult.PostHookMessages = res.Message
+		if res.GetFailed() {
+			handleHookFailure(e.suiteResult, res, result.AddPostHook)
+		}
 	}
 }
 

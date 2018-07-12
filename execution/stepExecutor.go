@@ -35,14 +35,14 @@ type stepExecutor struct {
 
 // TODO: stepExecutor should not consume both gauge.Step and gauge_messages.ProtoStep. The usage of ProtoStep should be eliminated.
 func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.ProtoStep) *result.StepResult {
+
 	stepRequest := e.createStepRequest(protoStep)
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
 	stepResult := result.NewStepResult(protoStep)
 
 	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, *e.currentExecutionInfo))
-
 	e.notifyBeforeStepHook(stepResult)
-	if !stepResult.GetFailed() {
+	if !stepResult.GetFailed() && !DryRun {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep, ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
 		messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, stepExecutionStatus.Message...)
@@ -69,31 +69,35 @@ func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *g
 }
 
 func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
-	m := &gauge_messages.Message{
-		MessageType:                  gauge_messages.Message_StepExecutionStarting,
-		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
-	}
-	e.pluginHandler.NotifyPlugins(m)
-	res := executeHook(m, stepResult, e.runner)
-	stepResult.ProtoStep.PreHookMessages = res.Message
-	if res.GetFailed() {
-		setStepFailure(e.currentExecutionInfo)
-		handleHookFailure(stepResult, res, result.AddPreHook)
+	if !DryRun {
+		m := &gauge_messages.Message{
+			MessageType:                  gauge_messages.Message_StepExecutionStarting,
+			StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
+		}
+		e.pluginHandler.NotifyPlugins(m)
+		res := executeHook(m, stepResult, e.runner)
+		stepResult.ProtoStep.PreHookMessages = res.Message
+		if res.GetFailed() {
+			setStepFailure(e.currentExecutionInfo)
+			handleHookFailure(stepResult, res, result.AddPreHook)
+		}
 	}
 }
 
 func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
-	m := &gauge_messages.Message{
-		MessageType:                gauge_messages.Message_StepExecutionEnding,
-		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
-	}
+	if !DryRun {
+		m := &gauge_messages.Message{
+			MessageType:                gauge_messages.Message_StepExecutionEnding,
+			StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
+		}
 
-	res := executeHook(m, stepResult, e.runner)
-	messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
-	stepResult.ProtoStep.PostHookMessages = messages
-	if res.GetFailed() {
-		setStepFailure(e.currentExecutionInfo)
-		handleHookFailure(stepResult, res, result.AddPostHook)
+		res := executeHook(m, stepResult, e.runner)
+		messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
+		stepResult.ProtoStep.PostHookMessages = messages
+		if res.GetFailed() {
+			setStepFailure(e.currentExecutionInfo)
+			handleHookFailure(stepResult, res, result.AddPostHook)
+		}
+		e.pluginHandler.NotifyPlugins(m)
 	}
-	e.pluginHandler.NotifyPlugins(m)
 }
