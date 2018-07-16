@@ -26,13 +26,13 @@ import (
 
 func TestJSONFormatter(t *testing.T) {
 	want := []string{
-		"--------------------------------------------------------------------",
+		"------------------------------------------------------------------",
 		"Key                           	Value                              ",
 		"check_updates                 	true                               ",
 		"gauge_repository_url          	https://downloads.gauge.org/plugin ",
 		"gauge_telemetry_enabled       	true                               ",
 		"gauge_telemetry_log_enabled   	false                              ",
-		"gauge_templates_url           	https://downloads.gauge.org/templates",
+		"gauge_templates_url           	https://templates.gauge.org        ",
 		"gauge_update_url              	https://downloads.gauge.org/gauge  ",
 		"ide_request_timeout           	30000                              ",
 		"plugin_connection_timeout     	10000                              ",
