@@ -12,10 +12,6 @@ if [[ -z $GOBIN ]]; then
     export GOBIN="$GOPATH/bin"
 fi
 
-cd $GOPATH/src/github.com/getgauge/gauge
-
-go get github.com/tools/godep && $GOBIN/godep restore
-
 function err () {
     echo "ERROR: $1"
     exit 1
