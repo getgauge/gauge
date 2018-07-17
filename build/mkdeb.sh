@@ -28,6 +28,7 @@ if [[ -z $GOBIN ]]; then
     export GOBIN="$GOPATH/bin"
 fi
 
+cd $GOPATH/src/github.com/getgauge/gauge
 set -e
 
 function err () {
