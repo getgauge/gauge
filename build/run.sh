@@ -25,11 +25,9 @@ fi
 option="${1}"
 case ${option} in
     test)
-        setup
         go test ./... -v
         ;;
     build|"")
-        setup
         go run build/make.go
         ;;
     *)
