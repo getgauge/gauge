@@ -142,3 +142,7 @@ func ListContains(list []string, val string) bool {
 	}
 	return false
 }
+
+func GetFileContents(filepath string) (string, error) {
+	return common.ReadFileContents(GetPathToFile(filepath))
+}

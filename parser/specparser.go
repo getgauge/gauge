@@ -751,9 +751,9 @@ func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string
 			match := specialArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
 			file :=  strings.TrimSpace(strings.TrimPrefix(param,"file:"))
-			if _, err := common.ReadFileContents(util.GetPathToFile(file)); err !=nil {
+			if _, err := util.GetFileContents(file); err !=nil {
 				tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
-				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file:- %s", param,file),LineText:token.LineText})
+				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param,file),LineText:token.LineText})
 			} else {
 				tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
 			}
