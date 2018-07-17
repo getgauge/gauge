@@ -1729,7 +1729,7 @@ func (s *MySuite) TestTableForSpecialParameterWhenFileIsNotFound(c *C) {
 	_, res := parser.ParseSpecText(specText, "")
 
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file:- notFound.txt")
+	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file: notFound.txt")
 	c.Assert(res.ParseErrors[0].LineText, Equals, "|james|<file:notFound.txt>|")
 }
 
@@ -1740,6 +1740,6 @@ func (s *MySuite) TestDataTableForSpecialParameterWhenFileIsNotFound(c *C) {
 	_, res := parser.ParseSpecText(specText, "")
 	
 	c.Assert(res.Ok, Equals, false)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file:- notFound.txt")
+	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file: notFound.txt")
 	c.Assert(res.ParseErrors[0].LineText, Equals, "|james|<file:notFound.txt>|")
 }
