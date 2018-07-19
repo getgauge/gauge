@@ -152,7 +152,7 @@ func addReferenceCodeLensRegistration(registrations []registration, selectors []
 	if enabled, err := strconv.ParseBool(os.Getenv("gauge_lsp_reference_codelens")); err == nil && !enabled {
 		return registrations
 	}
-	codeLenseRegistration := registration{Id: "gauge-runner-codelens",
+	codeLensRegistration := registration{Id: "gauge-runner-codelens",
 		Method: "textDocument/codeLens",
 		RegisterOptions: codeLensRegistrationOptions{
 			textDocumentRegistrationOptions: textDocumentRegistrationOptions{
@@ -160,5 +160,5 @@ func addReferenceCodeLensRegistration(registrations []registration, selectors []
 			},
 			ResolveProvider: false},
 	}
-	return append(registrations, codeLenseRegistration)
+	return append(registrations, codeLensRegistration)
 }
