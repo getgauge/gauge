@@ -143,13 +143,13 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 		{Id: "gauge-runner-didChange", Method: "textDocument/didChange", RegisterOptions: textDocumentChangeRegistrationOptions{textDocumentRegistrationOptions: textDocumentRegistrationOptions{DocumentSelector: documentSelectors}, SyncKind: lsp.TDSKFull}},
 		{Id: "gauge-runner-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: didChangeWatchedFilesRegistrationOptions{Watchers: filePatterns}},
 	}
-	registrations = addReferenceCodeLenseRegistration(registrations, documentSelectors)
+	registrations = addReferenceCodeLensRegistration(registrations, documentSelectors)
 	conn.Call(ctx, "client/registerCapability", registrationParams{registrations}, &result)
 	return nil
 }
 
-func addReferenceCodeLenseRegistration(registrations []registration, selectors []documentSelector) []registration {
-	if enabled, err := strconv.ParseBool(os.Getenv("gauge_lsp_reference_codelense")); err == nil && !enabled {
+func addReferenceCodeLensRegistration(registrations []registration, selectors []documentSelector) []registration {
+	if enabled, err := strconv.ParseBool(os.Getenv("gauge_lsp_reference_codelens")); err == nil && !enabled {
 		return registrations
 	}
 	codeLenseRegistration := registration{Id: "gauge-runner-codelens",
