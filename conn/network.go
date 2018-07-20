@@ -95,7 +95,7 @@ func readResponse(conn net.Conn) ([]byte, error) {
 
 		buffer.Write(data[0:n])
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
-		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
+		if (messageLength > 0 && messageLength < uint64(buffer.Len())) && ((messageLength + uint64(bytesRead)) <= uint64(buffer.Len())) {
 			return buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)], nil
 		}
 	}

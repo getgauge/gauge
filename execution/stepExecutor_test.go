@@ -110,3 +110,51 @@ func TestStepExecutionShouldAddAfterStepHookMessages(t *testing.T) {
 		t.Errorf("Expected `After Step Called` message, got : %s", afterStepMsg[0])
 	}
 }
+
+func TestStepExecutionShouldGetScreenshots(t *testing.T) {
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_StepExecutionEnding {
+			return &gauge_messages.ProtoExecutionResult{
+				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	ei := &gauge_messages.ExecutionInfo{
+		CurrentStep: &gauge_messages.StepInfo{
+			Step: &gauge_messages.ExecuteStepRequest{
+				ActualStepText:  "a simple step",
+				ParsedStepText:  "a simple step",
+				ScenarioFailing: false,
+			},
+			IsFailed: false,
+		},
+	}
+	se := &stepExecutor{runner: r, pluginHandler: h, currentExecutionInfo: ei, stream: 0}
+	step := &gauge.Step{
+		Value:     "a simple step",
+		LineText:  "a simple step",
+		Fragments: []*gauge_messages.Fragment{{FragmentType: gauge_messages.Fragment_Text, Text: "a simple step"}},
+	}
+	protoStep := gauge.ConvertToProtoItem(step).GetStep()
+	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
+
+	stepResult := se.executeStep(step, protoStep)
+	screenShots := stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot
+
+	expected := []string{"screenshot1", "screenshot2"}
+
+	if len(screenShots) != len(expected) {
+		t.Errorf("Expected 1 message, got : %d", len(screenShots))
+	}
+
+	for i, e := range expected {
+		if string(screenShots[i]) != e {
+			t.Errorf("Expected `%s` message, got : %s", e, screenShots[i])
+		}
+	}
+}
