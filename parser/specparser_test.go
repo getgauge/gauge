@@ -1721,3 +1721,25 @@ func (s *MySuite) TestParsingDataTableWithSpecialString(c *C) {
 	c.Assert(specs.DataTable.Table.Columns[1][1].Value, Equals, "file:testdata/foo.txt")
 	c.Assert(specs.DataTable.Table.Columns[1][1].CellType, Equals, gauge.SpecialString)
 }
+
+func (s *MySuite) TestTableForSpecialParameterWhenFileIsNotFound(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:notFound.txt>|").String()
+	
+	_, res := parser.ParseSpecText(specText, "")
+
+	c.Assert(res.Ok, Equals, false)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file: notFound.txt")
+	c.Assert(res.ParseErrors[0].LineText, Equals, "|james|<file:notFound.txt>|")
+}
+
+func (s *MySuite) TestDataTableForSpecialParameterWhenFileIsNotFound(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:notFound.txt>|").String()
+	
+	_, res := parser.ParseSpecText(specText, "")
+	
+	c.Assert(res.Ok, Equals, false)
+	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file: notFound.txt")
+	c.Assert(res.ParseErrors[0].LineText, Equals, "|james|<file:notFound.txt>|")
+}
