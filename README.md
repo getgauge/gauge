@@ -44,6 +44,12 @@ Please see below for the best place to ask a query:
 - Why do you? -- [Google Groups](https://groups.google.com/forum/#!forum/getgauge)
 - When will you? -- [Google Groups](https://groups.google.com/forum/#!forum/getgauge)
 
+### Other projects
+
+Also maintained by Gauge
+
+- [Taiko](https://github.com/getgauge/taiko) Headless web browser automation.
+
 ## Add Gauge Badge to your project!
 Copy the text below and add it to the README.md of your project using Gauge, and show your support. It looks like this:
 
