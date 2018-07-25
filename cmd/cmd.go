@@ -81,7 +81,7 @@ func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 	if !config.TelemetryConsent() {
 		fmt.Printf("\nINFO: This installation of Gauge automatically sends telemetry data.")
 		fmt.Printf("\nTo turn this message off you need to opt in/out. Run 'gauge telemetry on' or 'gauge telemetry off'.\n")
-		fmt.Println("For more information see https://manpage.gauge.org/gauge_telemetry.html")
+		fmt.Println("For more information see https://gauge.org/2017/07/20/why-we-collect-data")
 	}
 }
 
