@@ -133,6 +133,9 @@ check_updates = true
 
 # Allow Gauge to collect anonymous usage statistics
 gauge_telemetry_enabled = true
+
+# Record user opt in/out for telemetry
+gauge_telemetry_action_recorded = false
 `
 	want := strings.Split(propertiesContent, "\n")
 	sort.Strings(want)
