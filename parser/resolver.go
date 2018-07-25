@@ -22,7 +22,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
@@ -142,14 +141,14 @@ func newSpecialTypeResolver() *specialTypeResolver {
 func initializePredefinedResolvers() map[string]resolverFn {
 	return map[string]resolverFn{
 		"file": func(filePath string) (*gauge.StepArg, error) {
-			fileContent, err := common.ReadFileContents(util.GetPathToFile(filePath))
+			fileContent, err := util.GetFileContents(filePath)
 			if err != nil {
 				return nil, err
 			}
 			return &gauge.StepArg{Value: fileContent, ArgType: gauge.SpecialString}, nil
 		},
 		"table": func(filePath string) (*gauge.StepArg, error) {
-			csv, err := common.ReadFileContents(util.GetPathToFile(filePath))
+			csv, err := util.GetFileContents(filePath)
 			if err != nil {
 				return nil, err
 			}
