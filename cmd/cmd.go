@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/getgauge/gauge/config"
@@ -68,12 +69,21 @@ var (
 			setGlobalFlags()
 			initPackageFlags()
 		},
+		PersistentPostRun: notifyTelemetryIfNeeded,
 	}
 	logLevel        string
 	dir             string
 	machineReadable bool
 	gaugeVersion    bool
 )
+
+func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
+	if !config.TelemetryConsent() {
+		fmt.Printf("\nINFO: This installation of Gauge automatically sends telemetry data.")
+		fmt.Printf("\nTo turn this message off you need to opt in/out. Run 'gauge telemetry on' or 'gauge telemetry off'.\n")
+		fmt.Println("For more information see https://manpage.gauge.org/gauge_telemetry.html")
+	}
+}
 
 func initLogger(n string) {
 	if lsp {

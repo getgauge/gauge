@@ -100,6 +100,7 @@ func Properties() *properties {
 		checkUpdates:            newProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
 		telemetryEnabled:        newProperty(telemetryEnabled, "true", "Allow Gauge to collect anonymous usage statistics"),
 		telemetryLoggingEnabled: newProperty(telemetryLoggingEnabled, "false", "Log request sent to Gauge telemetry engine"),
+		telemetryConsent:        newProperty(telemetryConsent, "false", "Record user opt in/out for telemetry"),
 	}}
 }
 
