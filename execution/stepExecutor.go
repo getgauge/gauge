@@ -76,6 +76,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, stepResult, e.runner)
 	stepResult.ProtoStep.PreHookMessages = res.Message
+	stepResult.ProtoStep.PreHookScreenshots = res.ScreenShot
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPreHook)
@@ -90,7 +91,7 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 
 	res := executeHook(m, stepResult, e.runner)
 	stepResult.ProtoStep.PostHookMessages = append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
-	stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot = append(stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot, res.ScreenShot...)
+	stepResult.ProtoStep.PostHookScreenshots = append(stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot, res.ScreenShot...)
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
