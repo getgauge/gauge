@@ -80,3 +80,65 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookMessages(t *testing.T) {
 		t.Errorf("Expected `After Suite Called` message, got : %s", gotMessages[0])
 	}
 }
+
+func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookScreenshots(t *testing.T) {
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_ExecutionStarting {
+			return &gauge_messages.ProtoExecutionResult{
+				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	ei := &executionInfo{runner: r, pluginHandler: h}
+	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
+	simpleExecution.notifyBeforeSuite()
+
+	beforeSuiteScreenshots := simpleExecution.suiteResult.PreHookScreenshots
+	expected := []string{"screenshot1", "screenshot2"}
+
+	if len(beforeSuiteScreenshots) != len(expected) {
+		t.Errorf("Expected 2 screenshots, got : %d", len(beforeSuiteScreenshots))
+	}
+	for i, e := range expected {
+		if string(beforeSuiteScreenshots[i]) != e {
+			t.Errorf("Expected `%s` screenshot, got : %s", e, beforeSuiteScreenshots[i])
+		}
+	}
+}
+
+func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
+	r := &mockRunner{}
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_ExecutionEnding {
+			return &gauge_messages.ProtoExecutionResult{
+				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	ei := &executionInfo{runner: r, pluginHandler: h}
+	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
+	simpleExecution.notifyAfterSuite()
+
+	afterSuiteScreenshots := simpleExecution.suiteResult.PostHookScreenshots
+	expected := []string{"screenshot1", "screenshot2"}
+
+	if len(afterSuiteScreenshots) != len(expected) {
+		t.Errorf("Expected 2 screenshots, got : %d", len(afterSuiteScreenshots))
+	}
+	for i, e := range expected {
+		if string(afterSuiteScreenshots[i]) != e {
+			t.Errorf("Expected `%s` screenshot, got : %s", e, afterSuiteScreenshots[i])
+		}
+	}
+}

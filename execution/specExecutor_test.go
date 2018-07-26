@@ -688,6 +688,53 @@ func TestExecuteAddsSpecHookExecutionMessages(t *testing.T) {
 	}
 }
 
+func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
+	errs := gauge.NewBuildErrors()
+	mockRunner := &mockRunner{}
+	mockHandler := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+
+	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+			return &gauge_messages.ProtoExecutionResult{
+				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+			return &gauge_messages.ProtoExecutionResult{
+				ScreenShot:    [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
+				Failed:        false,
+				ExecutionTime: 10,
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+	se := newSpecExecutor(exampleSpec, mockRunner, mockHandler, errs, 0)
+	se.execute(true, false, true)
+
+	beforeSpecScreenshots := se.specResult.ProtoSpec.PreHookScreenshots
+	afterSpecScreenshots := se.specResult.ProtoSpec.PostHookScreenshots
+	expectedAfterSpecScreenshots := []string{"screenshot1", "screenshot2"}
+	expectedBeforeSpecScreenshots := []string{"screenshot3", "screenshot4"}
+
+	if len(beforeSpecScreenshots) != len(expectedBeforeSpecScreenshots) {
+		t.Errorf("Expected 2 screenshots, got : %d", len(beforeSpecScreenshots))
+	}
+	for i, e := range expectedBeforeSpecScreenshots {
+		if string(beforeSpecScreenshots[i]) != e {
+			t.Errorf("Expected `%s` screenshot, got : %s", e, beforeSpecScreenshots[i])
+		}
+	}
+	if len(afterSpecScreenshots) != len(expectedAfterSpecScreenshots) {
+		t.Errorf("Expected 2 screenshots, got : %d", len(afterSpecScreenshots))
+	}
+	for i, e := range expectedAfterSpecScreenshots {
+		if string(afterSpecScreenshots[i]) != e {
+			t.Errorf("Expected `%s` screenshot, got : %s", e, afterSpecScreenshots[i])
+		}
+	}
+}
+
 func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 	errs := gauge.NewBuildErrors()
 	r := &mockRunner{}
