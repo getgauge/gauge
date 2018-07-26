@@ -101,8 +101,26 @@ func TestMergedProperties(t *testing.T) {
 func TestPropertiesString(t *testing.T) {
 	propertiesContent := `# This file contains Gauge specific internal configurations. Do not delete
 
+# Allow Gauge and its plugin updates to be notified.
+check_updates = true
+
+# Url to get plugin versions
+gauge_repository_url = https://downloads.gauge.org/plugin
+
+# Allow Gauge to collect anonymous usage statistics
+gauge_telemetry_enabled = true
+
+# Log request sent to Gauge telemetry engine
+gauge_telemetry_log_enabled = false
+
 # Url to get templates list
 gauge_templates_url = https://templates.gauge.org
+
+# Url for latest gauge version
+gauge_update_url = https://downloads.gauge.org/gauge
+
+# Timeout in milliseconds for requests from runner when invoked for ide.
+ide_request_timeout = 30000
 
 # Timeout in milliseconds for making a connection to plugins.
 plugin_connection_timeout = 10000
@@ -110,37 +128,23 @@ plugin_connection_timeout = 10000
 # Timeout in milliseconds for a plugin to stop after a kill message has been sent.
 plugin_kill_timeout = 4000
 
-# Timeout in milliseconds for requests from the language runner.
-runner_request_timeout = 30000
-
-# Timeout in milliseconds for requests from runner when invoked for ide.
-ide_request_timeout = 30000
-
-# Log request sent to Gauge telemetry engine
-gauge_telemetry_log_enabled = false
-
-# Url to get plugin versions
-gauge_repository_url = https://downloads.gauge.org/plugin
-
-# Url for latest gauge version
-gauge_update_url = https://downloads.gauge.org/gauge
-
 # Timeout in milliseconds for making a connection to the language runner.
 runner_connection_timeout = 30000
 
-# Allow Gauge and its plugin updates to be notified.
-check_updates = true
-
-# Allow Gauge to collect anonymous usage statistics
-gauge_telemetry_enabled = true
+# Timeout in milliseconds for requests from the language runner.
+runner_request_timeout = 30000
 `
-	want := strings.Split(propertiesContent, "\n")
-	sort.Strings(want)
+	want := strings.Split(propertiesContent, "\n\n")
 
-	got := strings.Split(Properties().String(), "\n")
+	got := strings.Split(Properties().String(), "\n\n")
 
-	sort.Strings(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("Properties String failed\ngot: `%s`\nwant:`%s`", got, want)
+	if len(got) != len(want) {
+		t.Errorf("Expected %d properties, got %d", len(want), len(got))
+	}
+
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Expected property no %d = %s, got %s", i, x, got[i])
+		}
 	}
 }

@@ -20,6 +20,7 @@ package config
 import (
 	"bytes"
 	"io"
+	"sort"
 
 	"os"
 	"path/filepath"
@@ -70,7 +71,13 @@ func (p *properties) String() string {
 	buffer.WriteString("# ")
 	buffer.WriteString(comment)
 	buffer.WriteString("\n")
-	for _, v := range p.p {
+	var keys []string
+	for k := range p.p {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		v := p.p[k]
 		buffer.WriteString("\n")
 		buffer.WriteString("# ")
 		buffer.WriteString(v.description)
