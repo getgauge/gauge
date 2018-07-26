@@ -18,9 +18,11 @@
 package config
 
 import (
+	"bufio"
 	"bytes"
 	"io"
 	"sort"
+	"strings"
 
 	"os"
 	"path/filepath"
@@ -28,6 +30,7 @@ import (
 	"fmt"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/version"
 )
 
 const comment = `This file contains Gauge specific internal configurations. Do not delete`
@@ -48,14 +51,14 @@ func (p *properties) set(k, v string) error {
 		p.p[k].Value = v
 		return nil
 	}
-	return fmt.Errorf("Config '%s' doesn't exist.", k)
+	return fmt.Errorf("config '%s' doesn't exist", k)
 }
 
 func (p *properties) get(k string) (string, error) {
 	if _, ok := p.p[k]; ok {
 		return p.p[k].Value, nil
 	}
-	return "", fmt.Errorf("Config '%s' doesn't exist.", k)
+	return "", fmt.Errorf("config '%s' doesn't exist", k)
 }
 
 func (p *properties) Format(f formatter) (string, error) {
@@ -68,6 +71,8 @@ func (p *properties) Format(f formatter) (string, error) {
 
 func (p *properties) String() string {
 	var buffer bytes.Buffer
+	buffer.WriteString("Version " + version.FullVersion())
+	buffer.WriteString("\n")
 	buffer.WriteString("# ")
 	buffer.WriteString(comment)
 	buffer.WriteString("\n")
@@ -140,7 +145,11 @@ func UpdateTelemetryLoggging(value string) error {
 }
 
 func Merge() error {
-	return writeConfig(MergedProperties())
+	v, err := gaugeVersionInProperties()
+	if err != nil || version.CompareVersions(v, version.CurrentGaugeVersion, version.LesserThanFunc) {
+		return writeConfig(MergedProperties())
+	}
+	return nil
 }
 
 func GetProperty(name string) (string, error) {
@@ -166,11 +175,10 @@ func newProperty(key, defaultValue, description string) *property {
 }
 
 func writeConfig(p *properties) error {
-	dir, err := common.GetConfigurationDir()
+	gaugePropertiesFile, err := gaugePropertiesFile()
 	if err != nil {
 		return err
 	}
-	gaugePropertiesFile := filepath.Join(dir, common.GaugePropertiesFile)
 	var f *os.File
 	if _, err = os.Stat(gaugePropertiesFile); err != nil {
 		f, err = os.Create(gaugePropertiesFile)
@@ -183,4 +191,31 @@ func writeConfig(p *properties) error {
 	defer f.Close()
 	_, err = p.Write(f)
 	return err
+}
+
+func gaugePropertiesFile() (string, error) {
+	dir, err := common.GetConfigurationDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, common.GaugePropertiesFile), err
+}
+
+func gaugeVersionInProperties() (*version.Version, error) {
+	var v *version.Version
+	pf, err := gaugePropertiesFile()
+	if err != nil {
+		return v, err
+	}
+	f, err := os.Open(pf)
+	if err != nil {
+		return v, err
+	}
+	defer f.Close()
+	r := bufio.NewReader(f)
+	l, _, err := r.ReadLine()
+	if err != nil {
+		return v, err
+	}
+	return version.ParseVersion(strings.TrimLeft(string(l), "Version "))
 }
