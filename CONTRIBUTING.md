@@ -7,7 +7,7 @@ Please read this document to understand the process for contributing.
 ## Different ways to contribute
 
 * You can [report an issue](https://github.com/getgauge/gauge/issues) you found
-* Help us [test Gauge] (https://github.com/getgauge/gauge-tests) by adding to our existing automated tests
+* Help us [test Gauge](https://github.com/getgauge/gauge-tests) by adding to our existing automated tests
 * Help someone get started with Gauge on [our discussion forum](https://groups.google.com/forum/#!forum/getgauge)
 * Contribute [to our blog](gauge.org/blog) 
 * Add to our [set of examples](https://docs.gauge.org/examples.html) to help someone new to Gauge get started easily
