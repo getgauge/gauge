@@ -40,10 +40,18 @@ const (
 	machineReadableDefault = false
 	gaugeVersionDefault    = false
 
-	logLevelName        = "log-level"
-	dirName             = "dir"
-	machineReadableName = "machine-readable"
-	gaugeVersionName    = "version"
+	logLevelName          = "log-level"
+	dirName               = "dir"
+	machineReadableName   = "machine-readable"
+	gaugeVersionName      = "version"
+	gaugeTelemetryMessage = `Telemetry
+	---------
+	This installation of Gauge collects usage data in order to help us improve your experience.
+	The data is anonymous and doesn't include command-line arguments.
+	To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
+
+	Read more about Gauge telemetry at https://gauge.org/telemetry
+	`
 )
 
 var (
@@ -79,9 +87,7 @@ var (
 
 func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 	if !config.TelemetryConsent() {
-		fmt.Printf("\nINFO: This installation of Gauge automatically sends telemetry data.")
-		fmt.Printf("\nTo turn this message off you need to opt in/out. Run 'gauge telemetry on' or 'gauge telemetry off'.\n")
-		fmt.Println("For more information see https://gauge.org/2017/07/20/why-we-collect-data")
+		fmt.Println(gaugeTelemetryMessage)
 	}
 }
 
