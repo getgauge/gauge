@@ -98,7 +98,7 @@ func (x APIMessage_APIMessageType) String() string {
 	return proto.EnumName(APIMessage_APIMessageType_name, int32(x))
 }
 func (APIMessage_APIMessageType) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{25, 0}
+	return fileDescriptor_api_61c330053bee9dde, []int{25, 0}
 }
 
 // / Request to get the Root Directory of the project
@@ -112,7 +112,7 @@ func (m *GetProjectRootRequest) Reset()         { *m = GetProjectRootRequest{} }
 func (m *GetProjectRootRequest) String() string { return proto.CompactTextString(m) }
 func (*GetProjectRootRequest) ProtoMessage()    {}
 func (*GetProjectRootRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{0}
+	return fileDescriptor_api_61c330053bee9dde, []int{0}
 }
 func (m *GetProjectRootRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetProjectRootRequest.Unmarshal(m, b)
@@ -145,7 +145,7 @@ func (m *GetProjectRootResponse) Reset()         { *m = GetProjectRootResponse{}
 func (m *GetProjectRootResponse) String() string { return proto.CompactTextString(m) }
 func (*GetProjectRootResponse) ProtoMessage()    {}
 func (*GetProjectRootResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{1}
+	return fileDescriptor_api_61c330053bee9dde, []int{1}
 }
 func (m *GetProjectRootResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetProjectRootResponse.Unmarshal(m, b)
@@ -183,7 +183,7 @@ func (m *GetInstallationRootRequest) Reset()         { *m = GetInstallationRootR
 func (m *GetInstallationRootRequest) String() string { return proto.CompactTextString(m) }
 func (*GetInstallationRootRequest) ProtoMessage()    {}
 func (*GetInstallationRootRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{2}
+	return fileDescriptor_api_61c330053bee9dde, []int{2}
 }
 func (m *GetInstallationRootRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetInstallationRootRequest.Unmarshal(m, b)
@@ -216,7 +216,7 @@ func (m *GetInstallationRootResponse) Reset()         { *m = GetInstallationRoot
 func (m *GetInstallationRootResponse) String() string { return proto.CompactTextString(m) }
 func (*GetInstallationRootResponse) ProtoMessage()    {}
 func (*GetInstallationRootResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{3}
+	return fileDescriptor_api_61c330053bee9dde, []int{3}
 }
 func (m *GetInstallationRootResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetInstallationRootResponse.Unmarshal(m, b)
@@ -254,7 +254,7 @@ func (m *GetAllStepsRequest) Reset()         { *m = GetAllStepsRequest{} }
 func (m *GetAllStepsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAllStepsRequest) ProtoMessage()    {}
 func (*GetAllStepsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{4}
+	return fileDescriptor_api_61c330053bee9dde, []int{4}
 }
 func (m *GetAllStepsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetAllStepsRequest.Unmarshal(m, b)
@@ -287,7 +287,7 @@ func (m *GetAllStepsResponse) Reset()         { *m = GetAllStepsResponse{} }
 func (m *GetAllStepsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetAllStepsResponse) ProtoMessage()    {}
 func (*GetAllStepsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{5}
+	return fileDescriptor_api_61c330053bee9dde, []int{5}
 }
 func (m *GetAllStepsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetAllStepsResponse.Unmarshal(m, b)
@@ -326,7 +326,7 @@ func (m *SpecsRequest) Reset()         { *m = SpecsRequest{} }
 func (m *SpecsRequest) String() string { return proto.CompactTextString(m) }
 func (*SpecsRequest) ProtoMessage()    {}
 func (*SpecsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{6}
+	return fileDescriptor_api_61c330053bee9dde, []int{6}
 }
 func (m *SpecsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecsRequest.Unmarshal(m, b)
@@ -366,7 +366,7 @@ func (m *SpecsResponse) Reset()         { *m = SpecsResponse{} }
 func (m *SpecsResponse) String() string { return proto.CompactTextString(m) }
 func (*SpecsResponse) ProtoMessage()    {}
 func (*SpecsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{7}
+	return fileDescriptor_api_61c330053bee9dde, []int{7}
 }
 func (m *SpecsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecsResponse.Unmarshal(m, b)
@@ -407,7 +407,7 @@ func (m *SpecsResponse_SpecDetail) Reset()         { *m = SpecsResponse_SpecDeta
 func (m *SpecsResponse_SpecDetail) String() string { return proto.CompactTextString(m) }
 func (*SpecsResponse_SpecDetail) ProtoMessage()    {}
 func (*SpecsResponse_SpecDetail) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{7, 0}
+	return fileDescriptor_api_61c330053bee9dde, []int{7, 0}
 }
 func (m *SpecsResponse_SpecDetail) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_SpecsResponse_SpecDetail.Unmarshal(m, b)
@@ -452,7 +452,7 @@ func (m *GetAllConceptsRequest) Reset()         { *m = GetAllConceptsRequest{} }
 func (m *GetAllConceptsRequest) String() string { return proto.CompactTextString(m) }
 func (*GetAllConceptsRequest) ProtoMessage()    {}
 func (*GetAllConceptsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{8}
+	return fileDescriptor_api_61c330053bee9dde, []int{8}
 }
 func (m *GetAllConceptsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetAllConceptsRequest.Unmarshal(m, b)
@@ -485,7 +485,7 @@ func (m *GetAllConceptsResponse) Reset()         { *m = GetAllConceptsResponse{}
 func (m *GetAllConceptsResponse) String() string { return proto.CompactTextString(m) }
 func (*GetAllConceptsResponse) ProtoMessage()    {}
 func (*GetAllConceptsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{9}
+	return fileDescriptor_api_61c330053bee9dde, []int{9}
 }
 func (m *GetAllConceptsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetAllConceptsResponse.Unmarshal(m, b)
@@ -529,7 +529,7 @@ func (m *ConceptInfo) Reset()         { *m = ConceptInfo{} }
 func (m *ConceptInfo) String() string { return proto.CompactTextString(m) }
 func (*ConceptInfo) ProtoMessage()    {}
 func (*ConceptInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{10}
+	return fileDescriptor_api_61c330053bee9dde, []int{10}
 }
 func (m *ConceptInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ConceptInfo.Unmarshal(m, b)
@@ -585,7 +585,7 @@ func (m *GetStepValueRequest) Reset()         { *m = GetStepValueRequest{} }
 func (m *GetStepValueRequest) String() string { return proto.CompactTextString(m) }
 func (*GetStepValueRequest) ProtoMessage()    {}
 func (*GetStepValueRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{11}
+	return fileDescriptor_api_61c330053bee9dde, []int{11}
 }
 func (m *GetStepValueRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetStepValueRequest.Unmarshal(m, b)
@@ -632,7 +632,7 @@ func (m *GetStepValueResponse) Reset()         { *m = GetStepValueResponse{} }
 func (m *GetStepValueResponse) String() string { return proto.CompactTextString(m) }
 func (*GetStepValueResponse) ProtoMessage()    {}
 func (*GetStepValueResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{12}
+	return fileDescriptor_api_61c330053bee9dde, []int{12}
 }
 func (m *GetStepValueResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetStepValueResponse.Unmarshal(m, b)
@@ -672,7 +672,7 @@ func (m *GetLanguagePluginLibPathRequest) Reset()         { *m = GetLanguagePlug
 func (m *GetLanguagePluginLibPathRequest) String() string { return proto.CompactTextString(m) }
 func (*GetLanguagePluginLibPathRequest) ProtoMessage()    {}
 func (*GetLanguagePluginLibPathRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{13}
+	return fileDescriptor_api_61c330053bee9dde, []int{13}
 }
 func (m *GetLanguagePluginLibPathRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetLanguagePluginLibPathRequest.Unmarshal(m, b)
@@ -712,7 +712,7 @@ func (m *GetLanguagePluginLibPathResponse) Reset()         { *m = GetLanguagePlu
 func (m *GetLanguagePluginLibPathResponse) String() string { return proto.CompactTextString(m) }
 func (*GetLanguagePluginLibPathResponse) ProtoMessage()    {}
 func (*GetLanguagePluginLibPathResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{14}
+	return fileDescriptor_api_61c330053bee9dde, []int{14}
 }
 func (m *GetLanguagePluginLibPathResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_GetLanguagePluginLibPathResponse.Unmarshal(m, b)
@@ -752,7 +752,7 @@ func (m *ErrorResponse) Reset()         { *m = ErrorResponse{} }
 func (m *ErrorResponse) String() string { return proto.CompactTextString(m) }
 func (*ErrorResponse) ProtoMessage()    {}
 func (*ErrorResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{15}
+	return fileDescriptor_api_61c330053bee9dde, []int{15}
 }
 func (m *ErrorResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ErrorResponse.Unmarshal(m, b)
@@ -794,7 +794,7 @@ func (m *PerformRefactoringRequest) Reset()         { *m = PerformRefactoringReq
 func (m *PerformRefactoringRequest) String() string { return proto.CompactTextString(m) }
 func (*PerformRefactoringRequest) ProtoMessage()    {}
 func (*PerformRefactoringRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{16}
+	return fileDescriptor_api_61c330053bee9dde, []int{16}
 }
 func (m *PerformRefactoringRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PerformRefactoringRequest.Unmarshal(m, b)
@@ -845,7 +845,7 @@ func (m *PerformRefactoringResponse) Reset()         { *m = PerformRefactoringRe
 func (m *PerformRefactoringResponse) String() string { return proto.CompactTextString(m) }
 func (*PerformRefactoringResponse) ProtoMessage()    {}
 func (*PerformRefactoringResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{17}
+	return fileDescriptor_api_61c330053bee9dde, []int{17}
 }
 func (m *PerformRefactoringResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_PerformRefactoringResponse.Unmarshal(m, b)
@@ -907,7 +907,7 @@ func (m *ExtractConceptRequest) Reset()         { *m = ExtractConceptRequest{} }
 func (m *ExtractConceptRequest) String() string { return proto.CompactTextString(m) }
 func (*ExtractConceptRequest) ProtoMessage()    {}
 func (*ExtractConceptRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{18}
+	return fileDescriptor_api_61c330053bee9dde, []int{18}
 }
 func (m *ExtractConceptRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExtractConceptRequest.Unmarshal(m, b)
@@ -977,7 +977,7 @@ func (m *TextInfo) Reset()         { *m = TextInfo{} }
 func (m *TextInfo) String() string { return proto.CompactTextString(m) }
 func (*TextInfo) ProtoMessage()    {}
 func (*TextInfo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{19}
+	return fileDescriptor_api_61c330053bee9dde, []int{19}
 }
 func (m *TextInfo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_TextInfo.Unmarshal(m, b)
@@ -1034,7 +1034,7 @@ func (m *Step) Reset()         { *m = Step{} }
 func (m *Step) String() string { return proto.CompactTextString(m) }
 func (*Step) ProtoMessage()    {}
 func (*Step) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{20}
+	return fileDescriptor_api_61c330053bee9dde, []int{20}
 }
 func (m *Step) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Step.Unmarshal(m, b)
@@ -1092,7 +1092,7 @@ func (m *ExtractConceptResponse) Reset()         { *m = ExtractConceptResponse{}
 func (m *ExtractConceptResponse) String() string { return proto.CompactTextString(m) }
 func (*ExtractConceptResponse) ProtoMessage()    {}
 func (*ExtractConceptResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{21}
+	return fileDescriptor_api_61c330053bee9dde, []int{21}
 }
 func (m *ExtractConceptResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ExtractConceptResponse.Unmarshal(m, b)
@@ -1146,7 +1146,7 @@ func (m *FormatSpecsRequest) Reset()         { *m = FormatSpecsRequest{} }
 func (m *FormatSpecsRequest) String() string { return proto.CompactTextString(m) }
 func (*FormatSpecsRequest) ProtoMessage()    {}
 func (*FormatSpecsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{22}
+	return fileDescriptor_api_61c330053bee9dde, []int{22}
 }
 func (m *FormatSpecsRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FormatSpecsRequest.Unmarshal(m, b)
@@ -1188,7 +1188,7 @@ func (m *FormatSpecsResponse) Reset()         { *m = FormatSpecsResponse{} }
 func (m *FormatSpecsResponse) String() string { return proto.CompactTextString(m) }
 func (*FormatSpecsResponse) ProtoMessage()    {}
 func (*FormatSpecsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{23}
+	return fileDescriptor_api_61c330053bee9dde, []int{23}
 }
 func (m *FormatSpecsResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_FormatSpecsResponse.Unmarshal(m, b)
@@ -1233,7 +1233,7 @@ func (m *UnsupportedApiMessageResponse) Reset()         { *m = UnsupportedApiMes
 func (m *UnsupportedApiMessageResponse) String() string { return proto.CompactTextString(m) }
 func (*UnsupportedApiMessageResponse) ProtoMessage()    {}
 func (*UnsupportedApiMessageResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{24}
+	return fileDescriptor_api_61c330053bee9dde, []int{24}
 }
 func (m *UnsupportedApiMessageResponse) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UnsupportedApiMessageResponse.Unmarshal(m, b)
@@ -1314,7 +1314,7 @@ func (m *APIMessage) Reset()         { *m = APIMessage{} }
 func (m *APIMessage) String() string { return proto.CompactTextString(m) }
 func (*APIMessage) ProtoMessage()    {}
 func (*APIMessage) Descriptor() ([]byte, []int) {
-	return fileDescriptor_api_ef7e72629173380e, []int{25}
+	return fileDescriptor_api_61c330053bee9dde, []int{25}
 }
 func (m *APIMessage) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_APIMessage.Unmarshal(m, b)
@@ -1533,9 +1533,9 @@ func init() {
 	proto.RegisterEnum("gauge.messages.APIMessage_APIMessageType", APIMessage_APIMessageType_name, APIMessage_APIMessageType_value)
 }
 
-func init() { proto.RegisterFile("api.proto", fileDescriptor_api_ef7e72629173380e) }
+func init() { proto.RegisterFile("api.proto", fileDescriptor_api_61c330053bee9dde) }
 
-var fileDescriptor_api_ef7e72629173380e = []byte{
+var fileDescriptor_api_61c330053bee9dde = []byte{
 	// 1444 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x58, 0xdd, 0x6e, 0xdc, 0xb6,
 	0x12, 0x3e, 0xeb, 0xdf, 0xdd, 0x59, 0x7b, 0x2d, 0x8f, 0xed, 0x35, 0xbd, 0xb1, 0x13, 0x1f, 0xe5,
