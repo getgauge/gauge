@@ -91,7 +91,7 @@ func Properties() *properties {
 	return &properties{p: map[string]*property{
 		gaugeRepositoryURL:      newProperty(gaugeRepositoryURL, "https://downloads.gauge.org/plugin", "Url to get plugin versions"),
 		gaugeUpdateURL:          newProperty(gaugeUpdateURL, "https://downloads.gauge.org/gauge", "Url for latest gauge version"),
-		gaugeTemplatesURL:       newProperty(gaugeTemplatesURL, "https://downloads.gauge.org/templates", "Url to get templates list"),
+		gaugeTemplatesURL:       newProperty(gaugeTemplatesURL, "https://templates.gauge.org", "Url to get templates list"),
 		runnerConnectionTimeout: newProperty(runnerConnectionTimeout, "30000", "Timeout in milliseconds for making a connection to the language runner."),
 		pluginConnectionTimeout: newProperty(pluginConnectionTimeout, "10000", "Timeout in milliseconds for making a connection to plugins."),
 		pluginKillTimeOut:       newProperty(pluginKillTimeOut, "4000", "Timeout in milliseconds for a plugin to stop after a kill message has been sent."),
@@ -100,6 +100,7 @@ func Properties() *properties {
 		checkUpdates:            newProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
 		telemetryEnabled:        newProperty(telemetryEnabled, "true", "Allow Gauge to collect anonymous usage statistics"),
 		telemetryLoggingEnabled: newProperty(telemetryLoggingEnabled, "false", "Log request sent to Gauge telemetry engine"),
+		telemetryConsent:        newProperty(telemetryConsent, "false", "Record user opt in/out for telemetry"),
 	}}
 }
 

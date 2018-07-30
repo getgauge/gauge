@@ -18,6 +18,7 @@
 package parser
 
 import (
+	"github.com/getgauge/gauge/util"
 	"bufio"
 	"fmt"
 	"regexp"
@@ -520,9 +521,13 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.AddComment(&gauge.Comment{token.LineText, token.LineNo})
 			}
 		} else {
-			tableValues, warnings := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
-			spec.DataTable.Table.AddRowValues(tableValues)
-			result = ParseResult{Ok: true, Warnings: warnings}
+			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			if len(err) >0 {
+				result = ParseResult{Ok: false, Warnings: warnings,ParseErrors: err}
+			} else {
+				spec.DataTable.Table.AddRowValues(tableValues)
+				result = ParseResult{Ok: true, Warnings: warnings}
+			}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope, tableSeparatorScope)
 		return result
@@ -727,21 +732,29 @@ func addInlineTableHeader(step *gauge.Step, token *Token) {
 }
 
 func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLookup, fileName string) ParseResult {
-	tableValues, warnings := validateTableRows(token, argLookup, fileName)
+	tableValues, warnings,err := validateTableRows(token, argLookup, fileName)
+	if len(err) > 0 {
+		return ParseResult{Ok:false,Warnings:warnings, ParseErrors: err}
+	}
 	step.AddInlineTableRow(tableValues)
 	return ParseResult{Ok: true, Warnings: warnings}
 }
 
-func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string) ([]gauge.TableCell, []*Warning) {
+func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string) ([]gauge.TableCell, []*Warning, []ParseError) {
 	dynamicArgMatcher := regexp.MustCompile("^<(.*)>$")
 	specialArgMatcher := regexp.MustCompile("^<(file:.*)>$")
 	tableValues := make([]gauge.TableCell, 0)
 	warnings := make([]*Warning, 0)
+	error := make([]ParseError, 0)
 	for _, tableValue := range token.Args {
 		if specialArgMatcher.MatchString(tableValue) {
 			match := specialArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
+			file :=  strings.TrimSpace(strings.TrimPrefix(param,"file:"))
 			tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
+			if _, err := util.GetFileContents(file); err !=nil {
+				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param,file),LineText:token.LineText})
+			}
 		} else if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
@@ -755,7 +768,7 @@ func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string
 			tableValues = append(tableValues, gauge.TableCell{Value: tableValue, CellType: gauge.Static})
 		}
 	}
-	return tableValues, warnings
+	return tableValues, warnings, error
 }
 
 func ConvertToStepText(fragments []*gauge_messages.Fragment) string {

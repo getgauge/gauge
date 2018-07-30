@@ -29,9 +29,6 @@ if [[ -z $GOBIN ]]; then
 fi
 
 cd $GOPATH/src/github.com/getgauge/gauge
-
-go get github.com/tools/godep && $GOBIN/godep restore
-
 set -e
 
 function err () {

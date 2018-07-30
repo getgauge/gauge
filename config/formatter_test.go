@@ -18,7 +18,6 @@
 package config
 
 import (
-	"reflect"
 	"sort"
 	"strings"
 	"testing"
@@ -26,13 +25,14 @@ import (
 
 func TestJSONFormatter(t *testing.T) {
 	want := []string{
-		"--------------------------------------------------------------------",
+		"-------------------------------------------------------------------",
 		"Key                           	Value                              ",
 		"check_updates                 	true                               ",
 		"gauge_repository_url          	https://downloads.gauge.org/plugin ",
+		"gauge_telemetry_action_recorded	false                              ",
 		"gauge_telemetry_enabled       	true                               ",
 		"gauge_telemetry_log_enabled   	false                              ",
-		"gauge_templates_url           	https://downloads.gauge.org/templates",
+		"gauge_templates_url           	https://templates.gauge.org        ",
 		"gauge_update_url              	https://downloads.gauge.org/gauge  ",
 		"ide_request_timeout           	30000                              ",
 		"plugin_connection_timeout     	10000                              ",
@@ -49,12 +49,19 @@ func TestJSONFormatter(t *testing.T) {
 	f := &textFormatter{}
 	text, err := f.format(properties)
 
+	t.Log(text)
 	if err != nil {
 		t.Errorf("Expected error == nil when using text formatter for properties, got %s", err.Error())
 	}
 	got := strings.Split(text, "\n")
 	sort.Strings(got)
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Properties text Format failed\nwant: `%s`\ngot: `%s`", want, got)
+
+	if len(got) != len(want) {
+		t.Errorf("Expected %d entries, got %d", len(want), len(got))
+	}
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Properties text Format failed\nwant: `%s`\ngot: `%s`", x, got[i])
+		}
 	}
 }

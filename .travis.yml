@@ -3,7 +3,7 @@ os:
   - osx
 language: go
 go:
-  - 1.9
+  - "1.10"
 addons:
   apt:
     packages:
@@ -12,9 +12,6 @@ env:
   - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
-install:
-  - go get github.com/tools/godep
-  - godep restore
 script:
   - go run build/make.go
   - go run build/make.go --test

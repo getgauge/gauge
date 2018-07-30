@@ -44,11 +44,6 @@ if ("$env:GOBIN" -eq "") {
 
 Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
 
-go get github.com/tools/godep 
-& "$env:GOBIN\godep.exe" "restore"
-
-checkLasterror
-
 switch ($task) {
     "test" { 
         test

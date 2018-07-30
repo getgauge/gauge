@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/getgauge/gauge/config"
@@ -39,10 +40,19 @@ const (
 	machineReadableDefault = false
 	gaugeVersionDefault    = false
 
-	logLevelName        = "log-level"
-	dirName             = "dir"
-	machineReadableName = "machine-readable"
-	gaugeVersionName    = "version"
+	logLevelName          = "log-level"
+	dirName               = "dir"
+	machineReadableName   = "machine-readable"
+	gaugeVersionName      = "version"
+	gaugeTelemetryMessage = `
+Telemetry
+---------
+This installation of Gauge collects usage data in order to help us improve your experience.
+The data is anonymous and doesn't include command-line arguments.
+To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
+
+Read more about Gauge telemetry at https://gauge.org/telemetry
+	`
 )
 
 var (
@@ -68,12 +78,19 @@ var (
 			setGlobalFlags()
 			initPackageFlags()
 		},
+		PersistentPostRun: notifyTelemetryIfNeeded,
 	}
 	logLevel        string
 	dir             string
 	machineReadable bool
 	gaugeVersion    bool
 )
+
+func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
+	if !config.TelemetryConsent() {
+		fmt.Println(gaugeTelemetryMessage)
+	}
+}
 
 func initLogger(n string) {
 	if lsp {

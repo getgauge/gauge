@@ -45,8 +45,8 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	if !stepResult.GetFailed() {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep, ExecuteStepRequest: stepRequest}
 		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
-		messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, stepExecutionStatus.Message...)
-		stepExecutionStatus.Message = messages
+		stepExecutionStatus.Message = append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, stepExecutionStatus.Message...)
+		stepExecutionStatus.ScreenShot = append(stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot, stepExecutionStatus.ScreenShot...)
 		if stepExecutionStatus.GetFailed() {
 			e.currentExecutionInfo.CurrentStep.ErrorMessage = stepExecutionStatus.GetErrorMessage()
 			e.currentExecutionInfo.CurrentStep.StackTrace = stepExecutionStatus.GetStackTrace()
@@ -76,6 +76,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, stepResult, e.runner)
 	stepResult.ProtoStep.PreHookMessages = res.Message
+	stepResult.ProtoStep.PreHookScreenshots = res.ScreenShot
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPreHook)
@@ -89,8 +90,8 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	}
 
 	res := executeHook(m, stepResult, e.runner)
-	messages := append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
-	stepResult.ProtoStep.PostHookMessages = messages
+	stepResult.ProtoStep.PostHookMessages = append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
+	stepResult.ProtoStep.PostHookScreenshots = append(stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot, res.ScreenShot...)
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
