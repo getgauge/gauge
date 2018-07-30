@@ -44,7 +44,8 @@ const (
 	dirName               = "dir"
 	machineReadableName   = "machine-readable"
 	gaugeVersionName      = "version"
-	gaugeTelemetryMessage = `Telemetry
+	gaugeTelemetryMessage = `
+Telemetry
 ---------
 This installation of Gauge collects usage data in order to help us improve your experience.
 The data is anonymous and doesn't include command-line arguments.
