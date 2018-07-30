@@ -45,12 +45,12 @@ const (
 	machineReadableName   = "machine-readable"
 	gaugeVersionName      = "version"
 	gaugeTelemetryMessage = `Telemetry
-	---------
-	This installation of Gauge collects usage data in order to help us improve your experience.
-	The data is anonymous and doesn't include command-line arguments.
-	To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
+---------
+This installation of Gauge collects usage data in order to help us improve your experience.
+The data is anonymous and doesn't include command-line arguments.
+To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
 
-	Read more about Gauge telemetry at https://gauge.org/telemetry
+Read more about Gauge telemetry at https://gauge.org/telemetry
 	`
 )
 
