@@ -179,11 +179,11 @@ func write(stdout bool, msg string, args ...interface{}) {
 }
 
 // Initialize initializes the logger object
-func Initialize(machineReadable bool, logLevel string, c channel) {
+func Initialize(isMachineReadable bool, logLevel string, c channel) {
 	initialized = true
 	level = loggingLevel(logLevel)
 	activeLogger = logger(c)
-	machineReadable = machineReadable
+	machineReadable = isMachineReadable
 }
 
 func logger(c channel) *logging.Logger {
