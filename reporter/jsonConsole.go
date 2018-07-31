@@ -236,7 +236,7 @@ func (c *jsonConsole) Write(b []byte) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	fmt.Fprintf(c.writer, string(t))
+	fmt.Fprintf(c.writer, "%s\n", string(t))
 	return len(b), nil
 }
 

@@ -41,7 +41,7 @@ var (
 				exit(fmt.Errorf("Missing argument <template name>. To see all the templates, run 'gauge list-templates'"), cmd.UsageString())
 			}
 			track.ProjectInit(args[0])
-			projectInit.InitializeProject(args[0])
+			projectInit.InitializeProject(args[0], machineReadable)
 		},
 		DisableAutoGenTag: true,
 	}

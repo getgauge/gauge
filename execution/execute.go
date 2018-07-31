@@ -128,7 +128,7 @@ func ExecuteSpecs(specDirs []string) int {
 		i.BufferUpdateDetails()
 		defer i.PrintUpdateBuffer()
 	}
-	skel.SetupPlugins()
+	skel.SetupPlugins(MachineReadable)
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
 		return 1
@@ -252,8 +252,10 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 
 	s := statusJSON(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	if MachineReadable {
-		logger.Info(true, s)
-		logger.Info(true, fmt.Sprintf("{\"time\" : \"%s\" }", time.Millisecond*time.Duration(suiteResult.ExecutionTime)))
+		// rather than printing a string status, print parseable json results.
+		// logger.Infof tries to convert json into another json (when machine-readable), which is ugly
+		fmt.Println(s)
+		fmt.Printf("{\"time\" : \"%s\" }\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 	} else {
 		logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
 		logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
