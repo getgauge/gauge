@@ -32,7 +32,7 @@ import (
 )
 
 func TestLoggerInitWithInfoLevel(t *testing.T) {
-	Initialize("info", CLI)
+	Initialize(false, "info", CLI)
 
 	if !activeLogger.IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for INFO")
@@ -40,7 +40,7 @@ func TestLoggerInitWithInfoLevel(t *testing.T) {
 }
 
 func TestLoggerInitWithDefaultLevel(t *testing.T) {
-	Initialize("", CLI)
+	Initialize(false, "", CLI)
 
 	if !activeLogger.IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for default log level")
@@ -48,7 +48,7 @@ func TestLoggerInitWithDefaultLevel(t *testing.T) {
 }
 
 func TestLoggerInitWithDebugLevel(t *testing.T) {
-	Initialize("debug", CLI)
+	Initialize(false, "debug", CLI)
 
 	if !activeLogger.IsEnabledFor(logging.DEBUG) {
 		t.Error("Expected gaugeLog to be enabled for DEBUG")
@@ -56,7 +56,7 @@ func TestLoggerInitWithDebugLevel(t *testing.T) {
 }
 
 func TestLoggerInitWithWarningLevel(t *testing.T) {
-	Initialize("warning", CLI)
+	Initialize(false, "warning", CLI)
 
 	if !activeLogger.IsEnabledFor(logging.WARNING) {
 		t.Error("Expected gaugeLog to be enabled for WARNING")
@@ -64,7 +64,7 @@ func TestLoggerInitWithWarningLevel(t *testing.T) {
 }
 
 func TestLoggerInitWithErrorLevel(t *testing.T) {
-	Initialize("error", CLI)
+	Initialize(false, "error", CLI)
 
 	if !activeLogger.IsEnabledFor(logging.ERROR) {
 		t.Error("Expected gaugeLog to be enabled for ERROR")

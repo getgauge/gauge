@@ -72,6 +72,7 @@ var (
 			if err := config.UpdateTelemetry("true"); err != nil {
 				logger.Fatalf(true, err.Error())
 			}
+			config.RecordTelemetryConsentSet()
 		},
 		DisableAutoGenTag: true,
 	}
@@ -85,6 +86,7 @@ var (
 			if err := config.UpdateTelemetry("false"); err != nil {
 				logger.Fatalf(true, err.Error())
 			}
+			config.RecordTelemetryConsentSet()
 		},
 		DisableAutoGenTag: true,
 	}
