@@ -227,7 +227,7 @@ func (c *jsonConsole) Errorf(err string, args ...interface{}) {
 func (c *jsonConsole) Write(b []byte) (int, error) {
 	c.Lock()
 	defer c.Unlock()
-	fmt.Fprintf(c.writer, "{\"type\": \"out\", \"message\": \"%s\"}", b)
+	fmt.Fprintf(c.writer, "{\"type\": \"out\", \"message\": \"%s\"}\n", b)
 	return len(b), nil
 }
 

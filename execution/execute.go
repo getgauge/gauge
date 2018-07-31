@@ -77,6 +77,9 @@ var NumberOfExecutionStreams int
 // InParallel if true executes the specs in parallel else in serial.
 var InParallel bool
 
+// MachineReadable indicates that the output is in json format
+var MachineReadable bool
+
 type suiteExecutor interface {
 	run() *result.SuiteResult
 }
@@ -170,14 +173,14 @@ type executionStatus struct {
 }
 
 func (status *executionStatus) getJSON() (string, error) {
-	j, err := json.MarshalIndent(status, "", "\t")
+	j, err := json.Marshal(status)
 	if err != nil {
 		return "", err
 	}
 	return string(j), nil
 }
 
-func writeExecutionStatus(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) {
+func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) string {
 	executionStatus := &executionStatus{}
 	executionStatus.SpecsExecuted = executedSpecs
 	executionStatus.SpecsPassed = passedSpecs
@@ -187,16 +190,20 @@ func writeExecutionStatus(executedSpecs, passedSpecs, failedSpecs, skippedSpecs,
 	executionStatus.ScePassed = passedScenarios
 	executionStatus.SceFailed = failedScenarios
 	executionStatus.SceSkipped = skippedScenarios
-	contents, err := executionStatus.getJSON()
+	s, err := executionStatus.getJSON()
 	if err != nil {
 		logger.Fatalf(true, "Unable to parse execution status information : %v", err.Error())
 	}
+	return s
+}
+
+func writeExecutionStatus(content string) {
 	executionStatusFile := filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
-	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err = ioutil.WriteFile(executionStatusFile, []byte(contents), common.NewFilePermissions)
+	err := ioutil.WriteFile(executionStatusFile, []byte(content), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
 	}
@@ -243,11 +250,16 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 		nPassedScenarios = 0
 	}
 
-	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-
-	writeExecutionStatus(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	s := statusJSON(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	if MachineReadable {
+		logger.Info(true, s)
+		logger.Info(true, fmt.Sprintf("{\"time\" : \"%s\" }", time.Millisecond*time.Duration(suiteResult.ExecutionTime)))
+	} else {
+		logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+		logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+		logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	}
+	writeExecutionStatus(s)
 
 	if suiteResult.IsFailed || !isParsingOk {
 		return 1

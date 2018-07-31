@@ -172,6 +172,7 @@ func initPackageFlags() {
 	reporter.SimpleConsoleOutput = simpleConsole
 	reporter.Verbose = verbose
 	reporter.MachineReadable = machineReadable
+	execution.MachineReadable = machineReadable
 	execution.ExecuteTags = tags
 	execution.SetTableRows(rows)
 	validation.TableRows = rows
