@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/getgauge/gauge/execution/result"
@@ -227,7 +228,15 @@ func (c *jsonConsole) Errorf(err string, args ...interface{}) {
 func (c *jsonConsole) Write(b []byte) (int, error) {
 	c.Lock()
 	defer c.Unlock()
-	fmt.Fprintf(c.writer, "{\"type\": \"out\", \"message\": \"%s\"}\n", b)
+	type outMessage struct {
+		MessageType string `json:"type"`
+		Message     string `json:"message"`
+	}
+	t, err := json.Marshal(&outMessage{MessageType: "out", Message: strings.Trim(string(b), "\n ")})
+	if err != nil {
+		return 0, err
+	}
+	fmt.Fprintf(c.writer, "%s\n", string(t))
 	return len(b), nil
 }
 
