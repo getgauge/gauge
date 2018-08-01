@@ -24,9 +24,11 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/version"
 )
 
 type dummyFormatter struct {
@@ -98,11 +100,32 @@ func TestMergedProperties(t *testing.T) {
 	}
 }
 
-func TestPropertiesString(t *testing.T) {
-	propertiesContent := `# This file contains Gauge specific internal configurations. Do not delete
+var propertiesContent = "Version " + version.CurrentGaugeVersion.String() + `
+# This file contains Gauge specific internal configurations. Do not delete
+
+# Allow Gauge and its plugin updates to be notified.
+check_updates = true
+
+# Url to get plugin versions
+gauge_repository_url = https://downloads.gauge.org/plugin
+
+# Record user opt in/out for telemetry
+gauge_telemetry_action_recorded = false
+
+# Allow Gauge to collect anonymous usage statistics
+gauge_telemetry_enabled = true
+
+# Log request sent to Gauge telemetry engine
+gauge_telemetry_log_enabled = false
 
 # Url to get templates list
 gauge_templates_url = https://templates.gauge.org
+
+# Url for latest gauge version
+gauge_update_url = https://downloads.gauge.org/gauge
+
+# Timeout in milliseconds for requests from runner when invoked for ide.
+ide_request_timeout = 30000
 
 # Timeout in milliseconds for making a connection to plugins.
 plugin_connection_timeout = 10000
@@ -110,40 +133,85 @@ plugin_connection_timeout = 10000
 # Timeout in milliseconds for a plugin to stop after a kill message has been sent.
 plugin_kill_timeout = 4000
 
-# Timeout in milliseconds for requests from the language runner.
-runner_request_timeout = 30000
-
-# Timeout in milliseconds for requests from runner when invoked for ide.
-ide_request_timeout = 30000
-
-# Log request sent to Gauge telemetry engine
-gauge_telemetry_log_enabled = false
-
-# Url to get plugin versions
-gauge_repository_url = https://downloads.gauge.org/plugin
-
-# Url for latest gauge version
-gauge_update_url = https://downloads.gauge.org/gauge
-
 # Timeout in milliseconds for making a connection to the language runner.
 runner_connection_timeout = 30000
 
-# Allow Gauge and its plugin updates to be notified.
-check_updates = true
-
-# Allow Gauge to collect anonymous usage statistics
-gauge_telemetry_enabled = true
-
-# Record user opt in/out for telemetry
-gauge_telemetry_action_recorded = false
+# Timeout in milliseconds for requests from the language runner.
+runner_request_timeout = 30000
 `
-	want := strings.Split(propertiesContent, "\n")
-	sort.Strings(want)
 
-	got := strings.Split(Properties().String(), "\n")
+func TestPropertiesString(t *testing.T) {
+	want := strings.Split(propertiesContent, "\n\n")
 
-	sort.Strings(got)
-	if !reflect.DeepEqual(want, got) {
-		t.Errorf("Properties String failed\ngot: `%s`\nwant:`%s`", got, want)
+	got := strings.Split(Properties().String(), "\n\n")
+
+	if len(got) != len(want) {
+		t.Errorf("Expected %d properties, got %d", len(want), len(got))
 	}
+
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Expected property no %d = %s, got %s", i, x, got[i])
+		}
+	}
+}
+
+func TestPropertiesStringConcurrent(t *testing.T) {
+	want := strings.Split(propertiesContent, "\n\n")
+	var errors []error
+
+	writeFunc := func(wg *sync.WaitGroup) {
+		errors = append(errors, Merge())
+		wg.Done()
+	}
+
+	wg := &sync.WaitGroup{}
+
+	for i := 0; i < 1000; i++ {
+		wg.Add(1)
+		go writeFunc(wg)
+	}
+
+	wg.Wait()
+
+	for _, e := range errors {
+		if e != nil {
+			t.Error(e)
+		}
+	}
+
+	got := strings.Split(Properties().String(), "\n\n")
+
+	if len(got) != len(want) {
+		t.Errorf("Expected %d properties, got %d", len(want), len(got))
+	}
+
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Expected property no %d = %s, got %s", i, x, got[i])
+		}
+	}
+}
+
+func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
+	oldEnv := os.Getenv("GAUGE_HOME")
+	os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
+	propFile := filepath.Join("_testData", "config", "gauge.properties")
+	ioutil.WriteFile(propFile, []byte("Version 0.8.0"), common.NewFilePermissions)
+
+	err := Merge()
+	if err != nil {
+		t.Error(err)
+	}
+
+	want := version.FullVersion()
+	got, err := gaugeVersionInProperties()
+	if err != nil {
+		t.Error(err)
+	}
+	if got.String() != want {
+		t.Errorf("Expected Gauge Version in gauge.properties %s, got %s", want, got)
+	}
+	os.Setenv("GAUGE_HOME", oldEnv)
+	os.Remove(propFile)
 }
