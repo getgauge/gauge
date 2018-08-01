@@ -58,6 +58,12 @@ To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge
 
 Read more about Gauge telemetry at https://gauge.org/telemetry
 `
+
+	// GaugeTelemetryLSPMessage is the message printed when user has not explicitly opted in/out
+	// of telemetry. Displayed only in LSP Client.
+	GaugeTelemetryLSPMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
+[Read more here](https://gauge.org/telemetry) about Gauge telemetry.
+Would you like to participate?`
 )
 
 var gaHTTPTransport = http.DefaultTransport
