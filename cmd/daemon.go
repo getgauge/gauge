@@ -63,6 +63,7 @@ var (
 			}
 			api.RunInBackground(port, specs)
 		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) { /* noop */ },
 		DisableAutoGenTag: true,
 	}
 	lsp bool
