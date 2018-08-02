@@ -29,7 +29,6 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
@@ -110,9 +109,6 @@ var (
 			if failed {
 				loadLastState(cmd)
 				return
-			}
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
 			}
 			execute(cmd, args)
 		},

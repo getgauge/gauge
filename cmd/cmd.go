@@ -22,6 +22,7 @@ import (
 	"os"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/logger"
@@ -74,6 +75,9 @@ var (
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
+			if e := env.LoadEnv(environment); e != nil {
+				logger.Fatalf(true, e.Error())
+			}
 			initLogger(cmd.Name())
 			setGlobalFlags()
 			initPackageFlags()
