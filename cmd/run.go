@@ -207,7 +207,7 @@ func handleFlags(cmd *cobra.Command) {
 
 func installMissingPlugins(flag bool) {
 	if flag {
-		install.AllPlugins()
+		install.AllPlugins(machineReadable)
 	}
 }
 
