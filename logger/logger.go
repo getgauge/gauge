@@ -57,6 +57,7 @@ var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}
 var isLSP bool
 var initialized bool
 var ActiveLogFile string
+var machineReadable bool
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Info(stdout bool, msg string) {
@@ -169,15 +170,20 @@ func getPluginVersions() string {
 
 func write(stdout bool, msg string, args ...interface{}) {
 	if !isLSP && stdout {
-		fmt.Println(fmt.Sprintf(msg, args...))
+		if machineReadable {
+			fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", fmt.Sprintf(msg, args...))
+		} else {
+			fmt.Println(fmt.Sprintf(msg, args...))
+		}
 	}
 }
 
 // Initialize initializes the logger object
-func Initialize(logLevel string, c channel) {
+func Initialize(isMachineReadable bool, logLevel string, c channel) {
 	initialized = true
 	level = loggingLevel(logLevel)
 	activeLogger = logger(c)
+	machineReadable = isMachineReadable
 }
 
 func logger(c channel) *logging.Logger {

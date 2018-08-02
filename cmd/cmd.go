@@ -20,6 +20,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -41,19 +42,20 @@ const (
 	machineReadableDefault = false
 	gaugeVersionDefault    = false
 
-	logLevelName          = "log-level"
-	dirName               = "dir"
-	machineReadableName   = "machine-readable"
-	gaugeVersionName      = "version"
-	gaugeTelemetryMessage = `
+	logLevelName                 = "log-level"
+	dirName                      = "dir"
+	machineReadableName          = "machine-readable"
+	gaugeVersionName             = "version"
+	gaugeTelemetryMessageHeading = `
 Telemetry
 ---------
-This installation of Gauge collects usage data in order to help us improve your experience.
+`
+	gaugeTelemetryMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
 The data is anonymous and doesn't include command-line arguments.
 To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
 
 Read more about Gauge telemetry at https://gauge.org/telemetry
-	`
+`
 )
 
 var (
@@ -92,17 +94,21 @@ var (
 
 func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 	if !config.TelemetryConsent() {
-		fmt.Println(gaugeTelemetryMessage)
+		if machineReadable {
+			fmt.Printf("{\"Telemetry\": \"%s\"}\n", strings.Replace(gaugeTelemetryMessage, "\n", "", -1))
+		} else {
+			fmt.Printf("%s\n%s\n", gaugeTelemetryMessageHeading, gaugeTelemetryMessage)
+		}
 	}
 }
 
 func initLogger(n string) {
 	if lsp {
-		logger.Initialize(logLevel, logger.LSP)
+		logger.Initialize(machineReadable, logLevel, logger.LSP)
 	} else if n == "daemon" {
-		logger.Initialize(logLevel, logger.API)
+		logger.Initialize(machineReadable, logLevel, logger.API)
 	} else {
-		logger.Initialize(logLevel, logger.CLI)
+		logger.Initialize(machineReadable, logLevel, logger.CLI)
 	}
 }
 
@@ -170,6 +176,7 @@ func initPackageFlags() {
 	reporter.SimpleConsoleOutput = simpleConsole
 	reporter.Verbose = verbose
 	reporter.MachineReadable = machineReadable
+	execution.MachineReadable = machineReadable
 	execution.ExecuteTags = tags
 	execution.SetTableRows(rows)
 	validation.TableRows = rows
