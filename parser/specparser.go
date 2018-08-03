@@ -18,11 +18,12 @@
 package parser
 
 import (
-	"github.com/getgauge/gauge/util"
 	"bufio"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/getgauge/gauge/util"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
@@ -52,6 +53,7 @@ const (
 	conceptScope        = 1 << iota
 	keywordScope        = 1 << iota
 	tagsScope           = 1 << iota
+	newLineScope        = 1 << iota
 )
 
 func (parser *SpecParser) initialize() {
@@ -108,6 +110,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		}
 		trimmedLine := strings.TrimSpace(line)
 		if len(trimmedLine) == 0 {
+			addStates(&parser.currentState, newLineScope)
 			if newToken != nil && newToken.Kind == gauge.StepKind {
 				newToken.Suffix = "\n"
 				continue
@@ -120,11 +123,11 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		} else if parser.isSpecUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.Kind = gauge.SpecKind
-			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
+			parser.discardLastToken()
 		} else if parser.isScenarioUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.Kind = gauge.ScenarioKind
-			parser.tokens = append(parser.tokens[:len(parser.tokens)-1])
+			parser.discardLastToken()
 		} else if parser.isStep(trimmedLine) {
 			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
@@ -144,6 +147,10 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
 		} else if parser.isTearDown(trimmedLine) {
 			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
+		} else if newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
+			v := fmt.Sprintf("%s %s", newToken.LineText, trimmedLine)
+			newToken = &Token{Kind: gauge.StepKind, LineNo: newToken.LineNo, LineText: strings.TrimSpace(v), Value: strings.TrimSpace(v)}
+			parser.discardLastToken()
 		} else {
 			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
@@ -155,9 +162,8 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
 	if isInState(parser.currentState, state) {
 		return matchingToken
-	} else {
-		return alternateToken
 	}
+	return alternateToken
 }
 
 func (parser *SpecParser) checkTag(text string) (bool, int) {
@@ -259,6 +265,13 @@ func (parser *SpecParser) nextLine() (string, bool, error) {
 
 func (parser *SpecParser) clearState() {
 	parser.currentState = 0
+}
+
+func (parser *SpecParser) discardLastToken() {
+	if len(parser.tokens) < 1 {
+		return
+	}
+	parser.tokens = parser.tokens[:len(parser.tokens)-1]
 }
 
 // CreateSpecification creates specification from the given set of tokens.
@@ -522,8 +535,8 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else {
 			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
-			if len(err) >0 {
-				result = ParseResult{Ok: false, Warnings: warnings,ParseErrors: err}
+			if len(err) > 0 {
+				result = ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 			} else {
 				spec.DataTable.Table.AddRowValues(tableValues)
 				result = ParseResult{Ok: true, Warnings: warnings}
@@ -732,9 +745,9 @@ func addInlineTableHeader(step *gauge.Step, token *Token) {
 }
 
 func addInlineTableRow(step *gauge.Step, token *Token, argLookup *gauge.ArgLookup, fileName string) ParseResult {
-	tableValues, warnings,err := validateTableRows(token, argLookup, fileName)
+	tableValues, warnings, err := validateTableRows(token, argLookup, fileName)
 	if len(err) > 0 {
-		return ParseResult{Ok:false,Warnings:warnings, ParseErrors: err}
+		return ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 	}
 	step.AddInlineTableRow(tableValues)
 	return ParseResult{Ok: true, Warnings: warnings}
@@ -750,10 +763,10 @@ func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string
 		if specialArgMatcher.MatchString(tableValue) {
 			match := specialArgMatcher.FindAllStringSubmatch(tableValue, -1)
 			param := match[0][1]
-			file :=  strings.TrimSpace(strings.TrimPrefix(param,"file:"))
+			file := strings.TrimSpace(strings.TrimPrefix(param, "file:"))
 			tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
-			if _, err := util.GetFileContents(file); err !=nil {
-				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param,file),LineText:token.LineText})
+			if _, err := util.GetFileContents(file); err != nil {
+				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param, file), LineText: token.LineText})
 			}
 		} else if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
