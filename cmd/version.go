@@ -23,6 +23,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/getgauge/gauge/track"
+
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/spf13/cobra"
@@ -38,6 +40,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			printVersion()
 		},
+		PersistentPostRun: func(cmd *cobra.Command, args []string) { /* noop */ },
 		DisableAutoGenTag: true,
 	}
 )
@@ -60,11 +63,12 @@ func printJSONVersion() {
 		Version string `json:"version"`
 	}
 	type versionJSON struct {
-		Version    string        `json:"version"`
-		CommitHash string        `json:"commitHash"`
-		Plugins    []*pluginJSON `json:"plugins"`
+		Version          string        `json:"version"`
+		CommitHash       string        `json:"commitHash"`
+		Plugins          []*pluginJSON `json:"plugins"`
+		TelemetryMessage string        `json:"telemetry"`
 	}
-	gaugeVersion := versionJSON{version.FullVersion(), version.GetCommitHash(), make([]*pluginJSON, 0)}
+	gaugeVersion := versionJSON{version.FullVersion(), version.GetCommitHash(), make([]*pluginJSON, 0), track.GaugeTelemetryMessage}
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
