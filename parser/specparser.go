@@ -103,6 +103,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 	parser.currentState = initial
 	var errors []ParseError
 	var newToken *Token
+	var lastTokenErrorCount int
 	for line, hasLine, err := parser.nextLine(); hasLine; line, hasLine, err = parser.nextLine() {
 		if err != nil {
 			errors = append(errors, ParseError{Message: err.Error()})
@@ -150,11 +151,14 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		} else if newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
 			v := fmt.Sprintf("%s %s", newToken.LineText, trimmedLine)
 			newToken = &Token{Kind: gauge.StepKind, LineNo: newToken.LineNo, LineText: strings.TrimSpace(v), Value: strings.TrimSpace(v)}
+			errors = errors[:lastTokenErrorCount]
 			parser.discardLastToken()
 		} else {
 			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
 		}
-		errors = append(errors, parser.accept(newToken, fileName)...)
+		pErrs := parser.accept(newToken, fileName)
+		lastTokenErrorCount = len(pErrs)
+		errors = append(errors, pErrs...)
 	}
 	return parser.tokens, errors
 }
