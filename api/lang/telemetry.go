@@ -43,7 +43,7 @@ func notifyTelemetry(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 	}
 	err := conn.Call(ctx, "window/showMessageRequest", params, &result)
 
-	if err != nil {
+	if err != nil || result.Title == "" {
 		return
 	}
 	config.UpdateTelemetry(fmt.Sprintf("%t", result.Title != "No"))
