@@ -90,8 +90,8 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	}
 
 	res := executeHook(m, stepResult, e.runner)
-	stepResult.ProtoStep.PostHookMessages = append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, res.Message...)
-	stepResult.ProtoStep.PostHookScreenshots = append(stepResult.ProtoStepExecResult().GetExecutionResult().ScreenShot, res.ScreenShot...)
+	stepResult.ProtoStep.PostHookMessages = res.Message
+	stepResult.ProtoStep.PostHookScreenshots = res.ScreenShot
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
