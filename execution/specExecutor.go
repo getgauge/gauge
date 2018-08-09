@@ -244,7 +244,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PreHookMessages = res.Message
-	e.specResult.ProtoSpec.PreHookScreenshots = res.ScreenShot
+	e.specResult.ProtoSpec.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook)
@@ -257,7 +257,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PostHookMessages = res.Message
-	e.specResult.ProtoSpec.PostHookScreenshots = res.ScreenShot
+	e.specResult.ProtoSpec.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook)
