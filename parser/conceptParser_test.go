@@ -703,6 +703,7 @@ func (s *MySuite) TestConceptParserShouldNotAddTableAsArgIfCommentsArePresentBet
 	conceptText := SpecBuilder().
 		specHeading("create user").
 		step("a step").
+		text("").
 		text("adasdasd\n\n").
 		text("|sdfsdf|").
 		text("|----|").
