@@ -163,11 +163,12 @@ func (s *MySuite) TestLoadMultipleEnvEnsureFirstOneDecides(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	e := LoadEnv("foo, bar")
+	e := LoadEnv("bar, default")
 
 	c.Assert(e, Equals, nil)
-	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
-	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
 }
 
 func (s *MySuite) TestEnvPropertyIsSet(c *C) {
