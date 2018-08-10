@@ -55,6 +55,7 @@ func LoadEnv(envName string) error {
 
 	envVars = make(map[string]string)
 
+	defaultEnvLoaded := false
 	for _, currentEnv := range allEnvs {
 		currentEnv = strings.TrimSpace(currentEnv)
 
@@ -63,11 +64,15 @@ func LoadEnv(envName string) error {
 			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
 
-		if currentEnv != "default" {
-			err := loadEnvDir("default")
-			if err != nil {
-				return fmt.Errorf("Failed to load env. %s", err.Error())
-			}
+		if currentEnv == "default" {
+			defaultEnvLoaded = true
+		}
+	}
+
+	if !defaultEnvLoaded {
+		err := loadEnvDir("default")
+		if err != nil {
+			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
 	}
 
