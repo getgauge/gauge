@@ -494,6 +494,7 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 		scenarioHeading("First flow").
 		tags("tag1", "tag2").
 		step("first with \"fpp\" and <bar>").
+		text("").
 		text("Comment in scenario").
 		step("<table:file.csv> and <another> with \"foo\"").
 		scenarioHeading("First flow").
@@ -532,7 +533,7 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 }
 
-func (s *MySuite) TestParsingMultilineStep(c *C) {
+func (s *MySuite) TestParsingStepWIthNewlineAndTableParam(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().
 		step("step1").
@@ -548,6 +549,55 @@ func (s *MySuite) TestParsingMultilineStep(c *C) {
 
 	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
+}
+
+func (s *MySuite) TestParsingMultilineStep(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().
+		step("step1").
+		text("second line").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[0].Value, Equals, "step1 second line")
+}
+
+func (s *MySuite) TestParsingMultilineStepWithParams(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().
+		step("step1").
+		text("second line \"foo\"").
+		text("third line <bar>").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[0].Value, Equals, "step1 second line {static} third line {dynamic}")
+	c.Assert(len(tokens[0].Args), Equals, 2)
+}
+
+func (s *MySuite) TestParsingMultilineStepWithTableParam(c *C) {
+	parser := new(SpecParser)
+	specText := SpecBuilder().
+		step("step1").
+		text("second line").
+		text("").
+		tableHeader("foo|bar").
+		tableRow("somerow|another").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 3)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
+	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
+
 }
 
 func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
@@ -1725,7 +1775,7 @@ func (s *MySuite) TestParsingDataTableWithSpecialString(c *C) {
 func (s *MySuite) TestTableForSpecialParameterWhenFileIsNotFound(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:notFound.txt>|").String()
-	
+
 	_, res := parser.ParseSpecText(specText, "")
 
 	c.Assert(res.Ok, Equals, false)
@@ -1736,9 +1786,9 @@ func (s *MySuite) TestTableForSpecialParameterWhenFileIsNotFound(c *C) {
 func (s *MySuite) TestDataTableForSpecialParameterWhenFileIsNotFound(c *C) {
 	parser := new(SpecParser)
 	specText := SpecBuilder().specHeading("Spec heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:notFound.txt>|").String()
-	
+
 	_, res := parser.ParseSpecText(specText, "")
-	
+
 	c.Assert(res.Ok, Equals, false)
 	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic param <file:notFound.txt> could not be resolved, Missing file: notFound.txt")
 	c.Assert(res.ParseErrors[0].LineText, Equals, "|james|<file:notFound.txt>|")

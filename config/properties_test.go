@@ -100,7 +100,7 @@ func TestMergedProperties(t *testing.T) {
 	}
 }
 
-var propertiesContent = "Version " + version.CurrentGaugeVersion.String() + `
+var propertiesContent = "# Version " + version.CurrentGaugeVersion.String() + `
 # This file contains Gauge specific internal configurations. Do not delete
 
 # Allow Gauge and its plugin updates to be notified.
@@ -158,10 +158,9 @@ func TestPropertiesString(t *testing.T) {
 
 func TestPropertiesStringConcurrent(t *testing.T) {
 	want := strings.Split(propertiesContent, "\n\n")
-	var errors []error
 
 	writeFunc := func(wg *sync.WaitGroup) {
-		errors = append(errors, Merge())
+		Merge()
 		wg.Done()
 	}
 
@@ -173,12 +172,6 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 	}
 
 	wg.Wait()
-
-	for _, e := range errors {
-		if e != nil {
-			t.Error(e)
-		}
-	}
 
 	got := strings.Split(Properties().String(), "\n\n")
 
@@ -197,7 +190,7 @@ func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	oldEnv := os.Getenv("GAUGE_HOME")
 	os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
 	propFile := filepath.Join("_testData", "config", "gauge.properties")
-	ioutil.WriteFile(propFile, []byte("Version 0.8.0"), common.NewFilePermissions)
+	ioutil.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
 
 	err := Merge()
 	if err != nil {
