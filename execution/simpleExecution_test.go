@@ -87,7 +87,7 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookScreenshots(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -118,7 +118,7 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
