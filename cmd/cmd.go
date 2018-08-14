@@ -18,9 +18,9 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
@@ -82,10 +82,30 @@ var (
 	gaugeVersion    bool
 )
 
+type notification struct {
+	Title   string `json:"title"`
+	Message string `json:"message"`
+	Type    string `json:"type"`
+}
+
+func (status *notification) getJSON() (string, error) {
+	j, err := json.Marshal(status)
+	if err != nil {
+		return "", err
+	}
+	return string(j), nil
+}
+
 func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 	if !gaugeVersion && !config.TelemetryConsent() {
 		if machineReadable {
-			fmt.Printf("{\"telemetry\": \"%s\"}\n", strings.Replace(track.GaugeTelemetryMessage, "\n", "", -1))
+			n := &notification{
+				Title:   "Gauge Telemetry",
+				Message: track.GaugeTelemetryMachineRedableMessage,
+				Type:    "info",
+			}
+			s, _ := n.getJSON()
+			fmt.Printf("{\"type\":\"notification\",\"notification\":%s}\n", s)
 		} else {
 			fmt.Printf("%s\n%s\n", track.GaugeTelemetryMessageHeading, track.GaugeTelemetryMessage)
 		}

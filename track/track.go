@@ -58,6 +58,10 @@ To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge
 
 Read more about Gauge telemetry at https://gauge.org/telemetry
 `
+	// GaugeTelemetryMachineRedableMessage is the message printed when user has not explicitly opted in/out
+	// of telemetry. Printed only in CLI.
+	GaugeTelemetryMachineRedableMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
+<a href="https://gauge.org/telemetry">Read more here</a> about Gauge telemetry.`
 
 	// GaugeTelemetryLSPMessage is the message printed when user has not explicitly opted in/out
 	// of telemetry. Displayed only in LSP Client.
