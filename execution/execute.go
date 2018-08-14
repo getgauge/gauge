@@ -162,14 +162,15 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 }
 
 type executionStatus struct {
-	SpecsExecuted int `json:"specsExecuted"`
-	SpecsPassed   int `json:"specsPassed"`
-	SpecsFailed   int `json:"specsFailed"`
-	SpecsSkipped  int `json:"specsSkipped"`
-	SceExecuted   int `json:"sceExecuted"`
-	ScePassed     int `json:"scePassed"`
-	SceFailed     int `json:"sceFailed"`
-	SceSkipped    int `json:"sceSkipped"`
+	Type          string `json:"type"`
+	SpecsExecuted int    `json:"specsExecuted"`
+	SpecsPassed   int    `json:"specsPassed"`
+	SpecsFailed   int    `json:"specsFailed"`
+	SpecsSkipped  int    `json:"specsSkipped"`
+	SceExecuted   int    `json:"sceExecuted"`
+	ScePassed     int    `json:"scePassed"`
+	SceFailed     int    `json:"sceFailed"`
+	SceSkipped    int    `json:"sceSkipped"`
 }
 
 func (status *executionStatus) getJSON() (string, error) {
@@ -182,6 +183,7 @@ func (status *executionStatus) getJSON() (string, error) {
 
 func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) string {
 	executionStatus := &executionStatus{}
+	executionStatus.Type = "out"
 	executionStatus.SpecsExecuted = executedSpecs
 	executionStatus.SpecsPassed = passedSpecs
 	executionStatus.SpecsFailed = failedSpecs
@@ -255,7 +257,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 		// rather than printing a string status, print parseable json results.
 		// logger.Infof tries to convert json into another json (when machine-readable), which is ugly
 		fmt.Println(s)
-		fmt.Printf("{\"time\" : \"%s\" }\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+		fmt.Printf("{\"type\":\"out\", \"time\" : \"%s\" }\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 	} else {
 		logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
 		logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
