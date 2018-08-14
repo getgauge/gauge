@@ -188,8 +188,8 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 	got := createSpecsForTableRows(spec, spec.Scenarios, gauge.NewBuildErrors())
 
 	if !reflect.DeepEqual(want, got) {
-		gotJson, _ := json.Marshal(got)
-		wantJson, _ := json.Marshal(want)
-		t.Errorf("Failed: Create specs for table row.\n\tWanted: %v\n\tGot: %v", string(wantJson), string(gotJson))
+		gotJSON, _ := json.Marshal(got)
+		wantJSON, _ := json.Marshal(want)
+		t.Errorf("Failed: Create specs for table row.\n\tWanted: %v\n\tGot: %v", string(wantJSON), string(gotJSON))
 	}
 }
