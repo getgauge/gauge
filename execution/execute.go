@@ -118,7 +118,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 
 // ExecuteSpecs : Check for updates, validates the specs (by invoking the respective language runners), initiates the registry which is needed for console reporting, execution API and Rerunning of specs
 // and finally saves the execution result as binary in .gauge folder.
-func ExecuteSpecs(specDirs []string) int {
+var ExecuteSpecs = func(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
 		logger.Fatalf(true, err.Error())

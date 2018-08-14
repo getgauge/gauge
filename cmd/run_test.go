@@ -2,8 +2,11 @@ package cmd
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/getgauge/gauge/execution"
 
 	"github.com/spf13/pflag"
 
@@ -179,16 +182,55 @@ func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
 	args := []string{}
 	var flags = pflag.FlagSet{}
 
-	flags.StringP("log-level","l","info","")
+	flags.StringP("log-level", "l", "info", "")
 	flags.Set("log-level", "debug")
 
 	flags.BoolP("repeat", "r", false, "")
 	flags.Set("repeat", "true")
 	repeat = true
-	
+
 	err := handleConflictingParams(&flags, args)
 
 	if err != nil {
 		t.Errorf("Expected %v  Got %v", nil, err.Error())
 	}
+}
+
+func TestNoExitCodeShouldForceReturnZero(t *testing.T) {
+	installPlugins = false
+	// simulate failure
+	execution.ExecuteSpecs = func(s []string) int { return 1 }
+
+	os.Args = []string{"gauge", "run", "--no-exit-code", "specs"}
+
+	if os.Getenv("TEST_EXITS") == "1" {
+		runCmd.Execute()
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestNoExitCodeShouldForceReturnZero")
+	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0", err)
+	}
+}
+
+func TestFailureShouldReturnExitCode(t *testing.T) {
+	installPlugins = false
+	// simulate failure
+	execution.ExecuteSpecs = func(s []string) int { return 1 }
+
+	os.Args = []string{"gauge", "run", "specs"}
+
+	if os.Getenv("TEST_EXITS") == "1" {
+		runCmd.Execute()
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestFailureShouldReturnExitCode")
+	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
+		return
+	}
+	t.Fatalf("process ran with err %v, want exit status 0", err)
 }

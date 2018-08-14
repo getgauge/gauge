@@ -53,6 +53,7 @@ const (
 	rowsDefault           = ""
 	strategyDefault       = "lazy"
 	groupDefault          = -1
+	noExitCodeDefault     = false
 
 	verboseName        = "verbose"
 	simpleConsoleName  = "simple-console"
@@ -67,6 +68,7 @@ const (
 	strategyName       = "strategy"
 	groupName          = "group"
 	streamsName        = "n"
+	noExitCodeName     = "no-exit-code"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
@@ -127,6 +129,7 @@ var (
 	strategy       string
 	streams        int
 	group          int
+	noExitCode     bool
 )
 
 func init() {
@@ -145,6 +148,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	runCmd.Flags().BoolVarP(&noExitCode, noExitCodeName, "", noExitCodeDefault, "Force return 0 exit code, even in case of failures.")
 }
 
 //This flag stores whether the command is gauge run --failed and if it is triggering another command.
@@ -214,6 +218,9 @@ func execute(cmd *cobra.Command, args []string) {
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
 	notifyTelemetryIfNeeded(cmd, args)
+	if noExitCode {
+		exitCode = 0
+	}
 	os.Exit(exitCode)
 }
 
