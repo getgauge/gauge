@@ -228,13 +228,11 @@ func (parser *SpecParser) isSpecUnderline(text string) bool {
 }
 
 func (parser *SpecParser) isDataTable(text string) (string, bool) {
-	lowerCased := strings.ToLower
-	tableColon := "table:"
-	tableSpaceColon := "table :"
-	if strings.HasPrefix(lowerCased(text), tableColon) {
-		return tableColon + " " + strings.TrimSpace(strings.Replace(lowerCased(text), tableColon, "", 1)), true
-	} else if strings.HasPrefix(lowerCased(text), tableSpaceColon) {
-		return tableColon + " " + strings.TrimSpace(strings.Replace(lowerCased(text), tableSpaceColon, "", 1)), true
+	if regexp.MustCompile(`^\s*[tT][aA][bB][lL][eE]\s*:(\s*)`).FindIndex([]byte(text)) != nil {
+		index := strings.Index(text, ":")
+		if index != -1 {
+			return "table:" + " " + strings.TrimSpace(strings.SplitAfterN(text, ":", 2)[1]), true
+		}
 	}
 	return "", false
 }
