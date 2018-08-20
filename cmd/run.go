@@ -106,6 +106,8 @@ var (
 			}
 			handleRepeatCommand(cmd, os.Args)
 			if repeat {
+				prevCmd := readPrevCmd()
+				executeCmd(cmd, prevCmd.Command)
 				return
 			}
 			if failed {
@@ -134,21 +136,22 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&verbose, verboseName, "v", verboseDefault, "Enable step level reporting on console, default being scenario level")
-	runCmd.Flags().BoolVarP(&simpleConsole, simpleConsoleName, "", simpleConsoleDefault, "Removes colouring and simplifies the console output")
-	runCmd.Flags().StringVarP(&environment, environmentName, "e", environmentDefault, "Specifies the environment to use")
-	runCmd.Flags().StringVarP(&tags, tagsName, "t", tagsDefault, "Executes the specs and scenarios tagged with given tags")
-	runCmd.Flags().StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
-	runCmd.Flags().BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
-	runCmd.Flags().IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
-	runCmd.Flags().IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
-	runCmd.Flags().StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
-	runCmd.Flags().BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
-	runCmd.Flags().BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
-	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
-	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
-	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
-	runCmd.Flags().BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of execution failures. Parse errors will return non-zero exit codes.")
+	f := runCmd.Flags()
+	f.BoolVarP(&verbose, verboseName, "v", verboseDefault, "Enable step level reporting on console, default being scenario level")
+	f.BoolVarP(&simpleConsole, simpleConsoleName, "", simpleConsoleDefault, "Removes colouring and simplifies the console output")
+	f.StringVarP(&environment, environmentName, "e", environmentDefault, "Specifies the environment to use")
+	f.StringVarP(&tags, tagsName, "t", tagsDefault, "Executes the specs and scenarios tagged with given tags")
+	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
+	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
+	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
+	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
+	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
+	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
+	f.BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
+	f.BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
+	f.BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
+	f.BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	f.BoolVarP(&noExitCode, noExitCodeName, "", noExitCodeDefault, "Force return 0 exit code, even in case of failures.")
 }
 
 //This flag stores whether the command is gauge run --failed and if it is triggering another command.
@@ -161,37 +164,23 @@ func loadLastState(cmd *cobra.Command) {
 	if err != nil {
 		exit(err, "")
 	}
-	logger.Infof(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
-	cmd.Parent().SetArgs(lastState)
-	os.Args = append([]string{"gauge"}, lastState...)
-	handleFlags(cmd)
+	logger.Debugf(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
+	handleFlags(cmd, append([]string{"gauge"}, lastState...))
 	prevFailed = true
 	cmd.Execute()
 }
 
 func resetFlags() {
-	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion, installPlugins =
-		verboseDefault, simpleConsoleDefault, failedDefault, repeatDefault, parallelDefault, sortDefault,
+	failed, repeat, parallel, sort, hideSuggestion, installPlugins =
+		failedDefault, repeatDefault, parallelDefault, sortDefault,
 		hideSuggestionDefault, installPluginsDefault
-	environment, tags, rows, strategy, logLevel, dir =
-		environmentDefault, tagsDefault, rowsDefault, strategyDefault, logLevelDefault, dirDefault
-	streams, group = streamsDefault, groupDefault
-}
-
-func getFlagsToOverride(cmd *cobra.Command) map[string]string {
-	flagResetMap := map[string]string{}
-	setFlags := cmd.Flags()
-	setFlags.Visit(func(flag *pflag.Flag) {
-		if util.ListContains(overrideRerunFlags, flag.Name) && flag.Value.String() != flag.DefValue {
-			flagResetMap[flag.Name] = flag.Value.String()
-		}
-	})
-	return flagResetMap
+	environment, tags, rows, strategy, streams, group =
+		environmentDefault, tagsDefault, rowsDefault, strategyDefault,
+		streamsDefault, groupDefault
 }
 
 func overrideFlags(cmd *cobra.Command, flagResetMap map[string]string) {
-	setFlags := cmd.Flags()
-	setFlags.VisitAll(func(flag *pflag.Flag) {
+	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
 		val, ok := flagResetMap[flag.Name]
 		if ok {
 			flag.Value.Set(val)
@@ -199,12 +188,44 @@ func overrideFlags(cmd *cobra.Command, flagResetMap map[string]string) {
 	})
 }
 
-func handleFlags(cmd *cobra.Command) {
-	flagResetMap := getFlagsToOverride(cmd)
+func handleFlags(cmd *cobra.Command, args []string) {
+	flagResetMap := map[string]string{}
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		if util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
+			flagResetMap[flag.Name] = flag.Value.String()
+		}
+	})
 	resetFlags()
 	overrideFlags(cmd, flagResetMap)
+
+	for i := 0; i < len(args)-1; i++ {
+		if !isFlag(args[i]) {
+			continue
+		}
+		f := lookupFlagFromArgs(cmd, args[i])
+		if f == nil {
+			continue
+		}
+		if v, ok := flagResetMap[f.Name]; ok {
+			args[i+1] = v
+		}
+	}
+	os.Args = args
 }
 
+func isFlag(f string) bool {
+	return strings.HasPrefix(f, "-")
+}
+
+func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
+	fName := strings.TrimLeft(arg, "-")
+	flags := cmd.Flags()
+	f := flags.Lookup(fName)
+	if f == nil && len(fName) == 1 {
+		f = flags.ShorthandLookup(fName)
+	}
+	return f
+}
 func installMissingPlugins(flag bool) {
 	if flag {
 		install.AllPlugins(machineReadable)
@@ -225,10 +246,7 @@ func execute(cmd *cobra.Command, args []string) {
 }
 
 func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
-	if repeat {
-		prevCmd := readPrevCmd()
-		executeCmd(cmd, prevCmd.Command)
-	} else {
+	if !repeat {
 		if prevFailed {
 			prevFailed = false
 			return
@@ -238,9 +256,8 @@ func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
 }
 
 var executeCmd = func(cmd *cobra.Command, lastState []string) {
-	cmd.Parent().SetArgs(lastState[1:])
-	os.Args = lastState
-	handleFlags(cmd)
+	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
+	handleFlags(cmd, lastState)
 	cmd.Execute()
 }
 
