@@ -131,15 +131,18 @@ var ExecuteSpecs = func(specDirs []string) int {
 	skel.SetupPlugins(MachineReadable)
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
-		return 1
+		if res.ParseOk {
+			return ParseFailed
+		}
+		return ValidationFailed
 	}
 	if res.SpecCollection.Size() < 1 {
 		logger.Infof(true, "No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
-			return 0
+			return Success
 		}
-		return 1
+		return ExecutionFailed
 	}
 	event.InitRegistry()
 	wg := &sync.WaitGroup{}
@@ -265,10 +268,13 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	}
 	writeExecutionStatus(s)
 
-	if suiteResult.IsFailed || !isParsingOk {
-		return 1
+	if !isParsingOk {
+		return ParseFailed
 	}
-	return 0
+	if suiteResult.IsFailed {
+		return ExecutionFailed
+	}
+	return Success
 }
 
 func validateFlags() error {

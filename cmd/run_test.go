@@ -162,7 +162,6 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 }
 
 func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
-	os.Args = []string{"gauge", "run", "-f"}
 	config.ProjectRoot = ""
 	currDir, _ := os.Getwd()
 	defer os.Chdir(currDir)
@@ -175,7 +174,14 @@ func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 		}
 		os.Exit(0)
 	}
-	runCmd.Execute()
+	if os.Getenv("TEST_EXITS") == "1" {
+		os.Args = []string{"gauge", "run", "-f"}
+		runCmd.Execute()
+		return
+	}
+	cmd := exec.Command(os.Args[0], "-test.run=TestHandleFailedCommandForNonGaugeProject")
+	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
+	cmd.Run()
 }
 
 func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
@@ -196,18 +202,17 @@ func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
 	}
 }
 
-func TestNoExitCodeShouldForceReturnZero(t *testing.T) {
+func TestFailSafeShouldForceReturnZero(t *testing.T) {
 	installPlugins = false
 	// simulate failure
-	execution.ExecuteSpecs = func(s []string) int { return 1 }
-
-	os.Args = []string{"gauge", "run", "--no-exit-code", "specs"}
+	execution.ExecuteSpecs = func(s []string) int { return execution.ExecutionFailed }
 
 	if os.Getenv("TEST_EXITS") == "1" {
+		os.Args = []string{"gauge", "run", "--fail-safe", "specs"}
 		runCmd.Execute()
 		return
 	}
-	cmd := exec.Command(os.Args[0], "-test.run=TestNoExitCodeShouldForceReturnZero")
+	cmd := exec.Command(os.Args[0], "-test.run=TestFailSafeShouldForceReturnZero")
 	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
 	err := cmd.Run()
 	if err != nil {
@@ -215,22 +220,40 @@ func TestNoExitCodeShouldForceReturnZero(t *testing.T) {
 	}
 }
 
-func TestFailureShouldReturnExitCode(t *testing.T) {
+func TestFailSafeShouldNotForceReturnZeroForParseErrors(t *testing.T) {
 	installPlugins = false
-	// simulate failure
-	execution.ExecuteSpecs = func(s []string) int { return 1 }
-
-	os.Args = []string{"gauge", "run", "specs"}
+	// simulate parse failure
+	execution.ExecuteSpecs = func(s []string) int { return execution.ParseFailed }
 
 	if os.Getenv("TEST_EXITS") == "1" {
+		os.Args = []string{"gauge", "run", "--fail-safe", "specs"}
 		runCmd.Execute()
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestFailSafeShouldNotForceReturnZeroForParseErrors")
+	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
+	err := cmd.Run()
+	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		return
 	}
+	t.Fatalf("process ran with err %v, want exit status 2", err)
+}
+
+func TestFailureShouldReturnExitCode(t *testing.T) {
+	installPlugins = false
+	// simulate execution failure
+	execution.ExecuteSpecs = func(s []string) int { return execution.ExecutionFailed }
+
+	if os.Getenv("TEST_EXITS") == "1" {
+		os.Args = []string{"gauge", "run", "specs"}
+		runCmd.Execute()
+	}
+
 	cmd := exec.Command(os.Args[0], "-test.run=TestFailureShouldReturnExitCode")
 	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		return
 	}
-	t.Fatalf("process ran with err %v, want exit status 0", err)
+	t.Fatalf("process ran with err %v, want exit status 1", err)
 }
