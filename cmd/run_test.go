@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/execution/rerun"
+
 	"github.com/getgauge/gauge/execution"
 
 	"github.com/spf13/pflag"
@@ -34,51 +36,77 @@ func TestMain(m *testing.M) {
 	os.Exit(runTests)
 }
 
-func TestHandleRepeatCommandForWriteCommandFlow(t *testing.T) {
+func TestSaveCommandArgs(t *testing.T) {
 	args := []string{"gauge", "run", "specs"}
-	cmd := &cobra.Command{}
 
-	handleRepeatCommand(cmd, args)
-	commandWritten := readPrevCmd()
-	if !reflect.DeepEqual(commandWritten.Command, args) {
-		t.Errorf("Expected %v  Got %v", args, commandWritten.Command)
+	writePrevArgs(args)
+
+	prevArgs := readPrevArgs()
+	if !reflect.DeepEqual(prevArgs, args) {
+		t.Errorf("Expected %v  Got %v", args, prevArgs)
 	}
 }
 
-func TestHandleRepeatCommandForRepeatCommandFlow(t *testing.T) {
+func TestExecuteWritesPrevCommandArgs(t *testing.T) {
 	args := []string{"gauge", "run", "specs"}
-	cmd := &cobra.Command{}
 
-	var execFlowFlag = false
-	executeCmd = func(cmd *cobra.Command, lastState []string) {
-		execFlowFlag = true
+	installPlugins = false
+	execution.ExecuteSpecs = func(s []string) int { return 0 }
+
+	if os.Getenv("TEST_EXITS") == "1" {
+		cmd := &cobra.Command{}
+		os.Args = args
+		execute(cmd, args)
+		return
 	}
-
-	handleRepeatCommand(cmd, args)
-
-	repeat = true
-	handleRepeatCommand(cmd, args)
-	if !execFlowFlag {
-		t.Errorf("Expected %v  Got %v", true, execFlowFlag)
+	cmd := exec.Command(os.Args[0], "-test.run=TestExecuteWritesPrevCommandArgs")
+	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0", err)
 	}
-	commandWritten := readPrevCmd()
-	if !reflect.DeepEqual(commandWritten.Command, args) {
-		t.Errorf("Expected %v  Got %v", args, commandWritten.Command)
+	prevArgs := readPrevArgs()
+	if !reflect.DeepEqual(prevArgs, args) {
+		t.Errorf("Expected %v  Got %v", args, prevArgs)
 	}
 }
 
-func TestHandleRepeatCommandForFailedCommandFlow(t *testing.T) {
-	args := []string{"gauge", "run", "specs"}
+func TestRepeatShouldPreservePreviousArgs(t *testing.T) {
 	cmd := &cobra.Command{}
 
-	handleRepeatCommand(cmd, args)
+	var called bool
+	writePrevArgs = func(x []string) {
+		called = true
+	}
+	repeatLastExecution(cmd)
 
-	prevFailed = true
-	args2 := []string{"something", "else"}
-	handleRepeatCommand(cmd, args2)
-	commandWritten := readPrevCmd()
-	if !reflect.DeepEqual(commandWritten.Command, args) {
-		t.Errorf("Expected %v  Got %v", args, commandWritten.Command)
+	if called {
+		t.Error("Unexpected call to writePrevArgs while repeat")
+	}
+}
+
+func TestSaveCommandArgsForFailed(t *testing.T) {
+	execution.ExecuteSpecs = func(s []string) int { return 0 }
+	rerun.GetLastState = func() ([]string, error) {
+		return []string{"run", "specs"}, nil
+	}
+	var args = []string{"gauge", "run", "--failed"}
+
+	if os.Getenv("TEST_EXITS") == "1" {
+		os.Args = args
+		executeFailed(runCmd)
+		return
+	}
+
+	cmd := exec.Command(os.Args[0], "-test.run=TestSaveCommandArgsForFailed")
+	cmd.Env = append(os.Environ(), []string{"TEST_EXITS=1", "GAUGE_PLUGIN_INSTALL=false"}...)
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0", err)
+	}
+	prevArgs := readPrevArgs()
+	if !reflect.DeepEqual(prevArgs, args) {
+		t.Errorf("Expected %v  Got %v", args, prevArgs)
 	}
 }
 
@@ -152,7 +180,7 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 	cmd.Flags().Set(repeatName, "true")
 	cmd.Flags().Set(verboseName, "true")
 
-	handleFlags(cmd)
+	handleFlags(cmd, []string{"--repeat", "--verbose"})
 	overridenFlagValue := cmd.Flag(verboseName).Value.String()
 	expectedFlag := "true"
 
@@ -181,7 +209,10 @@ func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 	}
 	cmd := exec.Command(os.Args[0], "-test.run=TestHandleFailedCommandForNonGaugeProject")
 	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
-	cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0", err)
+	}
 }
 
 func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
