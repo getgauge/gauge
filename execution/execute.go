@@ -256,16 +256,9 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	}
 
 	s := statusJSON(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	if MachineReadable {
-		// rather than printing a string status, print parseable json results.
-		// logger.Infof tries to convert json into another json (when machine-readable), which is ugly
-		fmt.Println(s)
-		fmt.Printf("{\"type\":\"out\", \"time\" : \"%s\" }\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-	} else {
-		logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-		logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-		logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-	}
+	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 	writeExecutionStatus(s)
 
 	if !isParsingOk {
