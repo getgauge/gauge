@@ -239,7 +239,7 @@ var repeatLastExecution = func(cmd *cobra.Command) {
 	cmd.Execute()
 }
 
-func readPrevArgs() []string {
+var readPrevArgs = func() []string {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
 	if err != nil {
 		logger.Fatalf(true, "Failed to read previous command information. Reason: %s", err.Error())
