@@ -313,11 +313,12 @@ func TestFailureShouldReturnExitCodeForParseErrors(t *testing.T) {
 		// simulate parse failure
 		execution.ExecuteSpecs = func(s []string) int { return execution.ParseFailed }
 
-		os.Args = []string{"gauge", "run", "specs"}
+		os.Args = []string{"gauge", "run", "--fail-safe", "specs"}
+		failSafe = true
 		runCmd.Execute()
 	}
 
-	cmd := exec.Command(os.Args[0], "-test.run=TestFailSafeShouldNotForceReturnZeroForParseErrors")
+	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = append(os.Environ(), "TEST_EXITS=1")
 	err := cmd.Run()
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
@@ -327,17 +328,14 @@ func TestFailureShouldReturnExitCodeForParseErrors(t *testing.T) {
 }
 
 func TestFailureShouldReturnExitCode(t *testing.T) {
-	installPlugins = false
-	// simulate execution failure
-	execution.ExecuteSpecs = func(s []string) int { return execution.ExecutionFailed }
-
 	if os.Getenv("TEST_EXITS") == "1" {
+		// simulate execution failure
+		execution.ExecuteSpecs = func(s []string) int { return execution.ExecutionFailed }
 		os.Args = []string{"gauge", "run", "specs"}
 		runCmd.Execute()
 	}
 
 	var stdout bytes.Buffer
-
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
@@ -345,7 +343,7 @@ func TestFailureShouldReturnExitCode(t *testing.T) {
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		return
 	}
-	t.Fatalf("process ran with err %v, want exit status 1", err)
+	t.Fatalf("process ran with err %v, want exit status 1. Stdout:\n%s", err, stdout.Bytes())
 }
 
 func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
