@@ -20,6 +20,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"strings"
 
@@ -88,7 +89,6 @@ var (
 				exit(err, cmd.UsageString())
 			}
 			if er := handleConflictingParams(cmd.Flags(), args); er != nil {
-				fmt.Print("error")
 				exit(er, "")
 			}
 			if repeat {
@@ -191,7 +191,11 @@ func handleFlags(cmd *cobra.Command, args []string) {
 			continue
 		}
 		if v, ok := flagResetMap[f.Name]; ok {
-			args[i+1] = v
+			_, err := strconv.ParseBool(v)
+			if err != nil {
+				args[i+1] = v
+				i = i + 1
+			}
 		}
 	}
 	os.Args = args
