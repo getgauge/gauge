@@ -154,55 +154,26 @@ func executeFailed(cmd *cobra.Command) {
 	cmd.Execute()
 }
 
-func resetFlags() {
-	failed, repeat, parallel, sort, hideSuggestion, installPlugins =
-		failedDefault, repeatDefault, parallelDefault, sortDefault,
-		hideSuggestionDefault, installPluginsDefault
-	environment, tags, rows, strategy, streams, group =
-		environmentDefault, tagsDefault, rowsDefault, strategyDefault,
-		streamsDefault, groupDefault
-}
-
-func overrideFlags(cmd *cobra.Command, flagResetMap map[string]string) {
-	cmd.Flags().VisitAll(func(flag *pflag.Flag) {
-		val, ok := flagResetMap[flag.Name]
-		if ok {
-			flag.Value.Set(val)
-		}
-	})
-}
-
 func handleFlags(cmd *cobra.Command, args []string) {
-	flagResetMap := map[string]string{}
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
-		if util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
-			flagResetMap[flag.Name] = flag.Value.String()
+		if !util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
+			flag.Value.Set(flag.DefValue)
 		}
 	})
-	resetFlags()
-	overrideFlags(cmd, flagResetMap)
 
 	for i := 0; i < len(args)-1; i++ {
-		if !isFlag(args[i]) {
-			continue
-		}
 		f := lookupFlagFromArgs(cmd, args[i])
 		if f == nil {
 			continue
 		}
-		if v, ok := flagResetMap[f.Name]; ok {
-			_, err := strconv.ParseBool(v)
-			if err != nil {
-				args[i+1] = v
-				i = i + 1
-			}
+		v := f.Value.String()
+		_, err := strconv.ParseBool(v)
+		if err != nil {
+			args[i+1] = v
+			i = i + 1
 		}
 	}
 	os.Args = args
-}
-
-func isFlag(f string) bool {
-	return strings.HasPrefix(f, "-")
 }
 
 func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
@@ -214,6 +185,7 @@ func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
 	}
 	return f
 }
+
 func installMissingPlugins(flag bool) {
 	if flag && os.Getenv("GAUGE_PLUGIN_INSTALL") != "false" {
 		install.AllPlugins(machineReadable)
