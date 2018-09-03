@@ -51,15 +51,25 @@ var currentEnv = "default"
 //
 // Finally, all the env vars present in the map are actually set in the shell.
 func LoadEnv(envName string) error {
-	envVars = make(map[string]string)
-	currentEnv = envName
+	allEnvs := strings.Split(envName, ",")
 
-	err := loadEnvDir(currentEnv)
-	if err != nil {
-		return fmt.Errorf("Failed to load env. %s", err.Error())
+	envVars = make(map[string]string)
+
+	defaultEnvLoaded := false
+	for _, currentEnv := range allEnvs {
+		currentEnv = strings.TrimSpace(currentEnv)
+
+		err := loadEnvDir(currentEnv)
+		if err != nil {
+			return fmt.Errorf("Failed to load env. %s", err.Error())
+		}
+
+		if currentEnv == "default" {
+			defaultEnvLoaded = true
+		}
 	}
 
-	if currentEnv != "default" {
+	if !defaultEnvLoaded {
 		err := loadEnvDir("default")
 		if err != nil {
 			return fmt.Errorf("Failed to load env. %s", err.Error())
@@ -68,7 +78,7 @@ func LoadEnv(envName string) error {
 
 	loadDefaultEnvVars()
 
-	err = substituteEnvVars()
+	err := substituteEnvVars()
 	if err != nil {
 		return fmt.Errorf("%s", err.Error())
 	}

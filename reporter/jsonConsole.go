@@ -232,11 +232,14 @@ func (c *jsonConsole) Write(b []byte) (int, error) {
 		MessageType string `json:"type"`
 		Message     string `json:"message"`
 	}
-	t, err := json.Marshal(&outMessage{MessageType: "out", Message: strings.Trim(string(b), "\n ")})
-	if err != nil {
-		return 0, err
+	s := strings.Split(string(b), "\n")
+	for _, m := range s {
+		t, err := json.Marshal(&outMessage{MessageType: "out", Message: strings.Trim(m, "\n ")})
+		if err != nil {
+			return 0, err
+		}
+		fmt.Fprintf(c.writer, "%s\n", string(t))
 	}
-	fmt.Fprintf(c.writer, "%s\n", string(t))
 	return len(b), nil
 }
 

@@ -150,7 +150,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
 	res := e.executeHook(m)
 	e.suiteResult.PreHookMessages = res.Message
-	e.suiteResult.PreHookScreenshots = res.ScreenShot
+	e.suiteResult.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
@@ -161,7 +161,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
 	e.suiteResult.PostHookMessages = res.Message
-	e.suiteResult.PostHookScreenshots = res.ScreenShot
+	e.suiteResult.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}

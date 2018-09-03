@@ -29,7 +29,6 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
@@ -54,6 +53,7 @@ const (
 	rowsDefault           = ""
 	strategyDefault       = "lazy"
 	groupDefault          = -1
+	failSafeDefault       = false
 
 	verboseName        = "verbose"
 	simpleConsoleName  = "simple-console"
@@ -68,6 +68,7 @@ const (
 	strategyName       = "strategy"
 	groupName          = "group"
 	streamsName        = "n"
+	failSafeName       = "fail-safe"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
@@ -111,9 +112,6 @@ var (
 				loadLastState(cmd)
 				return
 			}
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
-			}
 			execute(cmd, args)
 		},
 		DisableAutoGenTag: true,
@@ -131,6 +129,7 @@ var (
 	strategy       string
 	streams        int
 	group          int
+	failSafe       bool
 )
 
 func init() {
@@ -149,6 +148,7 @@ func init() {
 	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
 	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	runCmd.Flags().BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of execution failures. Parse errors will return non-zero exit codes.")
 }
 
 //This flag stores whether the command is gauge run --failed and if it is triggering another command.
@@ -218,6 +218,9 @@ func execute(cmd *cobra.Command, args []string) {
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
 	notifyTelemetryIfNeeded(cmd, args)
+	if failSafe && exitCode != execution.ParseFailed {
+		exitCode = 0
+	}
 	os.Exit(exitCode)
 }
 
