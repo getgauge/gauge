@@ -43,17 +43,17 @@ var (
 			if specsFlag {
 				logger.Info(true, "[Specifications]")
 				track.ListSpecifications()
-				listSpecifications(specs, print)
+				listSpecifications(specs, taggedWithFlag, print)
 			}
 			if scenariosFlag {
 				logger.Info(true, "[Scenarios]")
 				track.ListScenarios()
-				listScenarios(specs, print)
+				listScenarios(specs, taggedWithFlag, print)
 			}
 			if tagsFlag {
 				logger.Info(true, "[Tags]")
 				track.ListTags()
-				listTags(specs, print)
+				listTags(specs, taggedWithFlag, print)
 			}
 			if !specsFlag && !scenariosFlag && !tagsFlag {
 				exit(fmt.Errorf("Missing flag, nothing to list"), cmd.UsageString())
@@ -61,9 +61,10 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	tagsFlag      bool
-	specsFlag     bool
-	scenariosFlag bool
+	tagsFlag       bool
+	specsFlag      bool
+	scenariosFlag  bool
+	taggedWithFlag string
 )
 
 func init() {
@@ -71,6 +72,7 @@ func init() {
 	listCmd.Flags().BoolVarP(&tagsFlag, "tags", "", false, "List the tags in projects")
 	listCmd.Flags().BoolVarP(&specsFlag, "specs", "", false, "List the specifications in projects")
 	listCmd.Flags().BoolVarP(&scenariosFlag, "scenarios", "", false, "List the scenarios in projects")
+	listCmd.Flags().StringVarP(&taggedWithFlag, "taggedWith", "", "", "Filters all elements that contain the given tag")
 }
 
 type handleResult func([]string)
@@ -81,31 +83,35 @@ func print(res []string) {
 	}
 }
 
-func listTags(s []*gauge.Specification, f handleResult) {
+func listTags(s []*gauge.Specification, taggedWith string, f handleResult) {
 	allTags := []string{}
 	for _, spec := range s {
-		allTags = appendTags(allTags, spec.Tags)
+		allTags = appendTags(allTags, spec.Tags, taggedWith)
 		for _, scenario := range spec.Scenarios {
-			allTags = appendTags(allTags, scenario.Tags)
+			allTags = appendTags(allTags, scenario.Tags, taggedWith)
 		}
 	}
 	f(sortedDistinctElements(allTags))
 }
 
-func listScenarios(s []*gauge.Specification, f handleResult) {
+func listScenarios(s []*gauge.Specification, taggedWith string, f handleResult) {
 	allScenarios := []string{}
 	for _, spec := range s {
 		for _, scenario := range spec.Scenarios {
-			allScenarios = append(allScenarios, scenario.Heading.Value)
+			if contains(scenario.Tags, taggedWith) {
+				allScenarios = append(allScenarios, scenario.Heading.Value)
+			}
 		}
 	}
 	f(sortedDistinctElements(allScenarios))
 }
 
-func listSpecifications(s []*gauge.Specification, f handleResult) {
+func listSpecifications(s []*gauge.Specification, taggedWith string, f handleResult) {
 	allSpecs := []string{}
 	for _, spec := range s {
-		allSpecs = append(allSpecs, spec.Heading.Value)
+		if contains(spec.Tags, taggedWith) {
+			allSpecs = append(allSpecs, spec.Heading.Value)
+		}
 	}
 	f(sortedDistinctElements(allSpecs))
 }
@@ -116,11 +122,27 @@ func sortedDistinctElements(s []string) []string {
 	return unique
 }
 
-func appendTags(s []string, tags *gauge.Tags) []string {
+func appendTags(s []string, tags *gauge.Tags, taggedWith string) []string {
 	if tags != nil {
-		s = append(s, tags.Values()...)
+		if contains(tags, taggedWith) {
+			s = append(s, tags.Values()...)
+		}
 	}
 	return s
+}
+
+func contains(tags *gauge.Tags, filter string) bool {
+	if len(filter) == 0 {
+		return true
+	} else if tags == nil {
+		return false
+	}
+	for _, theTag := range tags.Values() {
+		if theTag == filter {
+			return true
+		}
+	}
+	return false
 }
 
 func uniqueNonEmptyElementsOf(input []string) []string {

@@ -25,31 +25,65 @@ import (
 )
 
 func TestOnlyUniqueTagsAreReturned(t *testing.T) {
-	listTags([]*gauge.Specification{buildTestSpecification()}, func(res []string) {
+	listTags([]*gauge.Specification{buildTestSpecification("Spec1")}, "", func(res []string) {
 		verifyUniqueness(res, []string{"bar", "foo"}, t)
 	})
 }
 
 func TestOnlyUniqueSpecsAreReturned(t *testing.T) {
 	specs := []*gauge.Specification{
-		buildTestSpecification(),
-		buildTestSpecification(),
+		buildTestSpecification("Spec1"),
+		buildTestSpecification("Spec2"),
 	}
-	listSpecifications(specs, func(res []string) {
-		verifyUniqueness(res, []string{"Spec1"}, t)
+	listSpecifications(specs, "", func(res []string) {
+		verifyUniqueness(res, []string{"Spec1", "Spec2"}, t)
 	})
 }
 
 func TestOnlyUniqueSceanriosAreReturned(t *testing.T) {
-	listScenarios([]*gauge.Specification{buildTestSpecification()}, func(res []string) {
+	specs := []*gauge.Specification{
+		buildTestSpecification("Spec1"),
+		buildTestSpecification("Spec2"),
+	}
+	listScenarios(specs, "", func(res []string) {
+		verifyUniqueness(res, []string{"scenario1", "scenario2"}, t)
+	})
+}
+
+func TestFilteredScenariosWithTag(t *testing.T) {
+	specs := []*gauge.Specification{
+		buildTestSpecification("Spec1"),
+		buildTestSpecification("Spec2"),
+	}
+	listScenarios(specs, "bar", func(res []string) {
 		verifyUniqueness(res, []string{"scenario1"}, t)
 	})
 }
 
-func buildTestSpecification() *gauge.Specification {
+func TestFilteredSpecsWithNoTagsAndNoFiltering(t *testing.T) {
+	specs := []*gauge.Specification{
+		buildTestSpecification("Spec1"),
+		buildTestSpecification("Spec2"),
+	}
+	listSpecifications(specs, "", func(res []string) {
+		verifyUniqueness(res, []string{"Spec1", "Spec2"}, t)
+	})
+}
+
+func TestFilteredSpecsWithNoTagsAndFiltering(t *testing.T) {
+	specs := []*gauge.Specification{
+		buildTestSpecification("Spec1"),
+		buildTestSpecification("Spec2"),
+	}
+	listSpecifications(specs, "blub", func(res []string) {
+		verifyUniqueness(res, []string{}, t)
+	})
+}
+
+func buildTestSpecification(name string) *gauge.Specification {
 	return &gauge.Specification{
 		Heading: &gauge.Heading{
-			Value: "Spec1",
+			Value: name,
 		},
 		Scenarios: []*gauge.Scenario{
 			&gauge.Scenario{
@@ -68,7 +102,7 @@ func buildTestSpecification() *gauge.Specification {
 				}},
 			&gauge.Scenario{
 				Heading: &gauge.Heading{
-					Value: "scenario1",
+					Value: "scenario2",
 				},
 				Tags: &gauge.Tags{
 					RawValues: [][]string{{"foo"}},
