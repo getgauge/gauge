@@ -121,14 +121,18 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
 			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
-		} else if parser.isSpecUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
+		} else if parser.isSpecUnderline(trimmedLine) && isInState(parser.currentState, commentScope) {
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.Kind = gauge.SpecKind
 			parser.discardLastToken()
-		} else if parser.isScenarioUnderline(trimmedLine) && (isInState(parser.currentState, commentScope)) {
-			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.Kind = gauge.ScenarioKind
-			parser.discardLastToken()
+		} else if parser.isScenarioUnderline(trimmedLine) {
+			if isInState(parser.currentState, commentScope) {
+				newToken = parser.tokens[len(parser.tokens)-1]
+				newToken.Kind = gauge.ScenarioKind
+				parser.discardLastToken()
+			} else {
+				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+			}
 		} else if parser.isStep(trimmedLine) {
 			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {

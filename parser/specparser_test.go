@@ -1634,6 +1634,7 @@ func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {
 	spec, _, err := p.Parse(`Specification Heading
 =====================
 * Vowels in English language are "aeiou".
+
 Vowel counts in single word
 ---------------------------
 * The word "gauge" has "3" vowels.
