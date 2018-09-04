@@ -118,7 +118,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 
 // ExecuteSpecs : Check for updates, validates the specs (by invoking the respective language runners), initiates the registry which is needed for console reporting, execution API and Rerunning of specs
 // and finally saves the execution result as binary in .gauge folder.
-func ExecuteSpecs(specDirs []string) int {
+var ExecuteSpecs = func(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
 		logger.Fatalf(true, err.Error())
@@ -131,15 +131,18 @@ func ExecuteSpecs(specDirs []string) int {
 	skel.SetupPlugins(MachineReadable)
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
-		return 1
+		if res.ParseOk {
+			return ParseFailed
+		}
+		return ValidationFailed
 	}
 	if res.SpecCollection.Size() < 1 {
 		logger.Infof(true, "No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
-			return 0
+			return Success
 		}
-		return 1
+		return ExecutionFailed
 	}
 	event.InitRegistry()
 	wg := &sync.WaitGroup{}
@@ -162,14 +165,15 @@ func newExecution(executionInfo *executionInfo) suiteExecutor {
 }
 
 type executionStatus struct {
-	SpecsExecuted int `json:"specsExecuted"`
-	SpecsPassed   int `json:"specsPassed"`
-	SpecsFailed   int `json:"specsFailed"`
-	SpecsSkipped  int `json:"specsSkipped"`
-	SceExecuted   int `json:"sceExecuted"`
-	ScePassed     int `json:"scePassed"`
-	SceFailed     int `json:"sceFailed"`
-	SceSkipped    int `json:"sceSkipped"`
+	Type          string `json:"type"`
+	SpecsExecuted int    `json:"specsExecuted"`
+	SpecsPassed   int    `json:"specsPassed"`
+	SpecsFailed   int    `json:"specsFailed"`
+	SpecsSkipped  int    `json:"specsSkipped"`
+	SceExecuted   int    `json:"sceExecuted"`
+	ScePassed     int    `json:"scePassed"`
+	SceFailed     int    `json:"sceFailed"`
+	SceSkipped    int    `json:"sceSkipped"`
 }
 
 func (status *executionStatus) getJSON() (string, error) {
@@ -182,6 +186,7 @@ func (status *executionStatus) getJSON() (string, error) {
 
 func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) string {
 	executionStatus := &executionStatus{}
+	executionStatus.Type = "out"
 	executionStatus.SpecsExecuted = executedSpecs
 	executionStatus.SpecsPassed = passedSpecs
 	executionStatus.SpecsFailed = failedSpecs
@@ -251,22 +256,18 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	}
 
 	s := statusJSON(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	if MachineReadable {
-		// rather than printing a string status, print parseable json results.
-		// logger.Infof tries to convert json into another json (when machine-readable), which is ugly
-		fmt.Println(s)
-		fmt.Printf("{\"time\" : \"%s\" }\n", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-	} else {
-		logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-		logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-		logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-	}
+	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 	writeExecutionStatus(s)
 
-	if suiteResult.IsFailed || !isParsingOk {
-		return 1
+	if !isParsingOk {
+		return ParseFailed
 	}
-	return 0
+	if suiteResult.IsFailed {
+		return ExecutionFailed
+	}
+	return Success
 }
 
 func validateFlags() error {

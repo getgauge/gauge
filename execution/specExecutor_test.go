@@ -696,13 +696,13 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenShot:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
 		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenShot:    [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
+				Screenshots:    [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}

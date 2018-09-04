@@ -149,6 +149,28 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "custom_specs_dir")
 }
 
+func (s *MySuite) TestLoadMultipleEnv(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj2"
+
+	e := LoadEnv("bar, foo")
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
+}
+func (s *MySuite) TestLoadMultipleEnvEnsureFirstOneDecides(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj2"
+
+	e := LoadEnv("bar, default")
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+}
+
 func (s *MySuite) TestEnvPropertyIsSet(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")

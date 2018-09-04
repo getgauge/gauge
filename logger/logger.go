@@ -171,7 +171,10 @@ func getPluginVersions() string {
 func write(stdout bool, msg string, args ...interface{}) {
 	if !isLSP && stdout {
 		if machineReadable {
-			fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", fmt.Sprintf(msg, args...))
+			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
+			for _, m := range strs {
+				fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", strings.Trim(m, "\n "))
+			}
 		} else {
 			fmt.Println(fmt.Sprintf(msg, args...))
 		}

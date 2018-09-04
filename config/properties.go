@@ -71,7 +71,7 @@ func (p *properties) Format(f formatter) (string, error) {
 
 func (p *properties) String() string {
 	var buffer bytes.Buffer
-	buffer.WriteString("Version " + version.FullVersion())
+	buffer.WriteString("# Version " + version.FullVersion())
 	buffer.WriteString("\n")
 	buffer.WriteString("# ")
 	buffer.WriteString(comment)
@@ -218,5 +218,5 @@ func gaugeVersionInProperties() (*version.Version, error) {
 	if err != nil {
 		return v, err
 	}
-	return version.ParseVersion(strings.TrimLeft(string(l), "Version "))
+	return version.ParseVersion(strings.TrimLeft(string(l), "# Version "))
 }

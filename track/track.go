@@ -18,10 +18,10 @@
 package track
 
 import (
-	"strconv"
 	"net/http"
 	"net/http/httputil"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,6 +45,29 @@ const (
 	apiMedium     = "api"
 	ciMedium      = "CI"
 	timeout       = 1
+	// GaugeTelemetryMessageHeading is the header printed for telemetry warning
+	GaugeTelemetryMessageHeading = `
+Telemetry
+---------
+`
+	// GaugeTelemetryMessage is the message printed when user has not explicitly opted in/out
+	// of telemetry. Printed only in CLI.
+	GaugeTelemetryMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
+The data is anonymous and doesn't include command-line arguments.
+To turn this message off opt in or out by running 'gauge telemetry on' or 'gauge telemetry off'.
+
+Read more about Gauge telemetry at https://gauge.org/telemetry
+`
+	// GaugeTelemetryMachineRedableMessage is the message printed when user has not explicitly opted in/out
+	// of telemetry. Printed only in CLI.
+	GaugeTelemetryMachineRedableMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
+<a href="https://gauge.org/telemetry">Read more here</a> about Gauge telemetry.`
+
+	// GaugeTelemetryLSPMessage is the message printed when user has not explicitly opted in/out
+	// of telemetry. Displayed only in LSP Client.
+	GaugeTelemetryLSPMessage = `This installation of Gauge collects usage data in order to help us improve your experience.
+[Read more here](https://gauge.org/telemetry) about Gauge telemetry.
+Would you like to participate?`
 )
 
 var gaHTTPTransport = http.DefaultTransport
