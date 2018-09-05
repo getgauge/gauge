@@ -160,7 +160,7 @@ func getJSON(failedMeta *failedMetadata) string {
 	return string(j)
 }
 
-func GetLastState() ([]string, error) {
+var GetLastState = func() ([]string, error) {
 	meta := readLastState()
 	util.SetWorkingDir(config.ProjectRoot)
 	if len(meta.FailedItems) == 0 {
