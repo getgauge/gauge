@@ -20,6 +20,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"strconv"
 
 	"strings"
 
@@ -40,55 +41,41 @@ import (
 )
 
 const (
-	lastRunCmdFileName    = "lastRunCmd.json"
-	verboseDefault        = false
-	simpleConsoleDefault  = false
-	failedDefault         = false
-	repeatDefault         = false
-	parallelDefault       = false
-	sortDefault           = false
-	installPluginsDefault = true
-	environmentDefault    = "default"
-	tagsDefault           = ""
-	rowsDefault           = ""
-	strategyDefault       = "lazy"
-	groupDefault          = -1
-	failSafeDefault       = false
+	lastRunCmdFileName     = "lastRunCmd.json"
+	verboseDefault         = false
+	simpleConsoleDefault   = false
+	failedDefault          = false
+	repeatDefault          = false
+	parallelDefault        = false
+	sortDefault            = false
+	installPluginsDefault  = true
+	environmentDefault     = "default"
+	tagsDefault            = ""
+	rowsDefault            = ""
+	strategyDefault        = "lazy"
+	groupDefault           = -1
+	failSafeDefault        = false
+	skipCommandSaveDefault = false
 
-	verboseName        = "verbose"
-	simpleConsoleName  = "simple-console"
-	failedName         = "failed"
-	repeatName         = "repeat"
-	parallelName       = "parallel"
-	sortName           = "sort"
-	installPluginsName = "install-plugins"
-	environmentName    = "env"
-	tagsName           = "tags"
-	rowsName           = "table-rows"
-	strategyName       = "strategy"
-	groupName          = "group"
-	streamsName        = "n"
-	failSafeName       = "fail-safe"
+	verboseName         = "verbose"
+	simpleConsoleName   = "simple-console"
+	failedName          = "failed"
+	repeatName          = "repeat"
+	parallelName        = "parallel"
+	sortName            = "sort"
+	installPluginsName  = "install-plugins"
+	environmentName     = "env"
+	tagsName            = "tags"
+	rowsName            = "table-rows"
+	strategyName        = "strategy"
+	groupName           = "group"
+	streamsName         = "n"
+	failSafeName        = "fail-safe"
+	skipCommandSaveName = "skip-save"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
 var streamsDefault = util.NumberOfCores()
-
-type prevCommand struct {
-	Command []string
-}
-
-func newPrevCommand() *prevCommand {
-	return &prevCommand{Command: make([]string, 0)}
-}
-
-func (cmd *prevCommand) getJSON() (string, error) {
-	j, err := json.MarshalIndent(cmd, "", "\t")
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
 
 var (
 	runCmd = &cobra.Command{
@@ -104,109 +91,103 @@ var (
 			if er := handleConflictingParams(cmd.Flags(), args); er != nil {
 				exit(er, "")
 			}
-			handleRepeatCommand(cmd, os.Args)
 			if repeat {
-				return
+				repeatLastExecution(cmd)
+			} else if failed {
+				executeFailed(cmd)
+			} else {
+				execute(cmd, args)
 			}
-			if failed {
-				loadLastState(cmd)
-				return
-			}
-			execute(cmd, args)
 		},
 		DisableAutoGenTag: true,
 	}
-	verbose        bool
-	simpleConsole  bool
-	failed         bool
-	repeat         bool
-	parallel       bool
-	sort           bool
-	installPlugins bool
-	environment    string
-	tags           string
-	rows           string
-	strategy       string
-	streams        int
-	group          int
-	failSafe       bool
+	verbose         bool
+	simpleConsole   bool
+	failed          bool
+	repeat          bool
+	parallel        bool
+	sort            bool
+	installPlugins  bool
+	environment     string
+	tags            string
+	rows            string
+	strategy        string
+	streams         int
+	group           int
+	failSafe        bool
+	skipCommandSave bool
 )
 
 func init() {
 	GaugeCmd.AddCommand(runCmd)
-	runCmd.Flags().BoolVarP(&verbose, verboseName, "v", verboseDefault, "Enable step level reporting on console, default being scenario level")
-	runCmd.Flags().BoolVarP(&simpleConsole, simpleConsoleName, "", simpleConsoleDefault, "Removes colouring and simplifies the console output")
-	runCmd.Flags().StringVarP(&environment, environmentName, "e", environmentDefault, "Specifies the environment to use")
-	runCmd.Flags().StringVarP(&tags, tagsName, "t", tagsDefault, "Executes the specs and scenarios tagged with given tags")
-	runCmd.Flags().StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
-	runCmd.Flags().BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
-	runCmd.Flags().IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
-	runCmd.Flags().IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
-	runCmd.Flags().StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
-	runCmd.Flags().BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
-	runCmd.Flags().BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
-	runCmd.Flags().BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
-	runCmd.Flags().BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
-	runCmd.Flags().BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
-	runCmd.Flags().BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of execution failures. Parse errors will return non-zero exit codes.")
+	f := runCmd.Flags()
+	f.BoolVarP(&verbose, verboseName, "v", verboseDefault, "Enable step level reporting on console, default being scenario level")
+	f.BoolVarP(&simpleConsole, simpleConsoleName, "", simpleConsoleDefault, "Removes colouring and simplifies the console output")
+	f.StringVarP(&environment, environmentName, "e", environmentDefault, "Specifies the environment to use")
+	f.StringVarP(&tags, tagsName, "t", tagsDefault, "Executes the specs and scenarios tagged with given tags")
+	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
+	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
+	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
+	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
+	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
+	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
+	f.BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
+	f.BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
+	f.BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
+	f.BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	f.BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of failures.")
+	f.BoolVarP(&skipCommandSave, skipCommandSaveName, "", skipCommandSaveDefault, "Skip saving last command in lastRunCmd.json")
+	f.MarkHidden(skipCommandSaveName)
 }
 
-//This flag stores whether the command is gauge run --failed and if it is triggering another command.
-//The purpose is to only store commands given by user in the lastRunCmd file.
-//We need this flag to stop the followup commands(non user given) from getting saved in that file.
-var prevFailed = false
-
-func loadLastState(cmd *cobra.Command) {
+func executeFailed(cmd *cobra.Command) {
 	lastState, err := rerun.GetLastState()
 	if err != nil {
 		exit(err, "")
 	}
-	logger.Infof(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
-	cmd.Parent().SetArgs(lastState)
-	os.Args = append([]string{"gauge"}, lastState...)
-	handleFlags(cmd)
-	prevFailed = true
+	if !skipCommandSave {
+		writePrevArgs(os.Args)
+	}
+	logger.Debugf(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
+	handleFlags(cmd, append([]string{"gauge"}, lastState...))
+	cmd.Flags().Set(skipCommandSaveName, "true")
 	cmd.Execute()
 }
 
-func resetFlags() {
-	verbose, simpleConsole, failed, repeat, parallel, sort, hideSuggestion, installPlugins =
-		verboseDefault, simpleConsoleDefault, failedDefault, repeatDefault, parallelDefault, sortDefault,
-		hideSuggestionDefault, installPluginsDefault
-	environment, tags, rows, strategy, logLevel, dir =
-		environmentDefault, tagsDefault, rowsDefault, strategyDefault, logLevelDefault, dirDefault
-	streams, group = streamsDefault, groupDefault
-}
-
-func getFlagsToOverride(cmd *cobra.Command) map[string]string {
-	flagResetMap := map[string]string{}
-	setFlags := cmd.Flags()
-	setFlags.Visit(func(flag *pflag.Flag) {
-		if util.ListContains(overrideRerunFlags, flag.Name) && flag.Value.String() != flag.DefValue {
-			flagResetMap[flag.Name] = flag.Value.String()
+func handleFlags(cmd *cobra.Command, args []string) {
+	cmd.Flags().Visit(func(flag *pflag.Flag) {
+		if !util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
+			flag.Value.Set(flag.DefValue)
 		}
 	})
-	return flagResetMap
-}
 
-func overrideFlags(cmd *cobra.Command, flagResetMap map[string]string) {
-	setFlags := cmd.Flags()
-	setFlags.VisitAll(func(flag *pflag.Flag) {
-		val, ok := flagResetMap[flag.Name]
-		if ok {
-			flag.Value.Set(val)
+	for i := 0; i < len(args)-1; i++ {
+		f := lookupFlagFromArgs(cmd, args[i])
+		if f == nil {
+			continue
 		}
-	})
+		v := f.Value.String()
+		_, err := strconv.ParseBool(v)
+		if err != nil {
+			args[i+1] = v
+			i = i + 1
+		}
+	}
+	os.Args = args
 }
 
-func handleFlags(cmd *cobra.Command) {
-	flagResetMap := getFlagsToOverride(cmd)
-	resetFlags()
-	overrideFlags(cmd, flagResetMap)
+func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
+	fName := strings.TrimLeft(arg, "-")
+	flags := cmd.Flags()
+	f := flags.Lookup(fName)
+	if f == nil && len(fName) == 1 {
+		f = flags.ShorthandLookup(fName)
+	}
+	return f
 }
 
 func installMissingPlugins(flag bool) {
-	if flag {
+	if flag && os.Getenv("GAUGE_PLUGIN_INSTALL") != "false" {
 		install.AllPlugins(machineReadable)
 	}
 }
@@ -214,6 +195,9 @@ func installMissingPlugins(flag bool) {
 func execute(cmd *cobra.Command, args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
+	if !skipCommandSave {
+		writePrevArgs(os.Args)
+	}
 	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
@@ -224,42 +208,29 @@ func execute(cmd *cobra.Command, args []string) {
 	os.Exit(exitCode)
 }
 
-func handleRepeatCommand(cmd *cobra.Command, cmdArgs []string) {
-	if repeat {
-		prevCmd := readPrevCmd()
-		executeCmd(cmd, prevCmd.Command)
-	} else {
-		if prevFailed {
-			prevFailed = false
-			return
-		}
-		writePrevCmd(cmdArgs)
-	}
-}
-
-var executeCmd = func(cmd *cobra.Command, lastState []string) {
-	cmd.Parent().SetArgs(lastState[1:])
-	os.Args = lastState
-	handleFlags(cmd)
+var repeatLastExecution = func(cmd *cobra.Command) {
+	lastState := readPrevArgs()
+	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
+	handleFlags(cmd, lastState)
 	cmd.Execute()
 }
 
-func readPrevCmd() *prevCommand {
+var readPrevArgs = func() []string {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
 	if err != nil {
 		logger.Fatalf(true, "Failed to read previous command information. Reason: %s", err.Error())
+		return nil
 	}
-	meta := newPrevCommand()
-	if err = json.Unmarshal([]byte(contents), meta); err != nil {
+	var args []string
+	if err = json.Unmarshal([]byte(contents), &args); err != nil {
 		logger.Fatalf(true, "Invalid previous command information. Reason: %s", err.Error())
+		return nil
 	}
-	return meta
+	return args
 }
 
-func writePrevCmd(cmdArgs []string) {
-	prevCmd := newPrevCommand()
-	prevCmd.Command = cmdArgs
-	contents, err := prevCmd.getJSON()
+var writePrevArgs = func(cmdArgs []string) {
+	b, err := json.MarshalIndent(cmdArgs, "", "\t")
 	if err != nil {
 		logger.Fatalf(true, "Unable to parse last run command. Error : %v", err.Error())
 	}
@@ -268,7 +239,7 @@ func writePrevCmd(cmdArgs []string) {
 	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err = ioutil.WriteFile(prevCmdFile, []byte(contents), common.NewFilePermissions)
+	err = ioutil.WriteFile(prevCmdFile, b, common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
 	}
