@@ -81,7 +81,7 @@ func Error(stdout bool, msg string) {
 // Errorf logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Errorf(stdout bool, msg string, args ...interface{}) {
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg, args)
+		fmt.Fprintf(os.Stderr, msg, args...)
 		return
 	}
 	write(stdout, msg, args...)
@@ -111,7 +111,7 @@ func Fatal(stdout bool, msg string) {
 func Fatalf(stdout bool, msg string, args ...interface{}) {
 	message := getErrorText(msg, args...)
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg, args)
+		fmt.Fprintf(os.Stderr, msg, args...)
 		return
 	}
 	write(stdout, message)
