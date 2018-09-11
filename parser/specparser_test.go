@@ -18,9 +18,11 @@
 package parser
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 
 	. "gopkg.in/check.v1"
@@ -552,6 +554,7 @@ func (s *MySuite) TestParsingStepWIthNewlineAndTableParam(c *C) {
 }
 
 func (s *MySuite) TestParsingMultilineStep(c *C) {
+	os.Setenv(env.AllowMultilineStep, "true")
 	parser := new(SpecParser)
 	specText := SpecBuilder().
 		step("step1").
@@ -563,9 +566,11 @@ func (s *MySuite) TestParsingMultilineStep(c *C) {
 
 	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[0].Value, Equals, "step1 second line")
+	os.Setenv(env.AllowMultilineStep, "false")
 }
 
 func (s *MySuite) TestParsingMultilineStepWithParams(c *C) {
+	os.Setenv(env.AllowMultilineStep, "true")
 	parser := new(SpecParser)
 	specText := SpecBuilder().
 		step("step1").
@@ -579,9 +584,11 @@ func (s *MySuite) TestParsingMultilineStepWithParams(c *C) {
 	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[0].Value, Equals, "step1 second line {static} third line {dynamic}")
 	c.Assert(len(tokens[0].Args), Equals, 2)
+	os.Setenv(env.AllowMultilineStep, "false")
 }
 
 func (s *MySuite) TestParsingMultilineStepWithTableParam(c *C) {
+	os.Setenv(env.AllowMultilineStep, "true")
 	parser := new(SpecParser)
 	specText := SpecBuilder().
 		step("step1").
@@ -598,6 +605,7 @@ func (s *MySuite) TestParsingMultilineStepWithTableParam(c *C) {
 	c.Assert(tokens[1].Kind, Equals, gauge.TableHeader)
 	c.Assert(tokens[2].Kind, Equals, gauge.TableRow)
 
+	os.Setenv(env.AllowMultilineStep, "false")
 }
 
 func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {

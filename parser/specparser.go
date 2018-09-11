@@ -20,9 +20,11 @@ package parser
 import (
 	"bufio"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/util"
 
 	"github.com/getgauge/common"
@@ -152,7 +154,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
 		} else if parser.isTearDown(trimmedLine) {
 			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
-		} else if newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
+		} else if shouldAllowMultiLineStep() && newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
 			v := fmt.Sprintf("%s %s", newToken.LineText, trimmedLine)
 			newToken = &Token{Kind: gauge.StepKind, LineNo: newToken.LineNo, LineText: strings.TrimSpace(v), Value: strings.TrimSpace(v)}
 			errors = errors[:lastTokenErrorCount]
@@ -165,6 +167,10 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		errors = append(errors, pErrs...)
 	}
 	return parser.tokens, errors
+}
+
+func shouldAllowMultiLineStep() bool {
+	return util.ConvertToBool(os.Getenv(env.AllowMultilineStep), env.AllowMultilineStep, false)
 }
 
 func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
