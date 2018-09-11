@@ -99,6 +99,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(ScreenshotOnFailure, "true")
 	addEnvVar(SaveExecutionResult, "false")
 	addEnvVar(CsvDelimiter, ",")
+	addEnvVar(AllowMultilineStep, "false")
 }
 
 func loadEnvDir(envName string) error {
