@@ -15,8 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-/*
-  Parses all the specs in the list of directories given and also de-duplicates all specs passed through `specDirs` before parsing specs.
+/*Package parser parses all the specs in the list of directories given and also de-duplicates all specs passed through `specDirs` before parsing specs.
   Gets all the specs files in the given directory and generates token for each spec file.
   While parsing a concept file, concepts are inlined i.e. concept in the spec file is replaced with steps that concept has in the concept file.
   While creating a specification file parser applies the converter functions.
@@ -52,9 +51,9 @@ import (
 	"github.com/getgauge/gauge/util"
 )
 
-// TODO: Use single channel instead of one for spec and another for result, so that mapping is consistent
-// ParseSpecFiles - gets all the spec files and parse each spec file.
+// ParseSpecFiles gets all the spec files and parse each spec file.
 // Generates specifications and parse results.
+// TODO: Use single channel instead of one for spec and another for result, so that mapping is consistent
 func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
 	parseResultsChan := make(chan *ParseResult, len(specFiles))
 	specsChan := make(chan *gauge.Specification, len(specFiles))
@@ -213,6 +212,7 @@ func getIndex(specSource string) int {
 	return 0
 }
 
+// ExtractStepValueAndParams parses a stepText string into a StepValue struct
 func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*gauge.StepValue, error) {
 	stepValueWithPlaceHolders, args, err := processStepText(stepText)
 	if err != nil {
@@ -226,10 +226,11 @@ func ExtractStepValueAndParams(stepText string, hasInlineTable bool) (*gauge.Ste
 	}
 	parameterizedStepValue := getParameterizeStepValue(extractedStepValue, args)
 
-	return &gauge.StepValue{args, extractedStepValue, parameterizedStepValue}, nil
+	return &gauge.StepValue{Args: args, StepValue: extractedStepValue, ParameterizedStepValue: parameterizedStepValue}, nil
 
 }
 
+// CreateStepValue converts a Step to StepValue
 func CreateStepValue(step *gauge.Step) gauge.StepValue {
 	stepValue := gauge.StepValue{StepValue: step.Value}
 	args := make([]string, 0)
@@ -248,6 +249,7 @@ func getParameterizeStepValue(stepValue string, params []string) string {
 	return stepValue
 }
 
+// HandleParseResult collates list of parse result and determines if gauge has to break flow.
 func HandleParseResult(results ...*ParseResult) bool {
 	var failed = false
 	for _, result := range results {
