@@ -70,7 +70,7 @@ func (parser *SpecParser) initialize() {
 	parser.processors[gauge.TearDownKind] = processTearDown
 }
 
-// Generates tokens based on the parsed line.
+// GenerateTokens generates tokens based on the parsed line.
 func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
@@ -95,10 +95,14 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
 		} else if parser.isSpecHeading(trimmedLine) {
 			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
-		} else if parser.isSpecUnderline(trimmedLine) && isInState(parser.currentState, commentScope) {
-			newToken = parser.tokens[len(parser.tokens)-1]
-			newToken.Kind = gauge.SpecKind
-			parser.discardLastToken()
+		} else if parser.isSpecUnderline(trimmedLine) {
+			if isInState(parser.currentState, commentScope) {
+				newToken = parser.tokens[len(parser.tokens)-1]
+				newToken.Kind = gauge.SpecKind
+				parser.discardLastToken()
+			} else {
+				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+			}
 		} else if parser.isScenarioUnderline(trimmedLine) {
 			if isInState(parser.currentState, commentScope) {
 				newToken = parser.tokens[len(parser.tokens)-1]
