@@ -26,4 +26,6 @@ var downloadAndExtract = async function(version) {
     });
 }
 
-install.getVersion(packageJsonPath).then((v) => downloadAndExtract(v));
+install.getVersion(packageJsonPath)
+.then((v) => downloadAndExtract(v))
+.catch((e) => console.error(e));
