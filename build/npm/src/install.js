@@ -31,11 +31,7 @@ var getVersion = function(p) {
 }
 
 var getReleaseURL = function(version) {
-    if (!version) {
-        return `${BASE_URL}/latest`;
-    } else {
-        return `${BASE_URL}/tags/v${version}`;
-    }
+    return `${BASE_URL}/tags/v${version}`;
 }
 
 var getBinaryUrl = function(version) {

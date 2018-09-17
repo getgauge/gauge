@@ -18,12 +18,6 @@ describe("getVersion", () => {
 });
 
 describe("getReleaseURl", () => {
-    it("should get latest url", () => {
-        let url = subject.getReleaseURL();
-
-        expect(url).equals("https://api.github.com/repos/getgauge/gauge/releases/latest");
-    });
-
     it("should get url for version", () => {
         let version = "1.0.0";
         let url = subject.getReleaseURL(version);
