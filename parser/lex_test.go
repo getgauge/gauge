@@ -508,6 +508,41 @@ func (s *MySuite) TestParsingSpecWithMultipleLines(c *C) {
 
 }
 
+func (s *MySuite) TestParsingSimpleScenarioDataTable(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().specHeading("Spec heading").
+		scenarioHeading("Scenario Heading").
+		text("|name|id|").
+		text("|---|---|").
+		text("|john|123|").
+		text("|james|007|").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 6)
+
+	c.Assert(tokens[2].Kind, Equals, gauge.TableHeader)
+	c.Assert(len(tokens[2].Args), Equals, 2)
+	c.Assert(tokens[2].Args[0], Equals, "name")
+	c.Assert(tokens[2].Args[1], Equals, "id")
+
+	c.Assert(tokens[3].Kind, Equals, gauge.TableRow)
+	c.Assert(len(tokens[3].Args), Equals, 2)
+	c.Assert(tokens[3].Args[0], Equals, "---")
+	c.Assert(tokens[3].Args[1], Equals, "---")
+
+	c.Assert(tokens[4].Kind, Equals, gauge.TableRow)
+	c.Assert(len(tokens[4].Args), Equals, 2)
+	c.Assert(tokens[4].Args[0], Equals, "john")
+	c.Assert(tokens[4].Args[1], Equals, "123")
+
+	c.Assert(tokens[5].Kind, Equals, gauge.TableRow)
+	c.Assert(len(tokens[5].Args), Equals, 2)
+	c.Assert(tokens[5].Args[0], Equals, "james")
+	c.Assert(tokens[5].Args[1], Equals, "007")
+
+}
+
 func (s *MySuite) TestParsingStepWIthNewlineAndTableParam(c *C) {
 	parser := new(SpecParser)
 	specText := newSpecBuilder().

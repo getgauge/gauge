@@ -158,7 +158,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	})
 
 	tableHeaderConverter := converterFn(func(token *Token, state *int) bool {
-		return token.Kind == gauge.TableHeader && isInState(*state, specScope)
+		return token.Kind == gauge.TableHeader && isInAnyState(*state, specScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
@@ -174,10 +174,20 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
-		} else if !isInState(*state, scenarioScope) {
+		} else if isInState(*state, scenarioScope) {
+			scn := spec.LatestScenario()
+			if !scn.DataTable.Table.IsInitialized() {
+				dataTable := &gauge.Table{LineNo: token.LineNo}
+				dataTable.AddHeaders(token.Args)
+				scn.AddDataTable(dataTable)
+			} else {
+				value := "Multiple data table present, ignoring table"
+				scn.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+			}
+		} else {
 			if !spec.DataTable.Table.IsInitialized() {
-				dataTable := &gauge.Table{}
-				dataTable.LineNo = token.LineNo
+				dataTable := &gauge.Table{LineNo: token.LineNo}
 				dataTable.AddHeaders(token.Args)
 				spec.AddDataTable(dataTable)
 			} else {
@@ -185,10 +195,6 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
 			}
-		} else {
-			value := "Table not associated with a step, ignoring table"
-			spec.LatestScenario().AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope)
 		addStates(state, tableScope)
@@ -226,11 +232,16 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
 		} else {
-			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			t := spec.DataTable
+			if isInState(*state, scenarioScope) {
+				t = spec.LatestScenario().DataTable
+			}
+
+			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&t.Table), spec.FileName)
 			if len(err) > 0 {
 				result = ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 			} else {
-				spec.DataTable.Table.AddRowValues(tableValues)
+				t.Table.AddRowValues(tableValues)
 				result = ParseResult{Ok: true, Warnings: warnings}
 			}
 		}

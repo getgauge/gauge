@@ -124,7 +124,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 
 func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) error {
 	if len(scenarios) > 0 {
-		index := e.specification.Scenarios[0].DataTableRowIndex
+		index := e.specification.Scenarios[0].SpecDataTableRowIndex
 		sceRes, err := e.executeScenarios(scenarios)
 		if err != nil {
 			return err
@@ -138,7 +138,7 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 func (e *specExecutor) executeSpec() error {
 	parser.GetResolvedDataTablerows(e.specification.DataTable.Table)
 	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
-		return s.DataTableRow.IsInitialized()
+		return s.SpecDataTableRow.IsInitialized()
 	})
 	res, err := e.executeScenarios(nonTableRelatedScenarios)
 	if err != nil {

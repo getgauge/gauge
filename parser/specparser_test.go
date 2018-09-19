@@ -351,6 +351,42 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
+func (s *MySuite) TestScenarioWithDataTable(c *C) {
+	tokens := []*Token{
+		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		&Token{Kind: gauge.StepKind, Value: "my step"},
+	}
+
+	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
+	c.Assert(len(spec.Items), Equals, 2)
+	c.Assert(result.Ok, Equals, true)
+
+	scn := spec.Scenarios[0]
+
+	c.Assert(scn.DataTable.Table, NotNil)
+	c.Assert(len(scn.Items), Equals, 3)
+
+	idCells, _ := scn.DataTable.Table.Get("id")
+	nameCells, _ := scn.DataTable.Table.Get("name")
+	c.Assert(len(idCells), Equals, 2)
+	c.Assert(len(nameCells), Equals, 2)
+	c.Assert(idCells[0].Value, Equals, "1")
+	c.Assert(idCells[0].CellType, Equals, gauge.Static)
+	c.Assert(idCells[1].Value, Equals, "2")
+	c.Assert(idCells[1].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[0].Value, Equals, "foo")
+	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells[1].Value, Equals, "bar")
+	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
+}
+
 func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
@@ -587,29 +623,6 @@ func (s *MySuite) TestParseErrorWhenCouldNotResolveExternalDataTable(c *C) {
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(len(result.Warnings), Equals, 0)
 	c.Assert(result.Errors()[0], Equals, "[ParseError] foo.spec:3 Could not resolve table from table: foo => 'table: foo'")
-
-}
-
-func (s *MySuite) TestWarningWhenParsingTableOccursWithoutStep(c *C) {
-	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 3},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}, LineNo: 4},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}, LineNo: 5},
-		&Token{Kind: gauge.StepKind, Value: "Step", LineNo: 6},
-		&Token{Kind: gauge.CommentKind, Value: "comment in between", LineNo: 7},
-		&Token{Kind: gauge.TableHeader, Args: []string{"phone"}, LineNo: 8},
-		&Token{Kind: gauge.TableRow, Args: []string{"1"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2"}},
-	}
-
-	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
-	c.Assert(err, IsNil)
-	c.Assert(result.Ok, Equals, true)
-	c.Assert(len(result.Warnings), Equals, 2)
-	c.Assert(result.Warnings[0].String(), Equals, "foo.spec:3 Table not associated with a step, ignoring table")
-	c.Assert(result.Warnings[1].String(), Equals, "foo.spec:8 Table not associated with a step, ignoring table")
 
 }
 
@@ -1030,6 +1043,36 @@ comment3
 	c.Assert(spec.Scenarios[1].Span.End, Equals, 13)
 	c.Assert(spec.Scenarios[2].Span.Start, Equals, 14)
 	c.Assert(spec.Scenarios[2].Span.End, Equals, 17)
+}
+
+func (s *MySuite) TestParseScenarioWithDataTable(c *C) {
+	p := new(SpecParser)
+
+	spec, _, err := p.Parse(`Specification Heading
+=====================
+* Vowels in English language are "aeiou".
+
+Vowel counts in single word
+---------------------------
+
+	|Word  |Vowel Count|
+	|------|-----------|
+	|Gauge |3          |
+	|Mingle|2          |
+	|Snap  |1          |
+	|GoCD  |1          |
+	|Rhythm|0          |
+
+* The word <Word> has <Vowel Count> vowels.
+
+`, gauge.NewConceptDictionary(), "")
+
+	scn := spec.Scenarios[0]
+
+	c.Assert(err, IsNil)
+	c.Assert(scn.DataTable.Table, NotNil)
+	c.Assert(len(scn.DataTable.Table.Rows()), Equals, 5)
+	c.Assert(len(scn.DataTable.Table.Columns), Equals, 2)
 }
 
 func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {

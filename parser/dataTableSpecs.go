@@ -83,14 +83,14 @@ func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specific
 func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap *gauge.BuildErrors) (scns []*gauge.Scenario) {
 	for _, scn := range scenarios {
 		newScn := &gauge.Scenario{
-			Steps:             scn.Steps,
-			Items:             scn.Items,
-			Heading:           scn.Heading,
-			DataTableRow:      table,
-			DataTableRowIndex: i,
-			Tags:              scn.Tags,
-			Comments:          scn.Comments,
-			Span:              scn.Span,
+			Steps:                 scn.Steps,
+			Items:                 scn.Items,
+			Heading:               scn.Heading,
+			SpecDataTableRow:      table,
+			SpecDataTableRowIndex: i,
+			Tags:     scn.Tags,
+			Comments: scn.Comments,
+			Span:     scn.Span,
 		}
 		if len(errMap.ScenarioErrs[scn]) > 0 {
 			errMap.ScenarioErrs[newScn] = errMap.ScenarioErrs[scn]
