@@ -287,6 +287,17 @@ func createWindowsInstaller() {
 	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
 }
 
+func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
+	if getGOOS() == windows {
+		if certFilePath != "" && certFilePwd != "" {
+			log.Printf("Signing: %s", exeFilePath)
+			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
+		} else {
+			log.Printf("No certificate file passed. Executable won't be signed.")
+		}
+	}
+}
+
 func createDarwinPackage() {
 	distroDir := filepath.Join(deploy, gauge)
 	copyGaugeBinaries(distroDir)
