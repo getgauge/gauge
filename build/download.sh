@@ -80,7 +80,7 @@ set_os_architecture() {
             ;;
 
         FreeBSD)
-            local _ostype=linux
+            local _ostype=freebsd
             ;;
 
         DragonFly)
