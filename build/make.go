@@ -154,6 +154,8 @@ var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
+var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
+var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -270,12 +272,30 @@ func createWindowsDistro() {
 func createWindowsInstaller() {
 	pName := packageName()
 	distroDir, err := filepath.Abs(filepath.Join(deploy, pName))
+	installerFileName := filepath.Join(filepath.Dir(distroDir), pName)
 	if err != nil {
 		panic(err)
 	}
 	copyGaugeBinaries(distroDir)
+	runProcess("makensis.exe",
+		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
+		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
+		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
+		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
 	os.RemoveAll(distroDir)
+	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
+}
+
+func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
+	if getGOOS() == windows {
+		if certFilePath != "" && certFilePwd != "" {
+			log.Printf("Signing: %s", exeFilePath)
+			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
+		} else {
+			log.Printf("No certificate file passed. Executable won't be signed.")
+		}
+	}
 }
 
 func createDarwinPackage() {
