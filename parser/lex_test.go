@@ -581,6 +581,44 @@ func (s *MySuite) TestParsingMultilineStepWithTableParam(c *C) {
 	os.Setenv(env.AllowMultilineStep, "false")
 }
 
+func (s *MySuite) TestParsingMultilineStepScenarioNext(c *C) {
+	os.Setenv(env.AllowMultilineStep, "true")
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		step("step1").
+		text("Scenario1").
+		text("---------").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 2)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[0].Value, Equals, "step1 Scenario1")
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
+
+	os.Setenv(env.AllowMultilineStep, "false")
+}
+
+func (s *MySuite) TestParsingMultilineStepWithSpecNext(c *C) {
+	os.Setenv(env.AllowMultilineStep, "true")
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		step("step1").
+		text("Concept1").
+		text("========").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 2)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[0].Value, Equals, "step1 Concept1")
+	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
+
+	os.Setenv(env.AllowMultilineStep, "false")
+}
+
 func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
 	parser := new(SpecParser)
 	specText := newSpecBuilder().specHeading("A spec heading").
