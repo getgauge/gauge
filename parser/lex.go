@@ -70,7 +70,7 @@ func (parser *SpecParser) initialize() {
 	parser.processors[gauge.TearDownKind] = processTearDown
 }
 
-// GenerateTokens generates tokens based on the parsed line.
+// GenerateTokens gets tokens based on the parsed line.
 func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
 	parser.initialize()
 	parser.scanner = bufio.NewScanner(strings.NewReader(specText))

@@ -678,7 +678,6 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 3)
-
 }
 
 func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c *C) {
@@ -696,7 +695,21 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(result.ParseErrors[0].Message, Equals, "Dynamic parameter <foo> could not be resolved")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 5)
+}
 
+func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
+	tokens := []*Token{
+		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 2},
+		&Token{Kind: gauge.TableRow, Args: []string{"123", "hello"}, LineNo: 3},
+		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"id"}, LineNo: 5, LineText: "*Step with a <id>"},
+		&Token{Kind: gauge.StepKind, Value: "Step"},
+	}
+
+	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
+	c.Assert(result.Ok, Equals, true)
 }
 
 func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {

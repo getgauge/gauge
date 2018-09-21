@@ -101,14 +101,15 @@ func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) (*ArgLook
 	return dataTableLookup, err
 }
 
-//create an empty lookup with only args to resolve dynamic params for steps
-func (lookup *ArgLookup) FromDataTable(datatable *Table) *ArgLookup {
+//FromDataTables creates an empty lookup with only args to resolve dynamic params for steps from given list of tables
+func (lookup *ArgLookup) FromDataTables(tables ...*Table) *ArgLookup {
 	dataTableLookup := new(ArgLookup)
-	if !datatable.IsInitialized() {
-		return dataTableLookup
-	}
-	for _, header := range datatable.Headers {
-		dataTableLookup.AddArgName(header)
+	for _, table := range tables {
+		if table.IsInitialized() {
+			for _, header := range table.Headers {
+				dataTableLookup.AddArgName(header)
+			}
+		}
 	}
 	return dataTableLookup
 }

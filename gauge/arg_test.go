@@ -111,3 +111,22 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	c.Assert(nameArg2.Value, Equals, "root")
 	c.Assert(nameArg2.ArgType, Equals, Static)
 }
+
+func (s *MySuite) TestGetLookupFromTables(c *C) {
+	t1 := new(Table)
+	t1.AddHeaders([]string{"id1", "name1"})
+	t1.AddRowValues(t1.CreateTableCells([]string{"1", "admin"}))
+	t1.AddRowValues(t1.CreateTableCells([]string{"2", "root"}))
+
+	t2 := new(Table)
+	t2.AddHeaders([]string{"id2", "name2"})
+	t2.AddRowValues(t2.CreateTableCells([]string{"1", "admin"}))
+	t2.AddRowValues(t2.CreateTableCells([]string{"2", "root"}))
+
+	l := new(ArgLookup).FromDataTables(t1, t2)
+
+	c.Assert(l.ContainsArg("id1"), Equals, true)
+	c.Assert(l.ContainsArg("name1"), Equals, true)
+	c.Assert(l.ContainsArg("id2"), Equals, true)
+	c.Assert(l.ContainsArg("name2"), Equals, true)
+}

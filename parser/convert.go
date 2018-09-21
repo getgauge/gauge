@@ -49,7 +49,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && isInState(*state, scenarioScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		latestScenario := spec.LatestScenario()
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, latestScenario, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -68,7 +68,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	contextConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope) && !isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, nil, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -97,7 +97,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	tearDownStepConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.StepKind && isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, nil, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -220,14 +220,14 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
 			latestStep := latestScenario.LatestStep()
-			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.LatestContext()
-			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 		} else if isInState(*state, tearDownScope) {
 			if len(spec.TearDownSteps) > 0 {
 				latestTeardown := spec.LatestTeardown()
-				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
@@ -237,7 +237,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				t = spec.LatestScenario().DataTable
 			}
 
-			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&t.Table), spec.FileName)
+			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTables(&t.Table), spec.FileName)
 			if len(err) > 0 {
 				result = ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 			} else {
