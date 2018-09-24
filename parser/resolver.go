@@ -40,8 +40,24 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
-// GetResolvedParams based on the arg type(static, dynamic, table, special_string, special_table) resolves the parameter of a step.
-func GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) ([]*gauge_messages.Parameter, error) {
+//Resolve takes a step, a lookup and updates the target after reconciling the dynamic paramters from the given lookup
+func Resolve(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup, target *gauge_messages.ProtoStep) error {
+	stepParameters, err := getResolvedParams(step, parent, lookup)
+	if err != nil {
+		return err
+	}
+	paramIndex := 0
+	for fragmentIndex, fragment := range target.Fragments {
+		if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
+			target.Fragments[fragmentIndex].Parameter = stepParameters[paramIndex]
+			paramIndex++
+		}
+	}
+	return nil
+}
+
+// getResolvedParams based on the arg type(static, dynamic, table, special_string, special_table) resolves the parameter of a step.
+func getResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) ([]*gauge_messages.Parameter, error) {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)

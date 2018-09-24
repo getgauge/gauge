@@ -224,7 +224,7 @@ func (s *MySuite) TestGetResolveParameterFromTable(c *C) {
 
 	step := specs.Steps()[0]
 
-	parameters, err := GetResolvedParams(step, nil, nil)
+	parameters, err := getResolvedParams(step, nil, nil)
 
 	c.Assert(len(parameters), Equals, 1)
 	c.Assert(parameters[0].Table.Rows[0].GetCells()[0], Equals, "john")

@@ -203,12 +203,12 @@ func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gau
 			}
 			protoConceptItem.GetConcept().GetSteps()[stepIndex] = protoItem
 		} else {
-			stepParameters, err := parser.GetResolvedParams(step, &concept, &concept.Lookup)
+			conceptStep := protoConceptItem.Concept.Steps[stepIndex].Step
+			err := parser.Resolve(step, &concept, &concept.Lookup, conceptStep)
 			if err != nil {
 				return nil, err
 			}
-			updateProtoStepParameters(protoConceptItem.Concept.Steps[stepIndex].Step, stepParameters)
-			e.setSkipInfo(protoConceptItem.Concept.Steps[stepIndex].Step, step)
+			e.setSkipInfo(conceptStep, step)
 		}
 	}
 	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = false
@@ -221,11 +221,10 @@ func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) (*gauge_messages
 	if err != nil {
 		return nil, err
 	}
-	parameters, err := parser.GetResolvedParams(step, nil, lookup)
+	err = parser.Resolve(step, nil, lookup, protoStepItem.Step)
 	if err != nil {
 		return nil, err
 	}
-	updateProtoStepParameters(protoStepItem.Step, parameters)
 	e.setSkipInfo(protoStepItem.Step, step)
 	return protoStepItem, err
 }
@@ -377,16 +376,6 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 	}
 	scenarioResult.AddItems(items)
 	return nil
-}
-
-func updateProtoStepParameters(protoStep *gauge_messages.ProtoStep, parameters []*gauge_messages.Parameter) {
-	paramIndex := 0
-	for fragmentIndex, fragment := range protoStep.Fragments {
-		if fragment.GetFragmentType() == gauge_messages.Fragment_Parameter {
-			protoStep.Fragments[fragmentIndex].Parameter = parameters[paramIndex]
-			paramIndex++
-		}
-	}
 }
 
 func getTagValue(tags *gauge.Tags) []string {
