@@ -188,7 +188,6 @@ func (e *specExecutor) resolveToProtoItem(item gauge.Item) (*gauge_messages.Prot
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
 func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup) (*gauge_messages.ProtoItem, error) {
-	paramResolver := new(parser.ParamResolver)
 	if err := parser.PopulateConceptDynamicParams(&concept, lookup); err != nil {
 		return nil, err
 	}
@@ -204,7 +203,7 @@ func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gau
 			}
 			protoConceptItem.GetConcept().GetSteps()[stepIndex] = protoItem
 		} else {
-			stepParameters, err := paramResolver.GetResolvedParams(step, &concept, &concept.Lookup)
+			stepParameters, err := parser.GetResolvedParams(step, &concept, &concept.Lookup)
 			if err != nil {
 				return nil, err
 			}
@@ -218,12 +217,11 @@ func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gau
 
 func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) (*gauge_messages.ProtoItem, error) {
 	protoStepItem := gauge.ConvertToProtoItem(step)
-	paramResolver := new(parser.ParamResolver)
 	lookup, err := e.dataTableLookup()
 	if err != nil {
 		return nil, err
 	}
-	parameters, err := paramResolver.GetResolvedParams(step, nil, lookup)
+	parameters, err := parser.GetResolvedParams(step, nil, lookup)
 	if err != nil {
 		return nil, err
 	}

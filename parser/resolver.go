@@ -36,16 +36,12 @@ type specialTypeResolver struct {
 	predefinedResolvers map[string]resolverFn
 }
 
-// ParamResolver resolves dynamic parameters
-type ParamResolver struct {
-}
-
 func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
 // GetResolvedParams based on the arg type(static, dynamic, table, special_string, special_table) resolves the parameter of a step.
-func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) ([]*gauge_messages.Parameter, error) {
+func GetResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup) ([]*gauge_messages.Parameter, error) {
 	parameters := make([]*gauge_messages.Parameter, 0)
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
@@ -68,7 +64,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Name = resolvedArg.Name
 			if resolvedArg.Table.IsInitialized() {
 				parameter.ParameterType = gauge_messages.Parameter_Special_Table
-				table, err := paramResolver.createProtoStepTable(&resolvedArg.Table, lookup)
+				table, err := createProtoStepTable(&resolvedArg.Table, lookup)
 				if err != nil {
 					return nil, err
 				}
@@ -82,14 +78,14 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 			parameter.Value = arg.Value
 		} else if arg.ArgType == gauge.SpecialTable {
 			parameter.ParameterType = gauge_messages.Parameter_Special_Table
-			table, err := paramResolver.createProtoStepTable(&arg.Table, lookup)
+			table, err := createProtoStepTable(&arg.Table, lookup)
 			if err != nil {
 				return nil, err
 			}
 			parameter.Table = table
 		} else {
 			parameter.ParameterType = gauge_messages.Parameter_Table
-			table, err := paramResolver.createProtoStepTable(&arg.Table, lookup)
+			table, err := createProtoStepTable(&arg.Table, lookup)
 			if err != nil {
 				return nil, err
 			}
@@ -101,7 +97,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 	return parameters, nil
 }
 
-func (paramResolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_messages.ProtoTable, error) {
+func createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_messages.ProtoTable, error) {
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
