@@ -80,12 +80,12 @@ func (s *MySuite) TestValidateFlagsWithInvalidStrategy(c *C) {
 	Strategy = "sdf"
 	NumberOfExecutionStreams = 1
 	err := validateFlags()
-	c.Assert(err.Error(), Equals, "Invalid input(sdf) to --strategy flag.")
+	c.Assert(err.Error(), Equals, "invalid input(sdf) to --strategy flag")
 }
 
 func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 	InParallel = true
 	NumberOfExecutionStreams = -1
 	err := validateFlags()
-	c.Assert(err.Error(), Equals, "Invalid input(-1) to --n flag.")
+	c.Assert(err.Error(), Equals, "invalid input(-1) to --n flag")
 }

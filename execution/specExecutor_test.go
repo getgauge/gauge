@@ -38,7 +38,7 @@ type specBuilder struct {
 	lines []string
 }
 
-func SpecBuilder() *specBuilder {
+func newSpecBuilder() *specBuilder {
 	return &specBuilder{lines: make([]string, 0)}
 }
 
@@ -105,7 +105,7 @@ func (specBuilder *specBuilder) text(comment string) *specBuilder {
 func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
@@ -116,9 +116,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	lookup, err := specExecutor.dataTableLookup()
-	c.Assert(err, IsNil)
-	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 
@@ -146,7 +144,7 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
@@ -158,9 +156,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	lookup, err := specExecutor.dataTableLookup()
-	c.Assert(err, IsNil)
-	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -193,7 +189,7 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 	conceptDictionary := gauge.NewConceptDictionary()
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\"").
 		String()
@@ -205,11 +201,7 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	lookup, err := specExecutor.dataTableLookup()
-	if err != nil {
-		t.Errorf("Expected no error. Got : %s", err.Error())
-	}
-	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
 	if err != nil {
 		t.Errorf("Expected no error. Got : %s", err.Error())
 	}
@@ -224,7 +216,7 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "foo", "8800").
 		tableHeader("666", "bar", "9900").
@@ -240,9 +232,7 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	specExecutor.errMap = gauge.NewBuildErrors()
-	lookup, err := specExecutor.dataTableLookup()
-	c.Assert(err, IsNil)
-	cItem, err := specExecutor.resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")
@@ -325,7 +315,7 @@ func (s *MySuite) TestCreateSkippedSpecResultWithScenarios(c *C) {
 
 func anySpec() *gauge.Specification {
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
@@ -352,7 +342,7 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
 	stepText := "Unimplememted step"
 
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableRow("123", "foo", "8800").
 		tableRow("666", "bar", "9900").
@@ -696,13 +686,13 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
 		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:    [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
+				Screenshots:   [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}

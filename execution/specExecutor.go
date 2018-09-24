@@ -65,16 +65,6 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler,
 	}
 }
 
-func hasParseError(errs []error) bool {
-	for _, e := range errs {
-		switch e.(type) {
-		case parser.ParseError:
-			return true
-		}
-	}
-	return false
-}
-
 func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *result.SpecResult {
 	e.specResult = gauge.NewSpecResult(e.specification)
 	if errs, ok := e.errMap.SpecErrs[e.specification]; ok {
@@ -83,7 +73,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			return e.specResult
 		}
 	}
-	resolvedSpecItems, err := e.resolveItems(e.specification.GetSpecItems())
+	resolvedSpecItems, err := resolveItems(e.specification.GetSpecItems(), e.dataTableLookup, e.setSkipInfo)
 	if err != nil {
 		logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 	}
@@ -149,86 +139,6 @@ func (e *specExecutor) executeSpec() error {
 	return nil
 }
 
-func (e *specExecutor) resolveItems(items []gauge.Item) ([]*gauge_messages.ProtoItem, error) {
-	var protoItems []*gauge_messages.ProtoItem
-	for _, item := range items {
-		if item.Kind() != gauge.TearDownKind {
-			protoItem, err := e.resolveToProtoItem(item)
-			if err != nil {
-				return nil, err
-			}
-			protoItems = append(protoItems, protoItem)
-		}
-	}
-	return protoItems, nil
-}
-
-func (e *specExecutor) resolveToProtoItem(item gauge.Item) (*gauge_messages.ProtoItem, error) {
-	var protoItem *gauge_messages.ProtoItem
-	var err error
-	switch item.Kind() {
-	case gauge.StepKind:
-		if (item.(*gauge.Step)).IsConcept {
-			concept := item.(*gauge.Step)
-			lookup, err := e.dataTableLookup()
-			if err != nil {
-				return nil, err
-			}
-			protoItem, err = e.resolveToProtoConceptItem(*concept, lookup)
-		} else {
-			protoItem, err = e.resolveToProtoStepItem(item.(*gauge.Step))
-		}
-		break
-
-	default:
-		protoItem = gauge.ConvertToProtoItem(item)
-	}
-	return protoItem, err
-}
-
-// Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
-func (e *specExecutor) resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup) (*gauge_messages.ProtoItem, error) {
-	if err := parser.PopulateConceptDynamicParams(&concept, lookup); err != nil {
-		return nil, err
-	}
-	protoConceptItem := gauge.ConvertToProtoItem(&concept)
-	protoConceptItem.Concept.ConceptStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
-	for stepIndex, step := range concept.ConceptSteps {
-		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
-		if step.IsConcept {
-			step.Parent = &concept
-			protoItem, err := e.resolveToProtoConceptItem(*step, &concept.Lookup)
-			if err != nil {
-				return nil, err
-			}
-			protoConceptItem.GetConcept().GetSteps()[stepIndex] = protoItem
-		} else {
-			conceptStep := protoConceptItem.Concept.Steps[stepIndex].Step
-			err := parser.Resolve(step, &concept, &concept.Lookup, conceptStep)
-			if err != nil {
-				return nil, err
-			}
-			e.setSkipInfo(conceptStep, step)
-		}
-	}
-	protoConceptItem.Concept.ConceptStep.StepExecutionResult.Skipped = false
-	return protoConceptItem, nil
-}
-
-func (e *specExecutor) resolveToProtoStepItem(step *gauge.Step) (*gauge_messages.ProtoItem, error) {
-	protoStepItem := gauge.ConvertToProtoItem(step)
-	lookup, err := e.dataTableLookup()
-	if err != nil {
-		return nil, err
-	}
-	err = parser.Resolve(step, nil, lookup, protoStepItem.Step)
-	if err != nil {
-		return nil, err
-	}
-	e.setSkipInfo(protoStepItem.Step, step)
-	return protoStepItem, err
-}
-
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit,
 		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
@@ -260,12 +170,6 @@ func (e *specExecutor) notifyAfterSpecHook() {
 		handleHookFailure(e.specResult, res, result.AddPostHook)
 	}
 	e.pluginHandler.NotifyPlugins(m)
-}
-
-func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r runner.Runner) *gauge_messages.ProtoExecutionResult {
-	executionResult := r.ExecuteAndGetStatus(message)
-	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())
-	return executionResult
 }
 
 func (e *specExecutor) skipSpecForError(err error) {
@@ -321,7 +225,7 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) ([]*gau
 	for i, context := range steps {
 		items[i] = context
 	}
-	return e.resolveItems(items)
+	return resolveItems(items, e.dataTableLookup, e.setSkipInfo)
 }
 
 func (e *specExecutor) dataTableLookup() (*gauge.ArgLookup, error) {
@@ -370,7 +274,7 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 		return err
 	}
 	scenarioResult.AddTearDownSteps(tearDownSteps)
-	items, err := e.resolveItems(scenario.Items)
+	items, err := resolveItems(scenario.Items, e.dataTableLookup, e.setSkipInfo)
 	if err != nil {
 		return err
 	}
@@ -420,4 +324,20 @@ func getDataTableRows(tableRows string) (tableRowIndexes []int) {
 		}
 	}
 	return
+}
+
+func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTimeTracker, r runner.Runner) *gauge_messages.ProtoExecutionResult {
+	executionResult := r.ExecuteAndGetStatus(message)
+	execTimeTracker.AddExecTime(executionResult.GetExecutionTime())
+	return executionResult
+}
+
+func hasParseError(errs []error) bool {
+	for _, e := range errs {
+		switch e.(type) {
+		case parser.ParseError:
+			return true
+		}
+	}
+	return false
 }

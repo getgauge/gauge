@@ -43,6 +43,7 @@ import (
 	"github.com/getgauge/gauge/util"
 )
 
+// Strategy for execution, can be either 'Eager' or 'Lazy'
 var Strategy string
 
 // Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.

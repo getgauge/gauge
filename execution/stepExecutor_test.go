@@ -117,7 +117,7 @@ func TestStepExecutionShouldGetScreenshotsBeforeStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -165,7 +165,7 @@ func TestStepExecutionShouldGetScreenshotsAfterStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:    [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
 				Failed:        false,
 				ExecutionTime: 10,
 			}

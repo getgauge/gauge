@@ -31,9 +31,11 @@ import (
 	"github.com/getgauge/gauge/runner"
 )
 
+// ExecuteTags holds the tags to filter the execution by
 var ExecuteTags = ""
 var tableRowsIndexes []int
 
+// SetTableRows is used to limit data driven execution to specific rows
 func SetTableRows(tableRows string) {
 	tableRowsIndexes = getDataTableRows(tableRows)
 }
