@@ -61,7 +61,7 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 }
 
 // AddTableRelatedScenarioResult aggregates the data table driven spec results.
-func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
+func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int, specDataTable bool) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
@@ -82,7 +82,7 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 			specResult.IsFailed = true
 		}
 	}
-	specResult.ProtoSpec.IsTableDriven = true
+	specResult.ProtoSpec.IsTableDriven = specDataTable
 	specResult.ScenarioCount += numberOfScenarios
 }
 

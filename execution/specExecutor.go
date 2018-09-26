@@ -97,11 +97,15 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	if execute && !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
-			scenarioResults, err := e.executeScenarios(e.specification.Scenarios)
+			others, tableDriven := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
+				return s.ScenarioDataTableRow.IsInitialized()
+			})
+			scenarioResults, err := e.executeScenarios(others)
 			if err != nil {
 				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(scenarioResults)
+			e.executeTableRelatedScenarios(tableDriven)
 		} else {
 			e.executeSpec()
 		}
@@ -124,7 +128,7 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 			return err
 		}
 		result := [][]result.Result{sceRes}
-		e.specResult.AddTableRelatedScenarioResult(result, index)
+		e.specResult.AddTableRelatedScenarioResult(result, index, e.specification.DataTable.IsInitialized())
 	}
 	return nil
 }
@@ -288,8 +292,10 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 	if err != nil {
 		return err
 	}
-	if err = lookup.ReadDataTableRow(&scenario.DataTable.Table, 0); err != nil {
-		return err
+	if scenario.ScenarioDataTableRow.IsInitialized() {
+		if err = lookup.ReadDataTableRow(&scenario.ScenarioDataTableRow, 0); err != nil {
+			return err
+		}
 	}
 	items, err := resolveItems(scenario.Items, lookup, e.setSkipInfo)
 	if err != nil {

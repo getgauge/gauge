@@ -40,6 +40,7 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 				}
 			}
 		} else {
+			spec.Scenarios = copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap)
 			specs = append(specs, spec)
 		}
 	}
@@ -81,7 +82,7 @@ func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specific
 }
 
 func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap *gauge.BuildErrors) (scns []*gauge.Scenario) {
-	for _, scn := range scenarios {
+	var create = func(scn *gauge.Scenario, scnTableRow gauge.Table, scnTableRowIndex int) *gauge.Scenario {
 		newScn := &gauge.Scenario{
 			Steps:                 scn.Steps,
 			Items:                 scn.Items,
@@ -92,10 +93,24 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 			Comments: scn.Comments,
 			Span:     scn.Span,
 		}
+		if scnTableRow.IsInitialized() {
+			newScn.ScenarioDataTableRow = scnTableRow
+			newScn.ScenarioDataTableRowIndex = scnTableRowIndex
+		}
 		if len(errMap.ScenarioErrs[scn]) > 0 {
 			errMap.ScenarioErrs[newScn] = errMap.ScenarioErrs[scn]
 		}
-		scns = append(scns, newScn)
+		return newScn
+	}
+	for _, scn := range scenarios {
+		if scn.DataTable.IsInitialized() {
+			for i := range scn.DataTable.Table.Rows() {
+				t := getTableWithOneRow(scn.DataTable.Table, i)
+				scns = append(scns, create(scn, *t, i))
+			}
+		} else {
+			scns = append(scns, create(scn, gauge.Table{}, 0))
+		}
 	}
 	return
 }

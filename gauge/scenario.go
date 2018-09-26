@@ -22,15 +22,17 @@ import (
 )
 
 type Scenario struct {
-	Heading               *Heading
-	Steps                 []*Step
-	Comments              []*Comment
-	Tags                  *Tags
-	Items                 []Item
-	DataTable             DataTable
-	SpecDataTableRow      Table
-	SpecDataTableRowIndex int
-	Span                  *Span
+	Heading                   *Heading
+	Steps                     []*Step
+	Comments                  []*Comment
+	Tags                      *Tags
+	Items                     []Item
+	DataTable                 DataTable
+	SpecDataTableRow          Table
+	SpecDataTableRowIndex     int
+	ScenarioDataTableRow      Table
+	ScenarioDataTableRowIndex int
+	Span                      *Span
 }
 
 // Span represents scope of Scenario based on line number
