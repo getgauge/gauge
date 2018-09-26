@@ -5,15 +5,15 @@ the version number is manually bumped for now.
 
 Python package can be installed through multiple ways
 
-### using setup.py
+#### using setup.py
 - navigate to the current directory `gauge\build\pip\' 
 - run `python setup.py install` on command prompt
 
-### using pip
+#### using pip
 - pre-requisite: pip should be installed and available on machine
 - run the command `pip install gauge-cli`
 
-### Check to ensure gauge-cli is installed
+## Check to ensure gauge-cli is installed
 - Once the package has been setup. please exit the current terminal and relaunch terminal again
 - run the command `gauge` , you should be able to see similar output
 ```
@@ -52,3 +52,14 @@ Flags:
 Use "gauge [command] --help" for more information about a command.
 Complete manual is available at https://manpage.gauge.org/.
 ```
+
+## Installing an older version gauge 
+Easiest way to deal with an older version of gauge is using setup.py
+
+### Using setup.py
+- Check through and obtain a valid tag/build number from [releases](https://github.com/getgauge/gauge/releases)
+- Navigate to line # 15 of `setup.py` file and update the the value of `release_ver` variable to be something similar to  release_ver = '1.0.2'
+- save the changes made to file and close the editor
+- navigate to `setup.py` on command prompt/terminal 
+- run the command `python setup.py install`
+- This would install the version as specified along with latest release of Gauge-CLI Version
