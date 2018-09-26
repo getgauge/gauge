@@ -73,7 +73,11 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			return e.specResult
 		}
 	}
-	resolvedSpecItems, err := resolveItems(e.specification.GetSpecItems(), e.dataTableLookup, e.setSkipInfo)
+	lookup, err := e.dataTableLookup()
+	if err != nil {
+		logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+	}
+	resolvedSpecItems, err := resolveItems(e.specification.GetSpecItems(), lookup, e.setSkipInfo)
 	if err != nil {
 		logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 	}
@@ -225,11 +229,17 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) ([]*gau
 	for i, context := range steps {
 		items[i] = context
 	}
-	return resolveItems(items, e.dataTableLookup, e.setSkipInfo)
+	lookup, err := e.dataTableLookup()
+	if err != nil {
+		return nil, err
+	}
+	return resolveItems(items, lookup, e.setSkipInfo)
 }
 
 func (e *specExecutor) dataTableLookup() (*gauge.ArgLookup, error) {
-	return new(gauge.ArgLookup).FromDataTableRow(&e.specification.DataTable.Table, 0)
+	l := new(gauge.ArgLookup)
+	err := l.ReadDataTableRow(&e.specification.DataTable.Table, 0)
+	return l, err
 }
 
 func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) ([]result.Result, error) {
@@ -274,7 +284,14 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 		return err
 	}
 	scenarioResult.AddTearDownSteps(tearDownSteps)
-	items, err := resolveItems(scenario.Items, e.dataTableLookup, e.setSkipInfo)
+	lookup, err := e.dataTableLookup()
+	if err != nil {
+		return err
+	}
+	if err = lookup.ReadDataTableRow(&scenario.DataTable.Table, 0); err != nil {
+		return err
+	}
+	items, err := resolveItems(scenario.Items, lookup, e.setSkipInfo)
 	if err != nil {
 		return err
 	}

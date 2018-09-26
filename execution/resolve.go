@@ -26,11 +26,11 @@ import (
 type setSkipInfoFn func(protoStep *gauge_messages.ProtoStep, step *gauge.Step)
 type argLookupFn func() (*gauge.ArgLookup, error)
 
-func resolveItems(items []gauge.Item, lookupFn argLookupFn, skipFn setSkipInfoFn) ([]*gauge_messages.ProtoItem, error) {
+func resolveItems(items []gauge.Item, lookup *gauge.ArgLookup, skipFn setSkipInfoFn) ([]*gauge_messages.ProtoItem, error) {
 	var protoItems []*gauge_messages.ProtoItem
 	for _, item := range items {
 		if item.Kind() != gauge.TearDownKind {
-			protoItem, err := resolveToProtoItem(item, lookupFn, skipFn)
+			protoItem, err := resolveToProtoItem(item, lookup, skipFn)
 			if err != nil {
 				return nil, err
 			}
@@ -40,7 +40,7 @@ func resolveItems(items []gauge.Item, lookupFn argLookupFn, skipFn setSkipInfoFn
 	return protoItems, nil
 }
 
-func resolveToProtoItem(item gauge.Item, lookupFn argLookupFn, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
+func resolveToProtoItem(item gauge.Item, lookup *gauge.ArgLookup, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
 	var protoItem *gauge_messages.ProtoItem
 	var err error
 	switch item.Kind() {
@@ -48,9 +48,9 @@ func resolveToProtoItem(item gauge.Item, lookupFn argLookupFn, skipFn setSkipInf
 		if (item.(*gauge.Step)).IsConcept {
 			concept := item.(*gauge.Step)
 			// lookup, err := e.dataTableLookup()
-			protoItem, err = resolveToProtoConceptItem(*concept, lookupFn, skipFn)
+			protoItem, err = resolveToProtoConceptItem(*concept, lookup, skipFn)
 		} else {
-			protoItem, err = resolveToProtoStepItem(item.(*gauge.Step), lookupFn, skipFn)
+			protoItem, err = resolveToProtoStepItem(item.(*gauge.Step), lookup, skipFn)
 		}
 		break
 
@@ -61,11 +61,7 @@ func resolveToProtoItem(item gauge.Item, lookupFn argLookupFn, skipFn setSkipInf
 }
 
 // Not passing pointer as we cannot modify the original concept step's lookup. This has to be populated for each iteration over data table.
-func resolveToProtoConceptItem(concept gauge.Step, lookupFn argLookupFn, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
-	lookup, err := lookupFn()
-	if err != nil {
-		return nil, err
-	}
+func resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
 	if err := parser.PopulateConceptDynamicParams(&concept, lookup); err != nil {
 		return nil, err
 	}
@@ -75,7 +71,7 @@ func resolveToProtoConceptItem(concept gauge.Step, lookupFn argLookupFn, skipFn 
 		// Need to reset parent as the step.parent is pointing to a concept whose lookup is not populated yet
 		if step.IsConcept {
 			step.Parent = &concept
-			protoItem, err := resolveToProtoConceptItem(*step, func() (*gauge.ArgLookup, error) { return &concept.Lookup, nil }, skipFn)
+			protoItem, err := resolveToProtoConceptItem(*step, &concept.Lookup, skipFn)
 			if err != nil {
 				return nil, err
 			}
@@ -94,13 +90,9 @@ func resolveToProtoConceptItem(concept gauge.Step, lookupFn argLookupFn, skipFn 
 	return protoConceptItem, nil
 }
 
-func resolveToProtoStepItem(step *gauge.Step, lookupFn argLookupFn, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
+func resolveToProtoStepItem(step *gauge.Step, lookup *gauge.ArgLookup, skipFn setSkipInfoFn) (*gauge_messages.ProtoItem, error) {
 	protoStepItem := gauge.ConvertToProtoItem(step)
-	lookup, err := lookupFn()
-	if err != nil {
-		return nil, err
-	}
-	err = parser.Resolve(step, nil, lookup, protoStepItem.Step)
+	err := parser.Resolve(step, nil, lookup, protoStepItem.Step)
 	if err != nil {
 		return nil, err
 	}

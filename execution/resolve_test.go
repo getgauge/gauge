@@ -41,7 +41,9 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 
@@ -81,7 +83,9 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "456", "foo", "9900")
@@ -126,7 +130,11 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
-	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
+	lookup, err := specExecutor.dataTableLookup()
+	if err != nil {
+		t.Errorf("Expected no error. Got : %s", err.Error())
+	}
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup, specExecutor.setSkipInfo)
 	if err != nil {
 		t.Errorf("Expected no error. Got : %s", err.Error())
 	}
@@ -157,7 +165,9 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 
 	specExecutor.errMap = gauge.NewBuildErrors()
-	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], specExecutor.dataTableLookup, specExecutor.setSkipInfo)
+	lookup, err := specExecutor.dataTableLookup()
+	c.Assert(err, IsNil)
+	cItem, err := resolveToProtoConceptItem(*spec.Scenarios[0].Steps[0], lookup, specExecutor.setSkipInfo)
 	c.Assert(err, IsNil)
 	protoConcept := cItem.GetConcept()
 	checkConceptParameterValuesInOrder(c, protoConcept, "123", "foo", "8800")

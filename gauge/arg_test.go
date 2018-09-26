@@ -85,11 +85,13 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	dataTable.AddRowValues(dataTable.CreateTableCells([]string{"1", "admin"}))
 	dataTable.AddRowValues(dataTable.CreateTableCells([]string{"2", "root"}))
 
-	emptyLookup, err := new(ArgLookup).FromDataTableRow(new(Table), 0)
+	emptyLookup := new(ArgLookup)
+	err := emptyLookup.ReadDataTableRow(new(Table), 0)
 	c.Assert(err, IsNil)
 	c.Assert(emptyLookup.ParamIndexMap, IsNil)
 
-	lookup1, err := new(ArgLookup).FromDataTableRow(dataTable, 0)
+	lookup1 := new(ArgLookup)
+	err = lookup1.ReadDataTableRow(dataTable, 0)
 	c.Assert(err, IsNil)
 	idArg1, err := lookup1.GetArg("id")
 	c.Assert(err, IsNil)
@@ -100,7 +102,8 @@ func (s *MySuite) TestGetLookupFromTableRow(c *C) {
 	c.Assert(nameArg1.Value, Equals, "admin")
 	c.Assert(nameArg1.ArgType, Equals, Static)
 
-	lookup2, err := new(ArgLookup).FromDataTableRow(dataTable, 1)
+	lookup2 := new(ArgLookup)
+	err = lookup2.ReadDataTableRow(dataTable, 1)
 	c.Assert(err, IsNil)
 	idArg2, err := lookup2.GetArg("id")
 	c.Assert(err, IsNil)
