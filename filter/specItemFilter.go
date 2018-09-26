@@ -40,6 +40,10 @@ type ScenarioFilterBasedOnTags struct {
 	tagExpression string
 }
 
+type scenarioFilterBasedOnName struct {
+	scenariosName []string
+}
+
 func NewScenarioFilterBasedOnSpan(lineNumbers []int) *scenarioFilterBasedOnSpan {
 	return &scenarioFilterBasedOnSpan{lineNumbers}
 }
@@ -69,6 +73,17 @@ func (filter *ScenarioFilterBasedOnTags) Filter(item gauge.Item) bool {
 		return !filter.filterTags(append(tags.Values(), filter.specTags...))
 	}
 	return false
+}
+
+func newScenarioFilterBasedOnName(scenariosName []string) *scenarioFilterBasedOnName {
+	return &scenarioFilterBasedOnName{scenariosName}
+}
+
+func (filter *scenarioFilterBasedOnName) Filter(item gauge.Item) bool {
+	if item.Kind() != gauge.ScenarioKind {
+		return false
+	}
+	return !item.(*gauge.Scenario).IsScenarioExists(filter.scenariosName)
 }
 
 func sanitize(tag string) string {
@@ -214,4 +229,15 @@ func validateTagExpression(tagExpression string) {
 	if err != nil {
 		logger.Fatalf(true, err.Error())
 	}
+}
+
+func filterSpecsByScenarioName(specs []*gauge.Specification, scenariosName []string) []*gauge.Specification {
+	filteredSpecs := make([]*gauge.Specification, 0)
+	for _, spec := range specs {
+		spec.Filter(newScenarioFilterBasedOnName(scenariosName))
+		if len(spec.Scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, spec)
+		}
+	}
+	return filteredSpecs
 }

@@ -17,6 +17,10 @@
 
 package gauge
 
+import (
+	"strings"
+)
+
 type Scenario struct {
 	Heading           *Heading
 	Steps             []*Step
@@ -102,4 +106,13 @@ func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
 
 func (scenario Scenario) Kind() TokenKind {
 	return ScenarioKind
+}
+
+func (scen *Scenario) IsScenarioExists(scenarios []string) bool {
+	for _, scenario := range scenarios {
+		if strings.Compare(scen.Heading.Value, scenario) == 0 {
+			return true
+		}
+	}
+	return false
 }
