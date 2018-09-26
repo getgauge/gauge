@@ -67,6 +67,7 @@ except IOError:
 
 setup(
     name='gauge-cli',
+    version=release_ver,
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/getgauge/gauge',
