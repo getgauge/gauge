@@ -55,7 +55,7 @@ Function TelemetryEnablePage
 FunctionEnd
 
 Function TelemetryPageLeave
-    ${NSD_GetState} $TelemetryEnabled $R5
+    ${NSD_GetState} $TelemetryEnabled $R8
 FunctionEnd
 
 ; MUI Settings
@@ -108,6 +108,12 @@ SectionGroup /e "Language Plugins" SEC_LANGUAGES
   SectionEnd
   Section /o "Ruby" SEC_RUBY
   SectionEnd
+  Section /o "JavaScript" SEC_JAVASCRIPT
+  SectionEnd
+  Section /o "Python" SEC_PYTHON
+  SectionEnd
+  Section /o "Dotnet" SEC_DOTNET
+  SectionEnd
 SectionGroupEnd
 
 SectionGroup /e "Reporting Plugins" SEC_REPORTS
@@ -127,6 +133,9 @@ SectionGroupEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVA} "Java language runner, enables writing implementations using Java."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CSHARP} "C# language runner, enables writing implementations using C#."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_RUBY} "Ruby language runner, enables writing implementations using Ruby."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVASCRIPT} "JavaScript language runner, enables writing implementations using JavaScript."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_PYTHON} "Python language runner, enables writing implementations using Python."
+  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_DOTNET} "Dotnet core language runner, enables writing implementations using Dotnet core."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_REPORTS} "Check to install reporting plugins. HTML report plugin is installed by default."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_HTML} "Generates HTML report of Gauge spec run."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_XML} "Generates JUnit style XML report of Gauge spec run."
@@ -161,6 +170,15 @@ function .onInit
         ${If} '$3' == 'csharp'
           !insertmacro SelectSection ${SEC_CSHARP}
         ${EndIf}
+        ${If} '$3' == 'javascript'
+          !insertmacro SelectSection ${SEC_JAVASCRIPT}
+        ${EndIf}
+        ${If} '$3' == 'python'
+          !insertmacro SelectSection ${SEC_PYTHON}
+        ${EndIf}
+        ${If} '$3' == 'dotnet'
+          !insertmacro SelectSection ${SEC_DOTNET}
+        ${EndIf}
         ${If} '$3' == 'xml-report'
           !insertmacro SelectSection ${SEC_XML}
         ${EndIf}
@@ -174,7 +192,7 @@ function .onInit
     ${GetOptions} $R0 "/TELEMETRY" $0
     ${IfNot} ${Errors}
       ${If} $0 == "off"
-        StrCpy $R5 0
+        StrCpy $R8 0
       ${EndIF}
     ${EndIF}
   ${EndIf}
@@ -199,7 +217,7 @@ Section -Post
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
-  ${If} $R5 == 0
+  ${If} $R8 == 0
     DetailPrint "Turning off Telemetry"
     nsExec::ExecToLog 'gauge telemetry off'
   ${Else}
@@ -214,8 +232,11 @@ Section -Post
     SectionGetFlags ${SEC_JAVA} $R0
     SectionGetFlags ${SEC_CSHARP} $R1
     SectionGetFlags ${SEC_RUBY} $R2
-    SectionGetFlags ${SEC_XML} $R3
-    SectionGetFlags ${SEC_SPECTACLE} $R4
+    SectionGetFlags ${SEC_JAVASCRIPT} $R3
+    SectionGetFlags ${SEC_PYTHON} $R4
+    SectionGetFlags ${SEC_DOTNET} $R5
+    SectionGetFlags ${SEC_XML} $R6
+    SectionGetFlags ${SEC_SPECTACLE} $R7
 
     ${If} $R0 == 1
       DetailPrint "Installing plugin : java"
@@ -233,14 +254,32 @@ Section -Post
     ${EndIf}
 
     ${If} $R3 == 1
+      DetailPrint "Installing plugin : javavscript"
+      nsExec::ExecToLog 'gauge install javascript'
+    ${EndIf}
+
+    ${If} $R4 == 1
+      DetailPrint "Installing plugin : python"
+      nsExec::ExecToLog 'gauge install python'
+    ${EndIf}
+
+    ${If} $R5 == 1
+      DetailPrint "Installing plugin : dotnet"
+      nsExec::ExecToLog 'gauge install dotnet'
+    ${EndIf}
+
+    ${If} $R6 == 1
       DetailPrint "Installing plugin : xml-report"
       nsExec::ExecToLog 'gauge install xml-report'
     ${EndIf}
 
-    ${If} $R4 == 1
+    ${If} $R7 == 1
       DetailPrint "Installing plugin : spectacle"
       nsExec::ExecToLog 'gauge install spectacle'
     ${EndIf}
+
+    DetailPrint "Installing plugin : html-report"
+    nsExec::ExecToLog 'gauge install html-report'
   ${Else}
     DetailPrint "[WARNING] Internet connection unavailable. Skipping plugins installation"
   ${EndIf}
