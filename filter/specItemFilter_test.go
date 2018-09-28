@@ -702,7 +702,7 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 	c.Assert(len(specs), Equals, 0)
 }
 
-func (s *MySuite) TestToFilterScenariosByName(c *C) {
+func (s *MySuite) TestFilterScenariosByName(c *C) {
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
 	}
@@ -723,7 +723,7 @@ func (s *MySuite) TestToFilterScenariosByName(c *C) {
 	c.Assert(len(specs[0].Scenarios), Equals, 1)
 }
 
-func (s *MySuite) TestToFilterScenarioWhichIsNotExists(c *C) {
+func (s *MySuite) TestFilterScenarioWhichDoesNotExists(c *C) {
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
 	}
@@ -744,7 +744,7 @@ func (s *MySuite) TestToFilterScenarioWhichIsNotExists(c *C) {
 	c.Assert(len(specs), Equals, 0)
 }
 
-func (s *MySuite) TestToFilterMultipleScenariosByName(c *C) {
+func (s *MySuite) TestFilterMultipleScenariosByName(c *C) {
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
 	}

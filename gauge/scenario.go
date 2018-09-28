@@ -108,9 +108,9 @@ func (scenario Scenario) Kind() TokenKind {
 	return ScenarioKind
 }
 
-func (scen *Scenario) IsScenarioExists(scenarios []string) bool {
-	for _, scenario := range scenarios {
-		if strings.Compare(scen.Heading.Value, scenario) == 0 {
+func (scn *Scenario) HasAnyHeading(headings []string) bool {
+	for _, heading := range headings {
+		if strings.Compare(scn.Heading.Value, heading) == 0 {
 			return true
 		}
 	}

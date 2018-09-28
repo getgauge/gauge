@@ -83,7 +83,7 @@ func (filter *scenarioFilterBasedOnName) Filter(item gauge.Item) bool {
 	if item.Kind() != gauge.ScenarioKind {
 		return false
 	}
-	return !item.(*gauge.Scenario).IsScenarioExists(filter.scenariosName)
+	return !item.(*gauge.Scenario).HasAnyHeading(filter.scenariosName)
 }
 
 func sanitize(tag string) string {
