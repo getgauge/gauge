@@ -100,12 +100,25 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			others, tableDriven := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
 				return s.ScenarioDataTableRow.IsInitialized()
 			})
-			scenarioResults, err := e.executeScenarios(others)
+			results, err := e.executeScenarios(others)
 			if err != nil {
 				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 			}
-			e.specResult.AddScenarioResults(scenarioResults)
-			e.executeTableRelatedScenarios(tableDriven)
+			e.specResult.AddScenarioResults(results)
+			scnMap := make(map[int]bool, 0)
+			for _, s := range tableDriven {
+				if _, ok := scnMap[s.Span.Start]; !ok {
+					scnMap[s.Span.Start] = true
+				}
+
+				r, err := e.executeScenario(s)
+				if err != nil {
+					logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+				}
+				e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(&s.DataTable.Table),
+					s.ScenarioDataTableRowIndex, s.SpecDataTableRowIndex, s.SpecDataTableRow.IsInitialized())
+			}
+			e.specResult.ScenarioCount += len(scnMap)
 		} else {
 			e.executeSpec()
 		}
@@ -128,7 +141,7 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 			return err
 		}
 		result := [][]result.Result{sceRes}
-		e.specResult.AddTableRelatedScenarioResult(result, index, e.specification.DataTable.IsInitialized())
+		e.specResult.AddTableRelatedScenarioResult(result, index)
 	}
 	return nil
 }
@@ -265,7 +278,12 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 		IsFailed: false,
 	}
 
-	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
+	scenarioResult := &result.ScenarioResult{
+		ProtoScenario:             gauge.NewProtoScenario(scenario),
+		ScenarioDataTableRow:      gauge.ConvertToProtoTable(&scenario.ScenarioDataTableRow),
+		ScenarioDataTableRowIndex: scenario.ScenarioDataTableRowIndex,
+		ScenarioDataTable:         gauge.ConvertToProtoTable(&scenario.DataTable.Table),
+	}
 	if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
 		return nil, err
 	}
