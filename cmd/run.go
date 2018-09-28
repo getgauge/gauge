@@ -72,6 +72,7 @@ const (
 	streamsName         = "n"
 	failSafeName        = "fail-safe"
 	skipCommandSaveName = "skip-save"
+	scenarioName        = "scenario"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
@@ -101,21 +102,23 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	verbose         bool
-	simpleConsole   bool
-	failed          bool
-	repeat          bool
-	parallel        bool
-	sort            bool
-	installPlugins  bool
-	environment     string
-	tags            string
-	rows            string
-	strategy        string
-	streams         int
-	group           int
-	failSafe        bool
-	skipCommandSave bool
+	verbose             bool
+	simpleConsole       bool
+	failed              bool
+	repeat              bool
+	parallel            bool
+	sort                bool
+	installPlugins      bool
+	environment         string
+	tags                string
+	rows                string
+	strategy            string
+	streams             int
+	group               int
+	failSafe            bool
+	skipCommandSave     bool
+	scenarios           []string
+	scenarioNameDefault []string
 )
 
 func init() {
@@ -138,6 +141,7 @@ func init() {
 	f.BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of failures.")
 	f.BoolVarP(&skipCommandSave, skipCommandSaveName, "", skipCommandSaveDefault, "Skip saving last command in lastRunCmd.json")
 	f.MarkHidden(skipCommandSaveName)
+	f.StringArrayVar(&scenarios, scenarioName, scenarioNameDefault, "Set scenarios for running specs with scenario name")
 }
 
 func executeFailed(cmd *cobra.Command) {
@@ -195,6 +199,7 @@ func installMissingPlugins(flag bool) {
 func execute(cmd *cobra.Command, args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
+
 	if !skipCommandSave {
 		writePrevArgs(os.Args)
 	}

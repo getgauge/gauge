@@ -35,6 +35,10 @@ type specsGroupFilter struct {
 	execStreams int
 }
 
+type scenariosFilter struct {
+	scenarios []string
+}
+
 func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if tagsFilter.tagExp != "" {
 		validateTagExpression(tagsFilter.tagExp)
@@ -56,6 +60,13 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 		return make([]*gauge.Specification, 0)
 	}
 	return group.Specs()
+}
+
+func (scenarioFilter *scenariosFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
+	if len(scenarioFilter.scenarios) != 0 {
+		specs = filterSpecsByScenarioName(specs, scenarioFilter.scenarios)
+	}
+	return specs
 }
 
 func DistributeSpecs(specifications []*gauge.Specification, distributions int) []*gauge.SpecCollection {
