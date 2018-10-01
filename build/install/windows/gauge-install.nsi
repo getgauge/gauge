@@ -224,7 +224,7 @@ Section -Post
     DetailPrint "Turning on Telemetry"
     nsExec::ExecToLog 'gauge telemetry on'
   ${EndIf}
-  
+
   Dialer::GetConnectedState
   Pop $R0
 
@@ -255,7 +255,7 @@ Section -Post
 
     ${If} $R3 == 1
       DetailPrint "Installing plugin : javavscript"
-      nsExec::ExecToLog 'gauge install javascript'
+      nsExec::ExecToLog 'gauge install js'
     ${EndIf}
 
     ${If} $R4 == 1
