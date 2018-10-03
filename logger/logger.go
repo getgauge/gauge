@@ -236,19 +236,19 @@ func addLogsDirPath(logFileName string) string {
 	return filepath.Join(customLogsDir, logFileName)
 }
 
-func getLogFile(fileName string) string {
-	if filepath.IsAbs(fileName) {
-		return fileName
+func getLogFile(logFileName string) string {
+	logDirPath := addLogsDirPath(logFileName)
+	if filepath.IsAbs(logDirPath) {
+		return logDirPath
 	}
-	fileName = addLogsDirPath(fileName)
 	if config.ProjectRoot != "" {
-		return filepath.Join(config.ProjectRoot, fileName)
+		return filepath.Join(config.ProjectRoot, logDirPath)
 	}
 	gaugeHome, err := common.GetGaugeHomeDirectory()
 	if err != nil {
-		return fileName
+		return logDirPath
 	}
-	return filepath.Join(gaugeHome, fileName)
+	return filepath.Join(gaugeHome, logDirPath)
 }
 
 func loggingLevel(logLevel string) logging.Level {
