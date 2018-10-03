@@ -151,51 +151,6 @@ function .onInit
       StrCpy $INSTDIR "$PROGRAMFILES\Gauge"
     ${EndIf}
   ${EndIf}
-  ;Only if it is silent install
-  ${If} ${Silent}
-    ${GetParameters} $R0
-    ;See if PLUGINS to install are specified via cmd line arg
-    ${GetOptions} $R0 "/PLUGINS" $0
-    ${IfNot} ${Errors}
-      ${Explode}  $1  "," $0
-      ${For} $2 1 $1
-        Pop $3
-        ${StrFilter} $3 "-" "" "" $3 ; lowercase
-        ${If} '$3' == 'ruby'
-          !insertmacro SelectSection ${SEC_RUBY}
-        ${EndIf}
-        ${If} '$3' == 'java'
-          !insertmacro SelectSection ${SEC_JAVA}
-        ${EndIf}
-        ${If} '$3' == 'csharp'
-          !insertmacro SelectSection ${SEC_CSHARP}
-        ${EndIf}
-        ${If} '$3' == 'javascript'
-          !insertmacro SelectSection ${SEC_JAVASCRIPT}
-        ${EndIf}
-        ${If} '$3' == 'python'
-          !insertmacro SelectSection ${SEC_PYTHON}
-        ${EndIf}
-        ${If} '$3' == 'dotnet'
-          !insertmacro SelectSection ${SEC_DOTNET}
-        ${EndIf}
-        ${If} '$3' == 'xml-report'
-          !insertmacro SelectSection ${SEC_XML}
-        ${EndIf}
-        ${If} '$3' == 'spectacle'
-          !insertmacro SelectSection ${SEC_SPECTACLE}
-        ${EndIf}
-      ${Next}
-    ${EndIF}
-
-    ;See if TELEMETRY is set via cmd line arg
-    ${GetOptions} $R0 "/TELEMETRY" $0
-    ${IfNot} ${Errors}
-      ${If} $0 == "off"
-        StrCpy $R8 0
-      ${EndIF}
-    ${EndIF}
-  ${EndIf}
 functionEnd
 
 Section -AdditionalIcons
