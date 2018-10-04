@@ -1,15 +1,21 @@
-"""
-The setup is wrapper to install Gauge CLI through pip.
-"""
+"""The setup installs Gauge CLI through pip."""
 from setuptools import setup
 from os import path
 from setuptools.command.install import install
-import requests
 import json
 import platform
 import glob
 import zipfile
 import shutil
+import os
+import sys
+try:
+    import requests
+
+except ImportError:
+    os.system('python -m ensurepip --default-pip')
+    os.system('python -m pip install requests')
+    import requests
 
 # TODO: bumped manually for now, wish to be automatically picked from source
 release_ver = '1.0.2'
@@ -38,18 +44,29 @@ class CustomInstallCommand(install):
         package_name = 'gauge-%s-%s.%s' % (release_ver, os_name, arch)
         package_url = base_url.replace('api.', '').replace('/repos', '') + '/download/v%s/%s.zip' % (release_ver, package_name)
         r2 = requests.get(package_url)
-        print package_url
         with open("gauge.zip", "wb") as download:
             download.write(r2.content)
 
     def gauge_main_to_path(self):
-        """Make gauge to be available globally by placing them into bin."""
+        """Place Gauge CLI into Scripts Directory."""
         file_list = glob.glob('*')
         if 'bin' in file_list:
             shutil.rmtree('bin')
         self._gauge_package_fetch()
         with zipfile.ZipFile('gauge.zip', "r") as z:
             z.extractall()
+        target_path = os.path.join(self.install_scripts, gauge_file)
+        source_path = os.path.join(os.getcwd(), gauge_file)
+        if os.path.isfile(target_path):
+            os.remove(target_path)
+        if os.path.isfile(source_path):
+            self.move_file(source_path, target_path)
+
+            if os_name is not "win32":
+                if sys.version_info[0] == 3:
+                    os.chmod(target_path, 0o755)
+                if sys.version_info[0] < 3:
+                    os.chmod(target_path, 755)
 
     def run(self):
         """Custom Install / Run Commands."""
@@ -63,7 +80,8 @@ try:
     with open(path.join(this_directory, 'ReadMe.md'), 'rb') as f:
         long_description = f.read().decode('utf-8')
 except IOError:
-    long_description = '''Gauge is a free and open source test automation framework that takes the pain out of acceptance testing'''
+    long_description = '''Gauge is a free and open source test automation
+    framework that takes the pain out of acceptance testing'''
 
 setup(
     name='gauge-cli',
@@ -79,7 +97,6 @@ setup(
     cmdclass={
         'install': CustomInstallCommand,
     },
-    scripts=[gauge_file],
     classifiers=[
         "License :: GPL-3.0",
         "Development Status :: 5 - Production/Stable",
@@ -98,10 +115,8 @@ setup(
     ],
     install_requires=[
         'pip',
-        'setuptools',
-        'flake8',
-        'requests',
+        'requests>=2.19.1',
     ],
 )
-print("\n***Gauge CLI version - %s Installation Complete!***\n" % release_ver)
-print("\n***Latest release of Gauge CLI is - %s***\n" % latest_version)
+print("\n***Gauge CLI - %s Installation Complete!***\n" % release_ver)
+print("\n***Latest version of Gauge CLI is - %s***\n" % latest_version)
