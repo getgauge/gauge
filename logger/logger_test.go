@@ -117,6 +117,19 @@ func TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(t *testing.T) {
 	}
 }
 
+func TestGetLogFileInCustomPathOutSideOfGaugeProject(t *testing.T) {
+	customLogpath := ""
+	customLogpath, _ = filepath.Abs("_testdata/../myLogsDir")
+	os.Setenv("logs_directory", customLogpath)
+	defer os.Unsetenv("logs_directory")
+	config.ProjectRoot, _ = filepath.Abs("_testdata")
+	want := filepath.Join(customLogpath, apiLogFileName)
+	got := getLogFile(apiLogFileName)
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
+}
+
 func TestGetErrorText(t *testing.T) {
 	tests := []struct {
 		gaugeVersion *version.Version
