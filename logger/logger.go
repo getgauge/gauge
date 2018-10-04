@@ -241,6 +241,9 @@ func getLogFile(fileName string) string {
 		return fileName
 	}
 	fileName = addLogsDirPath(fileName)
+	if filepath.IsAbs(fileName) {
+		return fileName
+	}
 	if config.ProjectRoot != "" {
 		return filepath.Join(config.ProjectRoot, fileName)
 	}
