@@ -6,7 +6,7 @@ the version number is manually bumped for now.
 Python package can be installed through multiple ways
 
 #### using setup.py
-- navigate to the current directory `gauge\build\pip\' 
+- navigate to the current directory `gauge\build\pip\`
 - run `python setup.py install` on command prompt
 
 #### using pip
@@ -63,3 +63,13 @@ Easiest way to deal with an older version of gauge is using setup.py
 - navigate to `setup.py` on command prompt/terminal 
 - run the command `python setup.py install`
 - This would install the version as specified along with latest release of Gauge-CLI Version
+
+## Uninstalling Gauge CLI
+Gauge CLI uninstall should be done manually for now.
+Run the following command on your prompt
+```
+$ pip uninstall gauge-cli
+$ python
+
+# This Launches the Interactive Python  
+

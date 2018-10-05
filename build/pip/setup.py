@@ -1,12 +1,9 @@
 """The setup installs Gauge CLI through pip."""
 from setuptools import setup
-from os import path
 from setuptools.command.install import install
 import json
 import platform
-import glob
 import zipfile
-import shutil
 import os
 import sys
 import requests
@@ -52,7 +49,6 @@ class CustomInstallCommand(install):
             os.remove(target_path)
         if os.path.isfile(source_path):
             self.move_file(source_path, target_path)
-
             if os_name is not "win32":
                 if sys.version_info[0] == 3:
                     os.chmod(target_path, 0o755)
@@ -60,24 +56,20 @@ class CustomInstallCommand(install):
                     os.chmod(target_path, 755)
 
     def run(self):
-        """Custom Install / Run Commands."""
+        """Custom Install / Run Command."""
         self.gauge_main_to_path()
         install.run(self)
 
 
-this_directory = path.abspath(path.dirname(__file__))
-long_description = None
-try:
-    with open(path.join(this_directory, 'ReadMe.md'), 'rb') as f:
-        long_description = f.read().decode('utf-8')
-except IOError:
-    long_description = '''Gauge is a free and open source test automation
-    framework that takes the pain out of acceptance testing'''
+def readme():
+    """Get the ReadMe content for Long Description."""
+    with open('ReadMe.md') as readme_file:
+        return readme_file.read()
 
 setup(
     name='gauge-cli',
     version=release_ver,
-    long_description=long_description,
+    long_description=readme(),
     long_description_content_type='text/markdown',
     url='https://github.com/getgauge/gauge',
     platforms=["Windows", "Linux", "Unix", "Mac OS-X"],
@@ -106,6 +98,7 @@ setup(
     ],
     install_requires=[
         'requests>=2.19.1',
+        'markdown',
     ],
 )
 print("\n***Gauge CLI - %s Installation Complete!***\n" % release_ver)
