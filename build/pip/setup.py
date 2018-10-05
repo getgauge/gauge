@@ -9,13 +9,7 @@ import zipfile
 import shutil
 import os
 import sys
-try:
-    import requests
-
-except ImportError:
-    os.system('python -m ensurepip --default-pip')
-    os.system('python -m pip install requests')
-    import requests
+import requests
 
 # TODO: bumped manually for now, wish to be automatically picked from source
 release_ver = '1.0.2'
@@ -49,9 +43,6 @@ class CustomInstallCommand(install):
 
     def gauge_main_to_path(self):
         """Place Gauge CLI into Scripts Directory."""
-        file_list = glob.glob('*')
-        if 'bin' in file_list:
-            shutil.rmtree('bin')
         self._gauge_package_fetch()
         with zipfile.ZipFile('gauge.zip', "r") as z:
             z.extractall()
@@ -114,7 +105,6 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
-        'pip',
         'requests>=2.19.1',
     ],
 )
