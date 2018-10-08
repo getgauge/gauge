@@ -1,6 +1,6 @@
-# PIP Installer for gauge-cli tool
+# PIP Installer for getgauge-cli tool
 
-This `setup.py` file is used for installed gauge-cli tool.
+This `setup.py` file is used for installed getgauge-cli tool.
 the version number is manually bumped for now.
 
 Python package can be installed through multiple ways
@@ -11,9 +11,9 @@ Python package can be installed through multiple ways
 
 #### using pip
 - pre-requisite: pip should be installed and available on machine
-- run the command `pip install gauge-cli`
+- run the command `pip install getgauge-cli`
 
-## Check to ensure gauge-cli is installed
+## Check to ensure getgauge-cli is installed
 - Once the package has been setup. please exit the current terminal and relaunch terminal again
 - run the command `gauge` , you should be able to see similar output
 ```
