@@ -107,7 +107,11 @@ func TestGetLogFileInGaugeProjectWhenRelativeCustomLogsDirIsSet(t *testing.T) {
 }
 
 func TestGetLogFileInGaugeProjectWhenAbsoluteCustomLogsDirIsSet(t *testing.T) {
-	myLogsDir := "/var/log/gauge"
+	myLogsDir, err := filepath.Abs("my_logs")
+	if err != nil {
+		t.Errorf("Unable to convert to absolute path, %s", err.Error())
+	}
+
 	os.Setenv(logsDirectory, myLogsDir)
 	defer os.Unsetenv(logsDirectory)
 
