@@ -241,6 +241,9 @@ func (s *MySuite) TestToCheckIfItsIndexedSpec(c *C) {
 	c.Assert(isIndexedSpec("specs/hello_world.spec"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.spec:"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.md"), Equals, false)
+	c.Assert(isIndexedSpec("specs:12"), Equals, false)
+	c.Assert(isIndexedSpec("specs:12/hello_world.spec:10"), Equals, true)
+	c.Assert(isIndexedSpec("SPECS/HELLO_WORLD.SPEC:10"), Equals, true)
 }
 
 func (s *MySuite) TestToObtainIndexedSpecName(c *C) {
