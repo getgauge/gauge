@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/util"
 )
@@ -174,16 +175,16 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
-		} else if isInState(*state, scenarioScope) {
+		} else if isInState(*state, scenarioScope) && env.AllowScenarioDatatable() {
 			scn := spec.LatestScenario()
 			if !scn.DataTable.Table.IsInitialized() {
 				dataTable := &gauge.Table{LineNo: token.LineNo}
 				dataTable.AddHeaders(token.Args)
 				scn.AddDataTable(dataTable)
 			} else {
-				value := "Multiple data table present, ignoring table"
 				scn.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+				return ParseResult{Ok: false, Warnings: []*Warning{
+					&Warning{spec.FileName, token.LineNo, "Multiple data table present, ignoring table"}}}
 			}
 		} else {
 			if !spec.DataTable.Table.IsInitialized() {
@@ -191,9 +192,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				dataTable.AddHeaders(token.Args)
 				spec.AddDataTable(dataTable)
 			} else {
-				value := "Multiple data table present, ignoring table"
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName,
+					token.LineNo, "Multiple data table present, ignoring table"}}}
 			}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope)
@@ -233,7 +234,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else {
 			t := spec.DataTable
-			if isInState(*state, scenarioScope) {
+			if isInState(*state, scenarioScope) && env.AllowScenarioDatatable() {
 				t = spec.LatestScenario().DataTable
 			}
 

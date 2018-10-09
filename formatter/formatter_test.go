@@ -20,6 +20,8 @@ package formatter
 import (
 	"testing"
 
+	"github.com/getgauge/gauge/env"
+
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
@@ -291,6 +293,7 @@ func (s *MySuite) TestFormatShouldRetainNewlines(c *C) {
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
+	env.AllowScenarioDatatable = func() bool { return true }
 	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	formatted := FormatSpecification(spec)
 	c.Assert(formatted, Equals,

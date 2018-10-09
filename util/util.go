@@ -24,7 +24,6 @@ import (
 	"runtime"
 	"syscall"
 
-	"strconv"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -107,16 +106,6 @@ func SetWorkingDir(workingDir string) {
 	if err != nil {
 		logger.Fatalf(true, "Unable to set working directory : %s", err.Error())
 	}
-}
-
-func ConvertToBool(value, property string, defaultValue bool) bool {
-	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
-	if err != nil {
-		logger.Warningf(true, "Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)
-		logger.Warningf(true, "Using default value %v for property %s.", defaultValue, property)
-		return defaultValue
-	}
-	return boolValue
 }
 
 // GetSpecDirs returns the specification directory.

@@ -63,7 +63,6 @@ import (
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 )
 
@@ -148,7 +147,7 @@ var ExecuteSpecs = func(specDirs []string) int {
 	wg := &sync.WaitGroup{}
 	reporter.ListenExecutionEvents(wg)
 	rerun.ListenFailedScenarios(wg, specDirs)
-	if util.ConvertToBool(os.Getenv(env.SaveExecutionResult), env.SaveExecutionResult, false) {
+	if env.SaveExecutionResult() {
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()

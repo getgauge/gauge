@@ -19,8 +19,10 @@ package parser
 
 import (
 	"path/filepath"
+	"strings"
 	"testing"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 
 	. "gopkg.in/check.v1"
@@ -351,40 +353,71 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
-func (s *MySuite) TestScenarioWithDataTable(c *C) {
-	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-		&Token{Kind: gauge.StepKind, Value: "my step"},
+func TestScenarioWithDataTable(t *testing.T) {
+	var subject = func(specItems int) *gauge.Scenario {
+		tokens := []*Token{
+			&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
+			&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+			&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+			&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
+			&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+			&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+			&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+			&Token{Kind: gauge.StepKind, Value: "my step"},
+		}
+		spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+		if err != nil {
+			t.Error(err)
+		}
+		v := len(spec.Items)
+		if v != specItems {
+			t.Errorf("expected spec to have %d items. got %d", specItems, v)
+		}
+		if !result.Ok {
+			t.Errorf("parse failed, err %s", strings.Join(result.Errors(), ","))
+		}
+
+		return spec.Scenarios[0]
 	}
 
-	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
-	c.Assert(err, IsNil)
-	c.Assert(len(spec.Items), Equals, 2)
-	c.Assert(result.Ok, Equals, true)
+	t.Run("Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
+		env.AllowScenarioDatatable = func() bool { return true }
+		s := subject(2)
+		if &s.DataTable.Table == nil {
+			t.Error("expected scenario datatable to be not nil")
+		}
+		v := len(s.Items)
+		if v != 3 {
+			t.Errorf("expected scenario to have 3 items, got %d", v)
+		}
 
-	scn := spec.Scenarios[0]
+		idCells, _ := s.DataTable.Table.Get("id")
+		nameCells, _ := s.DataTable.Table.Get("name")
 
-	c.Assert(scn.DataTable.Table, NotNil)
-	c.Assert(len(scn.Items), Equals, 3)
+		var assertEqual = func(e, a interface{}) {
+			if e != a {
+				t.Errorf("expected %v got %v", e, a)
+			}
+		}
+		assertEqual(len(idCells), 2)
+		assertEqual(len(nameCells), 2)
+		assertEqual(idCells[0].Value, "1")
+		assertEqual(idCells[0].CellType, gauge.Static)
+		assertEqual(idCells[1].Value, "2")
+		assertEqual(idCells[1].CellType, gauge.Static)
+		assertEqual(nameCells[0].Value, "foo")
+		assertEqual(nameCells[0].CellType, gauge.Static)
+		assertEqual(nameCells[1].Value, "bar")
+		assertEqual(nameCells[1].CellType, gauge.Static)
+	})
+	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
+		env.AllowScenarioDatatable = func() bool { return false }
+		s := subject(3)
+		if s.DataTable.Table.IsInitialized() {
+			t.Error("expected scenario to have no datatable, got one")
+		}
+	})
 
-	idCells, _ := scn.DataTable.Table.Get("id")
-	nameCells, _ := scn.DataTable.Table.Get("name")
-	c.Assert(len(idCells), Equals, 2)
-	c.Assert(len(nameCells), Equals, 2)
-	c.Assert(idCells[0].Value, Equals, "1")
-	c.Assert(idCells[0].CellType, Equals, gauge.Static)
-	c.Assert(idCells[1].Value, Equals, "2")
-	c.Assert(idCells[1].CellType, Equals, gauge.Static)
-	c.Assert(nameCells[0].Value, Equals, "foo")
-	c.Assert(nameCells[0].CellType, Equals, gauge.Static)
-	c.Assert(nameCells[1].Value, Equals, "bar")
-	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
 func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
@@ -1058,34 +1091,54 @@ comment3
 	c.Assert(spec.Scenarios[2].Span.End, Equals, 17)
 }
 
-func (s *MySuite) TestParseScenarioWithDataTable(c *C) {
+func TestParseScenarioWithDataTable(t *testing.T) {
 	p := new(SpecParser)
+	var subject = func() *gauge.Scenario {
+		spec, _, err := p.Parse(`Specification Heading
+		=====================
+		* Vowels in English language are "aeiou".
+		
+		Vowel counts in single word
+		---------------------------
+		
+			|Word  |Vowel Count|
+			|------|-----------|
+			|Gauge |3          |
+			|Mingle|2          |
+			|Snap  |1          |
+			|GoCD  |1          |
+			|Rhythm|0          |
+		
+		* The word <Word> has <Vowel Count> vowels.
+		
+		`, gauge.NewConceptDictionary(), "")
+		if err != nil {
+			t.Error(err)
+		}
+		return spec.Scenarios[0]
+	}
 
-	spec, _, err := p.Parse(`Specification Heading
-=====================
-* Vowels in English language are "aeiou".
+	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
+		env.AllowScenarioDatatable = func() bool { return true }
+		s := subject()
+		v := len(s.DataTable.Table.Rows())
+		if v != 5 {
+			t.Errorf("expected scenario to have 5 rows, got %d", v)
+		}
+		v = len(s.DataTable.Table.Columns)
+		if v != 2 {
+			t.Errorf("expected scenario to have 2 columns, got %d", v)
+		}
+	})
 
-Vowel counts in single word
----------------------------
-
-	|Word  |Vowel Count|
-	|------|-----------|
-	|Gauge |3          |
-	|Mingle|2          |
-	|Snap  |1          |
-	|GoCD  |1          |
-	|Rhythm|0          |
-
-* The word <Word> has <Vowel Count> vowels.
-
-`, gauge.NewConceptDictionary(), "")
-
-	scn := spec.Scenarios[0]
-
-	c.Assert(err, IsNil)
-	c.Assert(scn.DataTable.Table, NotNil)
-	c.Assert(len(scn.DataTable.Table.Rows()), Equals, 5)
-	c.Assert(len(scn.DataTable.Table.Columns), Equals, 2)
+	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
+		env.AllowScenarioDatatable = func() bool { return false }
+		s := subject()
+		v := len(s.DataTable.Table.Rows())
+		if v != 0 {
+			t.Errorf("expected scenario to have no rows, got %d", v)
+		}
+	})
 }
 
 func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {
