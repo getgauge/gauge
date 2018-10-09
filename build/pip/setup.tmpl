@@ -8,13 +8,12 @@ import os
 import sys
 import requests
 
-# TODO: bumped manually for now, wish to be automatically picked from source
-release_ver = '1.0.2'
+release_ver = "{0}"
 base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
 
 # Code to determine Architecture and OS where Gauge is being installed
-arch_map = {"ia32": "x86", "x64": "x86_64"}
-os_map = {"Darwin": "darwin", "linux": "linux", "win32": "windows"}
+arch_map = {{"ia32": "x86", "x64": "x86_64"}}
+os_map = {{"Darwin": "darwin", "linux": "linux", "win32": "windows"}}
 if '64' in platform.architecture()[0]:
     arch = arch_map['x64']
 else:
@@ -62,12 +61,12 @@ class CustomInstallCommand(install):
 
 
 def readme():
-    """Get the ReadMe content for Long Description."""
-    with open('ReadMe.md') as readme_file:
+    """Get the README content for Long Description."""
+    with open('README.md') as readme_file:
         return readme_file.read()
 
 setup(
-    name='gauge-cli',
+    name="{1}",
     version=release_ver,
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -77,11 +76,11 @@ setup(
     author_email='revanth.mvs@hotmail.com',
     maintainer='Revant',
     license="GPL-3.0",
-    cmdclass={
+    cmdclass={{
         'install': CustomInstallCommand,
-    },
+    }},
     classifiers=[
-        "License :: GPL-3.0",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Development Status :: 5 - Production/Stable",
         "Topic :: Internet",
         "Topic :: Scientific/Engineering",
