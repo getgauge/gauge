@@ -354,7 +354,7 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 }
 
 func TestScenarioWithDataTable(t *testing.T) {
-	var subject = func(specItems int) *gauge.Scenario {
+	var subject = func() *gauge.Scenario {
 		tokens := []*Token{
 			&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
 			&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
@@ -370,8 +370,8 @@ func TestScenarioWithDataTable(t *testing.T) {
 			t.Error(err)
 		}
 		v := len(spec.Items)
-		if v != specItems {
-			t.Errorf("expected spec to have %d items. got %d", specItems, v)
+		if v != 2 {
+			t.Errorf("expected spec to have 2 items. got %d", v)
 		}
 		if !result.Ok {
 			t.Errorf("parse failed, err %s", strings.Join(result.Errors(), ","))
@@ -382,7 +382,7 @@ func TestScenarioWithDataTable(t *testing.T) {
 
 	t.Run("Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
 		env.AllowScenarioDatatable = func() bool { return true }
-		s := subject(2)
+		s := subject()
 		if &s.DataTable.Table == nil {
 			t.Error("expected scenario datatable to be not nil")
 		}
@@ -412,7 +412,7 @@ func TestScenarioWithDataTable(t *testing.T) {
 	})
 	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
 		env.AllowScenarioDatatable = func() bool { return false }
-		s := subject(3)
+		s := subject()
 		if s.DataTable.Table.IsInitialized() {
 			t.Error("expected scenario to have no datatable, got one")
 		}
@@ -731,6 +731,7 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 }
 
 func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
+	env.AllowScenarioDatatable = func() bool { return true }
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},

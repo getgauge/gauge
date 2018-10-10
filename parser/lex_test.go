@@ -611,7 +611,7 @@ func (s *MySuite) TestParsingMultilineStepWithTableParam(c *C) {
 }
 
 func (s *MySuite) TestParsingMultilineStepScenarioNext(c *C) {
-	os.Setenv(env.AllowMultilineStep, "true")
+	env.AllowMultiLineStep = func() bool { return true }
 	parser := new(SpecParser)
 	specText := newSpecBuilder().
 		step("step1").
@@ -625,12 +625,10 @@ func (s *MySuite) TestParsingMultilineStepScenarioNext(c *C) {
 	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
 	c.Assert(tokens[0].Value, Equals, "step1 Scenario1")
 	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
-
-	os.Setenv(env.AllowMultilineStep, "false")
 }
 
 func (s *MySuite) TestParsingMultilineStepWithSpecNext(c *C) {
-	os.Setenv(env.AllowMultilineStep, "true")
+	env.AllowMultiLineStep = func() bool { return true }
 	parser := new(SpecParser)
 	specText := newSpecBuilder().
 		step("step1").
@@ -645,7 +643,6 @@ func (s *MySuite) TestParsingMultilineStepWithSpecNext(c *C) {
 	c.Assert(tokens[0].Value, Equals, "step1 Concept1")
 	c.Assert(tokens[1].Kind, Equals, gauge.CommentKind)
 
-	os.Setenv(env.AllowMultilineStep, "false")
 }
 
 func (s *MySuite) TestParsingSpecWithTearDownSteps(c *C) {
