@@ -24,7 +24,6 @@ import (
 )
 
 type setSkipInfoFn func(protoStep *gauge_messages.ProtoStep, step *gauge.Step)
-type argLookupFn func() (*gauge.ArgLookup, error)
 
 func resolveItems(items []gauge.Item, lookup *gauge.ArgLookup, skipFn setSkipInfoFn) ([]*gauge_messages.ProtoItem, error) {
 	var protoItems []*gauge_messages.ProtoItem
@@ -47,7 +46,6 @@ func resolveToProtoItem(item gauge.Item, lookup *gauge.ArgLookup, skipFn setSkip
 	case gauge.StepKind:
 		if (item.(*gauge.Step)).IsConcept {
 			concept := item.(*gauge.Step)
-			// lookup, err := e.dataTableLookup()
 			protoItem, err = resolveToProtoConceptItem(*concept, lookup, skipFn)
 		} else {
 			protoItem, err = resolveToProtoStepItem(item.(*gauge.Step), lookup, skipFn)
@@ -82,7 +80,6 @@ func resolveToProtoConceptItem(concept gauge.Step, lookup *gauge.ArgLookup, skip
 			if err != nil {
 				return nil, err
 			}
-			// e.setSkipInfo(conceptStep, step)
 			skipFn(conceptStep, step)
 		}
 	}
@@ -96,7 +93,6 @@ func resolveToProtoStepItem(step *gauge.Step, lookup *gauge.ArgLookup, skipFn se
 	if err != nil {
 		return nil, err
 	}
-	// e.setSkipInfo(protoStepItem.Step, step)
 	skipFn(protoStepItem.Step, step)
 	return protoStepItem, err
 }

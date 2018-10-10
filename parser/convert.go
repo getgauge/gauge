@@ -175,9 +175,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
-		} else if isInState(*state, scenarioScope) && env.AllowScenarioDatatable() {
+		} else if isInState(*state, scenarioScope) {
 			scn := spec.LatestScenario()
-			if !scn.DataTable.Table.IsInitialized() {
+			if !scn.DataTable.Table.IsInitialized() && env.AllowScenarioDatatable() {
 				dataTable := &gauge.Table{LineNo: token.LineNo}
 				dataTable.AddHeaders(token.Args)
 				scn.AddDataTable(dataTable)
