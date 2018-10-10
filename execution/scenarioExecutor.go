@@ -82,10 +82,11 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	e.notifyBeforeScenarioHook(scenarioResult)
 
 	if !scenarioResult.GetFailed() {
-		s := scenarioResult.ProtoScenario
-		items := append(e.contexts, append(scenario.Steps, e.teardowns...)...)
-		protoItems := append(s.GetContexts(), append(s.GetScenarioItems(), s.GetTearDownSteps()...)...)
-		e.executeSteps(items, protoItems, scenarioResult)
+		protoContexts := scenarioResult.ProtoScenario.GetContexts()
+		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
+		e.executeSteps(append(e.contexts, scenario.Steps...), append(protoContexts, protoScenItems...), scenarioResult)
+		// teardowns are not appended to previous call to executeSteps to ensure they are run irrespective of context/step failures
+		e.executeSteps(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
 	}
 
 	e.notifyAfterScenarioHook(scenarioResult)
