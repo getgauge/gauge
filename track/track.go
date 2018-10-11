@@ -20,6 +20,7 @@ package track
 import (
 	"net/http"
 	"net/http/httputil"
+	"runtime"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -84,6 +85,7 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 		wg.Done()
 		return false
 	}
+	label = strings.Trim(fmt.Sprintf("%s,%s", label, runtime.GOOS), ",")
 	sendChan := make(chan bool, 1)
 	go func(c chan<- bool) {
 		defer recoverPanic()
