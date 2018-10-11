@@ -241,6 +241,9 @@ func (s *MySuite) TestToCheckIfItsIndexedSpec(c *C) {
 	c.Assert(isIndexedSpec("specs/hello_world.spec"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.spec:"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.md"), Equals, false)
+	c.Assert(isIndexedSpec("specs:12"), Equals, false)
+	c.Assert(isIndexedSpec("specs:12/hello_world.spec:10"), Equals, true)
+	c.Assert(isIndexedSpec("SPECS/HELLO_WORLD.SPEC:10"), Equals, true)
 }
 
 func (s *MySuite) TestToObtainIndexedSpecName(c *C) {
@@ -263,6 +266,8 @@ func (s *MySuite) TestGetIndex(c *C) {
 	c.Assert(getIndex("foo"), Equals, 0)
 	c.Assert(getIndex(":"), Equals, 0)
 	c.Assert(getIndex("f:7a.spec:9"), Equals, 9)
+	c.Assert(getIndex("specs/foo.md:9"), Equals, 12)
+	c.Assert(getIndex("f:7a.md:7"), Equals, 7)
 }
 
 func staticArg(val string) *gauge.StepArg {

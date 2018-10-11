@@ -192,7 +192,12 @@ func getIndexFor(files []*specFile, file string) (int, bool) {
 }
 
 func isIndexedSpec(specSource string) bool {
-	return getIndex(specSource) != 0
+	re:= regexp.MustCompile(`(?i).(spec|md):[0-9]+$`)
+	index := re.FindStringIndex(specSource)
+	if index != nil {
+		return index[0] != 0
+	}
+	return false
 }
 
 func getIndexedSpecName(indexedSpec string) (string, int) {
