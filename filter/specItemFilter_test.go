@@ -764,3 +764,25 @@ func (s *MySuite) TestFilterMultipleScenariosByName(c *C) {
 	specs = filterSpecsByScenarioName(specs, scenarios)
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
 }
+
+func (s *MySuite) TestFilterInvalidScenarios(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	var scenarios = []string{"First Scenario","Third Scenario"}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	filteredScenarios := filterValidScenarios(specs, scenarios)
+	c.Assert(len(filteredScenarios), Equals, 1)
+	c.Assert(filteredScenarios[0],Equals, "First Scenario")
+}
