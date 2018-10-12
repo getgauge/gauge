@@ -413,7 +413,7 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 
 func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First flow").
 		step("create user \"foo\" \"doo\"").
 		step("another step").String()
@@ -436,7 +436,7 @@ func (s *MySuite) TestNestedConceptLooksUpArgsFromParent(c *C) {
 
 func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "prateek", "8800").
 		tableHeader("456", "apoorva", "9800").
@@ -476,7 +476,7 @@ func (s *MySuite) TestNestedConceptLooksUpDataTableArgs(c *C) {
 
 func (s *MySuite) TestNestedConceptLooksUpWhenParameterPlaceholdersAreSame(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "prateek", "8800").
 		tableHeader("456", "apoorva", "9800").
@@ -595,7 +595,7 @@ func (s *MySuite) TestErrorParsingConceptWithRecursiveCallToConcept(c *C) {
 }
 
 func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("create user <user:id> <user:name> and <file>").
 		step("a step <user:id>").String()
 	step, _ := new(ConceptParser).Parse(conceptText, "")
@@ -606,7 +606,7 @@ func (s *MySuite) TestConceptHavingDynamicParameters(c *C) {
 }
 
 func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("create user <user:id> <table:name> and <file>").
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText, "")
@@ -614,7 +614,7 @@ func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
 }
 
 func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("create user <user:id> \"abc\" and <file>").
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText, "")
@@ -622,14 +622,14 @@ func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 }
 
 func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("create user").
 		step("a step").
 		scenarioHeading("Scenario Heading").
 		step("a step1").
 		String()
 
-	scenarioHeading := SpecBuilder().
+	scenarioHeading := newSpecBuilder().
 		scenarioHeading("Scenario Heading").
 		String()
 	_, res := new(ConceptParser).Parse(conceptText, "")
@@ -640,7 +640,7 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 }
 
 func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("Concept Heading37a").
 		step("a step").
 		specHeading("testinghjk \"sdf\"").
@@ -655,7 +655,7 @@ func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError
 }
 
 func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseError(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("Concept Heading37a").
 		step("a step").
 		specHeading("testinghjk ").
@@ -673,7 +673,7 @@ func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseEr
 }
 
 func (s *MySuite) TestMultipleConceptsInAFileHavingErrorsShouldBeConsolidated(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("1<werwer>").
 		step("self <werwe1r>").
 		specHeading("2 <werwer> two").
@@ -700,7 +700,7 @@ func (s *MySuite) TestConceptFileHavingItemsWithDuplicateTableHeaders(c *C) {
 }
 
 func (s *MySuite) TestConceptParserShouldNotAddTableAsArgIfCommentsArePresentBetweenStepAndTable(c *C) {
-	conceptText := SpecBuilder().
+	conceptText := newSpecBuilder().
 		specHeading("create user").
 		step("a step").
 		text("").

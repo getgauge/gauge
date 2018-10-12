@@ -36,6 +36,7 @@ type specialTypeResolver struct {
 	predefinedResolvers map[string]resolverFn
 }
 
+// ParamResolver resolves dynamic parameters
 type ParamResolver struct {
 }
 
@@ -100,7 +101,7 @@ func (paramResolver *ParamResolver) GetResolvedParams(step *gauge.Step, parent *
 	return parameters, nil
 }
 
-func (resolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_messages.ProtoTable, error) {
+func (paramResolver *ParamResolver) createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_messages.ProtoTable, error) {
 	protoTable := new(gauge_messages.ProtoTable)
 	protoTable.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	tableRows := make([]*gauge_messages.ProtoTableRow, 0)
@@ -184,7 +185,7 @@ func (resolver *specialTypeResolver) getStepArg(specialType string, value string
 	return nil, invalidSpecialParamError{message: fmt.Sprintf("Resolver not found for special param <%s>", arg)}
 }
 
-// Creating a copy of the lookup and populating table values
+// PopulateConceptDynamicParams creates a copy of the lookup and populates table values
 func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.ArgLookup) error {
 	//If it is a top level concept
 	lookup, err := concept.Lookup.GetCopy()
@@ -234,6 +235,7 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 	return nil
 }
 
+// GetResolvedDataTablerows resolves any dynamic parameters in a table cell
 func GetResolvedDataTablerows(table gauge.Table) {
 	for i, cells := range table.Columns {
 		for j, cell := range cells {

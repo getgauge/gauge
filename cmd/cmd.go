@@ -202,6 +202,7 @@ func initPackageFlags() {
 	if group != -1 {
 		execution.Strategy = execution.Eager
 	}
+	filter.ScenariosName = scenarios
 }
 
 var exit = func(err error, additionalText string) {

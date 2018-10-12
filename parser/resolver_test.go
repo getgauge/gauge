@@ -86,7 +86,7 @@ func (s *MySuite) TestParsingUnknownSpecialType(c *C) {
 
 func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "foo", "888").
 		scenarioHeading("First scenario").
@@ -113,7 +113,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		tableHeader("id", "name", "phone").
 		tableHeader("123", "prateek", "8800").
 		scenarioHeading("First scenario").
@@ -161,7 +161,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"456\" \"foo\" and \"123456\"").
 		String()
@@ -192,7 +192,7 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("A spec heading").
+	specText := newSpecBuilder().specHeading("A spec heading").
 		scenarioHeading("First scenario").
 		step("create user \"sdf\" \"name\" and \"1234\"").
 		String()
@@ -218,7 +218,7 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 
 func (s *MySuite) TestGetResolveParameterFromTable(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").String()
+	specText := newSpecBuilder().specHeading("Spec Heading").scenarioHeading("First scenario").step("my step").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").String()
 
 	specs, _ := parser.ParseSpecText(specText, "")
 
@@ -236,10 +236,9 @@ func (s *MySuite) TestGetResolveParameterFromTable(c *C) {
 	c.Assert(err, IsNil)
 }
 
-
 func (s *MySuite) TestGetResolveParameterFromDataTable(c *C) {
 	parser := new(SpecParser)
-	specText := SpecBuilder().specHeading("Spec Heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").scenarioHeading("First scenario").step("my step <id>").String()
+	specText := newSpecBuilder().specHeading("Spec Heading").text("|name|id|").text("|---|---|").text("|john|123|").text("|james|<file:testdata/foo.txt>|").scenarioHeading("First scenario").step("my step <id>").String()
 	spec, _ := parser.ParseSpecText(specText, "")
 
 	GetResolvedDataTablerows(spec.DataTable.Table)
@@ -247,5 +246,5 @@ func (s *MySuite) TestGetResolveParameterFromDataTable(c *C) {
 	c.Assert(spec.DataTable.Table.Columns[0][0].Value, Equals, "john")
 	c.Assert(spec.DataTable.Table.Columns[0][1].Value, Equals, "james")
 	c.Assert(spec.DataTable.Table.Columns[1][0].Value, Equals, "123")
-	c.Assert(spec.DataTable.Table.Columns[1][1].Value, Equals, "007")	
+	c.Assert(spec.DataTable.Table.Columns[1][1].Value, Equals, "007")
 }

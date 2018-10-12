@@ -81,34 +81,41 @@ func TestGetLogFileGivenRelativePathInGaugeProject(t *testing.T) {
 	}
 }
 
-func TestGetLogFileInGaugeProjectGivenAbsPath(t *testing.T) {
+func TestGetLogFileWhenLogsDirNotSet(t *testing.T) {
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	want := filepath.Join(config.ProjectRoot, apiLogFileName)
+	want := filepath.Join(config.ProjectRoot, logs, apiLogFileName)
 
-	got := getLogFile(filepath.Join(config.ProjectRoot, apiLogFileName))
+	got := getLogFile(apiLogFileName)
 	if got != want {
 		t.Errorf("Got %s, want %s", got, want)
 	}
 }
 
-func TestGetLogFileInGaugeProjectCustomPath(t *testing.T) {
-	config.ProjectRoot, _ = filepath.Abs("_testdata")
-	customLogsDir := filepath.Join(config.ProjectRoot, "myLogsDir")
-	want := filepath.Join(customLogsDir, apiLogFileName)
-	got := getLogFile(filepath.Join(customLogsDir, apiLogFileName))
-
-	if got != want {
-		t.Errorf("Got %s, want %s", got, want)
-	}
-}
-
-func TestGetLogFileInGaugeProjectWhenCustomLogsDirIsSet(t *testing.T) {
+func TestGetLogFileInGaugeProjectWhenRelativeCustomLogsDirIsSet(t *testing.T) {
 	myLogsDir := "my_logs"
 	os.Setenv(logsDirectory, myLogsDir)
 	defer os.Unsetenv(logsDirectory)
 
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	want := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
+
+	got := getLogFile(apiLogFileName)
+
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
+}
+
+func TestGetLogFileInGaugeProjectWhenAbsoluteCustomLogsDirIsSet(t *testing.T) {
+	myLogsDir, err := filepath.Abs("my_logs")
+	if err != nil {
+		t.Errorf("Unable to convert to absolute path, %s", err.Error())
+	}
+
+	os.Setenv(logsDirectory, myLogsDir)
+	defer os.Unsetenv(logsDirectory)
+
+	want := filepath.Join(myLogsDir, apiLogFileName)
 
 	got := getLogFile(apiLogFileName)
 

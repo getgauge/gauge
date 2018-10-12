@@ -295,6 +295,8 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, outp
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
+	env = append(env, fmt.Sprintf("GAUGE_UNIQUE_INSTALLATION_ID=%s", config.UniqueID()))
+	env = append(env, fmt.Sprintf("GAUGE_TELEMETRY_ENABLED=%v", config.TelemetryEnabled()))
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, outputStreamWriter, outputStreamWriter, env)
 	return cmd, &r, err
 }

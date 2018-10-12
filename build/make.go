@@ -41,6 +41,7 @@ const (
 	X86_64            = "amd64"
 	darwin            = "darwin"
 	linux             = "linux"
+	freebsd           = "freebsd"
 	windows           = "windows"
 	bin               = "bin"
 	gauge             = "gauge"
@@ -153,6 +154,8 @@ var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
+var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
+var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -162,10 +165,12 @@ var (
 		map[string]string{GOARCH: X86_64, GOOS: darwin, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: linux, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86_64, GOOS: linux, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86, GOOS: freebsd, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: X86_64, GOOS: freebsd, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: windows, CC: "i586-mingw32-gcc", CGO_ENABLED: "1"},
 		map[string]string{GOARCH: X86_64, GOOS: windows, CC: "x86_64-w64-mingw32-gcc", CGO_ENABLED: "1"},
 	}
-	osDistroMap = map[string]distroFunc{windows: createWindowsDistro, linux: createLinuxPackage, darwin: createDarwinPackage}
+	osDistroMap = map[string]distroFunc{windows: createWindowsDistro, linux: createLinuxPackage, freebsd: createLinuxPackage, darwin: createDarwinPackage}
 )
 
 func main() {
@@ -267,12 +272,30 @@ func createWindowsDistro() {
 func createWindowsInstaller() {
 	pName := packageName()
 	distroDir, err := filepath.Abs(filepath.Join(deploy, pName))
+	installerFileName := filepath.Join(filepath.Dir(distroDir), pName)
 	if err != nil {
 		panic(err)
 	}
 	copyGaugeBinaries(distroDir)
+	runProcess("makensis.exe",
+		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
+		fmt.Sprintf("/DGAUGE_DISTRIBUTABLES_DIR=%s", distroDir),
+		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
+		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
 	os.RemoveAll(distroDir)
+	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
+}
+
+func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
+	if getGOOS() == windows {
+		if certFilePath != "" && certFilePwd != "" {
+			log.Printf("Signing: %s", exeFilePath)
+			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
+		} else {
+			log.Printf("No certificate file passed. Executable won't be signed.")
+		}
+	}
 }
 
 func createDarwinPackage() {

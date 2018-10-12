@@ -27,7 +27,7 @@ type specBuilder struct {
 	lines []string
 }
 
-func SpecBuilder() *specBuilder {
+func newSpecBuilder() *specBuilder {
 	return &specBuilder{lines: make([]string, 0)}
 }
 
@@ -139,32 +139,32 @@ func (s *MySuite) TestAreUnderlinedForEmptyArray(c *C) {
 }
 
 func (s *MySuite) TestSpecBuilderSpecHeading(c *C) {
-	heading := SpecBuilder().specHeading("spec heading").String()
+	heading := newSpecBuilder().specHeading("spec heading").String()
 	c.Assert(heading, Equals, "#spec heading\n")
 }
 
 func (s *MySuite) TestSpecBuilderScenarioHeading(c *C) {
-	heading := SpecBuilder().scenarioHeading("scenario heading").String()
+	heading := newSpecBuilder().scenarioHeading("scenario heading").String()
 	c.Assert(heading, Equals, "##scenario heading\n")
 }
 
 func (s *MySuite) TestSpecBuilderStep(c *C) {
-	step := SpecBuilder().step("sample step").String()
+	step := newSpecBuilder().step("sample step").String()
 	c.Assert(step, Equals, "* sample step\n")
 }
 
 func (s *MySuite) TestSpecBuilderTags(c *C) {
-	tags := SpecBuilder().tags("tag1", "tag2").String()
+	tags := newSpecBuilder().tags("tag1", "tag2").String()
 	c.Assert(tags, Equals, "tags: tag1,tag2\n")
 }
 
 func (s *MySuite) TestSpecBuilderWithFreeText(c *C) {
-	freeText := SpecBuilder().text("some free text").String()
+	freeText := newSpecBuilder().text("some free text").String()
 	c.Assert(freeText, Equals, "some free text\n")
 }
 
 func (s *MySuite) TestSpecBuilderWithSampleSpec(c *C) {
-	spec := SpecBuilder().specHeading("spec heading").tags("tag1", "tag2").step("context here").scenarioHeading("scenario heading").text("comment").step("sample step").scenarioHeading("scenario 2").step("step 2")
+	spec := newSpecBuilder().specHeading("spec heading").tags("tag1", "tag2").step("context here").scenarioHeading("scenario heading").text("comment").step("sample step").scenarioHeading("scenario 2").step("step 2")
 	c.Assert(spec.String(), Equals, "#spec heading\ntags: tag1,tag2\n* context here\n##scenario heading\ncomment\n* sample step\n##scenario 2\n* step 2\n")
 }
 

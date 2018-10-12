@@ -43,8 +43,8 @@ if ($LastExitCode -ne 0) {
 Pop-Location
 
 $nightlyFlag = If ($nightly) {"--nightly"} Else {""}
-& go run build/make.go --distro --bin-dir bin\windows_amd64 $nightlyFlag
-& go run build/make.go --distro --bin-dir bin\windows_386 $nightlyFlag
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64 $nightlyFlag
+& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386 $nightlyFlag
 
 mkdir test_installers 
 

@@ -701,3 +701,66 @@ func (s *MySuite) TestToFilterScenariosByUnavailableTags(c *C) {
 
 	c.Assert(len(specs), Equals, 0)
 }
+
+func (s *MySuite) TestFilterScenariosByName(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	var scenarios = []string{"First Scenario"}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	specs = filterSpecsByScenarioName(specs, scenarios)
+	c.Assert(len(specs[0].Scenarios), Equals, 1)
+}
+
+func (s *MySuite) TestFilterScenarioWhichDoesNotExists(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	var scenarios = []string{"Third Scenario"}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	specs = filterSpecsByScenarioName(specs, scenarios)
+	c.Assert(len(specs), Equals, 0)
+}
+
+func (s *MySuite) TestFilterMultipleScenariosByName(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+	}
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	var scenarios = []string{"First Scenario", "Second Scenario"}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+	specs = filterSpecsByScenarioName(specs, scenarios)
+	c.Assert(len(specs[0].Scenarios), Equals, 2)
+}

@@ -42,7 +42,7 @@ download() {
         ensure cp ./gauge "$LOCATION/"
     else
         echo "You do not have write permision for $LOCATION. Trying with sudo."
-        sudo cp ./bin/gauge "$LOCATION/"
+        sudo cp ./gauge "$LOCATION/"
     fi
 
     ensure cd "$CWD"
@@ -80,7 +80,7 @@ set_os_architecture() {
             ;;
 
         FreeBSD)
-            local _ostype=linux
+            local _ostype=freebsd
             ;;
 
         DragonFly)

@@ -27,13 +27,14 @@ import (
 	"github.com/getgauge/gauge/util"
 )
 
+// ConceptParser is used for parsing concepts. Similar, but not the same as a SpecParser
 type ConceptParser struct {
 	currentState   int
 	currentConcept *gauge.Step
 }
 
+// Parse Generates token for the given concept file and cretes concepts(array of steps) and parse results.
 // concept file can have multiple concept headings.
-// Generates token for the given concept file and cretes concepts(array of steps) and parse results.
 func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *ParseResult) {
 	defer parser.resetState()
 
@@ -43,7 +44,7 @@ func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *Parse
 	return concepts, &ParseResult{ParseErrors: append(errs, res.ParseErrors...), Warnings: res.Warnings}
 }
 
-// Reads file contents from a give file and parses the file.
+// ParseFile Reads file contents from a give file and parses the file.
 func (parser *ConceptParser) ParseFile(file string) ([]*gauge.Step, *ParseResult) {
 	fileText, fileReadErr := common.ReadFileContents(file)
 	if fileReadErr != nil {
@@ -244,6 +245,7 @@ func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult, error) 
 	return conceptsDictionary, res, nil
 }
 
+// AddConcept adds the concept in the ConceptDictionary.
 func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.ConceptDictionary) ([]ParseError, error) {
 	parseErrors := make([]ParseError, 0)
 	for _, conceptStep := range concepts {
@@ -261,7 +263,7 @@ func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.Co
 				LineText: dupConcept.ConceptStep.LineText,
 			})
 		}
-		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{conceptStep, file}
+		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{ConceptStep: conceptStep, FileName: file}
 		if err := conceptDictionary.ReplaceNestedConceptSteps(conceptStep); err != nil {
 			return nil, err
 		}
@@ -300,6 +302,7 @@ func collectAllParseErrors(results []*ParseResult) (errs []ParseError) {
 	return
 }
 
+// ValidateConcepts ensures that there are no circular references within
 func ValidateConcepts(conceptDictionary *gauge.ConceptDictionary) *ParseResult {
 	res := &ParseResult{ParseErrors: []ParseError{}}
 	var conceptsWithError []*gauge.Concept

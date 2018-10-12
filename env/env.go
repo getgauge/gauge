@@ -38,6 +38,7 @@ const (
 	ScreenshotOnFailure = "screenshot_on_failure"
 	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
 	CsvDelimiter        = "csv_delimiter"
+	AllowMultilineStep  = "allow_multiline_step"
 )
 
 var envVars map[string]string
@@ -98,6 +99,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(ScreenshotOnFailure, "true")
 	addEnvVar(SaveExecutionResult, "false")
 	addEnvVar(CsvDelimiter, ",")
+	addEnvVar(AllowMultilineStep, "false")
 }
 
 func loadEnvDir(envName string) error {

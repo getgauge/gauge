@@ -46,6 +46,9 @@ gauge_specs_dir = specs
 
 # The default delimiter used read csv files.
 csv_delimiter = ,
+
+# Allows steps to be written in multiline
+allow_multiline_step = false
 `
 var ExampleSpec = `# Specification Heading
 
