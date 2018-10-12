@@ -246,23 +246,22 @@ func filterSpecsByScenarioName(specs []*gauge.Specification, scenariosName []str
 func filterValidScenarios(specs []*gauge.Specification, headings []string) []string {
 	filteredScenarios := make([]string, 0)
 	allScenarios := GetAllScenarios(specs)
+	var exists = func(scenarios []string, heading string) bool {
+		for _, scenario := range scenarios {
+			if strings.Compare(scenario, heading) == 0 {
+				return true
+			}
+		}
+		return false
+	}
 	for _, heading := range headings {
-		if isContains(allScenarios,heading) {
+		if exists(allScenarios,heading) {
 			filteredScenarios = append(filteredScenarios,heading)
 		} else {
 			logger.Warningf(true,"Warning: scenario name - \"%s\" not found",heading)
 		}
 	}
 	return filteredScenarios;
-}
-
-func isContains(scenarios []string, heading string) bool {
-    for _, scenario := range scenarios {
-        if strings.Compare(scenario, heading) == 0 {
-            return true
-        }
-    }
-    return false
 }
 
 func GetAllScenarios(specs []*gauge.Specification) []string {
