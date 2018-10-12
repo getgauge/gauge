@@ -39,6 +39,7 @@ const (
 	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
 	CsvDelimiter        = "csv_delimiter"
 	AllowMultilineStep  = "allow_multiline_step"
+	useTestGA           = "use_test_ga"
 )
 
 var envVars map[string]string
@@ -100,6 +101,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(SaveExecutionResult, "false")
 	addEnvVar(CsvDelimiter, ",")
 	addEnvVar(AllowMultilineStep, "false")
+	addEnvVar(useTestGA, "false")
 }
 
 func loadEnvDir(envName string) error {
@@ -195,4 +197,9 @@ func containsEnvVar(value string) (contains bool, matches [][]string) {
 // CurrentEnv returns the value of currentEnv
 func CurrentEnv() string {
 	return currentEnv
+}
+
+// UseTestGA checks if test google analytics account needs to be used
+var UseTestGA = func() bool {
+	return strings.ToLower(os.Getenv(useTestGA)) == "true"
 }

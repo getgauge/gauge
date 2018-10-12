@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/getgauge/gauge/env"
+
 	"fmt"
 
 	"os"
@@ -40,12 +42,13 @@ import (
 )
 
 const (
-	gaTrackingID  = "UA-54838477-1"
-	appName       = "Gauge Core"
-	consoleMedium = "console"
-	apiMedium     = "api"
-	ciMedium      = "CI"
-	timeout       = 1
+	gaTrackingID     = "UA-54838477-1"
+	gaTestTrackingID = "UA-100778536-1"
+	appName          = "Gauge Core"
+	consoleMedium    = "console"
+	apiMedium        = "api"
+	ciMedium         = "CI"
+	timeout          = 1
 	// GaugeTelemetryMessageHeading is the header printed for telemetry warning
 	GaugeTelemetryMessageHeading = `
 Telemetry
@@ -89,7 +92,14 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 	sendChan := make(chan bool, 1)
 	go func(c chan<- bool) {
 		defer recoverPanic()
-		client, err := ga.NewClient(gaTrackingID)
+		t := gaTrackingID
+		if env.UseTestGA() {
+			t = gaTestTrackingID
+		}
+		client, err := ga.NewClient(t)
+		if err != nil {
+			logger.Debugf(true, "Unable to create ga client, %s", err)
+		}
 		client.HttpClient = &http.Client{}
 		client.ClientID(config.UniqueID())
 		client.AnonymizeIP(true)
@@ -98,20 +108,13 @@ func send(category, action, label, medium string, wg *sync.WaitGroup) bool {
 		client.CampaignMedium(medium)
 		client.CampaignSource(appName)
 		client.HttpClient.Transport = gaHTTPTransport
-
 		if telemetryLogEnabled {
 			client.HttpClient.Transport = newlogEnabledHTTPTransport()
 		}
-
-		if err != nil {
-			logger.Debugf(true, "Unable to create ga client, %s", err)
-		}
-
 		ev := ga.NewEvent(category, action)
 		if label != "" {
 			ev.Label(label)
 		}
-
 		err = client.Send(ev)
 		if err != nil {
 			logger.Debugf(true, "Unable to send analytics data, %s", err)
