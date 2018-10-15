@@ -58,7 +58,7 @@ Complete manual is available at https://manpage.gauge.org/.
 ```
 
 ## Using setup.py
-
+- Install required dep by running `python/python3 -m pip install requirements.txt`.
 - Check through and obtain a valid tag/build number from [releases](https://github.com/getgauge/gauge/releases)
 - Run the command `python build.py --install` (set GAUGE_VERSION env to install specific version)
 - This would install the version as specified along with latest release of Gauge-CLI Version

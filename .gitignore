@@ -53,3 +53,4 @@ dist/
 *.egg
 *.zip
 build/pip/setup.py
+.eggs
