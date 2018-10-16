@@ -375,8 +375,7 @@ func executeHook(message *gauge_messages.Message, execTimeTracker result.ExecTim
 
 func hasParseError(errs []error) bool {
 	for _, e := range errs {
-		switch e.(type) {
-		case parser.ParseError:
+		if _, ok := e.(parser.ParseError); ok {
 			return true
 		}
 	}
