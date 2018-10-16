@@ -55,7 +55,7 @@ const (
 
 var envVars map[string]string
 
-var currentEnv = "default"
+var currentEnvironments = []string{"default"}
 
 // LoadEnv first generates the map of the env vars that needs to be set.
 // It starts by populating the map with the env passed by the user in --env flag.
@@ -69,16 +69,18 @@ func LoadEnv(envName string) error {
 	envVars = make(map[string]string)
 
 	defaultEnvLoaded := false
-	for _, currentEnv := range allEnvs {
-		currentEnv = strings.TrimSpace(currentEnv)
+	for _, env := range allEnvs {
+		env = strings.TrimSpace(env)
 
-		err := loadEnvDir(currentEnv)
+		err := loadEnvDir(env)
 		if err != nil {
 			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
 
-		if currentEnv == "default" {
+		if env == "default" {
 			defaultEnvLoaded = true
+		} else {
+			currentEnvironments = append(currentEnvironments, env)
 		}
 	}
 
@@ -206,9 +208,9 @@ func containsEnvVar(value string) (contains bool, matches [][]string) {
 	return
 }
 
-// CurrentEnv returns the value of currentEnv
-func CurrentEnv() string {
-	return currentEnv
+// comma-separated value of environments
+func CurrentEnvironments() string {
+	return strings.Join(currentEnvironments, ",")
 }
 
 func convertToBool(property string, defaultValue bool) bool {
