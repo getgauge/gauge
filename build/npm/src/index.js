@@ -27,5 +27,5 @@ var downloadAndExtract = async function(version) {
 }
 
 install.getVersion(packageJsonPath)
-.then((v) => downloadAndExtract(v))
+.then((v) => downloadAndExtract(v.split('-')[0]))
 .catch((e) => console.error(e));

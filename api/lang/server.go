@@ -223,7 +223,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "gauge/executionStatus":
-		val, err := execution.ReadExecutionStatus()
+		val, err := execution.ReadLastExecutionResult()
 		if err != nil {
 			logDebug(req, err.Error())
 		}

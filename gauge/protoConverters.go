@@ -147,7 +147,7 @@ func convertToProtoCommentItem(comment *Comment) *gauge_messages.ProtoItem {
 }
 
 func convertToProtoDataTableItem(dataTable *DataTable) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: convertToProtoTableParam(&dataTable.Table)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: ConvertToProtoTable(&dataTable.Table)}
 }
 
 func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
@@ -157,16 +157,16 @@ func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
 	case Dynamic:
 		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Dynamic, Value: arg.Value, Name: arg.Name}
 	case TableArg:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table, Table: convertToProtoTableParam(&arg.Table), Name: arg.Name}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Table, Table: ConvertToProtoTable(&arg.Table), Name: arg.Name}
 	case SpecialString:
 		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_String, Value: arg.Value, Name: arg.Name}
 	case SpecialTable:
-		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table, Table: convertToProtoTableParam(&arg.Table), Name: arg.Name}
+		return &gauge_messages.Parameter{ParameterType: gauge_messages.Parameter_Special_Table, Table: ConvertToProtoTable(&arg.Table), Name: arg.Name}
 	}
 	return nil
 }
 
-func convertToProtoTableParam(table *Table) *gauge_messages.ProtoTable {
+func ConvertToProtoTable(table *Table) *gauge_messages.ProtoTable {
 	protoTableParam := &gauge_messages.ProtoTable{Rows: make([]*gauge_messages.ProtoTableRow, 0)}
 	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	for _, row := range table.Rows() {
@@ -177,20 +177,20 @@ func convertToProtoTableParam(table *Table) *gauge_messages.ProtoTable {
 
 func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
-		PreHookFailure:    suiteResult.PreSuite,
-		PostHookFailure:   suiteResult.PostSuite,
-		Failed:            suiteResult.IsFailed,
-		SpecsFailedCount:  int32(suiteResult.SpecsFailedCount),
-		ExecutionTime:     suiteResult.ExecutionTime,
-		SpecResults:       convertToProtoSpecResult(suiteResult.SpecResults),
-		SuccessRate:       getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
-		Environment:       suiteResult.Environment,
-		Tags:              suiteResult.Tags,
-		ProjectName:       suiteResult.ProjectName,
-		Timestamp:         suiteResult.Timestamp,
-		SpecsSkippedCount: int32(suiteResult.SpecsSkippedCount),
-		PreHookMessages:   suiteResult.PreHookMessages,
-		PostHookMessages:  suiteResult.PostHookMessages,
+		PreHookFailure:      suiteResult.PreSuite,
+		PostHookFailure:     suiteResult.PostSuite,
+		Failed:              suiteResult.IsFailed,
+		SpecsFailedCount:    int32(suiteResult.SpecsFailedCount),
+		ExecutionTime:       suiteResult.ExecutionTime,
+		SpecResults:         convertToProtoSpecResult(suiteResult.SpecResults),
+		SuccessRate:         getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
+		Environment:         suiteResult.Environment,
+		Tags:                suiteResult.Tags,
+		ProjectName:         suiteResult.ProjectName,
+		Timestamp:           suiteResult.Timestamp,
+		SpecsSkippedCount:   int32(suiteResult.SpecsSkippedCount),
+		PreHookMessages:     suiteResult.PreHookMessages,
+		PostHookMessages:    suiteResult.PostHookMessages,
 		PreHookScreenshots:  suiteResult.PreHookScreenshots,
 		PostHookScreenshots: suiteResult.PostHookScreenshots,
 	}

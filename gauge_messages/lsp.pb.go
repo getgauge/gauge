@@ -3,9 +3,11 @@
 
 package gauge_messages
 
-import proto "github.com/golang/protobuf/proto"
-import fmt "fmt"
-import math "math"
+import (
+	fmt "fmt"
+	proto "github.com/golang/protobuf/proto"
+	math "math"
+)
 
 import (
 	context "golang.org/x/net/context"
@@ -34,16 +36,17 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_lsp_d53682f2da872e6a, []int{0}
+	return fileDescriptor_ba9c4f454d309be8, []int{0}
 }
+
 func (m *Empty) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Empty.Unmarshal(m, b)
 }
 func (m *Empty) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	return xxx_messageInfo_Empty.Marshal(b, m, deterministic)
 }
-func (dst *Empty) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Empty.Merge(dst, src)
+func (m *Empty) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Empty.Merge(m, src)
 }
 func (m *Empty) XXX_Size() int {
 	return xxx_messageInfo_Empty.Size(m)
@@ -427,9 +430,9 @@ var _LspService_serviceDesc = grpc.ServiceDesc{
 	Metadata: "lsp.proto",
 }
 
-func init() { proto.RegisterFile("lsp.proto", fileDescriptor_lsp_d53682f2da872e6a) }
+func init() { proto.RegisterFile("lsp.proto", fileDescriptor_ba9c4f454d309be8) }
 
-var fileDescriptor_lsp_d53682f2da872e6a = []byte{
+var fileDescriptor_ba9c4f454d309be8 = []byte{
 	// 380 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x93, 0xcd, 0x6e, 0xda, 0x40,
 	0x14, 0x85, 0xa5, 0x4a, 0xa5, 0x65, 0xa0, 0xb4, 0x1a, 0xa9, 0xa8, 0x62, 0x53, 0x4a, 0xe9, 0xa2,

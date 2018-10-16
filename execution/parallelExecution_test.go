@@ -21,8 +21,8 @@ import (
 	"testing"
 
 	"net"
-	"os"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -115,37 +115,25 @@ func (s *MySuite) TestAggregationOfSuiteResultWithHook(c *C) {
 func (s *MySuite) TestIsMultiThreadedWithEnvSetToFalse(c *C) {
 	e := parallelExecution{errMaps: getValidationErrorMap()}
 
-	os.Setenv(enableMultithreadingEnv, "false")
+	env.EnableMultiThreadedExecution = func() bool { return false }
 
-	multithreaded := e.isMultithreaded()
-
-	os.Setenv(enableMultithreadingEnv, "")
-
-	c.Assert(false, Equals, multithreaded)
+	c.Assert(false, Equals, e.isMultithreaded())
 }
 
 func (s *MySuite) TestIsMultiThreadedWithRunnerWhenSupportsMultithreading(c *C) {
 	e := parallelExecution{errMaps: getValidationErrorMap(), runner: &fakeRunner{isMultiThreaded: true}}
 
-	os.Setenv(enableMultithreadingEnv, "true")
+	env.EnableMultiThreadedExecution = func() bool { return true }
 
-	multithreaded := e.isMultithreaded()
-
-	os.Setenv(enableMultithreadingEnv, "")
-
-	c.Assert(true, Equals, multithreaded)
+	c.Assert(true, Equals, e.isMultithreaded())
 }
 
 func (s *MySuite) TestIsMultiThreadedWithRunnerWhenDoesNotSupportMultithreading(c *C) {
 	e := parallelExecution{errMaps: getValidationErrorMap(), runner: &fakeRunner{isMultiThreaded: false}}
 
-	os.Setenv(enableMultithreadingEnv, "true")
+	env.EnableMultiThreadedExecution = func() bool { return true }
 
-	multithreaded := e.isMultithreaded()
-
-	os.Setenv(enableMultithreadingEnv, "")
-
-	c.Assert(false, Equals, multithreaded)
+	c.Assert(false, Equals, e.isMultithreaded())
 }
 
 type fakeRunner struct {

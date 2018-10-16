@@ -76,7 +76,7 @@ func (lookup *ArgLookup) GetArg(param string) (*StepArg, error) {
 func (lookup *ArgLookup) GetCopy() (*ArgLookup, error) {
 	lookupCopy := new(ArgLookup)
 	var err error
-	for key, _ := range lookup.ParamIndexMap {
+	for key := range lookup.ParamIndexMap {
 		lookupCopy.AddArgName(key)
 		var arg *StepArg
 		arg, err = lookup.GetArg(key)
@@ -87,28 +87,30 @@ func (lookup *ArgLookup) GetCopy() (*ArgLookup, error) {
 	return lookupCopy, err
 }
 
-func (lookup *ArgLookup) FromDataTableRow(datatable *Table, index int) (*ArgLookup, error) {
-	dataTableLookup := new(ArgLookup)
-	var err error
+func (lookup *ArgLookup) ReadDataTableRow(datatable *Table, index int) error {
 	if !datatable.IsInitialized() {
-		return dataTableLookup, err
+		return nil
 	}
 	for _, header := range datatable.Headers {
-		dataTableLookup.AddArgName(header)
+		lookup.AddArgName(header)
 		tableCells, _ := datatable.Get(header)
-		err = dataTableLookup.AddArgValue(header, &StepArg{Value: tableCells[index].Value, ArgType: Static})
+		err := lookup.AddArgValue(header, &StepArg{Value: tableCells[index].Value, ArgType: Static})
+		if err != nil {
+			return err
+		}
 	}
-	return dataTableLookup, err
+	return nil
 }
 
-//create an empty lookup with only args to resolve dynamic params for steps
-func (lookup *ArgLookup) FromDataTable(datatable *Table) *ArgLookup {
+//FromDataTables creates an empty lookup with only args to resolve dynamic params for steps from given list of tables
+func (lookup *ArgLookup) FromDataTables(tables ...*Table) *ArgLookup {
 	dataTableLookup := new(ArgLookup)
-	if !datatable.IsInitialized() {
-		return dataTableLookup
-	}
-	for _, header := range datatable.Headers {
-		dataTableLookup.AddArgName(header)
+	for _, table := range tables {
+		if table.IsInitialized() {
+			for _, header := range table.Headers {
+				dataTableLookup.AddArgName(header)
+			}
+		}
 	}
 	return dataTableLookup
 }

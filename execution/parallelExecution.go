@@ -30,6 +30,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
@@ -40,9 +41,9 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
 )
 
+// Strategy for execution, can be either 'Eager' or 'Lazy'
 var Strategy string
 
 // Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.
@@ -50,7 +51,6 @@ const Eager string = "eager"
 
 // Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
 const Lazy string = "lazy"
-const enableMultithreadingEnv = "enable_multithreading"
 
 type parallelExecution struct {
 	wg                       sync.WaitGroup
@@ -273,8 +273,7 @@ func isValidStrategy(strategy string) bool {
 }
 
 func (e *parallelExecution) isMultithreaded() bool {
-	value := util.ConvertToBool(os.Getenv(enableMultithreadingEnv), enableMultithreadingEnv, false)
-	if !value {
+	if !env.EnableMultiThreadedExecution() {
 		return false
 	}
 	if !e.runner.IsMultithreaded() {

@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/util"
 )
@@ -49,7 +50,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.StepKind && isInState(*state, scenarioScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		latestScenario := spec.LatestScenario()
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, latestScenario, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -68,7 +69,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	contextConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.StepKind && !isInState(*state, scenarioScope) && isInState(*state, specScope) && !isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, nil, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -97,7 +98,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	tearDownStepConverter := converterFn(func(token *Token, state *int) bool {
 		return token.Kind == gauge.StepKind && isInState(*state, tearDownScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
-		stepToAdd, parseDetails := createStep(spec, token)
+		stepToAdd, parseDetails := createStep(spec, nil, token)
 		if stepToAdd == nil {
 			return ParseResult{ParseErrors: parseDetails.ParseErrors, Ok: false, Warnings: parseDetails.Warnings}
 		}
@@ -158,7 +159,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	})
 
 	tableHeaderConverter := converterFn(func(token *Token, state *int) bool {
-		return token.Kind == gauge.TableHeader && isInState(*state, specScope)
+		return token.Kind == gauge.TableHeader && isInAnyState(*state, specScope)
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
@@ -174,21 +175,27 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
-		} else if !isInState(*state, scenarioScope) {
+		} else if isInState(*state, scenarioScope) {
+			scn := spec.LatestScenario()
+			if !scn.DataTable.Table.IsInitialized() && env.AllowScenarioDatatable() {
+				dataTable := &gauge.Table{LineNo: token.LineNo}
+				dataTable.AddHeaders(token.Args)
+				scn.AddDataTable(dataTable)
+			} else {
+				scn.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				return ParseResult{Ok: false, Warnings: []*Warning{
+					&Warning{spec.FileName, token.LineNo, "Multiple data table present, ignoring table"}}}
+			}
+		} else {
 			if !spec.DataTable.Table.IsInitialized() {
-				dataTable := &gauge.Table{}
-				dataTable.LineNo = token.LineNo
+				dataTable := &gauge.Table{LineNo: token.LineNo}
 				dataTable.AddHeaders(token.Args)
 				spec.AddDataTable(dataTable)
 			} else {
-				value := "Multiple data table present, ignoring table"
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName,
+					token.LineNo, "Multiple data table present, ignoring table"}}}
 			}
-		} else {
-			value := "Table not associated with a step, ignoring table"
-			spec.LatestScenario().AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope)
 		addStates(state, tableScope)
@@ -214,23 +221,28 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
 			latestStep := latestScenario.LatestStep()
-			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.LatestContext()
-			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 		} else if isInState(*state, tearDownScope) {
 			if len(spec.TearDownSteps) > 0 {
 				latestTeardown := spec.LatestTeardown()
-				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
 			}
 		} else {
-			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table), spec.FileName)
+			t := spec.DataTable
+			if isInState(*state, scenarioScope) && env.AllowScenarioDatatable() {
+				t = spec.LatestScenario().DataTable
+			}
+
+			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTables(&t.Table), spec.FileName)
 			if len(err) > 0 {
 				result = ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 			} else {
-				spec.DataTable.Table.AddRowValues(tableValues)
+				t.Table.AddRowValues(tableValues)
 				result = ParseResult{Ok: true, Warnings: warnings}
 			}
 		}

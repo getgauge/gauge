@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 
 	"regexp"
 	"strings"
@@ -28,18 +29,28 @@ import (
 	"github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
 )
 
 const (
-	SpecsDir            = "gauge_specs_dir"
-	GaugeReportsDir     = "gauge_reports_dir"
-	LogsDirectory       = "logs_directory"
-	OverwriteReports    = "overwrite_reports"
+	// SpecsDir holds the location of spec files
+	SpecsDir = "gauge_specs_dir"
+	// GaugeReportsDir holds the location of reports
+	GaugeReportsDir = "gauge_reports_dir"
+	// LogsDirectory holds the location of log files
+	LogsDirectory = "logs_directory"
+	// OverwriteReports = false will create a new directory for reports
+	// for every run.
+	OverwriteReports = "overwrite_reports"
+	// ScreenshotOnFailure indicates if failure should invoke screenshot
 	ScreenshotOnFailure = "screenshot_on_failure"
-	SaveExecutionResult = "save_execution_result" // determines if last run result should be saved
-	CsvDelimiter        = "csv_delimiter"
-	AllowMultilineStep  = "allow_multiline_step"
-	useTestGA           = "use_test_ga"
+	saveExecutionResult = "save_execution_result"
+	// CsvDelimiter holds delimiter used to parse csv files
+	CsvDelimiter           = "csv_delimiter"
+	allowMultilineStep     = "allow_multiline_step"
+	allowScenarioDatatable = "allow_scenario_datatable"
+	enableMultithreading   = "enable_multithreading"
+	useTestGA              = "use_test_ga"
 )
 
 var envVars map[string]string
@@ -98,9 +109,10 @@ func loadDefaultEnvVars() {
 	addEnvVar(LogsDirectory, "logs")
 	addEnvVar(OverwriteReports, "true")
 	addEnvVar(ScreenshotOnFailure, "true")
-	addEnvVar(SaveExecutionResult, "false")
+	addEnvVar(saveExecutionResult, "false")
 	addEnvVar(CsvDelimiter, ",")
-	addEnvVar(AllowMultilineStep, "false")
+	addEnvVar(allowMultilineStep, "false")
+	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(useTestGA, "false")
 }
 
@@ -154,7 +166,7 @@ func substituteEnvVars() error {
 				envKey, property := match[0], match[1]
 				// error if env property is not found
 				if !isPropertySet(property) {
-					return fmt.Errorf("'%s' env variable was not set.", property)
+					return fmt.Errorf("'%s' env variable was not set", property)
 				}
 				// get env var from system
 				propertyValue := os.Getenv(property)
@@ -197,6 +209,38 @@ func containsEnvVar(value string) (contains bool, matches [][]string) {
 // CurrentEnv returns the value of currentEnv
 func CurrentEnv() string {
 	return currentEnv
+}
+
+func convertToBool(property string, defaultValue bool) bool {
+	v := os.Getenv(property)
+	boolValue, err := strconv.ParseBool(strings.TrimSpace(v))
+	if err != nil {
+		logger.Warningf(true, "Incorrect value for %s in property file. Cannot convert %s to boolean.", property, v)
+		logger.Warningf(true, "Using default value %v for property %s.", defaultValue, property)
+		return defaultValue
+	}
+	return boolValue
+}
+
+// AllowScenarioDatatable -feature toggle for datatables in scenario
+var AllowScenarioDatatable = func() bool {
+	return convertToBool(allowScenarioDatatable, false)
+}
+
+// AllowMultiLineStep - feature toggle for newline in step text
+var AllowMultiLineStep = func() bool {
+	return convertToBool(allowMultilineStep, false)
+}
+
+// SaveExecutionResult determines if last run result should be saved
+var SaveExecutionResult = func() bool {
+	return convertToBool(saveExecutionResult, false)
+}
+
+// EnableMultiThreadedExecution determines if threads should be used instead of process
+// for each parallel stream
+var EnableMultiThreadedExecution = func() bool {
+	return convertToBool(enableMultithreading, false)
 }
 
 // UseTestGA checks if test google analytics account needs to be used
