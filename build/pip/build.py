@@ -23,12 +23,12 @@ def generate_package():
     shutil.rmtree('dist', True)
     print('Creating getgauge package.')
     create_setup_file()
-    call(['python', 'setup.py', 'sdist'], stdout=sys.stdout, stderr=sys.stderr)
+    call([sys.executable, 'setup.py', 'sdist'], stdout=sys.stdout, stderr=sys.stderr)
 
 
 def install():
     create_setup_file()
-    call(['python', 'setup.py', 'install'], stdout=sys.stdout, stderr=sys.stderr)
+    call([sys.executable, 'setup.py', 'install'], stdout=sys.stdout, stderr=sys.stderr)
 
 usage = """
 Usage: python build.py --[option]
