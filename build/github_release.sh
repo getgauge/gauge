@@ -36,8 +36,9 @@ if [ -z "$GITHUB_TOKEN" ]; then
 fi
 
 go get -v -u github.com/aktau/github-release
-
-version=$(ls $artifactName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$artifactName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+if [ -z "$version" ]; then
+  version=$(ls $artifactName* | head -1 | sed "s/\.[^\.]*$//" | sed "s/$artifactName-//" | sed "s/-[a-z]*\.[a-z0-9_]*$//");
+fi
 echo "------------------------------"
 echo "Releasing $repoName v$version"
 echo "------------------------------"
