@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-/*
+/*Package execution handles gauge's execution of spec/scenario/steps
    Execution can be of two types
 	- Simple execution
 	- Paralell execution
@@ -63,7 +63,6 @@ import (
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 )
 
@@ -148,13 +147,13 @@ var ExecuteSpecs = func(specDirs []string) int {
 	wg := &sync.WaitGroup{}
 	reporter.ListenExecutionEvents(wg)
 	rerun.ListenFailedScenarios(wg, specDirs)
-	if util.ConvertToBool(os.Getenv(env.SaveExecutionResult), env.SaveExecutionResult, false) {
+	if env.SaveExecutionResult() {
 		ListenSuiteEndAndSaveResult(wg)
 	}
 	defer wg.Wait()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 	e := newExecution(ei)
-	return printExecutionStatus(e.run(), res.ParseOk)
+	return printExecutionResult(e.run(), res.ParseOk)
 }
 
 func newExecution(executionInfo *executionInfo) suiteExecutor {
@@ -202,7 +201,7 @@ func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedS
 	return s
 }
 
-func writeExecutionStatus(content string) {
+func writeExecutionResult(content string) {
 	executionStatusFile := filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
@@ -214,7 +213,9 @@ func writeExecutionStatus(content string) {
 	}
 }
 
-func ReadExecutionStatus() (interface{}, error) {
+// ReadLastExecutionResult returns the result of previous execution in JSON format
+// This is stored in $GAUGE_PROJECT_ROOT/.gauge/executionStatus.json file after every execution
+func ReadLastExecutionResult() (interface{}, error) {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile))
 	if err != nil {
 		logger.Fatalf(true, "Failed to read execution status information. Reason: %s", err.Error())
@@ -227,7 +228,7 @@ func ReadExecutionStatus() (interface{}, error) {
 	return meta, nil
 }
 
-func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int {
+func printExecutionResult(suiteResult *result.SuiteResult, isParsingOk bool) int {
 	nSkippedSpecs := suiteResult.SpecsSkippedCount
 	var nExecutedSpecs int
 	if len(suiteResult.SpecResults) != 0 {
@@ -259,7 +260,7 @@ func printExecutionStatus(suiteResult *result.SuiteResult, isParsingOk bool) int
 	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
 	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
 	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
-	writeExecutionStatus(s)
+	writeExecutionResult(s)
 
 	if !isParsingOk {
 		return ParseFailed
@@ -275,10 +276,10 @@ func validateFlags() error {
 		return nil
 	}
 	if NumberOfExecutionStreams < 1 {
-		return fmt.Errorf("Invalid input(%s) to --n flag.", strconv.Itoa(NumberOfExecutionStreams))
+		return fmt.Errorf("invalid input(%s) to --n flag", strconv.Itoa(NumberOfExecutionStreams))
 	}
 	if !isValidStrategy(Strategy) {
-		return fmt.Errorf("Invalid input(%s) to --strategy flag.", Strategy)
+		return fmt.Errorf("invalid input(%s) to --strategy flag", Strategy)
 	}
 	return nil
 }

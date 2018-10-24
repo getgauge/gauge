@@ -132,8 +132,12 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 	return nil
 }
 
-func createStep(spec *gauge.Specification, stepToken *Token) (*gauge.Step, *ParseResult) {
-	dataTableLookup := new(gauge.ArgLookup).FromDataTable(&spec.DataTable.Table)
+func createStep(spec *gauge.Specification, scn *gauge.Scenario, stepToken *Token) (*gauge.Step, *ParseResult) {
+	tables := []*gauge.Table{&spec.DataTable.Table}
+	if scn != nil {
+		tables = append(tables, &scn.DataTable.Table)
+	}
+	dataTableLookup := new(gauge.ArgLookup).FromDataTables(tables...)
 	stepToAdd, parseDetails := CreateStepUsingLookup(stepToken, dataTableLookup, spec.FileName)
 	if stepToAdd != nil {
 		stepToAdd.Suffix = stepToken.Suffix

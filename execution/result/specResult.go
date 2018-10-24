@@ -60,6 +60,26 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 	specResult.ScenarioCount += len(scenarioResults)
 }
 
+func (specResult *SpecResult) AddTableDrivenScenarioResult(r *ScenarioResult, t *gauge_messages.ProtoTable, scenarioRowIndex int, specRowIndex int, specTableDriven bool) {
+	if r.GetFailed() {
+		specResult.IsFailed = true
+		specResult.ScenarioFailedCount++
+	}
+	specResult.AddExecTime(r.ExecTime())
+	pItem := &gauge_messages.ProtoItem{
+		ItemType: gauge_messages.ProtoItem_TableDrivenScenario,
+		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
+			Scenario:              r.Item().(*gauge_messages.ProtoScenario),
+			IsScenarioTableDriven: true,
+			ScenarioTableRowIndex: int32(scenarioRowIndex),
+			IsSpecTableDriven:     specTableDriven,
+			ScenarioDataTable:     t,
+			TableRowIndex:         int32(specRowIndex),
+		},
+	}
+	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, pItem)
+}
+
 // AddTableRelatedScenarioResult aggregates the data table driven spec results.
 func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
 	numberOfScenarios := len(scenarioResults[0])

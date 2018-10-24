@@ -233,11 +233,43 @@ func validateTagExpression(tagExpression string) {
 
 func filterSpecsByScenarioName(specs []*gauge.Specification, scenariosName []string) []*gauge.Specification {
 	filteredSpecs := make([]*gauge.Specification, 0)
+	scenarios := filterValidScenarios(specs, scenariosName)
 	for _, spec := range specs {
-		spec.Filter(newScenarioFilterBasedOnName(scenariosName))
+		spec.Filter(newScenarioFilterBasedOnName(scenarios))
 		if len(spec.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, spec)
 		}
 	}
 	return filteredSpecs
+}
+
+func filterValidScenarios(specs []*gauge.Specification, headings []string) []string {
+	filteredScenarios := make([]string, 0)
+	allScenarios := GetAllScenarios(specs)
+	var exists = func(scenarios []string, heading string) bool {
+		for _, scenario := range scenarios {
+			if strings.Compare(scenario, heading) == 0 {
+				return true
+			}
+		}
+		return false
+	}
+	for _, heading := range headings {
+		if exists(allScenarios,heading) {
+			filteredScenarios = append(filteredScenarios,heading)
+		} else {
+			logger.Warningf(true,"Warning: scenario name - \"%s\" not found",heading)
+		}
+	}
+	return filteredScenarios;
+}
+
+func GetAllScenarios(specs []*gauge.Specification) []string {
+	allScenarios := []string{}
+	for _, spec := range specs{
+		for _, scenario := range spec.Scenarios {
+			allScenarios = append(allScenarios, scenario.Heading.Value)
+		}
+	}
+	return allScenarios
 }

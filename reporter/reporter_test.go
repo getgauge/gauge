@@ -91,7 +91,7 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 			Value:   "foo",
 			ArgType: gauge.Dynamic}},
 	}
-	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}, DataTableRow: dataTable, Steps: []*gauge.Step{step}}
+	sce := &gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}, SpecDataTableRow: dataTable, Steps: []*gauge.Step{step}}
 	sceRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ScenarioHeading: sceHeading})
 
 	ListenExecutionEvents(&sync.WaitGroup{})

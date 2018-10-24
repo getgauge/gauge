@@ -52,7 +52,7 @@ func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result.SpecResults = make([]*SpecResult, 0)
 	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
 	result.ProjectName = filepath.Base(config.ProjectRoot)
-	result.Environment = env.CurrentEnv()
+	result.Environment = env.CurrentEnvironments()
 	result.Tags = tags
 	return result
 }

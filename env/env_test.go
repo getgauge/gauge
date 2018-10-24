@@ -216,5 +216,15 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
 	config.ProjectRoot = "_testdata/proj3"
 	e := LoadEnv("default")
-	c.Assert(e, ErrorMatches, ".*env variable was not set.")
+	c.Assert(e, ErrorMatches, ".*env variable was not set")
+}
+
+func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj1"
+
+	e := LoadEnv("foo")
+
+	c.Assert(e, Equals, nil)
+	c.Assert(CurrentEnvironments(), Equals, "default,foo")
 }

@@ -27,6 +27,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/spf13/cobra"
+	"github.com/getgauge/gauge/filter"
 )
 
 var (
@@ -93,12 +94,7 @@ func listTags(s []*gauge.Specification, f handleResult) {
 }
 
 func listScenarios(s []*gauge.Specification, f handleResult) {
-	allScenarios := []string{}
-	for _, spec := range s {
-		for _, scenario := range spec.Scenarios {
-			allScenarios = append(allScenarios, scenario.Heading.Value)
-		}
-	}
+	allScenarios := filter.GetAllScenarios(s)
 	f(sortedDistinctElements(allScenarios))
 }
 

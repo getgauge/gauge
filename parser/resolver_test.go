@@ -99,7 +99,8 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup, _ := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup)
+	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
 	err := PopulateConceptDynamicParams(concept, dataTableLookup)
 	c.Assert(err, IsNil)
 	useridArg, _ := concept.GetArg("user-id")
@@ -127,7 +128,8 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup, _ := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup)
+	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
 	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
 
@@ -173,7 +175,8 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
-	dataTableLookup, _ := new(gauge.ArgLookup).FromDataTableRow(&spec.DataTable.Table, 0)
+	dataTableLookup := new(gauge.ArgLookup)
+	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
 	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
 	useridArg1, _ := concept1.GetArg("user-id")
@@ -223,9 +226,8 @@ func (s *MySuite) TestGetResolveParameterFromTable(c *C) {
 	specs, _ := parser.ParseSpecText(specText, "")
 
 	step := specs.Steps()[0]
-	paramResolver := new(ParamResolver)
 
-	parameters, err := paramResolver.GetResolvedParams(step, nil, nil)
+	parameters, err := getResolvedParams(step, nil, nil)
 
 	c.Assert(len(parameters), Equals, 1)
 	c.Assert(parameters[0].Table.Rows[0].GetCells()[0], Equals, "john")

@@ -6,34 +6,46 @@ import platform
 import zipfile
 import os
 import sys
-import requests
 
-release_ver = "{0}"
-base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
 
-# Code to determine Architecture and OS where Gauge is being installed
-arch_map = {{"ia32": "x86", "x64": "x86_64"}}
-os_map = {{"Darwin": "darwin", "linux": "linux", "win32": "windows"}}
-if '64' in platform.architecture()[0]:
-    arch = arch_map['x64']
-else:
-    arch = arch_map['ia32']
-os_name = os_map[platform.system()]
-if os_name is 'win32':
-    gauge_file = 'gauge.exe'
-else:
-    gauge_file = 'gauge'
-
-latest_version = json.loads(requests.get(base_url).text)[0]['tag_name']
+_version = "{0}"
+_latest_version = ""
 
 
 class CustomInstallCommand(install):
     """Customized setuptools install command to download and setup."""
 
+    _base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
+    _arch_map = {{"ia32": "x86", "x64": "x86_64"}}
+    _os_map = {{"Darwin": "darwin", "Linux": "linux", "Windows": "windows"}}
+    _os_name = _os_map[platform.system()]
+
+    def _get_arch(self):
+        if '64' in platform.architecture()[0]:
+            return self._arch_map['x64']
+        else:
+            return self._arch_map['ia32']
+
+    def _get(self, url):
+        import requests
+        return requests.get(url)
+
+    def set_released_version(self):
+        global _latest_version
+        _latest_version = json.loads(self._get(self._base_url).text)[0]['tag_name'].replace('v', '')
+
+    def _get_gauge_file(self):
+        if self._os_name is 'win32':
+            return 'gauge.exe'
+        else:
+            return 'gauge'
+
     def _gauge_package_fetch(self):
-        package_name = 'gauge-%s-%s.%s' % (release_ver, os_name, arch)
-        package_url = base_url.replace('api.', '').replace('/repos', '') + '/download/v%s/%s.zip' % (release_ver, package_name)
-        r2 = requests.get(package_url)
+        package_name = 'gauge-%s-%s.%s' % (_version,
+                                           self._os_name, self._get_arch())
+        package_url = self._base_url.replace('api.', '').replace(
+            '/repos', '') + '/download/v%s/%s.zip' % (_version, package_name)
+        r2 = self._get(package_url)
         with open("gauge.zip", "wb") as download:
             download.write(r2.content)
 
@@ -42,13 +54,14 @@ class CustomInstallCommand(install):
         self._gauge_package_fetch()
         with zipfile.ZipFile('gauge.zip', "r") as z:
             z.extractall()
-        target_path = os.path.join(self.install_scripts, gauge_file)
-        source_path = os.path.join(os.getcwd(), gauge_file)
+        target_path = os.path.join(
+            self.install_scripts, self._get_gauge_file())
+        source_path = os.path.join(os.getcwd(), self._get_gauge_file())
         if os.path.isfile(target_path):
             os.remove(target_path)
         if os.path.isfile(source_path):
             self.move_file(source_path, target_path)
-            if os_name is not "win32":
+            if self._os_name is not "win32":
                 if sys.version_info[0] == 3:
                     os.chmod(target_path, 0o755)
                 if sys.version_info[0] < 3:
@@ -56,8 +69,12 @@ class CustomInstallCommand(install):
 
     def run(self):
         """Custom Install / Run Command."""
+        self.set_released_version()
         self.gauge_main_to_path()
         install.run(self)
+        print("\n***Gauge CLI - %s Installation Complete!***\n" % _version)
+        print("\n***Latest version of Gauge CLI is - %s***\n" % _latest_version)
+
 
 
 def readme():
@@ -65,9 +82,10 @@ def readme():
     with open('README.md') as readme_file:
         return readme_file.read()
 
+
 setup(
     name="{1}",
-    version=release_ver,
+    version=_version,
     long_description=readme(),
     long_description_content_type='text/markdown',
     url='https://github.com/getgauge/gauge',
@@ -96,9 +114,8 @@ setup(
         "Programming Language :: Python :: 3.6",
     ],
     install_requires=[
-        'requests>=2.19.1',
+        'requests',
         'markdown',
     ],
+    setup_requires=['requests']
 )
-print("\n***Gauge CLI - %s Installation Complete!***\n" % release_ver)
-print("\n***Latest version of Gauge CLI is - %s***\n" % latest_version)

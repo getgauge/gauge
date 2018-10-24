@@ -7,7 +7,7 @@ from subprocess import call
 
 
 base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
-latest_version = json.loads(requests.get(base_url).text)[0]['tag_name']
+latest_version = json.loads(requests.get(base_url).text)[0]['tag_name'].replace('v', '')
 
 def create_setup_file():
     tmpl = open("setup.tmpl", "r")
@@ -23,16 +23,12 @@ def generate_package():
     shutil.rmtree('dist', True)
     print('Creating getgauge package.')
     create_setup_file()
-    fnull = open(os.devnull, 'w')
-    call(['python', 'setup.py', 'sdist'], stdout=fnull, stderr=fnull)
-    fnull.close()
+    call([sys.executable, 'setup.py', 'sdist'], stdout=sys.stdout, stderr=sys.stderr)
 
 
 def install():
     create_setup_file()
-    fnull = open(os.devnull, 'w')
-    call(['python', 'setup.py', 'install'], stdout=fnull, stderr=fnull)
-    fnull.close()
+    call([sys.executable, 'setup.py', 'install'], stdout=sys.stdout, stderr=sys.stderr)
 
 usage = """
 Usage: python build.py --[option]
