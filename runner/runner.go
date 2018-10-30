@@ -448,18 +448,19 @@ func Start(manifest *manifest.Manifest, outputStreamWriter io.Writer, killChanne
 	if err != nil {
 		return nil, err
 	}
-	return connect(handler, runner)
+	err = connect(handler, runner)
+	return runner, err
 }
 
-func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) (Runner, error) {
+func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) error {
 	connection, connErr := h.AcceptConnection(config.RunnerConnectionTimeout(), runner.errorChannel)
 	if connErr != nil {
 		logger.Debugf(true, "Runner connection error: %s", connErr)
 		if err := runner.killRunner(); err != nil {
 			logger.Debugf(true, "Error while killing runner: %s", err)
 		}
-		return nil, connErr
+		return connErr
 	}
 	runner.connection = connection
-	return runner, nil
+	return nil
 }
