@@ -252,13 +252,18 @@ func FilterDuplicates(validationErrors validationErrors) []error {
 	exists := make(map[string]bool)
 	for _, errs := range validationErrors {
 		for _, e := range errs {
+			var val string
 			if vErr, ok := e.(StepValidationError); ok {
-				valError := vErr.step.Value + vErr.step.FileName + strconv.Itoa(e.(StepValidationError).step.LineNo)
-				if _, ok := exists[valError]; !ok {
-					exists[valError] = true
-				}
+				val = vErr.step.Value + vErr.step.FileName + strconv.Itoa(e.(StepValidationError).step.LineNo)
+			} else if vErr, ok := e.(SpecValidationError); ok {
+				val = vErr.message + vErr.fileName
+			} else {
+				continue
 			}
-			filteredErrs = append(filteredErrs, e)
+			if _, ok := exists[val]; !ok {
+				exists[val] = true
+				filteredErrs = append(filteredErrs, e)
+			}
 		}
 	}
 	return filteredErrs
