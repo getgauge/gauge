@@ -28,7 +28,7 @@ Gauge Core is a project that has features that would reflect across all Gauge us
 
 Plugins are meant to do something specific. These could be adding support for a new language, or have a new report etc. So, depending on where you see your contribution fit, please focus on the respective repository.
 
-If your contribution is a code contribution and you do send us a pull request, you will first need to read and sign the [Contributor License Agreement](https://gauge-cla.herokuapp.com/).
+If your contribution is a code contribution and you do send us a pull request, you will first need to read and sign the [Contributor License Agreement](https://gauge-bot.herokuapp.com/cla/).
 
 ### Developer documentation
 
