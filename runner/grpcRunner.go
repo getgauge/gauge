@@ -108,7 +108,7 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
 	return nil
 }
-func (r *GrpcRunner) IsProcessRunning() bool {
+func (r *GrpcRunner) Alive() bool {
 	return false
 }
 
