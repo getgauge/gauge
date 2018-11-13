@@ -219,7 +219,7 @@ func (r *LanguageRunner) EnsureConnected() bool {
 	c := r.connection
 	c.SetReadDeadline(time.Now())
 	var one []byte
-	if _, err := c.Read(one); err == io.EOF {
+	if _, err := c.Read(one); err != nil {
 		r.lostContact = true
 		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
