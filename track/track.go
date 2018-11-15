@@ -47,7 +47,7 @@ const (
 	appName          = "Gauge Core"
 	consoleMedium    = "console"
 	apiMedium        = "api"
-	lspMedium		 = "lsp"
+	lspMedium        = "lsp"
 	ciMedium         = "CI"
 	timeout          = 1
 	// GaugeTelemetryMessageHeading is the header printed for telemetry warning
@@ -142,7 +142,7 @@ func recoverPanic() {
 	}
 }
 
-func track(medium, category, action, label string){
+func track(medium, category, action, label string) {
 	if isCI() {
 		medium = ciMedium
 	}
@@ -160,7 +160,7 @@ func trackAPI(category, action, label string) {
 	track(apiMedium, category, action, label)
 }
 
-func trackLSP(category, action, label string){
+func trackLSP(category, action, label string) {
 	track(lspMedium, category, action, label)
 }
 
@@ -319,8 +319,8 @@ func APIFormat() {
 	trackAPI("formatting", "format", "")
 }
 
-func LSPAction(lang, action string){
-	trackLSP("vscode",lang, action)
+func LSPAction(lang, action string) {
+	trackLSP("vscode", lang, action)
 }
 
 func newlogEnabledHTTPTransport() http.RoundTripper {
