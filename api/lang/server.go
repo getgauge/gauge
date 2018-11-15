@@ -133,7 +133,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "completionItem/resolve":
-		track.LSPAction(lRunner.lspID, "code completion resolved")
 		val, err := resolveCompletion(req)
 		if err != nil {
 			logDebug(req, err.Error())
@@ -213,6 +212,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "gauge/putStubImpl":
+		track.LSPAction(lRunner.lspID, "generate step")
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			logDebug(req, err.Error())
 			showErrorMessageOnClient(ctx, conn, err)
@@ -230,6 +230,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "gauge/executionStatus":
+		track.LSPAction(lRunner.lspID, "execution")
 		val, err := execution.ReadLastExecutionResult()
 		if err != nil {
 			logDebug(req, err.Error())
