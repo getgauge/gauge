@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/track"
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/sourcegraph/jsonrpc2"
 )
@@ -125,24 +126,28 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return nil, err
 	case "textDocument/completion":
+		track.LSPAction(lRunner.lspID, "code completion")
 		val, err := completion(req)
 		if err != nil {
 			logDebug(req, err.Error())
 		}
 		return val, err
 	case "completionItem/resolve":
+		track.LSPAction(lRunner.lspID, "code completion resolved")
 		val, err := resolveCompletion(req)
 		if err != nil {
 			logDebug(req, err.Error())
 		}
 		return val, err
 	case "textDocument/definition":
+		track.LSPAction(lRunner.lspID, "goto definition")
 		val, err := definition(req)
 		if err != nil {
 			logDebug(req, err.Error())
 		}
 		return val, err
 	case "textDocument/formatting":
+		track.LSPAction(lRunner.lspID, "formatting")
 		data, err := format(req)
 		if err != nil {
 			logDebug(req, err.Error())
@@ -162,6 +167,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "textDocument/rename":
+		track.LSPAction(lRunner.lspID, "rename")
 		result, err := rename(ctx, conn, req)
 		if err != nil {
 			logDebug(req, err.Error())
@@ -182,6 +188,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "gauge/stepReferences":
+		track.LSPAction(lRunner.lspID, "step reference")
 		val, err := stepReferences(req)
 		if err != nil {
 			logDebug(req, err.Error())
@@ -229,6 +236,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		}
 		return val, err
 	case "gauge/generateConcept":
+		track.LSPAction(lRunner.lspID, "generate concept")
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			showErrorMessageOnClient(ctx, conn, err)
 			return nil, err
