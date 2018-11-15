@@ -141,8 +141,7 @@ func recoverPanic() {
 	}
 }
 
-func trackConsole(category, action, label string) {
-	var medium = consoleMedium
+func track(medium, category, action, label string){
 	if isCI() {
 		medium = ciMedium
 	}
@@ -152,14 +151,12 @@ func trackConsole(category, action, label string) {
 	go send(category, action, label, medium, wg)
 }
 
+func trackConsole(category, action, label string) {
+	track(consoleMedium, category, action, label)
+}
+
 func trackAPI(category, action, label string) {
-	var medium = apiMedium
-	if isCI() {
-		medium = ciMedium
-	}
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go send(category, action, label, medium, wg)
+	track(apiMedium, category, action, label)
 }
 
 func isCI() bool {
