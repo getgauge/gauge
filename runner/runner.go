@@ -46,7 +46,7 @@ import (
 type Runner interface {
 	ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult
 	ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gauge_messages.Message, error)
-	Alive() bool
+	IsProcessRunning() bool
 	Kill() error
 	Connection() net.Conn
 	IsMultithreaded() bool
@@ -59,16 +59,15 @@ type LanguageRunner struct {
 	connection    net.Conn
 	errorChannel  chan error
 	multiThreaded bool
-	lostContact   bool
 }
 
 type MultithreadedRunner struct {
 	r *LanguageRunner
 }
 
-func (r *MultithreadedRunner) Alive() bool {
+func (r *MultithreadedRunner) IsProcessRunning() bool {
 	if r.r.mutex != nil && r.r.Cmd != nil {
-		return r.r.Alive()
+		return r.r.IsProcessRunning()
 	}
 	return false
 }
@@ -88,7 +87,7 @@ func (r *MultithreadedRunner) Kill() error {
 	exited := make(chan bool, 1)
 	go func() {
 		for {
-			if r.Alive() {
+			if r.IsProcessRunning() {
 				time.Sleep(100 * time.Millisecond)
 			} else {
 				exited <- true
@@ -129,7 +128,6 @@ func (r *MultithreadedRunner) ExecuteAndGetStatus(message *gauge_messages.Messag
 }
 
 func (r *MultithreadedRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
-	r.r.EnsureConnected()
 	return conn.GetResponseForMessageWithTimeout(message, r.r.Connection(), config.RunnerRequestTimeout())
 }
 
@@ -204,28 +202,11 @@ func GetRunnerInfo(language string) (*RunnerInfo, error) {
 	}
 	return runnerInfo, nil
 }
-
-func (r *LanguageRunner) Alive() bool {
+func (r *LanguageRunner) IsProcessRunning() bool {
 	r.mutex.Lock()
 	ps := r.Cmd.ProcessState
 	r.mutex.Unlock()
 	return ps == nil || !ps.Exited()
-}
-
-func (r *LanguageRunner) EnsureConnected() bool {
-	if r.lostContact {
-		return false
-	}
-	c := r.connection
-	c.SetReadDeadline(time.Now())
-	var one []byte
-	if _, err := c.Read(one); err == io.EOF {
-		r.lostContact = true
-		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
-	}
-	var zero time.Time
-	c.SetReadDeadline(zero)
-	return true
 }
 
 func (r *LanguageRunner) IsMultithreaded() bool {
@@ -233,14 +214,14 @@ func (r *LanguageRunner) IsMultithreaded() bool {
 }
 
 func (r *LanguageRunner) Kill() error {
-	if r.Alive() {
+	if r.IsProcessRunning() {
 		defer r.connection.Close()
 		conn.SendProcessKillMessage(r.connection)
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if r.Alive() {
+				if r.IsProcessRunning() {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -274,11 +255,7 @@ func (r *LanguageRunner) Pid() int {
 	return r.Cmd.Process.Pid
 }
 
-// ExecuteAndGetStatus invokes the runner with a request and waits for response. error is thrown only when unable to connect to runner
 func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-	if !r.EnsureConnected() {
-		return nil
-	}
 	response, err := conn.GetResponseForMessageWithTimeout(message, r.connection, 0)
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
@@ -299,7 +276,6 @@ func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *g
 }
 
 func (r *LanguageRunner) ExecuteMessageWithTimeout(message *gauge_messages.Message) (*gauge_messages.Message, error) {
-	r.EnsureConnected()
 	return conn.GetResponseForMessageWithTimeout(message, r.Connection(), config.RunnerRequestTimeout())
 }
 
@@ -447,19 +423,18 @@ func Start(manifest *manifest.Manifest, outputStreamWriter io.Writer, killChanne
 	if err != nil {
 		return nil, err
 	}
-	err = connect(handler, runner)
-	return runner, err
+	return connect(handler, runner)
 }
 
-func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) error {
+func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) (Runner, error) {
 	connection, connErr := h.AcceptConnection(config.RunnerConnectionTimeout(), runner.errorChannel)
 	if connErr != nil {
 		logger.Debugf(true, "Runner connection error: %s", connErr)
 		if err := runner.killRunner(); err != nil {
 			logger.Debugf(true, "Error while killing runner: %s", err)
 		}
-		return connErr
+		return nil, connErr
 	}
 	runner.connection = connection
-	return nil
+	return runner, nil
 }

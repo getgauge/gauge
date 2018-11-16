@@ -262,7 +262,7 @@ func (r *mockRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messa
 	return r.ExecuteAndGetStatusFunc(m)
 }
 
-func (r *mockRunner) Alive() bool {
+func (r *mockRunner) IsProcessRunning() bool {
 	return false
 }
 

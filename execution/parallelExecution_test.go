@@ -147,7 +147,7 @@ func (f *fakeRunner) ExecuteMessageWithTimeout(m *gauge_messages.Message) (*gaug
 func (f *fakeRunner) ExecuteAndGetStatus(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 	return nil
 }
-func (f *fakeRunner) Alive() bool {
+func (f *fakeRunner) IsProcessRunning() bool {
 	return false
 }
 func (f *fakeRunner) Kill() error {
