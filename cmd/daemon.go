@@ -57,7 +57,7 @@ var (
 				lang.Start(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}, logLevel)
 				return
 			}
-			track.ScheduleDaemonTracking("API", language)
+			go track.ScheduleDaemonTracking("API", language)
 			port := ""
 			specs := util.GetSpecDirs()
 			if len(args) > 0 {
