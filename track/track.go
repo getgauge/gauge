@@ -297,12 +297,8 @@ func CheckUpdates() {
 	trackConsole("updates", "check", "")
 }
 
-func Daemon() {
-	trackConsole("daemon", "api", "")
-}
-
-func Lsp() {
-	trackConsole("daemon", "lsp", "")
+func Daemon(mode,lang string) {
+	trackConsole("daemon", mode, lang)
 }
 
 func APIRefactoring() {
@@ -316,6 +312,16 @@ func APIExtractConcept() {
 func APIFormat() {
 	trackAPI("formatting", "format", "")
 }
+
+func ScheduleDaemonTracking(mode,lang string){
+	ticker := time.NewTicker(5 * time.Second)
+    for {
+       select {
+		case <- ticker.C:
+			Daemon(mode,lang)	
+        }
+    }
+ }
 
 func newlogEnabledHTTPTransport() http.RoundTripper {
 	return &logEnabledRoundTripper{}
