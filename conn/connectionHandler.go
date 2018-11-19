@@ -23,6 +23,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/getgauge/gauge/logger"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -107,8 +109,7 @@ func (connectionHandler *GaugeConnectionHandler) handleConnectionMessages(conn n
 		n, err := conn.Read(data)
 		if err != nil {
 			conn.Close()
-			//TODO: Move to file
-			//			logger.Log.Println(fmt.Sprintf("Closing connection [%s] cause: %s", connectionHandler.conn.RemoteAddr(), err.Error()))
+			logger.Infof(false, "Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error())
 			return
 		}
 
