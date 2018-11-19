@@ -42,27 +42,14 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-const (
-	executionScope          = "execution"
-	docScope                = "documentation"
-	pluginConnectionPortEnv = "plugin_connection_port"
-	debugEnv                = "debugging"
-)
+type pluginScope string
 
-type pluginDescriptor struct {
-	ID          string
-	Version     string
-	Name        string
-	Description string
-	Command     struct {
-		Windows []string
-		Linux   []string
-		Darwin  []string
-	}
-	Scope               []string
-	GaugeVersionSupport version.VersionSupport
-	pluginPath          string
-}
+const (
+	executionScope          pluginScope = "execution"
+	docScope                pluginScope = "documentation"
+	pluginConnectionPortEnv             = "plugin_connection_port"
+	debugEnv                            = "debugging"
+)
 
 type plugin struct {
 	mutex      *sync.Mutex
@@ -168,7 +155,7 @@ func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
 	return &pd, nil
 }
 
-func StartPlugin(pd *pluginDescriptor, action string) (*plugin, error) {
+func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	command := []string{}
 	switch runtime.GOOS {
 	case "windows":
@@ -201,8 +188,8 @@ func StartPlugin(pd *pluginDescriptor, action string) (*plugin, error) {
 	return plugin, nil
 }
 
-func SetEnvForPlugin(action string, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
-	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = action
+func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
+	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = string(action)
 	pluginEnvVars["test_language"] = manifest.Language
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
 		return err
@@ -244,7 +231,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			warnings = append(warnings, fmt.Sprintf("Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion))
 			continue
 		}
-		if isPluginValidFor(pd, executionScope) {
+		if pd.hasScope(executionScope) {
 			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
 			if err != nil {
 				warnings = append(warnings, err.Error())
@@ -284,7 +271,7 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	if err := version.CheckCompatibility(version.CurrentGaugeVersion, &pd.GaugeVersionSupport); err != nil {
 		logger.Fatalf(true, "Compatible %s plugin version to current Gauge version %s not found", pd.Name, version.CurrentGaugeVersion)
 	}
-	if !isPluginValidFor(pd, docScope) {
+	if !pd.hasScope(docScope) {
 		logger.Fatalf(true, "Invalid plugin name: %s, this plugin cannot generate documentation.", pd.Name)
 	}
 	var sources []string
@@ -301,15 +288,6 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	}
 	for p.IsProcessRunning() {
 	}
-}
-
-func isPluginValidFor(pd *pluginDescriptor, scope string) bool {
-	for _, s := range pd.Scope {
-		if strings.ToLower(s) == scope {
-			return true
-		}
-	}
-	return false
 }
 
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
@@ -336,7 +314,7 @@ func PluginsWithoutScope() (infos []pluginInfo.PluginInfo) {
 	if plugins, err := pluginInfo.GetAllInstalledPluginsWithVersion(); err == nil {
 		for _, p := range plugins {
 			pd, err := GetPluginDescriptor(p.Name, p.Version.String())
-			if err == nil && len(pd.Scope) == 0 {
+			if err == nil && !pd.hasAnyScope() {
 				infos = append(infos, p)
 			}
 		}

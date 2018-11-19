@@ -45,11 +45,37 @@ func (gp *GaugePlugins) removePlugin(pluginID string) {
 }
 
 func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
-	for id, plugin := range gp.pluginsMap {
-		err := plugin.sendMessage(message)
+	var handle = func(id string, p *plugin, err error) {
 		if err != nil {
-			logger.Errorf(true, "Unable to connect to plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+			logger.Errorf(true, "Unable to connect to plugin %s %s. %s\n", p.descriptor.Name, p.descriptor.Version, err.Error())
 			gp.killPlugin(id)
+		}
+	}
+
+	for id, plugin := range gp.pluginsMap {
+		if !plugin.descriptor.hasCapability(streamResultCapability) {
+			handle(id, plugin, plugin.sendMessage(message))
+			return
+		}
+		items := []*gauge_messages.ProtoItem{}
+		for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
+			for _, i := range sr.ProtoSpec.Items {
+				i.FileName = sr.ProtoSpec.FileName
+				items = append(items, i)
+			}
+			sr.ProtoSpec.ItemCount = int64(len(sr.ProtoSpec.Items))
+			sr.ProtoSpec.Items = nil
+		}
+		if message.MessageType == gauge_messages.Message_SuiteExecutionResult {
+			message.SuiteExecutionResult.SuiteResult.Chunked = true
+			message.SuiteExecutionResult.SuiteResult.ChunkSize = int64(len(items))
+			handle(id, plugin, plugin.sendMessage(message))
+			for _, i := range items {
+				m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResultItem, SuiteExecutionResultItem: &gauge_messages.SuiteExecutionResultItem{ResultItem: i}}
+				handle(id, plugin, plugin.sendMessage(m))
+			}
+		} else {
+			handle(id, plugin, plugin.sendMessage(message))
 		}
 	}
 }
