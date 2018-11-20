@@ -314,6 +314,7 @@ func APIFormat() {
 }
 
 func ScheduleDaemonTracking(mode,lang string){
+	Daemon(mode,lang)
 	ticker := time.NewTicker(28 * time.Minute)
     for {
        select {
