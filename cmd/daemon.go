@@ -53,11 +53,11 @@ var (
 			manifest, _ := manifest.ProjectManifest()
 			language := manifest.Language
 			if lsp {
-				go track.ScheduleDaemonTracking("LSP", language)
+				go track.ScheduleDaemonTracking("lsp", language)
 				lang.Start(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}, logLevel)
 				return
 			}
-			go track.ScheduleDaemonTracking("API", language)
+			go track.ScheduleDaemonTracking("api", language)
 			port := ""
 			specs := util.GetSpecDirs()
 			if len(args) > 0 {
