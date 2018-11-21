@@ -297,7 +297,7 @@ func CheckUpdates() {
 	trackConsole("updates", "check", "")
 }
 
-func Daemon(mode,lang string) {
+func daemon(mode,lang string) {
 	trackConsole("daemon", mode, lang)
 }
 
@@ -314,12 +314,12 @@ func APIFormat() {
 }
 
 func ScheduleDaemonTracking(mode,lang string){
-	Daemon(mode,lang)
+	daemon(mode,lang)
 	ticker := time.NewTicker(28 * time.Minute)
     for {
        select {
 		case <- ticker.C:
-			Daemon(mode,lang)	
+			daemon(mode,lang)	
         }
     }
  }
