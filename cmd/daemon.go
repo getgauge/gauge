@@ -28,6 +28,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/spf13/cobra"
 )
 
@@ -49,12 +50,14 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
+			manifest, _ := manifest.ProjectManifest()
+			language := manifest.Language
 			if lsp {
-				track.Lsp()
+				go track.ScheduleDaemonTracking("lsp", language)
 				lang.Start(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}, logLevel)
 				return
 			}
-			track.Daemon()
+			go track.ScheduleDaemonTracking("api", language)
 			port := ""
 			specs := util.GetSpecDirs()
 			if len(args) > 0 {
