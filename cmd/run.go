@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"github.com/getgauge/gauge/track"
 	"fmt"
 	"os"
 	"strconv"
@@ -202,6 +203,7 @@ func execute(cmd *cobra.Command, args []string) {
 	if !skipCommandSave {
 		writePrevArgs(os.Args)
 	}
+	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
 	notifyTelemetryIfNeeded(cmd, args)

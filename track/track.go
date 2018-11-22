@@ -187,6 +187,38 @@ func trackManifest() {
 	}
 }
 
+func Execution(parallel, tagged, sorted, simpleConsole, verbose, hideSuggestion bool, parallelExecutionStrategy string) {
+	action := "serial"
+	if parallel {
+		action = "parallel"
+	}
+	flags := []string{}
+
+	if tagged {
+		flags = append(flags, "tagged")
+	}
+
+	if sorted {
+		flags = append(flags, "sorted")
+	}
+
+	if simpleConsole {
+		flags = append(flags, "simple-console")
+	} else {
+		flags = append(flags, "rich-console")
+	}
+
+	if verbose {
+		flags = append(flags, "verbose")
+	}
+	if hideSuggestion {
+		flags = append(flags, "hide-suggestion")
+	}
+
+	trackManifest()
+	trackConsole("execution", action, strings.Join(flags, ","))
+}
+
 func daemon(mode,lang string) {
 	trackConsole("daemon", mode, lang)
 }
