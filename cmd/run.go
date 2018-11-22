@@ -34,7 +34,6 @@ import (
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -203,7 +202,6 @@ func execute(cmd *cobra.Command, args []string) {
 	if !skipCommandSave {
 		writePrevArgs(os.Args)
 	}
-	track.Execution(parallel, tags != "", sort, simpleConsole, verbose, hideSuggestion, strategy)
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
 	notifyTelemetryIfNeeded(cmd, args)

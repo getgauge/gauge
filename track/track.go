@@ -152,16 +152,6 @@ func trackConsole(category, action, label string) {
 	go send(category, action, label, medium, wg)
 }
 
-func trackAPI(category, action, label string) {
-	var medium = apiMedium
-	if isCI() {
-		medium = ciMedium
-	}
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
-	go send(category, action, label, medium, wg)
-}
-
 func isCI() bool {
 	// Travis, AppVeyor, CircleCI, Wercket, drone.io, gitlab-ci
 	if ci, _ := strconv.ParseBool(os.Getenv("CI")); ci {
@@ -197,120 +187,8 @@ func trackManifest() {
 	}
 }
 
-func Execution(parallel, tagged, sorted, simpleConsole, verbose, hideSuggestion bool, parallelExecutionStrategy string) {
-	action := "serial"
-	if parallel {
-		action = "parallel"
-	}
-	flags := []string{}
-
-	if tagged {
-		flags = append(flags, "tagged")
-	}
-
-	if sorted {
-		flags = append(flags, "sorted")
-	}
-
-	if simpleConsole {
-		flags = append(flags, "simple-console")
-	} else {
-		flags = append(flags, "rich-console")
-	}
-
-	if verbose {
-		flags = append(flags, "verbose")
-	}
-	if hideSuggestion {
-		flags = append(flags, "hide-suggestion")
-	}
-
-	trackManifest()
-	trackConsole("execution", action, strings.Join(flags, ","))
-}
-
-func Validation(hideSuggestion bool) {
-	if hideSuggestion {
-		trackConsole("validation", "validate", "hide-suggestion")
-	} else {
-		trackConsole("validation", "validate", "")
-	}
-}
-
-func Docs(docs string) {
-	trackConsole("docs", "generate", docs)
-}
-
-func Format() {
-	trackConsole("formatting", "format", "")
-}
-
-func Refactor() {
-	trackConsole("refactoring", "rephrase", "")
-}
-
-func ListScenarios() {
-	trackConsole("list", "scenarios", "")
-}
-
-func ListTags() {
-	trackConsole("list", "tags", "")
-}
-
-func ListSpecifications() {
-	trackConsole("list", "specifications", "")
-}
-
-func ListTemplates() {
-	trackConsole("init", "templates", "")
-}
-
-func UninstallPlugin(plugin string) {
-	trackConsole("plugins", "uninstall", plugin)
-}
-
-func ProjectInit(lang string) {
-	trackConsole("project", "init", lang)
-}
-
-func Install(plugin string, zip bool) {
-	if zip {
-		trackConsole("plugins", "install-zip", plugin)
-	} else {
-		trackConsole("plugins", "install", plugin)
-	}
-}
-
-func Update(plugin string) {
-	trackConsole("plugins", "update", plugin)
-}
-
-func UpdateAll() {
-	trackConsole("plugins", "update-all", "all")
-}
-
-func InstallAll() {
-	trackConsole("plugins", "install-all", "all")
-}
-
-func CheckUpdates() {
-	trackConsole("updates", "check", "")
-}
-
 func daemon(mode,lang string) {
 	trackConsole("daemon", mode, lang)
-}
-
-func APIRefactoring() {
-	trackAPI("refactoring", "rephrase", "")
-}
-
-func APIExtractConcept() {
-	trackAPI("refactoring", "extract-concept", "")
-}
-
-func APIFormat() {
-	trackAPI("formatting", "format", "")
 }
 
 func ScheduleDaemonTracking(mode,lang string){

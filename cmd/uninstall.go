@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -34,7 +33,6 @@ var uninstallCmd = &cobra.Command{
 		if len(args) < 1 {
 			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
-		track.UninstallPlugin(args[0])
 		install.UninstallPlugin(args[0], pVersion)
 	},
 	DisableAutoGenTag: true,

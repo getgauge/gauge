@@ -21,8 +21,6 @@ import (
 	"fmt"
 	supersort "sort"
 
-	"github.com/getgauge/gauge/track"
-
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -43,17 +41,14 @@ var (
 			}
 			if specsFlag {
 				logger.Info(true, "[Specifications]")
-				track.ListSpecifications()
 				listSpecifications(specs, print)
 			}
 			if scenariosFlag {
 				logger.Info(true, "[Scenarios]")
-				track.ListScenarios()
 				listScenarios(specs, print)
 			}
 			if tagsFlag {
 				logger.Info(true, "[Tags]")
-				track.ListTags()
 				listTags(specs, print)
 			}
 			if !specsFlag && !scenariosFlag && !tagsFlag {

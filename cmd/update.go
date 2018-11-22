@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -35,18 +34,15 @@ var (
   gauge update -c`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if all {
-				track.UpdateAll()
 				install.UpdatePlugins(machineReadable)
 				return
 			} else if check {
-				track.CheckUpdates()
 				install.PrintUpdateInfoWithDetails()
 				return
 			}
 			if len(args) < 1 {
 				exit(fmt.Errorf("missing argument <plugin name>"), cmd.UsageString())
 			}
-			track.Update(args[0])
 			install.HandleUpdateResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
 		},
 		DisableAutoGenTag: true,
