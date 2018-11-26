@@ -21,7 +21,6 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
@@ -45,7 +44,6 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
-			track.Validation(hideSuggestion)
 			validation.Validate(args)
 		},
 		DisableAutoGenTag: true,

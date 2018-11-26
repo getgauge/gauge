@@ -34,7 +34,6 @@ import (
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/golang/protobuf/proto"
 )
@@ -77,16 +76,13 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
 			break
 		case gauge_messages.APIMessage_PerformRefactoringRequest:
-			track.APIRefactoring()
 			responseMessage = handler.performRefactoring(apiMessage)
 			handler.performRefresh(responseMessage.PerformRefactoringResponse.FilesChanged)
 			break
 		case gauge_messages.APIMessage_ExtractConceptRequest:
-			track.APIExtractConcept()
 			responseMessage = handler.extractConcept(apiMessage)
 			break
 		case gauge_messages.APIMessage_FormatSpecsRequest:
-			track.APIFormat()
 			responseMessage = handler.formatSpecs(apiMessage)
 			break
 		default:

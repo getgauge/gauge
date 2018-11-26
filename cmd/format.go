@@ -22,7 +22,6 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -38,7 +37,6 @@ var formatCmd = &cobra.Command{
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
-		track.Format()
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])
 	},
 	DisableAutoGenTag: true,

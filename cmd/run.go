@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"github.com/getgauge/gauge/track"
 	"fmt"
 	"os"
 	"strconv"
@@ -34,7 +35,6 @@ import (
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
