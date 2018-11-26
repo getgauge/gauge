@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/getgauge/gauge/projectInit"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -33,14 +32,12 @@ var (
 		Example: "  gauge init java",
 		Run: func(cmd *cobra.Command, args []string) {
 			if templates {
-				track.ListTemplates()
 				projectInit.ListTemplates()
 				return
 			}
 			if len(args) < 1 {
 				exit(fmt.Errorf("Missing argument <template name>. To see all the templates, run 'gauge list-templates'"), cmd.UsageString())
 			}
-			track.ProjectInit(args[0])
 			projectInit.InitializeProject(args[0], machineReadable)
 		},
 		DisableAutoGenTag: true,

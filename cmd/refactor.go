@@ -27,7 +27,6 @@ import (
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/refactor"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -46,7 +45,6 @@ var refactorCmd = &cobra.Command{
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
-		track.Refactor()
 		refactorInit(args)
 	},
 	DisableAutoGenTag: true,
