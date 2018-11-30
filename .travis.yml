@@ -4,15 +4,13 @@ os:
 language: go
 go:
   - "1.10"
-addons:
-  apt:
-    packages:
-      - oracle-java8-set-default
+jdk: openjdk10
 env:
   - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 script:
+  - jdk_switcher use openjdk10
   - go run build/make.go
   - go run build/make.go --test
   - go run build/make.go --install --prefix=$GAUGE_PREFIX
@@ -23,4 +21,5 @@ script:
   - java -version
   - echo $JAVA_HOME
   - $GAUGE_PREFIX/bin/gauge version
-  - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" xvfb-run ./starttests.sh java; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java; fi
