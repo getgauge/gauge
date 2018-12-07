@@ -55,7 +55,7 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 	for id, plugin := range gp.pluginsMap {
 		if !plugin.descriptor.hasCapability(streamResultCapability) {
 			handle(id, plugin, plugin.sendMessage(message))
-			return
+			continue
 		}
 		items := []*gauge_messages.ProtoItem{}
 		for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
