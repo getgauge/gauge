@@ -18,7 +18,6 @@
 package cmd
 
 import (
-	"github.com/getgauge/gauge/track"
 	"fmt"
 	"os"
 	"strconv"
