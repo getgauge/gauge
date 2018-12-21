@@ -51,6 +51,7 @@ const (
 	allowScenarioDatatable = "allow_scenario_datatable"
 	enableMultithreading   = "enable_multithreading"
 	useTestGA              = "use_test_ga"
+	telemetryDuration      = "telemetry_duration"
 )
 
 var envVars map[string]string
@@ -248,4 +249,9 @@ var EnableMultiThreadedExecution = func() bool {
 // UseTestGA checks if test google analytics account needs to be used
 var UseTestGA = func() bool {
 	return strings.ToLower(os.Getenv(useTestGA)) == "true"
+}
+
+// TelemetryDuration allows to configure duration for which telemetry is to be sent, when UseTestGA is true.
+var TelemetryDuration = func() string {
+	return strings.ToLower(os.Getenv(telemetryDuration))
 }

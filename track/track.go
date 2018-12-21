@@ -186,6 +186,10 @@ func daemon(mode,lang string) {
 func ScheduleDaemonTracking(mode,lang string){
 	daemon(mode,lang)
 	ticker := time.NewTicker(28 * time.Minute)
+	if (env.UseTestGA() && env.TelemetryDuration() != "") {
+		duration, _ := strconv.Atoi(env.TelemetryDuration())
+		ticker = time.NewTicker(time.Duration(duration) * time.Minute)
+	}
     for {
        select {
 		case <- ticker.C:
