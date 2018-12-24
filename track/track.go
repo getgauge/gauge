@@ -186,8 +186,8 @@ func daemon(mode,lang string) {
 func ScheduleDaemonTracking(mode,lang string){
 	daemon(mode,lang)
 	ticker := time.NewTicker(28 * time.Minute)
-	if (env.UseTestGA() && env.TelemetryDuration() != "") {
-		duration, _ := strconv.Atoi(env.TelemetryDuration())
+	if (env.UseTestGA() && env.TelemetryInterval() != "") {
+		duration, _ := strconv.Atoi(env.TelemetryInterval())
 		ticker = time.NewTicker(time.Duration(duration) * time.Minute)
 	}
     for {

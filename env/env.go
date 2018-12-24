@@ -51,7 +51,7 @@ const (
 	allowScenarioDatatable = "allow_scenario_datatable"
 	enableMultithreading   = "enable_multithreading"
 	useTestGA              = "use_test_ga"
-	telemetryDuration      = "telemetry_duration"
+	telemetryInterval      = "gauge_telemetry_interval"
 )
 
 var envVars map[string]string
@@ -251,7 +251,7 @@ var UseTestGA = func() bool {
 	return strings.ToLower(os.Getenv(useTestGA)) == "true"
 }
 
-// TelemetryDuration allows to configure duration for which telemetry is to be sent, when UseTestGA is true.
-var TelemetryDuration = func() string {
-	return strings.ToLower(os.Getenv(telemetryDuration))
+// TelemetryInterval allows to configure duration for which telemetry is to be sent, when UseTestGA is true.
+var TelemetryInterval = func() string {
+	return strings.ToLower(os.Getenv(telemetryInterval))
 }
