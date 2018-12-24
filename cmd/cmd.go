@@ -67,11 +67,11 @@ var (
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
+			setGlobalFlags()
 			if e := env.LoadEnv(environment); e != nil {
 				logger.Fatalf(true, e.Error())
 			}
 			initLogger(cmd.Name())
-			setGlobalFlags()
 			initPackageFlags()
 		},
 		PersistentPostRun: notifyTelemetryIfNeeded,
