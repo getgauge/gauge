@@ -179,24 +179,24 @@ func isCI() bool {
 	return false
 }
 
-func daemon(mode,lang string) {
+func daemon(mode, lang string) {
 	trackConsole("daemon", mode, lang)
 }
 
-func ScheduleDaemonTracking(mode,lang string){
-	daemon(mode,lang)
+func ScheduleDaemonTracking(mode, lang string) {
+	daemon(mode, lang)
 	ticker := time.NewTicker(28 * time.Minute)
-	if (env.UseTestGA() && env.TelemetryInterval() != "") {
+	if env.UseTestGA() && env.TelemetryInterval() != "" {
 		duration, _ := strconv.Atoi(env.TelemetryInterval())
 		ticker = time.NewTicker(time.Duration(duration) * time.Minute)
 	}
-    for {
-       select {
-		case <- ticker.C:
-			daemon(mode,lang)	
-        }
-    }
- }
+	for {
+		select {
+		case <-ticker.C:
+			daemon(mode, lang)
+		}
+	}
+}
 
 func newlogEnabledHTTPTransport() http.RoundTripper {
 	return &logEnabledRoundTripper{}
