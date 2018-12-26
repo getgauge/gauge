@@ -244,7 +244,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			continue
 		}
 		if pd.hasScope(executionScope) {
-			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
+			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, &keepAliveHandler{ph: handler})
 			if err != nil {
 				warnings = append(warnings, err.Error())
 				continue
