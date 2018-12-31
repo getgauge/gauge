@@ -167,7 +167,7 @@ func handleFlags(cmd *cobra.Command, args []string) {
 		_, err := strconv.ParseBool(v)
 		if err != nil && f.Changed {
 			if strings.Contains(args[i], "=") {
-				args[i] = strings.SplitAfter(args[i], "=")[0] + f.Value.String() 
+				args[i] = strings.SplitAfter(args[i], "=")[0] + f.Value.String()
 			} else {
 				args[i+1] = v
 				i = i + 1
