@@ -37,7 +37,8 @@ import (
 )
 
 const (
-	failedFile = "failures.json"
+	failedFile         = "failures.json"
+	lastRunCmdFileName = "lastRunCmd.json"
 )
 
 var failedMeta *failedMetadata
@@ -160,8 +161,8 @@ func getJSON(failedMeta *failedMetadata) string {
 	return string(j)
 }
 
-var GetLastState = func() ([]string, error) {
-	meta := readLastState()
+var GetLastFailedState = func() ([]string, error) {
+	meta := readLastFailedState()
 	util.SetWorkingDir(config.ProjectRoot)
 	if len(meta.FailedItems) == 0 {
 		return nil, errors.New("No failed tests found.")
@@ -185,7 +186,7 @@ func SaveState(args []string, specs []string) {
 	}
 }
 
-func readLastState() *failedMetadata {
+func readLastFailedState() *failedMetadata {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, failedFile))
 	if err != nil {
 		logger.Fatalf(true, "Failed to read last run information. Reason: %s", err.Error())
@@ -195,4 +196,34 @@ func readLastState() *failedMetadata {
 		logger.Fatalf(true, "Invalid last run information. Reason: %s", err.Error())
 	}
 	return meta
+}
+
+var ReadPrevArgs = func() []string {
+	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
+	if err != nil {
+		logger.Fatalf(true, "Failed to read previous command information. Reason: %s", err.Error())
+		return nil
+	}
+	var args []string
+	if err = json.Unmarshal([]byte(contents), &args); err != nil {
+		logger.Fatalf(true, "Invalid previous command information. Reason: %s", err.Error())
+		return nil
+	}
+	return args
+}
+
+var WritePrevArgs = func(cmdArgs []string) {
+	b, err := json.MarshalIndent(cmdArgs, "", "\t")
+	if err != nil {
+		logger.Fatalf(true, "Unable to parse last run command. Error : %v", err.Error())
+	}
+	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
+	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
+	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
+		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+	}
+	err = ioutil.WriteFile(prevCmdFile, b, common.NewFilePermissions)
+	if err != nil {
+		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+	}
 }
