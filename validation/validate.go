@@ -137,7 +137,7 @@ func Validate(args []string) {
 	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
-	logger.Infof(true, "No error found.")
+	logger.Infof(true, "No errors found.")
 }
 
 //TODO : duplicate in execute.go. Need to fix runner init.
