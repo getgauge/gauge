@@ -21,11 +21,11 @@ import (
 	"fmt"
 	supersort "sort"
 
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/spf13/cobra"
-	"github.com/getgauge/gauge/filter"
 )
 
 var (

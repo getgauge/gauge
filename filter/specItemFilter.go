@@ -255,18 +255,18 @@ func filterValidScenarios(specs []*gauge.Specification, headings []string) []str
 		return false
 	}
 	for _, heading := range headings {
-		if exists(allScenarios,heading) {
-			filteredScenarios = append(filteredScenarios,heading)
+		if exists(allScenarios, heading) {
+			filteredScenarios = append(filteredScenarios, heading)
 		} else {
-			logger.Warningf(true,"Warning: scenario name - \"%s\" not found",heading)
+			logger.Warningf(true, "Warning: scenario name - \"%s\" not found", heading)
 		}
 	}
-	return filteredScenarios;
+	return filteredScenarios
 }
 
 func GetAllScenarios(specs []*gauge.Specification) []string {
 	allScenarios := []string{}
-	for _, spec := range specs{
+	for _, spec := range specs {
 		for _, scenario := range spec.Scenarios {
 			allScenarios = append(allScenarios, scenario.Heading.Value)
 		}
