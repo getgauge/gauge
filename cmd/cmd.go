@@ -68,10 +68,6 @@ var (
 			track.Init()
 			config.SetProjectRoot(args)
 			setGlobalFlags()
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
-			}
-			initLogger(cmd.Name())
 			initPackageFlags()
 		},
 		PersistentPostRun: notifyTelemetryIfNeeded,
@@ -213,4 +209,11 @@ var exit = func(err error, additionalText string) {
 		logger.Infof(true, additionalText)
 	}
 	os.Exit(0)
+}
+
+func loadEnvAndInitLogger(cmd *cobra.Command) {
+	if e := env.LoadEnv(environment); e != nil {
+		logger.Fatalf(true, e.Error())
+	}
+	initLogger(cmd.Name())
 }

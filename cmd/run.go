@@ -24,11 +24,6 @@ import (
 
 	"strings"
 
-	"encoding/json"
-	"io/ioutil"
-	"path/filepath"
-
-	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
@@ -40,7 +35,6 @@ import (
 )
 
 const (
-	lastRunCmdFileName     = "lastRunCmd.json"
 	verboseDefault         = false
 	simpleConsoleDefault   = false
 	failedDefault          = false
@@ -144,16 +138,16 @@ func init() {
 }
 
 func executeFailed(cmd *cobra.Command) {
-	lastState, err := rerun.GetLastState()
+	lastState, err := rerun.GetLastFailedState()
 	if err != nil {
 		exit(err, "")
 	}
 	if !skipCommandSave {
-		writePrevArgs(os.Args)
+		rerun.WritePrevArgs(os.Args)
 	}
-	logger.Debugf(true, "Executing => gauge %s\n", strings.Join(lastState, " "))
 	handleFlags(cmd, append([]string{"gauge"}, lastState...))
 	cmd.Flags().Set(skipCommandSaveName, "true")
+	logger.Debugf(true, "Executing => %s\n", strings.Join(os.Args, " "))
 	cmd.Execute()
 }
 
@@ -164,23 +158,27 @@ func handleFlags(cmd *cobra.Command, args []string) {
 		}
 	})
 
-	for i := 0; i < len(args)-1; i++ {
+	for i := 0; i <= len(args)-1; i++ {
 		f := lookupFlagFromArgs(cmd, args[i])
 		if f == nil {
 			continue
 		}
 		v := f.Value.String()
 		_, err := strconv.ParseBool(v)
-		if err != nil {
-			args[i+1] = v
-			i = i + 1
+		if err != nil && f.Changed {
+			if strings.Contains(args[i], "=") {
+				args[i] = strings.SplitAfter(args[i], "=")[0] + f.Value.String()
+			} else {
+				args[i+1] = v
+				i = i + 1
+			}
 		}
 	}
 	os.Args = args
 }
 
 func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
-	fName := strings.TrimLeft(arg, "-")
+	fName := strings.Split(strings.TrimLeft(arg, "-"), "=")[0]
 	flags := cmd.Flags()
 	f := flags.Lookup(fName)
 	if f == nil && len(fName) == 1 {
@@ -196,11 +194,12 @@ func installMissingPlugins(flag bool) {
 }
 
 func execute(cmd *cobra.Command, args []string) {
+	loadEnvAndInitLogger(cmd)
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 
 	if !skipCommandSave {
-		writePrevArgs(os.Args)
+		rerun.WritePrevArgs(os.Args)
 	}
 	installMissingPlugins(installPlugins)
 	exitCode := execution.ExecuteSpecs(specs)
@@ -212,40 +211,10 @@ func execute(cmd *cobra.Command, args []string) {
 }
 
 var repeatLastExecution = func(cmd *cobra.Command) {
-	lastState := readPrevArgs()
-	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
+	lastState := rerun.ReadPrevArgs()
 	handleFlags(cmd, lastState)
+	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
 	cmd.Execute()
-}
-
-var readPrevArgs = func() []string {
-	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
-	if err != nil {
-		logger.Fatalf(true, "Failed to read previous command information. Reason: %s", err.Error())
-		return nil
-	}
-	var args []string
-	if err = json.Unmarshal([]byte(contents), &args); err != nil {
-		logger.Fatalf(true, "Invalid previous command information. Reason: %s", err.Error())
-		return nil
-	}
-	return args
-}
-
-var writePrevArgs = func(cmdArgs []string) {
-	b, err := json.MarshalIndent(cmdArgs, "", "\t")
-	if err != nil {
-		logger.Fatalf(true, "Unable to parse last run command. Error : %v", err.Error())
-	}
-	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
-	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
-	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
-	}
-	err = ioutil.WriteFile(prevCmdFile, b, common.NewFilePermissions)
-	if err != nil {
-		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
-	}
 }
 
 func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {

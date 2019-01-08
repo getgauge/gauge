@@ -22,8 +22,6 @@ import (
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/spf13/cobra"
 )
@@ -34,9 +32,7 @@ var docsCmd = &cobra.Command{
 	Long:    `Generate documentation using specified plugin.`,
 	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
-		if e := env.LoadEnv(environment); e != nil {
-			logger.Fatalf(true, e.Error())
-		}
+		loadEnvAndInitLogger(cmd)
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
