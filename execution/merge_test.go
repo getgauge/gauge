@@ -77,7 +77,7 @@ func TestAggregateDataTableScnStats(t *testing.T) {
 	aggregateDataTableScnStats(scns, res)
 
 	got := stat{failed: res.ScenarioFailedCount, skipped: res.ScenarioSkippedCount, total: res.ScenarioCount}
-	want := stat{failed: 2, skipped: 1, total: 4}
+	want := stat{failed: 3, skipped: 1, total: 6}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Aggregate data table scenario stats failed. Want: %v , Got: %v", want, got)
@@ -142,7 +142,7 @@ func TestMergeResults(t *testing.T) {
 				},
 			}, IsTableDriven: true,
 		},
-		ScenarioCount: 2, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
+		ScenarioCount: 3, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
 	}
 
 	if !reflect.DeepEqual(got, want) {
@@ -210,7 +210,7 @@ func TestMergeSkippedResults(t *testing.T) {
 				},
 			}, IsTableDriven: true,
 		},
-		ScenarioCount: 2, ScenarioSkippedCount: 2, ScenarioFailedCount: 0, IsFailed: false, Skipped: true, ExecutionTime: int64(3),
+		ScenarioCount: 3, ScenarioSkippedCount: 3, ScenarioFailedCount: 0, IsFailed: false, Skipped: true, ExecutionTime: int64(3),
 	}
 
 	if !reflect.DeepEqual(got, want) {

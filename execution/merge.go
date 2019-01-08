@@ -141,10 +141,10 @@ func aggregateDataTableScnStats(results map[string][]*m.ProtoTableDrivenScenario
 				isSkipped = 1
 				specResult.Skipped = true
 			}
+			specResult.ScenarioFailedCount += isFailed
+			specResult.ScenarioSkippedCount += isSkipped
+			specResult.ScenarioCount++
 		}
-		specResult.ScenarioFailedCount += isFailed
-		specResult.ScenarioSkippedCount += isSkipped
-		specResult.ScenarioCount++
 	}
 }
 
