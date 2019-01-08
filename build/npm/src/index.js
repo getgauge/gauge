@@ -16,7 +16,7 @@ var downloadAndExtract = async function(version) {
     let url = await install.getBinaryUrl(version);
     let gaugeExecutable = process.platform === "win32" ? "gauge.exe" : "gauge"
     console.log(`Downloading ${url} to ${binPath}`);
-    unzip.Open.url(request, url).then((d) => {
+    return unzip.Open.url(request, url).then((d) => {
         return new Promise((resolve, reject) => {
             d.files[0].stream()
             .pipe(fs.createWriteStream(path.join(binPath, gaugeExecutable)))
