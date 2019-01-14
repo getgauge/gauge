@@ -19,12 +19,10 @@ package lang
 
 import (
 	"context"
-	"log"
-	"runtime/debug"
-
-	"os"
-
 	"encoding/json"
+	"log"
+	"os"
+	"runtime/debug"
 
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/execution"
@@ -75,6 +73,7 @@ func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
 	switch req.Method {
 	case "initialize":
+		informRunnerCompatibility(ctx, conn)
 		if err := cacheInitializeParams(req); err != nil {
 			logError(req, err.Error())
 			return nil, err
