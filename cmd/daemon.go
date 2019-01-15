@@ -24,8 +24,7 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
@@ -42,19 +41,19 @@ var (
 		Long:    `Run as a daemon.`,
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
-			}
+			loadEnvAndInitLogger(cmd)
 			os.Setenv(isDaemon, "true")
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
+			manifest, _ := manifest.ProjectManifest()
+			language := manifest.Language
 			if lsp {
-				track.Lsp()
+				go track.ScheduleDaemonTracking("lsp", language)
 				lang.Start(&infoGatherer.SpecInfoGatherer{SpecDirs: getSpecsDir(args)}, logLevel)
 				return
 			}
-			track.Daemon()
+			go track.ScheduleDaemonTracking("api", language)
 			port := ""
 			specs := util.GetSpecDirs()
 			if len(args) > 0 {

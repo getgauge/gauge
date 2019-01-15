@@ -66,10 +66,10 @@ func Info(stdout bool, msg string) {
 
 // Infof logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Infof(stdout bool, msg string, args ...interface{}) {
+	write(stdout, msg, args...)
 	if !initialized {
 		return
 	}
-	write(stdout, msg, args...)
 	activeLogger.Infof(msg, args...)
 }
 
@@ -80,11 +80,11 @@ func Error(stdout bool, msg string) {
 
 // Errorf logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Errorf(stdout bool, msg string, args ...interface{}) {
+	write(stdout, msg, args...)
 	if !initialized {
 		fmt.Fprintf(os.Stderr, msg, args...)
 		return
 	}
-	write(stdout, msg, args...)
 	activeLogger.Errorf(msg, args...)
 }
 
@@ -95,10 +95,10 @@ func Warning(stdout bool, msg string) {
 
 // Warningf logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Warningf(stdout bool, msg string, args ...interface{}) {
+	write(stdout, msg, args...)
 	if !initialized {
 		return
 	}
-	write(stdout, msg, args...)
 	activeLogger.Warningf(msg, args...)
 }
 

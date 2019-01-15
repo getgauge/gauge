@@ -776,7 +776,7 @@ func (s *MySuite) TestFilterInvalidScenarios(c *C) {
 		Items:     []gauge.Item{scenario1, scenario2},
 		Scenarios: []*gauge.Scenario{scenario1, scenario2},
 	}
-	var scenarios = []string{"First Scenario","Third Scenario"}
+	var scenarios = []string{"First Scenario", "Third Scenario"}
 
 	var specs []*gauge.Specification
 	specs = append(specs, spec1)
@@ -784,5 +784,5 @@ func (s *MySuite) TestFilterInvalidScenarios(c *C) {
 	c.Assert(len(specs[0].Scenarios), Equals, 2)
 	filteredScenarios := filterValidScenarios(specs, scenarios)
 	c.Assert(len(filteredScenarios), Equals, 1)
-	c.Assert(filteredScenarios[0],Equals, "First Scenario")
+	c.Assert(filteredScenarios[0], Equals, "First Scenario")
 }

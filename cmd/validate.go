@@ -19,9 +19,6 @@ package cmd
 
 import (
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
@@ -38,14 +35,11 @@ var (
 		Long:    `Check for validation and parse errors.`,
 		Example: "  gauge validate specs/",
 		Run: func(cmd *cobra.Command, args []string) {
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
-			}
+			loadEnvAndInitLogger(cmd)
 			validation.HideSuggestion = hideSuggestion
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
-			track.Validation(hideSuggestion)
 			validation.Validate(args)
 		},
 		DisableAutoGenTag: true,

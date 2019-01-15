@@ -20,7 +20,6 @@ package cmd
 import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -34,15 +33,12 @@ var (
   gauge install java -f gauge-java-0.6.3-darwin.x86_64.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
-				track.InstallAll()
 				install.AllPlugins(machineReadable)
 				return
 			}
 			if zip != "" {
-				track.Install(args[0], true)
 				install.HandleInstallResult(install.InstallPluginFromZipFile(zip, args[0]), args[0], true)
 			} else {
-				track.Install(args[0], false)
 				install.HandleInstallResult(install.Plugin(args[0], pVersion, machineReadable), args[0], false)
 			}
 			if err := install.AddPluginToProject(args[0]); err != nil {

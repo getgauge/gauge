@@ -22,10 +22,7 @@ import (
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -35,16 +32,13 @@ var docsCmd = &cobra.Command{
 	Long:    `Generate documentation using specified plugin.`,
 	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
-		if e := env.LoadEnv(environment); e != nil {
-			logger.Fatalf(true, e.Error())
-		}
+		loadEnvAndInitLogger(cmd)
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
 		if len(args) < 1 {
 			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
-		track.Docs(args[0])
 		specDirs := getSpecsDir(args[1:])
 		gaugeConnectionHandler := api.Start(specDirs)
 		plugin.GenerateDoc(args[0], specDirs, gaugeConnectionHandler.ConnectionPortNumber())

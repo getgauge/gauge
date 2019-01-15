@@ -67,10 +67,6 @@ var (
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
-			if e := env.LoadEnv(environment); e != nil {
-				logger.Fatalf(true, e.Error())
-			}
-			initLogger(cmd.Name())
 			setGlobalFlags()
 			initPackageFlags()
 		},
@@ -213,4 +209,11 @@ var exit = func(err error, additionalText string) {
 		logger.Infof(true, additionalText)
 	}
 	os.Exit(0)
+}
+
+func loadEnvAndInitLogger(cmd *cobra.Command) {
+	if e := env.LoadEnv(environment); e != nil {
+		logger.Fatalf(true, e.Error())
+	}
+	initLogger(cmd.Name())
 }

@@ -24,10 +24,7 @@ import (
 
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/refactor"
-	"github.com/getgauge/gauge/track"
 	"github.com/spf13/cobra"
 )
 
@@ -37,16 +34,13 @@ var refactorCmd = &cobra.Command{
 	Long:    `Refactor steps.`,
 	Example: `  gauge refactor "old step" "new step"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if e := env.LoadEnv(environment); e != nil {
-			logger.Fatalf(true, e.Error())
-		}
+		loadEnvAndInitLogger(cmd)
 		if len(args) < 2 {
 			exit(fmt.Errorf("Refactor command needs at least two arguments."), cmd.UsageString())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
-		track.Refactor()
 		refactorInit(args)
 	},
 	DisableAutoGenTag: true,

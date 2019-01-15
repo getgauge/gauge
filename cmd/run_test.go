@@ -41,9 +41,9 @@ func TestSaveCommandArgs(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		args := []string{"gauge", "run", "specs"}
 
-		writePrevArgs(args)
+		rerun.WritePrevArgs(args)
 
-		prevArgs := readPrevArgs()
+		prevArgs := rerun.ReadPrevArgs()
 		if !reflect.DeepEqual(prevArgs, args) {
 			fmt.Printf("Expected %v  Got %v\n", args, prevArgs)
 			os.Exit(1)
@@ -68,7 +68,7 @@ func TestExecuteWritesPrevCommandArgs(t *testing.T) {
 
 		os.Args = args
 		execute(cmd, args)
-		prevArgs := readPrevArgs()
+		prevArgs := rerun.ReadPrevArgs()
 		if !reflect.DeepEqual(prevArgs, args) {
 			fmt.Printf("Expected %v  Got %v\n", args, prevArgs)
 			os.Exit(1)
@@ -88,10 +88,10 @@ func TestRepeatShouldPreservePreviousArgs(t *testing.T) {
 		cmd := &cobra.Command{}
 
 		var called bool
-		writePrevArgs = func(x []string) {
+		rerun.WritePrevArgs = func(x []string) {
 			called = true
 		}
-		readPrevArgs = func() []string {
+		rerun.ReadPrevArgs = func() []string {
 			return []string{"gauge", "run", "specs", "-l", "debug"}
 		}
 		installPlugins = false
@@ -113,12 +113,12 @@ func TestRepeatShouldPreservePreviousArgs(t *testing.T) {
 func TestSaveCommandArgsForFailed(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		execution.ExecuteSpecs = func(s []string) int { return 0 }
-		rerun.GetLastState = func() ([]string, error) {
+		rerun.GetLastFailedState = func() ([]string, error) {
 			return []string{"run", "specs"}, nil
 		}
 		var args = []string{"gauge", "run", "--failed"}
 
-		writePrevArgs = func(a []string) {
+		rerun.WritePrevArgs = func(a []string) {
 			if !reflect.DeepEqual(a, args) {
 				panic(fmt.Sprintf("Expected %v  Got %v", args, a))
 			}
@@ -362,7 +362,7 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 			return 0
 		}
 
-		readPrevArgs = func() []string {
+		rerun.ReadPrevArgs = func() []string {
 			return []string{"gauge", "run", "specs", "-l", "debug"}
 		}
 		os.Args = []string{"gauge", "run", "--failed", "-l", "info"}
@@ -395,15 +395,83 @@ func TestLogLevelCanBeOverriddenForRepeat(t *testing.T) {
 			return 0
 		}
 
-		rerun.GetLastState = func() ([]string, error) {
-			return []string{"gauge", "run", "specs", "-l", "debug"}, nil
+		rerun.ReadPrevArgs = func() []string {
+			return []string{"gauge", "run", "specs", "-l=debug"}
 		}
-		os.Args = []string{"gauge", "run", "--failed", "-l", "info"}
+		os.Args = []string{"gauge", "run", "--failed", "-l=info"}
+		runCmd.ParseFlags(os.Args)
+		repeatLastExecution(runCmd)
+		return
+	}
+	var stdout bytes.Buffer
+	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()), "-test.v")
+	cmd.Env = subEnv()
+	cmd.Stdout = &stdout
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+	}
+}
+
+func TestCorrectFlagsAreSetForRepeat(t *testing.T) {
+	if os.Getenv("TEST_EXITS") == "1" {
+		// expect "env" to be set to "test"
+		execution.ExecuteSpecs = func(s []string) int {
+			f, err := runCmd.Flags().GetString(environmentName)
+			if err != nil {
+				fmt.Printf("Error parsing flags. %s\n", err.Error())
+				panic(err)
+			}
+			if f != "test" {
+				fmt.Printf("Expecting env=test, got %s\n", f)
+				panic("assert failure")
+			}
+			return 0
+		}
+
+		rerun.ReadPrevArgs = func() []string {
+			return []string{"gauge", "run", "specs", "--env=test"}
+		}
+		os.Args = []string{"gauge", "run", "--failed"}
+		runCmd.ParseFlags(os.Args)
 		repeatLastExecution(runCmd)
 		return
 	}
 	var stdout bytes.Buffer
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
+	cmd.Env = subEnv()
+	cmd.Stdout = &stdout
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+	}
+}
+
+func TestCorrectFlagsAreSetForFailed(t *testing.T) {
+	if os.Getenv("TEST_EXITS") == "1" {
+		// expect "env" to be set to "test"
+		execution.ExecuteSpecs = func(s []string) int {
+			f, err := runCmd.Flags().GetString(environmentName)
+			if err != nil {
+				fmt.Printf("Error parsing flags. %s\n", err.Error())
+				panic(err)
+			}
+			if f != "test" {
+				fmt.Printf("Expecting env=test, got %s\n", f)
+				panic("assert failure")
+			}
+			return 0
+		}
+
+		rerun.GetLastFailedState = func() ([]string, error) {
+			return []string{"run", "specs", "--env=test"}, nil
+		}
+		os.Args = []string{"gauge", "run", "--failed"}
+		executeFailed(runCmd)
+		return
+	}
+	var stdout bytes.Buffer
+	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()), "-test.v")
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
