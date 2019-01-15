@@ -517,7 +517,7 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		return true
 	}
 	if !result.Success {
-		logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Info, result.getMessage())
+		logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
 		if exitIfFailure {
 			os.Exit(1)
 		}
