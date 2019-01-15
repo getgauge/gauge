@@ -83,6 +83,7 @@ type InstallResult struct {
 	Info    string
 	Success bool
 	Skipped bool
+	Version string
 }
 
 func (installResult *InstallResult) getMessage() string {
@@ -266,7 +267,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
 	}
 	res := InstallPluginFromZipFile(pluginZip, installDesc.Name)
-	res.Info = versionInstallDescription.Version
+	res.Version = versionInstallDescription.Version
 	return res
 }
 
@@ -522,7 +523,7 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		}
 		return false
 	}
-	logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Info)
+	logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
 	return true
 }
 
