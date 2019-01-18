@@ -70,7 +70,7 @@ func (p *plugin) rejuvenate() error {
 	if p.killTimer == nil {
 		return fmt.Errorf("timer is uninitialized. Perhaps kill is not yet invoked")
 	}
-
+	logger.Debugf(true, "Extending the plugin_kill_timeout for %s", p.descriptor.ID)
 	p.killTimer.Reset(config.PluginConnectionTimeout())
 	return nil
 }
@@ -250,6 +250,12 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
+			prop, err := common.GetGaugeConfiguration()
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("Unable to read Gauge configuration. %s", err.Error()))
+				continue
+			}
+			envProperties["plugin_kill_timeout"] = prop["plugin_kill_timeout"]
 			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))

@@ -33,11 +33,11 @@ func (h *keepAliveHandler) MessageBytesReceived(b []byte, c net.Conn) {
 	m := &gauge_messages.Message{}
 	err := proto.Unmarshal(b, m)
 	if err != nil {
-		logger.Errorf(false, "Failed to read proto message: %s\n", err.Error())
+		logger.Errorf(true, "Failed to read proto message: %s\n", err.Error())
 	} else {
 		if m.GetMessageType() == gauge_messages.Message_KeepAlive {
 			id := m.KeepAlive.PluginId
-			logger.Debugf(false, "KeepAlive request received for pluginID: %s", id)
+			logger.Debugf(true, "KeepAlive request received for pluginID: %s", id)
 			h.ph.ExtendTimeout(id)
 		}
 	}
