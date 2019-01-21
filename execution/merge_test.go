@@ -77,7 +77,7 @@ func TestAggregateDataTableScnStats(t *testing.T) {
 	aggregateDataTableScnStats(scns, res)
 
 	got := stat{failed: res.ScenarioFailedCount, skipped: res.ScenarioSkippedCount, total: res.ScenarioCount}
-	want := stat{failed: 3, skipped: 1, total: 6}
+	want := stat{failed: 2, skipped: 1, total: 5}
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Aggregate data table scenario stats failed. Want: %v , Got: %v", want, got)
