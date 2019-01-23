@@ -131,19 +131,21 @@ func getItems(table *m.ProtoTable, scnResults []*m.ProtoItem, results []*result.
 
 func aggregateDataTableScnStats(results map[string][]*m.ProtoTableDrivenScenario, specResult *result.SpecResult) {
 	for _, dResult := range results {
-		isFailed := 0
-		isSkipped := 0
 		for _, res := range dResult {
+			isTableIndicesExcluded := false
 			if res.Scenario.ExecutionStatus == m.ExecutionStatus_FAILED {
-				isFailed = 1
+				specResult.ScenarioFailedCount++
 			} else if res.Scenario.ExecutionStatus == m.ExecutionStatus_SKIPPED &&
 				!strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
-				isSkipped = 1
+				specResult.ScenarioSkippedCount++
 				specResult.Skipped = true
+			} else if res.Scenario.ExecutionStatus == m.ExecutionStatus_SKIPPED &&
+				strings.Contains(res.Scenario.SkipErrors[0], "--table-rows") {
+				isTableIndicesExcluded = true
 			}
-			specResult.ScenarioFailedCount += isFailed
-			specResult.ScenarioSkippedCount += isSkipped
-			specResult.ScenarioCount++
+			if !isTableIndicesExcluded {
+				specResult.ScenarioCount++
+			}
 		}
 	}
 }
