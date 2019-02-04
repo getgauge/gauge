@@ -39,7 +39,7 @@ var (
 			if zip != "" {
 				install.HandleInstallResult(install.InstallPluginFromZipFile(zip, args[0]), args[0], true)
 			} else {
-				install.HandleInstallResult(install.Plugin(args[0], pVersion, machineReadable), args[0], false)
+				install.HandleInstallResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
 			}
 			if err := install.AddPluginToProject(args[0]); err != nil {
 				logger.Fatalf(true, "Failed to add plugin %s to project : %s\n", args[0], err.Error())
