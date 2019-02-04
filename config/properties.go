@@ -20,14 +20,12 @@ package config
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
-	"sort"
-	"strings"
-
 	"os"
 	"path/filepath"
-
-	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
@@ -102,7 +100,6 @@ func (p *properties) Write(w io.Writer) (int, error) {
 func Properties() *properties {
 	return &properties{p: map[string]*property{
 		gaugeRepositoryURL:      newProperty(gaugeRepositoryURL, "https://downloads.gauge.org/plugin", "Url to get plugin versions"),
-		gaugeUpdateURL:          newProperty(gaugeUpdateURL, "https://downloads.gauge.org/gauge", "Url for latest gauge version"),
 		gaugeTemplatesURL:       newProperty(gaugeTemplatesURL, "https://templates.gauge.org", "Url to get templates list"),
 		runnerConnectionTimeout: newProperty(runnerConnectionTimeout, "30000", "Timeout in milliseconds for making a connection to the language runner."),
 		pluginConnectionTimeout: newProperty(pluginConnectionTimeout, "10000", "Timeout in milliseconds for making a connection to plugins."),

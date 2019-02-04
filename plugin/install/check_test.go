@@ -18,8 +18,6 @@
 package install
 
 import (
-	"strings"
-
 	"github.com/getgauge/gauge/version"
 	. "gopkg.in/check.v1"
 )
@@ -64,20 +62,13 @@ func (s *MySuite) TestCreatePluginUpdateDetailWhenThereIsNoUpdate(c *C) {
 	c.Assert(len(updateDetails), Equals, 0)
 }
 
-func (s *MySuite) TestGetGaugeVersionProperty(c *C) {
-	info := `version: 0.3.2
-darwin86: a41ba21c1517583fd741645bb89ce1264f525f1e
-darwin86_64: f2d3ef3dae561bf431e75a6bd46f3a4baff58499
-linux86: 32d0c75521523e510b2cc61491ce79c37fdf03f3
-linux86_64: c810361c4e0a622af528f8fa282b861baada769d
-windows86: 570429e9a1f574cf0df2e117246690fe31c6fed0
-windows86_64: a70281e005d97216a2535b6def57ef38df38b767`
-	r := strings.NewReader(info)
+func (s *MySuite) TestGetGaugeVersionFromURL(c *C) {
+	url := `https://github.com/getgauge/gauge/releases/tag/v1.0.4`
 
-	v, err := getGaugeVersionProperty(r)
+	v, err := getGaugeVersionFromURL(url)
 
 	c.Assert(err, Equals, nil)
-	c.Assert(v, Equals, "0.3.2")
+	c.Assert(v, Equals, "1.0.4")
 }
 
 func (s *MySuite) TestCreatePluginUpdateDetailForNightly(c *C) {
