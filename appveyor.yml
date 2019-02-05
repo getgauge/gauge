@@ -11,15 +11,23 @@ environment:
   GOPATH: c:\gopath
   GAUGE_PREFIX: c:\gauge
   GAUGE_TELEMETRY_ENABLED: false
+
+before_build:
+- ps: $env:Path = $env:GAUGE_PREFIX + "\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+
 build_script:
 - ps: >-
-    $env:Path = $env:GAUGE_PREFIX + "\bin;" + [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-
     go run build\make.go
+
+    if ($LastExitCode -ne 0) { throw "Gauge Build failed" }
 
     go run build\make.go --test
 
-    go run build\make.go --install --prefix=$env:GAUGE_PREFIX
+    if ($LastExitCode -ne 0) { throw "Gauge Test failed" }
+    
+
+after_build:
+- ps: go run build\make.go --install --prefix=$env:GAUGE_PREFIX
 
 test_script:
 - ps: >-
@@ -29,7 +37,8 @@ test_script:
 
     gauge install
 
-    mvn -q clean install -Denv=ci-java
+    gauge -v
 
-    $wc = New-Object 'System.Net.WebClient'
-        $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\reports-java\xml-report\result.xml))
+    mvn clean install -q -Denv=ci-java -Dtags="java" -DinParallel=true
+
+    if ($LastExitCode -ne 0) { throw "Gauge Functional Tests failed" }
