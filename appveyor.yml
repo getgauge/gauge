@@ -35,6 +35,8 @@ test_script:
 
     cd ../gauge-tests
 
+    gauge config gauge_repository_url https://raw.githubusercontent.com/getgauge/gauge-nightly-repository/master/
+
     gauge install
 
     gauge -v
