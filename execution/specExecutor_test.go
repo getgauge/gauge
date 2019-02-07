@@ -295,6 +295,10 @@ func (h *mockPluginHandler) GracefullyKillPlugins() {
 	h.GracefullyKillPluginsfunc()
 }
 
+func (h *mockPluginHandler) ExtendTimeout(id string) {
+
+}
+
 var exampleSpec = &gauge.Specification{Heading: &gauge.Heading{Value: "Example Spec"}, FileName: "example.spec", Tags: &gauge.Tags{}}
 
 var exampleSpecWithScenarios = &gauge.Specification{

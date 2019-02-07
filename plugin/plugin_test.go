@@ -28,61 +28,106 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
-
-	. "gopkg.in/check.v1"
 )
 
-func Test(t *testing.T) { TestingT(t) }
-
-type MySuite struct{}
-
-var _ = Suite(&MySuite{})
-
-func (s *MySuite) TestGetPluginDescriptorFromJSON(c *C) {
+func TestGetPluginDescriptorFromJSON(t *testing.T) {
 	testData := "_testdata"
 	path, _ := filepath.Abs(testData)
 
 	pd, err := GetPluginDescriptorFromJSON(filepath.Join(path, "_test.json"))
 
-	c.Assert(err, Equals, nil)
-	c.Assert(pd.ID, Equals, "html-report")
-	c.Assert(pd.Version, Equals, "1.1.0")
-	c.Assert(pd.Name, Equals, "Html Report")
-	c.Assert(pd.Description, Equals, "Html reporting plugin")
-	c.Assert(pd.pluginPath, Equals, path)
-	c.Assert(pd.GaugeVersionSupport.Minimum, Equals, "0.2.0")
-	c.Assert(pd.GaugeVersionSupport.Maximum, Equals, "0.4.0")
-	c.Assert(pd.Scope, DeepEquals, []string{"Execution"})
+	if err != nil {
+		t.Errorf("error: %s", err.Error())
+	}
+	t.Run("ID", func(t *testing.T) {
+		if pd.ID != "html-report" {
+			t.Errorf("expected %s, got %s", "html-report", pd.ID)
+		}
+	})
+	t.Run("Version", func(t *testing.T) {
+		if pd.Version != "1.1.0" {
+			t.Errorf("expected %s, got %s", "1.1.0", pd.Version)
+		}
+	})
+	t.Run("Name", func(t *testing.T) {
+		if pd.Name != "Html Report" {
+			t.Errorf("expected %s, got %s", "Html Report", pd.Name)
+		}
+	})
+	t.Run("Description", func(t *testing.T) {
+		if pd.Description != "Html reporting plugin" {
+			t.Errorf("expected %s, got %s", "Html reporting plugin", pd.Name)
+		}
+	})
+	t.Run("Path", func(t *testing.T) {
+		if pd.pluginPath != path {
+			t.Errorf("expected %s, got %s", path, pd.pluginPath)
+		}
+	})
+	t.Run("Min Version", func(t *testing.T) {
+		if pd.GaugeVersionSupport.Minimum != "0.2.0" {
+			t.Errorf("expected %s, got %s", "0.2.0", pd.GaugeVersionSupport.Minimum)
+		}
+	})
+	t.Run("Max Version", func(t *testing.T) {
+		if pd.GaugeVersionSupport.Maximum != "0.4.0" {
+			t.Errorf("expected %s, got %s", "0.4.0", pd.GaugeVersionSupport.Maximum)
+		}
+	})
+	t.Run("Scope", func(t *testing.T) {
+		if !reflect.DeepEqual(pd.Scope, []string{"Execution"}) {
+			t.Errorf("expected %s, got %s", []string{"Execution"}, pd.Scope)
+		}
+	})
 	htmlCommand := []string{"bin/html-report"}
-	c.Assert(pd.Command.Windows, DeepEquals, htmlCommand)
-	c.Assert(pd.Command.Darwin, DeepEquals, htmlCommand)
-	c.Assert(pd.Command.Linux, DeepEquals, htmlCommand)
+	t.Run("Windows Command", func(t *testing.T) {
+		if !reflect.DeepEqual(pd.Command.Windows, htmlCommand) {
+			t.Errorf("expected %s, got %s", htmlCommand, pd.Command.Windows)
+		}
+	})
+	t.Run("Darwin Command", func(t *testing.T) {
+		if !reflect.DeepEqual(pd.Command.Darwin, htmlCommand) {
+			t.Errorf("expected %s, got %s", htmlCommand, pd.Command.Darwin)
+		}
+	})
+	t.Run("Linux Command", func(t *testing.T) {
+		if !reflect.DeepEqual(pd.Command.Linux, htmlCommand) {
+			t.Errorf("expected %s, got %s", htmlCommand, pd.Command.Linux)
+		}
+	})
 }
 
-func (s *MySuite) TestGetPluginDescriptorFromNonExistingJSON(c *C) {
+func TestGetPluginDescriptorFromNonExistingJSON(t *testing.T) {
 	testData := "_testdata"
 	path, _ := filepath.Abs(testData)
 	JSONPath := filepath.Join(path, "_test1.json")
 	_, err := GetPluginDescriptorFromJSON(JSONPath)
 
-	c.Assert(err, DeepEquals, fmt.Errorf("File %s doesn't exist.", JSONPath))
+	expected := fmt.Errorf("File %s doesn't exist.", JSONPath)
+	if err.Error() != expected.Error() {
+		t.Errorf("expected %s, got %s", expected, err)
+	}
 }
 
-func (s *MySuite) TestGetLanguageQueryParamWhenProjectRootNotSet(c *C) {
+func TestGetLanguageQueryParamWhenProjectRootNotSet(t *testing.T) {
 	config.ProjectRoot = ""
 
 	l := language()
 
-	c.Assert(l, Equals, "")
+	if l != "" {
+		t.Errorf("expected empty language, got %s", l)
+	}
 }
 
-func (s *MySuite) TestGetLanguageQueryParam(c *C) {
+func TestGetLanguageQueryParam(t *testing.T) {
 	path, _ := filepath.Abs(filepath.Join("_testdata", "sample"))
 	config.ProjectRoot = path
 
 	l := language()
 
-	c.Assert(l, Equals, "java")
+	if l != "java" {
+		t.Errorf("expected java, got %s", l)
+	}
 }
 
 func TestGetPluginsWithoutScope(t *testing.T) {

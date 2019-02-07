@@ -56,25 +56,36 @@ type plugin struct {
 	connection net.Conn
 	pluginCmd  *exec.Cmd
 	descriptor *pluginDescriptor
+	killTimer  *time.Timer
 }
 
-func (p *plugin) IsProcessRunning() bool {
+func isProcessRunning(p *plugin) bool {
 	p.mutex.Lock()
 	ps := p.pluginCmd.ProcessState
 	p.mutex.Unlock()
 	return ps == nil || !ps.Exited()
 }
 
+func (p *plugin) rejuvenate() error {
+	if p.killTimer == nil {
+		return fmt.Errorf("timer is uninitialized. Perhaps kill is not yet invoked")
+	}
+	logger.Debugf(true, "Extending the plugin_kill_timeout for %s", p.descriptor.ID)
+	p.killTimer.Reset(config.PluginConnectionTimeout())
+	return nil
+}
+
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	if p.IsProcessRunning() {
+	if isProcessRunning(p) {
 		defer p.connection.Close()
+		p.killTimer = time.NewTimer(config.PluginConnectionTimeout())
 		conn.SendProcessKillMessage(p.connection)
 
 		exited := make(chan bool, 1)
 		go func() {
 			for {
-				if p.IsProcessRunning() {
+				if isProcessRunning(p) {
 					time.Sleep(100 * time.Millisecond)
 				} else {
 					exited <- true
@@ -83,11 +94,12 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 			}
 		}()
 		select {
-		case done := <-exited:
-			if done {
-				logger.Debugf(true, "Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
+		case <-exited:
+			if !p.killTimer.Stop() {
+				<-p.killTimer.C
 			}
-		case <-time.After(config.PluginKillTimeout()):
+			logger.Debugf(true, "Plugin [%s] with pid [%d] has exited", p.descriptor.Name, p.pluginCmd.Process.Pid)
+		case <-p.killTimer.C:
 			logger.Warningf(true, "Plugin [%s] with pid [%d] did not exit after %.2f seconds. Forcefully killing it.", p.descriptor.Name, p.pluginCmd.Process.Pid, config.PluginKillTimeout().Seconds())
 			err := p.pluginCmd.Process.Kill()
 			if err != nil {
@@ -232,12 +244,18 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			continue
 		}
 		if pd.hasScope(executionScope) {
-			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
+			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, &keepAliveHandler{ph: handler})
 			if err != nil {
 				warnings = append(warnings, err.Error())
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
+			prop, err := common.GetGaugeConfiguration()
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("Unable to read Gauge configuration. %s", err.Error()))
+				continue
+			}
+			envProperties["plugin_kill_timeout"] = prop["plugin_kill_timeout"]
 			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
@@ -286,7 +304,7 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	if err != nil {
 		logger.Fatalf(true, "Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
 	}
-	for p.IsProcessRunning() {
+	for isProcessRunning(p) {
 	}
 }
 
