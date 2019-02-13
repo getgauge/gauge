@@ -119,6 +119,7 @@ func getExtractedConcept(conceptName *gm.Step, steps []*gm.Step, content string,
 	if len(extractor.errors) != 0 {
 		return "", "", err
 	}
+	conceptStep.ReplaceArgsWithDynamic(conceptStep.Args)
 	addArgsFromTable(conceptStep, &extractor.conceptName, extractor.dynamicArgs)
 	if extractor.table.IsInitialized() {
 		extractor.conceptName += "\n" + formatter.FormatTable(extractor.table)
