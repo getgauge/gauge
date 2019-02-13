@@ -56,7 +56,7 @@ func (s *MySuite) TestExtractConcept(c *C) {
 	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP}}, "# sdfdsf\nsome comment\n* some step\n## sce\n* step", "")
 
 	c.Assert(err, IsNil)
-	c.Assert(concept, Equals, "# concept with <arg>\n* step that takes a table <arg>\n")
+	c.Assert(concept, Equals, "# concept with \"arg\"\n* step that takes a table <arg>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\"")
 }
 
@@ -67,7 +67,7 @@ func (s *MySuite) TestExtractConceptWithSkippedParameters(c *C) {
 	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP}}, "# sdfdsf\nsome comment\n* some step\n## sce\n* step", "")
 
 	c.Assert(err, IsNil)
-	c.Assert(concept, Equals, "# concept with <arg>\n* step that takes a table <arg> and \"hello again\"\n")
+	c.Assert(concept, Equals, "# concept with \"arg\"\n* step that takes a table <arg> and \"hello again\"\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\"")
 }
 
@@ -78,7 +78,7 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParameters(c *C) {
 	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n## sce\n* step", "")
 
 	c.Assert(err, IsNil)
-	c.Assert(concept, Equals, "# concept with <arg> <hello again>\n* step that takes a table <arg> and <hello again>\n")
+	c.Assert(concept, Equals, "# concept with \"arg\" <hello again>\n* step that takes a table <arg> and <hello again>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg\" <hello again>")
 }
 
@@ -89,7 +89,7 @@ func (s *MySuite) TestExtractConceptWithDynamicAndStaticParametersWithParamChar(
 	concept, conceptText, err := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP}}, "# sdfdsf\n\n|hello again|name|\n|hey|hello|\n\n## sce\n* step", "")
 
 	c.Assert(err, IsNil)
-	c.Assert(concept, Equals, "# concept with <arg {hello}> <hello again>\n* step that takes a table <arg {hello}> and <hello again>\n")
+	c.Assert(concept, Equals, "# concept with \"arg <hello>\" <hello again>\n* step that takes a table <arg {hello}> and <hello again>\n")
 	c.Assert(conceptText, Equals, "* concept with \"arg <hello>\" <hello again>")
 }
 
