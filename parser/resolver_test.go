@@ -193,6 +193,37 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	c.Assert(usernameArgN.Value, Equals, "static-value")
 }
 
+func (s *MySuite) TestPopulatingConceptsWithDynamicParametersInTable(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().specHeading("A spec heading").
+		tableHeader("property").
+		tableRow("something").
+		scenarioHeading("First scenario").
+		step("create user \"someone\" with ").
+		tableHeader("name").
+		tableRow("<property>").
+		String()
+	conceptDictionary := gauge.NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "table_param_concept.cpt"))
+	AddConcepts([]string{path}, conceptDictionary)
+
+	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
+	concept1 := spec.Scenarios[0].Steps[0]
+
+	dataTableLookup := new(gauge.ArgLookup)
+	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
+	c.Assert(err, IsNil)
+	tableArg,err := concept1.Lookup.GetArg("addresses")
+	c.Assert(err, IsNil)
+	v, err := tableArg.Table.Get("name")
+	c.Assert(err, IsNil)
+	c.Assert(v[0].CellType, Equals, gauge.Static)
+	c.Assert(v[0].Value, Equals, "something")
+}
+
+
+
 func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	parser := new(SpecParser)
 	specText := newSpecBuilder().specHeading("A spec heading").
