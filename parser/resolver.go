@@ -218,9 +218,27 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 				return err
 			}
 		}
+		if conceptLookupArg.ArgType == gauge.TableArg {
+			var updateColumns [][]gauge.TableCell
+			for _, cells := range conceptLookupArg.Table.Columns {
+				var updateCells []gauge.TableCell
+				for _, cell := range cells {
+					if cell.CellType == gauge.Dynamic {
+						v, err := dataTableLookup.GetArg(cell.Value)
+						if err != nil {
+							return err
+						}
+						updateCells = append(updateCells, gauge.TableCell{CellType:gauge.Static,Value:v.Value})
+					}else {
+						updateCells = append(updateCells, cell)
+					}
+				}
+				updateColumns = append(updateColumns, updateCells)
+			}
+			conceptLookupArg.Table.Columns = updateColumns
+		}
 	}
 	concept.Lookup = *lookup
-
 	//Updating values inside the concept step as well
 	newArgs := make([]*gauge.StepArg, 0)
 	for _, arg := range concept.Args {
