@@ -77,6 +77,7 @@ var gaHTTPTransport = http.DefaultTransport
 
 var telemetryEnabled, telemetryLogEnabled bool
 
+// Init sets flags used by the package methods.
 func Init() {
 	telemetryEnabled = config.TelemetryEnabled()
 	telemetryLogEnabled = config.TelemetryLogEnabled()
@@ -183,6 +184,7 @@ func daemon(mode, lang string) {
 	trackConsole("daemon", mode, lang)
 }
 
+// ScheduleDaemonTracking sends pings to GA at regular intervals. This is used to flag active usage.
 func ScheduleDaemonTracking(mode, lang string) {
 	daemon(mode, lang)
 	ticker := time.NewTicker(28 * time.Minute)

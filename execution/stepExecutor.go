@@ -38,7 +38,13 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	stepRequest := e.createStepRequest(protoStep)
 	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
 	stepResult := result.NewStepResult(protoStep)
-
+	for i := range step.GetFragments() {
+		stepFragmet := step.GetFragments()[i]
+		protoStepFragmet := protoStep.GetFragments()[i]
+		if stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Dynamic {
+			stepFragmet.GetParameter().Value = protoStepFragmet.GetParameter().Value
+		}
+	}
 	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, *e.currentExecutionInfo))
 
 	e.notifyBeforeStepHook(stepResult)

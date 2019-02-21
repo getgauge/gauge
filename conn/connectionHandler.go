@@ -123,7 +123,7 @@ func (connectionHandler *GaugeConnectionHandler) processMessage(buffer *bytes.Bu
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if messageLength > 0 && messageLength < uint64(buffer.Len()) {
 			messageBoundary := int(messageLength) + bytesRead
-			receivedBytes := buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)]
+			receivedBytes := buffer.Bytes()[bytesRead:messageBoundary]
 			connectionHandler.messageHandler.MessageBytesReceived(receivedBytes, conn)
 			buffer.Next(messageBoundary)
 			if buffer.Len() == 0 {

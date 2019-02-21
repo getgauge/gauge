@@ -121,9 +121,6 @@ gauge_telemetry_log_enabled = false
 # Url to get templates list
 gauge_templates_url = https://templates.gauge.org
 
-# Url for latest gauge version
-gauge_update_url = https://downloads.gauge.org/gauge
-
 # Timeout in milliseconds for requests from runner when invoked for ide.
 ide_request_timeout = 30000
 

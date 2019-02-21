@@ -536,6 +536,7 @@ func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure b
 		logger.Warningf(true, result.Warning)
 	}
 	if result.Skipped {
+		logger.Infof(true, "Plugin '%s' is up to date.", pluginName)
 		return true
 	}
 	if !result.Success {

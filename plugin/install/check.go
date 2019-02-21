@@ -19,19 +19,18 @@ package install
 
 import (
 	"fmt"
-	"io"
 	"net/http"
+	"regexp"
 	"runtime/debug"
 	"strings"
 	"sync"
 
-	"github.com/dmotylev/goproperties"
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 )
+
+const gauge_releases_url = "https://github.com/getgauge/gauge/releases"
 
 type UpdateFacade struct {
 	wg    *sync.WaitGroup
@@ -98,11 +97,7 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 
 func checkGaugeUpdate() []UpdateInfo {
 	var updateInfos []UpdateInfo
-	url := config.GaugeUpdateUrl()
-	if qp := plugin.QueryParams(); qp != "" {
-		url += qp
-	}
-	v, err := getLatestGaugeVersion(url)
+	v, err := getLatestGaugeVersion(gauge_releases_url + "/latest")
 	if err != nil {
 		return updateInfos
 	}
@@ -167,19 +162,19 @@ var getLatestGaugeVersion = func(url string) (string, error) {
 	}
 	defer res.Body.Close()
 
-	v, err := getGaugeVersionProperty(res.Body)
+	v, err := getGaugeVersionFromURL(res.Request.URL.String())
 	if err != nil {
 		return "", err
 	}
 	return v, nil
 }
 
-func getGaugeVersionProperty(r io.Reader) (string, error) {
-	properties := make(properties.Properties)
-
-	err := properties.Load(r)
-	if err != nil {
-		return "", fmt.Errorf("Failed to parse: %s", err.Error())
+func getGaugeVersionFromURL(url string) (string, error) {
+	versionString := strings.Replace(url, gauge_releases_url, "", -1)
+	reg, _ := regexp.Compile("tag/v(\\d.*)")
+	matches := reg.FindStringSubmatch(versionString)
+	if len(matches) < 2 {
+		return "", fmt.Errorf("Failed to parse: %s", url)
 	}
-	return strings.TrimSpace(properties["version"]), nil
+	return matches[1], nil
 }

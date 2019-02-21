@@ -31,7 +31,6 @@ import (
 
 const (
 	gaugeRepositoryURL      = "gauge_repository_url"
-	gaugeUpdateURL          = "gauge_update_url"
 	gaugeTemplatesURL       = "gauge_templates_url"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
@@ -105,11 +104,6 @@ func IdeRequestTimeout() time.Duration {
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
 func GaugeRepositoryUrl() string {
 	return getFromConfig(gaugeRepositoryURL)
-}
-
-// GaugeUpdateUrl fetches the URL to be used to check updates
-func GaugeUpdateUrl() string {
-	return getFromConfig(gaugeUpdateURL)
 }
 
 // GaugeTemplatesUrl fetches the URL to be used to download project templates

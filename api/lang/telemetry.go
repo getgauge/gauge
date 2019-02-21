@@ -23,7 +23,6 @@ import (
 
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/track"
-
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"
 )
