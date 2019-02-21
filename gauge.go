@@ -19,6 +19,7 @@ package main
 
 import (
 	"runtime/debug"
+	"syscall"
 
 	"github.com/getgauge/gauge/cmd"
 	"github.com/getgauge/gauge/logger"
@@ -28,6 +29,7 @@ func main() {
 	defer recoverPanic()
 	if err := cmd.Parse(); err != nil {
 		logger.Info(true, err.Error())
+		syscall.Exit(1)
 	}
 }
 
