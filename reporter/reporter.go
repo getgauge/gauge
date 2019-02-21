@@ -160,7 +160,7 @@ func ListenExecutionEvents(wg *sync.WaitGroup) {
 			case event.ConceptStart:
 				r.ConceptStart(formatter.FormatStep(e.Item.(*gauge.Step)))
 			case event.StepStart:
-				r.StepStart(formatter.FormatStep(e.Item.(*gauge.Step)))
+				r.StepStart(formatter.FormatStepWithResolvedArgs(e.Item.(*gauge.Step)))
 			case event.StepEnd:
 				r.StepEnd(e.Item.(gauge.Step), e.Result, e.ExecutionInfo)
 			case event.ConceptEnd:

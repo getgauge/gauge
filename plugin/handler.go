@@ -24,11 +24,14 @@ import (
 	"github.com/getgauge/gauge/logger"
 )
 
+// Handler manages plugins listed in project manifest.
 type Handler interface {
 	NotifyPlugins(*gauge_messages.Message)
 	GracefullyKillPlugins()
+	ExtendTimeout(string)
 }
 
+// GaugePlugins holds a reference to all plugins launched. The plugins are listed in project manifest
 type GaugePlugins struct {
 	pluginsMap map[string]*plugin
 }
@@ -44,6 +47,7 @@ func (gp *GaugePlugins) removePlugin(pluginID string) {
 	delete(gp.pluginsMap, pluginID)
 }
 
+// NotifyPlugins passes a message to all plugins listed in the manifest
 func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 	var handle = func(id string, p *plugin, err error) {
 		if err != nil {
@@ -90,6 +94,7 @@ func (gp *GaugePlugins) killPlugin(pluginID string) {
 	gp.removePlugin(pluginID)
 }
 
+// GracefullyKillPlugins tells the plugins to stop, letting them cleanup whatever they need to
 func (gp *GaugePlugins) GracefullyKillPlugins() {
 	var wg sync.WaitGroup
 	for _, plugin := range gp.pluginsMap {
@@ -97,4 +102,9 @@ func (gp *GaugePlugins) GracefullyKillPlugins() {
 		go plugin.kill(&wg)
 	}
 	wg.Wait()
+}
+
+// ExtendTimeout resets the kill timer of the plugin
+func (gp *GaugePlugins) ExtendTimeout(id string) {
+	gp.pluginsMap[id].rejuvenate()
 }

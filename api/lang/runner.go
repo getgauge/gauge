@@ -18,17 +18,18 @@
 package lang
 
 import (
+	"context"
 	"fmt"
 	"os"
 
 	"github.com/getgauge/gauge/config"
-
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
+	"github.com/sourcegraph/jsonrpc2"
 )
 
 type langRunner struct {
@@ -121,7 +122,7 @@ func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error
 		MessageType: gm.Message_StubImplementationCodeRequest,
 		StubImplementationCodeRequest: &gm.StubImplementationCodeRequest{
 			ImplementationFilePath: filePath,
-			Codes: codes,
+			Codes:                  codes,
 		},
 	}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(stubImplementationCodeRequest)
@@ -156,4 +157,15 @@ func getLanguageIdentifier() (string, error) {
 		return "", err
 	}
 	return info.LspLangId, nil
+}
+
+func informRunnerCompatibility(ctx context.Context, conn jsonrpc2.JSONRPC2) {
+	if lRunner.lspID != "" {
+		return
+	}
+	var params = lsp.ShowMessageParams{
+		Type:    lsp.Warning,
+		Message: "Current gauge language runner is not compatible with gauge LSP. Some of the editing feature will not work as expected",
+	}
+	conn.Notify(ctx, "window/showMessage", params)
 }
