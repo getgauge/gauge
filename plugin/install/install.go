@@ -517,13 +517,21 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		return true
 	}
 	if !result.Success {
-		logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
+		if (result.Version != "") {
+		    logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
+		} else {
+			logger.Errorf(true, "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
+		}
 		if exitIfFailure {
 			os.Exit(1)
 		}
 		return false
 	}
-	logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
+	if (result.Version != "") {
+		logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
+	} else {
+		logger.Infof(true, "Successfully installed plugin '%s'", pluginName, result.Version)
+	}
 	return true
 }
 
