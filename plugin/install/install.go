@@ -530,7 +530,7 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 	if (result.Version != "") {
 		logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
 	} else {
-		logger.Infof(true, "Successfully installed plugin '%s'", pluginName, result.Version)
+		logger.Infof(true, "Successfully installed plugin '%s'", pluginName)
 	}
 	return true
 }
