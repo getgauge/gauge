@@ -35,37 +35,39 @@ import (
 )
 
 const (
-	verboseDefault         = false
-	simpleConsoleDefault   = false
-	failedDefault          = false
-	repeatDefault          = false
-	parallelDefault        = false
-	sortDefault            = false
-	installPluginsDefault  = true
-	environmentDefault     = "default"
-	tagsDefault            = ""
-	rowsDefault            = ""
-	strategyDefault        = "lazy"
-	groupDefault           = -1
-	failSafeDefault        = false
-	skipCommandSaveDefault = false
+	verboseDefault                    = false
+	simpleConsoleDefault              = false
+	failedDefault                     = false
+	repeatDefault                     = false
+	parallelDefault                   = false
+	sortDefault                       = false
+	installPluginsDefault             = true
+	environmentDefault                = "default"
+	tagsDefault                       = ""
+	rowsDefault                       = ""
+	strategyDefault                   = "lazy"
+	tagsToFilterForParallelRunDefault = ""
+	groupDefault                      = -1
+	failSafeDefault                   = false
+	skipCommandSaveDefault            = false
 
-	verboseName         = "verbose"
-	simpleConsoleName   = "simple-console"
-	failedName          = "failed"
-	repeatName          = "repeat"
-	parallelName        = "parallel"
-	sortName            = "sort"
-	installPluginsName  = "install-plugins"
-	environmentName     = "env"
-	tagsName            = "tags"
-	rowsName            = "table-rows"
-	strategyName        = "strategy"
-	groupName           = "group"
-	streamsName         = "n"
-	failSafeName        = "fail-safe"
-	skipCommandSaveName = "skip-save"
-	scenarioName        = "scenario"
+	verboseName                    = "verbose"
+	simpleConsoleName              = "simple-console"
+	failedName                     = "failed"
+	repeatName                     = "repeat"
+	parallelName                   = "parallel"
+	sortName                       = "sort"
+	installPluginsName             = "install-plugins"
+	environmentName                = "env"
+	tagsName                       = "tags"
+	rowsName                       = "table-rows"
+	strategyName                   = "strategy"
+	groupName                      = "group"
+	streamsName                    = "n"
+	tagsToFilterForParallelRunName = "filter"
+	failSafeName                   = "fail-safe"
+	skipCommandSaveName            = "skip-save"
+	scenarioName                   = "scenario"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
@@ -95,23 +97,24 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	verbose             bool
-	simpleConsole       bool
-	failed              bool
-	repeat              bool
-	parallel            bool
-	sort                bool
-	installPlugins      bool
-	environment         string
-	tags                string
-	rows                string
-	strategy            string
-	streams             int
-	group               int
-	failSafe            bool
-	skipCommandSave     bool
-	scenarios           []string
-	scenarioNameDefault []string
+	verbose                    bool
+	simpleConsole              bool
+	failed                     bool
+	repeat                     bool
+	parallel                   bool
+	sort                       bool
+	installPlugins             bool
+	environment                string
+	tags                       string
+	tagsToFilterForParallelRun string
+	rows                       string
+	strategy                   string
+	streams                    int
+	group                      int
+	failSafe                   bool
+	skipCommandSave            bool
+	scenarios                  []string
+	scenarioNameDefault        []string
 )
 
 func init() {
@@ -124,6 +127,7 @@ func init() {
 	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
+	f.StringVarP(&tagsToFilterForParallelRun, tagsToFilterForParallelRunName, "", tagsToFilterForParallelRunDefault, "Specify number of parallel execution streams")
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
@@ -230,6 +234,9 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 	}
 	if failed && len(args)+flagDiffCount > 1 {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --failed")
+	}
+	if !parallel && tagsToFilterForParallelRun != "" {
+		return fmt.Errorf("Invalid Command. flag --filter can be used only with --parallel")
 	}
 	return nil
 }

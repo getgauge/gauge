@@ -22,6 +22,10 @@ func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 	return specs
 }
 
+func FilterSpecForParallelRun(specs []*gauge.Specification, tags string) (serialSpecs []*gauge.Specification, parallelSpecs []*gauge.Specification) {
+	return
+}
+
 func specsFilters() []specsFilter {
 	return []specsFilter{&tagsFilter{ExecuteTags}, &specsGroupFilter{Distribute, NumberOfExecutionStreams}, &scenariosFilter{ScenariosName}}
 }

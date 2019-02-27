@@ -188,6 +188,7 @@ func initPackageFlags() {
 	validation.TableRows = rows
 	execution.NumberOfExecutionStreams = streams
 	execution.InParallel = parallel
+	execution.TagsToFilterForParallelRun = tagsToFilterForParallelRun
 	execution.Strategy = strategy
 	filter.ExecuteTags = tags
 	order.Sorted = sort

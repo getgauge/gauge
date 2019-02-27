@@ -17,7 +17,9 @@
 
 package gauge
 
-import "sync"
+import (
+	"sync"
+)
 
 type SpecCollection struct {
 	mutex sync.Mutex
