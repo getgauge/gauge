@@ -78,6 +78,14 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 				m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResultItem, SuiteExecutionResultItem: &gauge_messages.SuiteExecutionResultItem{ResultItem: i}}
 				handle(id, plugin, plugin.sendMessage(m))
 			}
+			//Copy back chunked items
+			itemCounter := 0
+			for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
+				for i := 0; i < int(sr.ProtoSpec.ItemCount); i++ {
+					sr.ProtoSpec.Items = append(sr.ProtoSpec.Items, items[itemCounter])
+					itemCounter++
+				}
+			}
 		} else {
 			handle(id, plugin, plugin.sendMessage(message))
 		}
