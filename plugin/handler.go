@@ -56,20 +56,33 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 		}
 	}
 
+	var pluginsWithCapabilityToChunk  map[string]*plugin = make(map[string]*plugin)
+	var pluginsWithoutCapabilityToChunk  map[string]*plugin = make(map[string]*plugin)
+
 	for id, plugin := range gp.pluginsMap {
 		if !plugin.descriptor.hasCapability(streamResultCapability) {
-			handle(id, plugin, plugin.sendMessage(message))
-			continue
+			pluginsWithoutCapabilityToChunk[id] = plugin
+		}else { 
+			pluginsWithCapabilityToChunk[id] = plugin
 		}
-		items := []*gauge_messages.ProtoItem{}
-		for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
-			for _, i := range sr.ProtoSpec.Items {
-				i.FileName = sr.ProtoSpec.FileName
-				items = append(items, i)
-			}
-			sr.ProtoSpec.ItemCount = int64(len(sr.ProtoSpec.Items))
-			sr.ProtoSpec.Items = nil
+	}
+
+
+	for id, plugin := range pluginsWithoutCapabilityToChunk {
+		handle(id, plugin, plugin.sendMessage(message))
+	}	
+
+	items := []*gauge_messages.ProtoItem{}
+	for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
+		for _, i := range sr.ProtoSpec.Items {
+			i.FileName = sr.ProtoSpec.FileName
+			items = append(items, i)
 		}
+		sr.ProtoSpec.ItemCount = int64(len(sr.ProtoSpec.Items))
+		sr.ProtoSpec.Items = nil
+	}
+
+	for id, plugin := range pluginsWithCapabilityToChunk {
 		if message.MessageType == gauge_messages.Message_SuiteExecutionResult {
 			message.SuiteExecutionResult.SuiteResult.Chunked = true
 			message.SuiteExecutionResult.SuiteResult.ChunkSize = int64(len(items))
