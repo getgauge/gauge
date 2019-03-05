@@ -22,8 +22,9 @@ func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 	return specs
 }
 
-func FilterSpecForParallelRun(specs []*gauge.Specification, tags string) (serialSpecs []*gauge.Specification, parallelSpecs []*gauge.Specification) {
-	return
+func FilterSpecForParallelRun(specs []*gauge.Specification, tags string) ([]*gauge.Specification, []*gauge.Specification) {
+	tf := &tagFilterForParallelRun{tagExp: tags}
+	return tf.filter(specs)
 }
 
 func specsFilters() []specsFilter {

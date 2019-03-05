@@ -30,6 +30,10 @@ type tagsFilter struct {
 	tagExp string
 }
 
+type tagFilterForParallelRun struct {
+	tagExp string
+}
+
 type specsGroupFilter struct {
 	group       int
 	execStreams int
@@ -39,10 +43,18 @@ type scenariosFilter struct {
 	scenarios []string
 }
 
+func (tf *tagFilterForParallelRun) filter(specs []*gauge.Specification) ([]*gauge.Specification, []*gauge.Specification) {
+	if tf.tagExp != "" {
+		validateTagExpression(tf.tagExp)
+		return filterSpecsByTags(specs, tf.tagExp)
+	}
+	return specs, specs
+}
+
 func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if tagsFilter.tagExp != "" {
 		validateTagExpression(tagsFilter.tagExp)
-		specs = filterSpecsByTags(specs, tagsFilter.tagExp)
+		specs, _ = filterSpecsByTags(specs, tagsFilter.tagExp)
 	}
 	return specs
 }

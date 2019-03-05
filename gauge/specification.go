@@ -298,13 +298,23 @@ type SpecItemFilter interface {
 	Filter(Item) bool
 }
 
-func (spec *Specification) Filter(filter SpecItemFilter) {
-	for i := 0; i < len(spec.Items); i++ {
-		if filter.Filter(spec.Items[i]) {
-			spec.removeItem(i)
+func (spec *Specification) Filter(filter SpecItemFilter) (*Specification, *Specification) {
+	specWithFilteredItems := new(Specification)
+	specWithOtherItems := new(Specification)
+	*specWithFilteredItems, *specWithOtherItems = *spec, *spec
+	for i := 0; i < len(specWithFilteredItems.Items); i++ {
+		if filter.Filter(specWithFilteredItems.Items[i]) {
+			specWithFilteredItems.removeItem(i)
 			i--
 		}
 	}
+	for i := 0; i < len(specWithOtherItems.Items); i++ {
+		if !filter.Filter(specWithOtherItems.Items[i]) {
+			specWithOtherItems.removeItem(i)
+			i--
+		}
+	}
+	return specWithFilteredItems, specWithOtherItems
 }
 
 func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {

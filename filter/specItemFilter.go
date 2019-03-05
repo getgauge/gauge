@@ -207,19 +207,23 @@ func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionPart
 	return
 }
 
-func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) []*gauge.Specification {
+func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) ([]*gauge.Specification, []*gauge.Specification) {
 	filteredSpecs := make([]*gauge.Specification, 0)
+	otherSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {
 		tagValues := make([]string, 0)
 		if spec.Tags != nil {
 			tagValues = spec.Tags.Values()
 		}
-		spec.Filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
+		specWithFilteredItems, specWithOtherItems := spec.Filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
+		if len(specWithFilteredItems.Scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, specWithFilteredItems)
+		}
+		if len(specWithOtherItems.Scenarios) != 0 {
+			otherSpecs = append(otherSpecs, specWithOtherItems)
 		}
 	}
-	return filteredSpecs
+	return filteredSpecs, otherSpecs
 }
 
 func validateTagExpression(tagExpression string) {
