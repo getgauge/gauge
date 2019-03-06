@@ -239,9 +239,9 @@ func filterSpecsByScenarioName(specs []*gauge.Specification, scenariosName []str
 	filteredSpecs := make([]*gauge.Specification, 0)
 	scenarios := filterValidScenarios(specs, scenariosName)
 	for _, spec := range specs {
-		spec.Filter(newScenarioFilterBasedOnName(scenarios))
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
+		s, _ := spec.Filter(newScenarioFilterBasedOnName(scenarios))
+		if len(s.Scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, s)
 		}
 	}
 	return filteredSpecs

@@ -615,8 +615,8 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 	c.Assert(len(specs), Equals, 2)
 	c.Assert(len(specs[0].Scenarios), Equals, 1)
 	c.Assert(len(specs[1].Scenarios), Equals, 1)
-	c.Assert(specs[0], Equals, spec1)
-	c.Assert(specs[1], Equals, spec3)
+	c.Assert(specs[0].Scenarios[0], Equals, scenario1)
+	c.Assert(specs[1].Scenarios[0], Equals, scenario1)
 }
 
 func (s *MySuite) TestToFilterScenariosByTag(c *C) {
