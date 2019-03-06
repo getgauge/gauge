@@ -154,8 +154,7 @@ var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
-var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer along with the password (certFilePwd)")
-var certFilePwd = flag.String("certFilePwd", "", "Password for certificate that will be used to sign the windows installer")
+var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -284,14 +283,14 @@ func createWindowsInstaller() {
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
 	os.RemoveAll(distroDir)
-	signExecutable(installerFileName+".exe", *certFile, *certFilePwd)
+	signExecutable(installerFileName+".exe", *certFile)
 }
 
-func signExecutable(exeFilePath string, certFilePath string, certFilePwd string) {
+func signExecutable(exeFilePath string, certFilePath string) {
 	if getGOOS() == windows {
-		if certFilePath != "" && certFilePwd != "" {
+		if certFilePath != "" {
 			log.Printf("Signing: %s", exeFilePath)
-			runProcess("signtool", "sign", "/f", certFilePath, "/p", certFilePwd, exeFilePath)
+			runProcess("signtool", "sign", "/f", certFilePath, "/debug", "/v", "/tr", "http://timestamp.digicert.com", "/a", "/fd", "sha256", "/td", "sha256", "/as", exeFilePath)
 		} else {
 			log.Printf("No certificate file passed. Executable won't be signed.")
 		}
