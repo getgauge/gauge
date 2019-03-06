@@ -56,6 +56,7 @@ func (lookup *ArgLookup) AddArgValue(param string, stepArg *StepArg) error {
 	if !ok {
 		return fmt.Errorf("Accessing an invalid parameter (%s)", param)
 	}
+	stepArg.Name = param
 	lookup.paramValue[paramIndex].stepArg = stepArg
 	return nil
 }
