@@ -39,6 +39,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "default")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
@@ -56,6 +57,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "foo")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
@@ -73,6 +75,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirAndOverwritePassedEnv(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "bar")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
@@ -87,6 +90,7 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "default")
 	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
