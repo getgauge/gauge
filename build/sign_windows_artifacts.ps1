@@ -29,22 +29,22 @@ if ("$env:GOBIN" -eq "") {
 Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
 
 Push-Location "$pwd\bin\windows_amd64"
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
+signtool sign /debug /v /tr http://timestamp.digicert.com /a /fd sha256 /td sha256 /f $env:CERT_FILE /as gauge.exe
 if ($LastExitCode -ne 0) {
      throw "gauge.exe signing failed"
 }
 Pop-Location
 
 Push-Location "$pwd\bin\windows_386"
-signtool sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /f $env:CERT_FILE /p "$env:CERT_FILE_PWD" gauge.exe
+signtool sign /debug /v /tr http://timestamp.digicert.com /a /fd sha256 /td sha256 /f $env:CERT_FILE /as gauge.exe
 if ($LastExitCode -ne 0) {
      throw "gauge.exe signing failed"
 }
 Pop-Location
 
 $nightlyFlag = If ($nightly) {"--nightly"} Else {""}
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_amd64 $nightlyFlag
-& go run build/make.go --distro --certFile $env:CERT_FILE --certFilePwd "$env:CERT_FILE_PWD" --bin-dir bin\windows_386 $nightlyFlag
+& go run build/make.go --distro --certFile $env:CERT_FILE --bin-dir bin\windows_amd64 $nightlyFlag
+& go run build/make.go --distro --certFile $env:CERT_FILE --bin-dir bin\windows_386 $nightlyFlag
 
 mkdir test_installers 
 
