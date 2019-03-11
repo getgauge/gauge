@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
@@ -128,6 +129,7 @@ func init() {
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
 	f.StringVarP(&tagsToFilterForParallelRun, tagsToFilterForParallelRunName, "", tagsToFilterForParallelRunDefault, "Specify number of parallel execution streams")
+	f.MarkHidden(tagsToFilterForParallelRunName)
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
@@ -199,6 +201,9 @@ func installMissingPlugins(flag bool) {
 
 func execute(cmd *cobra.Command, args []string) {
 	loadEnvAndInitLogger(cmd)
+	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
+		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled		 via allow_filtered_parallel_execution property.")
+	}
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 

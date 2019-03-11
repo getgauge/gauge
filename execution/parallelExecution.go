@@ -109,8 +109,7 @@ func (e *parallelExecution) start() {
 func (e *parallelExecution) run() *result.SuiteResult {
 	e.start()
 	var res []*result.SuiteResult
-
-	if e.tagsToFilter != "" {
+	if env.AllowFilteredParallelExecution() && e.tagsToFilter != "" {
 		p, s := filter.FilterSpecForParallelRun(e.specCollection.Specs(), e.tagsToFilter)
 		if len(s) > 0 {
 			logger.Infof(true, "Executing in serial.")

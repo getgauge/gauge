@@ -46,12 +46,13 @@ const (
 	ScreenshotOnFailure = "screenshot_on_failure"
 	saveExecutionResult = "save_execution_result"
 	// CsvDelimiter holds delimiter used to parse csv files
-	CsvDelimiter           = "csv_delimiter"
-	allowMultilineStep     = "allow_multiline_step"
-	allowScenarioDatatable = "allow_scenario_datatable"
-	enableMultithreading   = "enable_multithreading"
-	useTestGA              = "use_test_ga"
-	telemetryInterval      = "gauge_telemetry_interval"
+	CsvDelimiter                   = "csv_delimiter"
+	allowMultilineStep             = "allow_multiline_step"
+	allowScenarioDatatable         = "allow_scenario_datatable"
+	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
+	enableMultithreading           = "enable_multithreading"
+	useTestGA                      = "use_test_ga"
+	telemetryInterval              = "gauge_telemetry_interval"
 )
 
 var envVars map[string]string
@@ -116,6 +117,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(CsvDelimiter, ",")
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
+	addEnvVar(allowFilteredParallelExecution, "false")
 	addEnvVar(useTestGA, "false")
 }
 
@@ -223,6 +225,11 @@ func convertToBool(property string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return boolValue
+}
+
+// AllowFilteredParallelExecution - feature toggle for filtered parallel execution
+var AllowFilteredParallelExecution = func() bool {
+	return convertToBool(allowFilteredParallelExecution, false)
 }
 
 // AllowScenarioDatatable -feature toggle for datatables in scenario
