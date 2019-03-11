@@ -54,6 +54,7 @@ func (s *MySuite) TestAddArgValue(c *C) {
 	stepArg, err = lookup.GetArg("param2")
 	c.Assert(err, IsNil)
 	c.Assert(stepArg.Value, Equals, "value2")
+	c.Assert(stepArg.Name, Equals, "param2")
 }
 
 func (s *MySuite) TestErrorForInvalidArg(c *C) {
@@ -74,6 +75,7 @@ func (s *MySuite) TestGetLookupCopy(c *C) {
 	stepArg, err := copiedLookup.GetArg("param1")
 	c.Assert(err, IsNil)
 	c.Assert(stepArg.Value, Equals, "new value")
+	c.Assert(stepArg.Name, Equals, "param1")
 	stepArg, err = originalLookup.GetArg("param1")
 	c.Assert(err, IsNil)
 	c.Assert(stepArg.Value, Equals, "oldValue")
