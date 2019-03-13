@@ -36,39 +36,39 @@ import (
 )
 
 const (
-	verboseDefault                    = false
-	simpleConsoleDefault              = false
-	failedDefault                     = false
-	repeatDefault                     = false
-	parallelDefault                   = false
-	sortDefault                       = false
-	installPluginsDefault             = true
-	environmentDefault                = "default"
-	tagsDefault                       = ""
-	rowsDefault                       = ""
-	strategyDefault                   = "lazy"
-	tagsToFilterForParallelRunDefault = ""
-	groupDefault                      = -1
-	failSafeDefault                   = false
-	skipCommandSaveDefault            = false
+	verboseDefault         = false
+	simpleConsoleDefault   = false
+	failedDefault          = false
+	repeatDefault          = false
+	parallelDefault        = false
+	sortDefault            = false
+	installPluginsDefault  = true
+	environmentDefault     = "default"
+	tagsDefault            = ""
+	rowsDefault            = ""
+	strategyDefault        = "lazy"
+	onlyDefault            = ""
+	groupDefault           = -1
+	failSafeDefault        = false
+	skipCommandSaveDefault = false
 
-	verboseName                    = "verbose"
-	simpleConsoleName              = "simple-console"
-	failedName                     = "failed"
-	repeatName                     = "repeat"
-	parallelName                   = "parallel"
-	sortName                       = "sort"
-	installPluginsName             = "install-plugins"
-	environmentName                = "env"
-	tagsName                       = "tags"
-	rowsName                       = "table-rows"
-	strategyName                   = "strategy"
-	groupName                      = "group"
-	streamsName                    = "n"
-	tagsToFilterForParallelRunName = "filter"
-	failSafeName                   = "fail-safe"
-	skipCommandSaveName            = "skip-save"
-	scenarioName                   = "scenario"
+	verboseName         = "verbose"
+	simpleConsoleName   = "simple-console"
+	failedName          = "failed"
+	repeatName          = "repeat"
+	parallelName        = "parallel"
+	sortName            = "sort"
+	installPluginsName  = "install-plugins"
+	environmentName     = "env"
+	tagsName            = "tags"
+	rowsName            = "table-rows"
+	strategyName        = "strategy"
+	groupName           = "group"
+	streamsName         = "n"
+	onlyName            = "only"
+	failSafeName        = "fail-safe"
+	skipCommandSaveName = "skip-save"
+	scenarioName        = "scenario"
 )
 
 var overrideRerunFlags = []string{verboseName, simpleConsoleName, machineReadableName, dirName, logLevelName}
@@ -128,8 +128,8 @@ func init() {
 	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
-	f.StringVarP(&tagsToFilterForParallelRun, tagsToFilterForParallelRunName, "", tagsToFilterForParallelRunDefault, "Specify number of parallel execution streams")
-	f.MarkHidden(tagsToFilterForParallelRunName)
+	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
+	f.MarkHidden(onlyName)
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
@@ -202,7 +202,7 @@ func installMissingPlugins(flag bool) {
 func execute(cmd *cobra.Command, args []string) {
 	loadEnvAndInitLogger(cmd)
 	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
-		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled		 via allow_filtered_parallel_execution property.")
+		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
 	}
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
@@ -241,7 +241,7 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --failed")
 	}
 	if !parallel && tagsToFilterForParallelRun != "" {
-		return fmt.Errorf("Invalid Command. flag --filter can be used only with --parallel")
+		return fmt.Errorf("Invalid Command. flag --only can be used only with --parallel")
 	}
 	return nil
 }
