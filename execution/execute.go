@@ -78,6 +78,9 @@ var InParallel bool
 
 var TagsToFilterForParallelRun string
 
+// Verbose if true prints additional details about the execution
+var Verbose bool
+
 // MachineReadable indicates that the output is in json format
 var MachineReadable bool
 

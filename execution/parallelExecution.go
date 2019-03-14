@@ -111,11 +111,13 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	var res []*result.SuiteResult
 	if env.AllowFilteredParallelExecution() && e.tagsToFilter != "" {
 		p, s := filter.FilterSpecForParallelRun(e.specCollection.Specs(), e.tagsToFilter)
+		if Verbose {
+			printAdditionalExecutionInfo(p, s, e.tagsToFilter)
+		}
 		if len(s) > 0 {
-			logger.Infof(true, "Executing in serial.")
+			logger.Infof(true, "Executing %d specs in serial.", len(s))
 			e.specCollection = gauge.NewSpecCollection(p, false)
 			res = append(res, e.executeSpecsInSerial(gauge.NewSpecCollection(s, true)))
-			logger.Infof(true, "Starting parallel execution.")
 		}
 	}
 
@@ -139,6 +141,12 @@ func (e *parallelExecution) run() *result.SuiteResult {
 
 	e.finish()
 	return e.suiteResult
+}
+
+func printAdditionalExecutionInfo(p []*gauge.Specification, s []*gauge.Specification, tags string) {
+	logger.Infof(true, "Applied tags '%s' to filter specs for parallel execution", tags)
+	logger.Infof(true, "No of specs to be executed in serial : %d", len(s))
+	logger.Infof(true, "No of specs to be executed in parallel : %d", len(p))
 }
 
 func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
