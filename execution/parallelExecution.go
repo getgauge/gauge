@@ -61,6 +61,7 @@ type parallelExecution struct {
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
+	tagsToFilter             string
 	errMaps                  *gauge.BuildErrors
 	startTime                time.Time
 }
@@ -72,6 +73,7 @@ func newParallelExecution(e *executionInfo) *parallelExecution {
 		runner:                   e.runner,
 		pluginHandler:            e.pluginHandler,
 		numberOfExecutionStreams: e.numberOfStreams,
+		tagsToFilter:             e.tagsToFilter,
 		errMaps:                  e.errMaps,
 	}
 }
@@ -106,11 +108,23 @@ func (e *parallelExecution) start() {
 
 func (e *parallelExecution) run() *result.SuiteResult {
 	e.start()
+	var res []*result.SuiteResult
+	if env.AllowFilteredParallelExecution() && e.tagsToFilter != "" {
+		p, s := filter.FilterSpecForParallelRun(e.specCollection.Specs(), e.tagsToFilter)
+		if Verbose {
+			printAdditionalExecutionInfo(p, s, e.tagsToFilter)
+		}
+		if len(s) > 0 {
+			logger.Infof(true, "Executing %d specs in serial.", len(s))
+			e.specCollection = gauge.NewSpecCollection(p, false)
+			res = append(res, e.executeSpecsInSerial(gauge.NewSpecCollection(s, true)))
+		}
+	}
 
 	nStreams := e.numberOfStreams()
 	logger.Infof(true, "Executing in %s parallel streams.", strconv.Itoa(nStreams))
-
 	resChan := make(chan *result.SuiteResult)
+
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
 		go e.executeMultithreaded(nStreams, resChan)
@@ -120,7 +134,6 @@ func (e *parallelExecution) run() *result.SuiteResult {
 		go e.executeEagerly(nStreams, resChan)
 	}
 
-	var res []*result.SuiteResult
 	for r := range resChan {
 		res = append(res, r)
 	}
@@ -128,6 +141,12 @@ func (e *parallelExecution) run() *result.SuiteResult {
 
 	e.finish()
 	return e.suiteResult
+}
+
+func printAdditionalExecutionInfo(p []*gauge.Specification, s []*gauge.Specification, tags string) {
+	logger.Infof(true, "Applied tags '%s' to filter specs for parallel execution", tags)
+	logger.Infof(true, "No of specs to be executed in serial : %d", len(s))
+	logger.Infof(true, "No of specs to be executed in parallel : %d", len(p))
 }
 
 func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
@@ -184,7 +203,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
 	for i, s := range specs {
-		go e.startSpecsExecution(s, resChan, i+1)
+		go e.startStream(s, resChan, i+1)
 	}
 	e.wg.Wait()
 	close(resChan)
@@ -192,20 +211,15 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	if os.Getenv("GAUGE_CUSTOM_BUILD_PATH") == "" {
-		os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
-	}
-	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
-	if err != nil {
-		logger.Errorf(true, "Failed to start runner. %s", err.Error())
-		resChan <- &result.SuiteResult{UnhandledErrors: []error{fmt.Errorf("Failed to start runner. %s", err.Error())}}
+	runner, err := e.startRunner(s, stream)
+	if err != nil && len(err) > 0 {
+		resChan <- &result.SuiteResult{UnhandledErrors: err}
 		return
 	}
 	e.startSpecsExecutionWithRunner(s, resChan, runner, stream)
 }
 
-func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
-	defer e.wg.Done()
+func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (runner.Runner, []error) {
 	if os.Getenv("GAUGE_CUSTOM_BUILD_PATH") == "" {
 		os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
 	}
@@ -213,10 +227,12 @@ func (e *parallelExecution) startSpecsExecution(s *gauge.SpecCollection, resChan
 	if err != nil {
 		logger.Errorf(true, "Failed to start runner. %s", err.Error())
 		logger.Debugf(true, "Skipping %d specifications", s.Size())
-		resChan <- &result.SuiteResult{UnhandledErrors: []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}}
-		return
+		if isLazy() {
+			return nil, []error{fmt.Errorf("Failed to start runner. %s", err.Error())}
+		}
+		return nil, []error{streamExecError{specsSkipped: s.SpecNames(), message: fmt.Sprintf("Failed to start runner. %s", err.Error())}}
 	}
-	e.startSpecsExecutionWithRunner(s, resChan, runner, stream)
+	return runner, nil
 }
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner runner.Runner, stream int) {
@@ -225,6 +241,18 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 	se.execute()
 	runner.Kill()
 	resChan <- se.suiteResult
+}
+
+func (e *parallelExecution) executeSpecsInSerial(s *gauge.SpecCollection) *result.SuiteResult {
+	runner, err := e.startRunner(s, 1)
+	if err != nil {
+		return &result.SuiteResult{UnhandledErrors: err}
+	}
+	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, 1)
+	se := newSimpleExecution(executionInfo, false)
+	se.execute()
+	runner.Kill()
+	return se.suiteResult
 }
 
 func (e *parallelExecution) finish() {

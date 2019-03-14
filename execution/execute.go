@@ -76,6 +76,11 @@ var NumberOfExecutionStreams int
 // InParallel if true executes the specs in parallel else in serial.
 var InParallel bool
 
+var TagsToFilterForParallelRun string
+
+// Verbose if true prints additional details about the execution
+var Verbose bool
+
 // MachineReadable indicates that the output is in json format
 var MachineReadable bool
 
@@ -95,6 +100,7 @@ type executionInfo struct {
 	errMaps         *gauge.BuildErrors
 	inParallel      bool
 	numberOfStreams int
+	tagsToFilter    string
 	stream          int
 }
 
@@ -111,6 +117,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 		errMaps:         e,
 		inParallel:      p,
 		numberOfStreams: NumberOfExecutionStreams,
+		tagsToFilter:    TagsToFilterForParallelRun,
 		stream:          stream,
 	}
 }
@@ -152,6 +159,7 @@ var ExecuteSpecs = func(specDirs []string) int {
 	}
 	defer wg.Wait()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
+
 	e := newExecution(ei)
 	return printExecutionResult(e.run(), res.ParseOk)
 }
