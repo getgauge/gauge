@@ -49,6 +49,7 @@ const (
 	strategyDefault        = "lazy"
 	onlyDefault            = ""
 	groupDefault           = -1
+	maxRetriesCountDefault = 1
 	failSafeDefault        = false
 	skipCommandSaveDefault = false
 
@@ -64,6 +65,7 @@ const (
 	rowsName            = "table-rows"
 	strategyName        = "strategy"
 	groupName           = "group"
+	maxRetriesCountName = "max-retries-count"
 	streamsName         = "n"
 	onlyName            = "only"
 	failSafeName        = "fail-safe"
@@ -111,6 +113,7 @@ var (
 	rows                       string
 	strategy                   string
 	streams                    int
+	maxRetriesCount            int
 	group                      int
 	failSafe                   bool
 	skipCommandSave            bool
@@ -128,6 +131,7 @@ func init() {
 	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
+	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
 	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
 	f.MarkHidden(onlyName)
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")

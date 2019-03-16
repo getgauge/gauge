@@ -629,6 +629,32 @@ func TestExecuteScenario(t *testing.T) {
 	}
 }
 
+func TestExecuteScenarioWithRetries(t *testing.T) {
+	MaxRetriesCount = 3
+	errs := gauge.NewBuildErrors()
+	se := newSpecExecutor(exampleSpecWithScenarios, nil, nil, errs, 0)
+
+	count := 1
+	se.scenarioExecutor = &mockExecutor{
+		executeFunc: func(i gauge.Item, r result.Result) {
+			if count < MaxRetriesCount {
+				r.(*result.ScenarioResult).ProtoScenario.Failed = true
+				r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED
+			} else {
+				r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
+			}
+
+			count++
+		},
+	}
+
+	sceResult, _ := se.executeScenario(exampleSpecWithScenarios.Scenarios[0])
+
+	if sceResult.GetFailed() {
+		t.Errorf("Expect sceResult.GetFailed() = false, got true")
+	}
+}
+
 func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {
 	errs := gauge.NewBuildErrors()
 	se := newSpecExecutor(exampleSpecWithScenarios, nil, nil, errs, 0)

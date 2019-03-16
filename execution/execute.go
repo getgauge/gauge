@@ -70,6 +70,9 @@ const (
 	executionStatusFile = "executionStatus.json"
 )
 
+// Count of iterations
+var MaxRetriesCount int
+
 // NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
 var NumberOfExecutionStreams int
 

@@ -201,6 +201,7 @@ func initPackageFlags() {
 		execution.Strategy = execution.Eager
 	}
 	filter.ScenariosName = scenarios
+	execution.MaxRetriesCount = maxRetriesCount
 }
 
 var exit = func(err error, additionalText string) {
