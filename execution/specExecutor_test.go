@@ -173,6 +173,7 @@ func (s *MySuite) TestSpecIsSkippedIfDataRangeIsInvalid(c *C) {
 }
 
 func (s *MySuite) TestDataTableRowsAreSkippedForUnimplemetedStep(c *C) {
+	MaxRetriesCount = 1
 	stepText := "Unimplememted step"
 
 	specText := newSpecBuilder().specHeading("A spec heading").
@@ -607,6 +608,7 @@ func (e *mockExecutor) execute(i gauge.Item, r result.Result) {
 }
 
 func TestExecuteScenario(t *testing.T) {
+	MaxRetriesCount = 1
 	errs := gauge.NewBuildErrors()
 	se := newSpecExecutor(exampleSpecWithScenarios, nil, nil, errs, 0)
 	executedScenarios := make([]string, 0)

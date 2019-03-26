@@ -274,8 +274,7 @@ func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) ([]result.R
 func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.ScenarioResult, error) {
 	var scenarioResult *result.ScenarioResult
 
-	i := 1
-	for {
+	for i := 0; i < MaxRetriesCount; i++ {
 		e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
 			Name:     scenario.Heading.Value,
 			Tags:     getTagValue(scenario.Tags),
@@ -298,10 +297,9 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			e.specResult.ScenarioSkippedCount++
 		}
 
-		if !scenarioResult.GetFailed() || i >= MaxRetriesCount {
+		if !scenarioResult.GetFailed() {
 			break
 		}
-		i++
 	}
 	return scenarioResult, nil
 }

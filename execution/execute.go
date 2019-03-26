@@ -283,6 +283,9 @@ func printExecutionResult(suiteResult *result.SuiteResult, isParsingOk bool) int
 }
 
 func validateFlags() error {
+	if MaxRetriesCount < 1 {
+		return fmt.Errorf("invalid input(%s) to --max-retries-count flag", strconv.Itoa(MaxRetriesCount))
+	}
 	if !InParallel {
 		return nil
 	}
