@@ -19,6 +19,7 @@ package execution
 
 import (
 	"fmt"
+	"github.com/getgauge/gauge/filter"
 
 	"strconv"
 	"strings"
@@ -274,6 +275,20 @@ func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) ([]result.R
 func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.ScenarioResult, error) {
 	var scenarioResult *result.ScenarioResult
 
+	shouldRetry := RetryOnlyTags == ""
+
+	if !shouldRetry {
+		spec := e.specification
+		tagValues := make([]string, 0)
+		if spec.Tags != nil {
+			tagValues = spec.Tags.Values()
+		}
+
+		specFilter := filter.NewScenarioFilterBasedOnTags(tagValues, RetryOnlyTags)
+
+		shouldRetry = !(specFilter.Filter(scenario))
+	}
+
 	for i := 0; i < MaxRetriesCount; i++ {
 		e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
 			Name:     scenario.Heading.Value,
@@ -297,7 +312,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			e.specResult.ScenarioSkippedCount++
 		}
 
-		if !scenarioResult.GetFailed() {
+		if !(shouldRetry && scenarioResult.GetFailed()) {
 			break
 		}
 	}

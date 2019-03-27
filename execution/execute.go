@@ -73,6 +73,9 @@ const (
 // Count of iterations
 var MaxRetriesCount int
 
+// Tags to filter specs/scenarios to retry
+var RetryOnlyTags string
+
 // NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
 var NumberOfExecutionStreams int
 

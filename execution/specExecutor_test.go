@@ -640,8 +640,7 @@ func TestExecuteScenarioWithRetries(t *testing.T) {
 	se.scenarioExecutor = &mockExecutor{
 		executeFunc: func(i gauge.Item, r result.Result) {
 			if count < MaxRetriesCount {
-				r.(*result.ScenarioResult).ProtoScenario.Failed = true
-				r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED
+				r.SetFailure()
 			} else {
 				r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
 			}
@@ -655,6 +654,73 @@ func TestExecuteScenarioWithRetries(t *testing.T) {
 	if sceResult.GetFailed() {
 		t.Errorf("Expect sceResult.GetFailed() = false, got true")
 	}
+}
+
+var exampleSpecWithTags = &gauge.Specification{
+	Heading:  &gauge.Heading{Value: "Example Spec"},
+	FileName: "example.spec",
+	Tags:     &gauge.Tags{RawValues: [][]string{{"tagSpec"}}},
+	Scenarios: []*gauge.Scenario{
+		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{RawValues: [][]string{{"tagSce"}}}, Span: &gauge.Span{}},
+	},
+}
+
+func TestExecuteScenarioShouldNotRetryIfNotMatchTags(t *testing.T) {
+	MaxRetriesCount = 2
+	RetryOnlyTags = "tagN"
+
+	se := newSpecExecutorForTestsWithRetry()
+	sceResult, _ := se.executeScenario(exampleSpecWithTags.Scenarios[0])
+
+	if !sceResult.GetFailed() {
+		t.Errorf("Expect sceResult.GetFailed() = true, got false")
+	}
+}
+
+func TestExecuteScenarioShouldRetryIfSpecificationMatchTags(t *testing.T) {
+	MaxRetriesCount = 2
+	RetryOnlyTags = "tagSpec"
+
+	se := newSpecExecutorForTestsWithRetry()
+
+	sceResult, _ := se.executeScenario(exampleSpecWithTags.Scenarios[0])
+
+	if sceResult.GetFailed() {
+		t.Errorf("Expect sceResult.GetFailed() = false, got true")
+	}
+}
+
+func TestExecuteScenarioShouldRetryIfScenarioMatchTags(t *testing.T) {
+	MaxRetriesCount = 2
+	RetryOnlyTags = "tagSce"
+
+	se := newSpecExecutorForTestsWithRetry()
+
+	sceResult, _ := se.executeScenario(exampleSpecWithTags.Scenarios[0])
+
+	if sceResult.GetFailed() {
+		t.Errorf("Expect sceResult.GetFailed() = false, got true")
+	}
+}
+
+func newSpecExecutorForTestsWithRetry() *specExecutor {
+	errs := gauge.NewBuildErrors()
+	se := newSpecExecutor(exampleSpecWithTags, nil, nil, errs, 0)
+
+	count := 1
+	se.scenarioExecutor = &mockExecutor{
+		executeFunc: func(i gauge.Item, r result.Result) {
+			if count < MaxRetriesCount {
+				r.SetFailure()
+			} else {
+				r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
+			}
+
+			count++
+		},
+	}
+
+	return se
 }
 
 func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {

@@ -50,6 +50,7 @@ const (
 	onlyDefault            = ""
 	groupDefault           = -1
 	maxRetriesCountDefault = 1
+	retryOnlyTagsDefault   = ""
 	failSafeDefault        = false
 	skipCommandSaveDefault = false
 
@@ -66,6 +67,7 @@ const (
 	strategyName        = "strategy"
 	groupName           = "group"
 	maxRetriesCountName = "max-retries-count"
+	retryOnlyTagsName   = "retry-only"
 	streamsName         = "n"
 	onlyName            = "only"
 	failSafeName        = "fail-safe"
@@ -114,6 +116,7 @@ var (
 	strategy                   string
 	streams                    int
 	maxRetriesCount            int
+	retryOnlyTags              string
 	group                      int
 	failSafe                   bool
 	skipCommandSave            bool
@@ -132,6 +135,7 @@ func init() {
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
 	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
+	f.StringVarP(&retryOnlyTags, retryOnlyTagsName, "", retryOnlyTagsDefault, "Retries the specs and scenarios tagged with given tags")
 	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
 	f.MarkHidden(onlyName)
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
@@ -239,13 +243,15 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 	})
 	if repeat && len(args)+flagDiffCount > 1 {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --repeat")
-
 	}
 	if failed && len(args)+flagDiffCount > 1 {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --failed")
 	}
 	if !parallel && tagsToFilterForParallelRun != "" {
 		return fmt.Errorf("Invalid Command. flag --only can be used only with --parallel")
+	}
+	if maxRetriesCount == 1 && retryOnlyTags != "" {
+		return fmt.Errorf("Invalid Command. flag --retry-only can be used only with --max-retry-count")
 	}
 	return nil
 }

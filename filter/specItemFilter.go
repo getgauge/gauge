@@ -60,7 +60,7 @@ func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
 	return true
 }
 
-func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
+func NewScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
 	return &ScenarioFilterBasedOnTags{specTags, tagExp}
 }
 
@@ -215,7 +215,7 @@ func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) ([]*g
 		if spec.Tags != nil {
 			tagValues = spec.Tags.Values()
 		}
-		specWithFilteredItems, specWithOtherItems := spec.Filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
+		specWithFilteredItems, specWithOtherItems := spec.Filter(NewScenarioFilterBasedOnTags(tagValues, tagExpression))
 		if len(specWithFilteredItems.Scenarios) != 0 {
 			filteredSpecs = append(filteredSpecs, specWithFilteredItems)
 		}
