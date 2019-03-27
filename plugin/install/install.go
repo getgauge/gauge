@@ -83,6 +83,7 @@ type InstallResult struct {
 	Info    string
 	Success bool
 	Skipped bool
+	Version string
 }
 
 func (installResult *InstallResult) getMessage() string {
@@ -265,7 +266,9 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
 	}
-	return InstallPluginFromZipFile(pluginZip, installDesc.Name)
+	res := InstallPluginFromZipFile(pluginZip, installDesc.Name)
+	res.Version = versionInstallDescription.Version
+	return res
 }
 
 func runPlatformCommands(commands platformSpecificCommand, workingDir string) error {
@@ -514,14 +517,21 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		return true
 	}
 	if !result.Success {
-		logger.Errorf(true, "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
+		if (result.Version != "") {
+		    logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
+		} else {
+			logger.Errorf(true, "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
+		}
 		if exitIfFailure {
 			os.Exit(1)
 		}
 		return false
 	}
-
-	logger.Infof(true, "Successfully installed plugin '%s'.", pluginName)
+	if (result.Version != "") {
+		logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
+	} else {
+		logger.Infof(true, "Successfully installed plugin '%s'", pluginName)
+	}
 	return true
 }
 
