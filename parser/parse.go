@@ -139,9 +139,11 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 		i, _ := getIndexFor(specFiles, spec.FileName)
 		specFile := specFiles[i]
 		if len(specFile.indices) > 0 {
-			spec.Filter(filter.NewScenarioFilterBasedOnSpan(specFile.indices))
+			s, _ := spec.Filter(filter.NewScenarioFilterBasedOnSpan(specFile.indices))
+			allSpecs[i] = s
+		} else {
+			allSpecs[i] = spec
 		}
-		allSpecs[i] = spec
 	}
 	return allSpecs, !passed
 }

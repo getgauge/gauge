@@ -220,8 +220,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			result = ParseResult{Ok: true}
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
+			tables := []*gauge.Table{&spec.DataTable.Table}
+			if latestScenario.DataTable.IsInitialized() {
+				tables = append(tables, &latestScenario.DataTable.Table)
+			}
 			latestStep := latestScenario.LatestStep()
-			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTables(tables...), spec.FileName)
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.LatestContext()
 			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)

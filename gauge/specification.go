@@ -183,12 +183,14 @@ func (spec *Specification) LatestTeardown() *Step {
 
 func (spec *Specification) removeItem(itemIndex int) {
 	item := spec.Items[itemIndex]
+	items := make([]Item, len(spec.Items))
+	copy(items, spec.Items)
 	if len(spec.Items)-1 == itemIndex {
-		spec.Items = spec.Items[:itemIndex]
+		spec.Items = items[:itemIndex]
 	} else if 0 == itemIndex {
-		spec.Items = spec.Items[itemIndex+1:]
+		spec.Items = items[itemIndex+1:]
 	} else {
-		spec.Items = append(spec.Items[:itemIndex], spec.Items[itemIndex+1:]...)
+		spec.Items = append(items[:itemIndex], items[itemIndex+1:]...)
 	}
 	if item.Kind() == ScenarioKind {
 		spec.removeScenario(item.(*Scenario))
@@ -197,12 +199,14 @@ func (spec *Specification) removeItem(itemIndex int) {
 
 func (spec *Specification) removeScenario(scenario *Scenario) {
 	index := getIndexFor(scenario, spec.Scenarios)
+	scenarios := make([]*Scenario, len(spec.Scenarios))
+	copy(scenarios, spec.Scenarios)
 	if len(spec.Scenarios)-1 == index {
-		spec.Scenarios = spec.Scenarios[:index]
+		spec.Scenarios = scenarios[:index]
 	} else if index == 0 {
-		spec.Scenarios = spec.Scenarios[index+1:]
+		spec.Scenarios = scenarios[index+1:]
 	} else {
-		spec.Scenarios = append(spec.Scenarios[:index], spec.Scenarios[index+1:]...)
+		spec.Scenarios = append(scenarios[:index], scenarios[index+1:]...)
 	}
 }
 
@@ -298,13 +302,23 @@ type SpecItemFilter interface {
 	Filter(Item) bool
 }
 
-func (spec *Specification) Filter(filter SpecItemFilter) {
-	for i := 0; i < len(spec.Items); i++ {
-		if filter.Filter(spec.Items[i]) {
-			spec.removeItem(i)
+func (spec *Specification) Filter(filter SpecItemFilter) (*Specification, *Specification) {
+	specWithFilteredItems := new(Specification)
+	specWithOtherItems := new(Specification)
+	*specWithFilteredItems, *specWithOtherItems = *spec, *spec
+	for i := 0; i < len(specWithFilteredItems.Items); i++ {
+		if filter.Filter(specWithFilteredItems.Items[i]) {
+			specWithFilteredItems.removeItem(i)
 			i--
 		}
 	}
+	for i := 0; i < len(specWithOtherItems.Items); i++ {
+		if !filter.Filter(specWithOtherItems.Items[i]) {
+			specWithOtherItems.removeItem(i)
+			i--
+		}
+	}
+	return specWithFilteredItems, specWithOtherItems
 }
 
 func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {

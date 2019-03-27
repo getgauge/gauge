@@ -37,6 +37,8 @@ const (
 	SpecsDir = "gauge_specs_dir"
 	// GaugeReportsDir holds the location of reports
 	GaugeReportsDir = "gauge_reports_dir"
+	// GaugeEnvironment holds the name of the current environment
+	GaugeEnvironment = "gauge_environment"
 	// LogsDirectory holds the location of log files
 	LogsDirectory = "logs_directory"
 	// OverwriteReports = false will create a new directory for reports
@@ -46,17 +48,18 @@ const (
 	ScreenshotOnFailure = "screenshot_on_failure"
 	saveExecutionResult = "save_execution_result"
 	// CsvDelimiter holds delimiter used to parse csv files
-	CsvDelimiter           = "csv_delimiter"
-	allowMultilineStep     = "allow_multiline_step"
-	allowScenarioDatatable = "allow_scenario_datatable"
-	enableMultithreading   = "enable_multithreading"
-	useTestGA              = "use_test_ga"
-	telemetryInterval      = "gauge_telemetry_interval"
+	CsvDelimiter                   = "csv_delimiter"
+	allowMultilineStep             = "allow_multiline_step"
+	allowScenarioDatatable         = "allow_scenario_datatable"
+	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
+	enableMultithreading           = "enable_multithreading"
+	useTestGA                      = "use_test_ga"
+	telemetryInterval              = "gauge_telemetry_interval"
 )
 
 var envVars map[string]string
 
-var currentEnvironments = []string{"default"}
+var currentEnvironments = []string{common.DefaultEnvDir}
 
 // LoadEnv first generates the map of the env vars that needs to be set.
 // It starts by populating the map with the env passed by the user in --env flag.
@@ -78,7 +81,7 @@ func LoadEnv(envName string) error {
 			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
 
-		if env == "default" {
+		if env == common.DefaultEnvDir {
 			defaultEnvLoaded = true
 		} else {
 			currentEnvironments = append(currentEnvironments, env)
@@ -86,7 +89,7 @@ func LoadEnv(envName string) error {
 	}
 
 	if !defaultEnvLoaded {
-		err := loadEnvDir("default")
+		err := loadEnvDir(common.DefaultEnvDir)
 		if err != nil {
 			return fmt.Errorf("Failed to load env. %s", err.Error())
 		}
@@ -109,6 +112,7 @@ func LoadEnv(envName string) error {
 func loadDefaultEnvVars() {
 	addEnvVar(SpecsDir, "specs")
 	addEnvVar(GaugeReportsDir, "reports")
+	addEnvVar(GaugeEnvironment, common.DefaultEnvDir)
 	addEnvVar(LogsDirectory, "logs")
 	addEnvVar(OverwriteReports, "true")
 	addEnvVar(ScreenshotOnFailure, "true")
@@ -116,18 +120,20 @@ func loadDefaultEnvVars() {
 	addEnvVar(CsvDelimiter, ",")
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
+	addEnvVar(allowFilteredParallelExecution, "false")
 	addEnvVar(useTestGA, "false")
 }
 
 func loadEnvDir(envName string) error {
 	envDirPath := filepath.Join(config.ProjectRoot, common.EnvDirectoryName, envName)
 	if !common.DirExists(envDirPath) {
-		if envName != "default" {
+		if envName != common.DefaultEnvDir {
 			return fmt.Errorf("%s environment does not exist", envName)
 		}
 		return nil
 	}
-
+	addEnvVar(GaugeEnvironment, envName)
+	logger.Debugf(true, "'%s' set to '%s'", GaugeEnvironment, envName)
 	return filepath.Walk(envDirPath, loadEnvFile)
 }
 
@@ -223,6 +229,11 @@ func convertToBool(property string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return boolValue
+}
+
+// AllowFilteredParallelExecution - feature toggle for filtered parallel execution
+var AllowFilteredParallelExecution = func() bool {
+	return convertToBool(allowFilteredParallelExecution, false)
 }
 
 // AllowScenarioDatatable -feature toggle for datatables in scenario

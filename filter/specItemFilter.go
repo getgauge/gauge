@@ -60,7 +60,7 @@ func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
 	return true
 }
 
-func newScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
+func NewScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFilterBasedOnTags {
 	return &ScenarioFilterBasedOnTags{specTags, tagExp}
 }
 
@@ -207,19 +207,23 @@ func (filter *ScenarioFilterBasedOnTags) parseTagExpression() (tagExpressionPart
 	return
 }
 
-func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) []*gauge.Specification {
+func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) ([]*gauge.Specification, []*gauge.Specification) {
 	filteredSpecs := make([]*gauge.Specification, 0)
+	otherSpecs := make([]*gauge.Specification, 0)
 	for _, spec := range specs {
 		tagValues := make([]string, 0)
 		if spec.Tags != nil {
 			tagValues = spec.Tags.Values()
 		}
-		spec.Filter(newScenarioFilterBasedOnTags(tagValues, tagExpression))
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
+		specWithFilteredItems, specWithOtherItems := spec.Filter(NewScenarioFilterBasedOnTags(tagValues, tagExpression))
+		if len(specWithFilteredItems.Scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, specWithFilteredItems)
+		}
+		if len(specWithOtherItems.Scenarios) != 0 {
+			otherSpecs = append(otherSpecs, specWithOtherItems)
 		}
 	}
-	return filteredSpecs
+	return filteredSpecs, otherSpecs
 }
 
 func validateTagExpression(tagExpression string) {
@@ -235,9 +239,9 @@ func filterSpecsByScenarioName(specs []*gauge.Specification, scenariosName []str
 	filteredSpecs := make([]*gauge.Specification, 0)
 	scenarios := filterValidScenarios(specs, scenariosName)
 	for _, spec := range specs {
-		spec.Filter(newScenarioFilterBasedOnName(scenarios))
-		if len(spec.Scenarios) != 0 {
-			filteredSpecs = append(filteredSpecs, spec)
+		s, _ := spec.Filter(newScenarioFilterBasedOnName(scenarios))
+		if len(s.Scenarios) != 0 {
+			filteredSpecs = append(filteredSpecs, s)
 		}
 	}
 	return filteredSpecs

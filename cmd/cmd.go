@@ -188,6 +188,8 @@ func initPackageFlags() {
 	validation.TableRows = rows
 	execution.NumberOfExecutionStreams = streams
 	execution.InParallel = parallel
+	execution.TagsToFilterForParallelRun = tagsToFilterForParallelRun
+	execution.Verbose = verbose
 	execution.Strategy = strategy
 	filter.ExecuteTags = tags
 	order.Sorted = sort
@@ -199,6 +201,8 @@ func initPackageFlags() {
 		execution.Strategy = execution.Eager
 	}
 	filter.ScenariosName = scenarios
+	execution.MaxRetriesCount = maxRetriesCount
+	execution.RetryOnlyTags = retryOnlyTags
 }
 
 var exit = func(err error, additionalText string) {

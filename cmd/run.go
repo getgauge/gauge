@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	"github.com/getgauge/gauge/logger"
@@ -46,7 +47,10 @@ const (
 	tagsDefault            = ""
 	rowsDefault            = ""
 	strategyDefault        = "lazy"
+	onlyDefault            = ""
 	groupDefault           = -1
+	maxRetriesCountDefault = 1
+	retryOnlyTagsDefault   = ""
 	failSafeDefault        = false
 	skipCommandSaveDefault = false
 
@@ -62,7 +66,10 @@ const (
 	rowsName            = "table-rows"
 	strategyName        = "strategy"
 	groupName           = "group"
+	maxRetriesCountName = "max-retries-count"
+	retryOnlyTagsName   = "retry-only"
 	streamsName         = "n"
+	onlyName            = "only"
 	failSafeName        = "fail-safe"
 	skipCommandSaveName = "skip-save"
 	scenarioName        = "scenario"
@@ -95,23 +102,26 @@ var (
 		},
 		DisableAutoGenTag: true,
 	}
-	verbose             bool
-	simpleConsole       bool
-	failed              bool
-	repeat              bool
-	parallel            bool
-	sort                bool
-	installPlugins      bool
-	environment         string
-	tags                string
-	rows                string
-	strategy            string
-	streams             int
-	group               int
-	failSafe            bool
-	skipCommandSave     bool
-	scenarios           []string
-	scenarioNameDefault []string
+	verbose                    bool
+	simpleConsole              bool
+	failed                     bool
+	repeat                     bool
+	parallel                   bool
+	sort                       bool
+	installPlugins             bool
+	environment                string
+	tags                       string
+	tagsToFilterForParallelRun string
+	rows                       string
+	strategy                   string
+	streams                    int
+	maxRetriesCount            int
+	retryOnlyTags              string
+	group                      int
+	failSafe                   bool
+	skipCommandSave            bool
+	scenarios                  []string
+	scenarioNameDefault        []string
 )
 
 func init() {
@@ -124,6 +134,10 @@ func init() {
 	f.StringVarP(&rows, rowsName, "r", rowsDefault, "Executes the specs and scenarios only for the selected rows. It can be specified by range as 2-4 or as list 2,4")
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
+	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
+	f.StringVarP(&retryOnlyTags, retryOnlyTagsName, "", retryOnlyTagsDefault, "Retries the specs and scenarios tagged with given tags")
+	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
+	f.MarkHidden(onlyName)
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
@@ -195,6 +209,9 @@ func installMissingPlugins(flag bool) {
 
 func execute(cmd *cobra.Command, args []string) {
 	loadEnvAndInitLogger(cmd)
+	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
+		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
+	}
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 
@@ -226,10 +243,15 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 	})
 	if repeat && len(args)+flagDiffCount > 1 {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --repeat")
-
 	}
 	if failed && len(args)+flagDiffCount > 1 {
 		return fmt.Errorf("Invalid Command. Usage: gauge run --failed")
+	}
+	if !parallel && tagsToFilterForParallelRun != "" {
+		return fmt.Errorf("Invalid Command. flag --only can be used only with --parallel")
+	}
+	if maxRetriesCount == 1 && retryOnlyTags != "" {
+		return fmt.Errorf("Invalid Command. flag --retry-only can be used only with --max-retry-count")
 	}
 	return nil
 }
