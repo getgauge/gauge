@@ -602,14 +602,14 @@ func (s *MySuite) TestToFilterScenariosByTagExpWithDuplicateTagNames(c *C) {
 
 func (s *MySuite) TestFilterTags(c *C) {
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
-	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
+	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo bar")
 	evaluateTrue := tagFilter.filterTags(specTags)
 	c.Assert(evaluateTrue, Equals, true)
 }
 
 func (s *MySuite) TestSanitizeTags(c *C) {
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
-	tagFilter := newScenarioFilterBasedOnTags(specTags, "abcd & foo bar | true")
+	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo bar | true")
 	evaluateTrue := tagFilter.filterTags(specTags)
 	c.Assert(evaluateTrue, Equals, true)
 }
