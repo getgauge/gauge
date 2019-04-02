@@ -190,6 +190,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook)
 	}
+	m.SpecExecutionEndingRequest.SpecResult = gauge.ConvertToProtoSpecResult(e.specResult)
 	e.pluginHandler.NotifyPlugins(m)
 }
 

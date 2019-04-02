@@ -102,5 +102,6 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
 	}
+	m.StepExecutionEndingRequest.StepResult = gauge.ConvertToProtoStepResult(stepResult)
 	e.pluginHandler.NotifyPlugins(m)
 }

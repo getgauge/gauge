@@ -140,6 +140,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)
 	}
+	message.ScenarioExecutionEndingRequest.ScenarioResult = gauge.ConvertToProtoScenarioResult(scenarioResult)
 	e.pluginHandler.NotifyPlugins(message)
 }
 

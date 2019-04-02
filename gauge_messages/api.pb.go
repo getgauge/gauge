@@ -18,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type APIMessage_APIMessageType int32
 
@@ -105,7 +105,7 @@ func (APIMessage_APIMessageType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_00212fb1f9d3bf1c, []int{25, 0}
 }
 
-// / Request to get the Root Directory of the project
+/// Request to get the Root Directory of the project
 type GetProjectRootRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -137,9 +137,9 @@ func (m *GetProjectRootRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetProjectRootRequest proto.InternalMessageInfo
 
-// / Response of GetProjectRootRequest.
+/// Response of GetProjectRootRequest.
 type GetProjectRootResponse struct {
-	// / Holds the absolute path of the Project Root directory.
+	/// Holds the absolute path of the Project Root directory.
 	ProjectRoot          string   `protobuf:"bytes,1,opt,name=projectRoot,proto3" json:"projectRoot,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -178,7 +178,7 @@ func (m *GetProjectRootResponse) GetProjectRoot() string {
 	return ""
 }
 
-// / Request to get the Root Directory of the Gauge installation
+/// Request to get the Root Directory of the Gauge installation
 type GetInstallationRootRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -210,9 +210,9 @@ func (m *GetInstallationRootRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetInstallationRootRequest proto.InternalMessageInfo
 
-// / Response of GetInstallationRootRequest
+/// Response of GetInstallationRootRequest
 type GetInstallationRootResponse struct {
-	// / Holds the absolute path of the Gauge installation directory
+	/// Holds the absolute path of the Gauge installation directory
 	InstallationRoot     string   `protobuf:"bytes,1,opt,name=installationRoot,proto3" json:"installationRoot,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -251,7 +251,7 @@ func (m *GetInstallationRootResponse) GetInstallationRoot() string {
 	return ""
 }
 
-// / Request to get all Steps in the project
+/// Request to get all Steps in the project
 type GetAllStepsRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -283,9 +283,9 @@ func (m *GetAllStepsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetAllStepsRequest proto.InternalMessageInfo
 
-// / Response to GetAllStepsRequest
+/// Response to GetAllStepsRequest
 type GetAllStepsResponse struct {
-	// / Holds a collection of Steps that are defined in the project.
+	/// Holds a collection of Steps that are defined in the project.
 	AllSteps             []*ProtoStepValue `protobuf:"bytes,1,rep,name=allSteps,proto3" json:"allSteps,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
 	XXX_unrecognized     []byte            `json:"-"`
@@ -324,7 +324,7 @@ func (m *GetAllStepsResponse) GetAllSteps() []*ProtoStepValue {
 	return nil
 }
 
-// / Request to get all Specs in the project
+/// Request to get all Specs in the project
 type SpecsRequest struct {
 	Specs                []string `protobuf:"bytes,1,rep,name=specs,proto3" json:"specs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -364,9 +364,9 @@ func (m *SpecsRequest) GetSpecs() []string {
 	return nil
 }
 
-// / Response to GetAllSpecsRequest
+/// Response to GetAllSpecsRequest
 type SpecsResponse struct {
-	// / Holds a collection of Spec details.
+	/// Holds a collection of Spec details.
 	Details              []*SpecsResponse_SpecDetail `protobuf:"bytes,1,rep,name=details,proto3" json:"details,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
@@ -406,9 +406,9 @@ func (m *SpecsResponse) GetDetails() []*SpecsResponse_SpecDetail {
 }
 
 type SpecsResponse_SpecDetail struct {
-	// / Holds a collection of Specs that are defined in the project.
+	/// Holds a collection of Specs that are defined in the project.
 	Spec *ProtoSpec `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
-	// / Holds a collection of parse errors present in the above spec.
+	/// Holds a collection of parse errors present in the above spec.
 	ParseErrors          []*Error `protobuf:"bytes,2,rep,name=parseErrors,proto3" json:"parseErrors,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -454,7 +454,7 @@ func (m *SpecsResponse_SpecDetail) GetParseErrors() []*Error {
 	return nil
 }
 
-// / Request to get all Concepts in the project
+/// Request to get all Concepts in the project
 type GetAllConceptsRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -486,9 +486,9 @@ func (m *GetAllConceptsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetAllConceptsRequest proto.InternalMessageInfo
 
-// / Response to GetAllConceptsResponse
+/// Response to GetAllConceptsResponse
 type GetAllConceptsResponse struct {
-	// / Holds a collection of Concepts that are defined in the project.
+	/// Holds a collection of Concepts that are defined in the project.
 	Concepts             []*ConceptInfo `protobuf:"bytes,1,rep,name=concepts,proto3" json:"concepts,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
@@ -527,13 +527,13 @@ func (m *GetAllConceptsResponse) GetConcepts() []*ConceptInfo {
 	return nil
 }
 
-// / Details of a Concept
+/// Details of a Concept
 type ConceptInfo struct {
-	// / The text that defines a concept
+	/// The text that defines a concept
 	StepValue *ProtoStepValue `protobuf:"bytes,1,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
-	// / The absolute path to the file that contains the Concept
+	/// The absolute path to the file that contains the Concept
 	Filepath string `protobuf:"bytes,2,opt,name=filepath,proto3" json:"filepath,omitempty"`
-	// / The line number in the file where the concept is defined.
+	/// The line number in the file where the concept is defined.
 	LineNumber           int32    `protobuf:"varint,3,opt,name=lineNumber,proto3" json:"lineNumber,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -586,11 +586,11 @@ func (m *ConceptInfo) GetLineNumber() int32 {
 	return 0
 }
 
-// / Request to get a Step Value.
+/// Request to get a Step Value.
 type GetStepValueRequest struct {
-	// / The text of the Step.
+	/// The text of the Step.
 	StepText string `protobuf:"bytes,1,opt,name=stepText,proto3" json:"stepText,omitempty"`
-	// / Flag to indicate if the Step has an inline table.
+	/// Flag to indicate if the Step has an inline table.
 	HasInlineTable       bool     `protobuf:"varint,2,opt,name=hasInlineTable,proto3" json:"hasInlineTable,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -636,9 +636,9 @@ func (m *GetStepValueRequest) GetHasInlineTable() bool {
 	return false
 }
 
-// / Response to GetStepValueRequest
+/// Response to GetStepValueRequest
 type GetStepValueResponse struct {
-	// / The Step corresponding to the request provided.
+	/// The Step corresponding to the request provided.
 	StepValue            *ProtoStepValue `protobuf:"bytes,1,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
@@ -677,9 +677,9 @@ func (m *GetStepValueResponse) GetStepValue() *ProtoStepValue {
 	return nil
 }
 
-// / Request to get the location of language plugin's Lib directory
+/// Request to get the location of language plugin's Lib directory
 type GetLanguagePluginLibPathRequest struct {
-	// / The language to locate the lib directory for.
+	/// The language to locate the lib directory for.
 	Language             string   `protobuf:"bytes,1,opt,name=language,proto3" json:"language,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -718,9 +718,9 @@ func (m *GetLanguagePluginLibPathRequest) GetLanguage() string {
 	return ""
 }
 
-// / Response to GetLanguagePluginLibPathRequest
+/// Response to GetLanguagePluginLibPathRequest
 type GetLanguagePluginLibPathResponse struct {
-	// / Absolute path to the Lib directory of the language.
+	/// Absolute path to the Lib directory of the language.
 	Path                 string   `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -759,9 +759,9 @@ func (m *GetLanguagePluginLibPathResponse) GetPath() string {
 	return ""
 }
 
-// / A generic failure response
+/// A generic failure response
 type ErrorResponse struct {
-	// / Actual error message
+	/// Actual error message
 	Error                string   `protobuf:"bytes,1,opt,name=error,proto3" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -800,11 +800,11 @@ func (m *ErrorResponse) GetError() string {
 	return ""
 }
 
-// / Request to perform a Refactor
+/// Request to perform a Refactor
 type PerformRefactoringRequest struct {
-	// / Step to refactor
+	/// Step to refactor
 	OldStep string `protobuf:"bytes,1,opt,name=oldStep,proto3" json:"oldStep,omitempty"`
-	// / Change to be made
+	/// Change to be made
 	NewStep              string   `protobuf:"bytes,2,opt,name=newStep,proto3" json:"newStep,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -850,13 +850,13 @@ func (m *PerformRefactoringRequest) GetNewStep() string {
 	return ""
 }
 
-// / Response to PerformRefactoringRequest
+/// Response to PerformRefactoringRequest
 type PerformRefactoringResponse struct {
-	// / Flag indicating Success
+	/// Flag indicating Success
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	// / Error message if the refactoring was unsuccessful.
+	/// Error message if the refactoring was unsuccessful.
 	Errors []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
-	// / Collection of files that were changed as part of the Refactoring.
+	/// Collection of files that were changed as part of the Refactoring.
 	FilesChanged         []string `protobuf:"bytes,3,rep,name=filesChanged,proto3" json:"filesChanged,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -909,17 +909,17 @@ func (m *PerformRefactoringResponse) GetFilesChanged() []string {
 	return nil
 }
 
-// / Request to perform Extract to Concept refactoring
+/// Request to perform Extract to Concept refactoring
 type ExtractConceptRequest struct {
-	// / The Concept name given by the user
+	/// The Concept name given by the user
 	ConceptName *Step `protobuf:"bytes,1,opt,name=conceptName,proto3" json:"conceptName,omitempty"`
-	// / steps to extract
+	/// steps to extract
 	Steps []*Step `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
-	// / Flag indicating if refactoring should be done across project
+	/// Flag indicating if refactoring should be done across project
 	ChangeAcrossProject bool `protobuf:"varint,3,opt,name=changeAcrossProject,proto3" json:"changeAcrossProject,omitempty"`
-	// / The concept filename in which extracted concept will be added
+	/// The concept filename in which extracted concept will be added
 	ConceptFileName string `protobuf:"bytes,4,opt,name=conceptFileName,proto3" json:"conceptFileName,omitempty"`
-	// / Info related to selected text, only if changeAcrossProject is false
+	/// Info related to selected text, only if changeAcrossProject is false
 	SelectedTextInfo     *TextInfo `protobuf:"bytes,5,opt,name=selectedTextInfo,proto3" json:"selectedTextInfo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
 	XXX_unrecognized     []byte    `json:"-"`
@@ -987,9 +987,9 @@ func (m *ExtractConceptRequest) GetSelectedTextInfo() *TextInfo {
 }
 
 type TextInfo struct {
-	// / The filename from where concept is being extracted
+	/// The filename from where concept is being extracted
 	FileName string `protobuf:"bytes,1,opt,name=fileName,proto3" json:"fileName,omitempty"`
-	// / storing the starting and ending line number of selected text
+	/// storing the starting and ending line number of selected text
 	StartingLineNo       int32    `protobuf:"varint,2,opt,name=startingLineNo,proto3" json:"startingLineNo,omitempty"`
 	EndLineNo            int32    `protobuf:"varint,3,opt,name=endLineNo,proto3" json:"endLineNo,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1044,11 +1044,11 @@ func (m *TextInfo) GetEndLineNo() int32 {
 }
 
 type Step struct {
-	// / name of the step
+	/// name of the step
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// /  table present in step as parameter
+	///  table present in step as parameter
 	Table string `protobuf:"bytes,2,opt,name=table,proto3" json:"table,omitempty"`
-	// / name of table in concept heading, if it comes as a param to concept
+	/// name of table in concept heading, if it comes as a param to concept
 	ParamTableName       string   `protobuf:"bytes,3,opt,name=paramTableName,proto3" json:"paramTableName,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1101,13 +1101,13 @@ func (m *Step) GetParamTableName() string {
 	return ""
 }
 
-// / Response to perform Extract to Concept refactoring
+/// Response to perform Extract to Concept refactoring
 type ExtractConceptResponse struct {
-	// / Flag indicating Success
+	/// Flag indicating Success
 	IsSuccess bool `protobuf:"varint,1,opt,name=isSuccess,proto3" json:"isSuccess,omitempty"`
-	// / Error message if the refactoring was unsuccessful.
+	/// Error message if the refactoring was unsuccessful.
 	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	// / Collection of files that were changed as part of the Refactoring.
+	/// Collection of files that were changed as part of the Refactoring.
 	FilesChanged         []string `protobuf:"bytes,3,rep,name=filesChanged,proto3" json:"filesChanged,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1160,9 +1160,9 @@ func (m *ExtractConceptResponse) GetFilesChanged() []string {
 	return nil
 }
 
-// / Request to format spec files
+/// Request to format spec files
 type FormatSpecsRequest struct {
-	// / Specs to be formatted
+	/// Specs to be formatted
 	Specs                []string `protobuf:"bytes,1,rep,name=specs,proto3" json:"specs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1201,11 +1201,11 @@ func (m *FormatSpecsRequest) GetSpecs() []string {
 	return nil
 }
 
-// / Response on formatting spec files
+/// Response on formatting spec files
 type FormatSpecsResponse struct {
-	// / Errors occurred on formatting
+	/// Errors occurred on formatting
 	Errors []string `protobuf:"bytes,1,rep,name=errors,proto3" json:"errors,omitempty"`
-	// / Warnings occurred on formatting
+	/// Warnings occurred on formatting
 	Warnings             []string `protobuf:"bytes,2,rep,name=warnings,proto3" json:"warnings,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1251,7 +1251,7 @@ func (m *FormatSpecsResponse) GetWarnings() []string {
 	return nil
 }
 
-// / Response when a API message request is not supported.
+/// Response when a API message request is not supported.
 type UnsupportedApiMessageResponse struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1283,57 +1283,57 @@ func (m *UnsupportedApiMessageResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_UnsupportedApiMessageResponse proto.InternalMessageInfo
 
-// / A generic message composing of all possible operations.
-// / One of the Request/Response fields will have value, depending on the MessageType set.
+/// A generic message composing of all possible operations.
+/// One of the Request/Response fields will have value, depending on the MessageType set.
 type APIMessage struct {
-	// / Type of API call being made
+	/// Type of API call being made
 	MessageType APIMessage_APIMessageType `protobuf:"varint,1,opt,name=messageType,proto3,enum=gauge.messages.APIMessage_APIMessageType" json:"messageType,omitempty"`
-	// / A unique id to represent this message. A response to the message should copy over this value.
-	// / This is used to synchronize messages & responses
+	/// A unique id to represent this message. A response to the message should copy over this value.
+	/// This is used to synchronize messages & responses
 	MessageId int64 `protobuf:"varint,2,opt,name=messageId,proto3" json:"messageId,omitempty"`
-	// / [GetProjectRootRequest](#gauge.messages.GetProjectRootRequest)
+	/// [GetProjectRootRequest](#gauge.messages.GetProjectRootRequest)
 	ProjectRootRequest *GetProjectRootRequest `protobuf:"bytes,3,opt,name=projectRootRequest,proto3" json:"projectRootRequest,omitempty"`
-	// / [GetProjectRootResponse](#gauge.messages.GetProjectRootResponse)
+	/// [GetProjectRootResponse](#gauge.messages.GetProjectRootResponse)
 	ProjectRootResponse *GetProjectRootResponse `protobuf:"bytes,4,opt,name=projectRootResponse,proto3" json:"projectRootResponse,omitempty"`
-	// / [GetInstallationRootRequest](#gauge.messages.GetInstallationRootRequest)
+	/// [GetInstallationRootRequest](#gauge.messages.GetInstallationRootRequest)
 	InstallationRootRequest *GetInstallationRootRequest `protobuf:"bytes,5,opt,name=installationRootRequest,proto3" json:"installationRootRequest,omitempty"`
-	// / [GetInstallationRootResponse](#gauge.messages.GetInstallationRootResponse)
+	/// [GetInstallationRootResponse](#gauge.messages.GetInstallationRootResponse)
 	InstallationRootResponse *GetInstallationRootResponse `protobuf:"bytes,6,opt,name=installationRootResponse,proto3" json:"installationRootResponse,omitempty"`
-	// / [GetAllStepsRequest](#gauge.messages.GetAllStepsRequest)
+	/// [GetAllStepsRequest](#gauge.messages.GetAllStepsRequest)
 	AllStepsRequest *GetAllStepsRequest `protobuf:"bytes,7,opt,name=allStepsRequest,proto3" json:"allStepsRequest,omitempty"`
-	// / [GetAllStepsResponse](#gauge.messages.GetAllStepsResponse)
+	/// [GetAllStepsResponse](#gauge.messages.GetAllStepsResponse)
 	AllStepsResponse *GetAllStepsResponse `protobuf:"bytes,8,opt,name=allStepsResponse,proto3" json:"allStepsResponse,omitempty"`
-	// / [GetAllSpecsRequest](#gauge.messages.GetAllSpecsRequest)
+	/// [GetAllSpecsRequest](#gauge.messages.GetAllSpecsRequest)
 	SpecsRequest *SpecsRequest `protobuf:"bytes,9,opt,name=specsRequest,proto3" json:"specsRequest,omitempty"`
-	// / [GetAllSpecsResponse](#gauge.messages.GetAllSpecsResponse)
+	/// [GetAllSpecsResponse](#gauge.messages.GetAllSpecsResponse)
 	SpecsResponse *SpecsResponse `protobuf:"bytes,10,opt,name=specsResponse,proto3" json:"specsResponse,omitempty"`
-	// / [GetStepValueRequest](#gauge.messages.GetStepValueRequest)
+	/// [GetStepValueRequest](#gauge.messages.GetStepValueRequest)
 	StepValueRequest *GetStepValueRequest `protobuf:"bytes,11,opt,name=stepValueRequest,proto3" json:"stepValueRequest,omitempty"`
-	// / [GetStepValueResponse](#gauge.messages.GetStepValueResponse)
+	/// [GetStepValueResponse](#gauge.messages.GetStepValueResponse)
 	StepValueResponse *GetStepValueResponse `protobuf:"bytes,12,opt,name=stepValueResponse,proto3" json:"stepValueResponse,omitempty"`
-	// / [GetLanguagePluginLibPathRequest](#gauge.messages.GetLanguagePluginLibPathRequest)
+	/// [GetLanguagePluginLibPathRequest](#gauge.messages.GetLanguagePluginLibPathRequest)
 	LibPathRequest *GetLanguagePluginLibPathRequest `protobuf:"bytes,13,opt,name=libPathRequest,proto3" json:"libPathRequest,omitempty"`
-	// / [GetLanguagePluginLibPathResponse](#gauge.messages.GetLanguagePluginLibPathResponse)
+	/// [GetLanguagePluginLibPathResponse](#gauge.messages.GetLanguagePluginLibPathResponse)
 	LibPathResponse *GetLanguagePluginLibPathResponse `protobuf:"bytes,14,opt,name=libPathResponse,proto3" json:"libPathResponse,omitempty"`
-	// / [ErrorResponse](#gauge.messages.ErrorResponse)
+	/// [ErrorResponse](#gauge.messages.ErrorResponse)
 	Error *ErrorResponse `protobuf:"bytes,15,opt,name=error,proto3" json:"error,omitempty"`
-	// / [GetAllConceptsRequest](#gauge.messages.GetAllConceptsRequest)
+	/// [GetAllConceptsRequest](#gauge.messages.GetAllConceptsRequest)
 	AllConceptsRequest *GetAllConceptsRequest `protobuf:"bytes,16,opt,name=allConceptsRequest,proto3" json:"allConceptsRequest,omitempty"`
-	// / [GetAllConceptsResponse](#gauge.messages.GetAllConceptsResponse)
+	/// [GetAllConceptsResponse](#gauge.messages.GetAllConceptsResponse)
 	AllConceptsResponse *GetAllConceptsResponse `protobuf:"bytes,17,opt,name=allConceptsResponse,proto3" json:"allConceptsResponse,omitempty"`
-	// / [PerformRefactoringRequest](#gauge.messages.PerformRefactoringRequest)
+	/// [PerformRefactoringRequest](#gauge.messages.PerformRefactoringRequest)
 	PerformRefactoringRequest *PerformRefactoringRequest `protobuf:"bytes,18,opt,name=performRefactoringRequest,proto3" json:"performRefactoringRequest,omitempty"`
-	// / [PerformRefactoringResponse](#gauge.messages.PerformRefactoringResponse)
+	/// [PerformRefactoringResponse](#gauge.messages.PerformRefactoringResponse)
 	PerformRefactoringResponse *PerformRefactoringResponse `protobuf:"bytes,19,opt,name=performRefactoringResponse,proto3" json:"performRefactoringResponse,omitempty"`
-	// / [ExtractConceptRequest](#gauge.messages.ExtractConceptRequest)
+	/// [ExtractConceptRequest](#gauge.messages.ExtractConceptRequest)
 	ExtractConceptRequest *ExtractConceptRequest `protobuf:"bytes,20,opt,name=extractConceptRequest,proto3" json:"extractConceptRequest,omitempty"`
-	// / [ExtractConceptResponse](#gauge.messages.ExtractConceptResponse)
+	/// [ExtractConceptResponse](#gauge.messages.ExtractConceptResponse)
 	ExtractConceptResponse *ExtractConceptResponse `protobuf:"bytes,21,opt,name=extractConceptResponse,proto3" json:"extractConceptResponse,omitempty"`
-	// / [FormatSpecsRequest] (#gauge.messages.FormatSpecsRequest)
+	/// [FormatSpecsRequest] (#gauge.messages.FormatSpecsRequest)
 	FormatSpecsRequest *FormatSpecsRequest `protobuf:"bytes,22,opt,name=formatSpecsRequest,proto3" json:"formatSpecsRequest,omitempty"`
-	// / [FormatSpecsResponse] (#gauge.messages.FormatSpecsResponse)
+	/// [FormatSpecsResponse] (#gauge.messages.FormatSpecsResponse)
 	FormatSpecsResponse *FormatSpecsResponse `protobuf:"bytes,23,opt,name=formatSpecsResponse,proto3" json:"formatSpecsResponse,omitempty"`
-	// / [UnsupportedApiMessageResponse] (#gauge.messages.UnsupportedApiMessageResponse)
+	/// [UnsupportedApiMessageResponse] (#gauge.messages.UnsupportedApiMessageResponse)
 	UnsupportedApiMessageResponse *UnsupportedApiMessageResponse `protobuf:"bytes,24,opt,name=unsupportedApiMessageResponse,proto3" json:"unsupportedApiMessageResponse,omitempty"`
 	XXX_NoUnkeyedLiteral          struct{}                       `json:"-"`
 	XXX_unrecognized              []byte                         `json:"-"`
