@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -222,6 +224,41 @@ type LspServiceServer interface {
 	GetStepName(context.Context, *StepNameRequest) (*StepNameResponse, error)
 	GetGlobPatterns(context.Context, *Empty) (*ImplementationFileGlobPatternResponse, error)
 	KillProcess(context.Context, *KillProcessRequest) (*Empty, error)
+}
+
+// UnimplementedLspServiceServer can be embedded to have forward compatible implementations.
+type UnimplementedLspServiceServer struct {
+}
+
+func (*UnimplementedLspServiceServer) GetStepNames(ctx context.Context, req *StepNamesRequest) (*StepNamesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepNames not implemented")
+}
+func (*UnimplementedLspServiceServer) CacheFile(ctx context.Context, req *CacheFileRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CacheFile not implemented")
+}
+func (*UnimplementedLspServiceServer) GetStepPositions(ctx context.Context, req *StepPositionsRequest) (*StepPositionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepPositions not implemented")
+}
+func (*UnimplementedLspServiceServer) GetImplementationFiles(ctx context.Context, req *Empty) (*ImplementationFileListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImplementationFiles not implemented")
+}
+func (*UnimplementedLspServiceServer) ImplementStub(ctx context.Context, req *StubImplementationCodeRequest) (*FileDiff, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImplementStub not implemented")
+}
+func (*UnimplementedLspServiceServer) ValidateStep(ctx context.Context, req *StepValidateRequest) (*StepValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateStep not implemented")
+}
+func (*UnimplementedLspServiceServer) Refactor(ctx context.Context, req *RefactorRequest) (*RefactorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Refactor not implemented")
+}
+func (*UnimplementedLspServiceServer) GetStepName(ctx context.Context, req *StepNameRequest) (*StepNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepName not implemented")
+}
+func (*UnimplementedLspServiceServer) GetGlobPatterns(ctx context.Context, req *Empty) (*ImplementationFileGlobPatternResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGlobPatterns not implemented")
+}
+func (*UnimplementedLspServiceServer) KillProcess(ctx context.Context, req *KillProcessRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KillProcess not implemented")
 }
 
 func RegisterLspServiceServer(s *grpc.Server, srv LspServiceServer) {

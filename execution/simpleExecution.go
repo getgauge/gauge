@@ -156,6 +156,8 @@ func (e *simpleExecution) notifyBeforeSuite() {
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
+	m.ExecutionStartingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *simpleExecution) notifyAfterSuite() {
@@ -167,6 +169,8 @@ func (e *simpleExecution) notifyAfterSuite() {
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}
+	m.ExecutionEndingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
