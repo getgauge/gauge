@@ -183,8 +183,9 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
-
-	return installSuccess("")
+	installResult := installSuccess("")
+	installResult.Version = gp.Version
+	return installResult
 }
 
 func getPluginInstallDir(pluginID, pluginDirName string) (string, error) {
