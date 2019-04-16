@@ -461,6 +461,25 @@ func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 	c.Assert(nameCells[2].CellType, Equals, gauge.Static)
 }
 
+func (s *MySuite) TestSpecWithStepUsingInlineTableWhichUsagesDynamicParamFromScenarioDataTable(c *C) {
+	env.AllowScenarioDatatable = func() bool { return true }
+	specText := `# Specification heading
+
+## Scenario Heading
+
+	|name   |
+	|-------|
+	|someone|
+
+* step with
+	|id    |
+	|------|
+	|<name>|
+`
+	_, _, err := new(SpecParser).Parse(specText, gauge.NewConceptDictionary(), "foo.spec")
+	c.Assert(err, IsNil)
+}
+
 func (s *MySuite) TestStepWithInlineTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},

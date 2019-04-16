@@ -70,6 +70,12 @@ const (
 	executionStatusFile = "executionStatus.json"
 )
 
+// Count of iterations
+var MaxRetriesCount int
+
+// Tags to filter specs/scenarios to retry
+var RetryOnlyTags string
+
 // NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
 var NumberOfExecutionStreams int
 
@@ -282,6 +288,9 @@ func printExecutionResult(suiteResult *result.SuiteResult, isParsingOk bool) int
 }
 
 func validateFlags() error {
+	if MaxRetriesCount < 1 {
+		return fmt.Errorf("invalid input(%s) to --max-retries-count flag", strconv.Itoa(MaxRetriesCount))
+	}
 	if !InParallel {
 		return nil
 	}

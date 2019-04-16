@@ -41,11 +41,11 @@ var (
 		Long:    `Run as a daemon.`,
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
-			loadEnvAndInitLogger(cmd)
 			os.Setenv(isDaemon, "true")
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
+			loadEnvAndInitLogger(cmd)
 			manifest, _ := manifest.ProjectManifest()
 			language := manifest.Language
 			if lsp {

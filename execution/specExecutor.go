@@ -22,7 +22,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
+  
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -280,25 +281,48 @@ func (e *specExecutor) executeScenarios(scenarios []*gauge.Scenario) ([]result.R
 }
 
 func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.ScenarioResult, error) {
-	e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
-		Name:     scenario.Heading.Value,
-		Tags:     getTagValue(scenario.Tags),
-		IsFailed: false,
+	var scenarioResult *result.ScenarioResult
+
+	shouldRetry := RetryOnlyTags == ""
+
+	if !shouldRetry {
+		spec := e.specification
+		tagValues := make([]string, 0)
+		if spec.Tags != nil {
+			tagValues = spec.Tags.Values()
+		}
+
+		specFilter := filter.NewScenarioFilterBasedOnTags(tagValues, RetryOnlyTags)
+
+		shouldRetry = !(specFilter.Filter(scenario))
 	}
 
-	scenarioResult := &result.ScenarioResult{
-		ProtoScenario:             gauge.NewProtoScenario(scenario),
-		ScenarioDataTableRow:      gauge.ConvertToProtoTable(&scenario.ScenarioDataTableRow),
-		ScenarioDataTableRowIndex: scenario.ScenarioDataTableRowIndex,
-		ScenarioDataTable:         gauge.ConvertToProtoTable(&scenario.DataTable.Table),
-	}
-	if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
-		return nil, err
-	}
+	for i := 0; i < MaxRetriesCount; i++ {
+		e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
+			Name:     scenario.Heading.Value,
+			Tags:     getTagValue(scenario.Tags),
+			IsFailed: false,
+		}
 
-	e.scenarioExecutor.execute(scenario, scenarioResult)
-	if scenarioResult.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
-		e.specResult.ScenarioSkippedCount++
+		scenarioResult = &result.ScenarioResult{
+			ProtoScenario:             gauge.NewProtoScenario(scenario),
+			ScenarioDataTableRow:      gauge.ConvertToProtoTable(&scenario.ScenarioDataTableRow),
+			ScenarioDataTableRowIndex: scenario.ScenarioDataTableRowIndex,
+			ScenarioDataTable:         gauge.ConvertToProtoTable(&scenario.DataTable.Table),
+		}
+		if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
+			return nil, err
+		}
+
+		e.scenarioExecutor.execute(scenario, scenarioResult)
+
+		if scenarioResult.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
+			e.specResult.ScenarioSkippedCount++
+		}
+
+		if !(shouldRetry && scenarioResult.GetFailed()) {
+			break
+		}
 	}
 	return scenarioResult, nil
 }
