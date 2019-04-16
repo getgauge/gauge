@@ -149,7 +149,7 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 
 func (e *simpleExecution) notifyBeforeSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
-		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{}}
+		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := e.executeHook(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshots = res.Screenshots

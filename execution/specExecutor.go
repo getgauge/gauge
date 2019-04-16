@@ -18,11 +18,12 @@
 package execution
 
 import (
+	"path/filepath"
 	"fmt"
-
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -52,6 +53,10 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler,
 			FileName: s.FileName,
 			IsFailed: false,
 			Tags:     getTagValue(s.Tags)},
+		ProjectName : filepath.Base(config.ProjectRoot),
+		NumberOfExecutionStreams: int32(NumberOfExecutionStreams),
+		RunnerId : int32(stream),
+		ExecutionArgs: gauge.ConvertToProtoExecutionArg(ExecutionArgs),
 	}
 
 	return &specExecutor{
@@ -177,6 +182,8 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook)
 	}
+	m.SpecExecutionStartingRequest.SpecResult = gauge.ConvertToProtoSpecResult(e.specResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *specExecutor) notifyAfterSpecHook() {

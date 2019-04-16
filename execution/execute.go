@@ -84,6 +84,8 @@ var Verbose bool
 // MachineReadable indicates that the output is in json format
 var MachineReadable bool
 
+var ExecutionArgs []*gauge.ExecutionArg
+
 type suiteExecutor interface {
 	run() *result.SuiteResult
 }

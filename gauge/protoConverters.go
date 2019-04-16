@@ -18,6 +18,8 @@
 package gauge
 
 import (
+	"time"
+
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 )
@@ -203,17 +205,23 @@ func ConvertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.Pro
 
 func ConvertToProtoScenarioResult(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoScenarioResult {
 	return &gauge_messages.ProtoScenarioResult{
-		ProtoScenario:             scenarioResult.ProtoScenario,
-		ScenarioDataTable:         scenarioResult.ScenarioDataTable,
-		ScenarioDataTableRow:      scenarioResult.ScenarioDataTableRow,
-		ScenarioDataTableRowIndex: int64(scenarioResult.ScenarioDataTableRowIndex),
+		ProtoItem: &gauge_messages.ProtoItem{
+			ItemType: gauge_messages.ProtoItem_Scenario,
+			Scenario: scenarioResult.ProtoScenario,
+		},
+		ExecutionTime: scenarioResult.ExecTime(),
+		Timestamp:     time.Now().Format(time.RFC3339),
 	}
 }
 
 func ConvertToProtoStepResult(stepResult *result.StepResult) *gauge_messages.ProtoStepResult {
 	return &gauge_messages.ProtoStepResult{
-		ProtoStep:  stepResult.ProtoStep,
-		StepFailed: stepResult.StepFailed,
+		ProtoItem: &gauge_messages.ProtoItem{
+			ItemType: gauge_messages.ProtoItem_Step,
+			Step:     stepResult.ProtoStep,
+		},
+		ExecutionTime: stepResult.ExecTime(),
+		Timestamp:     time.Now().Format(time.RFC3339),
 	}
 }
 
@@ -235,6 +243,7 @@ func convertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.Pro
 		Skipped:              specResult.Skipped,
 		ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
 		Errors:               specResult.Errors,
+		Timestamp:     		  time.Now().Format(time.RFC3339),
 	}
 }
 
@@ -306,4 +315,15 @@ func getTags(tags *Tags) []string {
 	} else {
 		return make([]string, 0)
 	}
+}
+
+func ConvertToProtoExecutionArg(args []*ExecutionArg) []*gauge_messages.ExecutionArg {
+	execArgs := []*gauge_messages.ExecutionArg{}
+	for _, arg := range args {
+		execArgs = append(execArgs, &gauge_messages.ExecutionArg{
+			FlagName:  arg.Name,
+			FlagValue: arg.Value,
+		})
+	}
+	return execArgs
 }
