@@ -97,7 +97,7 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{
 				Scenario:         protoScenario,
 				TableRowIndex:    int32(index),
-				ScenarioTableRow: eachRow[scenarioIndex].(ScenarioResult).ScenarioDataTableRow,
+				ScenarioTableRow: eachRow[scenarioIndex].(*ScenarioResult).ScenarioDataTableRow,
 			}
 			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario}
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
