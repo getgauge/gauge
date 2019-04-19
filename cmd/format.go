@@ -29,7 +29,7 @@ var formatCmd = &cobra.Command{
 	Long:    `Formats the specified spec files.`,
 	Example: "  gauge format specs/",
 	Run: func(cmd *cobra.Command, args []string) {
-		loadEnvAndInitLogger(cmd)
+		loadEnvAndReinitLogger(cmd)
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}

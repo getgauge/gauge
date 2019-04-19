@@ -7,11 +7,9 @@ go:
 addons:
   apt:
     packages:
-      - oracle-java8-set-default
+      - default-jdk
 env:
   - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then export JAVA_HOME="/usr/lib/jvm/java-8-oracle"; fi
 script:
   - go run build/make.go
   - go run build/make.go --test
