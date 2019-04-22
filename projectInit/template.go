@@ -24,11 +24,11 @@ func ListTemplates() {
 	templatesURL := config.GaugeTemplatesUrl()
 	_, err := common.UrlExists(templatesURL)
 	if err != nil {
-		logger.Fatalf(true, "Gauge templates URL is not reachable: %s", err.Error())
+		logger.Fatalf(true, "Gauge templates URL %s is not reachable: %s", templatesURL, err.Error())
 	}
 	res, err := http.Get(templatesURL)
 	if err != nil {
-		logger.Fatalf(true, "Error occurred while downloading templates list: %s", err.Error())
+		logger.Fatalf(true, "Error occurred while downloading templates list from %s: %s", templatesURL, err.Error())
 	}
 	defer res.Body.Close()
 	if res.StatusCode >= 400 {

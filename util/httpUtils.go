@@ -24,6 +24,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/getgauge/gauge/logger"
+
 	"github.com/getgauge/common"
 )
 
@@ -63,6 +65,7 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 
+	logger.Debugf(true, "Downloading %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err

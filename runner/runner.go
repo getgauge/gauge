@@ -177,6 +177,7 @@ func ExecuteInitHookForRunner(language string) error {
 
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
 	runnerDir := filepath.Dir(languageJSONFilePath)
+	logger.Debugf(true, "Running init hook command => %s", command)
 	cmd, err := common.ExecuteCommand(command, runnerDir, os.Stdout, os.Stderr)
 
 	if err != nil {
