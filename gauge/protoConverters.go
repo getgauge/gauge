@@ -312,9 +312,8 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 func getTags(tags *Tags) []string {
 	if tags != nil {
 		return tags.Values()
-	} else {
-		return make([]string, 0)
 	}
+	return make([]string, 0)
 }
 
 func ConvertToProtoExecutionArg(args []*ExecutionArg) []*gauge_messages.ExecutionArg {

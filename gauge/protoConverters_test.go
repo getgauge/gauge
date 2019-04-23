@@ -205,3 +205,22 @@ func compareTable(table1 *gauge_messages.ProtoTable, table2 *gauge_messages.Prot
 func compareTableRow(row1 *gauge_messages.ProtoTableRow, row2 *gauge_messages.ProtoTableRow, c *C) {
 	c.Assert(row1.GetCells(), DeepEquals, row2.GetCells())
 }
+
+func (s *MySuite) TestProtoConvertingExecutionArgs(c *C) {
+	executionArgs := []*ExecutionArg{}
+	executionArg := &ExecutionArg {
+		Name: "parallel",
+		Value: []string{"true"},
+	}
+	executionArgs = append(executionArgs, executionArg)
+	actual := ConvertToProtoExecutionArg(executionArgs)
+
+	expectedArgs := []*gauge_messages.ExecutionArg{}
+	expectedArg := &gauge_messages.ExecutionArg {
+		FlagName: executionArgs[0].Name,
+		FlagValue: executionArgs[0].Value,
+	}
+	expectedArgs = append(expectedArgs, expectedArg)
+
+	c.Assert(actual, DeepEquals, expectedArgs)
+}

@@ -99,7 +99,7 @@ var (
 			} else if failed {
 				executeFailed(cmd)
 			} else {
-				addFlagFromCmd(cmd)
+				addFlagsToExecutionArgs(cmd.Flags())
 				execute(cmd, args)
 			}
 		},
@@ -204,8 +204,8 @@ func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
 	return f
 }
 
-func addFlagFromCmd(cmd *cobra.Command)  {
-	cmd.Flags().Visit(func(flag *pflag.Flag) {
+func addFlagsToExecutionArgs(flags *pflag.FlagSet)  {
+	flags.Visit(func(flag *pflag.Flag) {
 		execution.ExecutionArgs = append(execution.ExecutionArgs, &gauge.ExecutionArg{
 			Name:  flag.Name,
 			Value: []string{flag.Value.String()},
