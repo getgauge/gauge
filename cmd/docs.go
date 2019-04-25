@@ -32,7 +32,7 @@ var docsCmd = &cobra.Command{
 	Long:    `Generate documentation using specified plugin.`,
 	Example: "  gauge docs spectacle specs/",
 	Run: func(cmd *cobra.Command, args []string) {
-		loadEnvAndInitLogger(cmd)
+		loadEnvAndReinitLogger(cmd)
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}

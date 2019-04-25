@@ -64,6 +64,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			initLogger(cmd.Name())
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
@@ -215,7 +216,7 @@ var exit = func(err error, additionalText string) {
 	os.Exit(0)
 }
 
-func loadEnvAndInitLogger(cmd *cobra.Command) {
+func loadEnvAndReinitLogger(cmd *cobra.Command) {
 	if e := env.LoadEnv(environment); e != nil {
 		logger.Fatalf(true, e.Error())
 	}

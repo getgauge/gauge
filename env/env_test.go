@@ -231,5 +231,5 @@ func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
 	e := LoadEnv("foo")
 
 	c.Assert(e, Equals, nil)
-	c.Assert(CurrentEnvironments(), Equals, "default,foo")
+	c.Assert(CurrentEnvironments(), Equals, "foo")
 }

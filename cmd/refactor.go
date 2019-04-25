@@ -34,7 +34,7 @@ var refactorCmd = &cobra.Command{
 	Long:    `Refactor steps.`,
 	Example: `  gauge refactor "old step" "new step"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadEnvAndInitLogger(cmd)
+		loadEnvAndReinitLogger(cmd)
 		if len(args) < 2 {
 			exit(fmt.Errorf("Refactor command needs at least two arguments."), cmd.UsageString())
 		}

@@ -183,8 +183,9 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
-
-	return installSuccess("")
+	installResult := installSuccess("")
+	installResult.Version = gp.Version
+	return installResult
 }
 
 func getPluginInstallDir(pluginID, pluginDirName string) (string, error) {
@@ -261,7 +262,6 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	logger.Debugf(true, "Downloading %s", filepath.Base(downloadLink))
 	pluginZip, err := util.Download(downloadLink, tempDir, "", silent)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
@@ -421,11 +421,11 @@ func constructPluginInstallJSONURL(p string) (string, InstallResult) {
 	if repoURL == "" {
 		return "", installError(fmt.Errorf("Could not find gauge repository url from configuration."))
 	}
-	JSONURL := fmt.Sprintf("%s/%s", repoURL, p)
+	jsonURL := fmt.Sprintf("%s/%s", repoURL, p)
 	if qp := plugin.QueryParams(); qp != "" {
-		JSONURL += qp
+		jsonURL += qp
 	}
-	return JSONURL, installSuccess("")
+	return jsonURL, installSuccess("")
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {
@@ -517,8 +517,8 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		return true
 	}
 	if !result.Success {
-		if (result.Version != "") {
-		    logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
+		if result.Version != "" {
+			logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
 		} else {
 			logger.Errorf(true, "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
 		}
@@ -527,7 +527,7 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		}
 		return false
 	}
-	if (result.Version != "") {
+	if result.Version != "" {
 		logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
 	} else {
 		logger.Infof(true, "Successfully installed plugin '%s'", pluginName)

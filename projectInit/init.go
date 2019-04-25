@@ -38,7 +38,9 @@ type templateMetadata struct {
 func initializeTemplate(templateName string) error {
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
-	unzippedTemplate, err := util.DownloadAndUnzip(getTemplateURL(templateName), tempDir)
+	templateURL := getTemplateURL(templateName)
+	logger.Debugf(true, "Initializing template from %s", templateURL)
+	unzippedTemplate, err := util.DownloadAndUnzip(templateURL, tempDir)
 	if err != nil {
 		return err
 	}
@@ -71,6 +73,7 @@ func initializeTemplate(templateName string) error {
 	}
 
 	if metadata.PostInstallCmd != "" {
+		logger.Debugf(true, "Running post install command %s", metadata.PostInstallCmd)
 		command := strings.Fields(metadata.PostInstallCmd)
 		cmd, err := common.ExecuteSystemCommand(command, wd, os.Stdout, os.Stderr)
 		if err != nil {
@@ -84,7 +87,7 @@ func initializeTemplate(templateName string) error {
 			return err
 		}
 	}
-	fmt.Printf("Successfully initialized the project. %s\n", metadata.PostInstallMsg)
+	logger.Infof(true, "Successfully initialized the project. %s\n", metadata.PostInstallMsg)
 
 	util.Remove(metadataFile)
 	return nil
