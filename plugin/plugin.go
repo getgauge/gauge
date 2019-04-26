@@ -79,7 +79,7 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
 	if isProcessRunning(p) {
 		defer p.connection.Close()
-		p.killTimer = time.NewTimer(config.PluginConnectionTimeout())
+		p.killTimer = time.NewTimer(config.PluginKillTimeout())
 		conn.SendProcessKillMessage(p.connection)
 
 		exited := make(chan bool, 1)
