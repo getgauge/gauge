@@ -19,9 +19,11 @@ package util
 
 import (
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -238,4 +240,13 @@ func GetLineCount(text string) int {
 
 func OpenFile(fileName string) (io.Writer, error) {
 	return os.OpenFile(fileName, os.O_APPEND|os.O_WRONLY, 0600)
+}
+
+func RLimit() int {
+	var rLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		return 20
+	}
+	return int(math.Floor(float64(rLimit.Cur) / 2))
 }
