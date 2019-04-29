@@ -2,19 +2,16 @@ package parser
 
 import (
 	"sync"
-
-	"github.com/getgauge/gauge/gauge"
 )
 
 type SpecFileCollection struct {
-	mutex             sync.Mutex
-	index             int
-	specFiles         []string
-	conceptDictionary *gauge.ConceptDictionary
+	mutex     *sync.Mutex
+	index     int
+	specFiles []string
 }
 
-func NewSpecFileCollection(s []string, cptDict *gauge.ConceptDictionary) *SpecFileCollection {
-	return &SpecFileCollection{specFiles: s, conceptDictionary: cptDict}
+func NewSpecFileCollection(s []string) *SpecFileCollection {
+	return &SpecFileCollection{specFiles: s, index: 0, mutex: &sync.Mutex{}}
 }
 
 func (s *SpecFileCollection) HasNext() bool {

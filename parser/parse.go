@@ -61,33 +61,36 @@ type parseInfo struct {
 	spec        *gauge.Specification
 }
 
-func parseFile(sfc *SpecFileCollection, piChan chan *parseInfo, wg *sync.WaitGroup) {
-	for sfc.HasNext() {
-		file := sfc.Next()
-		s, pr := parseSpec(file, sfc.conceptDictionary)
-		piChan <- &parseInfo{spec: s, parseResult: pr}
-	}
-	wg.Done()
+func newParseInfo(spec *gauge.Specification, pr *ParseResult) *parseInfo {
+	return &parseInfo{spec: spec, parseResult: pr}
 }
 
-func parseSpecFiles(sfc *SpecFileCollection, piChan chan *parseInfo, limit int) {
+func parseSpecFiles(sfc *SpecFileCollection, conceptDictionary *gauge.ConceptDictionary, piChan chan *parseInfo, limit int) {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < limit; i++ {
 		wg.Add(1)
-		go parseFile(sfc, piChan, wg)
+		go func() {
+			for sfc.HasNext() {
+				piChan <- newParseInfo(parseSpec(sfc.Next(), conceptDictionary))
+			}
+			wg.Done()
+		}()
 	}
 	wg.Wait()
 	close(piChan)
 }
 
 func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
-	sfc := NewSpecFileCollection(specFiles, conceptDictionary)
+	sfc := NewSpecFileCollection(specFiles)
 	piChan := make(chan *parseInfo)
 	limit := len(specFiles)
-	if rLimit := util.RLimit(); rLimit < limit {
-		limit = rLimit
+	rLimit, e := util.RLimit()
+	if e == nil && rLimit < limit {
+		logger.Infof(true, "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
+			"Starting %d routines for parallel parsing.", limit, rLimit, rLimit/2)
+		limit = rLimit / 2
 	}
-	go parseSpecFiles(sfc, piChan, limit)
+	go parseSpecFiles(sfc, conceptDictionary, piChan, limit)
 	var parseResults []*ParseResult
 	var specs []*gauge.Specification
 	for r := range piChan {
