@@ -87,6 +87,8 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPreHook)
 	}
+	m.StepExecutionStartingRequest.StepResult = gauge.ConvertToProtoStepResult(stepResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
@@ -102,5 +104,6 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)
 	}
+	m.StepExecutionEndingRequest.StepResult = gauge.ConvertToProtoStepResult(stepResult)
 	e.pluginHandler.NotifyPlugins(m)
 }

@@ -18,6 +18,8 @@
 package gauge
 
 import (
+	"time"
+
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge_messages"
 )
@@ -182,7 +184,7 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		Failed:              suiteResult.IsFailed,
 		SpecsFailedCount:    int32(suiteResult.SpecsFailedCount),
 		ExecutionTime:       suiteResult.ExecutionTime,
-		SpecResults:         convertToProtoSpecResult(suiteResult.SpecResults),
+		SpecResults:         convertToProtoSpecResults(suiteResult.SpecResults),
 		SuccessRate:         getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
 		Environment:         suiteResult.Environment,
 		Tags:                suiteResult.Tags,
@@ -197,6 +199,32 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 	return protoSuiteResult
 }
 
+func ConvertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.ProtoSpecResult {
+	return convertToProtoSpecResult(specResult)
+}
+
+func ConvertToProtoScenarioResult(scenarioResult *result.ScenarioResult) *gauge_messages.ProtoScenarioResult {
+	return &gauge_messages.ProtoScenarioResult{
+		ProtoItem: &gauge_messages.ProtoItem{
+			ItemType: gauge_messages.ProtoItem_Scenario,
+			Scenario: scenarioResult.ProtoScenario,
+		},
+		ExecutionTime: scenarioResult.ExecTime(),
+		Timestamp:     time.Now().Format(time.RFC3339),
+	}
+}
+
+func ConvertToProtoStepResult(stepResult *result.StepResult) *gauge_messages.ProtoStepResult {
+	return &gauge_messages.ProtoStepResult{
+		ProtoItem: &gauge_messages.ProtoItem{
+			ItemType: gauge_messages.ProtoItem_Step,
+			Step:     stepResult.ProtoStep,
+		},
+		ExecutionTime: stepResult.ExecTime(),
+		Timestamp:     time.Now().Format(time.RFC3339),
+	}
+}
+
 func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
 	if totalSpecs == 0 {
 		return 0
@@ -204,21 +232,25 @@ func getSuccessRate(totalSpecs int, failedSpecs int) float32 {
 	return (float32)(100.0 * (totalSpecs - failedSpecs) / totalSpecs)
 }
 
-func convertToProtoSpecResult(specResults []*result.SpecResult) []*gauge_messages.ProtoSpecResult {
+func convertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.ProtoSpecResult {
+	return &gauge_messages.ProtoSpecResult{
+		ProtoSpec:            specResult.ProtoSpec,
+		ScenarioCount:        int32(specResult.ScenarioCount),
+		ScenarioFailedCount:  int32(specResult.ScenarioFailedCount),
+		Failed:               specResult.IsFailed,
+		FailedDataTableRows:  specResult.FailedDataTableRows,
+		ExecutionTime:        specResult.ExecutionTime,
+		Skipped:              specResult.Skipped,
+		ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
+		Errors:               specResult.Errors,
+		Timestamp:            time.Now().Format(time.RFC3339),
+	}
+}
+
+func convertToProtoSpecResults(specResults []*result.SpecResult) []*gauge_messages.ProtoSpecResult {
 	protoSpecResults := make([]*gauge_messages.ProtoSpecResult, 0)
 	for _, specResult := range specResults {
-		protoSpecResult := &gauge_messages.ProtoSpecResult{
-			ProtoSpec:            specResult.ProtoSpec,
-			ScenarioCount:        int32(specResult.ScenarioCount),
-			ScenarioFailedCount:  int32(specResult.ScenarioFailedCount),
-			Failed:               specResult.IsFailed,
-			FailedDataTableRows:  specResult.FailedDataTableRows,
-			ExecutionTime:        specResult.ExecutionTime,
-			Skipped:              specResult.Skipped,
-			ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
-			Errors:               specResult.Errors,
-		}
-		protoSpecResults = append(protoSpecResults, protoSpecResult)
+		protoSpecResults = append(protoSpecResults, convertToProtoSpecResult(specResult))
 	}
 	return protoSpecResults
 }
@@ -280,7 +312,17 @@ func NewProtoScenario(scenario *Scenario) *gauge_messages.ProtoScenario {
 func getTags(tags *Tags) []string {
 	if tags != nil {
 		return tags.Values()
-	} else {
-		return make([]string, 0)
 	}
+	return make([]string, 0)
+}
+
+func ConvertToProtoExecutionArg(args []*ExecutionArg) []*gauge_messages.ExecutionArg {
+	execArgs := []*gauge_messages.ExecutionArg{}
+	for _, arg := range args {
+		execArgs = append(execArgs, &gauge_messages.ExecutionArg{
+			FlagName:  arg.Name,
+			FlagValue: arg.Value,
+		})
+	}
+	return execArgs
 }

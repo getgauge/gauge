@@ -147,3 +147,8 @@ func (stepArg *StepArg) ArgValue() string {
 	}
 	return ""
 }
+
+type ExecutionArg struct {
+	Name  string
+	Value []string
+}

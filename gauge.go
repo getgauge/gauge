@@ -18,10 +18,11 @@
 package main
 
 import (
-	"github.com/getgauge/gauge/cmd"
-	"github.com/getgauge/gauge/logger"
 	"os"
 	"runtime/debug"
+
+	"github.com/getgauge/gauge/cmd"
+	"github.com/getgauge/gauge/logger"
 )
 
 func main() {

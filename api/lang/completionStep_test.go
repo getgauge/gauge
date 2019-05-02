@@ -147,13 +147,13 @@ func TestGetEditPosition(t *testing.T) {
 func TestGetAllImplementedStepValues(t *testing.T) {
 	stepValues := []gauge.StepValue{
 		{
-			StepValue: "hello world",
-			Args:      []string{},
+			StepValue:              "hello world",
+			Args:                   []string{},
 			ParameterizedStepValue: "hello world",
 		},
 		{
-			StepValue: "hello {}",
-			Args:      []string{"world"},
+			StepValue:              "hello {}",
+			Args:                   []string{"world"},
 			ParameterizedStepValue: "hello <world>",
 		},
 	}
@@ -195,16 +195,16 @@ func TestGetAllImplementedStepValuesShouldGivesEmptyIfRunnerRespondWithError(t *
 func TestRemoveDuplicateStepValues(t *testing.T) {
 	stepValues := []gauge.StepValue{
 		{
-			Args: []string{},
+			Args:                   []string{},
 			ParameterizedStepValue: "hello world",
 			StepValue:              "hello world",
 		}, {
-			Args: []string{"world"},
+			Args:                   []string{"world"},
 			ParameterizedStepValue: "hello <world>",
 			StepValue:              "hello {}",
 		},
 		{
-			Args: []string{"gauge"},
+			Args:                   []string{"gauge"},
 			ParameterizedStepValue: "hello <gauge>",
 			StepValue:              "hello {}",
 		},
