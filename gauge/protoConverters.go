@@ -243,7 +243,7 @@ func convertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.Pro
 		Skipped:              specResult.Skipped,
 		ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
 		Errors:               specResult.Errors,
-		Timestamp:     		  time.Now().Format(time.RFC3339),
+		Timestamp:            time.Now().Format(time.RFC3339),
 	}
 }
 

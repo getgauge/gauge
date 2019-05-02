@@ -18,15 +18,15 @@
 package execution
 
 import (
-	"path/filepath"
 	"fmt"
+	"path/filepath"
 	"strconv"
 	"strings"
-  
-	"github.com/getgauge/gauge/filter"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
@@ -54,10 +54,10 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler,
 			FileName: s.FileName,
 			IsFailed: false,
 			Tags:     getTagValue(s.Tags)},
-		ProjectName : filepath.Base(config.ProjectRoot),
+		ProjectName:              filepath.Base(config.ProjectRoot),
 		NumberOfExecutionStreams: int32(NumberOfExecutionStreams),
-		RunnerId : int32(stream),
-		ExecutionArgs: gauge.ConvertToProtoExecutionArg(ExecutionArgs),
+		RunnerId:                 int32(stream),
+		ExecutionArgs:            gauge.ConvertToProtoExecutionArg(ExecutionArgs),
 	}
 
 	return &specExecutor{

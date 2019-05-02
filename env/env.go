@@ -26,7 +26,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dmotylev/goproperties"
+	properties "github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"

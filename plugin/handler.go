@@ -56,21 +56,20 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 		}
 	}
 
-	var pluginsWithCapabilityToChunk  map[string]*plugin = make(map[string]*plugin)
-	var pluginsWithoutCapabilityToChunk  map[string]*plugin = make(map[string]*plugin)
+	var pluginsWithCapabilityToChunk map[string]*plugin = make(map[string]*plugin)
+	var pluginsWithoutCapabilityToChunk map[string]*plugin = make(map[string]*plugin)
 
 	for id, plugin := range gp.pluginsMap {
 		if !plugin.descriptor.hasCapability(streamResultCapability) {
 			pluginsWithoutCapabilityToChunk[id] = plugin
-		}else { 
+		} else {
 			pluginsWithCapabilityToChunk[id] = plugin
 		}
 	}
 
-
 	for id, plugin := range pluginsWithoutCapabilityToChunk {
 		handle(id, plugin, plugin.sendMessage(message))
-	}	
+	}
 
 	items := []*gauge_messages.ProtoItem{}
 	for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {

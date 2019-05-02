@@ -208,16 +208,16 @@ func compareTableRow(row1 *gauge_messages.ProtoTableRow, row2 *gauge_messages.Pr
 
 func (s *MySuite) TestProtoConvertingExecutionArgs(c *C) {
 	executionArgs := []*ExecutionArg{}
-	executionArg := &ExecutionArg {
-		Name: "parallel",
+	executionArg := &ExecutionArg{
+		Name:  "parallel",
 		Value: []string{"true"},
 	}
 	executionArgs = append(executionArgs, executionArg)
 	actual := ConvertToProtoExecutionArg(executionArgs)
 
 	expectedArgs := []*gauge_messages.ExecutionArg{}
-	expectedArg := &gauge_messages.ExecutionArg {
-		FlagName: executionArgs[0].Name,
+	expectedArg := &gauge_messages.ExecutionArg{
+		FlagName:  executionArgs[0].Name,
 		FlagValue: executionArgs[0].Value,
 	}
 	expectedArgs = append(expectedArgs, expectedArg)

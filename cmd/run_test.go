@@ -1,13 +1,14 @@
 package cmd
 
 import (
-	"github.com/getgauge/gauge/gauge"
 	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
+
+	"github.com/getgauge/gauge/gauge"
 
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
@@ -485,10 +486,10 @@ func subEnv() []string {
 	return append(os.Environ(), []string{"TEST_EXITS=1", "GAUGE_PLUGIN_INSTALL=false"}...)
 }
 
-func TestAddingFlagsToExecutionArgs(t *testing.T)  {
+func TestAddingFlagsToExecutionArgs(t *testing.T) {
 	var flags = &pflag.FlagSet{}
-		flags.BoolP("parallel", "p", false, "")
-		flags.Set("parallel", "true")
+	flags.BoolP("parallel", "p", false, "")
+	flags.Set("parallel", "true")
 
 	execution.ExecutionArgs = []*gauge.ExecutionArg{}
 	addFlagsToExecutionArgs(flags)
@@ -500,12 +501,12 @@ func TestAddingFlagsToExecutionArgs(t *testing.T)  {
 	}
 }
 
-func TestAddingMultipleFlagsToExecutionArgs(t *testing.T)  {
+func TestAddingMultipleFlagsToExecutionArgs(t *testing.T) {
 	var flags = &pflag.FlagSet{}
-		flags.BoolP("parallel", "p", false, "")
-		flags.Set("parallel", "true")
-		flags.StringP("tags", "", "", "")
-		flags.Set("tags", "tag1")
+	flags.BoolP("parallel", "p", false, "")
+	flags.Set("parallel", "true")
+	flags.StringP("tags", "", "", "")
+	flags.Set("tags", "tag1")
 
 	execution.ExecutionArgs = []*gauge.ExecutionArg{}
 	addFlagsToExecutionArgs(flags)

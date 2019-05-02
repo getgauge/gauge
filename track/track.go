@@ -37,7 +37,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/version"
-	"github.com/jpillora/go-ogle-analytics"
+	ga "github.com/jpillora/go-ogle-analytics"
 )
 
 const (

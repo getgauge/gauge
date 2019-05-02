@@ -228,8 +228,8 @@ func PopulateConceptDynamicParams(concept *gauge.Step, dataTableLookup *gauge.Ar
 						if err != nil {
 							return err
 						}
-						updateCells = append(updateCells, gauge.TableCell{CellType:gauge.Static,Value:v.Value})
-					}else {
+						updateCells = append(updateCells, gauge.TableCell{CellType: gauge.Static, Value: v.Value})
+					} else {
 						updateCells = append(updateCells, cell)
 					}
 				}

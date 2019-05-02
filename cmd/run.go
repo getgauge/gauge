@@ -204,7 +204,7 @@ func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
 	return f
 }
 
-func addFlagsToExecutionArgs(flags *pflag.FlagSet)  {
+func addFlagsToExecutionArgs(flags *pflag.FlagSet) {
 	flags.Visit(func(flag *pflag.Flag) {
 		execution.ExecutionArgs = append(execution.ExecutionArgs, &gauge.ExecutionArg{
 			Name:  flag.Name,
