@@ -53,7 +53,7 @@ const (
 
 var level logging.Level
 var activeLogger *logging.Logger
-var fileLogFormat = logging.MustStringFormatter("%{time:15:04:05.000} %{message}")
+var fileLogFormat = logging.MustStringFormatter("%{time:02-01-2006 15:04:05.000} [Gauge] [%{level}] %{message}")
 var isLSP bool
 var initialized bool
 var ActiveLogFile string
