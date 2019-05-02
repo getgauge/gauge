@@ -45,7 +45,7 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
-			loadEnvAndInitLogger(cmd)
+			loadEnvAndReinitLogger(cmd)
 			manifest, _ := manifest.ProjectManifest()
 			language := manifest.Language
 			if lsp {

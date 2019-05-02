@@ -262,7 +262,6 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
-	logger.Debugf(true, "Downloading %s", filepath.Base(downloadLink))
 	pluginZip, err := util.Download(downloadLink, tempDir, "", silent)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
@@ -422,11 +421,11 @@ func constructPluginInstallJSONURL(p string) (string, InstallResult) {
 	if repoURL == "" {
 		return "", installError(fmt.Errorf("Could not find gauge repository url from configuration."))
 	}
-	JSONURL := fmt.Sprintf("%s/%s", repoURL, p)
+	jsonURL := fmt.Sprintf("%s/%s", repoURL, p)
 	if qp := plugin.QueryParams(); qp != "" {
-		JSONURL += qp
+		jsonURL += qp
 	}
-	return JSONURL, installSuccess("")
+	return jsonURL, installSuccess("")
 }
 
 func (installDesc *installDescription) getVersion(version string) (*versionInstallDescription, error) {

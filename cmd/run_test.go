@@ -21,15 +21,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var path = ""
+var projectPath = ""
 
 func before() {
-	path, _ = filepath.Abs("_testData")
-	config.ProjectRoot = path
+	projectPath, _ = filepath.Abs("_testData")
+	config.ProjectRoot = projectPath
 }
 
 func after() {
-	os.RemoveAll(path)
+	os.RemoveAll(projectPath)
 }
 
 func TestMain(m *testing.M) {
@@ -418,6 +418,7 @@ func TestLogLevelCanBeOverriddenForRepeat(t *testing.T) {
 func TestCorrectFlagsAreSetForRepeat(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		// expect "env" to be set to "test"
+		os.MkdirAll(filepath.Join(projectPath, "env", "test"), 0755)
 		execution.ExecuteSpecs = func(s []string) int {
 			f, err := runCmd.Flags().GetString(environmentName)
 			if err != nil {

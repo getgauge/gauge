@@ -35,7 +35,7 @@ var (
 		Long:    `Check for validation and parse errors.`,
 		Example: "  gauge validate specs/",
 		Run: func(cmd *cobra.Command, args []string) {
-			loadEnvAndInitLogger(cmd)
+			loadEnvAndReinitLogger(cmd)
 			validation.HideSuggestion = hideSuggestion
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())

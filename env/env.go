@@ -59,7 +59,7 @@ const (
 
 var envVars map[string]string
 
-var currentEnvironments = []string{common.DefaultEnvDir}
+var currentEnvironments = []string{}
 
 // LoadEnv first generates the map of the env vars that needs to be set.
 // It starts by populating the map with the env passed by the user in --env flag.
@@ -217,6 +217,9 @@ func containsEnvVar(value string) (contains bool, matches [][]string) {
 
 // comma-separated value of environments
 func CurrentEnvironments() string {
+	if len(currentEnvironments) == 0 {
+		currentEnvironments = append(currentEnvironments, common.DefaultEnvDir)
+	}
 	return strings.Join(currentEnvironments, ",")
 }
 

@@ -220,7 +220,7 @@ func installMissingPlugins(flag bool) {
 }
 
 func execute(cmd *cobra.Command, args []string) {
-	loadEnvAndInitLogger(cmd)
+	loadEnvAndReinitLogger(cmd)
 	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
 		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
 	}
