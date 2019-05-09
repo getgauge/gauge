@@ -1,6 +1,6 @@
 "use strict"
 
-const expect  = require('chai').expect,
+const expect = require('chai').expect,
     fs = require('fs'),
     sinon = require('sinon'),
     request = require('request');
@@ -27,6 +27,9 @@ describe("getReleaseURl", () => {
 });
 
 describe("getBinaryMeta", () => {
+    afterEach(() => {
+        request.get.restore();
+    });
     it("should fetch platform specific metadata", async () => {
         let url = subject.getReleaseURL();
         let response = {
@@ -58,11 +61,35 @@ describe("getBinaryMeta", () => {
         let originalArch = Object.getOwnPropertyDescriptor(process, 'arch');;
         Object.defineProperty(process, 'platform', { value: "win32" });
         Object.defineProperty(process, 'arch', { value: "ia32" });
-        
+
         expect(await subject.getBinaryUrl()).equals("https://github.com/getgauge/gauge/releases/download/v1.0.0/gauge-1.0.0-windows.x86.zip");
 
         Object.defineProperty(process, 'platform', originalPlatform);
         Object.defineProperty(process, 'arch', originalArch);
+    });
+
+    it("should return error message", async () => {
+        let url = subject.getReleaseURL();
+        sinon.stub(request, 'get').yields("error message", undefined, undefined);
+        try {
+            await subject.getBinaryUrl();
+        } catch (err) {
+            expect(err.message).equals("error message");
+        }
+    });
+
+    it("should return rate limit exceeded message", async () => {
+        let url = subject.getReleaseURL();
+        let response = {
+            statusCode: 403,
+            body:{message:'API rate limit exceeded for 12.160.108.130'}
+        }
+        sinon.stub(request, 'get').yields(undefined, response, undefined);
+        try {
+            await subject.getBinaryUrl();
+        } catch (err) {
+            expect(err.message).equals("API rate limit exceeded for 12.160.108.130");
+        }
     });
 });
 
