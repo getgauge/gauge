@@ -71,7 +71,7 @@ func (p *plugin) rejuvenate() error {
 		return fmt.Errorf("timer is uninitialized. Perhaps kill is not yet invoked")
 	}
 	logger.Debugf(true, "Extending the plugin_kill_timeout for %s", p.descriptor.ID)
-	p.killTimer.Reset(config.PluginConnectionTimeout())
+	p.killTimer.Reset(config.PluginKillTimeout())
 	return nil
 }
 
