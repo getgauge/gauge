@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/getgauge/gauge/gauge"
+
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 
@@ -483,4 +485,40 @@ func TestCorrectFlagsAreSetForFailed(t *testing.T) {
 
 func subEnv() []string {
 	return append(os.Environ(), []string{"TEST_EXITS=1", "GAUGE_PLUGIN_INSTALL=false"}...)
+}
+
+func TestAddingFlagsToExecutionArgs(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.BoolP("parallel", "p", false, "")
+	flags.Set("parallel", "true")
+
+	execution.ExecutionArgs = []*gauge.ExecutionArg{}
+	addFlagsToExecutionArgs(flags)
+	if execution.ExecutionArgs[0].Name != "parallel" {
+		t.Fatalf("Expecting execution arg name parallel but found %s", execution.ExecutionArgs[0].Name)
+	}
+	if execution.ExecutionArgs[0].Value[0] != "true" {
+		t.Fatalf("Expecting execution arg value true but found %s", execution.ExecutionArgs[0].Value[0])
+	}
+}
+
+func TestAddingMultipleFlagsToExecutionArgs(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.BoolP("parallel", "p", false, "")
+	flags.Set("parallel", "true")
+	flags.StringP("tags", "", "", "")
+	flags.Set("tags", "tag1")
+
+	execution.ExecutionArgs = []*gauge.ExecutionArg{}
+	addFlagsToExecutionArgs(flags)
+
+	if execution.ExecutionArgs[0].Name != "parallel" {
+		t.Fatalf("Expecting execution arg name parallel but found %s", execution.ExecutionArgs[0].Name)
+	}
+	if execution.ExecutionArgs[1].Name != "tags" {
+		t.Fatalf("Expecting execution arg name tags but found %s", execution.ExecutionArgs[1].Name)
+	}
+	if execution.ExecutionArgs[1].Value[0] != "tag1" {
+		t.Fatalf("Expecting execution arg value tag1 but found %s", execution.ExecutionArgs[1].Value[0])
+	}
 }

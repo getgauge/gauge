@@ -214,15 +214,13 @@ func (s *MySuite) TestPopulatingConceptsWithDynamicParametersInTable(c *C) {
 	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
 	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
-	tableArg,err := concept1.Lookup.GetArg("addresses")
+	tableArg, err := concept1.Lookup.GetArg("addresses")
 	c.Assert(err, IsNil)
 	v, err := tableArg.Table.Get("name")
 	c.Assert(err, IsNil)
 	c.Assert(v[0].CellType, Equals, gauge.Static)
 	c.Assert(v[0].Value, Equals, "something")
 }
-
-
 
 func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 	parser := new(SpecParser)

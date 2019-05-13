@@ -61,5 +61,5 @@ func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	c.Assert(specResult.ScenarioCount, gc.Equals, 2)
 	c.Assert(specResult.ProtoSpec.IsTableDriven, gc.Equals, true)
 	c.Assert(specResult.ScenarioFailedCount, gc.Equals, 0)
-
+	c.Assert(specResult.ExecutionTime, gc.Equals, int64(0))
 }

@@ -43,6 +43,8 @@ var getBinaryUrl = function(version) {
 
         request.get(url, { headers: {'user-agent': 'node.js'}, json: true}, (err, res, data) => {
             try {
+                if( err ) reject(new Error(err));
+                if ( res && res.statusCode >= 400 ) reject(new Error (res.body.message));
                 for (const key in data.assets) {
                     if (data.assets.hasOwnProperty(key)) {
                         const a = data.assets[key];

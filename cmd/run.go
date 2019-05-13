@@ -22,6 +22,8 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/getgauge/gauge/gauge"
+
 	"strings"
 
 	"github.com/getgauge/gauge/config"
@@ -97,6 +99,7 @@ var (
 			} else if failed {
 				executeFailed(cmd)
 			} else {
+				addFlagsToExecutionArgs(cmd.Flags())
 				execute(cmd, args)
 			}
 		},
@@ -199,6 +202,15 @@ func lookupFlagFromArgs(cmd *cobra.Command, arg string) *pflag.Flag {
 		f = flags.ShorthandLookup(fName)
 	}
 	return f
+}
+
+func addFlagsToExecutionArgs(flags *pflag.FlagSet) {
+	flags.Visit(func(flag *pflag.Flag) {
+		execution.ExecutionArgs = append(execution.ExecutionArgs, &gauge.ExecutionArg{
+			Name:  flag.Name,
+			Value: []string{flag.Value.String()},
+		})
+	})
 }
 
 func installMissingPlugins(flag bool) {

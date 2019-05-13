@@ -25,7 +25,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 func CreateSkelFilesIfRequired() {

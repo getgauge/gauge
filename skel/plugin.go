@@ -57,7 +57,7 @@ func installPlugin(name string, silent bool) {
 	res := install.Plugin(name, "", silent)
 	if res.Error != nil {
 		logger.Debugf(true, res.Error.Error())
-	} else if (res.Version != "") {
+	} else if res.Version != "" {
 		logger.Infof(true, "Successfully installed plugin '%s' version %s", name, res.Version)
 	} else {
 		logger.Infof(true, "Successfully installed plugin '%s'", name)

@@ -128,6 +128,8 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
 	}
+	message.ScenarioExecutionStartingRequest.ScenarioResult = gauge.ConvertToProtoScenarioResult(scenarioResult)
+	e.pluginHandler.NotifyPlugins(message)
 }
 
 func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.ScenarioResult) {
@@ -140,6 +142,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)
 	}
+	message.ScenarioExecutionEndingRequest.ScenarioResult = gauge.ConvertToProtoScenarioResult(scenarioResult)
 	e.pluginHandler.NotifyPlugins(message)
 }
 
