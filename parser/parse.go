@@ -86,7 +86,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 	limit := len(specFiles)
 	rLimit, e := util.RLimit()
 	if e == nil && rLimit < limit {
-		logger.Infof(true, "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
+		logger.Debugf(true, "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
 			"Starting %d routines for parallel parsing.", limit, rLimit, rLimit/2)
 		limit = rLimit / 2
 	}
