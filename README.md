@@ -4,6 +4,7 @@
 [ ![Download Nightly](https://api.bintray.com/packages/gauge/Gauge/Nightly/images/download.svg) ](https://bintray.com/gauge/Gauge/Nightly/_latestVersion)
 [![Build Status](https://travis-ci.org/getgauge/gauge.svg?branch=master)](https://travis-ci.org/getgauge/gauge)
 [![Build status](https://ci.appveyor.com/api/projects/status/w9rjq31rqnru66fi?svg=true)](https://ci.appveyor.com/project/getgauge/gauge)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
 # Welcome to Gauge
 
