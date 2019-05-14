@@ -39,6 +39,7 @@ package parser
 import (
 	"runtime/debug"
 	"strings"
+	"sync"
 
 	"regexp"
 	"strconv"
@@ -54,29 +55,56 @@ import (
 // ParseSpecFiles gets all the spec files and parse each spec file.
 // Generates specifications and parse results.
 // TODO: Use single channel instead of one for spec and another for result, so that mapping is consistent
+
+type parseInfo struct {
+	parseResult *ParseResult
+	spec        *gauge.Specification
+}
+
+func newParseInfo(spec *gauge.Specification, pr *ParseResult) *parseInfo {
+	return &parseInfo{spec: spec, parseResult: pr}
+}
+
+func parseSpecFiles(sfc *specFileCollection, conceptDictionary *gauge.ConceptDictionary, piChan chan *parseInfo, limit int) {
+	wg := &sync.WaitGroup{}
+	for i := 0; i < limit; i++ {
+		wg.Add(1)
+		go func() {
+			for sfc.HasNext() {
+				piChan <- newParseInfo(parseSpec(sfc.Next(), conceptDictionary))
+			}
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+	close(piChan)
+}
+
 func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, []*ParseResult) {
-	parseResultsChan := make(chan *ParseResult, len(specFiles))
-	specsChan := make(chan *gauge.Specification, len(specFiles))
+	sfc := NewSpecFileCollection(specFiles)
+	piChan := make(chan *parseInfo)
+	limit := len(specFiles)
+	rLimit, e := util.RLimit()
+	if e == nil && rLimit < limit {
+		logger.Debugf(true, "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
+			"Starting %d routines for parallel parsing.", limit, rLimit, rLimit/2)
+		limit = rLimit / 2
+	}
+	go parseSpecFiles(sfc, conceptDictionary, piChan, limit)
 	var parseResults []*ParseResult
 	var specs []*gauge.Specification
-
-	for _, specFile := range specFiles {
-		go parseSpec(specFile, conceptDictionary, specsChan, parseResultsChan)
-	}
-	for range specFiles {
-		parseRes := <-parseResultsChan
-		spec := <-specsChan
-		if spec != nil {
-			specs = append(specs, spec)
+	for r := range piChan {
+		if r.spec != nil {
+			specs = append(specs, r.spec)
 			var parseErrs []error
-			for _, e := range parseRes.ParseErrors {
+			for _, e := range r.parseResult.ParseErrors {
 				parseErrs = append(parseErrs, e)
 			}
 			if len(parseErrs) != 0 {
-				buildErrors.SpecErrs[spec] = parseErrs
+				buildErrors.SpecErrs[r.spec] = parseErrs
 			}
 		}
-		parseResults = append(parseResults, parseRes)
+		parseResults = append(parseResults, r.parseResult)
 	}
 	return specs, parseResults
 }
@@ -104,20 +132,16 @@ func recoverPanic() {
 	}
 }
 
-func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary, specChannel chan *gauge.Specification, parseResultChan chan *ParseResult) {
-	defer recoverPanic()
+func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {
 	specFileContent, err := common.ReadFileContents(specFile)
 	if err != nil {
-		specChannel <- nil
-		parseResultChan <- &ParseResult{ParseErrors: []ParseError{ParseError{FileName: specFile, Message: err.Error()}}, Ok: false}
-		return
+		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{FileName: specFile, Message: err.Error()}}, Ok: false}
 	}
 	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	if err != nil {
 		logger.Fatalf(true, err.Error())
 	}
-	specChannel <- spec
-	parseResultChan <- parseResult
+	return spec, parseResult
 }
 
 type specFile struct {
