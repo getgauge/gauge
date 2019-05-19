@@ -173,12 +173,28 @@ func write(stdout bool, msg string, args ...interface{}) {
 		if machineReadable {
 			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
 			for _, m := range strs {
+				m = escapeInvalidJSONChars(m)
 				fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", strings.Trim(m, "\n "))
 			}
 		} else {
 			fmt.Println(fmt.Sprintf(msg, args...))
 		}
 	}
+}
+
+func escapeInvalidJSONChars(text string) string {
+	escapeCharters := make(map[string]string)
+	escapeCharters["\\"] = "\\\\"
+	escapeCharters["\t"] = "\\t"
+	escapeCharters["\n"] = "\\n"
+	escapeCharters["\r"] = "\\r"
+	escapeCharters["\b"] = "\\b"
+	escapeCharters["\f"] = "\\f"
+	escapeCharters["\v"] = "\\v"
+	for oldChar, newChar := range escapeCharters {
+		text = strings.Replace(text, oldChar, newChar, -1)
+	}
+	return text
 }
 
 // Initialize initializes the logger object
