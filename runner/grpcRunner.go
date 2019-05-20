@@ -28,6 +28,7 @@ import (
 
 	"github.com/getgauge/gauge/config"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
 )
@@ -153,7 +154,16 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 // ConnectToGrpcRunner makes a connection with grpc server
 func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer, timeout time.Duration) (*GrpcRunner, error) {
 	portChan := make(chan string)
-	cmd, _, err := runRunnerCommand(manifest, "0", false, customWriter{file: outFile, port: portChan})
+	cmd, _, err := runRunnerCommand(manifest, "0", false, &logger.LogWriter{
+		Stderr: customWriter{
+			file: logger.Writer{ShouldWriteToStdout: false},
+			port: portChan,
+		},
+		Stdout: customWriter{
+			file: logger.Writer{ShouldWriteToStdout: false},
+			port: portChan,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}

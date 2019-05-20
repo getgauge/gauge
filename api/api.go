@@ -19,7 +19,6 @@ package api
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"strconv"
 	"time"
@@ -35,18 +34,18 @@ import (
 )
 
 // StartAPI calls StartAPIService and returns the channels
-func StartAPI(debug bool, outputStreamWriter io.Writer) *runner.StartChannels {
+func StartAPI(debug bool) *runner.StartChannels {
 	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
-	go startAPIService(0, startChan, sig, debug, outputStreamWriter)
+	go startAPIService(0, startChan, sig, debug)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool, outputStreamWriter io.Writer) {
+func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
 	startAPIServiceWithoutRunner(port, startChannels, sig)
 
-	runner, err := ConnectToRunner(startChannels.KillChan, debug, outputStreamWriter)
+	runner, err := ConnectToRunner(startChannels.KillChan, debug)
 	if err != nil {
 		startChannels.ErrorChan <- err
 		return
@@ -70,13 +69,13 @@ func startAPIServiceWithoutRunner(port int, startChannels *runner.StartChannels,
 	go gaugeConnectionHandler.HandleMultipleConnections()
 }
 
-func ConnectToRunner(killChannel chan bool, debug bool, outputStreamWriter io.Writer) (runner.Runner, error) {
+func ConnectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		return nil, err
 	}
-
-	runner, connErr := runner.Start(manifest, outputStreamWriter, killChannel, debug)
+	writer := logger.NewLogWriter(manifest.Language, true, 0)
+	runner, connErr := runner.Start(manifest, writer, killChannel, debug)
 	if connErr != nil {
 		return nil, connErr
 	}

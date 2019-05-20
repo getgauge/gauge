@@ -314,7 +314,7 @@ func errorResult(message string) *gauge_messages.ProtoExecutionResult {
 	return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, RecoverableError: false}
 }
 
-func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, outputStreamWriter io.Writer) (*exec.Cmd, *RunnerInfo, error) {
+func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writer *logger.LogWriter) (*exec.Cmd, *RunnerInfo, error) {
 	var r RunnerInfo
 	runnerDir, err := getLanguageJSONFilePath(manifest, &r)
 	if err != nil {
@@ -328,13 +328,13 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, outp
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
 	env = append(env, fmt.Sprintf("GAUGE_UNIQUE_INSTALLATION_ID=%s", config.UniqueID()))
 	env = append(env, fmt.Sprintf("GAUGE_TELEMETRY_ENABLED=%v", config.TelemetryEnabled()))
-	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, outputStreamWriter, outputStreamWriter, env)
+	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, writer.Stdout, writer.Stderr, env)
 	return cmd, &r, err
 }
 
 // Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
-func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter io.Writer, killChannel chan bool, debug bool) (*LanguageRunner, error) {
+func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter *logger.LogWriter, killChannel chan bool, debug bool) (*LanguageRunner, error) {
 	cmd, r, err := runRunnerCommand(manifest, port, debug, outputStreamWriter)
 	if err != nil {
 		return nil, err
@@ -441,7 +441,7 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func Start(manifest *manifest.Manifest, outputStreamWriter io.Writer, killChannel chan bool, debug bool) (Runner, error) {
+func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, killChannel chan bool, debug bool) (Runner, error) {
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
