@@ -186,7 +186,7 @@ func write(stdout bool, msg string, args ...interface{}) {
 		if machineReadable {
 			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
 			for _, m := range strs {
-				outMessage := &out{Type: "out", Message: strings.Trim(m, "\n ")}
+				outMessage := &out{Type: "out", Message: m}
 				m, _ = outMessage.toJSON()
 				fmt.Println(m)
 			}
