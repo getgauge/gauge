@@ -18,6 +18,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -168,33 +169,31 @@ func getPluginVersions() string {
 	return strings.Join(pluginVersions, ", ")
 }
 
+type out struct {
+	Type    string `json:"type"`
+	Message string `json:"message"`
+}
+
+func (out *out) toJSON() (string, error) {
+	json, err := json.Marshal(out)
+	if err != nil {
+		return "", err
+	}
+	return string(json), nil
+}
 func write(stdout bool, msg string, args ...interface{}) {
 	if !isLSP && stdout {
 		if machineReadable {
 			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
 			for _, m := range strs {
-				m = escapeInvalidJSONChars(m)
-				fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", strings.Trim(m, "\n "))
+				outMessage := &out{Type: "out", Message: strings.Trim(m, "\n ")}
+				m, _ = outMessage.toJSON()
+				fmt.Println(m)
 			}
 		} else {
 			fmt.Println(fmt.Sprintf(msg, args...))
 		}
 	}
-}
-
-func escapeInvalidJSONChars(text string) string {
-	escapeCharters := make(map[string]string)
-	escapeCharters["\\"] = "\\\\"
-	escapeCharters["\t"] = "\\t"
-	escapeCharters["\n"] = "\\n"
-	escapeCharters["\r"] = "\\r"
-	escapeCharters["\b"] = "\\b"
-	escapeCharters["\f"] = "\\f"
-	escapeCharters["\v"] = "\\v"
-	for oldChar, newChar := range escapeCharters {
-		text = strings.Replace(text, oldChar, newChar, -1)
-	}
-	return text
 }
 
 // Initialize initializes the logger object
