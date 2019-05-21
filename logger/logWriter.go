@@ -7,13 +7,14 @@ import (
 )
 
 type Writer struct {
+	loggerId            string
 	ShouldWriteToStdout bool
 	stream              int
 }
 
 type LogInfo struct {
-	ID       string `josn:"id"`
-	LogLevel string `json:"logLevel`
+	ID       string `json:"id"`
+	LogLevel string `json:"logLevel"`
 	Message  string `json:"message"`
 }
 
@@ -21,6 +22,7 @@ func (w Writer) Write(p []byte) (int, error) {
 	m := &LogInfo{}
 	err := json.Unmarshal(p, m)
 	if err != nil {
+		Debug(w.ShouldWriteToStdout, err.Error())
 		m.LogLevel = "info"
 		m.Message = string(p)
 	}
@@ -47,7 +49,7 @@ type LogWriter struct {
 
 func NewLogWriter(loggerID string, stdout bool, stream int) *LogWriter {
 	return &LogWriter{
-		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream},
-		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream},
+		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerId: loggerID},
+		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerId: loggerID},
 	}
 }

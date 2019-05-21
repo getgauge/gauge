@@ -37,7 +37,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 )
@@ -184,7 +183,8 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)
 	}
 
-	cmd, err := common.ExecuteCommand(command, pd.pluginPath, reporter.Current(), reporter.Current())
+	writer := logger.NewLogWriter(pd.ID, true, 0)
+	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 
 	if err != nil {
 		return nil, err
