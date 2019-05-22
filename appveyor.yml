@@ -1,12 +1,6 @@
 version: 1.0.{build}
 clone_folder: c:\gopath\src\github.com\getgauge\gauge
-init:
-- ps: >-
-    Add-Type -AssemblyName System.IO.Compression.FileSystem
-        if (!(Test-Path -Path "C:\maven" )) {
-        (new-object System.Net.WebClient).DownloadFile('http://www.us.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip', 'C:\maven-bin.zip')
-        [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\maven-bin.zip", "C:\maven")
-        }
+
 environment:
   GOPATH: c:\gopath
   GAUGE_PREFIX: c:\gauge
@@ -41,6 +35,4 @@ test_script:
 
     gauge -v
 
-    mvn clean install -q -Denv=ci-java -Dtags="java" -DinParallel=true
-
-    if ($LastExitCode -ne 0) { throw "Gauge Functional Tests failed" }
+- gradlew.bat -q clean javaFT

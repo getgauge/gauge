@@ -9,7 +9,7 @@ addons:
     packages:
       - default-jdk
 env:
-  - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false
+  - GAUGE_PREFIX="/tmp/gauge" GAUGE_TELEMETRY_ENABLED=false TERM=dumb
 script:
   - go run build/make.go
   - go run build/make.go --test
@@ -21,4 +21,4 @@ script:
   - java -version
   - echo $JAVA_HOME
   - $GAUGE_PREFIX/bin/gauge version
-  - PATH=$GAUGE_PREFIX/bin:$PATH TAGS="\!unimplemented" ./starttests.sh java
+  - PATH=$GAUGE_PREFIX/bin:$PATH ./gradlew clean javaFT
