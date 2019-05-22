@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/gauge/env"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 )
@@ -209,6 +210,20 @@ func (s *MySuite) TestFormatStep(c *C) {
 		&gauge.StepArg{Name: "table :hell\".csv", ArgType: gauge.SpecialTable}}}
 	formatted := FormatStep(step)
 	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic>, <file:user\".txt> and <table :hell\".csv>
+`)
+}
+
+func (s *MySuite) TestFormatStepsWithResolveArgs(c *C) {
+	step := &gauge.Step{Value: "my step with {}, {}, {} and {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.Static},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Static},
+		&gauge.StepArg{Name: "file:user\".txt", ArgType: gauge.SpecialString},
+		&gauge.StepArg{Name: "table :hell\".csv", ArgType: gauge.SpecialTable}},
+		Fragments : []*gauge_messages.Fragment{
+			&gauge_messages.Fragment{Text:"Vowels in English language are "},
+			&gauge_messages.Fragment{FragmentType:gauge_messages.Fragment_FragmentType(int32(3)), Parameter:&gauge_messages.Parameter{Value:"aeiou" }},
+			&gauge_messages.Fragment{Text:"."}}}
+	formatted := FormatStepWithResolvedArgs(step)
+	c.Assert(formatted, Equals, `* my step with "static \"foo\"", "\"foo\"", <file:user\".txt> and <table :hell\".csv>
 `)
 }
 
