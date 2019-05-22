@@ -60,16 +60,16 @@ func writeResult(res *result.SuiteResult) {
 	dotGaugeDir := filepath.Join(config.ProjectRoot, dotGauge)
 	resultFile := filepath.Join(config.ProjectRoot, dotGauge, lastRunResult)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Errorf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Errorf(true, "", "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	r, err := proto.Marshal(gauge.ConvertToProtoSuiteResult(res))
 	if err != nil {
-		logger.Errorf(true, "Unable to marshal suite execution result, skipping save. %s", err.Error())
+		logger.Errorf(true, "", "Unable to marshal suite execution result, skipping save. %s", err.Error())
 	}
 	err = ioutil.WriteFile(resultFile, r, common.NewFilePermissions)
 	if err != nil {
-		logger.Errorf(true, "Failed to write to %s. Reason: %s", resultFile, err.Error())
+		logger.Errorf(true, "", "Failed to write to %s. Reason: %s", resultFile, err.Error())
 	} else {
-		logger.Debugf(true, "Last run result saved to %s", resultFile)
+		logger.Debugf(true, "", "Last run result saved to %s", resultFile)
 	}
 }

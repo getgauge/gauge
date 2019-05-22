@@ -31,10 +31,19 @@ import (
 	"github.com/op/go-logging"
 )
 
+func TestGetLoggerShouldGetTheLoggerForGivenModule(t *testing.T) {
+	Initialize(false, "info", CLI)
+
+	l := GetLogger("gauge-js")
+	if l == nil {
+		t.Error("Expected a logger to be initilized for gauge-js")
+	}
+}
+
 func TestLoggerInitWithInfoLevel(t *testing.T) {
 	Initialize(false, "info", CLI)
 
-	if !activeLogger.IsEnabledFor(logging.INFO) {
+	if !GetLogger(gauge).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for INFO")
 	}
 }
@@ -42,7 +51,7 @@ func TestLoggerInitWithInfoLevel(t *testing.T) {
 func TestLoggerInitWithDefaultLevel(t *testing.T) {
 	Initialize(false, "", CLI)
 
-	if !activeLogger.IsEnabledFor(logging.INFO) {
+	if !GetLogger(gauge).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for default log level")
 	}
 }
@@ -50,7 +59,7 @@ func TestLoggerInitWithDefaultLevel(t *testing.T) {
 func TestLoggerInitWithDebugLevel(t *testing.T) {
 	Initialize(false, "debug", CLI)
 
-	if !activeLogger.IsEnabledFor(logging.DEBUG) {
+	if !GetLogger(gauge).IsEnabledFor(logging.DEBUG) {
 		t.Error("Expected gaugeLog to be enabled for DEBUG")
 	}
 }
@@ -58,7 +67,7 @@ func TestLoggerInitWithDebugLevel(t *testing.T) {
 func TestLoggerInitWithWarningLevel(t *testing.T) {
 	Initialize(false, "warning", CLI)
 
-	if !activeLogger.IsEnabledFor(logging.WARNING) {
+	if !GetLogger(gauge).IsEnabledFor(logging.WARNING) {
 		t.Error("Expected gaugeLog to be enabled for WARNING")
 	}
 }
@@ -66,7 +75,7 @@ func TestLoggerInitWithWarningLevel(t *testing.T) {
 func TestLoggerInitWithErrorLevel(t *testing.T) {
 	Initialize(false, "error", CLI)
 
-	if !activeLogger.IsEnabledFor(logging.ERROR) {
+	if !GetLogger(gauge).IsEnabledFor(logging.ERROR) {
 		t.Error("Expected gaugeLog to be enabled for ERROR")
 	}
 }

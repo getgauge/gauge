@@ -51,7 +51,7 @@ func (gp *GaugePlugins) removePlugin(pluginID string) {
 func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 	var handle = func(id string, p *plugin, err error) {
 		if err != nil {
-			logger.Errorf(true, "Unable to connect to plugin %s %s. %s\n", p.descriptor.Name, p.descriptor.Version, err.Error())
+			logger.Errorf(true, "", "Unable to connect to plugin %s %s. %s\n", p.descriptor.Name, p.descriptor.Version, err.Error())
 			gp.killPlugin(id)
 		}
 	}
@@ -98,10 +98,10 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 
 func (gp *GaugePlugins) killPlugin(pluginID string) {
 	plugin := gp.pluginsMap[pluginID]
-	logger.Debugf(true, "Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
+	logger.Debugf(true, "", "Killing Plugin %s %s\n", plugin.descriptor.Name, plugin.descriptor.Version)
 	err := plugin.pluginCmd.Process.Kill()
 	if err != nil {
-		logger.Errorf(true, "Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
+		logger.Errorf(true, "", "Failed to kill plugin %s %s. %s\n", plugin.descriptor.Name, plugin.descriptor.Version, err.Error())
 	}
 	gp.removePlugin(pluginID)
 }

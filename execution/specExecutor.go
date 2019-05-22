@@ -81,11 +81,11 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	lookup, err := e.dataTableLookup()
 	if err != nil {
-		logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+		logger.Fatalf(true, "", "Failed to resolve Specifications : %s", err.Error())
 	}
 	resolvedSpecItems, err := resolveItems(e.specification.GetSpecItems(), lookup, e.setSkipInfo)
 	if err != nil {
-		logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+		logger.Fatalf(true, "", "Failed to resolve Specifications : %s", err.Error())
 	}
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if executeBefore {
@@ -108,7 +108,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			})
 			results, err := e.executeScenarios(others)
 			if err != nil {
-				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+				logger.Fatalf(true, "", "Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(results)
 			scnMap := make(map[int]bool, 0)
@@ -119,7 +119,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 
 				r, err := e.executeScenario(s)
 				if err != nil {
-					logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+					logger.Fatalf(true, "", "Failed to resolve Specifications : %s", err.Error())
 				}
 				e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(&s.DataTable.Table),
 					s.ScenarioDataTableRowIndex, s.SpecDataTableRowIndex, s.SpecDataTableRow.IsInitialized())
@@ -203,7 +203,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 }
 
 func (e *specExecutor) skipSpecForError(err error) {
-	logger.Errorf(true, err.Error())
+	logger.Errorf(true, "", err.Error())
 	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: e.specification.Heading.LineNo, LineText: e.specification.Heading.Value},
 		err.Error(), e.specification.FileName, nil, "")
 	for _, scenario := range e.specification.Scenarios {

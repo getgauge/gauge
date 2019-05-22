@@ -65,7 +65,7 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	}
 	targetFile := filepath.Join(targetDir, fileName)
 
-	logger.Debugf(true, "Downloading %s", url)
+	logger.Debugf(true, "", "Downloading %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err

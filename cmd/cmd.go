@@ -111,6 +111,7 @@ func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 
 func initLogger(n string) {
 	if lsp {
+
 		logger.Initialize(machineReadable, logLevel, logger.LSP)
 	} else if n == "daemon" {
 		logger.Initialize(machineReadable, logLevel, logger.API)
@@ -208,17 +209,17 @@ func initPackageFlags() {
 
 var exit = func(err error, additionalText string) {
 	if err != nil {
-		logger.Errorf(true, err.Error())
+		logger.Errorf(true, "", err.Error())
 	}
 	if additionalText != "" {
-		logger.Infof(true, additionalText)
+		logger.Infof(true, "", additionalText)
 	}
 	os.Exit(1)
 }
 
 func loadEnvAndReinitLogger(cmd *cobra.Command) {
 	if e := env.LoadEnv(environment); e != nil {
-		logger.Fatalf(true, e.Error())
+		logger.Fatalf(true, "", e.Error())
 	}
 	initLogger(cmd.Name())
 }

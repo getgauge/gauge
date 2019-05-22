@@ -115,7 +115,7 @@ type executionInfo struct {
 func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatalf(true, "", err.Error())
 	}
 	return &executionInfo{
 		manifest:        m,
@@ -135,7 +135,7 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 var ExecuteSpecs = func(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatalf(true, "", err.Error())
 	}
 	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}
@@ -151,7 +151,7 @@ var ExecuteSpecs = func(specDirs []string) int {
 		return ValidationFailed
 	}
 	if res.SpecCollection.Size() < 1 {
-		logger.Infof(true, "No specifications found in %s.", strings.Join(specDirs, ", "))
+		logger.Infof(true, "", "No specifications found in %s.", strings.Join(specDirs, ", "))
 		res.Runner.Kill()
 		if res.ParseOk {
 			return Success
@@ -212,7 +212,7 @@ func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedS
 	executionStatus.SceSkipped = skippedScenarios
 	s, err := executionStatus.getJSON()
 	if err != nil {
-		logger.Fatalf(true, "Unable to parse execution status information : %v", err.Error())
+		logger.Fatalf(true, "", "Unable to parse execution status information : %v", err.Error())
 	}
 	return s
 }
@@ -221,11 +221,11 @@ func writeExecutionResult(content string) {
 	executionStatusFile := filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Fatalf(true, "", "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	err := ioutil.WriteFile(executionStatusFile, []byte(content), common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf(true, "Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
+		logger.Fatalf(true, "", "Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
 	}
 }
 
@@ -234,11 +234,11 @@ func writeExecutionResult(content string) {
 func ReadLastExecutionResult() (interface{}, error) {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, executionStatusFile))
 	if err != nil {
-		logger.Fatalf(true, "Failed to read execution status information. Reason: %s", err.Error())
+		logger.Fatalf(true, "", "Failed to read execution status information. Reason: %s", err.Error())
 	}
 	meta := &executionStatus{}
 	if err = json.Unmarshal([]byte(contents), meta); err != nil {
-		logger.Fatalf(true, "Invalid execution status information. Reason: %s", err.Error())
+		logger.Fatalf(true, "", "Invalid execution status information. Reason: %s", err.Error())
 		return meta, err
 	}
 	return meta, nil
@@ -273,9 +273,9 @@ func printExecutionResult(suiteResult *result.SuiteResult, isParsingOk bool) int
 	}
 
 	s := statusJSON(nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs, nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Infof(true, "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
-	logger.Infof(true, "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
-	logger.Infof(true, "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
+	logger.Infof(true, "", "Specifications:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedSpecs, nPassedSpecs, nFailedSpecs, nSkippedSpecs)
+	logger.Infof(true, "", "Scenarios:\t%d executed\t%d passed\t%d failed\t%d skipped", nExecutedScenarios, nPassedScenarios, nFailedScenarios, nSkippedScenarios)
+	logger.Infof(true, "", "\nTotal time taken: %s", time.Millisecond*time.Duration(suiteResult.ExecutionTime))
 	writeExecutionResult(s)
 
 	if !isParsingOk {

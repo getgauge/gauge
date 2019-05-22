@@ -14,9 +14,9 @@ var ScenariosName []string
 func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 	specs = applyFilters(specs, specsFilters())
 	if ExecuteTags != "" && len(specs) > 0 {
-		logger.Debugf(true, "The following specifications satisfy filter criteria:")
+		logger.Debugf(true, "", "The following specifications satisfy filter criteria:")
 		for _, s := range specs {
-			logger.Debugf(true, util.RelPathToProjectRoot(s.FileName))
+			logger.Debugf(true, "", util.RelPathToProjectRoot(s.FileName))
 		}
 	}
 	return specs

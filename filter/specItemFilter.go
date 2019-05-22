@@ -231,7 +231,7 @@ func validateTagExpression(tagExpression string) {
 	filter.replaceSpecialChar()
 	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatalf(true, "", err.Error())
 	}
 }
 
@@ -262,7 +262,7 @@ func filterValidScenarios(specs []*gauge.Specification, headings []string) []str
 		if exists(allScenarios, heading) {
 			filteredScenarios = append(filteredScenarios, heading)
 		} else {
-			logger.Warningf(true, "Warning: scenario name - \"%s\" not found", heading)
+			logger.Warningf(true, "", "Warning: scenario name - \"%s\" not found", heading)
 		}
 	}
 	return filteredScenarios

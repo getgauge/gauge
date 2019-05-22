@@ -179,7 +179,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 	}
 
 	// copy files to gauge plugin install location
-	logger.Debugf(true, "Installing plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
+	logger.Debugf(true, "", "Installing plugin %s %s", gp.ID, filepath.Base(pluginInstallDir))
 	if _, err = common.MirrorDir(unzippedPluginDir, pluginInstallDir); err != nil {
 		return installError(err)
 	}
@@ -221,7 +221,7 @@ func parsePluginJSON(pluginDir, pluginName string) (*GaugePlugin, error) {
 
 // Plugin download and install the latest plugin(if version not specified) of given plugin name
 func Plugin(pluginName, version string, silent bool) InstallResult {
-	logger.Debugf(true, "Gathering metadata for %s", pluginName)
+	logger.Debugf(true, "", "Gathering metadata for %s", pluginName)
 	installDescription, result := getInstallDescription(pluginName, false)
 	defer util.RemoveTempDir()
 	if !result.Success {
@@ -289,7 +289,7 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 		return nil
 	}
 
-	logger.Debugf(true, "Running plugin hook command => %s", command)
+	logger.Debugf(true, "", "Running plugin hook command => %s", command)
 	cmd, err := common.ExecuteSystemCommand(command, workingDir, os.Stdout, os.Stderr)
 
 	if err != nil {
@@ -304,10 +304,10 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 func UninstallPlugin(pluginName string, uninstallVersion string) {
 	pluginsHome, err := common.GetPrimaryPluginsInstallDir()
 	if err != nil {
-		logger.Fatalf(true, "Failed to uninstall plugin %s. %s", pluginName, err.Error())
+		logger.Fatalf(true, "", "Failed to uninstall plugin %s. %s", pluginName, err.Error())
 	}
 	if !common.DirExists(filepath.Join(pluginsHome, pluginName, uninstallVersion)) {
-		logger.Errorf(true, "Plugin %s not found.", strings.TrimSpace(pluginName+" "+uninstallVersion))
+		logger.Errorf(true, "", "Plugin %s not found.", strings.TrimSpace(pluginName+" "+uninstallVersion))
 		os.Exit(0)
 	}
 	var failed bool
@@ -316,7 +316,7 @@ func UninstallPlugin(pluginName string, uninstallVersion string) {
 		if err == nil && info.IsDir() && dir != pluginsDir {
 			if matchesUninstallVersion(filepath.Base(dir), uninstallVersion) {
 				if err := uninstallVersionOfPlugin(dir, pluginName, filepath.Base(dir)); err != nil {
-					logger.Errorf(true, "Failed to uninstall plugin %s %s. %s", pluginName, uninstallVersion, err.Error())
+					logger.Errorf(true, "", "Failed to uninstall plugin %s %s. %s", pluginName, uninstallVersion, err.Error())
 					failed = true
 				}
 			}
@@ -328,7 +328,7 @@ func UninstallPlugin(pluginName string, uninstallVersion string) {
 	}
 	if uninstallVersion == "" {
 		if err := os.RemoveAll(pluginsDir); err != nil {
-			logger.Fatalf(true, "Failed to remove directory %s. %s", pluginsDir, err.Error())
+			logger.Fatalf(true, "", "Failed to remove directory %s. %s", pluginsDir, err.Error())
 		}
 	}
 }
@@ -343,7 +343,7 @@ func matchesUninstallVersion(pluginDirPath, uninstallVersion string) bool {
 func uninstallVersionOfPlugin(pluginDir, pluginName, uninstallVersion string) error {
 	gp, err := parsePluginJSON(pluginDir, pluginName)
 	if err != nil {
-		logger.Infof(true, "Unable to read plugin's metadata, removing %s", pluginDir)
+		logger.Infof(true, "", "Unable to read plugin's metadata, removing %s", pluginDir)
 		return os.RemoveAll(pluginDir)
 	}
 	if err := runPlatformCommands(gp.PreUnInstall, pluginDir); err != nil {
@@ -356,7 +356,7 @@ func uninstallVersionOfPlugin(pluginDir, pluginName, uninstallVersion string) er
 	if err := runPlatformCommands(gp.PostUnInstall, path.Dir(pluginDir)); err != nil {
 		return err
 	}
-	logger.Infof(true, "Successfully uninstalled plugin %s %s.", pluginName, uninstallVersion)
+	logger.Infof(true, "", "Successfully uninstalled plugin %s %s.", pluginName, uninstallVersion)
 	return nil
 }
 
@@ -397,7 +397,7 @@ func getInstallDescription(plugin string, silent bool) (*installDescription, Ins
 
 	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, versionInstallDescriptionJSONFile, silent)
 	if downloadErr != nil {
-		logger.Debugf(true, "Failed to download %s file: %s", versionInstallDescriptionJSONFile, downloadErr)
+		logger.Debugf(true, "", "Failed to download %s file: %s", versionInstallDescriptionJSONFile, downloadErr)
 		return nil, installError(fmt.Errorf("Invalid plugin. Could not download %s file.", versionInstallDescriptionJSONFile))
 	}
 
@@ -478,7 +478,7 @@ func getRunnerJSONContents(file string) (*runner.RunnerInfo, error) {
 func AllPlugins(silent bool) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatalf(true, "", err.Error())
 	}
 	installPluginsFromManifest(manifest, silent)
 }
@@ -488,39 +488,39 @@ func UpdatePlugins(silent bool) {
 	var failedPlugin []string
 	pluginInfos, err := pluginInfo.GetPluginsInfo()
 	if err != nil {
-		logger.Infof(true, err.Error())
+		logger.Infof(true, "", err.Error())
 		os.Exit(0)
 	}
 	for _, pluginInfo := range pluginInfos {
-		logger.Debugf(true, "Updating plugin '%s'", pluginInfo.Name)
+		logger.Debugf(true, "", "Updating plugin '%s'", pluginInfo.Name)
 		passed := HandleUpdateResult(Plugin(pluginInfo.Name, "", silent), pluginInfo.Name, false)
 		if !passed {
 			failedPlugin = append(failedPlugin, pluginInfo.Name)
 		}
 	}
 	if len(failedPlugin) > 0 {
-		logger.Fatalf(true, "Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
+		logger.Fatalf(true, "", "Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
 	}
-	logger.Infof(true, "Successfully updated all the plugins.")
+	logger.Infof(true, "", "Successfully updated all the plugins.")
 }
 
 // HandleInstallResult handles the result of plugin Installation
 // TODO: Merge both HandleInstallResult and HandleUpdateResult, eliminate boolean exitIfFailure
 func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
 	if result.Info != "" {
-		logger.Debugf(true, result.Info)
+		logger.Debugf(true, "", result.Info)
 	}
 	if result.Warning != "" {
-		logger.Warningf(true, result.Warning)
+		logger.Warningf(true, "", result.Warning)
 	}
 	if result.Skipped {
 		return true
 	}
 	if !result.Success {
 		if result.Version != "" {
-			logger.Errorf(true, "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
+			logger.Errorf(true, "", "Failed to install plugin '%s' version %s.\nReason: %s", pluginName, result.Version, result.getMessage())
 		} else {
-			logger.Errorf(true, "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
+			logger.Errorf(true, "", "Failed to install plugin '%s'.\nReason: %s", pluginName, result.getMessage())
 		}
 		if exitIfFailure {
 			os.Exit(1)
@@ -528,9 +528,9 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 		return false
 	}
 	if result.Version != "" {
-		logger.Infof(true, "Successfully installed plugin '%s' version %s", pluginName, result.Version)
+		logger.Infof(true, "", "Successfully installed plugin '%s' version %s", pluginName, result.Version)
 	} else {
-		logger.Infof(true, "Successfully installed plugin '%s'", pluginName)
+		logger.Infof(true, "", "Successfully installed plugin '%s'", pluginName)
 	}
 	return true
 }
@@ -538,23 +538,23 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 // HandleUpdateResult handles the result of plugin Installation
 func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
 	if result.Info != "" {
-		logger.Debugf(true, result.Info)
+		logger.Debugf(true, "", result.Info)
 	}
 	if result.Warning != "" {
-		logger.Warningf(true, result.Warning)
+		logger.Warningf(true, "", result.Warning)
 	}
 	if result.Skipped {
-		logger.Infof(true, "Plugin '%s' is up to date.", pluginName)
+		logger.Infof(true, "", "Plugin '%s' is up to date.", pluginName)
 		return true
 	}
 	if !result.Success {
-		logger.Errorf(true, "Failed to update plugin '%s'.\nReason: %s", pluginName, result.getMessage())
+		logger.Errorf(true, "", "Failed to update plugin '%s'.\nReason: %s", pluginName, result.getMessage())
 		if exitIfFailure {
 			os.Exit(1)
 		}
 		return false
 	}
-	logger.Infof(true, "Successfully updated plugin '%s'.", pluginName)
+	logger.Infof(true, "", "Successfully updated plugin '%s'.", pluginName)
 	return true
 }
 
@@ -567,10 +567,10 @@ func installPluginsFromManifest(manifest *manifest.Manifest, silent bool) {
 
 	for pluginName, isRunner := range pluginsMap {
 		if !IsCompatiblePluginInstalled(pluginName, isRunner) {
-			logger.Infof(true, "Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
+			logger.Infof(true, "", "Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
 			HandleInstallResult(Plugin(pluginName, "", silent), pluginName, false)
 		} else {
-			logger.Debugf(true, "Plugin %s is already installed.", pluginName)
+			logger.Debugf(true, "", "Plugin %s is already installed.", pluginName)
 		}
 	}
 }
@@ -625,13 +625,13 @@ func AddPluginToProject(pluginName string) error {
 		return err
 	}
 	if plugin.IsPluginAdded(m, pd) {
-		logger.Debugf(true, "Plugin %s is already added.", pd.Name)
+		logger.Debugf(true, "", "Plugin %s is already added.", pd.Name)
 		return nil
 	}
 	m.Plugins = append(m.Plugins, pd.ID)
 	if err = m.Save(); err != nil {
 		return err
 	}
-	logger.Infof(true, "Plugin %s was successfully added to the project\n", pluginName)
+	logger.Infof(true, "", "Plugin %s was successfully added to the project\n", pluginName)
 	return nil
 }

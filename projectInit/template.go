@@ -24,21 +24,21 @@ func ListTemplates() {
 	templatesURL := config.GaugeTemplatesUrl()
 	_, err := common.UrlExists(templatesURL)
 	if err != nil {
-		logger.Fatalf(true, "Gauge templates URL %s is not reachable: %s", templatesURL, err.Error())
+		logger.Fatalf(true, "", "Gauge templates URL %s is not reachable: %s", templatesURL, err.Error())
 	}
 	res, err := http.Get(templatesURL)
 	if err != nil {
-		logger.Fatalf(true, "Error occurred while downloading templates list from %s: %s", templatesURL, err.Error())
+		logger.Fatalf(true, "", "Error occurred while downloading templates list from %s: %s", templatesURL, err.Error())
 	}
 	defer res.Body.Close()
 	if res.StatusCode >= 400 {
-		logger.Errorf(true, fmt.Sprintf("Error downloading templates info: %s.\n%s", templatesURL, res.Status))
+		logger.Errorf(true, "", fmt.Sprintf("Error downloading templates info: %s.\n%s", templatesURL, res.Status))
 	}
 	templates := []template{}
 	json.NewDecoder(res.Body).Decode(&templates)
 	for _, t := range templates {
-		logger.Infof(true, t.GetName())
+		logger.Infof(true, "", t.GetName())
 	}
-	logger.Infof(true, "csharp")
-	logger.Infof(true, "\nRun `gauge init <template_name>` to create a new Gauge project.")
+	logger.Infof(true, "", "csharp")
+	logger.Infof(true, "", "\nRun `gauge init <template_name>` to create a new Gauge project.")
 }

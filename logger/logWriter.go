@@ -1,3 +1,20 @@
+// Copyright 2019 ThoughtWorks, Inc.
+
+// This file is part of Gauge.
+
+// Gauge is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Gauge is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+
 package logger
 
 import (
@@ -6,14 +23,16 @@ import (
 	"io"
 )
 
+// Writer reperesnts to a custom writer.
+// It intercents the log messages and redirects them to logger according the log level given in info
 type Writer struct {
-	loggerId            string
+	loggerID            string
 	ShouldWriteToStdout bool
 	stream              int
 }
 
+// LogInfo repesents the log message structure for plugins
 type LogInfo struct {
-	ID       string `json:"id"`
 	LogLevel string `json:"logLevel"`
 	Message  string `json:"message"`
 }
@@ -22,7 +41,6 @@ func (w Writer) Write(p []byte) (int, error) {
 	m := &LogInfo{}
 	err := json.Unmarshal(p, m)
 	if err != nil {
-		Debug(w.ShouldWriteToStdout, err.Error())
 		m.LogLevel = "info"
 		m.Message = string(p)
 	}
@@ -31,25 +49,29 @@ func (w Writer) Write(p []byte) (int, error) {
 	}
 	switch m.LogLevel {
 	case "debug":
-		Debug(w.ShouldWriteToStdout, m.Message)
+		Debug(w.ShouldWriteToStdout, w.loggerID, m.Message)
 	case "info":
-		Info(w.ShouldWriteToStdout, m.Message)
+		Info(w.ShouldWriteToStdout, w.loggerID, m.Message)
 	case "error":
-		Error(w.ShouldWriteToStdout, m.Message)
+		Error(w.ShouldWriteToStdout, w.loggerID, m.Message)
+	case "warning":
+		Warning(w.ShouldWriteToStdout, w.loggerID, m.Message)
 	case "fatal":
-		Fatal(w.ShouldWriteToStdout, m.Message)
+		Fatal(w.ShouldWriteToStdout, w.loggerID, m.Message)
 	}
 	return len(p), nil
 }
 
+// LogWriter reperesents the type which consists of two custom writers
 type LogWriter struct {
 	Stderr io.Writer
 	Stdout io.Writer
 }
 
+// NewLogWriter creates a new logWriter for given id
 func NewLogWriter(loggerID string, stdout bool, stream int) *LogWriter {
 	return &LogWriter{
-		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerId: loggerID},
-		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerId: loggerID},
+		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID},
+		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID},
 	}
 }

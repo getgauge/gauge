@@ -42,7 +42,7 @@ var (
 				install.HandleInstallResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
 			}
 			if err := install.AddPluginToProject(args[0]); err != nil {
-				logger.Fatalf(true, "Failed to add plugin %s to project : %s\n", args[0], err.Error())
+				logger.Fatalf(true, "", "Failed to add plugin %s to project : %s\n", args[0], err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
