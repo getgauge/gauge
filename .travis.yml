@@ -21,4 +21,4 @@ script:
   - java -version
   - echo $JAVA_HOME
   - $GAUGE_PREFIX/bin/gauge version
-  - PATH=$GAUGE_PREFIX/bin:$PATH ./gradlew -q clean javaFT
+  - PATH=$GAUGE_PREFIX/bin:$PATH ./gradlew clean javaFT
