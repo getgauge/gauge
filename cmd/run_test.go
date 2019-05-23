@@ -368,6 +368,13 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 			return []string{"gauge", "run", "specs", "-l", "debug"}
 		}
 		os.Args = []string{"gauge", "run", "--failed", "-l", "info"}
+		os.MkdirAll(filepath.Join(projectPath,".gauge"),0755)
+		file, err := os.OpenFile(filepath.Join(projectPath,".gauge","failures.json"),os.O_CREATE|os.O_WRONLY,0644)
+		_, err = file.Write([]byte("{\"Args\": [\"run\",\"-v\"],\"FailedItems\": [\"specs\"]}"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		file.Close()
 		executeFailed(runCmd)
 		return
 	}
