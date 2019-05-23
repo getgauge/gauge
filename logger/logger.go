@@ -65,12 +65,12 @@ func Initialize(mr bool, logLevel string, c int) {
 	level = loggingLevel(logLevel)
 	switch c {
 	case CLI:
-		ActiveLogFile = gaugeLogFileName
+		ActiveLogFile = getLogFile(gaugeLogFileName)
 	case API:
-		ActiveLogFile = apiLogFileName
+		ActiveLogFile = getLogFile(apiLogFileName)
 	case LSP:
 		isLSP = true
-		ActiveLogFile = lspLogFileName
+		ActiveLogFile = getLogFile(lspLogFileName)
 	}
 	addLogger(gauge)
 	initialized = true
@@ -202,7 +202,7 @@ func addLogger(module string) {
 
 func initFileLogger(logFileName string, module string, fileLogger *logging.Logger) {
 	var backend logging.Backend
-	backend = createFileLogger(getLogFile(logFileName), 10)
+	backend = createFileLogger(logFileName, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")

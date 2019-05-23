@@ -19,6 +19,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -143,9 +144,19 @@ type customWriter struct {
 	port chan string
 }
 
+func getLine(b []byte) string {
+	m := &logger.LogInfo{}
+	err := json.Unmarshal(b, m)
+	if err != nil {
+		return string(b)
+	}
+	return m.Message
+}
+
 func (w customWriter) Write(p []byte) (n int, err error) {
-	if strings.Contains(string(p), portPrefix) {
-		text := strings.Replace(string(p), "\r\n", "\n", -1)
+	line := getLine(p)
+	if strings.Contains(line, portPrefix) {
+		text := strings.Replace(line, "\r\n", "\n", -1)
 		w.port <- strings.TrimSuffix(strings.Split(text, portPrefix)[1], "\n")
 	}
 	return w.file.Write(p)
