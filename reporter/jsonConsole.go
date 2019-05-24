@@ -29,6 +29,7 @@ import (
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
 
@@ -228,13 +229,10 @@ func (c *jsonConsole) Errorf(err string, args ...interface{}) {
 func (c *jsonConsole) Write(b []byte) (int, error) {
 	c.Lock()
 	defer c.Unlock()
-	type outMessage struct {
-		MessageType string `json:"type"`
-		Message     string `json:"message"`
-	}
 	s := strings.Split(string(b), "\n")
 	for _, m := range s {
-		t, err := json.Marshal(&outMessage{MessageType: "out", Message: strings.Trim(m, "\n ")})
+		outMessage := &logger.OutMessage{MessageType: "out", Message: strings.Trim(m, "\n ")}
+		t, err := outMessage.ToJSON()
 		if err != nil {
 			return 0, err
 		}

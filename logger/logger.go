@@ -18,6 +18,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -58,6 +59,21 @@ var isLSP bool
 var initialized bool
 var ActiveLogFile string
 var machineReadable bool
+
+// OutMessage contains information for output log
+type OutMessage struct {
+	MessageType string `json:"type"`
+	Message     string `json:"message"`
+}
+
+// ToJSON converts OutMessage into JSON
+func (out *OutMessage) ToJSON() (string, error) {
+	json, err := json.Marshal(out)
+	if err != nil {
+		return "", err
+	}
+	return string(json), nil
+}
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Info(stdout bool, msg string) {
@@ -173,7 +189,9 @@ func write(stdout bool, msg string, args ...interface{}) {
 		if machineReadable {
 			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
 			for _, m := range strs {
-				fmt.Printf("{\"type\": \"out\", \"message\": \"%s\"}\n", strings.Trim(m, "\n "))
+				outMessage := &OutMessage{MessageType: "out", Message: m}
+				m, _ = outMessage.ToJSON()
+				fmt.Println(m)
 			}
 		} else {
 			fmt.Println(fmt.Sprintf(msg, args...))
