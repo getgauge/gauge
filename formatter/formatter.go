@@ -103,11 +103,11 @@ func FormatStepWithResolvedArgs(step *gauge.Step) string {
 			if argument.ArgType == gauge.Dynamic && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Dynamic {
 				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
 				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
-			} else if argument.ArgType == gauge.TableArg && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Table{
+			} else if argument.ArgType == gauge.TableArg && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Table {
 				formattedTable := FormatTable(&argument.Table)
 				formattedArg := fmt.Sprintf("\n%s", formattedTable)
 				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
-			} else if argument.ArgType == gauge.Static && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Static{
+			} else if argument.ArgType == gauge.Static && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Static {
 				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
 				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
 			}
