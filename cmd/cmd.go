@@ -213,7 +213,7 @@ var exit = func(err error, additionalText string) {
 	if additionalText != "" {
 		logger.Infof(true, additionalText)
 	}
-	os.Exit(0)
+	os.Exit(1)
 }
 
 func loadEnvAndReinitLogger(cmd *cobra.Command) {
