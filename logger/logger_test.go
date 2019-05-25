@@ -204,3 +204,23 @@ Your Environment Information -----------
 		}
 	}
 }
+
+func TestToJSONWithPlainText(t *testing.T) {
+	outMessage := &OutMessage{MessageType: "out", Message: "plain text"}
+	want := "{\"type\":\"out\",\"message\":\"plain text\"}"
+
+	got, _ := outMessage.ToJSON()
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
+}
+
+func TestToJSONWithInvalidJSONCharacters(t *testing.T) {
+	outMessage := &OutMessage{MessageType: "out", Message: "\n, \t, and \\ needs to be escaped to create a valid JSON"}
+	want := "{\"type\":\"out\",\"message\":\"\\n, \\t, and \\\\ needs to be escaped to create a valid JSON\"}"
+
+	got, _ := outMessage.ToJSON()
+	if got != want {
+		t.Errorf("Got %s, want %s", got, want)
+	}
+}
