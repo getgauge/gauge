@@ -110,6 +110,9 @@ func FormatStepWithResolvedArgs(step *gauge.Step) string {
 			} else if argument.ArgType == gauge.Static && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Static {
 				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
 				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
+			} else if (argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable) && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && (stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Special_String || stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Special_Table) {
+				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
+				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
 			}
 		}
 	}
