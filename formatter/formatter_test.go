@@ -23,6 +23,7 @@ import (
 	"github.com/getgauge/gauge/env"
 
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	. "gopkg.in/check.v1"
 )
@@ -209,6 +210,45 @@ func (s *MySuite) TestFormatStep(c *C) {
 		&gauge.StepArg{Name: "table :hell\".csv", ArgType: gauge.SpecialTable}}}
 	formatted := FormatStep(step)
 	c.Assert(formatted, Equals, `* my step with "static \"foo\"", <dynamic>, <file:user\".txt> and <table :hell\".csv>
+`)
+}
+
+func (s *MySuite) TestFormatStepsWithResolveArgs(c *C) {
+	step := &gauge.Step{Value: "my step with {}, {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.Static},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Static}},
+		Fragments: []*gauge_messages.Fragment{
+			&gauge_messages.Fragment{Text: "my step with "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "static \"foo\"", ParameterType: gauge_messages.Parameter_Static}},
+			&gauge_messages.Fragment{Text: ", "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "\"foo\"", ParameterType: gauge_messages.Parameter_Static}}}}
+	formatted := FormatStepWithResolvedArgs(step)
+	c.Assert(formatted, Equals, `* my step with "static "foo"", ""foo""
+`)
+}
+
+func (s *MySuite) TestFormatStepsWithResolveArgsWithConcept(c *C) {
+	step := &gauge.Step{Value: "my step with {}, {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.Dynamic},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Static}},
+		Fragments: []*gauge_messages.Fragment{
+			&gauge_messages.Fragment{Text: "my step with "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "static \"foo\"", ParameterType: gauge_messages.Parameter_Dynamic}},
+			&gauge_messages.Fragment{Text: ", "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "\"foo\"", ParameterType: gauge_messages.Parameter_Static}}}}
+	formatted := FormatStepWithResolvedArgs(step)
+	c.Assert(formatted, Equals, `* my step with "static "foo"", ""foo""
+`)
+}
+
+func (s *MySuite) TestFormatStepsWithResolveArgsWithSpecialArguments(c *C) {
+	step := &gauge.Step{Value: "my step with {}, {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.SpecialString},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.SpecialTable}},
+		Fragments: []*gauge_messages.Fragment{
+			&gauge_messages.Fragment{Text: "my step with "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "static \"foo\"", ParameterType: gauge_messages.Parameter_Special_String}},
+			&gauge_messages.Fragment{Text: ", "},
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "\"foo\"", ParameterType: gauge_messages.Parameter_Special_Table}}}}
+	formatted := FormatStepWithResolvedArgs(step)
+	c.Assert(formatted, Equals, `* my step with "static "foo"", ""foo""
 `)
 }
 

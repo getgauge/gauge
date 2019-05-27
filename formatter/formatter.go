@@ -24,10 +24,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/getgauge/gauge/gauge_messages"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
@@ -102,6 +101,16 @@ func FormatStepWithResolvedArgs(step *gauge.Step) string {
 		for i := range step.GetFragments() {
 			stepFragmet := step.GetFragments()[i]
 			if argument.ArgType == gauge.Dynamic && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Dynamic {
+				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
+				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
+			} else if argument.ArgType == gauge.TableArg && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Table {
+				formattedTable := FormatTable(&argument.Table)
+				formattedArg := fmt.Sprintf("\n%s", formattedTable)
+				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
+			} else if argument.ArgType == gauge.Static && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Static {
+				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
+				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
+			} else if (argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable) && stepFragmet.FragmentType == gauge_messages.Fragment_Parameter && (stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Special_String || stepFragmet.Parameter.ParameterType == gauge_messages.Parameter_Special_Table) {
 				formattedArg := fmt.Sprintf("\"%s\"", stepFragmet.GetParameter().Value)
 				text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
 			}
