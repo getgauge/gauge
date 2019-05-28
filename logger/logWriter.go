@@ -30,6 +30,7 @@ type Writer struct {
 	loggerID            string
 	ShouldWriteToStdout bool
 	stream              int
+	File                io.Writer
 }
 
 // LogInfo repesents the log message structure for plugins
@@ -42,8 +43,8 @@ func (w Writer) Write(p []byte) (int, error) {
 	m := &LogInfo{}
 	err := json.Unmarshal(p, m)
 	if err != nil {
-		m.LogLevel = "info"
-		m.Message = string(p)
+		fmt.Fprint(w.File, string(p))
+		return len(p), nil
 	}
 	if w.stream > 0 {
 		m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
@@ -88,7 +89,7 @@ type LogWriter struct {
 // NewLogWriter creates a new logWriter for given id
 func NewLogWriter(loggerID string, stdout bool, stream int) *LogWriter {
 	return &LogWriter{
-		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID},
-		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID},
+		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID, File: os.Stderr},
+		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID, File: os.Stdout},
 	}
 }

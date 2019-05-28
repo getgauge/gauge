@@ -167,11 +167,11 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer, timeout
 	portChan := make(chan string)
 	cmd, _, err := runRunnerCommand(manifest, "0", false, &logger.LogWriter{
 		Stderr: customWriter{
-			file: logger.Writer{ShouldWriteToStdout: false},
+			file: logger.Writer{ShouldWriteToStdout: false, File: outFile},
 			port: portChan,
 		},
 		Stdout: customWriter{
-			file: logger.Writer{ShouldWriteToStdout: false},
+			file: logger.Writer{ShouldWriteToStdout: false, File: outFile},
 			port: portChan,
 		},
 	})
