@@ -164,7 +164,7 @@ func executeFailed(cmd *cobra.Command) {
 	}
 	handleFlags(cmd, append([]string{"gauge"}, lastState...))
 	cmd.Flags().Set(skipCommandSaveName, "true")
-	logger.Debugf(true, "", "Executing => %s\n", strings.Join(os.Args, " "))
+	logger.Debugf(true, "Executing => %s\n", strings.Join(os.Args, " "))
 	cmd.Execute()
 }
 
@@ -222,7 +222,7 @@ func installMissingPlugins(flag bool) {
 func execute(cmd *cobra.Command, args []string) {
 	loadEnvAndReinitLogger(cmd)
 	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
-		logger.Fatal(true, "", "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
+		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
 	}
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
@@ -242,7 +242,7 @@ func execute(cmd *cobra.Command, args []string) {
 var repeatLastExecution = func(cmd *cobra.Command) {
 	lastState := rerun.ReadPrevArgs()
 	handleFlags(cmd, lastState)
-	logger.Debugf(true, "", "Executing => %s\n", strings.Join(lastState, " "))
+	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
 	cmd.Execute()
 }
 

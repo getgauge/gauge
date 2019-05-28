@@ -114,7 +114,7 @@ func (r *MultithreadedRunner) Connection() net.Conn {
 
 func (r *MultithreadedRunner) killRunner() error {
 	if r.r.Cmd != nil && r.r.Cmd.Process != nil {
-		logger.Warningf(true, "", "Killing runner with PID:%d forcefully", r.r.Cmd.Process.Pid)
+		logger.Warningf(true, "Killing runner with PID:%d forcefully", r.r.Cmd.Process.Pid)
 		return r.r.Cmd.Process.Kill()
 	}
 	return nil
@@ -177,7 +177,7 @@ func ExecuteInitHookForRunner(language string) error {
 
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
 	runnerDir := filepath.Dir(languageJSONFilePath)
-	logger.Debugf(true, "", "Running init hook command => %s", command)
+	logger.Debugf(true, "Running init hook command => %s", command)
 	cmd, err := common.ExecuteCommand(command, runnerDir, os.Stdout, os.Stderr)
 
 	if err != nil {
@@ -223,12 +223,12 @@ func (r *LanguageRunner) EnsureConnected() bool {
 	_, err := c.Read(one)
 	if err == io.EOF {
 		r.lostContact = true
-		logger.Fatalf(true, "", "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
+		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
 	opErr, ok := err.(*net.OpError)
 	if ok && !(opErr.Temporary() || opErr.Timeout()) {
 		r.lostContact = true
-		logger.Fatalf(true, "", "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
+		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
 	var zero time.Time
 	c.SetReadDeadline(zero)
@@ -262,7 +262,7 @@ func (r *LanguageRunner) Kill() error {
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
-			logger.Warningf(true, "", "Killing runner with PID:%d forcefully", r.Cmd.Process.Pid)
+			logger.Warningf(true, "Killing runner with PID:%d forcefully", r.Cmd.Process.Pid)
 			return r.killRunner()
 		}
 	}
@@ -295,13 +295,13 @@ func (r *LanguageRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *g
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Errorf(true, "", errMsg)
+			logger.Errorf(true, errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	}
 	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-	logger.Errorf(true, "", errMsg)
+	logger.Errorf(true, errMsg)
 	return errorResult(errMsg)
 }
 
@@ -382,7 +382,7 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 		r.Cmd.ProcessState = pState
 		r.mutex.Unlock()
 		if err != nil {
-			logger.Debugf(true, "", "Runner exited with error: %s", err)
+			logger.Debugf(true, "Runner exited with error: %s", err)
 			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
 		}
 		if !pState.Success() {
@@ -461,9 +461,9 @@ func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, ki
 func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) error {
 	connection, connErr := h.AcceptConnection(config.RunnerConnectionTimeout(), runner.errorChannel)
 	if connErr != nil {
-		logger.Debugf(true, "", "Runner connection error: %s", connErr)
+		logger.Debugf(true, "Runner connection error: %s", connErr)
 		if err := runner.killRunner(); err != nil {
-			logger.Debugf(true, "", "Error while killing runner: %s", err)
+			logger.Debugf(true, "Error while killing runner: %s", err)
 		}
 		return connErr
 	}

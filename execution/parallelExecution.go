@@ -113,18 +113,18 @@ func (e *parallelExecution) run() *result.SuiteResult {
 			printAdditionalExecutionInfo(p, s, e.tagsToFilter)
 		}
 		if len(s) > 0 {
-			logger.Infof(true, "", "Executing %d specs in serial.", len(s))
+			logger.Infof(true, "Executing %d specs in serial.", len(s))
 			e.specCollection = gauge.NewSpecCollection(p, false)
 			res = append(res, e.executeSpecsInSerial(gauge.NewSpecCollection(s, true)))
 		}
 	}
 
 	nStreams := e.numberOfStreams()
-	logger.Infof(true, "", "Executing in %s parallel streams.", strconv.Itoa(nStreams))
+	logger.Infof(true, "Executing in %s parallel streams.", strconv.Itoa(nStreams))
 	resChan := make(chan *result.SuiteResult)
 
 	if e.isMultithreaded() {
-		logger.Debugf(true, "", "Using multithreading for parallel execution.")
+		logger.Debugf(true, "Using multithreading for parallel execution.")
 		go e.executeMultithreaded(nStreams, resChan)
 	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
@@ -142,9 +142,9 @@ func (e *parallelExecution) run() *result.SuiteResult {
 }
 
 func printAdditionalExecutionInfo(p []*gauge.Specification, s []*gauge.Specification, tags string) {
-	logger.Infof(true, "", "Applied tags '%s' to filter specs for parallel execution", tags)
-	logger.Infof(true, "", "No of specs to be executed in serial : %d", len(s))
-	logger.Infof(true, "", "No of specs to be executed in parallel : %d", len(p))
+	logger.Infof(true, "Applied tags '%s' to filter specs for parallel execution", tags)
+	logger.Infof(true, "No of specs to be executed in serial : %d", len(s))
+	logger.Infof(true, "No of specs to be executed in parallel : %d", len(p))
 }
 
 func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
@@ -224,8 +224,8 @@ func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (ru
 	}
 	runner, err := runner.Start(e.manifest, logger.NewLogWriter(e.manifest.Language, true, stream), make(chan bool), false)
 	if err != nil {
-		logger.Errorf(true, "", "Failed to start runner. %s", err.Error())
-		logger.Debugf(true, "", "Skipping %d specifications", s.Size())
+		logger.Errorf(true, "Failed to start runner. %s", err.Error())
+		logger.Debugf(true, "Skipping %d specifications", s.Size())
 		if isLazy() {
 			return nil, []error{fmt.Errorf("Failed to start runner. %s", err.Error())}
 		}
@@ -304,7 +304,7 @@ func (e *parallelExecution) isMultithreaded() bool {
 		return false
 	}
 	if !e.runner.IsMultithreaded() {
-		logger.Warningf(true, "", "Runner doesn't support mutithreading, using multiprocess parallel execution.")
+		logger.Warningf(true, "Runner doesn't support mutithreading, using multiprocess parallel execution.")
 		return false
 	}
 	return true

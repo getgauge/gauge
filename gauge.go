@@ -28,13 +28,13 @@ import (
 func main() {
 	defer recoverPanic()
 	if err := cmd.Parse(); err != nil {
-		logger.Info(true, "", err.Error())
+		logger.Info(true, err.Error())
 		os.Exit(1)
 	}
 }
 
 func recoverPanic() {
 	if r := recover(); r != nil {
-		logger.Fatalf(true, "", "Panicing : %v\n%s", r, string(debug.Stack()))
+		logger.Fatalf(true, "Panicing : %v\n%s", r, string(debug.Stack()))
 	}
 }

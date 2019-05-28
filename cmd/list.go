@@ -41,15 +41,15 @@ var (
 				return
 			}
 			if specsFlag {
-				logger.Info(true, "", "[Specifications]")
+				logger.Info(true, "[Specifications]")
 				listSpecifications(specs, print)
 			}
 			if scenariosFlag {
-				logger.Info(true, "", "[Scenarios]")
+				logger.Info(true, "[Scenarios]")
 				listScenarios(specs, print)
 			}
 			if tagsFlag {
-				logger.Info(true, "", "[Tags]")
+				logger.Info(true, "[Tags]")
 				listTags(specs, print)
 			}
 			if !specsFlag && !scenariosFlag && !tagsFlag {
@@ -74,7 +74,7 @@ type handleResult func([]string)
 
 func print(res []string) {
 	for _, element := range res {
-		logger.Infof(true, "", element)
+		logger.Infof(true, element)
 	}
 }
 

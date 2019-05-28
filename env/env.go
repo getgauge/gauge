@@ -133,7 +133,7 @@ func loadEnvDir(envName string) error {
 		return nil
 	}
 	addEnvVar(GaugeEnvironment, envName)
-	logger.Debugf(true, "", "'%s' set to '%s'", GaugeEnvironment, envName)
+	logger.Debugf(true, "'%s' set to '%s'", GaugeEnvironment, envName)
 	return filepath.Walk(envDirPath, loadEnvFile)
 }
 
@@ -227,8 +227,8 @@ func convertToBool(property string, defaultValue bool) bool {
 	v := os.Getenv(property)
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(v))
 	if err != nil {
-		logger.Warningf(true, "", "Incorrect value for %s in property file. Cannot convert %s to boolean.", property, v)
-		logger.Warningf(true, "", "Using default value %v for property %s.", defaultValue, property)
+		logger.Warningf(true, "Incorrect value for %s in property file. Cannot convert %s to boolean.", property, v)
+		logger.Warningf(true, "Using default value %v for property %s.", defaultValue, property)
 		return defaultValue
 	}
 	return boolValue

@@ -179,6 +179,6 @@ func ListenExecutionEvents(wg *sync.WaitGroup) {
 
 func recoverPanic() {
 	if r := recover(); r != nil {
-		logger.Fatalf(true, "", "%v\n%s", r, string(debug.Stack()))
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
 	}
 }

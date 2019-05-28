@@ -49,7 +49,7 @@ func (sc *simpleConsole) SpecStart(spec *gauge.Specification, res result.Result)
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	formattedHeading := formatSpec(spec.Heading.Value)
-	logger.Info(false, "", formattedHeading)
+	logger.Info(false, formattedHeading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
 }
 
@@ -72,7 +72,7 @@ func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_message
 	defer sc.mu.Unlock()
 	sc.indentation += scenarioIndentation
 	formattedHeading := formatScenario(scenario.Heading.Value)
-	logger.Info(false, "", formattedHeading)
+	logger.Info(false, formattedHeading)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formattedHeading, sc.indentation), newline))
 }
 
@@ -91,7 +91,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.indentation += stepIndentation
-	logger.Debug(false, "", stepText)
+	logger.Debug(false, stepText)
 	if Verbose {
 		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(stepText), sc.indentation), newline))
 	}
@@ -104,15 +104,15 @@ func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 	stepRes := res.(*result.StepResult)
 	if stepRes.GetStepFailed() {
 		stepText := prepStepMsg(step.LineText)
-		logger.Error(false, "", stepText)
+		logger.Error(false, stepText)
 
 		specInfo := prepSpecInfo(execInfo.GetCurrentSpec().GetFileName(), step.LineNo, step.InConcept())
-		logger.Error(false, "", specInfo)
+		logger.Error(false, specInfo)
 
 		errMsg := prepErrorMessage(stepRes.ProtoStepExecResult().GetExecutionResult().GetErrorMessage())
-		logger.Error(false, "", errMsg)
+		logger.Error(false, errMsg)
 		stacktrace := prepStacktrace(stepRes.ProtoStepExecResult().GetExecutionResult().GetStackTrace())
-		logger.Error(false, "", stacktrace)
+		logger.Error(false, stacktrace)
 
 		msg := formatErrorFragment(stepText, sc.indentation) + formatErrorFragment(specInfo, sc.indentation) + formatErrorFragment(errMsg, sc.indentation) + formatErrorFragment(stacktrace, sc.indentation)
 		fmt.Fprint(sc.writer, msg)
@@ -125,7 +125,7 @@ func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	sc.indentation += stepIndentation
-	logger.Debug(false, "", conceptHeading)
+	logger.Debug(false, conceptHeading)
 	if Verbose {
 		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(conceptHeading), sc.indentation), newline))
 	}
@@ -144,7 +144,7 @@ func (sc *simpleConsole) SuiteEnd(res result.Result) {
 	printHookFailureSC(sc, res, res.GetPostHook)
 	suiteRes := res.(*result.SuiteResult)
 	for _, e := range suiteRes.UnhandledErrors {
-		logger.Error(false, "", e.Error())
+		logger.Error(false, e.Error())
 		fmt.Fprint(sc.writer, indent(e.Error(), sc.indentation+errorIndentation)+newline)
 	}
 }
@@ -152,7 +152,7 @@ func (sc *simpleConsole) SuiteEnd(res result.Result) {
 func (sc *simpleConsole) DataTable(table string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
-	logger.Debug(false, "", table)
+	logger.Debug(false, table)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s", table))
 }
 
@@ -160,7 +160,7 @@ func (sc *simpleConsole) Errorf(err string, args ...interface{}) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	errorMessage := fmt.Sprintf(err, args...)
-	logger.Error(false, "", errorMessage)
+	logger.Error(false, errorMessage)
 	errorString := indent(errorMessage, sc.indentation+errorIndentation)
 	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", errorString, newline))
 }
@@ -175,9 +175,9 @@ func (sc *simpleConsole) Write(b []byte) (int, error) {
 func printHookFailureSC(sc *simpleConsole, res result.Result, hookFailure func() []*gauge_messages.ProtoHookFailure) {
 	if len(hookFailure()) > 0 {
 		errMsg := prepErrorMessage(hookFailure()[0].GetErrorMessage())
-		logger.Error(false, "", errMsg)
+		logger.Error(false, errMsg)
 		stacktrace := prepStacktrace(hookFailure()[0].GetStackTrace())
-		logger.Error(false, "", stacktrace)
+		logger.Error(false, stacktrace)
 		fmt.Fprint(sc.writer, formatErrorFragment(errMsg, sc.indentation), formatErrorFragment(stacktrace, sc.indentation))
 	}
 }

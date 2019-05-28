@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 )
 
 // Writer reperesnts to a custom writer.
@@ -49,15 +50,31 @@ func (w Writer) Write(p []byte) (int, error) {
 	}
 	switch m.LogLevel {
 	case "debug":
-		Debug(w.ShouldWriteToStdout, w.loggerID, m.Message)
+		write(w.ShouldWriteToStdout, m.Message)
+		if initialized {
+			GetLogger(w.loggerID).Warning(m.Message)
+		}
 	case "info":
-		Info(w.ShouldWriteToStdout, w.loggerID, m.Message)
+		write(w.ShouldWriteToStdout, m.Message)
+		if initialized {
+			GetLogger(w.loggerID).Info(m.Message)
+		}
 	case "error":
-		Error(w.ShouldWriteToStdout, w.loggerID, m.Message)
+		write(w.ShouldWriteToStdout, m.Message)
+		fmt.Fprintf(os.Stderr, m.Message)
+		if initialized {
+			GetLogger(w.loggerID).Error(m.Message)
+		}
 	case "warning":
-		Warning(w.ShouldWriteToStdout, w.loggerID, m.Message)
+		write(w.ShouldWriteToStdout, m.Message)
+		if initialized {
+			GetLogger(w.loggerID).Warning(m.Message)
+		}
 	case "fatal":
-		Fatal(w.ShouldWriteToStdout, w.loggerID, m.Message)
+		write(w.ShouldWriteToStdout, m.Message)
+		fmt.Fprintf(os.Stderr, m.Message)
+		//TODO: Aggregate the fatal erros from the plugins and print it at the end of execution
+		// Or print them when Gauge's fataf is used.
 	}
 	return len(p), nil
 }

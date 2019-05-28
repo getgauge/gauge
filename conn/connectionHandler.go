@@ -109,7 +109,7 @@ func (connectionHandler *GaugeConnectionHandler) handleConnectionMessages(conn n
 		n, err := conn.Read(data)
 		if err != nil {
 			conn.Close()
-			logger.Infof(false, "", "Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error())
+			logger.Infof(false, "Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error())
 			return
 		}
 

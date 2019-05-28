@@ -50,7 +50,7 @@ func add(value string) {
 	if !filepath.IsAbs(value) {
 		path, err := filepath.Abs(filepath.Join(config.ProjectRoot, value))
 		if err != nil {
-			logger.Errorf(true, "", "Error getting absolute path. %v", err)
+			logger.Errorf(true, "Error getting absolute path. %v", err)
 			return
 		}
 		value = path
@@ -183,11 +183,11 @@ var GetSpecFiles = func(paths []string) []string {
 var GetConceptFiles = func() []string {
 	projRoot := config.ProjectRoot
 	if projRoot == "" {
-		logger.Fatalf(true, "", "Failed to get project root.")
+		logger.Fatalf(true, "Failed to get project root.")
 	}
 	absPath, err := filepath.Abs(projRoot)
 	if err != nil {
-		logger.Fatalf(true, "", "Error getting absolute path. %v", err)
+		logger.Fatalf(true, "Error getting absolute path. %v", err)
 	}
 	return FindConceptFilesIn(absPath)
 }
@@ -196,7 +196,7 @@ var GetConceptFiles = func() []string {
 func SaveFile(fileName string, content string, backup bool) {
 	err := common.SaveFile(fileName, content, backup)
 	if err != nil {
-		logger.Errorf(true, "", "Failed to refactor '%s': %s\n", fileName, err.Error())
+		logger.Errorf(true, "Failed to refactor '%s': %s\n", fileName, err.Error())
 	}
 }
 
@@ -216,7 +216,7 @@ func GetPathToFile(path string) string {
 func Remove(dir string) {
 	err := common.Remove(dir)
 	if err != nil {
-		logger.Warningf(true, "", "Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
+		logger.Warningf(true, "Failed to remove directory %s. Remove it manually. %s", dir, err.Error())
 	}
 }
 

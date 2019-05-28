@@ -104,76 +104,75 @@ func (out *OutMessage) ToJSON() (string, error) {
 }
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Info(stdout bool, module string, msg string) {
-	Infof(stdout, module, msg)
+func Info(stdout bool, msg string) {
+	Infof(stdout, msg)
 }
 
 // Infof logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Infof(stdout bool, module string, msg string, args ...interface{}) {
+func Infof(stdout bool, msg string, args ...interface{}) {
 	write(stdout, msg, args...)
 	if !initialized {
 		return
 	}
-	GetLogger(module).Infof(msg, args...)
+	GetLogger(gauge).Infof(msg, args...)
 }
 
 // Error logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Error(stdout bool, module string, msg string) {
-	Errorf(stdout, module, msg)
+func Error(stdout bool, msg string) {
+	Errorf(stdout, msg)
 }
 
 // Errorf logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Errorf(stdout bool, module string, msg string, args ...interface{}) {
+func Errorf(stdout bool, msg string, args ...interface{}) {
 	write(stdout, msg, args...)
 	if !initialized {
 		fmt.Fprintf(os.Stderr, msg, args...)
 		return
 	}
-	GetLogger(module).Errorf(msg, args...)
+	GetLogger(gauge).Errorf(msg, args...)
 }
 
 // Warning logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Warning(stdout bool, module string, msg string) {
-	Warningf(stdout, module, msg)
+func Warning(stdout bool, msg string) {
+	Warningf(stdout, msg)
 }
 
 // Warningf logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Warningf(stdout bool, module string, msg string, args ...interface{}) {
+func Warningf(stdout bool, msg string, args ...interface{}) {
 	write(stdout, msg, args...)
 	if !initialized {
 		return
 	}
-	GetLogger(module).Warningf(msg, args...)
+	GetLogger(gauge).Warningf(msg, args...)
 }
 
 // Fatal logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
-func Fatal(stdout bool, module string, msg string) {
-	Fatalf(stdout, module, msg)
+func Fatal(stdout bool, msg string) {
+	Fatalf(stdout, msg)
 }
 
 // Fatalf logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
-func Fatalf(stdout bool, module string, msg string, args ...interface{}) {
+func Fatalf(stdout bool, msg string, args ...interface{}) {
 	message := getErrorText(msg, args...)
 	if !initialized {
 		fmt.Fprintf(os.Stderr, msg, args...)
 		return
 	}
 	write(stdout, message)
-	GetLogger(module).Fatalf(msg, args...)
+	GetLogger(gauge).Fatalf(msg, args...)
 }
 
 // Debug logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Debug(stdout bool, module string, msg string) {
-	Debugf(stdout, module, msg)
+func Debug(stdout bool, msg string) {
+	Debugf(stdout, msg)
 }
 
 // Debugf logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
-// module is name of logger (it can runner or plugin ID), pass empty string to write to default logger (gauge)
-func Debugf(stdout bool, module string, msg string, args ...interface{}) {
+func Debugf(stdout bool, msg string, args ...interface{}) {
 	if !initialized {
 		return
 	}
-	GetLogger(module).Debugf(msg, args...)
+	GetLogger(gauge).Debugf(msg, args...)
 	if level == logging.DEBUG {
 		write(stdout, msg, args...)
 	}
@@ -294,6 +293,6 @@ func getPluginVersions() string {
 // HandleWarningMessages logs multiple messages in WARNING mode
 func HandleWarningMessages(stdout bool, warnings []string) {
 	for _, warning := range warnings {
-		Warning(stdout, gauge, warning)
+		Warning(stdout, warning)
 	}
 }

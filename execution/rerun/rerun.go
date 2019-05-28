@@ -145,11 +145,11 @@ func writeFailedMeta(contents string) {
 	failuresFile := filepath.Join(config.ProjectRoot, common.DotGauge, failedFile)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf(true, "", "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	err := ioutil.WriteFile(failuresFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf(true, "", "Failed to write to %s. Reason: %s", failuresFile, err.Error())
+		logger.Fatalf(true, "Failed to write to %s. Reason: %s", failuresFile, err.Error())
 	}
 }
 
@@ -189,11 +189,11 @@ func SaveState(args []string, specs []string) {
 func readLastFailedState() *failedMetadata {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, failedFile))
 	if err != nil {
-		logger.Fatalf(true, "", "Failed to read last run information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Failed to read last run information. Reason: %s", err.Error())
 	}
 	meta := newFailedMetaData()
 	if err = json.Unmarshal([]byte(contents), meta); err != nil {
-		logger.Fatalf(true, "", "Invalid last run information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Invalid last run information. Reason: %s", err.Error())
 	}
 	return meta
 }
@@ -201,12 +201,12 @@ func readLastFailedState() *failedMetadata {
 var ReadPrevArgs = func() []string {
 	contents, err := common.ReadFileContents(filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName))
 	if err != nil {
-		logger.Fatalf(true, "", "Failed to read previous command information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Failed to read previous command information. Reason: %s", err.Error())
 		return nil
 	}
 	var args []string
 	if err = json.Unmarshal([]byte(contents), &args); err != nil {
-		logger.Fatalf(true, "", "Invalid previous command information. Reason: %s", err.Error())
+		logger.Fatalf(true, "Invalid previous command information. Reason: %s", err.Error())
 		return nil
 	}
 	return args
@@ -215,15 +215,15 @@ var ReadPrevArgs = func() []string {
 var WritePrevArgs = func(cmdArgs []string) {
 	b, err := json.MarshalIndent(cmdArgs, "", "\t")
 	if err != nil {
-		logger.Fatalf(true, "", "Unable to parse last run command. Error : %v", err.Error())
+		logger.Fatalf(true, "Unable to parse last run command. Error : %v", err.Error())
 	}
 	prevCmdFile := filepath.Join(config.ProjectRoot, common.DotGauge, lastRunCmdFileName)
 	dotGaugeDir := filepath.Join(config.ProjectRoot, common.DotGauge)
 	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
-		logger.Fatalf(true, "", "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
+		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
 	err = ioutil.WriteFile(prevCmdFile, b, common.NewFilePermissions)
 	if err != nil {
-		logger.Fatalf(true, "", "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
 	}
 }

@@ -44,10 +44,10 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			out, err := getDefaultPath()
 			if err != nil {
-				logger.Fatalf(true, "", "Cannot find the gauge home directory.")
+				logger.Fatalf(true, "Cannot find the gauge home directory.")
 			}
 			if err := genManPages(out); err != nil {
-				logger.Fatalf(true, "", err.Error())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,
@@ -83,7 +83,7 @@ func genManPages(out string) error {
 		return err
 	}
 	p := strings.TrimSuffix(out, filepath.Base(out))
-	logger.Infof(true, "", "To view gauge man pages, add `%s` to `MANPATH` environment variable.", p)
+	logger.Infof(true, "To view gauge man pages, add `%s` to `MANPATH` environment variable.", p)
 	return nil
 }
 

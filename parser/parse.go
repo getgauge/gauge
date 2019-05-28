@@ -92,7 +92,7 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 	limit := len(specFiles)
 	rLimit, e := util.RLimit()
 	if e == nil && rLimit < limit {
-		logger.Debugf(true, "", "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
+		logger.Debugf(true, "No of specifcations %d is higher than Max no of open file descriptors %d.\n"+
 			"Starting %d routines for parallel parsing.", limit, rLimit, rLimit/2)
 		limit = rLimit / 2
 	}
@@ -134,7 +134,7 @@ func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
 
 func recoverPanic() {
 	if r := recover(); r != nil {
-		logger.Fatalf(true, "", "%v\n%s", r, string(debug.Stack()))
+		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
 	}
 }
 
@@ -145,7 +145,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary) (*ga
 	}
 	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	if err != nil {
-		logger.Fatalf(true, "", err.Error())
+		logger.Fatalf(true, err.Error())
 	}
 	return spec, parseResult
 }
@@ -292,13 +292,13 @@ func HandleParseResult(results ...*ParseResult) bool {
 	for _, result := range results {
 		if !result.Ok {
 			for _, err := range result.Errors() {
-				logger.Errorf(true, "", err)
+				logger.Errorf(true, err)
 			}
 			failed = true
 		}
 		if result.Warnings != nil {
 			for _, warning := range result.Warnings {
-				logger.Warningf(true, "", "[ParseWarning] %s", warning)
+				logger.Warningf(true, "[ParseWarning] %s", warning)
 			}
 		}
 	}
