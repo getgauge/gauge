@@ -65,16 +65,22 @@ func newParseInfo(spec *gauge.Specification, pr *ParseResult) *parseInfo {
 	return &parseInfo{spec: spec, parseResult: pr}
 }
 
+func parse(wg *sync.WaitGroup, sfc *specFileCollection, cpt *gauge.ConceptDictionary, piChan chan *parseInfo) {
+	defer wg.Done()
+	for {
+		if s, err := sfc.Next(); err == nil {
+			piChan <- newParseInfo(parseSpec(s, cpt))
+		} else {
+			return
+		}
+	}
+}
+
 func parseSpecFiles(sfc *specFileCollection, conceptDictionary *gauge.ConceptDictionary, piChan chan *parseInfo, limit int) {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < limit; i++ {
 		wg.Add(1)
-		go func() {
-			for sfc.HasNext() {
-				piChan <- newParseInfo(parseSpec(sfc.Next(), conceptDictionary))
-			}
-			wg.Done()
-		}()
+		go parse(wg, sfc, conceptDictionary, piChan)
 	}
 	wg.Wait()
 	close(piChan)

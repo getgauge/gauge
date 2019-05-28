@@ -18,29 +18,27 @@
 package parser
 
 import (
+	"fmt"
 	"sync"
 )
 
 type specFileCollection struct {
-	mutex     *sync.Mutex
+	mutex     sync.Mutex
 	index     int
 	specFiles []string
 }
 
 func NewSpecFileCollection(s []string) *specFileCollection {
-	return &specFileCollection{specFiles: s, index: 0, mutex: &sync.Mutex{}}
+	return &specFileCollection{specFiles: s}
 }
 
-func (s *specFileCollection) HasNext() bool {
+func (s *specFileCollection) Next() (string, error) {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
-	return s.index < len(s.specFiles)
-}
-
-func (s *specFileCollection) Next() string {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	specFile := s.specFiles[s.index]
-	s.index++
-	return specFile
+	if s.index < len(s.specFiles) {
+		specFile := s.specFiles[s.index]
+		s.index++
+		return specFile, nil
+	}
+	return "", fmt.Errorf("no files in collection")
 }
