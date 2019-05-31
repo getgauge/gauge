@@ -19,6 +19,7 @@ package runner
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -28,6 +29,7 @@ import (
 
 	"github.com/getgauge/gauge/config"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
 )
@@ -142,9 +144,19 @@ type customWriter struct {
 	port chan string
 }
 
+func getLine(b []byte) string {
+	m := &logger.LogInfo{}
+	err := json.Unmarshal(b, m)
+	if err != nil {
+		return string(b)
+	}
+	return m.Message
+}
+
 func (w customWriter) Write(p []byte) (n int, err error) {
-	if strings.Contains(string(p), portPrefix) {
-		text := strings.Replace(string(p), "\r\n", "\n", -1)
+	line := getLine(p)
+	if strings.Contains(line, portPrefix) {
+		text := strings.Replace(line, "\r\n", "\n", -1)
 		w.port <- strings.TrimSuffix(strings.Split(text, portPrefix)[1], "\n")
 	}
 	return w.file.Write(p)
@@ -153,7 +165,16 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 // ConnectToGrpcRunner makes a connection with grpc server
 func ConnectToGrpcRunner(manifest *manifest.Manifest, outFile io.Writer, timeout time.Duration) (*GrpcRunner, error) {
 	portChan := make(chan string)
-	cmd, _, err := runRunnerCommand(manifest, "0", false, customWriter{file: outFile, port: portChan})
+	cmd, _, err := runRunnerCommand(manifest, "0", false, &logger.LogWriter{
+		Stderr: customWriter{
+			file: logger.Writer{ShouldWriteToStdout: false, File: outFile},
+			port: portChan,
+		},
+		Stdout: customWriter{
+			file: logger.Writer{ShouldWriteToStdout: false, File: outFile},
+			port: portChan,
+		},
+	})
 	if err != nil {
 		return nil, err
 	}

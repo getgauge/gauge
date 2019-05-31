@@ -111,6 +111,7 @@ func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 
 func initLogger(n string) {
 	if lsp {
+
 		logger.Initialize(machineReadable, logLevel, logger.LSP)
 	} else if n == "daemon" {
 		logger.Initialize(machineReadable, logLevel, logger.API)

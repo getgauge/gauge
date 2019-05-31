@@ -19,13 +19,12 @@ package execution
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"os"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -39,7 +38,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/runner"
 )
 
@@ -175,7 +173,8 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 		handlers = append(handlers, handler)
 	}
 	os.Setenv("GAUGE_API_PORTS", strings.Join(ports, ","))
-	r, err := runner.StartRunner(e.manifest, "0", reporter.ParallelReporter(0), make(chan bool), false)
+	writer := logger.NewLogWriter(e.manifest.Language, true, 0)
+	r, err := runner.StartRunner(e.manifest, "0", writer, make(chan bool), false)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -223,7 +222,7 @@ func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (ru
 	if os.Getenv("GAUGE_CUSTOM_BUILD_PATH") == "" {
 		os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
 	}
-	runner, err := runner.Start(e.manifest, reporter.ParallelReporter(stream), make(chan bool), false)
+	runner, err := runner.Start(e.manifest, logger.NewLogWriter(e.manifest.Language, true, stream), make(chan bool), false)
 	if err != nil {
 		logger.Errorf(true, "Failed to start runner. %s", err.Error())
 		logger.Debugf(true, "Skipping %d specifications", s.Size())
