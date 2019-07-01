@@ -45,6 +45,7 @@ var getBinaryUrl = function(version) {
             try {
                 if( err ) reject(new Error(err));
                 if ( res && res.statusCode >= 400 ) reject(new Error (res.body.message));
+                if (!data.assets) reject(new Error('Please check your internet connection. Also ensure that you are not behind any firewall.'))
                 for (const key in data.assets) {
                     if (data.assets.hasOwnProperty(key)) {
                         const a = data.assets[key];
