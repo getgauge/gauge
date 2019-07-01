@@ -53,7 +53,7 @@ func (w Writer) Write(p []byte) (int, error) {
 	case "debug":
 		write(w.ShouldWriteToStdout, m.Message)
 		if initialized {
-			GetLogger(w.loggerID).Warning(m.Message)
+			GetLogger(w.loggerID).Debug(m.Message)
 		}
 	case "info":
 		write(w.ShouldWriteToStdout, m.Message)
