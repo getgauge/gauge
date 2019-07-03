@@ -283,7 +283,6 @@ func getErrorText(msg []string) string {
 		messageBuilder.WriteString(fmt.Sprintf(`Error ----------------------------------
 
 %s
-		
 `,errMsg))
 	}
 	return fmt.Sprintf(`%s

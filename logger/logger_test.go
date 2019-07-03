@@ -205,7 +205,9 @@ Your Environment Information -----------
 		pluginInfo.GetAllInstalledPluginsWithVersion = func() ([]pluginInfo.PluginInfo, error) {
 			return test.pluginInfos, nil
 		}
-		got := getErrorText("An Error has Occurred: %s", "some error")
+		var errMsgs []string
+		errMsgs = append(errMsgs, fmt.Sprintf("An Error has Occurred: %s", "some error"))
+		got := getErrorText(errMsgs)
 		want := test.expectedText
 
 		if got != want {
