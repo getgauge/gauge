@@ -475,20 +475,12 @@ func getRunnerJSONContents(file string) (*runner.RunnerInfo, error) {
 }
 
 // AllPlugins install the latest version of all plugins specified in Gauge project manifest file
-func AllPlugins(silent bool) {
+func AllPlugins(silent, languageOnly bool) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		logger.Fatalf(true, err.Error())
 	}
-	installPluginsFromManifest(manifest, silent)
-}
-
-func LanguagePlugin(silent bool){
-	manifest, err := manifest.ProjectManifest()
-	if err != nil {
-		logger.Fatalf(true, err.Error())
-	}
-	installLanguagePluginFromManifest(manifest, silent)
+	installPluginsFromManifest(manifest, silent, languageOnly)
 }
 
 // UpdatePlugins updates all the currently installed plugins to its latest version
@@ -566,25 +558,13 @@ func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure b
 	return true
 }
 
-func installLanguagePluginFromManifest(manifest *manifest.Manifest, silent bool){
+func installPluginsFromManifest(manifest *manifest.Manifest, silent, languageOnly bool) {
 	pluginsMap := make(map[string]bool, 0)
 	pluginsMap[manifest.Language] = true
-
-	for pluginName, isRunner := range pluginsMap {
-		if !IsCompatiblePluginInstalled(pluginName, isRunner) {
-			logger.Infof(true, "Compatible version of plugin %s not found. Installing plugin %s...", pluginName, pluginName)
-			HandleInstallResult(Plugin(pluginName, "", silent), pluginName, false)
-		} else {
-			logger.Debugf(true, "Plugin %s is already installed.", pluginName)
+	if !languageOnly {
+		for _, plugin := range manifest.Plugins {
+			pluginsMap[plugin] = false
 		}
-	}
-}
-
-func installPluginsFromManifest(manifest *manifest.Manifest, silent bool) {
-	pluginsMap := make(map[string]bool, 0)
-	pluginsMap[manifest.Language] = true
-	for _, plugin := range manifest.Plugins {
-		pluginsMap[plugin] = false
 	}
 
 	for pluginName, isRunner := range pluginsMap {

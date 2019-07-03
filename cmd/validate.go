@@ -18,10 +18,7 @@
 package cmd
 
 import (
-	"os"
-
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
 )
@@ -43,19 +40,13 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
-			installMissingLanguagePlugin(installPlugins)
+			installMissingPlugins(installPlugins, true)
 			validation.Validate(args)
 		},
 		DisableAutoGenTag: true,
 	}
 	hideSuggestion bool
 )
-
-func installMissingLanguagePlugin(flag bool) {
-	if flag && os.Getenv("GAUGE_PLUGIN_INSTALL") != "false" {
-		install.LanguagePlugin(machineReadable)
-	}
-}
 
 func init() {
 	GaugeCmd.AddCommand(validateCmd)

@@ -33,7 +33,7 @@ var (
   gauge install java -f gauge-java-0.6.3-darwin.x86_64.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if len(args) < 1 {
-				install.AllPlugins(machineReadable)
+				install.AllPlugins(machineReadable, false)
 				return
 			}
 			if zip != "" {
