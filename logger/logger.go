@@ -51,6 +51,7 @@ const (
 var level logging.Level
 var initialized bool
 var loggersMap map[string]*logging.Logger
+var fatalErrors []string
 var fileLogFormat = logging.MustStringFormatter("%{time:02-01-2006 15:04:05.000} [%{module}] [%{level}] %{message}")
 
 // ActiveLogFile log file represents the file which will be used for the backend logging
@@ -153,7 +154,12 @@ func Fatal(stdout bool, msg string) {
 
 // Fatalf logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
 func Fatalf(stdout bool, msg string, args ...interface{}) {
-	message := getErrorText(msg, args...)
+	var msgs []string
+	var builder strings.Builder
+	msgs = append(msgs, getPluginErrorText(), fmt.Sprintf("[gauge]\n\t" + msg, args...))
+	builder.WriteString(getErrorText(msgs))
+	message := builder.String()
+
 	if !initialized {
 		fmt.Fprintf(os.Stderr, msg, args...)
 		return
@@ -256,16 +262,30 @@ func loggingLevel(logLevel string) logging.Level {
 	return logging.INFO
 }
 
-func getErrorText(msg string, args ...interface{}) string {
+func getPluginErrorText() string {
+	var fatalTextBuilder strings.Builder
+	for _, errorText := range fatalErrors {
+		fatalTextBuilder.WriteString(errorText)
+	}
+	return fatalTextBuilder.String()
+}
+
+func getErrorText(msg []string) string {
 	env := []string{runtime.GOOS, version.FullVersion()}
 	if version.GetCommitHash() != "" {
 		env = append(env, version.GetCommitHash())
 	}
 	envText := strings.Join(env, ", ")
-	return fmt.Sprintf(`Error ----------------------------------
+	
+	var messageBuilder strings.Builder
+	for _, errorText := range msg{
+		errMsg := fmt.Sprintf(errorText)
+		messageBuilder.WriteString(fmt.Sprintf(`Error ----------------------------------
 
 %s
-
+`,errMsg))
+	}
+	return fmt.Sprintf(`%s
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
@@ -273,7 +293,7 @@ Get Support ----------------------------
 
 Your Environment Information -----------
 	%s
-	%s`, fmt.Sprintf(msg, args...),
+	%s`, messageBuilder.String(),
 		envText,
 		getPluginVersions())
 }
