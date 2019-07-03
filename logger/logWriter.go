@@ -72,7 +72,8 @@ func (w Writer) Write(p []byte) (int, error) {
 			GetLogger(w.loggerID).Warning(m.Message)
 		}
 	case "fatal":
-		fatalErrors[w.loggerID] = m.Message
+		write(w.ShouldWriteToStdout, m.Message)
+		fatalErrors = append(fatalErrors, fmt.Sprintf("[%s]\n\t%s", w.loggerID, m.Message))
 		//TODO: Aggregate the fatal erros from the plugins and print it at the end of execution
 		// Or print them when Gauge's fataf is used.
 	}
