@@ -35,12 +35,9 @@ function test {
     checkLasterror
 }
 
-if ("$env:GOPATH" -eq "") {
-    $env:GOPATH=$pwd
-}
-if ("$env:GOBIN" -eq "") {
-    $env:GOBIN="$env:GOPATH\bin"
-}
+$env:GOPATH=$pwd
+
+$env:GOBIN="$env:GOPATH\bin"
 
 Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
 
