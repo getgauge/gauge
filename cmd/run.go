@@ -213,9 +213,9 @@ func addFlagsToExecutionArgs(flags *pflag.FlagSet) {
 	})
 }
 
-func installMissingPlugins(flag bool) {
+func installMissingPlugins(flag, languageOnly bool) {
 	if flag && os.Getenv("GAUGE_PLUGIN_INSTALL") != "false" {
-		install.AllPlugins(machineReadable)
+		install.AllPlugins(machineReadable, languageOnly)
 	}
 }
 
@@ -230,7 +230,7 @@ func execute(cmd *cobra.Command, args []string) {
 	if !skipCommandSave {
 		rerun.WritePrevArgs(os.Args)
 	}
-	installMissingPlugins(installPlugins)
+	installMissingPlugins(installPlugins, false)
 	exitCode := execution.ExecuteSpecs(specs)
 	notifyTelemetryIfNeeded(cmd, args)
 	if failSafe && exitCode != execution.ParseFailed {

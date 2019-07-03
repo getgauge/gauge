@@ -40,6 +40,7 @@ var (
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
+			installMissingPlugins(installPlugins, true)
 			validation.Validate(args)
 		},
 		DisableAutoGenTag: true,
@@ -50,5 +51,4 @@ var (
 func init() {
 	GaugeCmd.AddCommand(validateCmd)
 	validateCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
-
 }
