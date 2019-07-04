@@ -43,7 +43,7 @@ func TestGetLoggerShouldGetTheLoggerForGivenModule(t *testing.T) {
 func TestLoggerInitWithInfoLevel(t *testing.T) {
 	Initialize(false, "info", CLI)
 
-	if !GetLogger(gauge).IsEnabledFor(logging.INFO) {
+	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for INFO")
 	}
 }
@@ -51,7 +51,7 @@ func TestLoggerInitWithInfoLevel(t *testing.T) {
 func TestLoggerInitWithDefaultLevel(t *testing.T) {
 	Initialize(false, "", CLI)
 
-	if !GetLogger(gauge).IsEnabledFor(logging.INFO) {
+	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for default log level")
 	}
 }
@@ -59,7 +59,7 @@ func TestLoggerInitWithDefaultLevel(t *testing.T) {
 func TestLoggerInitWithDebugLevel(t *testing.T) {
 	Initialize(false, "debug", CLI)
 
-	if !GetLogger(gauge).IsEnabledFor(logging.DEBUG) {
+	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.DEBUG) {
 		t.Error("Expected gaugeLog to be enabled for DEBUG")
 	}
 }
@@ -67,7 +67,7 @@ func TestLoggerInitWithDebugLevel(t *testing.T) {
 func TestLoggerInitWithWarningLevel(t *testing.T) {
 	Initialize(false, "warning", CLI)
 
-	if !GetLogger(gauge).IsEnabledFor(logging.WARNING) {
+	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.WARNING) {
 		t.Error("Expected gaugeLog to be enabled for WARNING")
 	}
 }
@@ -75,7 +75,7 @@ func TestLoggerInitWithWarningLevel(t *testing.T) {
 func TestLoggerInitWithErrorLevel(t *testing.T) {
 	Initialize(false, "error", CLI)
 
-	if !GetLogger(gauge).IsEnabledFor(logging.ERROR) {
+	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.ERROR) {
 		t.Error("Expected gaugeLog to be enabled for ERROR")
 	}
 }
@@ -205,14 +205,14 @@ Your Environment Information -----------
 		pluginInfo.GetAllInstalledPluginsWithVersion = func() ([]pluginInfo.PluginInfo, error) {
 			return test.pluginInfos, nil
 		}
-		var errMsgs []string
-		errMsgs = append(errMsgs, fmt.Sprintf("An Error has Occurred: %s", "some error"))
-		got := getErrorText(errMsgs)
+		fatalErrors = append(fatalErrors, fmt.Sprintf("An Error has Occurred: %s", "some error"))
+		got := getFatalErrorMsg()
 		want := test.expectedText
 
 		if got != want {
 			t.Errorf("Got %s, want %s", got, want)
 		}
+		fatalErrors = []string{}
 	}
 }
 

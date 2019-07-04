@@ -1,4 +1,4 @@
-// Copyright 2015 ThoughtWorks, Inc.
+// Copyright 2019 ThoughtWorks, Inc.
 
 // This file is part of Gauge.
 
@@ -34,7 +34,7 @@ import (
 )
 
 const (
-	gauge            = "Gauge"
+	gaugeModuleID    = "Gauge"
 	logsDirectory    = "logs_directory"
 	logs             = "logs"
 	gaugeLogFileName = "gauge.log"
@@ -61,7 +61,6 @@ var isLSP bool
 
 // Initialize logger with given level
 func Initialize(mr bool, logLevel string, c int) {
-	loggersMap = make(map[string]*logging.Logger)
 	machineReadable = mr
 	level = loggingLevel(logLevel)
 	switch c {
@@ -73,20 +72,80 @@ func Initialize(mr bool, logLevel string, c int) {
 		isLSP = true
 		ActiveLogFile = getLogFile(lspLogFileName)
 	}
-	addLogger(gauge)
+	addLogger(gaugeModuleID)
 	initialized = true
 }
 
 // GetLogger gets logger for given modules. It creates a new logger for the module if not exists
 func GetLogger(module string) *logging.Logger {
 	if module == "" {
-		return loggersMap[gauge]
+		return loggersMap[gaugeModuleID]
 	}
 	if _, ok := loggersMap[module]; !ok {
 		addLogger(module)
 	}
 	return loggersMap[module]
 
+}
+
+func logInfo(logger *logging.Logger, stdout bool, msg string) {
+	if level >= logging.INFO {
+		write(stdout, msg)
+	}
+	if !initialized {
+		return
+	}
+	logger.Infof(msg)
+}
+
+func logError(logger *logging.Logger, stdout bool, msg string) {
+	if level >= logging.ERROR {
+		write(stdout, msg)
+	}
+	if !initialized {
+		fmt.Fprintf(os.Stderr, msg)
+		return
+	}
+	logger.Errorf(msg)
+}
+
+func logWarning(logger *logging.Logger, stdout bool, msg string) {
+	if level >= logging.WARNING {
+		write(stdout, msg)
+	}
+	if !initialized {
+		return
+	}
+	logger.Warningf(msg)
+}
+
+func logDebug(logger *logging.Logger, stdout bool, msg string) {
+	if level >= logging.DEBUG {
+		write(stdout, msg)
+	}
+	if !initialized {
+		return
+	}
+	logger.Debugf(msg)
+}
+
+func logCritical(logger *logging.Logger, msg string) {
+	if !initialized {
+		fmt.Fprintf(os.Stderr, msg)
+		return
+	}
+	logger.Criticalf(msg)
+
+}
+
+func write(stdout bool, msg string) {
+	if !isLSP && stdout {
+		if machineReadable {
+			machineReadableLog(msg)
+		} else {
+			fmt.Println(msg)
+		}
+	}
 }
 
 // OutMessage contains information for output log
@@ -104,103 +163,20 @@ func (out *OutMessage) ToJSON() (string, error) {
 	return string(json), nil
 }
 
-// Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Info(stdout bool, msg string) {
-	Infof(stdout, msg)
-}
-
-// Infof logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Infof(stdout bool, msg string, args ...interface{}) {
-	write(stdout, msg, args...)
-	if !initialized {
-		return
-	}
-	GetLogger(gauge).Infof(msg, args...)
-}
-
-// Error logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Error(stdout bool, msg string) {
-	Errorf(stdout, msg)
-}
-
-// Errorf logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Errorf(stdout bool, msg string, args ...interface{}) {
-	write(stdout, msg, args...)
-	if !initialized {
-		fmt.Fprintf(os.Stderr, msg, args...)
-		return
-	}
-	GetLogger(gauge).Errorf(msg, args...)
-}
-
-// Warning logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Warning(stdout bool, msg string) {
-	Warningf(stdout, msg)
-}
-
-// Warningf logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Warningf(stdout bool, msg string, args ...interface{}) {
-	write(stdout, msg, args...)
-	if !initialized {
-		return
-	}
-	GetLogger(gauge).Warningf(msg, args...)
-}
-
-// Fatal logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
-func Fatal(stdout bool, msg string) {
-	Fatalf(stdout, msg)
-}
-
-// Fatalf logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
-func Fatalf(stdout bool, msg string, args ...interface{}) {
-	var msgs []string
-	var builder strings.Builder
-	msgs = append(msgs, getPluginErrorText(), fmt.Sprintf("[gauge]\n\t" + msg, args...))
-	builder.WriteString(getErrorText(msgs))
-	message := builder.String()
-
-	if !initialized {
-		fmt.Fprintf(os.Stderr, msg, args...)
-		return
-	}
-	write(stdout, message)
-	GetLogger(gauge).Fatalf(msg, args...)
-}
-
-// Debug logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Debug(stdout bool, msg string) {
-	Debugf(stdout, msg)
-}
-
-// Debugf logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
-func Debugf(stdout bool, msg string, args ...interface{}) {
-	if !initialized {
-		return
-	}
-	GetLogger(gauge).Debugf(msg, args...)
-	if level == logging.DEBUG {
-		write(stdout, msg, args...)
-	}
-}
-
-func write(stdout bool, msg string, args ...interface{}) {
-	if !isLSP && stdout {
-		if machineReadable {
-			strs := strings.Split(fmt.Sprintf(msg, args...), "\n")
-			for _, m := range strs {
-				outMessage := &OutMessage{MessageType: "out", Message: m}
-				m, _ = outMessage.ToJSON()
-				fmt.Println(m)
-			}
-		} else {
-			fmt.Println(fmt.Sprintf(msg, args...))
-		}
+func machineReadableLog(msg string) {
+	strs := strings.Split(msg, "\n")
+	for _, m := range strs {
+		outMessage := &OutMessage{MessageType: "out", Message: m}
+		m, _ = outMessage.ToJSON()
+		fmt.Println(m)
 	}
 }
 
 func addLogger(module string) {
 	l := logging.MustGetLogger(module)
+	if loggersMap == nil {
+		loggersMap = make(map[string]*logging.Logger)
+	}
 	loggersMap[module] = l
 	initFileLogger(ActiveLogFile, module, l)
 }
@@ -262,30 +238,17 @@ func loggingLevel(logLevel string) logging.Level {
 	return logging.INFO
 }
 
-func getPluginErrorText() string {
-	var fatalTextBuilder strings.Builder
-	for _, errorText := range fatalErrors {
-		fatalTextBuilder.WriteString(errorText)
-	}
-	return fatalTextBuilder.String()
-}
-
-func getErrorText(msg []string) string {
+func getFatalErrorMsg() string {
 	env := []string{runtime.GOOS, version.FullVersion()}
 	if version.GetCommitHash() != "" {
 		env = append(env, version.GetCommitHash())
 	}
 	envText := strings.Join(env, ", ")
-	
-	var messageBuilder strings.Builder
-	for _, errorText := range msg{
-		errMsg := fmt.Sprintf(errorText)
-		messageBuilder.WriteString(fmt.Sprintf(`Error ----------------------------------
+
+	return fmt.Sprintf(`Error ----------------------------------
 
 %s
-`,errMsg))
-	}
-	return fmt.Sprintf(`%s
+
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
@@ -293,9 +256,14 @@ Get Support ----------------------------
 
 Your Environment Information -----------
 	%s
-	%s`, messageBuilder.String(),
+	%s`, strings.Join(fatalErrors, "\n\n"),
 		envText,
 		getPluginVersions())
+}
+
+func addFatalError(module, msg string) {
+	msg = strings.TrimSpace(msg)
+	fatalErrors = append(fatalErrors, fmt.Sprintf("[%s]\n%s", module, msg))
 }
 
 func getPluginVersions() string {
@@ -308,11 +276,4 @@ func getPluginVersions() string {
 		pluginVersions = append(pluginVersions, fmt.Sprintf(`%s (%s)`, pi.Name, pi.Version))
 	}
 	return strings.Join(pluginVersions, ", ")
-}
-
-// HandleWarningMessages logs multiple messages in WARNING mode
-func HandleWarningMessages(stdout bool, warnings []string) {
-	for _, warning := range warnings {
-		Warning(stdout, warning)
-	}
 }

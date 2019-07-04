@@ -51,33 +51,16 @@ func (w Writer) Write(p []byte) (int, error) {
 	}
 	switch m.LogLevel {
 	case "debug":
-		write(w.ShouldWriteToStdout, m.Message)
-		if initialized {
-			GetLogger(w.loggerID).Debug(m.Message)
-		}
+		logDebug(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
 	case "info":
-		write(w.ShouldWriteToStdout, m.Message)
-		if initialized {
-			GetLogger(w.loggerID).Info(m.Message)
-		}
+		logInfo(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
 	case "error":
-		write(w.ShouldWriteToStdout, m.Message)
-		fmt.Fprintf(os.Stderr, m.Message)
-		if initialized {
-			GetLogger(w.loggerID).Error(m.Message)
-		}
+		logError(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
 	case "warning":
-		write(w.ShouldWriteToStdout, m.Message)
-		if initialized {
-			GetLogger(w.loggerID).Warning(m.Message)
-		}
+		logWarning(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
 	case "fatal":
-		if initialized {
-			GetLogger(w.loggerID).Warning(m.Message)
-		}
-		fatalErrors = append(fatalErrors, fmt.Sprintf("[%s]\n\t%s", w.loggerID, m.Message))
-		//TODO: Aggregate the fatal erros from the plugins and print it at the end of execution
-		// Or print them when Gauge's fataf is used.
+		logCritical(GetLogger(w.loggerID), m.Message)
+		addFatalError(w.loggerID, m.Message)
 	}
 	return len(p), nil
 }
