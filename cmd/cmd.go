@@ -64,6 +64,7 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			notifyTelemetryIfNeeded(cmd, args)
 			initLogger(cmd.Name())
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
@@ -71,7 +72,6 @@ var (
 			setGlobalFlags()
 			initPackageFlags()
 		},
-		PersistentPostRun: notifyTelemetryIfNeeded,
 	}
 	logLevel        string
 	dir             string
