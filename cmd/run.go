@@ -232,7 +232,6 @@ func execute(cmd *cobra.Command, args []string) {
 	}
 	installMissingPlugins(installPlugins, false)
 	exitCode := execution.ExecuteSpecs(specs)
-	notifyTelemetryIfNeeded(cmd, args)
 	if failSafe && exitCode != execution.ParseFailed {
 		exitCode = 0
 	}
