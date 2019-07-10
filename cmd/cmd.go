@@ -19,7 +19,6 @@ package cmd
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 
 	"github.com/getgauge/gauge/config"
@@ -64,8 +63,8 @@ var (
 		},
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			notifyTelemetryIfNeeded(cmd, args)
 			initLogger(cmd.Name())
+			notifyTelemetryIfNeeded(cmd, args)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
 			config.SetProjectRoot(args)
@@ -102,9 +101,9 @@ func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
 				Type:    "info",
 			}
 			s, _ := n.getJSON()
-			fmt.Printf("{\"type\":\"notification\",\"notification\":%s}\n", s)
+			logger.Infof(true, "{\"type\":\"notification\",\"notification\":%s}\n", s)
 		} else {
-			fmt.Printf("%s\n%s\n", track.GaugeTelemetryMessageHeading, track.GaugeTelemetryMessage)
+			logger.Infof(true, "%s\n%s\n", track.GaugeTelemetryMessageHeading, track.GaugeTelemetryMessage)
 		}
 	}
 }
