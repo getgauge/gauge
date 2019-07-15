@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // Writer reperesnts to a custom writer.
@@ -40,27 +41,35 @@ type LogInfo struct {
 }
 
 func (w Writer) Write(p []byte) (int, error) {
-	m := &LogInfo{}
-	err := json.Unmarshal(p, m)
-	if err != nil {
-		fmt.Fprint(w.File, string(p))
-		return len(p), nil
-	}
-	if w.stream > 0 {
-		m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
-	}
-	switch m.LogLevel {
-	case "debug":
-		logDebug(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
-	case "info":
-		logInfo(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
-	case "error":
-		logError(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
-	case "warning":
-		logWarning(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
-	case "fatal":
-		logCritical(GetLogger(w.loggerID), m.Message)
-		addFatalError(w.loggerID, m.Message)
+	logEntry := string(p)
+	logEntries := strings.Split(logEntry, "\n")
+	for _, _logEntry := range logEntries {
+		_logEntry = strings.Trim(_logEntry, " ")
+		if len(_logEntry) == 0 {
+			continue
+		}
+		_p := []byte(_logEntry)
+		m := &LogInfo{}
+		err := json.Unmarshal(_p, m)
+		if err != nil {
+			fmt.Fprintln(w.File, string(_p))
+		}
+		if w.stream > 0 {
+			m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
+		}
+		switch m.LogLevel {
+		case "debug":
+			logDebug(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+		case "info":
+			logInfo(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+		case "error":
+			logError(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+		case "warning":
+			logWarning(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+		case "fatal":
+			logCritical(GetLogger(w.loggerID), m.Message)
+			addFatalError(w.loggerID, m.Message)
+		}
 	}
 	return len(p), nil
 }
