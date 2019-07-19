@@ -53,6 +53,7 @@ var initialized bool
 var loggersMap map[string]*logging.Logger
 var fatalErrors []string
 var fileLogFormat = logging.MustStringFormatter("%{time:02-01-2006 15:04:05.000} [%{module}] [%{level}] %{message}")
+var fileLoggerLeveled logging.LeveledBackend
 
 // ActiveLogFile log file represents the file which will be used for the backend logging
 var ActiveLogFile string
@@ -72,6 +73,7 @@ func Initialize(mr bool, logLevel string, c int) {
 		isLSP = true
 		ActiveLogFile = getLogFile(lspLogFileName)
 	}
+	initFileLoggerBackend()
 	addLogger(gaugeModuleID)
 	initialized = true
 }
@@ -177,17 +179,16 @@ func addLogger(module string) {
 	if loggersMap == nil {
 		loggersMap = make(map[string]*logging.Logger)
 	}
+	l.SetBackend(fileLoggerLeveled)
 	loggersMap[module] = l
-	initFileLogger(ActiveLogFile, module, l)
 }
 
-func initFileLogger(logFileName string, module string, fileLogger *logging.Logger) {
+func initFileLoggerBackend() {
 	var backend logging.Backend
-	backend = createFileLogger(logFileName, 10)
+	backend = createFileLogger(ActiveLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
-	fileLoggerLeveled := logging.AddModuleLevel(fileFormatter)
+	fileLoggerLeveled = logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
-	fileLogger.SetBackend(fileLoggerLeveled)
 }
 
 func createFileLogger(name string, size int) logging.Backend {
