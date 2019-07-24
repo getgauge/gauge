@@ -271,6 +271,7 @@ func initializeRunner() {
 	err = startRunner()
 	if err != nil {
 		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
+		return
 	}
 	lRunner.lspID = id
 }
