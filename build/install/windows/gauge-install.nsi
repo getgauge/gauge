@@ -209,7 +209,7 @@ Section -Post
     ${EndIf}
 
     ${If} $R3 == 1
-      DetailPrint "Installing plugin : javavscript"
+      DetailPrint "Installing plugin : javascript"
       nsExec::ExecToLog 'gauge install js'
     ${EndIf}
 
