@@ -18,6 +18,7 @@
 package filter
 
 import (
+	"strings"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
@@ -44,19 +45,21 @@ type scenariosFilter struct {
 }
 
 func (tf *tagFilterForParallelRun) filter(specs []*gauge.Specification) ([]*gauge.Specification, []*gauge.Specification) {
-	if tf.tagExp != "" {
-		validateTagExpression(tf.tagExp)
-		return filterSpecsByTags(specs, tf.tagExp)
-	}
-	return specs, specs
+	return filterByTags(tf.tagExp, specs)
 }
 
 func (tagsFilter *tagsFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
-	if tagsFilter.tagExp != "" {
-		validateTagExpression(tagsFilter.tagExp)
-		specs, _ = filterSpecsByTags(specs, tagsFilter.tagExp)
-	}
+	specs, _ = filterByTags(tagsFilter.tagExp, specs)
 	return specs
+}
+
+func filterByTags(tagExpression string, specs []*gauge.Specification) ([]*gauge.Specification, []*gauge.Specification) {
+	if tagExpression != "" {
+		logger.Debugf(true, "Applying tags filter: %s", tagExpression)
+		validateTagExpression(tagExpression)
+		return filterSpecsByTags(specs, tagExpression)
+	}
+	return specs, specs
 }
 
 func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
@@ -67,6 +70,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 	if groupFilter.group < 1 || groupFilter.group > groupFilter.execStreams {
 		return make([]*gauge.Specification, 0)
 	}
+	logger.Debugf(true, "Applying group filter: %d", groupFilter.group)
 	group := DistributeSpecs(specs, groupFilter.execStreams)[groupFilter.group-1]
 	if group == nil {
 		return make([]*gauge.Specification, 0)
@@ -76,6 +80,7 @@ func (groupFilter *specsGroupFilter) filter(specs []*gauge.Specification) []*gau
 
 func (scenarioFilter *scenariosFilter) filter(specs []*gauge.Specification) []*gauge.Specification {
 	if len(scenarioFilter.scenarios) != 0 {
+		logger.Debugf(true, "Applying scenarios filter: %s", strings.Join(scenarioFilter.scenarios, ", "))
 		specs = filterSpecsByScenarioName(specs, scenarioFilter.scenarios)
 	}
 	return specs

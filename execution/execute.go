@@ -169,6 +169,7 @@ var ExecuteSpecs = func(specDirs []string) int {
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 
 	e := newExecution(ei)
+	logger.Debug(true, "Run started")
 	return printExecutionResult(e.run(), res.ParseOk)
 }
 
