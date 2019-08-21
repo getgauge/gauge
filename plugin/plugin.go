@@ -261,7 +261,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
-
+			logger.Debugf(true, "Starting %s plugin", pd.Name)
 			plugin, err := StartPlugin(pd, executionScope)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
@@ -273,6 +273,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				plugin.pluginCmd.Process.Kill()
 				continue
 			}
+			logger.Debugf(true, "Established connection to %s plugin", pd.Name)
 			plugin.connection = pluginConnection
 			handler.addPlugin(pluginID, plugin)
 		}
