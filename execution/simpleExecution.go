@@ -79,7 +79,7 @@ func (e *simpleExecution) execute() {
 		e.suiteResult.UpdateExecTime(e.startTime)
 		e.suiteResult.SetSpecsSkippedCount()
 	}
-	logger.Debug(true, "Initialising suit data store.")
+	logger.Debug(true, "Initialising suite data store.")
 	initSuiteDataStoreResult := e.initSuiteDataStore()
 	if initSuiteDataStoreResult.GetFailed() {
 		e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
