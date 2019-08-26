@@ -148,7 +148,7 @@ func init() {
 	f.BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
 	f.BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
 	f.BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
-	f.BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
+	f.BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Hide step implementation stub for every unimplemented step")
 	f.BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of failures.")
 	f.BoolVarP(&skipCommandSave, skipCommandSaveName, "", skipCommandSaveDefault, "Skip saving last command in lastRunCmd.json")
 	f.MarkHidden(skipCommandSaveName)
