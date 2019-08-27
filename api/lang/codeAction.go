@@ -46,14 +46,17 @@ func codeActions(req *jsonrpc2.Request) (interface{}, error) {
 
 func getSpecCodeAction(params lsp.CodeActionParams) ([]lsp.Command, error) {
 	var actions []lsp.Command
+	line := params.Range.Start.Line
 	for _, d := range params.Context.Diagnostics {
 		if d.Code != "" {
 			actions = append(actions, createCodeAction(generateStepCommand, generateStubTitle, []interface{}{d.Code}))
-			cptInfo, err := createConceptInfo(params.TextDocument.URI, params.Range.Start.Line)
+			cptInfo, err := createConceptInfo(params.TextDocument.URI, line)
 			if err != nil {
 				return nil, err
 			}
-			actions = append(actions, createCodeAction(generateConceptCommand, generateConceptTitle, []interface{}{cptInfo}))
+			if cptInfo != nil {
+				actions = append(actions, createCodeAction(generateConceptCommand, generateConceptTitle, []interface{}{cptInfo}))
+			}
 		}
 	}
 	return actions, nil
@@ -87,14 +90,17 @@ func createConceptInfo(uri lsp.DocumentURI, line int) (interface{}, error) {
 			}
 		}
 	}
-	count := strings.Count(stepValue.StepValue, "{}")
-	for i := 0; i < count; i++ {
-		stepValue.StepValue = strings.Replace(stepValue.StepValue, "{}", fmt.Sprintf("<arg%d>", i), 1)
+	if stepValue != nil {
+		count := strings.Count(stepValue.StepValue, "{}")
+		for i := 0; i < count; i++ {
+			stepValue.StepValue = strings.Replace(stepValue.StepValue, "{}", fmt.Sprintf("<arg%d>", i), 1)
+		}
+		cptName := strings.Replace(stepValue.StepValue, "*", "", -1)
+		return concpetInfo{
+			ConceptName: fmt.Sprintf("# %s\n* ", strings.TrimSpace(cptName)),
+		}, nil
 	}
-	cptName := strings.Replace(stepValue.StepValue, "*", "", -1)
-	return concpetInfo{
-		ConceptName: fmt.Sprintf("# %s\n* ", strings.TrimSpace(cptName)),
-	}, nil
+	return nil, nil
 }
 
 func extractStepValueAndParams(step *gauge.Step, linetext string) *gauge.StepValue {
