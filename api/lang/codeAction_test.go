@@ -240,3 +240,49 @@ func TestGetCodeActionForUnimplementedStepWithFileParameter(t *testing.T) {
 		t.Errorf("want: `%s`,\n got: `%s`", want, got)
 	}
 }
+
+func TestNotToPanicForUnimplementedWithInvalidStartLine(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	openFilesCache.add(lsp.DocumentURI("foo.spec"), "# spec heading\n## scenario heading\n* foo bar")
+
+	stub := "a stub for unimplemented step"
+	d := []lsp.Diagnostic{
+		{
+			Range: lsp.Range{
+				Start: lsp.Position{Line: 0, Character: 0},
+				End:   lsp.Position{Line: 0, Character: 0},
+			},
+			Message:  "Step implantation not found",
+			Severity: 1,
+			Code:     stub,
+		},
+	}
+	codeActionParams := lsp.CodeActionParams{
+		TextDocument: lsp.TextDocumentIdentifier{URI: "foo.spec"},
+		Context:      lsp.CodeActionContext{Diagnostics: d},
+		Range: lsp.Range{
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 0},
+		},
+	}
+	b, _ := json.Marshal(codeActionParams)
+	p := json.RawMessage(b)
+
+	want := []lsp.Command{
+		{
+			Command:   generateStepCommand,
+			Title:     generateStubTitle,
+			Arguments: []interface{}{stub},
+		},
+	}
+
+	got, err := codeActions(&jsonrpc2.Request{Params: &p})
+
+	if err != nil {
+		t.Errorf("expected error to be nil. \nGot : %s", err)
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, got)
+	}
+}
