@@ -111,6 +111,7 @@ func (gp *GaugePlugins) GracefullyKillPlugins() {
 	var wg sync.WaitGroup
 	for _, plugin := range gp.pluginsMap {
 		wg.Add(1)
+		logger.Debugf(true, "Sending kill message to %s plugin.", plugin.descriptor.Name)
 		go plugin.kill(&wg)
 	}
 	wg.Wait()
