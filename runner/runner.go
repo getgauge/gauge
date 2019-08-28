@@ -243,6 +243,7 @@ func (r *LanguageRunner) IsMultithreaded() bool {
 func (r *LanguageRunner) Kill() error {
 	if r.Alive() {
 		defer r.connection.Close()
+		logger.Debug(true, "Sending kill message to runner.")
 		conn.SendProcessKillMessage(r.connection)
 
 		exited := make(chan bool, 1)
@@ -451,6 +452,7 @@ func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, ki
 	if err != nil {
 		return nil, err
 	}
+	logger.Debug(true, "Starting runner")
 	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), outputStreamWriter, killChannel, debug)
 	if err != nil {
 		return nil, err
@@ -469,5 +471,6 @@ func connect(h *conn.GaugeConnectionHandler, runner *LanguageRunner) error {
 		return connErr
 	}
 	runner.connection = connection
+	logger.Debug(true, "Established connection to runner.")
 	return nil
 }

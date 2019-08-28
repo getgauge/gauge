@@ -166,6 +166,7 @@ func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r r
 
 // ValidateSpecs parses the specs, creates a new validator and call the runner to get the validation result.
 func ValidateSpecs(args []string, debug bool) *ValidationResult {
+	logger.Debug(true, "Parsing started.")
 	conceptDict, res, err := parser.ParseConcepts()
 	if err != nil {
 		logger.Fatalf(true, "Unable to validate : %s", err.Error())
@@ -185,6 +186,7 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	if specsFailed {
 		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
+	logger.Debug(true, "Parsing completed.")
 	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 
@@ -276,6 +278,7 @@ func NewValidator(s []*gauge.Specification, r runner.Runner, c *gauge.ConceptDic
 
 func (v *validator) Validate() validationErrors {
 	validationStatus := make(validationErrors)
+	logger.Debug(true, "Validation started.")
 	specValidator := &SpecValidator{runner: v.runner, conceptsDictionary: v.conceptsDictionary, stepValidationCache: make(map[string]error)}
 	for _, spec := range v.specsToExecute {
 		specValidator.specification = spec
@@ -287,6 +290,7 @@ func (v *validator) Validate() validationErrors {
 	if len(validationStatus) > 0 {
 		return validationStatus
 	}
+	logger.Debug(true, "Validation completed.")
 	return nil
 }
 
