@@ -47,3 +47,25 @@ func convertCsvToTable(csvContents string) (*gauge.Table, error) {
 	}
 	return table, nil
 }
+func convertCsvAndAddToTable(csvContents string, table *gauge.Table) {
+	r := csv.NewReader(strings.NewReader(csvContents))
+	var de = os.Getenv(env.CsvDelimiter)
+	if de != "" {
+		r.Comma = []rune(os.Getenv(env.CsvDelimiter))[0]
+	}
+	r.Comment = '#'
+	lines, err := r.ReadAll()
+	if err != nil {
+
+	}
+	
+
+	for i, line := range lines {
+		if i == 0 {
+			table.AddHeaders1(line)
+		} else {
+			table.AddRowValues(table.CreateTableCells(line))
+		}
+	}
+
+}

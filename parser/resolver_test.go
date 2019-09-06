@@ -18,6 +18,8 @@
 package parser
 
 import (
+	"fmt"
+	"strings"
 	"path/filepath"
 
 	"github.com/getgauge/gauge/gauge"
@@ -73,8 +75,29 @@ func (s *MySuite) TestConvertCsvToTable(c *C) {
 }
 
 func (s *MySuite) TestConvertEmptyCsvToTable(c *C) {
-	table, _ := convertCsvToTable("")
-	c.Assert(len(table.Columns), Equals, 0)
+	var filesPath = "C:/GTS_Project_Repo/GaugeProject/Gauge/TestData/InputData/DemoScriptDetails.csv;C:/GTS_Project_Repo/GaugeProject/Gauge/TestData/InputData/DemoScriptDetails1.csv"
+	files :=strings.Split(filesPath,";")
+	
+	//*gauge.Table table;
+	csv := util.GetTransposedCSVContent(files[0])
+	// if err != nil {
+		
+	// }
+	table, _ := convertCsvToTable(csv)
+	for index := 1; index < len(files); index++ {
+		csv,err  := util.GetFileContents(files[index])
+	if err != nil {
+		
+	}
+	if index!=0 {
+	convertCsvAndAddToTable(csv,table )
+	fmt.Println(table.Columns)
+	}
+	
+	//c.Assert(len(table.Columns), NotEquals, 0)
+	}
+	
+	
 }
 
 func (s *MySuite) TestParsingUnknownSpecialType(c *C) {

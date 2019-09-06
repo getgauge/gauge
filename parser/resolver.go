@@ -161,14 +161,33 @@ func initializePredefinedResolvers() map[string]resolverFn {
 			return &gauge.StepArg{Value: fileContent, ArgType: gauge.SpecialString}, nil
 		},
 		"table": func(filePath string) (*gauge.StepArg, error) {
-			csv, err := util.GetFileContents(filePath)
+			files := strings.Split(filePath, ";")
+
+			//*gauge.Table table;
+			csv, err := util.GetFileContents(files[0])
 			if err != nil {
 				return nil, err
 			}
 			csvTable, err := convertCsvToTable(csv)
-			if err != nil {
-				return nil, err
+			for index := 1; index < len(files); index++ {
+				csv, err := util.GetFileContents(files[index])
+				if err != nil {
+					return nil, err
+				}
+				if index != 0 {
+					convertCsvAndAddToTable(csv, csvTable)
+					//fmt.Println(table.Columns)
+				}
 			}
+			// 	csv, err := util.GetFileContents(filePath)
+			// 	if err != nil {
+			// 		return nil, err
+			// 	}
+			// 	csvTable, err := convertCsvToTable(csv)
+			// 	if err != nil {
+			// 		return nil, err
+
+			// }
 			return &gauge.StepArg{Table: *csvTable, ArgType: gauge.SpecialTable}, nil
 		},
 	}

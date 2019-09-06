@@ -107,6 +107,17 @@ func (table *Table) AddHeaders(columnNames []string) {
 	}
 }
 
+func (table *Table) AddHeaders1(columnNames []string) {
+	table.headerIndexMap = make(map[string]int)
+	table.Headers = make([]string, len(columnNames))
+	table.Columns =append( make([][]TableCell, len(columnNames)),table.Columns...)
+	for i, column := range columnNames {
+		table.Headers[i] = column
+		table.headerIndexMap[column] = i
+		table.Columns[i] = make([]TableCell, 0)
+	}
+}
+
 func (table *Table) AddRowValues(tableCells []TableCell) {
 	table.addRows(tableCells)
 }
@@ -118,6 +129,8 @@ func (table *Table) CreateTableCells(rowValues []string) []TableCell {
 	}
 	return tableCells
 }
+
+
 
 func (table *Table) toHeaderSizeRow(rows []TableCell) []TableCell {
 	finalCells := make([]TableCell, 0)
