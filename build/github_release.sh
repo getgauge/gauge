@@ -51,7 +51,7 @@ function clone_and_change_repo() {
     echo "-----------------------------------------"
     echo "Cloning $githubUser/$repoName to $dest/$repoName"
     echo "-----------------------------------------"
-    hub clone "$githubUser/$repoName" "$dest/$repoName" --depth 1
+    hub clone "https://github.com/$githubUser/$repoName" "$dest/$repoName" --depth 1
     cd "$dest/$repoName"
 }
 
