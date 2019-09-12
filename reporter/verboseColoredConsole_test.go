@@ -104,17 +104,15 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 
 	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: sceHeading}}, gauge_messages.ExecutionInfo{}, scnRes)
 	c.Assert(dw.output, Equals, spaces(scenarioIndentation)+"## First Scenario\t\n")
-	dw.output = ""
-
 	cc.StepStart(stepText)
 
 	twoLevelIndentation := spaces(scenarioIndentation + stepIndentation)
-	expectedStepStartOutput := twoLevelIndentation + stepText + newline
-	c.Assert(dw.output, Equals, expectedStepStartOutput)
+	expectedStepStartOutput := twoLevelIndentation + stepText
+	c.Assert(cc.headingBuffer.String(), Equals, expectedStepStartOutput)
 	dw.output = ""
 
 	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+twoLevelIndentation+stepText+"\t ...[PASS]\n")
+	c.Assert(dw.output, Equals, twoLevelIndentation+stepText+"\t ...[PASS]\n")
 
 	cc.ScenarioEnd(nil, sceRes, gauge_messages.ExecutionInfo{})
 	c.Assert(cc.headingBuffer.String(), Equals, "")
@@ -122,12 +120,11 @@ func (s *MySuite) TestScenarioStartAndScenarioEnd_ColoredConsole(c *C) {
 }
 
 func (s *MySuite) TestStepStart_Verbose(c *C) {
-	dw, cc := setupVerboseColoredConsole()
+	_, cc := setupVerboseColoredConsole()
 	cc.indentation = 2
 
 	cc.StepStart("* say hello")
-
-	c.Assert(dw.output, Equals, "      * say hello\n")
+	c.Assert(cc.headingBuffer.String(), Equals, "      * say hello")
 }
 
 func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
@@ -152,7 +149,7 @@ func (s *MySuite) TestFailingStepEndInVerbose_ColoredConsole(c *C) {
         Stacktrace:` + spaces(1) + `
         my stacktrace
 `
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+"      "+stepText+"\t ...[FAIL]\n"+expectedErrMsg)
+	c.Assert(dw.output, Equals, "      "+stepText+"\t ...[FAIL]\n"+expectedErrMsg)
 }
 
 func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
@@ -169,8 +166,8 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
 
 	cc.StepStart(stepText)
 
-	expectedStepStartOutput := spaces(cc.indentation) + stepText + newline
-	c.Assert(dw.output, Equals, expectedStepStartOutput)
+	expectedStepStartOutput := spaces(cc.indentation) + stepText
+	c.Assert(cc.headingBuffer.String(), Equals, expectedStepStartOutput)
 	dw.output = ""
 
 	cc.StepEnd(gauge.Step{LineText: stepText}, stepRes, specInfo)
@@ -182,7 +179,7 @@ func (s *MySuite) TestStepStartAndStepEnd_ColoredConsole(c *C) {
         Stacktrace:` + spaces(1) + `
         ` + stacktrace + `
 `
-	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + stepText + "\t ...[FAIL]\n" + expectedErrMsg
+	expectedStepEndOutput := spaces(6) + stepText + "\t ...[FAIL]\n" + expectedErrMsg
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
@@ -199,9 +196,8 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
 	stepText := "* Say hello to all"
 	cc.StepStart(stepText)
 
-	expectedStepStartOutput := spaces(cc.indentation) + stepText + newline
-	c.Assert(dw.output, Equals, expectedStepStartOutput)
-	dw.output = ""
+	expectedStepStartOutput := spaces(cc.indentation) + stepText
+	c.Assert(cc.headingBuffer.String(), Equals, expectedStepStartOutput)
 
 	cc.Errorf("Failed!")
 	c.Assert(dw.output, Equals, spaces(cc.indentation+errorIndentation)+"Failed!\n")
@@ -216,7 +212,7 @@ func (s *MySuite) TestStepFailure_ColoredConsole(c *C) {
         Stacktrace:` + spaces(1) + `
         ` + stacktrace + `
 `
-	expectedStepEndOutput := cursorUp + eraseLine + cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n" + expectedErrMsg
+	expectedStepEndOutput := cursorUp + eraseLine + spaces(6) + "* Say hello to all\t ...[FAIL]\n" + spaces(8) + "Failed!\n" + expectedErrMsg
 	c.Assert(dw.output, Equals, expectedStepEndOutput)
 }
 
@@ -301,7 +297,7 @@ func (s *MySuite) TestStepEndWithPreHookFailure_ColoredConsole(c *C) {
         Stacktrace:` + spaces(1) + `
         ` + stackTrace + `
 `
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+spaces(scenarioIndentation+stepIndentation)+stepText+newline+expectedErrMsg)
+	c.Assert(dw.output, Equals, spaces(scenarioIndentation+stepIndentation)+stepText+newline+expectedErrMsg)
 }
 
 func (s *MySuite) TestStepEndWithPostHookFailure_ColoredConsole(c *C) {
@@ -324,7 +320,7 @@ func (s *MySuite) TestStepEndWithPostHookFailure_ColoredConsole(c *C) {
         Stacktrace:` + spaces(1) + `
         ` + stackTrace + `
 `
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+spaces(scenarioIndentation+stepIndentation)+stepText+newline+expectedErrMsg)
+	c.Assert(dw.output, Equals, spaces(scenarioIndentation+stepIndentation)+stepText+newline+expectedErrMsg)
 }
 
 func (s *MySuite) TestStepEndWithPreAndPostHookFailure_ColoredConsole(c *C) {
@@ -348,7 +344,7 @@ func (s *MySuite) TestStepEndWithPreAndPostHookFailure_ColoredConsole(c *C) {
 	c.Assert(cc.indentation, Equals, scenarioIndentation)
 	err1 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), preHookErrMsg, spaces(8), spaces(8), stackTrace)
 	err2 := fmt.Sprintf("%sError Message: %s\n%sStacktrace: \n%s%s\n", spaces(8), postHookErrMsg, spaces(8), spaces(8), stackTrace)
-	c.Assert(dw.output, Equals, cursorUp+eraseLine+spaces(scenarioIndentation+stepIndentation)+stepText+newline+err1+err2)
+	c.Assert(dw.output, Equals, spaces(scenarioIndentation+stepIndentation)+stepText+newline+err1+err2)
 }
 
 func (s *MySuite) TestSubscribeScenarioEndPreHookFailure_ColoredConsole(c *C) {
