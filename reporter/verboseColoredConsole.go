@@ -97,7 +97,6 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 	c.indentation += stepIndentation
 	logger.Debug(false, stepText)
 	c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
-	c.displayMessage(c.headingBuffer.String()+newline, ct.None)
 }
 
 func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
