@@ -97,11 +97,6 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 	}
 }
 
-//func (s *MySuite) TestInstallGaugePluginFromNonExistingZipFile(c *C) {
-//	result := InstallPluginFromZipFile(filepath.Join("test_resources", "notPresent.zip"), "ruby")
-//	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("ZipFile %s does not exist", filepath.Join("test_resources", "notPresent.zip")))
-//}
-//
 func (s *MySuite) TestReturnsErrorInsteadOfPanicDuringZipFileInstall(c *C) {
 
 	sourceFileName := filepath.Join("_testdata", "plugin.json")
