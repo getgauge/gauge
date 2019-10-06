@@ -24,6 +24,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 
 	"github.com/getgauge/gauge/util"
@@ -114,7 +115,7 @@ func (s *MySuite) TestReturnsErrorInsteadOfPanicDuringZipFileInstall(c *C) {
 	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided zip file is not a valid plugin of ruby"))
 
 	result = InstallPluginFromZipFile(targetPathMultipleDots, "ruby")
-	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided plugin is not compatible with OS linux amd64"))
+	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH))
 }
 
 func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
