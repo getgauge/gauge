@@ -86,7 +86,7 @@ func (dict *ConceptDictionary) UpdateLookupForNestedConcepts() error {
 			stepInsideConcept.Parent = concept.ConceptStep
 			if nestedConcept := dict.Search(stepInsideConcept.Value); nestedConcept != nil {
 				for i, arg := range nestedConcept.ConceptStep.Args {
-					stepArg := StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value}
+					stepArg := StepArg{ArgType: stepInsideConcept.Args[i].ArgType, Value: stepInsideConcept.Args[i].Value, Table: stepInsideConcept.Args[i].Table}
 					if err := stepInsideConcept.Lookup.AddArgValue(arg.Value, &stepArg); err != nil {
 						return err
 					}

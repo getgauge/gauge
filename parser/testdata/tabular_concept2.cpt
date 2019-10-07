@@ -1,0 +1,8 @@
+# another concept with <foo> and inline table <table>
+* first step with <foo> and table <table>
+
+# my concept
+* another concept with "bar" and inline table
+  |id|id  |
+  |1 |gauge |
+  |2 |mingle|

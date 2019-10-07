@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	. "gopkg.in/check.v1"
+	"testing"
 )
 
 func assertStepEqual(c *C, expected, actual *gauge.Step) {
@@ -198,7 +199,7 @@ func (s *MySuite) TestConceptHavingItemsWithComments(c *C) {
 	c.Assert(concept.ConceptStep.Items[3].(*gauge.Comment).Value, Equals, "Comment1")
 }
 
-func (s *MySuite) TestConceptHavingItemsWithTablesAndComments(c *C) {
+func (s *MySuite) TestConceptHavingItemsComments(c *C) {
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "tabular_concept.cpt"))
 
@@ -209,6 +210,52 @@ func (s *MySuite) TestConceptHavingItemsWithTablesAndComments(c *C) {
 	c.Assert(len(concept.ConceptStep.PreComments), Equals, 1)
 	c.Assert(concept.ConceptStep.PreComments[0].Value, Equals, "COMMENT")
 	c.Assert(concept.ConceptStep.Items[2].(*gauge.Comment).Value, Equals, "   comment")
+}
+
+func TestConceptHavingItemsWithTables(t *testing.T) {
+	conceptDictionary := gauge.NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "tabular_concept.cpt"))
+
+	AddConcepts([]string{path}, conceptDictionary)
+
+	concept := conceptDictionary.Search("my concept {}")
+	if len(concept.ConceptStep.Items) != 3 {
+		t.Errorf("Incorrect number of items; want %d, got %d", 3, len(concept.ConceptStep.Items))
+	}
+	if got := concept.ConceptStep.Items[1].Kind(); got != gauge.StepKind {
+		t.Errorf("Incorrect concept step item kind; want %d, got %d", gauge.StepKind, got)
+	}
+	if concept.ConceptStep.Items[1].(*gauge.Step).HasInlineTable == true {
+		t.Errorf("Concept Step does not have inline table")
+	}
+}
+
+func TestConceptHavingConceptStepWithInlineTable(t *testing.T) {
+	conceptDictionary := gauge.NewConceptDictionary()
+	path, _ := filepath.Abs(filepath.Join("testdata", "tabular_concept2.cpt"))
+
+	AddConcepts([]string{path}, conceptDictionary)
+
+	concept := conceptDictionary.Search("my concept")
+	if got := len(concept.ConceptStep.Items); got != 2 {
+		t.Errorf("Incorrect number of concept step items; want %d, got %d", 2, got)
+	}
+	anotherConceptStep := concept.ConceptStep.Items[1].(*gauge.Step)
+	if anotherConceptStep.HasInlineTable == false {
+		t.Errorf("Expected first Item to have inline table")
+	}
+	if anotherConceptStep.IsConcept == false {
+		t.Errorf("Expected a nested concept step")
+	}
+	if len(anotherConceptStep.Args) != 2 {
+		t.Errorf("Incorrect number of Args for concept step")
+	}
+	if anotherConceptStep.Args[0].ArgValue() != "bar" {
+		t.Errorf("Incorrect first param value; want %s, got %s", "bar", anotherConceptStep.Args[0].ArgValue())
+	}
+	if anotherConceptStep.Args[1].ArgType != gauge.TableArg {
+		t.Errorf("Incorrect second param value; want %s, got %s", gauge.TableArg, anotherConceptStep.Args[1].ArgType)
+	}
 }
 
 func (s *MySuite) TestMultiLevelConcept(c *C) {
