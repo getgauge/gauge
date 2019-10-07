@@ -225,7 +225,7 @@ func TestConceptHavingItemsWithTables(t *testing.T) {
 	if got := concept.ConceptStep.Items[1].Kind(); got != gauge.StepKind {
 		t.Errorf("Incorrect concept step item kind; want %d, got %d", gauge.StepKind, got)
 	}
-	if concept.ConceptStep.Items[1].(*gauge.Step).HasInlineTable == true {
+	if concept.ConceptStep.Items[1].(*gauge.Step).HasInlineTable == false {
 		t.Errorf("Concept Step does not have inline table")
 	}
 }
