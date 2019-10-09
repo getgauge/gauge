@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 const (

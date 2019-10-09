@@ -30,7 +30,7 @@ import (
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/natefinch/lumberjack"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 const (
@@ -105,7 +105,7 @@ func logError(logger *logging.Logger, stdout bool, msg string) {
 		write(stdout, msg)
 	}
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprint(os.Stderr, msg)
 		return
 	}
 	logger.Errorf(msg)
@@ -133,7 +133,7 @@ func logDebug(logger *logging.Logger, stdout bool, msg string) {
 
 func logCritical(logger *logging.Logger, msg string) {
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprint(os.Stderr, msg)
 		return
 	}
 	logger.Criticalf(msg)
