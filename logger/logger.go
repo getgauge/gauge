@@ -184,8 +184,7 @@ func addLogger(module string) {
 }
 
 func initFileLoggerBackend() {
-	var backend logging.Backend
-	backend = createFileLogger(ActiveLogFile, 10)
+	var backend = createFileLogger(ActiveLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled = logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
