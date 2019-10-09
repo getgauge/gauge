@@ -162,7 +162,7 @@ func ExecuteInitHookForRunner(language string) error {
 	if err != nil {
 		return err
 	}
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = runnerInfo.Init.Windows
@@ -176,6 +176,10 @@ func ExecuteInitHookForRunner(language string) error {
 	}
 
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
+	if err != nil {
+		return err
+	}
+
 	runnerDir := filepath.Dir(languageJSONFilePath)
 	logger.Debugf(true, "Running init hook command => %s", command)
 	writer := logger.NewLogWriter(language, true, 0)
@@ -419,7 +423,7 @@ func getCleanEnv(port string, env []string, debug bool, pathToAdd []string) []st
 }
 
 func getOsSpecificCommand(r RunnerInfo) []string {
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = r.Run.Windows

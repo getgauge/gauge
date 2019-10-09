@@ -167,7 +167,7 @@ func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
 }
 
 func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = pd.Command.Windows

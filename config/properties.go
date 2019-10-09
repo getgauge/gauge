@@ -180,6 +180,9 @@ func writeConfig(p *properties) error {
 	var f *os.File
 	if _, err = os.Stat(gaugePropertiesFile); err != nil {
 		f, err = os.Create(gaugePropertiesFile)
+		if err != nil {
+			return err
+		}
 	} else {
 		f, err = os.OpenFile(gaugePropertiesFile, os.O_WRONLY, os.ModeExclusive)
 		if err != nil {

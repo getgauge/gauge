@@ -241,8 +241,7 @@ func (s *MySuite) TestInitStepsCache(c *C) {
 }
 
 func (s *MySuite) TestInitTagsCache(c *C) {
-	f, _ := createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
-	f, _ = filepath.Abs(f)
+	createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
@@ -253,10 +252,8 @@ func (s *MySuite) TestInitTagsCache(c *C) {
 }
 
 func (s *MySuite) TestInitTagsCacheWithMultipleFiles(c *C) {
-	f, _ := createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
-	f, _ = filepath.Abs(f)
-	f1, _ := createFileIn(s.specsDir, "spec2WithTags.spec", spec2WithTags)
-	f1, _ = filepath.Abs(f1)
+	createFileIn(s.specsDir, "specWithTags.spec", specWithTags)
+	createFileIn(s.specsDir, "spec2WithTags.spec", spec2WithTags)
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.waitGroup.Add(2)
@@ -500,8 +497,7 @@ func (s *MySuite) TestParamsForConceptFile(c *C) {
 }
 
 func (s *MySuite) TestAllStepsOnFileRename(c *C) {
-	file, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
-	file, _ = filepath.Abs(file)
+	createFileIn(s.specsDir, "spec1.spec", spec1)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
@@ -523,8 +519,8 @@ func renameFileIn(dir string, oldFileName string, newFileName string) (string, e
 }
 
 func createDirIn(dir string, dirName string) (string, error) {
-	tempDir, err := ioutil.TempDir(dir, dirName)
+	tempDir, _ := ioutil.TempDir(dir, dirName)
 	fullDirName := filepath.Join(dir, dirName)
-	err = os.Rename(tempDir, fullDirName)
+	err := os.Rename(tempDir, fullDirName)
 	return fullDirName, err
 }

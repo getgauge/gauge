@@ -275,7 +275,7 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 }
 
 func runPlatformCommands(commands platformSpecificCommand, workingDir string) error {
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = commands.Windows
