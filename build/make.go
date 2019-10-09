@@ -96,15 +96,15 @@ func compileGauge() {
 
 func runTests(coverage bool) {
 	if coverage {
-		runProcess("go", "test", "-covermode=count", "-coverprofile=count.out")
+		runProcess("go", "test", "-mod=vendor", "-covermode=count", "-coverprofile=count.out")
 		if coverage {
-			runProcess("go", "tool", "cover", "-html=count.out")
+			runProcess("go", "tool", "cover", "-html=count.out", "-mod=vendor")
 		}
 	} else {
 		if *verbose {
-			runProcess("go", "test", "./...", "-v")
+			runProcess("go", "test", "-mod=vendor", "./...", "-v")
 		} else {
-			runProcess("go", "test", "./...")
+			runProcess("go", "test", "-mod=vendor", "./...")
 		}
 	}
 }
