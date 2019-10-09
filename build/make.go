@@ -86,6 +86,7 @@ func compileGauge() {
 	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitHash=%s", buildMetadata, commitHash)
 	args := []string{
 		"build",
+		"-mod=vendor",
 		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
 		fmt.Sprintf("-asmflags=-trimpath=%s", os.Getenv("GOPATH")),
 		"-ldflags", ldflags, "-o", executablePath,

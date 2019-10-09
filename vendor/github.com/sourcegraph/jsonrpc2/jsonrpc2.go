@@ -128,7 +128,7 @@ func (r *Request) SetMeta(v interface{}) error {
 // http://www.jsonrpc.org/specification#response_object.
 type Response struct {
 	ID     ID               `json:"id"`
-	Result *json.RawMessage `json:"result"`
+	Result *json.RawMessage `json:"result,omitempty"`
 	Error  *Error           `json:"error,omitempty"`
 
 	// Meta optionally provides metadata to include in the response.
@@ -298,8 +298,8 @@ type Conn struct {
 	disconnect chan struct{}
 
 	// Set by ConnOpt funcs.
-	onRecv func(*Request, *Response)
-	onSend func(*Request, *Response)
+	onRecv []func(*Request, *Response)
+	onSend []func(*Request, *Response)
 }
 
 var _ JSONRPC2 = (*Conn)(nil)
@@ -315,14 +315,17 @@ var ErrClosed = errors.New("jsonrpc2: connection is closed")
 //
 // NewClient consumes conn, so you should call Close on the returned
 // client not on the given conn.
-func NewConn(ctx context.Context, stream ObjectStream, h Handler, opt ...ConnOpt) *Conn {
+func NewConn(ctx context.Context, stream ObjectStream, h Handler, opts ...ConnOpt) *Conn {
 	c := &Conn{
 		stream:     stream,
 		h:          h,
 		pending:    map[ID]*call{},
 		disconnect: make(chan struct{}),
 	}
-	for _, opt := range opt {
+	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		opt(c)
 	}
 	go c.readMessages(ctx)
@@ -370,12 +373,19 @@ func (c *Conn) send(ctx context.Context, m *anyMessage, wait bool) (cc *call, er
 	}
 	c.mu.Unlock()
 
-	if c.onSend != nil {
+	if len(c.onSend) > 0 {
+		var (
+			req  *Request
+			resp *Response
+		)
 		switch {
 		case m.request != nil:
-			c.onSend(m.request, nil)
+			req = m.request
 		case m.response != nil:
-			c.onSend(nil, m.response)
+			resp = m.response
+		}
+		for _, onSend := range c.onSend {
+			onSend(req, resp)
 		}
 	}
 
@@ -408,6 +418,9 @@ func (c *Conn) Call(ctx context.Context, method string, params, result interface
 		return err
 	}
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		if err := opt.apply(req); err != nil {
 			return err
 		}
@@ -451,6 +464,9 @@ func (c *Conn) Notify(ctx context.Context, method string, params interface{}, op
 		return err
 	}
 	for _, opt := range opts {
+		if opt == nil {
+			continue
+		}
 		if err := opt.apply(req); err != nil {
 			return err
 		}
@@ -498,8 +514,8 @@ func (c *Conn) readMessages(ctx context.Context) {
 
 		switch {
 		case m.request != nil:
-			if c.onRecv != nil {
-				c.onRecv(m.request, nil)
+			for _, onRecv := range c.onRecv {
+				onRecv(m.request, nil)
 			}
 			c.h.Handle(ctx, c, m.request)
 
@@ -516,13 +532,14 @@ func (c *Conn) readMessages(ctx context.Context) {
 					call.response = resp
 				}
 
-				if c.onRecv != nil {
+				if len(c.onRecv) > 0 {
 					var req *Request
-
 					if call != nil {
 						req = call.request
 					}
-					c.onRecv(req, resp)
+					for _, onRecv := range c.onRecv {
+						onRecv(req, resp)
+					}
 				}
 
 				switch {

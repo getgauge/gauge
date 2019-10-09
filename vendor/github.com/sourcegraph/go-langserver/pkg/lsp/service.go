@@ -64,6 +64,10 @@ type TextDocumentClientCapabilities struct {
 			SnippetSupport bool `json:"snippetSupport,omitempty"`
 		} `json:"completionItem,omitempty"`
 	} `json:"completion,omitempty"`
+
+	Implementation *struct {
+		DynamicRegistration bool `json:"dynamicRegistration,omitempty"`
+	} `json:"implementation,omitempty"`
 }
 
 type InitializeResult struct {
@@ -103,7 +107,10 @@ type TextDocumentSyncOptionsOrKind struct {
 }
 
 // MarshalJSON implements json.Marshaler.
-func (v TextDocumentSyncOptionsOrKind) MarshalJSON() ([]byte, error) {
+func (v *TextDocumentSyncOptionsOrKind) MarshalJSON() ([]byte, error) {
+	if v == nil {
+		return []byte("null"), nil
+	}
 	if v.Kind != nil {
 		return json.Marshal(v.Kind)
 	}
@@ -142,21 +149,24 @@ type SaveOptions struct {
 }
 
 type ServerCapabilities struct {
-	TextDocumentSync                 TextDocumentSyncOptionsOrKind    `json:"textDocumentSync,omitempty"`
+	TextDocumentSync                 *TextDocumentSyncOptionsOrKind   `json:"textDocumentSync,omitempty"`
 	HoverProvider                    bool                             `json:"hoverProvider,omitempty"`
 	CompletionProvider               *CompletionOptions               `json:"completionProvider,omitempty"`
 	SignatureHelpProvider            *SignatureHelpOptions            `json:"signatureHelpProvider,omitempty"`
 	DefinitionProvider               bool                             `json:"definitionProvider,omitempty"`
+	TypeDefinitionProvider           bool                             `json:"typeDefinitionProvider,omitempty"`
 	ReferencesProvider               bool                             `json:"referencesProvider,omitempty"`
 	DocumentHighlightProvider        bool                             `json:"documentHighlightProvider,omitempty"`
 	DocumentSymbolProvider           bool                             `json:"documentSymbolProvider,omitempty"`
 	WorkspaceSymbolProvider          bool                             `json:"workspaceSymbolProvider,omitempty"`
+	ImplementationProvider           bool                             `json:"implementationProvider,omitempty"`
 	CodeActionProvider               bool                             `json:"codeActionProvider,omitempty"`
 	CodeLensProvider                 *CodeLensOptions                 `json:"codeLensProvider,omitempty"`
 	DocumentFormattingProvider       bool                             `json:"documentFormattingProvider,omitempty"`
 	DocumentRangeFormattingProvider  bool                             `json:"documentRangeFormattingProvider,omitempty"`
 	DocumentOnTypeFormattingProvider *DocumentOnTypeFormattingOptions `json:"documentOnTypeFormattingProvider,omitempty"`
 	RenameProvider                   bool                             `json:"renameProvider,omitempty"`
+	ExecuteCommandProvider           *ExecuteCommandOptions           `json:"executeCommandProvider,omitempty"`
 
 	// XWorkspaceReferencesProvider indicates the server provides support for
 	// xworkspace/references. This is a Sourcegraph extension.
@@ -170,6 +180,8 @@ type ServerCapabilities struct {
 	// querying symbols by properties with WorkspaceSymbolParams.symbol. This
 	// is a Sourcegraph extension.
 	XWorkspaceSymbolByProperties bool `json:"xworkspaceSymbolByProperties,omitempty"`
+
+	Experimental interface{} `json:"experimental,omitempty"`
 }
 
 type CompletionOptions struct {
@@ -188,6 +200,15 @@ type CodeLensOptions struct {
 
 type SignatureHelpOptions struct {
 	TriggerCharacters []string `json:"triggerCharacters,omitempty"`
+}
+
+type ExecuteCommandOptions struct {
+	Commands []string `json:"commands"`
+}
+
+type ExecuteCommandParams struct {
+	Command   string        `json:"command"`
+	Arguments []interface{} `json:"arguments,omitempty"`
 }
 
 type CompletionItemKind int
@@ -296,8 +317,20 @@ type CompletionParams struct {
 }
 
 type Hover struct {
-	Contents []MarkedString `json:"contents,omitempty"`
+	Contents []MarkedString `json:"contents"`
 	Range    *Range         `json:"range,omitempty"`
+}
+
+type hover Hover
+
+func (h Hover) MarshalJSON() ([]byte, error) {
+	if h.Contents == nil {
+		return json.Marshal(hover{
+			Contents: []MarkedString{},
+			Range:    h.Range,
+		})
+	}
+	return json.Marshal(hover(h))
 }
 
 type MarkedString markedString
@@ -460,6 +493,17 @@ type WorkspaceSymbolParams struct {
 	Query string `json:"query"`
 	Limit int    `json:"limit"`
 }
+
+type ConfigurationParams struct {
+	Items []ConfigurationItem `json:"items"`
+}
+
+type ConfigurationItem struct {
+	ScopeURI string `json:"scopeUri,omitempty"`
+	Section  string `json:"section,omitempty"`
+}
+
+type ConfigurationResult []interface{}
 
 type CodeActionContext struct {
 	Diagnostics []Diagnostic `json:"diagnostics"`
