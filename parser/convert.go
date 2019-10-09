@@ -30,7 +30,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Scenario should be defined after the spec heading", token.LineText}}}
 		}
 		for _, scenario := range spec.Scenarios {
-			if strings.ToLower(scenario.Heading.Value) == strings.ToLower(token.Value) {
+			if strings.EqualFold(scenario.Heading.Value, token.Value) {
 				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
 			}
 		}
