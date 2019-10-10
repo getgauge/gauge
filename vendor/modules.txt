@@ -1,0 +1,92 @@
+# github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
+github.com/apoorvam/goterminal
+# github.com/cpuguy83/go-md2man v1.0.10
+github.com/cpuguy83/go-md2man/md2man
+# github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
+github.com/daviddengcn/go-colortext
+# github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
+github.com/dmotylev/goproperties
+# github.com/fsnotify/fsnotify v1.4.7
+github.com/fsnotify/fsnotify
+# github.com/getgauge/common v0.0.0-20180424115244-657067401e5f
+github.com/getgauge/common
+# github.com/golang/protobuf v1.3.2-0.20190318194812-d3c38a4eb497
+github.com/golang/protobuf/proto
+github.com/golang/protobuf/ptypes
+github.com/golang/protobuf/ptypes/any
+github.com/golang/protobuf/ptypes/duration
+github.com/golang/protobuf/ptypes/timestamp
+# github.com/inconshreveable/mousetrap v1.0.0
+github.com/inconshreveable/mousetrap
+# github.com/jpillora/go-ogle-analytics v0.0.0-20161213085824-14b04e0594ef
+github.com/jpillora/go-ogle-analytics
+# github.com/kr/pretty v0.1.0
+github.com/kr/pretty
+# github.com/kr/text v0.1.0
+github.com/kr/text
+# github.com/mattn/go-isatty v0.0.9
+github.com/mattn/go-isatty
+# github.com/natefinch/lumberjack v2.0.0+incompatible
+github.com/natefinch/lumberjack
+# github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+github.com/op/go-logging
+# github.com/russross/blackfriday v1.5.2
+github.com/russross/blackfriday
+# github.com/satori/go.uuid v1.2.0
+github.com/satori/go.uuid
+# github.com/sourcegraph/go-langserver v2.0.0+incompatible
+github.com/sourcegraph/go-langserver/pkg/lsp
+# github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a
+github.com/sourcegraph/jsonrpc2
+# github.com/spf13/cobra v0.0.5
+github.com/spf13/cobra
+github.com/spf13/cobra/doc
+# github.com/spf13/pflag v1.0.5
+github.com/spf13/pflag
+# golang.org/x/net v0.0.0-20180710023853-292b43bbf7cb
+golang.org/x/net/context
+golang.org/x/net/http/httpguts
+golang.org/x/net/http2
+golang.org/x/net/http2/hpack
+golang.org/x/net/idna
+golang.org/x/net/internal/timeseries
+golang.org/x/net/trace
+# golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
+golang.org/x/sys/unix
+# golang.org/x/text v0.3.1-0.20180708171225-0605a8320ace
+golang.org/x/text/secure/bidirule
+golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
+golang.org/x/text/unicode/norm
+# google.golang.org/genproto v0.0.0-20180621235812-80063a038e33
+google.golang.org/genproto/googleapis/rpc/status
+# google.golang.org/grpc v1.2.1-0.20180622230244-8e1875276672
+google.golang.org/grpc
+google.golang.org/grpc/balancer
+google.golang.org/grpc/balancer/base
+google.golang.org/grpc/balancer/roundrobin
+google.golang.org/grpc/codes
+google.golang.org/grpc/connectivity
+google.golang.org/grpc/credentials
+google.golang.org/grpc/encoding
+google.golang.org/grpc/encoding/proto
+google.golang.org/grpc/grpclog
+google.golang.org/grpc/internal
+google.golang.org/grpc/internal/backoff
+google.golang.org/grpc/internal/channelz
+google.golang.org/grpc/internal/grpcrand
+google.golang.org/grpc/keepalive
+google.golang.org/grpc/metadata
+google.golang.org/grpc/naming
+google.golang.org/grpc/peer
+google.golang.org/grpc/resolver
+google.golang.org/grpc/resolver/dns
+google.golang.org/grpc/resolver/passthrough
+google.golang.org/grpc/stats
+google.golang.org/grpc/status
+google.golang.org/grpc/tap
+google.golang.org/grpc/transport
+# gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
+gopkg.in/check.v1
+# gopkg.in/yaml.v2 v2.2.2
+gopkg.in/yaml.v2

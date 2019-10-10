@@ -87,7 +87,7 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 	kind := lsp.TDSKFull
 	return lsp.InitializeResult{
 		Capabilities: lsp.ServerCapabilities{
-			TextDocumentSync:           lsp.TextDocumentSyncOptionsOrKind{Kind: &kind, Options: &lsp.TextDocumentSyncOptions{Save: &lsp.SaveOptions{IncludeText: true}}},
+			TextDocumentSync:           &lsp.TextDocumentSyncOptionsOrKind{Kind: &kind, Options: &lsp.TextDocumentSyncOptions{Save: &lsp.SaveOptions{IncludeText: true}}},
 			CompletionProvider:         &lsp.CompletionOptions{ResolveProvider: true, TriggerCharacters: []string{"*", "* ", "\"", "<", ":", ","}},
 			DocumentFormattingProvider: true,
 			CodeLensProvider:           &lsp.CodeLensOptions{ResolveProvider: false},
