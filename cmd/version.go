@@ -68,7 +68,7 @@ func printJSONVersion() {
 		Plugins          []*pluginJSON `json:"plugins"`
 		TelemetryMessage string        `json:"telemetry"`
 	}
-	gaugeVersion := versionJSON{version.FullVersion(), version.GetCommitHash(), make([]*pluginJSON, 0), track.GaugeTelemetryMessage}
+	gaugeVersion := versionJSON{version.FullVersion(), version.CommitHash, make([]*pluginJSON, 0), track.GaugeTelemetryMessage}
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
@@ -82,7 +82,7 @@ func printJSONVersion() {
 
 func printTextVersion() {
 	fmt.Printf("Gauge version: %s\n", version.FullVersion())
-	v := version.GetCommitHash()
+	v := version.CommitHash
 	if v != "" {
 		fmt.Printf("Commit Hash: %s\n", v)
 

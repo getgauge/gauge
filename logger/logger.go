@@ -240,8 +240,8 @@ func loggingLevel(logLevel string) logging.Level {
 
 func getFatalErrorMsg() string {
 	env := []string{runtime.GOOS, version.FullVersion()}
-	if version.GetCommitHash() != "" {
-		env = append(env, version.GetCommitHash())
+	if version.CommitHash != "" {
+		env = append(env, version.CommitHash)
 	}
 	envText := strings.Join(env, ", ")
 

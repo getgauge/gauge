@@ -153,7 +153,7 @@ func (sc *simpleConsole) DataTable(table string) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	logger.Debug(false, table)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s", table))
+	fmt.Fprint(sc.writer, table)
 }
 
 func (sc *simpleConsole) Errorf(err string, args ...interface{}) {

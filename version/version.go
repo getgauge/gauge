@@ -132,14 +132,6 @@ func FullVersion() string {
 	return fmt.Sprintf("%s%s", CurrentGaugeVersion.String(), metadata)
 }
 
-func GetCommitHash() string {
-	var commitHash string
-	if CommitHash != "" {
-		commitHash = fmt.Sprintf("%s", CommitHash)
-	}
-	return fmt.Sprintf("%s", commitHash)
-}
-
 type byDecreasingVersion []*Version
 
 func (a byDecreasingVersion) Len() int      { return len(a) }
