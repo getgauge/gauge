@@ -1,9 +1,14 @@
 /*
 ct package provides functions to change the color of console text.
 
-Under windows platform, the Console api is used. Under other systems, ANSI text mode is used.
+Under windows platform, the Console API is used. Under other systems, ANSI text mode is used.
 */
 package ct
+
+import (
+	"io"
+	"os"
+)
 
 // Color is the type of color to be set.
 type Color int
@@ -21,9 +26,10 @@ const (
 	White
 )
 
-/*
-ResetColor resets the foreground and background to original colors
-*/
+// Writer is the io.Writer where ANSI escape codes will be written to
+var Writer io.Writer = os.Stdout
+
+// ResetColor resets the foreground and background to original colors
 func ResetColor() {
 	resetColor()
 }

@@ -86,6 +86,7 @@ func compileGauge() {
 	ldflags := fmt.Sprintf("-X github.com/getgauge/gauge/version.BuildMetadata=%s -X github.com/getgauge/gauge/version.CommitHash=%s", buildMetadata, commitHash)
 	args := []string{
 		"build",
+		"-mod=vendor",
 		fmt.Sprintf("-gcflags=-trimpath=%s", os.Getenv("GOPATH")),
 		fmt.Sprintf("-asmflags=-trimpath=%s", os.Getenv("GOPATH")),
 		"-ldflags", ldflags, "-o", executablePath,
@@ -95,15 +96,15 @@ func compileGauge() {
 
 func runTests(coverage bool) {
 	if coverage {
-		runProcess("go", "test", "-covermode=count", "-coverprofile=count.out")
+		runProcess("go", "test", "-mod=vendor", "-covermode=count", "-coverprofile=count.out")
 		if coverage {
-			runProcess("go", "tool", "cover", "-html=count.out")
+			runProcess("go", "tool", "cover", "-html=count.out", "-mod=vendor")
 		}
 	} else {
 		if *verbose {
-			runProcess("go", "test", "./...", "-v")
+			runProcess("go", "test", "-mod=vendor", "./...", "-v")
 		} else {
-			runProcess("go", "test", "./...")
+			runProcess("go", "test", "-mod=vendor", "./...")
 		}
 	}
 }
