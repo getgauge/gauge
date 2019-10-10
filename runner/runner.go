@@ -261,6 +261,7 @@ func (r *LanguageRunner) Kill() error {
 		select {
 		case done := <-exited:
 			if done {
+				logger.Debugf(true, "Runner with PID:%d has exited", r.Cmd.Process.Pid)
 				return nil
 			}
 		case <-time.After(config.PluginKillTimeout()):
@@ -452,7 +453,7 @@ func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, ki
 	if err != nil {
 		return nil, err
 	}
-	logger.Debug(true, "Starting runner")
+	logger.Debugf(true, "Staring %s runner", manifest.Language)
 	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), outputStreamWriter, killChannel, debug)
 	if err != nil {
 		return nil, err
