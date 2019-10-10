@@ -150,14 +150,14 @@ func isOsOSCompatible(zipfile string) bool {
 
 // InstallPluginFromZipFile installs plugin from given zip file
 func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
+	if !isPlatformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
+		err := fmt.Errorf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH)
+		return installError(err)
+	}
 	tempDir := common.GetTempDir()
 	defer common.Remove(tempDir)
 	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
 	if err != nil {
-		return installError(err)
-	}
-	if !isPlatformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
-		err := fmt.Errorf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH)
 		return installError(err)
 	}
 	gp, err := parsePluginJSON(unzippedPluginDir, pluginName)

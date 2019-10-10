@@ -18,11 +18,7 @@
 package install
 
 import (
-	"archive/zip"
-	"errors"
 	"fmt"
-	"io"
-	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -98,23 +94,8 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 	}
 }
 
-func (s *MySuite) TestReturnsErrorInsteadOfPanicDuringZipFileInstall(c *C) {
-
-	sourceFileName := filepath.Join("_testdata", "plugin.json")
-	targetPathSingleDot := filepath.Join("_testdata", "zip_with_single_dot.zip")
-	targetPathMultipleDots := filepath.Join("_testdata", "zip_with_multiple-dot.s.zip")
-	err := createZipFromFile(sourceFileName, targetPathSingleDot)
-	c.Assert(err, IsNil)
-	defer os.Remove(targetPathSingleDot)
-
-	err = createZipFromFile(sourceFileName, targetPathMultipleDots)
-	c.Assert(err, IsNil)
-	defer os.Remove(targetPathMultipleDots)
-
-	result := InstallPluginFromZipFile(targetPathSingleDot, "ruby")
-	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided zip file is not a valid plugin of ruby"))
-
-	result = InstallPluginFromZipFile(targetPathMultipleDots, "ruby")
+func (s *MySuite) TestInstallPluginFromZipFile(c *C) {
+	result := InstallPluginFromZipFile("zip_with_multiple-dot.s.zip", "ruby")
 	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH))
 }
 
@@ -200,42 +181,4 @@ func (s *MySuite) TestIsPlatformIndependentZipFile(c *C) {
 	c.Assert(isPlatformIndependent(csharpReleased), Equals, true)
 	c.Assert(isPlatformIndependent(javaNightly), Equals, false)
 	c.Assert(isPlatformIndependent(csharpNightly), Equals, true)
-}
-
-func createZipFromFile(source, target string) error {
-	zipfile, err := os.Create(target)
-	if err != nil {
-		return err
-	}
-	defer zipfile.Close()
-
-	archive := zip.NewWriter(zipfile)
-	defer archive.Close()
-
-	info, err := os.Stat(source)
-	if err != nil {
-		return err
-	}
-
-	if info.IsDir() {
-		return errors.New("file expected, directory found")
-	}
-
-	file, err := os.OpenFile(source, os.O_RDONLY, 0644)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	header, err := zip.FileInfoHeader(info)
-	writer, err := archive.CreateHeader(header)
-	if err != nil {
-		return err
-	}
-	if err != nil {
-		return err
-	}
-
-	_, err = io.Copy(writer, file)
-	return err
 }
