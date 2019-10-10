@@ -338,7 +338,7 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writ
 	return cmd, &r, err
 }
 
-// Looks for a runner configuration inside the runner directory
+// StartRunner Looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter *logger.LogWriter, killChannel chan bool, debug bool) (*LanguageRunner, error) {
 	cmd, r, err := runRunnerCommand(manifest, port, debug, outputStreamWriter)
@@ -346,10 +346,8 @@ func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter *l
 		return nil, err
 	}
 	go func() {
-		select {
-		case <-killChannel:
-			cmd.Process.Kill()
-		}
+		<-killChannel
+		cmd.Process.Kill()
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)

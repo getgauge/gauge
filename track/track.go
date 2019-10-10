@@ -193,10 +193,8 @@ func ScheduleDaemonTracking(mode, lang string) {
 		ticker = time.NewTicker(time.Duration(duration) * time.Minute)
 	}
 	for {
-		select {
-		case <-ticker.C:
-			daemon(mode, lang)
-		}
+		<-ticker.C
+		daemon(mode, lang)
 	}
 }
 
