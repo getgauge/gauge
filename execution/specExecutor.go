@@ -222,9 +222,8 @@ func (e *specExecutor) failSpec() {
 func (e *specExecutor) convertErrors(specErrors []error) []*gauge_messages.Error {
 	var errors []*gauge_messages.Error
 	for _, e := range specErrors {
-		switch e.(type) {
+		switch err := e.(type) {
 		case parser.ParseError:
-			err := e.(parser.ParseError)
 			errors = append(errors, &gauge_messages.Error{
 				Message:    err.Error(),
 				LineNumber: int32(err.LineNo),
