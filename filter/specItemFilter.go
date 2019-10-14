@@ -145,7 +145,7 @@ func (filter *ScenarioFilterBasedOnTags) resolveBracketExpression(tagExpression 
 		if tagExpression[i] == '(' {
 			bracketStack = append(bracketStack, "(")
 		} else if tagExpression[i] == ')' {
-			bracketStack = append(bracketStack[:len(bracketStack)-1])
+			bracketStack = bracketStack[:len(bracketStack)-1]
 		}
 		if len(bracketStack) == 0 {
 			break
