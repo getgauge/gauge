@@ -143,7 +143,10 @@ func TelemetryConsent() bool {
 
 // RecordTelemetryConsentSet records that user has opted in/out
 func RecordTelemetryConsentSet() {
-	Update(telemetryConsent, "true")
+	err := Update(telemetryConsent, "true")
+	if err != nil {
+		APILog.Warningf("Unable to update configuration: %s", telemetryConsent)
+	}
 }
 
 // SetProjectRoot sets project root location in ENV.

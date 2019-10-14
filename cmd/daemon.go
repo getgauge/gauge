@@ -24,6 +24,7 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/api/lang"
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
@@ -41,7 +42,10 @@ var (
 		Long:    `Run as a daemon.`,
 		Example: "  gauge daemon 1234",
 		Run: func(cmd *cobra.Command, args []string) {
-			os.Setenv(isDaemon, "true")
+			err := os.Setenv(isDaemon, "true")
+			if err != nil {
+				exit(err, "Unable to set Daemon=true")
+			}
 			if err := config.SetProjectRoot(args); err != nil {
 				exit(err, cmd.UsageString())
 			}
@@ -71,5 +75,8 @@ var (
 func init() {
 	GaugeCmd.AddCommand(daemonCmd)
 	daemonCmd.Flags().BoolVarP(&lsp, "lsp", "", false, "Start language server")
-	daemonCmd.Flags().MarkHidden("lsp")
+	err := daemonCmd.Flags().MarkHidden("lsp")
+	if err != nil {
+		logger.Fatalf(true, "Unable to hide `--lsp` flag: %s", err.Error())
+	}
 }

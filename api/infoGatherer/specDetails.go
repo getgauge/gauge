@@ -605,7 +605,7 @@ func handleParseFailures(parseResults []*parser.ParseResult) {
 func addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
 	err := watcher.Add(dir)
 	if err != nil {
-		logger.Errorf(false, "Unable to add directory %v to file watcher: %s", dir, err)
+		logger.Errorf(false, "Unable to add directory %v to file watcher: %s", dir, err.Error())
 	} else {
 		logger.Infof(false, "Watching directory: %s", dir)
 		files, _ := ioutil.ReadDir(dir)
@@ -615,5 +615,8 @@ func addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
 
 func removeWatcherOn(watcher *fsnotify.Watcher, path string) {
 	logger.Infof(false, "Removing watcher on : %s", path)
-	watcher.Remove(path)
+	err := watcher.Remove(path)
+	if err != nil {
+		logger.Errorf(false, "Unable to remove watcher on: %s. %s", path, err.Error())
+	}
 }

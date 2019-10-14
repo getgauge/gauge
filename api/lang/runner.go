@@ -54,7 +54,10 @@ func connectToRunner() error {
 	if err != nil {
 		return err
 	}
-	os.Setenv("GAUGE_LSP_GRPC", "true")
+	err = os.Setenv("GAUGE_LSP_GRPC", "true")
+	if err != nil {
+		return err
+	}
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
 		return err
@@ -141,10 +144,11 @@ func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	return response.GetStepNamesResponse(), nil
 }
 
-func killRunner() {
+func killRunner() error {
 	if lRunner.runner != nil {
-		lRunner.runner.Kill()
+		return lRunner.runner.Kill()
 	}
+	return nil
 }
 
 func getLanguageIdentifier() (string, error) {
@@ -159,13 +163,13 @@ func getLanguageIdentifier() (string, error) {
 	return info.LspLangId, nil
 }
 
-func informRunnerCompatibility(ctx context.Context, conn jsonrpc2.JSONRPC2) {
+func informRunnerCompatibility(ctx context.Context, conn jsonrpc2.JSONRPC2) error {
 	if lRunner.lspID != "" {
-		return
+		return nil
 	}
 	var params = lsp.ShowMessageParams{
 		Type:    lsp.Warning,
 		Message: "Current gauge language runner is not compatible with gauge LSP. Some of the editing feature will not work as expected",
 	}
-	conn.Notify(ctx, "window/showMessage", params)
+	return conn.Notify(ctx, "window/showMessage", params)
 }

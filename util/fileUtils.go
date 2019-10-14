@@ -146,12 +146,15 @@ func GaugeFileExtensions() []string {
 // FindAllNestedDirs returns list of all nested directories in given path
 func FindAllNestedDirs(dir string) []string {
 	var nestedDirs []string
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err == nil && info.IsDir() && !(path == dir) {
 			nestedDirs = append(nestedDirs, path)
 		}
 		return nil
 	})
+	if err != nil {
+		logger.Errorf(false, "Failed to find nested directories for %s: %s", dir, err.Error())
+	}
 	return nestedDirs
 }
 

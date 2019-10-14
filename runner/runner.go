@@ -83,8 +83,10 @@ func (r *MultithreadedRunner) SetConnection(c net.Conn) {
 
 func (r *MultithreadedRunner) Kill() error {
 	defer r.r.connection.Close()
-	conn.SendProcessKillMessage(r.r.connection)
-
+	err := conn.SendProcessKillMessage(r.r.connection)
+	if err != nil {
+		return err
+	}
 	exited := make(chan bool, 1)
 	go func() {
 		for {
@@ -248,8 +250,10 @@ func (r *LanguageRunner) Kill() error {
 	if r.Alive() {
 		defer r.connection.Close()
 		logger.Debug(true, "Sending kill message to runner.")
-		conn.SendProcessKillMessage(r.connection)
-
+		err := conn.SendProcessKillMessage(r.connection)
+		if err != nil {
+			return err
+		}
 		exited := make(chan bool, 1)
 		go func() {
 			for {

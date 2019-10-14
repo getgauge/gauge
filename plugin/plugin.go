@@ -79,7 +79,10 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 	if isProcessRunning(p) {
 		defer p.connection.Close()
 		p.killTimer = time.NewTimer(config.PluginKillTimeout())
-		conn.SendProcessKillMessage(p.connection)
+		err := conn.SendProcessKillMessage(p.connection)
+		if err != nil {
+			logger.Warningf(true, "Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
+		}
 
 		exited := make(chan bool, 1)
 		go func() {

@@ -55,14 +55,17 @@ func publishDiagnostics(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 			return
 		}
 		for uri, diagnostics := range diagnosticsMap {
-			publishDiagnostic(uri, diagnostics, conn, ctx)
+			err := publishDiagnostic(uri, diagnostics, conn, ctx)
+			if err != nil {
+				logError(nil, "Unable to publish diagnostics for %s, error : %s", uri, err.Error())
+			}
 		}
 	}
 }
 
-func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) {
+func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn jsonrpc2.JSONRPC2, ctx context.Context) error {
 	params := lsp.PublishDiagnosticsParams{URI: uri, Diagnostics: diagnostics}
-	conn.Notify(ctx, "textDocument/publishDiagnostics", params)
+	return conn.Notify(ctx, "textDocument/publishDiagnostics", params)
 }
 
 func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {

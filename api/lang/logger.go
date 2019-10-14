@@ -58,7 +58,10 @@ type lspLogger struct {
 }
 
 func (c *lspLogger) Log(level lsp.MessageType, msg string) {
-	c.conn.Notify(c.ctx, "window/logMessage", lsp.LogMessageParams{Type: level, Message: msg})
+	err := c.conn.Notify(c.ctx, "window/logMessage", lsp.LogMessageParams{Type: level, Message: msg})
+	if err != nil {
+		logger.Errorf(false, "Unable to log error '%s' to LSP: %s", msg, err.Error())
+	}
 }
 
 var lspLog *lspLogger

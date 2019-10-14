@@ -28,6 +28,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -89,11 +90,17 @@ func readResponse(conn net.Conn) ([]byte, error) {
 	for {
 		n, err := conn.Read(data)
 		if err != nil {
-			conn.Close()
+			e := conn.Close()
+			if e != nil {
+				logger.Debugf(false, "Connection already closed, %s", e.Error())
+			}
 			return nil, fmt.Errorf("Connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error())
 		}
 
-		buffer.Write(data[0:n])
+		_, err = buffer.Write(data[0:n])
+		if err != nil {
+			return nil, fmt.Errorf("Unable to write to buffer, %s", err.Error())
+		}
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if (messageLength > 0 && messageLength < uint64(buffer.Len())) && ((messageLength + uint64(bytesRead)) <= uint64(buffer.Len())) {
 			return buffer.Bytes()[bytesRead : messageLength+uint64(bytesRead)], nil
@@ -182,10 +189,10 @@ func GetPortFromEnvironmentVariable(portEnvVariable string) (int, error) {
 }
 
 // SendProcessKillMessage sends a KillProcessRequest message through the connection.
-func SendProcessKillMessage(connection net.Conn) {
+func SendProcessKillMessage(connection net.Conn) error {
 	id := common.GetUniqueID()
 	message := &gauge_messages.Message{MessageId: id, MessageType: gauge_messages.Message_KillProcessRequest,
 		KillProcessRequest: &gauge_messages.KillProcessRequest{}}
 
-	WriteGaugeMessage(message, connection)
+	return WriteGaugeMessage(message, connection)
 }
