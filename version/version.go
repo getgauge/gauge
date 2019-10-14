@@ -98,10 +98,7 @@ func CompareVersions(first *Version, second *Version, compareFunc func(int, int)
 		if compareFunc(first.Minor, second.Minor) {
 			return true
 		} else if IsEqual(first.Minor, second.Minor) {
-			if compareFunc(first.Patch, second.Patch) {
-				return true
-			}
-			return false
+			return compareFunc(first.Patch, second.Patch)
 		}
 	}
 	return false

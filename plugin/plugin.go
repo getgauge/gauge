@@ -125,11 +125,7 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 
 	if pluginVersion != "" {
-		pluginJSON := filepath.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
-		if common.FileExists(pluginJSON) {
-			return true
-		}
-		return false
+		return common.FileExists(filepath.Join(thisPluginDir, pluginVersion, common.PluginJSONFile))
 	}
 	return true
 }
