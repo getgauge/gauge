@@ -91,7 +91,7 @@ func SetWorkingDir(workingDir string) {
 	}
 
 	if !common.DirExists(targetDir) {
-		err = os.Mkdir(targetDir, 0777)
+		err = os.Mkdir(targetDir, 0750)
 		if err != nil {
 			logger.Fatalf(true, "Unable to set working directory : %s", err.Error())
 		}
