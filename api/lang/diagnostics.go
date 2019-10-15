@@ -69,7 +69,7 @@ func publishDiagnostic(uri lsp.DocumentURI, diagnostics []lsp.Diagnostic, conn j
 }
 
 func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
-	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
+	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic)
 	conceptDictionary, err := validateConcepts(diagnostics)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,6 @@ func createValidationDiagnostics(errors []error, diagnostics map[lsp.DocumentURI
 		}
 		diagnostics[uri] = append(diagnostics[uri], d)
 	}
-	return
 }
 
 func validateSpecifications(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) []error {
@@ -110,7 +109,7 @@ func validateSpecs(conceptDictionary *gauge.ConceptDictionary, diagnostics map[l
 		}
 		content, err := getContentFromFileOrDisk(specFile)
 		if err != nil {
-			return fmt.Errorf("Unable to read file %s", err)
+			return fmt.Errorf("unable to read file %s", err)
 		}
 		spec, res, err := new(parser.SpecParser).Parse(content, conceptDictionary, specFile)
 		if err != nil {
@@ -135,7 +134,7 @@ func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.
 		}
 		content, err := getContentFromFileOrDisk(conceptFile)
 		if err != nil {
-			return nil, fmt.Errorf("Unable to read file %s", err)
+			return nil, fmt.Errorf("unable to read file %s", err)
 		}
 		cpts, pRes := new(parser.ConceptParser).Parse(content, conceptFile)
 		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary)

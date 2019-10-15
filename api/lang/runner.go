@@ -40,10 +40,9 @@ type langRunner struct {
 var lRunner langRunner
 
 func startRunner() error {
-	var err error
-	err = connectToRunner()
+	var err = connectToRunner()
 	if err != nil {
-		return fmt.Errorf("Unable to connect to runner : %s", err.Error())
+		return fmt.Errorf("unable to connect to runner : %s", err.Error())
 	}
 	return nil
 }
@@ -94,7 +93,7 @@ func getStepPositionResponse(uri lsp.DocumentURI) (*gm.StepPositionsResponse, er
 	stepPositionsRequest := &gm.Message{MessageType: gm.Message_StepPositionsRequest, StepPositionsRequest: &gm.StepPositionsRequest{FilePath: util.ConvertURItoFilePath(uri)}}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(stepPositionsRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
+		return nil, fmt.Errorf("error while connecting to runner : %s", err)
 	}
 	if response.GetStepPositionsResponse().GetError() != "" {
 		return nil, fmt.Errorf("error while connecting to runner : %s", response.GetStepPositionsResponse().GetError())
@@ -106,7 +105,7 @@ func getImplementationFileList() (*gm.ImplementationFileListResponse, error) {
 	implementationFileListRequest := &gm.Message{MessageType: gm.Message_ImplementationFileListRequest}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(implementationFileListRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
+		return nil, fmt.Errorf("error while connecting to runner : %s", err.Error())
 	}
 	return response.GetImplementationFileListResponse(), nil
 }
@@ -115,7 +114,7 @@ func getStepNameResponse(stepValue string) (*gm.StepNameResponse, error) {
 	stepNameRequest := &gm.Message{MessageType: gm.Message_StepNameRequest, StepNameRequest: &gm.StepNameRequest{StepValue: stepValue}}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(stepNameRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Error while connecting to runner : %s", err)
+		return nil, fmt.Errorf("error while connecting to runner : %s", err)
 	}
 	return response.GetStepNameResponse(), nil
 }
@@ -130,7 +129,7 @@ func putStubImplementation(filePath string, codes []string) (*gm.FileDiff, error
 	}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(stubImplementationCodeRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
+		return nil, fmt.Errorf("error while connecting to runner : %s", err.Error())
 	}
 	return response.GetFileDiff(), nil
 }
@@ -139,7 +138,7 @@ func getAllStepsResponse() (*gm.StepNamesResponse, error) {
 	getAllStepsRequest := &gm.Message{MessageType: gm.Message_StepNamesRequest, StepNamesRequest: &gm.StepNamesRequest{}}
 	response, err := lRunner.runner.ExecuteMessageWithTimeout(getAllStepsRequest)
 	if err != nil {
-		return nil, fmt.Errorf("Error while connecting to runner : %s", err.Error())
+		return nil, fmt.Errorf("error while connecting to runner : %s", err.Error())
 	}
 	return response.GetStepNamesResponse(), nil
 }

@@ -70,12 +70,15 @@ func printJSONVersion() {
 	}
 	gaugeVersion := versionJSON{version.FullVersion(), version.CommitHash, make([]*pluginJSON, 0), track.GaugeTelemetryMessage}
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
+	if err != nil {
+		fmt.Println("error:", err.Error())
+	}
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
 	}
 	b, err := json.MarshalIndent(gaugeVersion, "", "    ")
 	if err != nil {
-		fmt.Println("error:", err)
+		fmt.Println("error:", err.Error())
 	}
 	fmt.Println(fmt.Sprintf("%s\n", string(b)))
 }

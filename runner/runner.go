@@ -349,7 +349,10 @@ func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter *l
 	}
 	go func() {
 		<-killChannel
-		cmd.Process.Kill()
+		err := cmd.Process.Kill()
+		if err != nil {
+			logger.Errorf(false, "Unable to kill %s with PID %d : %s", cmd.Path, cmd.Process.Pid, err.Error())
+		}
 	}()
 	// Wait for the process to exit so we will get a detailed error message
 	errChannel := make(chan error)

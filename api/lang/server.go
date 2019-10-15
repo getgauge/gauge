@@ -150,7 +150,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 			e := showErrorMessageOnClient(ctx, conn, err)
 			if e != nil {
-				return nil, fmt.Errorf("Unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
 			}
 		}
 		return data, err
@@ -172,7 +172,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 			e := showErrorMessageOnClient(ctx, conn, err)
 			if e != nil {
-				return nil, fmt.Errorf("Unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
 			}
 			return nil, err
 		}
@@ -218,7 +218,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 			e := showErrorMessageOnClient(ctx, conn, err)
 			if e != nil {
-				return nil, fmt.Errorf("Unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
 			}
 			return nil, err
 		}
@@ -243,7 +243,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			e := showErrorMessageOnClient(ctx, conn, err)
 			if e != nil {
-				return nil, fmt.Errorf("Unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
 			}
 			return nil, err
 		}
