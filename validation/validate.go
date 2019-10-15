@@ -169,10 +169,11 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	logger.Debug(true, "Parsing started.")
 	conceptDict, res, err := parser.ParseConcepts()
 	if err != nil {
-		logger.Fatalf(true, "Unable to validate : %s", err.Error())
+		logger.Fatalf(true, "Unable to parse : %s", err.Error())
 	}
 	errMap := gauge.NewBuildErrors()
 	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
+	logger.Debug(true, "Parsing completed.")
 	r := startAPI(debug)
 	vErrs := NewValidator(s, r, conceptDict).Validate()
 	errMap = getErrMap(errMap, vErrs)
@@ -181,12 +182,11 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	showSuggestion(vErrs)
 	if !res.Ok {
 		r.Kill()
-		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed."))
+		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed"))
 	}
 	if specsFailed {
 		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
 	}
-	logger.Debug(true, "Parsing completed.")
 	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
 }
 

@@ -124,11 +124,13 @@ func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buil
 
 // ParseConcepts creates concept dictionary and concept parse result.
 func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
+	logger.Debug(true, "Started concepts parsing.")
 	conceptsDictionary, conceptParseResult, err := CreateConceptsDictionary()
 	if err != nil {
 		return nil, nil, err
 	}
 	HandleParseResult(conceptParseResult)
+	logger.Debugf(true, "%d concepts parsing completed.", len(conceptsDictionary.ConceptsMap))
 	return conceptsDictionary, conceptParseResult, nil
 }
 
@@ -163,8 +165,10 @@ func parseSpecsInDirs(conceptDictionary *gauge.ConceptDictionary, specDirs []str
 	var specs []*gauge.Specification
 	var specParseResults []*ParseResult
 	allSpecs := make([]*gauge.Specification, len(specFiles))
+	logger.Debug(true, "Started specifications parsing.")
 	specs, specParseResults = ParseSpecFiles(givenSpecs, conceptDictionary, buildErrors)
 	passed = !HandleParseResult(specParseResults...) && passed
+	logger.Debugf(true, "%d specifications parsing completed.", len(specFiles))
 	for _, spec := range specs {
 		i, _ := getIndexFor(specFiles, spec.FileName)
 		specFile := specFiles[i]
