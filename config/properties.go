@@ -235,5 +235,5 @@ func gaugeVersionInProperties() (*version.Version, error) {
 	if err != nil {
 		return v, err
 	}
-	return version.ParseVersion(strings.TrimLeft(string(l), "# Version "))
+	return version.ParseVersion(strings.TrimPrefix(string(l), "# Version "))
 }
