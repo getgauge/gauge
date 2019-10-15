@@ -367,7 +367,7 @@ func (tags *Tags) Add(values []string) {
 }
 
 func (tags *Tags) Values() (val []string) {
-	for i, _ := range tags.RawValues {
+	for i := range tags.RawValues {
 		val = append(val, tags.RawValues[i]...)
 	}
 	return val

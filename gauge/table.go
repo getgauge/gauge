@@ -121,7 +121,7 @@ func (table *Table) CreateTableCells(rowValues []string) []TableCell {
 
 func (table *Table) toHeaderSizeRow(rows []TableCell) []TableCell {
 	finalCells := make([]TableCell, 0)
-	for i, _ := range table.Headers {
+	for i := range table.Headers {
 		var cell TableCell
 		if len(rows)-1 >= i {
 			cell = rows[i]
