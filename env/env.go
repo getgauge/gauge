@@ -138,13 +138,17 @@ func loadEnvDir(envName string) error {
 }
 
 func loadEnvFile(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+
 	if !isPropertiesFile(path) {
 		return nil
 	}
 
-	properties, err := properties.Load(path)
-	if err != nil {
-		return fmt.Errorf("Failed to parse: %s. %s", path, err.Error())
+	properties, err1 := properties.Load(path)
+	if err1 != nil {
+		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
 
 	for property, value := range properties {
