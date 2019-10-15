@@ -138,7 +138,10 @@ func getGoArch() string {
 }
 
 func isPlatformIndependent(zipfile string) bool {
-	re, _ := regexp.Compile("-([a-z]*)\\.")
+	re, err := regexp.Compile(`-([a-z]*)\.`)
+	if err != nil {
+		logger.Errorf(false, "unable to compile regex '-([a-z]*)\\.': %s", err.Error())
+	}
 	return !re.MatchString(zipfile)
 }
 
@@ -454,7 +457,11 @@ func getVersionedPluginDirName(pluginZip string) string {
 		re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+")
 		return re.FindString(zipFileName)
 	}
-	re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.nightly-[0-9]+-[0-9]+-[0-9]+")
+	rStr := `[0-9]+\.[0-9]+\.[0-9]+\.nightly-[0-9]+-[0-9]+-[0-9]+`
+	re, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
 	return re.FindString(zipFileName)
 }
 

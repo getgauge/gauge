@@ -171,7 +171,10 @@ var getLatestGaugeVersion = func(url string) (string, error) {
 
 func getGaugeVersionFromURL(url string) (string, error) {
 	versionString := strings.Replace(url, gauge_releases_url, "", -1)
-	reg, _ := regexp.Compile("tag/v(\\d.*)")
+	reg, err := regexp.Compile(`tag/v(\d.*)`)
+	if err != nil {
+		return "", fmt.Errorf("Unable to compile regex 'tag/v(\\d.*)': %s", err.Error())
+	}
 	matches := reg.FindStringSubmatch(versionString)
 	if len(matches) < 2 {
 		return "", fmt.Errorf("Failed to parse: %s", url)

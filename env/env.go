@@ -207,7 +207,11 @@ func isPropertySet(property string) bool {
 
 func containsEnvVar(value string) (contains bool, matches [][]string) {
 	// match for any ${foo}
-	r, _ := regexp.Compile("\\$\\{(\\w+)\\}")
+	rStr := `\$\{(\w+)\}`
+	r, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
 	contains = r.MatchString(value)
 	if contains {
 		matches = r.FindAllStringSubmatch(value, -1)
