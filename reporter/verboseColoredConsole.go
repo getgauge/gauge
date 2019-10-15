@@ -98,7 +98,7 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 	logger.Debug(false, stepText)
 	_, err := c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
 	if err != nil {
-		log.Errorf("Unable to add message to heading Buffer : %s", err.Error())
+		logger.Errorf("Unable to add message to heading Buffer : %s", err.Error())
 	}
 }
 
