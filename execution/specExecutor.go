@@ -111,7 +111,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(results)
-			scnMap := make(map[int]bool, 0)
+			scnMap := make(map[int]bool)
 			for _, s := range tableDriven {
 				if _, ok := scnMap[s.Span.Start]; !ok {
 					scnMap[s.Span.Start] = true

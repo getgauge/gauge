@@ -77,14 +77,14 @@ func newFailedMetaData() *failedMetadata {
 
 func (m *failedMetadata) addFailedItem(itemName string, item string) {
 	if _, ok := m.failedItemsMap[itemName]; !ok {
-		m.failedItemsMap[itemName] = make(map[string]bool, 0)
+		m.failedItemsMap[itemName] = make(map[string]bool)
 	}
 	m.failedItemsMap[itemName][item] = true
 }
 
 // ListenFailedScenarios listens to execution events and writes the failed scenarios to JSON file
 func ListenFailedScenarios(wg *sync.WaitGroup, specDirs []string) {
-	ch := make(chan event.ExecutionEvent, 0)
+	ch := make(chan event.ExecutionEvent)
 	event.Register(ch, event.ScenarioEnd)
 	event.Register(ch, event.SpecEnd)
 	event.Register(ch, event.SuiteEnd)

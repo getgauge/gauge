@@ -39,7 +39,7 @@ type TableCell struct {
 }
 
 func NewTable(headers []string, cols [][]TableCell, lineNo int) *Table {
-	headerIndx := make(map[string]int, 0)
+	headerIndx := make(map[string]int)
 	for i, h := range headers {
 		headerIndx[h] = i
 	}

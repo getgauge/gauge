@@ -264,7 +264,7 @@ func (s *MySuite) TestInitTagsCacheWithMultipleFiles(c *C) {
 }
 
 func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
-	var stepsFromSpecsMap = make(map[string][]*gauge.Step, 0)
+	var stepsFromSpecsMap = make(map[string][]*gauge.Step)
 	f, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
@@ -278,7 +278,7 @@ func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
 }
 
 func (s *MySuite) TestGetStepsFromCachedConcepts(c *C) {
-	var stepsFromConceptsMap = make(map[string][]*gauge.Step, 0)
+	var stepsFromConceptsMap = make(map[string][]*gauge.Step)
 	f, _ := createFileIn(s.specsDir, "concept1.cpt", concept1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}

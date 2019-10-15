@@ -79,7 +79,7 @@ func (d *SpecDetail) HasSpec() bool {
 }
 
 func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGatherer {
-	return &SpecInfoGatherer{conceptDictionary: conceptDictionary, conceptsCache: conceptCache{concepts: make(map[string][]*gauge.Concept, 0)}}
+	return &SpecInfoGatherer{conceptDictionary: conceptDictionary, conceptsCache: conceptCache{concepts: make(map[string][]*gauge.Concept)}}
 }
 
 // Init initializes all the SpecInfoGatherer caches
@@ -98,7 +98,7 @@ func (s *SpecInfoGatherer) initTagsCache() {
 	s.tagsCache.mutex.Lock()
 	defer s.tagsCache.mutex.Unlock()
 	s.specsCache.mutex.Lock()
-	s.tagsCache.tags = make(map[string][]string, 0)
+	s.tagsCache.tags = make(map[string][]string)
 	for file, specDetail := range s.specsCache.specDetails {
 		s.updateTagsCacheFromSpecs(file, specDetail)
 	}
@@ -109,8 +109,8 @@ func (s *SpecInfoGatherer) initParamsCache() {
 	s.paramsCache.mutex.Lock()
 	defer s.paramsCache.mutex.Unlock()
 	s.specsCache.mutex.Lock()
-	s.paramsCache.staticParams = make(map[string]map[string]gauge.StepArg, 0)
-	s.paramsCache.dynamicParams = make(map[string]map[string]gauge.StepArg, 0)
+	s.paramsCache.staticParams = make(map[string]map[string]gauge.StepArg)
+	s.paramsCache.dynamicParams = make(map[string]map[string]gauge.StepArg)
 	for file, specDetail := range s.specsCache.specDetails {
 		s.updateParamCacheFromSpecs(file, specDetail)
 	}
@@ -128,7 +128,7 @@ func (s *SpecInfoGatherer) initSpecsCache() {
 	s.specsCache.mutex.Lock()
 	defer s.specsCache.mutex.Unlock()
 
-	s.specsCache.specDetails = make(map[string]*SpecDetail, 0)
+	s.specsCache.specDetails = make(map[string]*SpecDetail)
 
 	logger.Infof(false, "Initializing specs cache with %d specs", len(details))
 	for _, d := range details {
@@ -150,7 +150,7 @@ func (s *SpecInfoGatherer) initConceptsCache() {
 	defer s.conceptsCache.mutex.Unlock()
 
 	parsedConcepts := s.getParsedConcepts()
-	s.conceptsCache.concepts = make(map[string][]*gauge.Concept, 0)
+	s.conceptsCache.concepts = make(map[string][]*gauge.Concept)
 	logger.Infof(false, "Initializing concepts cache with %d concepts", len(parsedConcepts))
 	for _, concept := range parsedConcepts {
 		logger.Debugf(false, "Adding concepts from %s", concept.FileName)
@@ -162,7 +162,7 @@ func (s *SpecInfoGatherer) initStepsCache() {
 	s.stepsCache.mutex.Lock()
 	defer s.stepsCache.mutex.Unlock()
 
-	s.stepsCache.steps = make(map[string][]*gauge.Step, 0)
+	s.stepsCache.steps = make(map[string][]*gauge.Step)
 	stepsFromSpecsMap := s.getStepsFromCachedSpecs()
 	stepsFromConceptsMap := s.getStepsFromCachedConcepts()
 
@@ -176,8 +176,8 @@ func (s *SpecInfoGatherer) initStepsCache() {
 }
 
 func (s *SpecInfoGatherer) updateParamsCacheFromConcepts(file string, concepts []*gauge.Concept) {
-	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg, 0)
-	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg, 0)
+	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg)
+	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg)
 	for _, concept := range concepts {
 		s.addParamsFromSteps([]*gauge.Step{concept.ConceptStep}, file)
 		s.addParamsFromSteps(concept.ConceptStep.ConceptSteps, file)
@@ -185,8 +185,8 @@ func (s *SpecInfoGatherer) updateParamsCacheFromConcepts(file string, concepts [
 }
 
 func (s *SpecInfoGatherer) updateParamCacheFromSpecs(file string, specDetail *SpecDetail) {
-	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg, 0)
-	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg, 0)
+	s.paramsCache.staticParams[file] = make(map[string]gauge.StepArg)
+	s.paramsCache.dynamicParams[file] = make(map[string]gauge.StepArg)
 	s.addParamsFromSteps(specDetail.Spec.Contexts, file)
 	for _, sce := range specDetail.Spec.Scenarios {
 		s.addParamsFromSteps(sce.Steps, file)
@@ -295,7 +295,7 @@ func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.Step {
 	s.specsCache.mutex.RLock()
 	defer s.specsCache.mutex.RUnlock()
 
-	var stepsFromSpecsMap = make(map[string][]*gauge.Step, 0)
+	var stepsFromSpecsMap = make(map[string][]*gauge.Step)
 	for _, detail := range s.specsCache.specDetails {
 		stepsFromSpecsMap[detail.Spec.FileName] = append(stepsFromSpecsMap[detail.Spec.FileName], getStepsFromSpec(detail.Spec)...)
 	}
@@ -303,7 +303,7 @@ func (s *SpecInfoGatherer) getStepsFromCachedSpecs() map[string][]*gauge.Step {
 }
 
 func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.Step {
-	var stepsFromConceptMap = make(map[string][]*gauge.Step, 0)
+	var stepsFromConceptMap = make(map[string][]*gauge.Step)
 	s.conceptsCache.mutex.RLock()
 	defer s.conceptsCache.mutex.RUnlock()
 	for _, conceptList := range s.conceptsCache.concepts {

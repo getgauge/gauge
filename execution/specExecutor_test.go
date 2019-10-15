@@ -430,7 +430,7 @@ func TestExecuteShouldNotifyBeforeSpecEvent(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 
-	ch := make(chan event.ExecutionEvent, 0)
+	ch := make(chan event.ExecutionEvent)
 	event.InitRegistry()
 	event.Register(ch, event.SpecStart)
 	wg := &sync.WaitGroup{}
@@ -573,7 +573,7 @@ func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 
-	ch := make(chan event.ExecutionEvent, 0)
+	ch := make(chan event.ExecutionEvent)
 	event.InitRegistry()
 	event.Register(ch, event.SpecEnd)
 	wg := &sync.WaitGroup{}

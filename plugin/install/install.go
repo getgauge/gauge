@@ -562,7 +562,7 @@ func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure b
 }
 
 func installPluginsFromManifest(manifest *manifest.Manifest, silent, languageOnly bool) {
-	pluginsMap := make(map[string]bool, 0)
+	pluginsMap := make(map[string]bool)
 	pluginsMap[manifest.Language] = true
 	if !languageOnly {
 		for _, plugin := range manifest.Plugins {

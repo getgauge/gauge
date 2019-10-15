@@ -64,7 +64,7 @@ var subscriberRegistry map[Topic][]chan ExecutionEvent
 
 // InitRegistry is used for console reporting, execution API and rerun of specs
 func InitRegistry() {
-	subscriberRegistry = make(map[Topic][]chan ExecutionEvent, 0)
+	subscriberRegistry = make(map[Topic][]chan ExecutionEvent)
 	subscriberRegistry[SuiteStart] = make([]chan ExecutionEvent, 0)
 	subscriberRegistry[ScenarioStart] = make([]chan ExecutionEvent, 0)
 	subscriberRegistry[ConceptStart] = make([]chan ExecutionEvent, 0)

@@ -271,7 +271,7 @@ func getPluginVersions() string {
 	if err != nil {
 		return fmt.Sprintf("Could not retrieve plugin information.")
 	}
-	pluginVersions := make([]string, 0, 0)
+	pluginVersions := make([]string, 0)
 	for _, pi := range pis {
 		pluginVersions = append(pluginVersions, fmt.Sprintf(`%s (%s)`, pi.Name, pi.Version))
 	}
