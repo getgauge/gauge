@@ -168,13 +168,10 @@ func ExecuteInitHookForRunner(language string) error {
 	switch runtime.GOOS {
 	case "windows":
 		command = runnerInfo.Init.Windows
-		break
 	case "darwin":
 		command = runnerInfo.Init.Darwin
-		break
 	default:
 		command = runnerInfo.Init.Linux
-		break
 	}
 
 	languageJSONFilePath, err := plugin.GetLanguageJSONFilePath(language)
@@ -429,13 +426,10 @@ func getOsSpecificCommand(r RunnerInfo) []string {
 	switch runtime.GOOS {
 	case "windows":
 		command = r.Run.Windows
-		break
 	case "darwin":
 		command = r.Run.Darwin
-		break
 	default:
 		command = r.Run.Linux
-		break
 	}
 	return command
 }

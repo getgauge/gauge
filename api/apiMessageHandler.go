@@ -56,35 +56,25 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 		switch messageType {
 		case gauge_messages.APIMessage_GetProjectRootRequest:
 			responseMessage = handler.projectRootRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_GetInstallationRootRequest:
 			responseMessage = handler.installationRootRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_GetAllStepsRequest:
 			responseMessage = handler.getAllStepsRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_SpecsRequest:
 			responseMessage = handler.getSpecsRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_GetStepValueRequest:
 			responseMessage = handler.getStepValueRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_GetLanguagePluginLibPathRequest:
 			responseMessage = handler.getLanguagePluginLibPath(apiMessage)
-			break
 		case gauge_messages.APIMessage_GetAllConceptsRequest:
 			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
-			break
 		case gauge_messages.APIMessage_PerformRefactoringRequest:
 			responseMessage = handler.performRefactoring(apiMessage)
 			handler.performRefresh(responseMessage.PerformRefactoringResponse.FilesChanged)
-			break
 		case gauge_messages.APIMessage_ExtractConceptRequest:
 			responseMessage = handler.extractConcept(apiMessage)
-			break
 		case gauge_messages.APIMessage_FormatSpecsRequest:
 			responseMessage = handler.formatSpecs(apiMessage)
-			break
 		default:
 			responseMessage = handler.createUnsupportedAPIMessageResponse(apiMessage)
 		}

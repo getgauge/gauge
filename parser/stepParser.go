@@ -289,18 +289,14 @@ func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 			switch fragment.GetParameter().GetParameterType() {
 			case gauge_messages.Parameter_Static:
 				value = fmt.Sprintf("\"%s\"", fragment.GetParameter().GetValue())
-				break
 			case gauge_messages.Parameter_Dynamic:
 				value = fmt.Sprintf("<%s>", fragment.GetParameter().GetValue())
-				break
 			case gauge_messages.Parameter_Special_String:
 				i++
 				value = fmt.Sprintf("<%s%d>", "file", i)
-				break
 			case gauge_messages.Parameter_Special_Table:
 				i++
 				value = fmt.Sprintf("<%s%d>", "table", i)
-				break
 			}
 		}
 		stepText += value

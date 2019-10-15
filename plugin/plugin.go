@@ -170,13 +170,10 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	switch runtime.GOOS {
 	case "windows":
 		command = pd.Command.Windows
-		break
 	case "darwin":
 		command = pd.Command.Darwin
-		break
 	default:
 		command = pd.Command.Linux
-		break
 	}
 	if len(command) == 0 {
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)

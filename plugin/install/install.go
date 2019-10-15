@@ -279,13 +279,10 @@ func runPlatformCommands(commands platformSpecificCommand, workingDir string) er
 	switch runtime.GOOS {
 	case "windows":
 		command = commands.Windows
-		break
 	case "darwin":
 		command = commands.Darwin
-		break
 	default:
 		command = commands.Linux
-		break
 	}
 
 	if len(command) == 0 {
@@ -375,13 +372,10 @@ func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 	switch runtime.GOOS {
 	case "windows":
 		downloadLink = platformLinks.Windows
-		break
 	case "darwin":
 		downloadLink = platformLinks.Darwin
-		break
 	default:
 		downloadLink = platformLinks.Linux
-		break
 	}
 	if downloadLink == "" {
 		return "", fmt.Errorf("Platform not supported for %s. Download URL not specified.", runtime.GOOS)
