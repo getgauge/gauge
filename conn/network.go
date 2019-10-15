@@ -94,12 +94,12 @@ func readResponse(conn net.Conn) ([]byte, error) {
 			if e != nil {
 				logger.Debugf(false, "Connection already closed, %s", e.Error())
 			}
-			return nil, fmt.Errorf("Connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error())
+			return nil, fmt.Errorf("connection closed [%s] cause: %s", conn.RemoteAddr(), err.Error())
 		}
 
 		_, err = buffer.Write(data[0:n])
 		if err != nil {
-			return nil, fmt.Errorf("Unable to write to buffer, %s", err.Error())
+			return nil, fmt.Errorf("unable to write to buffer, %s", err.Error())
 		}
 		messageLength, bytesRead := proto.DecodeVarint(buffer.Bytes())
 		if (messageLength > 0 && messageLength < uint64(buffer.Len())) && ((messageLength + uint64(bytesRead)) <= uint64(buffer.Len())) {
