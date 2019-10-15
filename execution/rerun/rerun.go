@@ -118,9 +118,7 @@ func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenar
 
 func addSpecFailedMetadata(res result.Result, args []string) {
 	fileName := util.RelPathToProjectRoot(res.(*result.SpecResult).ProtoSpec.GetFileName())
-	if _, ok := failedMeta.failedItemsMap[fileName]; ok {
-		delete(failedMeta.failedItemsMap, fileName)
-	}
+	delete(failedMeta.failedItemsMap, fileName)
 	failedMeta.addFailedItem(fileName, fileName)
 }
 
