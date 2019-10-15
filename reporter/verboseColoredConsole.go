@@ -29,7 +29,6 @@ import (
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
-	"k8s.io/kubernetes/pkg/kubelet/kubeletconfig/util/log"
 )
 
 type verboseColoredConsole struct {
