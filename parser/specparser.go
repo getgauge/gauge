@@ -162,9 +162,7 @@ func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileNa
 		}
 		arguments = append(arguments, argument)
 		if parseDetails != nil && parseDetails.Warnings != nil {
-			for _, warn := range parseDetails.Warnings {
-				warnings = append(warnings, warn)
-			}
+			warnings = append(warnings, parseDetails.Warnings...)
 		}
 	}
 	step.AddArgs(arguments...)

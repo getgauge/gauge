@@ -58,9 +58,7 @@ func (s *SpecCollection) Add(spec *Specification) {
 
 func (s *SpecCollection) Specs() (specs []*Specification) {
 	for _, subSpecs := range s.specs {
-		for _, spec := range subSpecs {
-			specs = append(specs, spec)
-		}
+		specs = append(specs, subSpecs...)
 	}
 	return specs
 }

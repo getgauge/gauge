@@ -83,16 +83,7 @@ func convertToProtoStep(step *Step) *gauge_messages.ProtoStep {
 }
 
 func convertToProtoTags(tags *Tags) *gauge_messages.ProtoTags {
-	return &gauge_messages.ProtoTags{Tags: getAllTags(tags)}
-
-}
-
-func getAllTags(tags *Tags) []string {
-	allTags := make([]string, 0)
-	for _, tag := range tags.Values() {
-		allTags = append(allTags, tag)
-	}
-	return allTags
+	return &gauge_messages.ProtoTags{Tags: tags.Values()}
 }
 
 func makeFragmentsCopy(fragments []*gauge_messages.Fragment) []*gauge_messages.Fragment {
