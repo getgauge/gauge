@@ -55,7 +55,6 @@ type parallelExecution struct {
 	manifest                 *manifest.Manifest
 	specCollection           *gauge.SpecCollection
 	pluginHandler            plugin.Handler
-	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int

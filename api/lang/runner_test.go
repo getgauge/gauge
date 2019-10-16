@@ -32,7 +32,6 @@ func (ctx *MockContext) Value(key interface{}) interface{} {
 type MockConn struct {
 	method  string
 	params  interface{}
-	result  interface{}
 	options []jsonrpc2.CallOption
 }
 
