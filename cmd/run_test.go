@@ -145,11 +145,14 @@ func TestHandleConflictingParamsWithOtherArguments(t *testing.T) {
 
 		var flags = pflag.FlagSet{}
 		flags.BoolP("repeat", "r", false, "")
-		flags.Set("repeat", "true")
+		err := flags.Set("repeat", "true")
+		if err != nil {
+			t.Error(err)
+		}
 
 		repeat = true
 		expectedErrorMessage := "Invalid Command. Usage: gauge run --repeat"
-		err := handleConflictingParams(&flags, args)
+		err = handleConflictingParams(&flags, args)
 
 		if !reflect.DeepEqual(err.Error(), expectedErrorMessage) {
 			fmt.Printf("Expected %v  Got %v\n", expectedErrorMessage, err)
@@ -172,14 +175,20 @@ func TestHandleConflictingParamsWithOtherFlags(t *testing.T) {
 
 	var flags = pflag.FlagSet{}
 	flags.BoolP("repeat", "r", false, "")
-	flags.Set("repeat", "true")
+	err := flags.Set("repeat", "true")
+	if err != nil {
+		t.Error(err)
+	}
 
 	flags.StringP("tags", "", "", "")
-	flags.Set("tags", "abcd")
+	err = flags.Set("tags", "abcd")
+	if err != nil {
+		t.Error(err)
+	}
 
 	repeat = true
 	expectedErrorMessage := "Invalid Command. Usage: gauge run --repeat"
-	err := handleConflictingParams(&flags, args)
+	err = handleConflictingParams(&flags, args)
 
 	if !reflect.DeepEqual(err.Error(), expectedErrorMessage) {
 		t.Errorf("Expected %v  Got %v", expectedErrorMessage, err)
@@ -191,10 +200,13 @@ func TestHandleConflictingParamsWithJustRepeatFlag(t *testing.T) {
 
 	var flags = pflag.FlagSet{}
 	flags.BoolP("repeat", "r", false, "")
-	flags.Set("repeat", "true")
+	err := flags.Set("repeat", "true")
+	if err != nil {
+		t.Error(err)
+	}
 
 	repeat = true
-	err := handleConflictingParams(&flags, args)
+	err = handleConflictingParams(&flags, args)
 
 	if err != nil {
 		t.Errorf("Expected %v  Got %v", nil, err.Error())
@@ -219,8 +231,14 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		cmd.Flags().BoolP(failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
 		cmd.Flags().BoolP(repeatName, "", repeatDefault, "Repeat last run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
 		cmd.Flags().BoolP(hideSuggestionName, "", hideSuggestionDefault, "Prints a step implementation stub for every unimplemented step")
-		cmd.Flags().Set(repeatName, "true")
-		cmd.Flags().Set(verboseName, "true")
+		err := cmd.Flags().Set(repeatName, "true")
+		if err != nil {
+			t.Error(err)
+		}
+		err = cmd.Flags().Set(verboseName, "true")
+		if err != nil {
+			t.Error(err)
+		}
 
 		handleFlags(cmd, []string{"--repeat", "--verbose"})
 		overridenFlagValue := cmd.Flag(verboseName).Value.String()
@@ -246,10 +264,19 @@ func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		config.ProjectRoot = ""
 		currDir, _ := os.Getwd()
-		defer os.Chdir(currDir)
+		defer func() {
+			err := os.Chdir(currDir)
+			if err != nil {
+				t.Error(err)
+			}
+		}()
 		testdir := filepath.Join(currDir, "dotGauge")
 		dotgaugeDir := filepath.Join(testdir, ".gauge")
-		os.Chdir(testdir)
+		err := os.Chdir(testdir)
+		if err != nil {
+			t.Error(err)
+		}
+
 		exit = func(err error, i string) {
 			if _, e := os.Stat(dotgaugeDir); os.IsExist(e) {
 				panic("Folder .gauge is created")
@@ -259,7 +286,11 @@ func TestHandleFailedCommandForNonGaugeProject(t *testing.T) {
 
 		os.Args = []string{"gauge", "run", "-f"}
 
-		runCmd.Execute()
+		err = runCmd.Execute()
+
+		if err != nil {
+			t.Error(err)
+		}
 		return
 	}
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
@@ -275,13 +306,20 @@ func TestHandleConflictingParamsWithLogLevelFlag(t *testing.T) {
 	var flags = pflag.FlagSet{}
 
 	flags.StringP("log-level", "l", "info", "")
-	flags.Set("log-level", "debug")
+	err := flags.Set("log-level", "debug")
+	if err != nil {
+		t.Error(err)
+	}
 
 	flags.BoolP("repeat", "r", false, "")
-	flags.Set("repeat", "true")
+	err = flags.Set("repeat", "true")
+	if err != nil {
+		t.Error(err)
+	}
+
 	repeat = true
 
-	err := handleConflictingParams(&flags, args)
+	err = handleConflictingParams(&flags, args)
 
 	if err != nil {
 		t.Errorf("Expected %v  Got %v", nil, err.Error())
@@ -297,7 +335,10 @@ func TestNoExitCodeShouldForceReturnZero(t *testing.T) {
 		os.Args = []string{"gauge", "run", "--fail-safe", "specs"}
 
 		failSafe = true
-		runCmd.Execute()
+		err := runCmd.Execute()
+		if err != nil {
+			t.Error(err)
+		}
 		return
 	}
 	var stdout bytes.Buffer
@@ -317,7 +358,10 @@ func TestFailureShouldReturnExitCodeForParseErrors(t *testing.T) {
 
 		os.Args = []string{"gauge", "run", "--fail-safe", "specs"}
 		failSafe = true
-		runCmd.Execute()
+		err := runCmd.Execute()
+		if err != nil {
+			t.Error(err)
+		}
 	}
 
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
@@ -334,7 +378,10 @@ func TestFailureShouldReturnExitCode(t *testing.T) {
 		// simulate execution failure
 		execution.ExecuteSpecs = func(s []string) int { return execution.ExecutionFailed }
 		os.Args = []string{"gauge", "run", "specs"}
-		runCmd.Execute()
+		err := runCmd.Execute()
+		if err != nil {
+			t.Error(err)
+		}
 	}
 
 	var stdout bytes.Buffer
@@ -368,11 +415,17 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 			return []string{"gauge", "run", "specs", "-l", "debug"}
 		}
 		os.Args = []string{"gauge", "run", "--failed", "-l", "info"}
-		os.MkdirAll(filepath.Join(projectPath, ".gauge"), 0755)
+		err := os.MkdirAll(filepath.Join(projectPath, ".gauge"), 0755)
+		if err != nil {
+			t.Error(err)
+		}
 		file, err := os.OpenFile(filepath.Join(projectPath, ".gauge", "failures.json"), os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			t.Error(err)
+		}
 		_, err = file.Write([]byte("{\"Args\": [\"run\",\"-v\"],\"FailedItems\": [\"specs\"]}"))
 		if err != nil {
-			fmt.Println(err)
+			t.Error(err)
 		}
 		file.Close()
 		executeFailed(runCmd)
@@ -408,7 +461,11 @@ func TestLogLevelCanBeOverriddenForRepeat(t *testing.T) {
 			return []string{"gauge", "run", "specs", "-l=debug"}
 		}
 		os.Args = []string{"gauge", "run", "--failed", "-l=info"}
-		runCmd.ParseFlags(os.Args)
+		err := runCmd.ParseFlags(os.Args)
+		if err != nil {
+			t.Error(err)
+		}
+
 		repeatLastExecution(runCmd)
 		return
 	}
@@ -425,7 +482,11 @@ func TestLogLevelCanBeOverriddenForRepeat(t *testing.T) {
 func TestCorrectFlagsAreSetForRepeat(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		// expect "env" to be set to "test"
-		os.MkdirAll(filepath.Join(projectPath, "env", "test"), 0755)
+		err := os.MkdirAll(filepath.Join(projectPath, "env", "test"), 0755)
+		if err != nil {
+			t.Error(err)
+		}
+
 		execution.ExecuteSpecs = func(s []string) int {
 			f, err := runCmd.Flags().GetString(environmentName)
 			if err != nil {
@@ -443,7 +504,11 @@ func TestCorrectFlagsAreSetForRepeat(t *testing.T) {
 			return []string{"gauge", "run", "specs", "--env=test"}
 		}
 		os.Args = []string{"gauge", "run", "--failed"}
-		runCmd.ParseFlags(os.Args)
+		err = runCmd.ParseFlags(os.Args)
+		if err != nil {
+			t.Error(err)
+		}
+
 		repeatLastExecution(runCmd)
 		return
 	}
@@ -497,7 +562,10 @@ func subEnv() []string {
 func TestAddingFlagsToExecutionArgs(t *testing.T) {
 	var flags = &pflag.FlagSet{}
 	flags.BoolP("parallel", "p", false, "")
-	flags.Set("parallel", "true")
+	err := flags.Set("parallel", "true")
+	if err != nil {
+		t.Error(err)
+	}
 
 	execution.ExecutionArgs = []*gauge.ExecutionArg{}
 	addFlagsToExecutionArgs(flags)
@@ -512,9 +580,16 @@ func TestAddingFlagsToExecutionArgs(t *testing.T) {
 func TestAddingMultipleFlagsToExecutionArgs(t *testing.T) {
 	var flags = &pflag.FlagSet{}
 	flags.BoolP("parallel", "p", false, "")
-	flags.Set("parallel", "true")
+	err := flags.Set("parallel", "true")
+	if err != nil {
+		t.Error(err)
+	}
+
 	flags.StringP("tags", "", "", "")
-	flags.Set("tags", "tag1")
+	err = flags.Set("tags", "tag1")
+	if err != nil {
+		t.Error(err)
+	}
 
 	execution.ExecutionArgs = []*gauge.ExecutionArg{}
 	addFlagsToExecutionArgs(flags)

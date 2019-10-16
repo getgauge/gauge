@@ -109,13 +109,11 @@ func documentCreate(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSON
 }
 
 func documentDelete(uri lsp.DocumentURI, ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	var err error
 	if !util.IsGaugeFile(string(uri)) {
 		if lRunner.runner != nil {
-			err = cacheFileOnRunner(uri, "", false, gm.CacheFileRequest_DELETED)
+			return cacheFileOnRunner(uri, "", false, gm.CacheFileRequest_DELETED)
 		}
-	} else {
-		publishDiagnostic(uri, []lsp.Diagnostic{}, conn, ctx)
+		return fmt.Errorf("Language runner is not instantiated.")
 	}
-	return err
+	return publishDiagnostic(uri, []lsp.Diagnostic{}, conn, ctx)
 }

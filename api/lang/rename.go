@@ -48,7 +48,9 @@ func renameStep(req *jsonrpc2.Request) (interface{}, error) {
 	}
 
 	step, err := getStepToRefactor(params)
-
+	if err != nil {
+		return nil, err
+	}
 	if step == nil {
 		return nil, fmt.Errorf("refactoring is supported for steps only")
 	}
@@ -62,7 +64,7 @@ func renameStep(req *jsonrpc2.Request) (interface{}, error) {
 		return nil, fmt.Errorf("%s", strings.Join(refactortingResult.Errors, "\t"))
 	}
 	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
+	result.Changes = make(map[string][]lsp.TextEdit)
 	changes := append(refactortingResult.SpecsChanged, append(refactortingResult.ConceptsChanged, refactortingResult.RunnerFilesChanged...)...)
 	if err := addWorkspaceEdits(&result, changes); err != nil {
 		return nil, err

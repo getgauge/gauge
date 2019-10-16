@@ -379,7 +379,10 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to zip: %s", err))
 	}
-	os.Chdir(wd)
+	err = os.Chdir(wd)
+	if err != nil {
+		panic(fmt.Sprintf("Unable to set working directory to %s: %s", wd, err.Error()))
+	}
 }
 
 func updateGaugeInstallPrefix() {

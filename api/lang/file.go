@@ -93,14 +93,6 @@ func getContent(uri lsp.DocumentURI) string {
 	return strings.Join(openFilesCache.content(uri), "\n")
 }
 
-func getLineCount(uri lsp.DocumentURI) int {
-	return len(openFilesCache.content(uri))
-}
-
 func isOpen(uri lsp.DocumentURI) bool {
 	return openFilesCache.exists(uri)
-}
-
-func getContentRange(uri lsp.DocumentURI, start, end int) []string {
-	return openFilesCache.contentRange(uri, start, end)
 }
