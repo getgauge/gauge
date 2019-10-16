@@ -79,7 +79,10 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 	if isProcessRunning(p) {
 		defer p.connection.Close()
 		p.killTimer = time.NewTimer(config.PluginKillTimeout())
-		conn.SendProcessKillMessage(p.connection)
+		err := conn.SendProcessKillMessage(p.connection)
+		if err != nil {
+			logger.Warningf(true, "Error while killing plugin %s : %s ", p.descriptor.Name, err.Error())
+		}
 
 		exited := make(chan bool, 1)
 		go func() {
@@ -122,11 +125,7 @@ func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	}
 
 	if pluginVersion != "" {
-		pluginJSON := filepath.Join(thisPluginDir, pluginVersion, common.PluginJSONFile)
-		if common.FileExists(pluginJSON) {
-			return true
-		}
-		return false
+		return common.FileExists(filepath.Join(thisPluginDir, pluginVersion, common.PluginJSONFile))
 	}
 	return true
 }
@@ -167,17 +166,14 @@ func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
 }
 
 func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = pd.Command.Windows
-		break
 	case "darwin":
 		command = pd.Command.Darwin
-		break
 	default:
 		command = pd.Command.Linux
-		break
 	}
 	if len(command) == 0 {
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)

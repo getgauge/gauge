@@ -119,7 +119,10 @@ func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo ga
 		logger.Error(false, stacktrace)
 
 		failureMsg := formatErrorFragment(stepText, c.indentation) + formatErrorFragment(specInfo, c.indentation) + formatErrorFragment(errMsg, c.indentation) + formatErrorFragment(stacktrace, c.indentation)
-		c.sceFailuresBuf.WriteString(failureMsg)
+		_, err := c.sceFailuresBuf.WriteString(failureMsg)
+		if err != nil {
+			logger.Errorf(true, "Error writing to scenario failure buffer: %s", err.Error())
+		}
 	}
 	printHookFailureCC(c, res, res.GetPostHook)
 	c.indentation -= stepIndentation

@@ -35,7 +35,10 @@ func ListTemplates() {
 		logger.Errorf(true, fmt.Sprintf("Error downloading templates info: %s.\n%s", templatesURL, res.Status))
 	}
 	templates := []template{}
-	json.NewDecoder(res.Body).Decode(&templates)
+	err = json.NewDecoder(res.Body).Decode(&templates)
+	if err != nil {
+		logger.Errorf(true, fmt.Sprintf("Error decoding templates info: %s : %s", templatesURL, err.Error()))
+	}
 	for _, t := range templates {
 		logger.Infof(true, t.GetName())
 	}

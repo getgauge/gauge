@@ -204,6 +204,10 @@ func createFileIn(dir string, fileName string, data []byte) (string, error) {
 
 func createDirIn(dir string, dirName string) (string, error) {
 	tempDir, err := ioutil.TempDir(dir, dirName)
+	if err != nil {
+		return "", err
+	}
+
 	fullDirName := filepath.Join(dir, dirName)
 	err = os.Rename(tempDir, fullDirName)
 	return fullDirName, err

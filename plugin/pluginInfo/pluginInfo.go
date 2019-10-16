@@ -65,7 +65,7 @@ var GetAllInstalledPluginsWithVersion = func() ([]PluginInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	allPlugins := make(map[string]PluginInfo, 0)
+	allPlugins := make(map[string]PluginInfo)
 	for _, prefix := range pluginInstallPrefixes {
 		files, err := ioutil.ReadDir(prefix)
 		if err != nil {
@@ -95,7 +95,7 @@ func GetLatestInstalledPlugin(pluginDir string) (*PluginInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
 	}
-	versionToPlugins := make(map[string][]PluginInfo, 0)
+	versionToPlugins := make(map[string][]PluginInfo)
 	pluginName := filepath.Base(pluginDir)
 
 	for _, file := range files {

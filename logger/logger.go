@@ -30,7 +30,7 @@ import (
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/natefinch/lumberjack"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 const (
@@ -105,7 +105,7 @@ func logError(logger *logging.Logger, stdout bool, msg string) {
 		write(stdout, msg)
 	}
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprint(os.Stderr, msg)
 		return
 	}
 	logger.Errorf(msg)
@@ -133,7 +133,7 @@ func logDebug(logger *logging.Logger, stdout bool, msg string) {
 
 func logCritical(logger *logging.Logger, msg string) {
 	if !initialized {
-		fmt.Fprintf(os.Stderr, msg)
+		fmt.Fprint(os.Stderr, msg)
 		return
 	}
 	logger.Criticalf(msg)
@@ -184,8 +184,7 @@ func addLogger(module string) {
 }
 
 func initFileLoggerBackend() {
-	var backend logging.Backend
-	backend = createFileLogger(ActiveLogFile, 10)
+	var backend = createFileLogger(ActiveLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
 	fileLoggerLeveled = logging.AddModuleLevel(fileFormatter)
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
@@ -241,8 +240,8 @@ func loggingLevel(logLevel string) logging.Level {
 
 func getFatalErrorMsg() string {
 	env := []string{runtime.GOOS, version.FullVersion()}
-	if version.GetCommitHash() != "" {
-		env = append(env, version.GetCommitHash())
+	if version.CommitHash != "" {
+		env = append(env, version.CommitHash)
 	}
 	envText := strings.Join(env, ", ")
 
@@ -272,7 +271,7 @@ func getPluginVersions() string {
 	if err != nil {
 		return fmt.Sprintf("Could not retrieve plugin information.")
 	}
-	pluginVersions := make([]string, 0, 0)
+	pluginVersions := make([]string, 0)
 	for _, pi := range pis {
 		pluginVersions = append(pluginVersions, fmt.Sprintf(`%s (%s)`, pi.Name, pi.Version))
 	}

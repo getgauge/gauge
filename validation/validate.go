@@ -193,9 +193,9 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 func getErrMap(errMap *gauge.BuildErrors, validationErrors validationErrors) *gauge.BuildErrors {
 	for spec, valErrors := range validationErrors {
 		for _, err := range valErrors {
-			switch err.(type) {
+			switch e := err.(type) {
 			case StepValidationError:
-				errMap.StepErrs[err.(StepValidationError).step] = err.(StepValidationError)
+				errMap.StepErrs[e.step] = e
 			case SpecValidationError:
 				errMap.SpecErrs[spec] = append(errMap.SpecErrs[spec], err.(SpecValidationError))
 			}

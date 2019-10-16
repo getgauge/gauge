@@ -57,9 +57,10 @@ type fileSystemWatcher struct {
 type watchKind int
 
 const (
-	created watchKind = 1
-	changed           = 2
-	deleted           = 4
+	created watchKind = iota
+	changed
+	_reserved
+	deleted
 )
 
 type textDocumentRegistrationOptions struct {

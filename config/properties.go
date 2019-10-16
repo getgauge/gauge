@@ -19,7 +19,6 @@ package config
 
 import (
 	"bufio"
-	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -67,13 +66,12 @@ func (p *properties) Format(f formatter) (string, error) {
 	return f.format(all)
 }
 
-func (p *properties) String() string {
-	var buffer bytes.Buffer
-	buffer.WriteString("# Version " + version.FullVersion())
-	buffer.WriteString("\n")
-	buffer.WriteString("# ")
-	buffer.WriteString(comment)
-	buffer.WriteString("\n")
+func (p *properties) String() (string, error) {
+	var buffer strings.Builder
+	_, err := buffer.WriteString(fmt.Sprintf("# Version %s\n# %s\n", version.FullVersion(), comment))
+	if err != nil {
+		return "", err
+	}
 	var keys []string
 	for k := range p.p {
 		keys = append(keys, k)
@@ -81,20 +79,20 @@ func (p *properties) String() string {
 	sort.Strings(keys)
 	for _, k := range keys {
 		v := p.p[k]
-		buffer.WriteString("\n")
-		buffer.WriteString("# ")
-		buffer.WriteString(v.description)
-		buffer.WriteString("\n")
-		buffer.WriteString(v.Key)
-		buffer.WriteString(" = ")
-		buffer.WriteString(v.Value)
-		buffer.WriteString("\n")
+		_, err := buffer.WriteString(fmt.Sprintf("\n# %s\n%s = %s\n", v.description, v.Key, v.Value))
+		if err != nil {
+			return "", err
+		}
 	}
-	return buffer.String()
+	return buffer.String(), nil
 }
 
 func (p *properties) Write(w io.Writer) (int, error) {
-	return w.Write([]byte(p.String()))
+	s, err := p.String()
+	if err != nil {
+		return 0, err
+	}
+	return w.Write([]byte(s))
 }
 
 func Properties() *properties {
@@ -113,21 +111,28 @@ func Properties() *properties {
 	}}
 }
 
-func MergedProperties() *properties {
+func MergedProperties() (*properties, error) {
 	p := Properties()
 	config, err := common.GetGaugeConfiguration()
 	if err != nil {
-		return p
+		// if unable to get from gauge.properties, just return defaults.
+		return p, nil
 	}
 	for k, v := range config {
-		p.set(k, v)
+		err := p.set(k, v)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return p
+	return p, nil
 }
 
 func Update(name, value string) error {
-	p := MergedProperties()
-	err := p.set(name, value)
+	p, err := MergedProperties()
+	if err != nil {
+		return err
+	}
+	err = p.set(name, value)
 	if err != nil {
 		return err
 	}
@@ -145,13 +150,21 @@ func UpdateTelemetryLoggging(value string) error {
 func Merge() error {
 	v, err := gaugeVersionInProperties()
 	if err != nil || version.CompareVersions(v, version.CurrentGaugeVersion, version.LesserThanFunc) {
-		return writeConfig(MergedProperties())
+		mp, err := MergedProperties()
+		if err != nil {
+			return err
+		}
+		return writeConfig(mp)
 	}
 	return nil
 }
 
 func GetProperty(name string) (string, error) {
-	return MergedProperties().get(name)
+	mp, err := MergedProperties()
+	if err != nil {
+		return "", err
+	}
+	return mp.get(name)
 }
 
 func List(machineReadable bool) (string, error) {
@@ -160,7 +173,11 @@ func List(machineReadable bool) (string, error) {
 	if machineReadable {
 		f = &jsonFormatter{}
 	}
-	return MergedProperties().Format(f)
+	mp, err := MergedProperties()
+	if err != nil {
+		return "", err
+	}
+	return mp.Format(f)
 }
 
 func newProperty(key, defaultValue, description string) *property {
@@ -180,6 +197,9 @@ func writeConfig(p *properties) error {
 	var f *os.File
 	if _, err = os.Stat(gaugePropertiesFile); err != nil {
 		f, err = os.Create(gaugePropertiesFile)
+		if err != nil {
+			return err
+		}
 	} else {
 		f, err = os.OpenFile(gaugePropertiesFile, os.O_WRONLY, os.ModeExclusive)
 		if err != nil {
@@ -215,5 +235,5 @@ func gaugeVersionInProperties() (*version.Version, error) {
 	if err != nil {
 		return v, err
 	}
-	return version.ParseVersion(strings.TrimLeft(string(l), "# Version "))
+	return version.ParseVersion(strings.TrimPrefix(string(l), "# Version "))
 }

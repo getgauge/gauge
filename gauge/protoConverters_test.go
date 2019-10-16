@@ -168,7 +168,7 @@ func newProtoStep(lineText, value string) *gauge_messages.ProtoStep {
 
 func compareFragments(fragmentList1 []*gauge_messages.Fragment, fragmentList2 []*gauge_messages.Fragment, c *C) {
 	c.Assert(len(fragmentList1), Equals, len(fragmentList2))
-	for i, _ := range fragmentList1 {
+	for i := range fragmentList1 {
 		compareFragment(fragmentList1[i], fragmentList2[i], c)
 	}
 }

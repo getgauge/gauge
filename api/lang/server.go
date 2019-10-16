@@ -20,6 +20,7 @@ package lang
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 	"runtime/debug"
@@ -73,7 +74,10 @@ func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
 	switch req.Method {
 	case "initialize":
-		informRunnerCompatibility(ctx, conn)
+		if err := informRunnerCompatibility(ctx, conn); err != nil {
+			logError(req, err.Error())
+			return nil, err
+		}
 		if err := cacheInitializeParams(req); err != nil {
 			logError(req, err.Error())
 			return nil, err
@@ -89,8 +93,7 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		go publishDiagnostics(ctx, conn)
 		return nil, nil
 	case "shutdown":
-		killRunner()
-		return nil, nil
+		return nil, killRunner()
 	case "exit":
 		if c, ok := conn.(*jsonrpc2.Conn); ok {
 			c.Close()
@@ -145,7 +148,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		data, err := format(req)
 		if err != nil {
 			logDebug(req, err.Error())
-			showErrorMessageOnClient(ctx, conn, err)
+			e := showErrorMessageOnClient(ctx, conn, err)
+			if e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
 		}
 		return data, err
 	case "textDocument/codeLens":
@@ -164,7 +170,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		result, err := rename(ctx, conn, req)
 		if err != nil {
 			logDebug(req, err.Error())
-			showErrorMessageOnClient(ctx, conn, err)
+			e := showErrorMessageOnClient(ctx, conn, err)
+			if e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
 			return nil, err
 		}
 		return result, nil
@@ -207,7 +216,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 	case "gauge/putStubImpl":
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
 			logDebug(req, err.Error())
-			showErrorMessageOnClient(ctx, conn, err)
+			e := showErrorMessageOnClient(ctx, conn, err)
+			if e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
 			return nil, err
 		}
 		val, err := putStubImpl(req)
@@ -229,7 +241,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return val, err
 	case "gauge/generateConcept":
 		if err := sendSaveFilesRequest(ctx, conn); err != nil {
-			showErrorMessageOnClient(ctx, conn, err)
+			e := showErrorMessageOnClient(ctx, conn, err)
+			if e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
 			return nil, err
 		}
 		return generateConcept(req)

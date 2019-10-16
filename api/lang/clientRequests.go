@@ -24,8 +24,8 @@ import (
 	"github.com/sourcegraph/jsonrpc2"
 )
 
-func showErrorMessageOnClient(ctx context.Context, conn jsonrpc2.JSONRPC2, err error) {
-	conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: lsp.MTError, Message: err.Error()})
+func showErrorMessageOnClient(ctx context.Context, conn jsonrpc2.JSONRPC2, err error) error {
+	return conn.Notify(ctx, "window/showMessage", lsp.ShowMessageParams{Type: lsp.MTError, Message: err.Error()})
 }
 
 func sendSaveFilesRequest(ctx context.Context, conn jsonrpc2.JSONRPC2) error {

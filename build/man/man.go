@@ -132,7 +132,7 @@ func prepareIndex(links []link) string {
 }
 
 func indentText(p string) (texts []text) {
-	filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(p, func(path string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(info.Name(), ".md") {
 			bytes, err := ioutil.ReadFile(path)
 			if err != nil {
@@ -151,6 +151,10 @@ func indentText(p string) (texts []text) {
 		}
 		return nil
 	})
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	return
 }
 

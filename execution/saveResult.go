@@ -41,7 +41,7 @@ const (
 
 // ListenSuiteEndAndSaveResult listens to execution events and writes the failed scenarios to JSON file
 func ListenSuiteEndAndSaveResult(wg *sync.WaitGroup) {
-	ch := make(chan event.ExecutionEvent, 0)
+	ch := make(chan event.ExecutionEvent)
 	event.Register(ch, event.SuiteEnd)
 	wg.Add(1)
 

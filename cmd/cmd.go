@@ -58,7 +58,10 @@ var (
 				return
 			}
 			if len(args) < 1 {
-				cmd.Help()
+				err := cmd.Help()
+				if err != nil {
+					logger.Errorf(true, "Unable to print help: %s", err.Error())
+				}
 			}
 		},
 		DisableAutoGenTag: true,
@@ -67,7 +70,10 @@ var (
 			notifyTelemetryIfNeeded(cmd, args)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
-			config.SetProjectRoot(args)
+			err := config.SetProjectRoot(args)
+			if err != nil {
+				logger.Errorf(true, "Unable to set Project Root: %s", err.Error())
+			}
 			setGlobalFlags()
 			initPackageFlags()
 		},

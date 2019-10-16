@@ -211,7 +211,7 @@ func (e *parallelExecution) executeEagerly(distributions int, resChan chan *resu
 func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
 	runner, err := e.startRunner(s, stream)
-	if err != nil && len(err) > 0 {
+	if len(err) > 0 {
 		resChan <- &result.SuiteResult{UnhandledErrors: err}
 		return
 	}

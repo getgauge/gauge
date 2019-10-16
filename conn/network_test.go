@@ -43,6 +43,10 @@ func (m mockConn) Read(b []byte) (n int, err error) {
 		responseMessage.MessageId = id
 	}
 	messageBytes, err := proto.Marshal(responseMessage)
+	if err != nil {
+		return 0, err
+	}
+
 	data := append(proto.EncodeVarint(uint64(len(messageBytes))), messageBytes...)
 	for i := 0; i < len(data); i++ {
 		b[i] = data[i]

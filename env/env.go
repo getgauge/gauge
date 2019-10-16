@@ -138,13 +138,17 @@ func loadEnvDir(envName string) error {
 }
 
 func loadEnvFile(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+
 	if !isPropertiesFile(path) {
 		return nil
 	}
 
-	properties, err := properties.Load(path)
-	if err != nil {
-		return fmt.Errorf("Failed to parse: %s. %s", path, err.Error())
+	properties, err1 := properties.Load(path)
+	if err1 != nil {
+		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
 
 	for property, value := range properties {
@@ -207,7 +211,11 @@ func isPropertySet(property string) bool {
 
 func containsEnvVar(value string) (contains bool, matches [][]string) {
 	// match for any ${foo}
-	r, _ := regexp.Compile("\\$\\{(\\w+)\\}")
+	rStr := `\$\{(\w+)\}`
+	r, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
 	contains = r.MatchString(value)
 	if contains {
 		matches = r.FindAllStringSubmatch(value, -1)

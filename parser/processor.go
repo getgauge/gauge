@@ -82,7 +82,10 @@ func processTable(parser *SpecParser, token *Token) ([]error, bool) {
 			continue
 		}
 		if shouldEscape {
-			buffer.WriteRune(element)
+			_, err := buffer.WriteRune(element)
+			if err != nil {
+				errs = append(errs, err)
+			}
 			shouldEscape = false
 			continue
 		}
@@ -102,7 +105,10 @@ func processTable(parser *SpecParser, token *Token) ([]error, bool) {
 			token.Args = append(token.Args, trimmedValue)
 			buffer.Reset()
 		} else {
-			buffer.WriteRune(element)
+			_, err := buffer.WriteRune(element)
+			if err != nil {
+				errs = append(errs, err)
+			}
 		}
 	}
 

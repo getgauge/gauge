@@ -24,6 +24,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/gauge/logger"
+
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 )
@@ -123,7 +125,10 @@ func processStepText(text string) (string, []string, error) {
 	lastState := -1
 
 	acceptStaticParam := simpleAcceptor(rune(quotes), rune(quotes), func(int) {
-		stepValue.WriteString("{static}")
+		_, err := stepValue.WriteString("{static}")
+		if err != nil {
+			logger.Errorf(false, "Unable to write `{static}` to step value while parsing : %s", err.Error())
+		}
 		args = append(args, argText.String())
 		argText.Reset()
 	}, inQuotes)
@@ -135,9 +140,15 @@ func processStepText(text string) (string, []string, error) {
 		return state
 	}, func(currentState int) {
 		if isInState(currentState, inSpecialParam) {
-			stepValue.WriteString("{special}")
+			_, err := stepValue.WriteString("{special}")
+			if err != nil {
+				logger.Errorf(false, "Unable to write `{special}` to step value while parsing : %s", err.Error())
+			}
 		} else {
-			stepValue.WriteString("{dynamic}")
+			_, err := stepValue.WriteString("{dynamic}")
+			if err != nil {
+				logger.Errorf(false, "Unable to write `{special}` to step value while parsing : %s", err.Error())
+			}
 		}
 		args = append(args, argText.String())
 		argText.Reset()
@@ -148,7 +159,10 @@ func processStepText(text string) (string, []string, error) {
 		if currentState == inEscape {
 			currentState = lastState
 			if _, isReservedChar := reservedChars[element]; currentState == inDefault && !isReservedChar {
-				curBuffer(currentState).WriteRune(escape)
+				_, err := curBuffer(currentState).WriteRune(escape)
+				if err != nil {
+					logger.Errorf(false, "Unable to write `\\\\`(escape) to step value while parsing : %s", err.Error())
+				}
 			} else {
 				element = getEscapedRuneIfValid(element)
 			}
@@ -164,7 +178,10 @@ func processStepText(text string) (string, []string, error) {
 			return "", nil, fmt.Errorf("'%c' is a reserved character and should be escaped", element)
 		}
 
-		curBuffer(currentState).WriteRune(element)
+		_, err := curBuffer(currentState).WriteRune(element)
+		if err != nil {
+			logger.Errorf(false, "Unable to write `%c` to step value while parsing : %s", element, err.Error())
+		}
 	}
 
 	// If it is a valid step, the state should be default when the control reaches here
@@ -272,18 +289,14 @@ func ConvertToStepText(fragments []*gauge_messages.Fragment) string {
 			switch fragment.GetParameter().GetParameterType() {
 			case gauge_messages.Parameter_Static:
 				value = fmt.Sprintf("\"%s\"", fragment.GetParameter().GetValue())
-				break
 			case gauge_messages.Parameter_Dynamic:
 				value = fmt.Sprintf("<%s>", fragment.GetParameter().GetValue())
-				break
 			case gauge_messages.Parameter_Special_String:
 				i++
 				value = fmt.Sprintf("<%s%d>", "file", i)
-				break
 			case gauge_messages.Parameter_Special_Table:
 				i++
 				value = fmt.Sprintf("<%s%d>", "table", i)
-				break
 			}
 		}
 		stepText += value

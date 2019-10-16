@@ -45,6 +45,9 @@ func notifyTelemetry(ctx context.Context, conn jsonrpc2.JSONRPC2) {
 	if err != nil || result.Title == "" {
 		return
 	}
-	config.UpdateTelemetry(fmt.Sprintf("%t", result.Title != "No"))
+	err = config.UpdateTelemetry(fmt.Sprintf("%t", result.Title != "No"))
+	if err != nil {
+		return
+	}
 	config.RecordTelemetryConsentSet()
 }

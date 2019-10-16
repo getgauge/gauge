@@ -50,8 +50,6 @@ func resolveToProtoItem(item gauge.Item, lookup *gauge.ArgLookup, skipFn setSkip
 		} else {
 			protoItem, err = resolveToProtoStepItem(item.(*gauge.Step), lookup, skipFn)
 		}
-		break
-
 	default:
 		protoItem = gauge.ConvertToProtoItem(item)
 	}

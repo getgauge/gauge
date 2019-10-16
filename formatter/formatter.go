@@ -166,7 +166,7 @@ func FormatTable(table *gauge.Table) string {
 		tableStringBuffer.WriteString("\n")
 	}
 
-	return string(tableStringBuffer.Bytes())
+	return tableStringBuffer.String()
 }
 
 func addPaddingToCell(cellValue string, width int) string {
@@ -210,7 +210,7 @@ func FormatTags(tags *gauge.Tags) string {
 			b.WriteString("      ")
 		}
 	}
-	return string(b.Bytes())
+	return b.String()
 }
 
 func formatExternalDataTable(dataTable *gauge.DataTable) string {
@@ -220,7 +220,7 @@ func formatExternalDataTable(dataTable *gauge.DataTable) string {
 	var b bytes.Buffer
 	b.WriteString(dataTable.Value)
 	b.WriteString("\n")
-	return string(b.Bytes())
+	return b.String()
 }
 
 func formatAndSave(spec *gauge.Specification) error {
@@ -236,7 +236,7 @@ func FormatSpecification(specification *gauge.Specification) string {
 	queue := &gauge.ItemQueue{Items: specification.AllItems()}
 	formatter := &formatter{buffer: formattedSpec, itemQueue: queue}
 	specification.Traverse(formatter, queue)
-	return string(formatter.buffer.Bytes())
+	return formatter.buffer.String()
 }
 
 func sortConcepts(conceptDictionary *gauge.ConceptDictionary, conceptMap map[string]string) []*gauge.Concept {

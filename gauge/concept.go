@@ -28,7 +28,7 @@ type Concept struct {
 }
 
 func NewConceptDictionary() *ConceptDictionary {
-	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept, 0), constructionMap: make(map[string][]*Step, 0)}
+	return &ConceptDictionary{ConceptsMap: make(map[string]*Concept), constructionMap: make(map[string][]*Step)}
 }
 
 func (dict *ConceptDictionary) Search(stepValue string) *Concept {

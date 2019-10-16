@@ -22,7 +22,7 @@ type ItemQueue struct {
 }
 
 func (queue *ItemQueue) Next() Item {
-	if queue.hasNext() {
+	if len(queue.Items) > 0 {
 		next := queue.Items[0]
 		queue.Items = queue.Items[1:]
 		return next
@@ -31,15 +31,8 @@ func (queue *ItemQueue) Next() Item {
 }
 
 func (queue *ItemQueue) Peek() Item {
-	if queue.hasNext() {
+	if len(queue.Items) > 0 {
 		return queue.Items[0]
 	}
 	return nil
-}
-
-func (queue *ItemQueue) hasNext() bool {
-	if len(queue.Items) > 0 {
-		return true
-	}
-	return false
 }

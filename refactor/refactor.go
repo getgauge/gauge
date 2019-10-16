@@ -199,9 +199,7 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	for _, parseResult := range parseResults {
 		if !parseResult.Ok {
 			refactorResult.Success = false
-			for _, err := range parseResult.Errors() {
-				refactorResult.Errors = append(refactorResult.Errors, err)
-			}
+			refactorResult.Errors = append(refactorResult.Errors, parseResult.Errors()...)
 		}
 		refactorResult.appendWarnings(parseResult.Warnings)
 	}
@@ -270,7 +268,7 @@ func (agent *rephraseRefactorer) refactorStepImplementations(shouldSaveChanges b
 
 func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification][]*gauge.StepDiff, map[string][]*gauge.StepDiff) {
 	specsRefactored := make(map[*gauge.Specification][]*gauge.StepDiff, 0)
-	conceptsRefactored := make(map[string][]*gauge.StepDiff, 0)
+	conceptsRefactored := make(map[string][]*gauge.StepDiff)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
 		diffs, isRefactored := spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)

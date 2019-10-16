@@ -111,7 +111,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(results)
-			scnMap := make(map[int]bool, 0)
+			scnMap := make(map[int]bool)
 			for _, s := range tableDriven {
 				if _, ok := scnMap[s.Span.Start]; !ok {
 					scnMap[s.Span.Start] = true
@@ -222,9 +222,8 @@ func (e *specExecutor) failSpec() {
 func (e *specExecutor) convertErrors(specErrors []error) []*gauge_messages.Error {
 	var errors []*gauge_messages.Error
 	for _, e := range specErrors {
-		switch e.(type) {
+		switch err := e.(type) {
 		case parser.ParseError:
-			err := e.(parser.ParseError)
 			errors = append(errors, &gauge_messages.Error{
 				Message:    err.Error(),
 				LineNumber: int32(err.LineNo),

@@ -94,7 +94,7 @@ func sanitize(tag string) string {
 }
 
 func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
-	tagsMap := make(map[string]bool, 0)
+	tagsMap := make(map[string]bool)
 	for _, tag := range stags {
 		tag = sanitize(tag)
 		tagsMap[strings.Replace(tag, " ", "", -1)] = true
@@ -145,7 +145,7 @@ func (filter *ScenarioFilterBasedOnTags) resolveBracketExpression(tagExpression 
 		if tagExpression[i] == '(' {
 			bracketStack = append(bracketStack, "(")
 		} else if tagExpression[i] == ')' {
-			bracketStack = append(bracketStack[:len(bracketStack)-1])
+			bracketStack = bracketStack[:len(bracketStack)-1]
 		}
 		if len(bracketStack) == 0 {
 			break
@@ -229,7 +229,7 @@ func filterSpecsByTags(specs []*gauge.Specification, tagExpression string) ([]*g
 func validateTagExpression(tagExpression string) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: tagExpression}
 	filter.replaceSpecialChar()
-	_, err := filter.formatAndEvaluateExpression(make(map[string]bool, 0), func(a map[string]bool, b string) bool { return true })
+	_, err := filter.formatAndEvaluateExpression(make(map[string]bool), func(a map[string]bool, b string) bool { return true })
 	if err != nil {
 		logger.Fatalf(true, err.Error())
 	}

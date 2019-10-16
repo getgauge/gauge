@@ -208,7 +208,7 @@ func revParseHead() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return fmt.Sprintf("%s", strings.TrimSpace(hash.String()))
+	return strings.TrimSpace(hash.String())
 }
 
 func filteredPlatforms() []map[string]string {

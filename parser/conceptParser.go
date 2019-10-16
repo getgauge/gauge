@@ -217,7 +217,7 @@ func (parser *ConceptParser) createConceptLookup(concept *gauge.Step) {
 
 // CreateConceptsDictionary generates a ConceptDictionary which is map of concept text to concept. ConceptDictionary is used to search for a concept.
 func CreateConceptsDictionary() (*gauge.ConceptDictionary, *ParseResult, error) {
-	cptFilesMap := make(map[string]bool, 0)
+	cptFilesMap := make(map[string]bool)
 	for _, cpt := range util.GetConceptFiles() {
 		cptFilesMap[cpt] = true
 	}
@@ -334,7 +334,7 @@ func removeAllReferences(conceptDictionary *gauge.ConceptDictionary, concept *ga
 
 func checkCircularReferencing(conceptDictionary *gauge.ConceptDictionary, concept *gauge.Step, traversedSteps map[string]string) []ParseError {
 	if traversedSteps == nil {
-		traversedSteps = make(map[string]string, 0)
+		traversedSteps = make(map[string]string)
 	}
 	con := conceptDictionary.Search(concept.Value)
 	if con == nil {

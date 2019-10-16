@@ -96,7 +96,10 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 
 	c.indentation += stepIndentation
 	logger.Debug(false, stepText)
-	c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
+	_, err := c.headingBuffer.WriteString(indent(strings.TrimSpace(stepText), c.indentation))
+	if err != nil {
+		logger.Errorf(false, "Unable to add message to heading Buffer : %s", err.Error())
+	}
 }
 
 func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
@@ -166,23 +169,32 @@ func (c *verboseColoredConsole) Errorf(text string, args ...interface{}) {
 	logger.Error(false, msg)
 	msg = indent(msg, c.indentation+errorIndentation) + newline
 	c.displayMessage(msg, ct.Red)
-	c.errorMessagesBuffer.WriteString(msg)
+	_, err := c.errorMessagesBuffer.WriteString(msg)
+	if err != nil {
+		logger.Errorf(false, "Unable to print error message '%s' : %s", msg, err.Error())
+	}
 }
 
 // Write writes the bytes to console via goterminal's writer.
 // This is called when any sysouts are to be printed on console.
 func (c *verboseColoredConsole) Write(b []byte) (int, error) {
 	text := string(b)
-	c.pluginMessagesBuffer.WriteString(text)
+	n, err := c.pluginMessagesBuffer.WriteString(text)
+	if err != nil {
+		return n, err
+	}
 	c.displayMessage(text, ct.None)
-	return len(b), nil
+	return n, nil
 }
 
 func (c *verboseColoredConsole) displayMessage(msg string, color ct.Color) {
 	ct.Foreground(color, false)
 	defer ct.ResetColor()
 	fmt.Fprint(c.writer, msg)
-	c.writer.Print()
+	err := c.writer.Print()
+	if err != nil {
+		logger.Error(false, err.Error())
+	}
 }
 
 func (c *verboseColoredConsole) resetBuffers() {

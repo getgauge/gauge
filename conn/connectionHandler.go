@@ -108,12 +108,19 @@ func (connectionHandler *GaugeConnectionHandler) handleConnectionMessages(conn n
 	for {
 		n, err := conn.Read(data)
 		if err != nil {
-			conn.Close()
+			e := conn.Close()
+			if e != nil {
+				logger.Debugf(false, "Connection already closed, %s", e.Error())
+			}
 			logger.Infof(false, "Closing connection [%s] cause: %s", conn.RemoteAddr(), err.Error())
 			return
 		}
 
-		buffer.Write(data[0:n])
+		_, err = buffer.Write(data[0:n])
+		if err != nil {
+			logger.Infof(false, "Unable to write to buffer, %s", err.Error())
+			return
+		}
 		connectionHandler.processMessage(buffer, conn)
 	}
 }

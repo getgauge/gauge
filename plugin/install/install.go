@@ -138,7 +138,10 @@ func getGoArch() string {
 }
 
 func isPlatformIndependent(zipfile string) bool {
-	re, _ := regexp.Compile("-([a-z]*)\\.")
+	re, err := regexp.Compile(`-([a-z]*)\.`)
+	if err != nil {
+		logger.Errorf(false, "unable to compile regex '-([a-z]*)\\.': %s", err.Error())
+	}
 	return !re.MatchString(zipfile)
 }
 
@@ -275,17 +278,14 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 }
 
 func runPlatformCommands(commands platformSpecificCommand, workingDir string) error {
-	command := []string{}
+	var command []string
 	switch runtime.GOOS {
 	case "windows":
 		command = commands.Windows
-		break
 	case "darwin":
 		command = commands.Darwin
-		break
 	default:
 		command = commands.Linux
-		break
 	}
 
 	if len(command) == 0 {
@@ -375,13 +375,10 @@ func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 	switch runtime.GOOS {
 	case "windows":
 		downloadLink = platformLinks.Windows
-		break
 	case "darwin":
 		downloadLink = platformLinks.Darwin
-		break
 	default:
 		downloadLink = platformLinks.Linux
-		break
 	}
 	if downloadLink == "" {
 		return "", fmt.Errorf("Platform not supported for %s. Download URL not specified.", runtime.GOOS)
@@ -460,7 +457,11 @@ func getVersionedPluginDirName(pluginZip string) string {
 		re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+")
 		return re.FindString(zipFileName)
 	}
-	re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+\\.nightly-[0-9]+-[0-9]+-[0-9]+")
+	rStr := `[0-9]+\.[0-9]+\.[0-9]+\.nightly-[0-9]+-[0-9]+-[0-9]+`
+	re, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
 	return re.FindString(zipFileName)
 }
 
@@ -562,7 +563,7 @@ func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure b
 }
 
 func installPluginsFromManifest(manifest *manifest.Manifest, silent, languageOnly bool) {
-	pluginsMap := make(map[string]bool, 0)
+	pluginsMap := make(map[string]bool)
 	pluginsMap[manifest.Language] = true
 	if !languageOnly {
 		for _, plugin := range manifest.Plugins {

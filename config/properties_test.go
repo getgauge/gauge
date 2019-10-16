@@ -84,7 +84,11 @@ func TestMergedProperties(t *testing.T) {
 	}
 	os.Setenv("GAUGE_HOME", s)
 
-	p := MergedProperties()
+	p, err := MergedProperties()
+	if err != nil {
+		t.Errorf("Unable to read MergedProperties: %s", err.Error())
+	}
+
 	got, err := p.get(checkUpdates)
 
 	if err != nil {
@@ -140,7 +144,11 @@ runner_request_timeout = 30000
 func TestPropertiesString(t *testing.T) {
 	want := strings.Split(propertiesContent, "\n\n")
 
-	got := strings.Split(Properties().String(), "\n\n")
+	s, err := Properties().String()
+	if err != nil {
+		t.Error(err)
+	}
+	got := strings.Split(s, "\n\n")
 
 	if len(got) != len(want) {
 		t.Errorf("Expected %d properties, got %d", len(want), len(got))
@@ -170,7 +178,11 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 
 	wg.Wait()
 
-	got := strings.Split(Properties().String(), "\n\n")
+	s, err := Properties().String()
+	if err != nil {
+		t.Error(err)
+	}
+	got := strings.Split(s, "\n\n")
 
 	if len(got) != len(want) {
 		t.Errorf("Expected %d properties, got %d", len(want), len(got))

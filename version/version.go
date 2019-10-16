@@ -98,10 +98,7 @@ func CompareVersions(first *Version, second *Version, compareFunc func(int, int)
 		if compareFunc(first.Minor, second.Minor) {
 			return true
 		} else if IsEqual(first.Minor, second.Minor) {
-			if compareFunc(first.Patch, second.Patch) {
-				return true
-			}
-			return false
+			return compareFunc(first.Patch, second.Patch)
 		}
 	}
 	return false
@@ -130,14 +127,6 @@ func FullVersion() string {
 		metadata = fmt.Sprintf(".%s", BuildMetadata)
 	}
 	return fmt.Sprintf("%s%s", CurrentGaugeVersion.String(), metadata)
-}
-
-func GetCommitHash() string {
-	var commitHash string
-	if CommitHash != "" {
-		commitHash = fmt.Sprintf("%s", CommitHash)
-	}
-	return fmt.Sprintf("%s", commitHash)
 }
 
 type byDecreasingVersion []*Version
