@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/spf13/cobra"
@@ -41,8 +42,10 @@ var (
 			} else {
 				install.HandleInstallResult(install.Plugin(args[0], pVersion, machineReadable), args[0], true)
 			}
-			if err := install.AddPluginToProject(args[0]); err != nil {
-				logger.Fatalf(true, "Failed to add plugin %s to project : %s\n", args[0], err.Error())
+			if err := config.SetProjectRoot(args); err == nil {
+				if err := install.AddPluginToProject(args[0]); err != nil {
+					logger.Fatalf(true, "Failed to add plugin %s to project : %s\n", args[0], err.Error())
+				}
 			}
 		},
 		DisableAutoGenTag: true,

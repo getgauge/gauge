@@ -70,10 +70,6 @@ var (
 			notifyTelemetryIfNeeded(cmd, args)
 			skel.CreateSkelFilesIfRequired()
 			track.Init()
-			err := config.SetProjectRoot(args)
-			if err != nil {
-				logger.Errorf(true, "Unable to set Project Root: %s", err.Error())
-			}
 			setGlobalFlags()
 			initPackageFlags()
 		},

@@ -32,13 +32,13 @@ var refactorCmd = &cobra.Command{
 	Long:    `Refactor steps.`,
 	Example: `  gauge refactor "old step" "new step"`,
 	Run: func(cmd *cobra.Command, args []string) {
-		loadEnvAndReinitLogger(cmd)
 		if len(args) < 2 {
 			exit(fmt.Errorf("Refactor command needs at least two arguments."), cmd.UsageString())
 		}
 		if err := config.SetProjectRoot(args); err != nil {
 			exit(err, cmd.UsageString())
 		}
+		loadEnvAndReinitLogger(cmd)
 		refactorInit(args)
 	},
 	DisableAutoGenTag: true,
