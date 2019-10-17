@@ -18,6 +18,7 @@
 package cmd
 
 import (
+	"github.com/getgauge/gauge/config"
 	"fmt"
 	supersort "sort"
 
@@ -35,6 +36,9 @@ var (
 		Long:    `List specifications, scenarios or tags for a gauge project`,
 		Example: `  gauge list --tags specs`,
 		Run: func(cmd *cobra.Command, args []string) {
+			if err := config.SetProjectRoot(args); err != nil {
+				exit(err, cmd.UsageString())
+			}
 			loadEnvAndReinitLogger(cmd)
 			specs, failed := parser.ParseSpecs(getSpecsDir(args), gauge.NewConceptDictionary(), gauge.NewBuildErrors())
 			if failed {
