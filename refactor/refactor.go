@@ -267,7 +267,7 @@ func (agent *rephraseRefactorer) refactorStepImplementations(shouldSaveChanges b
 }
 
 func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) (map[*gauge.Specification][]*gauge.StepDiff, map[string][]*gauge.StepDiff) {
-	specsRefactored := make(map[*gauge.Specification][]*gauge.StepDiff, 0)
+	specsRefactored := make(map[*gauge.Specification][]*gauge.StepDiff)
 	conceptsRefactored := make(map[string][]*gauge.StepDiff)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {

@@ -47,7 +47,6 @@ const (
 	executionScope          pluginScope = "execution"
 	docScope                pluginScope = "documentation"
 	pluginConnectionPortEnv             = "plugin_connection_port"
-	debugEnv                            = "debugging"
 )
 
 type plugin struct {
@@ -266,7 +265,10 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			pluginConnection, err := gaugeConnectionHandler.AcceptConnection(config.PluginConnectionTimeout(), make(chan error))
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
-				plugin.pluginCmd.Process.Kill()
+				err := plugin.pluginCmd.Process.Kill()
+				if err != nil {
+					logger.Errorf(false, "unable to kill plugin %s: %s", plugin.descriptor.Name, err.Error())
+				}
 				continue
 			}
 			logger.Debugf(true, "Established connection to %s plugin", pd.Name)

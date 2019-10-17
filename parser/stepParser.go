@@ -45,8 +45,6 @@ const (
 	specialParamIdentifier = ':'
 )
 
-var allEscapeChars = map[string]string{`\t`: "\t", `\n`: "\n", `\r`: "\r"}
-
 type acceptFn func(rune, int) (int, bool)
 
 // ExtractStepArgsFromToken extracts step args(Static and Dynamic) from the given step token.
@@ -259,9 +257,7 @@ func treatArgAsDynamic(argValue string, token *Token, lookup *gauge.ArgLookup, f
 			parseRes.ParseErrors = result.ParseErrors
 		}
 		if result.Warnings != nil {
-			for _, warn := range result.Warnings {
-				parseRes.Warnings = append(parseRes.Warnings, warn)
-			}
+			parseRes.Warnings = append(parseRes.Warnings, result.Warnings...)
 		}
 	}
 	return stepArg, parseRes

@@ -30,7 +30,8 @@ func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "failing step"}}, gauge_messages.ExecutionInfo{}, scnRes)
 	dw.output = ""
 
-	cc.Write([]byte("fail reason: blah"))
+	_, err := cc.Write([]byte("fail reason: blah"))
+	c.Assert(err, IsNil)
 	cc.ScenarioEnd(nil, scnRes, gauge_messages.ExecutionInfo{})
 
 	c.Assert(dw.output, Equals, "fail reason: blah\n")

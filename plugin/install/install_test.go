@@ -60,11 +60,11 @@ func (s *MySuite) TestSortingVersionInstallDescriptionsInDecreasingVersionOrder(
 func (s *MySuite) TestFindingLatestCompatibleVersionSuccess(c *C) {
 	installDescription := createInstallDescriptionWithVersions("5.8.8", "1.7.8", "4.8.9", "0.7.6")
 	addVersionSupportToInstallDescription(installDescription,
-		&version.VersionSupport{"0.0.2", "0.8.7"},
-		&version.VersionSupport{"1.2.4", "1.2.6"},
-		&version.VersionSupport{"0.9.8", "1.2.1"},
+		&version.VersionSupport{Minimum: "0.0.2", Maximum: "0.8.7"},
+		&version.VersionSupport{Minimum: "1.2.4", Maximum: "1.2.6"},
+		&version.VersionSupport{Minimum: "0.9.8", Maximum: "1.2.1"},
 		&version.VersionSupport{Minimum: "0.7.7"})
-	versionInstallDesc, err := installDescription.getLatestCompatibleVersionTo(&version.Version{1, 0, 0})
+	versionInstallDesc, err := installDescription.getLatestCompatibleVersionTo(&version.Version{Major: 1, Minor: 0, Patch: 0})
 	c.Assert(err, Equals, nil)
 	c.Assert(versionInstallDesc.Version, Equals, "4.8.9")
 }
@@ -72,11 +72,11 @@ func (s *MySuite) TestFindingLatestCompatibleVersionSuccess(c *C) {
 func (s *MySuite) TestFindingLatestCompatibleVersionFailing(c *C) {
 	installDescription := createInstallDescriptionWithVersions("2.8.8", "0.7.8", "4.8.9", "1.7.6")
 	addVersionSupportToInstallDescription(installDescription,
-		&version.VersionSupport{"0.0.2", "0.8.7"},
-		&version.VersionSupport{"1.2.4", "1.2.6"},
-		&version.VersionSupport{"0.9.8", "1.0.0"},
+		&version.VersionSupport{Minimum: "0.0.2", Maximum: "0.8.7"},
+		&version.VersionSupport{Minimum: "1.2.4", Maximum: "1.2.6"},
+		&version.VersionSupport{Minimum: "0.9.8", Maximum: "1.0.0"},
 		&version.VersionSupport{Minimum: "1.7.7"})
-	_, err := installDescription.getLatestCompatibleVersionTo(&version.Version{1, 1, 0})
+	_, err := installDescription.getLatestCompatibleVersionTo(&version.Version{Major: 1, Minor: 1, Patch: 0})
 	c.Assert(err, NotNil)
 }
 

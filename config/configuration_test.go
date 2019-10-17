@@ -90,7 +90,10 @@ func TestAllowUpdates(t *testing.T) {
 func TestReadUniqueID(t *testing.T) {
 	expected := "foo"
 	idFile := filepath.Join("_testData", "config", "id")
-	ioutil.WriteFile(idFile, []byte(expected), common.NewFilePermissions)
+	err := ioutil.WriteFile(idFile, []byte(expected), common.NewFilePermissions)
+	if err != nil {
+		t.Error(err)
+	}
 
 	s, err := filepath.Abs("_testData")
 	if err != nil {

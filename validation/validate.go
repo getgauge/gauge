@@ -126,13 +126,20 @@ func Validate(args []string) {
 	}
 	if res.SpecCollection.Size() < 1 {
 		logger.Infof(true, "No specifications found in %s.", strings.Join(args, ", "))
-		res.Runner.Kill()
+		err := res.Runner.Kill()
+		if err != nil {
+			logger.Errorf(false, "unable to kill runner: %s", err.Error())
+		}
 		if res.ParseOk {
 			os.Exit(0)
 		}
 		os.Exit(1)
 	}
-	res.Runner.Kill()
+	err := res.Runner.Kill()
+	if err != nil {
+		logger.Errorf(false, "unable to kill runner: %s", err.Error())
+	}
+
 	if res.ErrMap.HasErrors() {
 		os.Exit(1)
 	}
@@ -181,7 +188,10 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 	printValidationFailures(vErrs)
 	showSuggestion(vErrs)
 	if !res.Ok {
-		r.Kill()
+		err := r.Kill()
+		if err != nil {
+			logger.Errorf(true, "unable to kill runner: %s", err.Error())
+		}
 		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed"))
 	}
 	if specsFailed {

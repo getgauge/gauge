@@ -58,7 +58,10 @@ func (m mockConn) Write(b []byte) (n int, err error) {
 	message := &gauge_messages.Message{}
 	messageLength, bytesRead := proto.DecodeVarint(b)
 	b = b[bytesRead : messageLength+uint64(bytesRead)]
-	proto.Unmarshal(b, message)
+	err = proto.Unmarshal(b, message)
+	if err != nil {
+		return -1, err
+	}
 	if id == 0 {
 		id = message.MessageId
 	}

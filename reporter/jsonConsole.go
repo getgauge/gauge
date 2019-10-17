@@ -43,7 +43,6 @@ const (
 	scenarioEnd   eventType = "scenarioEnd"
 	specEnd       eventType = "specEnd"
 	suiteEnd      eventType = "suiteEnd"
-	errorResult   eventType = "error"
 	pass          status    = "pass"
 	fail          status    = "fail"
 	skip          status    = "skip"
