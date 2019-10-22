@@ -28,7 +28,7 @@ import (
 // Writer reperesnts to a custom writer.
 // It intercents the log messages and redirects them to logger according the log level given in info
 type Writer struct {
-	loggerID            string
+	LoggerID            string
 	ShouldWriteToStdout bool
 	stream              int
 	File                io.Writer
@@ -59,16 +59,16 @@ func (w Writer) Write(p []byte) (int, error) {
 		}
 		switch m.LogLevel {
 		case "debug":
-			logDebug(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+			logDebug(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "info":
-			logInfo(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+			logInfo(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "error":
-			logError(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+			logError(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "warning":
-			logWarning(GetLogger(w.loggerID), w.ShouldWriteToStdout, m.Message)
+			logWarning(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "fatal":
-			logCritical(GetLogger(w.loggerID), m.Message)
-			addFatalError(w.loggerID, m.Message)
+			logCritical(GetLogger(w.LoggerID), m.Message)
+			addFatalError(w.LoggerID, m.Message)
 		}
 	}
 	return len(p), nil
@@ -81,9 +81,9 @@ type LogWriter struct {
 }
 
 // NewLogWriter creates a new logWriter for given id
-func NewLogWriter(loggerID string, stdout bool, stream int) *LogWriter {
+func NewLogWriter(LoggerID string, stdout bool, stream int) *LogWriter {
 	return &LogWriter{
-		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID, File: os.Stderr},
-		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, loggerID: loggerID, File: os.Stdout},
+		Stderr: Writer{ShouldWriteToStdout: stdout, stream: stream, LoggerID: LoggerID, File: os.Stderr},
+		Stdout: Writer{ShouldWriteToStdout: stdout, stream: stream, LoggerID: LoggerID, File: os.Stdout},
 	}
 }

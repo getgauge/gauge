@@ -154,6 +154,7 @@ type RunnerInfo struct {
 	Multithreaded       bool
 	GaugeVersionSupport version.VersionSupport
 	LspLangId           string
+	GRPCSupport         bool
 }
 
 func ExecuteInitHookForRunner(language string) error {
@@ -340,7 +341,8 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writ
 	return cmd, &r, err
 }
 
-// StartRunner Looks for a runner configuration inside the runner directory
+
+// StartRunner looks for a runner configuration inside the runner directory
 // finds the runner configuration matching to the manifest and executes the commands for the current OS
 func StartRunner(manifest *manifest.Manifest, port string, outputStreamWriter *logger.LogWriter, killChannel chan bool, debug bool) (*LanguageRunner, error) {
 	cmd, r, err := runRunnerCommand(manifest, port, debug, outputStreamWriter)
@@ -447,7 +449,13 @@ type StartChannels struct {
 	KillChan chan bool
 }
 
-func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, killChannel chan bool, debug bool) (Runner, error) {
+func Start(manifest *manifest.Manifest, stream int, killChannel chan bool, debug bool) (Runner, error) {
+	ri, err := GetRunnerInfo(manifest.Language)
+	if err == nil && ri.GRPCSupport {
+		return ConnectToGrpcRunner(manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
+	}
+
+	writer := logger.NewLogWriter(manifest.Language, true, stream)
 	port, err := conn.GetPortFromEnvironmentVariable(common.GaugePortEnvName)
 	if err != nil {
 		port = 0
@@ -457,7 +465,7 @@ func Start(manifest *manifest.Manifest, outputStreamWriter *logger.LogWriter, ki
 		return nil, err
 	}
 	logger.Debugf(true, "Staring %s runner", manifest.Language)
-	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), outputStreamWriter, killChannel, debug)
+	runner, err := StartRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), writer, killChannel, debug)
 	if err != nil {
 		return nil, err
 	}

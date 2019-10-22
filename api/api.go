@@ -74,8 +74,7 @@ func ConnectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-	writer := logger.NewLogWriter(manifest.Language, true, 0)
-	runner, connErr := runner.Start(manifest, writer, killChannel, debug)
+	runner, connErr := runner.Start(manifest, 0, killChannel, debug)
 	if connErr != nil {
 		return nil, connErr
 	}
