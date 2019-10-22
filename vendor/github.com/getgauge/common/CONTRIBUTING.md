@@ -12,7 +12,7 @@ So, depending on where you see your contribution fit, please focus on the respec
 
 ## Contribution process
 
-Please read about the Contribution Process [here](http://getgauge.io/contribute/), if you are happy please sign the [Contributor's License Agreement](http://getgauge.io/cla/). 
+Please read about the Contribution Process [here](https://github.com/getgauge/gauge/blob/master/CONTRIBUTING.md), if you are happy please sign the [Contributor's License Agreement](https://gauge-bot.herokuapp.com/cla/). 
 
 ## How can I contribute
 

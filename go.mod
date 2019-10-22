@@ -7,24 +7,23 @@ require (
 	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/getgauge/common v0.0.0-20180424115244-657067401e5f
-	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
-	github.com/golang/protobuf v1.3.2-0.20190318194812-d3c38a4eb497
+	github.com/getgauge/common v0.0.0-20190514095629-619e107433ce
+	github.com/golang/protobuf v1.3.2
 	github.com/jpillora/go-ogle-analytics v0.0.0-20161213085824-14b04e0594ef
-	github.com/kr/pretty v0.1.0 // indirect
-	github.com/mattn/go-isatty v0.0.9 // indirect
+	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/russross/blackfriday v1.5.2
+	github.com/russross/blackfriday v2.0.0+incompatible
 	github.com/satori/go.uuid v1.2.0
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a
-	github.com/spf13/cobra v0.0.5
+	github.com/spf13/cobra v0.0.6-0.20191019221741-77e4d5aecc4d
 	github.com/spf13/pflag v1.0.5
-	golang.org/x/net v0.0.0-20180710023853-292b43bbf7cb
-	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f // indirect
-	golang.org/x/text v0.3.1-0.20180708171225-0605a8320ace // indirect
-	google.golang.org/genproto v0.0.0-20180621235812-80063a038e33 // indirect
-	google.golang.org/grpc v1.2.1-0.20180622230244-8e1875276672
+	golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582
+	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
+	golang.org/x/text v0.3.2 // indirect
+	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03 // indirect
+	google.golang.org/grpc v1.24.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
+	gopkg.in/yaml.v2 v2.2.4 // indirect
 )

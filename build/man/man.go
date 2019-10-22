@@ -89,7 +89,7 @@ func main() {
 			}
 		}
 		page := strings.Replace(html, "<!--NAV-->", prepareIndex(newLinks), -1)
-		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.MarkdownCommon([]byte(t.content))), -1)
+		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.Run([]byte(t.content))), -1)
 		ioutil.WriteFile(filepath.Join(htmlPath, name), []byte(output), 0644)
 	}
 	log.Printf("HTML man pages are available in %s dir\n", htmlPath)
