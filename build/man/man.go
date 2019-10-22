@@ -89,7 +89,8 @@ func main() {
 			}
 		}
 		page := strings.Replace(html, "<!--NAV-->", prepareIndex(newLinks), -1)
-		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.MarkdownCommon([]byte(t.content))), -1)
+
+		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.Run([]byte(t.content))), -1)
 		p := filepath.Join(htmlPath, name)
 		err := ioutil.WriteFile(p, []byte(output), 0644)
 		if err != nil {
