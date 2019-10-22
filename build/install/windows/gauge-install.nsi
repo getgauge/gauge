@@ -15,9 +15,6 @@
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.gauge.org"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
-!define TELEMETRY_PAGE_TITLE "Gauge Telemetry"
-!define TELEMETRY_PAGE_DESCRIPTION "We are constantly looking to make Gauge better, and report usage statistics anonymously over time."
-!define TELEMETRY_PAGE_ACTION_DESCRIPTION "If you do not want to participate please uncheck the option below."
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
 !include "MUI2.nsh"
@@ -37,27 +34,6 @@
   Pop     `${Length}`
 !macroend
 
-var TelemetryEnabled
-var TelemetryEnabledDialog
-Function TelemetryEnablePage
-  !insertmacro MUI_HEADER_TEXT "${TELEMETRY_PAGE_TITLE}" ""
-  nsDialogs::Create 1018
-  Pop $TelemetryEnabledDialog
-  ${If} $TelemetryEnabledDialog == error
-    abort
-  ${EndIf}
-  ${NSD_CreateLabel} 20u 0 250u 30u "${TELEMETRY_PAGE_DESCRIPTION}"
-  ${NSD_CreateLabel} 20u 30u 250u 30u "${TELEMETRY_PAGE_ACTION_DESCRIPTION}"
-  ${NSD_CreateCheckbox} 20u 60u 100% 10u "&Enable Telemetry"
-  Pop $TelemetryEnabled
-  ${NSD_Check} $TelemetryEnabled
-  nsDialogs::Show
-FunctionEnd
-
-Function TelemetryPageLeave
-    ${NSD_GetState} $TelemetryEnabled $R8
-FunctionEnd
-
 ; MUI Settings
 !define MUI_ABORTWARNING
 !define MUI_ICON "gauge.ico"
@@ -69,7 +45,6 @@ FunctionEnd
 !insertmacro MUI_PAGE_LICENSE "gpl.txt"
 ; Plugin options page
 !insertmacro MUI_PAGE_COMPONENTS
-Page Custom TelemetryEnablePage TelemetryPageLeave
 ; Directory page
 !insertmacro MUI_PAGE_DIRECTORY
 ; Instfiles page
@@ -171,14 +146,6 @@ Section -Post
   ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   RMDir /r /REBOOTOK "$%temp%\Gauge"
-
-  ${If} $R8 == 0
-    DetailPrint "Turning off Telemetry"
-    nsExec::ExecToLog 'gauge telemetry off'
-  ${Else}
-    DetailPrint "Turning on Telemetry"
-    nsExec::ExecToLog 'gauge telemetry on'
-  ${EndIf}
 
   Dialer::GetConnectedState
   Pop $R0

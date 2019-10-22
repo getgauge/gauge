@@ -19,96 +19,48 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"strings"
-
-	"strconv"
-
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/logger"
 	"github.com/spf13/cobra"
 )
-
-const gaugeTelemetryEnabled = "GAUGE_TELEMETRY_ENABLED"
-
-var telemetryEnv = os.Getenv(gaugeTelemetryEnabled)
-
-func telemetryEnabled() bool {
-	boolValue, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv))
-	if err != nil {
-		return config.TelemetryEnabled()
-	}
-	return boolValue
-}
 
 var (
 	telemetryCmd = &cobra.Command{
 		Use:   "telemetry [command]",
 		Short: "Configure options for sending anonymous usage stats",
 		Long:  `Configure options for sending anonymous usage stats.`,
-		Example: `  gauge telemetry on
-  gauge telemetry off
-  gauge telemetry`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) != 0 {
-				exit(nil, cmd.UsageString())
-			}
-			fmt.Println(map[bool]string{true: "on", false: "off"}[telemetryEnabled()])
+			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
 		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			if v, err := strconv.ParseBool(strings.TrimSpace(telemetryEnv)); err == nil {
-				logger.Infof(true, "ENV[%s]=%t. Overrides telemetry configuration.", gaugeTelemetryEnabled, v)
-			}
-		},
-		DisableAutoGenTag: true,
+		DisableAutoGenTag: false,
 	}
 
 	onCmd = &cobra.Command{
 		Use:     "on",
 		Short:   "Turn telemetry on",
 		Long:    "Turn telemetry on.",
-		Example: "  gauge telemetry on",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := config.UpdateTelemetry("true"); err != nil {
-				logger.Fatalf(true, err.Error())
-			}
-			config.RecordTelemetryConsentSet()
+			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
 		},
-		DisableAutoGenTag: true,
+		DisableAutoGenTag: false,
 	}
 
 	offCmd = &cobra.Command{
 		Use:     "off",
 		Short:   "Turn telemetry off",
 		Long:    "Turn telemetry off.",
-		Example: "  gauge telemetry off",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := config.UpdateTelemetry("false"); err != nil {
-				logger.Fatalf(true, err.Error())
-			}
-			config.RecordTelemetryConsentSet()
+			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
 		},
-		DisableAutoGenTag: true,
+		DisableAutoGenTag: false,
 	}
 
 	logCmd = &cobra.Command{
 		Use:   "log <value>",
 		Short: "Enable/disable telemetry logging",
 		Long:  "Enable/disable telemetry logging.",
-		Example: `  gauge telemetry log true
-  gauge telemetry log false`,
 		Run: func(cmd *cobra.Command, args []string) {
-			if len(args) < 1 {
-				fmt.Println(config.TelemetryLogEnabled())
-				return
-			}
-			if _, err := strconv.ParseBool(args[0]); err != nil {
-				exit(fmt.Errorf("Invalid argument. The valid options are true or false."), cmd.UsageString())
-			}
-			config.UpdateTelemetryLoggging(args[0])
+			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
 		},
-		PersistentPostRun: func(cmd *cobra.Command, args []string) {},
-		DisableAutoGenTag: true,
+		DisableAutoGenTag: false,
 	}
 )
 

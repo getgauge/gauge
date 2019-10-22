@@ -21,7 +21,6 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/filter"
@@ -29,7 +28,6 @@ import (
 	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/reporter"
 	"github.com/getgauge/gauge/skel"
-	"github.com/getgauge/gauge/track"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
 	"github.com/spf13/cobra"
@@ -67,9 +65,7 @@ var (
 		DisableAutoGenTag: true,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			initLogger(cmd.Name())
-			notifyTelemetryIfNeeded(cmd, args)
 			skel.CreateSkelFilesIfRequired()
-			track.Init()
 			setGlobalFlags()
 			initPackageFlags()
 		},
@@ -92,22 +88,6 @@ func (status *notification) getJSON() (string, error) {
 		return "", err
 	}
 	return string(j), nil
-}
-
-func notifyTelemetryIfNeeded(cmd *cobra.Command, args []string) {
-	if !gaugeVersion && !config.TelemetryConsent() {
-		if machineReadable {
-			n := &notification{
-				Title:   "Gauge Telemetry",
-				Message: track.GaugeTelemetryMachineRedableMessage,
-				Type:    "info",
-			}
-			s, _ := n.getJSON()
-			logger.Infof(true, "{\"type\":\"notification\",\"notification\":%s}\n", s)
-		} else {
-			logger.Infof(true, "%s\n%s\n", track.GaugeTelemetryMessageHeading, track.GaugeTelemetryMessage)
-		}
-	}
 }
 
 func initLogger(n string) {

@@ -85,7 +85,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return gaugeLSPCapabilities(), nil
 	case "initialized":
 		registerFileWatcher(conn, ctx)
-		notifyTelemetry(ctx, conn)
 		err := registerRunnerCapabilities(conn, ctx)
 		if err != nil {
 			logError(req, err.Error())

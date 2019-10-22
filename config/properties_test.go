@@ -113,15 +113,6 @@ check_updates = true
 # Url to get plugin versions
 gauge_repository_url = https://downloads.gauge.org/plugin
 
-# Record user opt in/out for telemetry
-gauge_telemetry_action_recorded = false
-
-# Allow Gauge to collect anonymous usage statistics
-gauge_telemetry_enabled = true
-
-# Log request sent to Gauge telemetry engine
-gauge_telemetry_log_enabled = false
-
 # Url to get templates list
 gauge_templates_url = https://templates.gauge.org
 
