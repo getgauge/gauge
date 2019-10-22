@@ -62,7 +62,7 @@ func connectToRunner() error {
 		return err
 	}
 
-	lRunner.runner, err = runner.ConnectToGrpcRunner(manifest, outFile, config.IdeRequestTimeout())
+	lRunner.runner, err = runner.ConnectToGrpcRunner(manifest, outFile, outFile, config.IdeRequestTimeout(), false)
 	return err
 }
 
