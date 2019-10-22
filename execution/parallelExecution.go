@@ -274,6 +274,9 @@ func (e *parallelExecution) finish() {
 	}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
+	if err := e.runner.Kill(); err != nil {
+		logger.Errorf(true, "Failed to kill Runner: %s", err.Error())
+	}
 }
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {

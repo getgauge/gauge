@@ -113,7 +113,7 @@ func (refactoringResult *refactoringResult) runnerFilesChanged() []string {
 // PerformRephraseRefactoring given an old step and new step refactors specs and concepts in memory and if its a concept writes to file
 // else invokes runner to get the step name and refactors the step and sends it to runner to refactor implementation.
 func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) *refactoringResult {
-	defer killRunner(startChan)
+	defer killRunner(startChan) // needed for old runner
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
 	}
@@ -132,6 +132,7 @@ func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.Start
 	}
 
 	refactorResult := agent.performRefactoringOn(specs, conceptDictionary, startChan)
+	agent.killRunner() // This is required for gRPC runners
 	refactorResult.Warnings = append(refactorResult.Warnings, result.Warnings...)
 	return refactorResult
 }
@@ -298,6 +299,10 @@ func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
 		orderMap[i] = SliceIndex(len(agent.oldStep.Args), func(i int) bool { return agent.oldStep.Args[i].String() == arg.String() })
 	}
 	return orderMap
+}
+
+func (agent *rephraseRefactorer) killRunner() error {
+	return agent.runner.Kill()
 }
 
 // SliceIndex gives the index of the args.
