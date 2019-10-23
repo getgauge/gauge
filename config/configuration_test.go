@@ -18,12 +18,8 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
-
-	"github.com/getgauge/common"
 )
 
 func stubGetFromConfig(propertyName string) string {
@@ -87,25 +83,3 @@ func TestAllowUpdates(t *testing.T) {
 	}
 }
 
-func TestReadUniqueID(t *testing.T) {
-	expected := "foo"
-	idFile := filepath.Join("_testData", "config", "id")
-	ioutil.WriteFile(idFile, []byte(expected), common.NewFilePermissions)
-
-	s, err := filepath.Abs("_testData")
-	if err != nil {
-		t.Error(err)
-	}
-
-	os.Setenv("GAUGE_HOME", s)
-	got := UniqueID()
-
-	if got != expected {
-		t.Errorf("Expected UniqueID=%s, got %s", expected, got)
-	}
-	os.Setenv("GAUGE_HOME", "")
-	err = os.Remove(idFile)
-	if err != nil {
-		t.Error(err)
-	}
-}

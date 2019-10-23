@@ -18,9 +18,7 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -123,22 +121,6 @@ func SetProjectRoot(args []string) error {
 	}
 	ProjectRoot = root
 	return setCurrentProjectEnvVariable()
-}
-
-// UniqueID gets the unique installation ID.
-func UniqueID() string {
-	configDir, err := common.GetConfigurationDir()
-	if err != nil {
-		APILog.Warningf("Unable to read config dir, %s", err)
-		return ""
-	}
-	idFile := filepath.Join(configDir, "id")
-	s, err := ioutil.ReadFile(idFile)
-	if err != nil {
-		APILog.Warningf("Unable to read %s", idFile)
-		return ""
-	}
-	return string(s)
 }
 
 func setCurrentProjectEnvVariable() error {
