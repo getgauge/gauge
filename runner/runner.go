@@ -391,10 +391,10 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 		r.mutex.Unlock()
 		if err != nil {
 			logger.Debugf(true, "Runner exited with error: %s", err)
-			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
+			r.errorChannel <- fmt.Errorf("Runner exited with error: %s", err.Error())
 		}
 		if !pState.Success() {
-			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s).", pState.Pid(), pState.String())
+			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s)", pState.Pid(), pState.String())
 		}
 	}()
 }
