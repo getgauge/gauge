@@ -18,7 +18,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"os"
 
 	"github.com/getgauge/gauge/env"
@@ -75,20 +74,6 @@ var (
 	machineReadable bool
 	gaugeVersion    bool
 )
-
-type notification struct {
-	Title   string `json:"title"`
-	Message string `json:"message"`
-	Type    string `json:"type"`
-}
-
-func (status *notification) getJSON() (string, error) {
-	j, err := json.Marshal(status)
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
 
 func initLogger(n string) {
 	if lsp {
