@@ -25,6 +25,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"syscall"
 	"testing"
 
 	"github.com/getgauge/common"
@@ -183,7 +184,13 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 
 	wg := &sync.WaitGroup{}
 
-	for i := 0; i < 1000; i++ {
+	var rLimit syscall.Rlimit
+	err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &rLimit)
+	if err != nil {
+		t.Error(err)
+	}
+
+	for i := 0; i < int(rLimit.Cur); i++ {
 		wg.Add(1)
 		go writeFunc(wg)
 	}
