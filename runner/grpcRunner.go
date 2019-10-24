@@ -253,7 +253,7 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 		Stderr: newCustomWriter(portChan, stderr, manifest.Language),
 		Stdout: newCustomWriter(portChan, stdout, manifest.Language),
 	}
-	cmd, info, err := runRunnerCommand(manifest, "0", shouldWriteToStdout, logWriter)
+	cmd, info, err := runRunnerCommand(manifest, "0", false, logWriter)
 	if err != nil {
 		return nil, err
 	}
