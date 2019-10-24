@@ -196,6 +196,7 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	response := &gauge_messages.PerformRefactoringResponse{}
 	c := make(chan bool)
 	runner, err := ConnectToRunner(c, false)
+	defer runner.Kill()
 	if err != nil {
 		response.Success = false
 		response.Errors = []string{err.Error()}
