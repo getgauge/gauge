@@ -123,6 +123,9 @@ func (r *GrpcRunner) invokeRunnerService(message *gm.Message) (*gm.Message, erro
 		response, err := r.ExecutionClient.ExecutionEnding(context.Background(), message.ExecutionEndingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 
+	case gm.Message_CacheFileRequest:
+		_, err := r.ExecutionClient.CacheFile(context.Background(), message.CacheFileRequest)
+		return &gm.Message{}, err
 	case gm.Message_StepNamesRequest:
 		response, err := r.ExecutionClient.GetStepNames(context.Background(), message.StepNamesRequest)
 		return &gm.Message{StepNamesResponse: response}, err
