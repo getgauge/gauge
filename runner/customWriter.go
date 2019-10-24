@@ -38,7 +38,7 @@ func newCustomWriter(portChan chan string, outFile io.Writer, id string) customW
 	return customWriter{
 		port: portChan,
 		file: logger.Writer{
-			File: outFile,
+			File:                outFile,
 			LoggerID:            id,
 			ShouldWriteToStdout: true,
 		},

@@ -20,6 +20,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/logger"
+
 	"github.com/getgauge/gauge/api"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/refactor"
@@ -49,6 +51,10 @@ func init() {
 }
 
 func refactorInit(args []string) {
-	startChan := api.StartAPI(false)
-	refactor.RefactorSteps(args[0], args[1], startChan, getSpecsDir(args[2:]))
+	c := make(chan bool)
+	runner, err := api.ConnectToRunner(c, false)
+	if err != nil {
+		logger.Fatalf(true, "Failed to connect to runnner. %s", err)
+	}
+	refactor.RefactorSteps(args[0], args[1], runner, getSpecsDir(args[2:]))
 }

@@ -110,36 +110,22 @@ func (refactoringResult *refactoringResult) runnerFilesChanged() []string {
 	return filesChanged
 }
 
-// PerformRephraseRefactoring given an old step and new step refactors specs and concepts in memory and if its a concept writes to file
-// else invokes runner to get the step name and refactors the step and sends it to runner to refactor implementation.
-func PerformRephraseRefactoring(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) *refactoringResult {
-	defer killRunner(startChan) // needed for old runner
-	if newStep == oldStep {
-		return &refactoringResult{Success: true}
+func (refactoringResult *refactoringResult) WriteToDisk() {
+	if !refactoringResult.Success {
+		return
 	}
-	agent, errs := getRefactorAgent(oldStep, newStep, nil)
-
-	if len(errs) > 0 {
-		var messages []string
-		for _, err := range errs {
-			messages = append(messages, err.Error())
-		}
-		return rephraseFailure(messages...)
+	for _, fileChange := range refactoringResult.SpecsChanged {
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
-	result, specs, conceptDictionary := parseSpecsAndConcepts(specDirs)
-	if !result.Success {
-		return result
+	for _, fileChange := range refactoringResult.ConceptsChanged {
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
 	}
-
-	refactorResult := agent.performRefactoringOn(specs, conceptDictionary, startChan)
-	agent.killRunner() // This is required for gRPC runners
-	refactorResult.Warnings = append(refactorResult.Warnings, result.Warnings...)
-	return refactorResult
 }
 
 // GetRefactoringChanges given an old step and new step gives the list of steps that need to be changed to perform refactoring.
 // It also provides the changes to be made on the implementation files.
-func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDirs []string) *refactoringResult {
+func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDirs []string, saveToDisk bool) *refactoringResult {
+	defer runner.Kill()
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
 	}
@@ -157,7 +143,7 @@ func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDi
 		return result
 	}
 
-	refactorResult := agent.getRefactoringChangesFor(specs, conceptDictionary)
+	refactorResult := agent.getRefactoringChangesFor(specs, conceptDictionary, saveToDisk)
 	refactorResult.Warnings = append(refactorResult.Warnings, result.Warnings...)
 	return refactorResult
 }
@@ -188,10 +174,6 @@ func parseSpecsAndConcepts(specDirs []string) (*refactoringResult, []*gauge.Spec
 	return result, specs, conceptDictionary
 }
 
-func killRunner(startChan *runner.StartChannels) {
-	startChan.KillChan <- true
-}
-
 func rephraseFailure(errors ...string) *refactoringResult {
 	return &refactoringResult{Success: false, Errors: errors}
 }
@@ -206,37 +188,9 @@ func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, 
 	}
 }
 
-func (agent *rephraseRefactorer) performRefactoringOn(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, startChan *runner.StartChannels) *refactoringResult {
+func (agent *rephraseRefactorer) getRefactoringChangesFor(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary, saveToDisk bool) *refactoringResult {
 	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
-	var runner runner.Runner
-	select {
-	case runner = <-startChan.RunnerChan:
-	case err := <-startChan.ErrorChan:
-		logger.Debugf(true, "Cannot perform refactoring: Unable to connect to runner."+err.Error())
-		return &refactoringResult{Success: false, Errors: make([]string, 0), Warnings: make([]string, 0)}
-	}
-	agent.runner = runner
-	result := agent.refactorStepImplementations(true)
-	if !result.Success {
-		return result
-	}
-	result.SpecsChanged, result.ConceptsChanged = getFileChanges(specs, conceptDictionary, specsRefactored, conceptFilesRefactored)
-	writeFileChangesToDisk(result)
-	return result
-}
-
-func writeFileChangesToDisk(result *refactoringResult) {
-	for _, fileChange := range result.SpecsChanged {
-		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
-	}
-	for _, fileChange := range result.ConceptsChanged {
-		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
-	}
-}
-
-func (agent *rephraseRefactorer) getRefactoringChangesFor(specs []*gauge.Specification, conceptDictionary *gauge.ConceptDictionary) *refactoringResult {
-	specsRefactored, conceptFilesRefactored := agent.rephraseInSpecsAndConcepts(&specs, conceptDictionary)
-	result := agent.refactorStepImplementations(false)
+	result := agent.refactorStepImplementations(saveToDisk)
 	if !result.Success {
 		return result
 	}
@@ -482,7 +436,8 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 
 // RefactorSteps performs rephrase refactoring and prints the refactoring summary which includes errors and warnings generated during refactoring and
 // files changed during refactoring : specification files, concept files and the implementation files changed.
-func RefactorSteps(oldStep, newStep string, startChan *runner.StartChannels, specDirs []string) {
-	refactoringResult := PerformRephraseRefactoring(oldStep, newStep, startChan, specDirs)
+func RefactorSteps(oldStep, newStep string, runner runner.Runner, specDirs []string) {
+	refactoringResult := GetRefactoringChanges(oldStep, newStep, runner, specDirs, true)
+	refactoringResult.WriteToDisk()
 	printRefactoringSummary(refactoringResult)
 }
