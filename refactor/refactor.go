@@ -125,7 +125,6 @@ func (refactoringResult *refactoringResult) WriteToDisk() {
 // GetRefactoringChanges given an old step and new step gives the list of steps that need to be changed to perform refactoring.
 // It also provides the changes to be made on the implementation files.
 func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDirs []string, saveToDisk bool) *refactoringResult {
-	defer runner.Kill()
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
 	}
@@ -438,6 +437,7 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 // files changed during refactoring : specification files, concept files and the implementation files changed.
 func RefactorSteps(oldStep, newStep string, runner runner.Runner, specDirs []string) {
 	refactoringResult := GetRefactoringChanges(oldStep, newStep, runner, specDirs, true)
+	runner.Kill()
 	refactoringResult.WriteToDisk()
 	printRefactoringSummary(refactoringResult)
 }
