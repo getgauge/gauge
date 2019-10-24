@@ -46,7 +46,7 @@ type GrpcRunner struct {
 	Timeout         time.Duration
 }
 
-func (r *GrpcRunner) executeLsp(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) invokeLSPService(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_CacheFileRequest:
 		_, err := r.Client.CacheFile(context.Background(), message.CacheFileRequest)
@@ -83,7 +83,7 @@ func (r *GrpcRunner) executeLsp(message *gm.Message) (*gm.Message, error) {
 	}
 }
 
-func (r *GrpcRunner) executeRunner(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) invokeRunnerService(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_SuiteDataStoreInit:
 		response, err := r.ExecutionClient.SuiteDataStoreInit(context.Background(), &gm.Empty{})
@@ -155,42 +155,28 @@ func (r *GrpcRunner) executeRunner(message *gm.Message) (*gm.Message, error) {
 	}
 }
 
-func (r *GrpcRunner) execute(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) invokeRPC(message *gm.Message, resChan chan *gm.Message, errChan chan error) {
 	var res *gm.Message
 	var err error
 	if r.ExecutionClient != nil {
-		res, err = r.executeRunner(message)
+		res, err = r.invokeRunnerService(message)
 	} else {
-		res, err = r.executeLsp(message)
+		res, err = r.invokeLSPService(message)
 	}
-	return res, err
+	if err != nil {
+		errChan <- err
+	} else {
+		resChan <- res
+	}
 }
 
-// ExecuteMessageWithTimeout process reuqest and give back the response
-func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) executeMessage(message *gm.Message, timeout time.Duration) (*gm.Message, error) {
 	resChan := make(chan *gm.Message)
 	errChan := make(chan error)
-	go func() {
-		res, err := r.execute(message)
-		if err != nil {
-			errChan <- err
-		} else {
-			resChan <- res
-		}
-	}()
+	go r.invokeRPC(message, resChan, errChan)
 
-	var timer *time.Timer
-	if r.Timeout > 0 {
-		timer = time.AfterFunc(r.Timeout, func() {
-			errChan <- fmt.Errorf("Request Timed out for message %s", message.GetMessageType().String())
-		})
-	}
-
-	defer func() {
-		if timer != nil && !timer.Stop() {
-			<-timer.C
-		}
-	}()
+	timer := setupTimer(timeout, errChan, message.GetMessageType().String())
+	defer stopTimer(timer)
 
 	select {
 	case response := <-resChan:
@@ -200,12 +186,14 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 	}
 }
 
+// ExecuteMessageWithTimeout process reuqest and give back the response
+func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
+	return r.executeMessage(message, r.Timeout)
+}
+
 // ExecuteAndGetStatus executes a given message and response without timeout.
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
-	t := r.Timeout
-	r.Timeout = 0
-	res, err := r.ExecuteMessageWithTimeout(m)
-	r.Timeout = t
+	res, err := r.executeMessage(m, 0)
 	if err != nil {
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
@@ -220,9 +208,11 @@ func (r *GrpcRunner) Alive() bool {
 
 // Kill closes the grpc connection and kills the process
 func (r *GrpcRunner) Kill() error {
-
-	r.Timeout = config.PluginKillTimeout()
-	m, err := r.ExecuteMessageWithTimeout(&gm.Message{MessageType: gm.Message_KillProcessRequest, KillProcessRequest: &gm.KillProcessRequest{}})
+	m := &gm.Message{
+		MessageType:        gm.Message_KillProcessRequest,
+		KillProcessRequest: &gm.KillProcessRequest{},
+	}
+	m, err := r.executeMessage(m, config.PluginKillTimeout())
 	if m == nil || err != nil {
 		return err
 	}
@@ -287,4 +277,19 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 		r.Client = gm.NewLspServiceClient(conn)
 	}
 	return r, nil
+}
+
+func setupTimer(timeout time.Duration, errChan chan error, messageType string) *time.Timer {
+	if timeout > 0 {
+		return time.AfterFunc(timeout, func() {
+			errChan <- fmt.Errorf("Request Timed out for message %s", messageType)
+		})
+	}
+	return nil
+}
+
+func stopTimer(timer *time.Timer) {
+	if timer != nil && !timer.Stop() {
+		<-timer.C
+	}
 }
