@@ -196,7 +196,12 @@ func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_message
 	response := &gauge_messages.PerformRefactoringResponse{}
 	c := make(chan bool)
 	runner, err := ConnectToRunner(c, false)
-	defer runner.Kill()
+	defer func() {
+		err := runner.Kill()
+		if err != nil {
+			logger.Errorf(true, "failed to kill runner with pid: %d", runner.Pid())
+		}
+	}()
 	if err != nil {
 		response.Success = false
 		response.Errors = []string{err.Error()}

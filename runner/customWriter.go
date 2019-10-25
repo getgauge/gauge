@@ -29,7 +29,7 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 	if strings.Contains(line, portPrefix) {
 		text := strings.Replace(line, "\r\n", "\n", -1)
 		w.port <- strings.TrimSuffix(strings.Split(text, portPrefix)[1], "\n")
-		return len(p), nil
+		// return len(p), nil
 	}
 	return w.file.Write(p)
 }

@@ -15,7 +15,10 @@ func TestCustomWriterShouldExtractPortNumberFromStdout(t *testing.T) {
 	}
 
 	go func() {
-		w.Write([]byte("Listening on port:23454"))
+		n, err := w.Write([]byte("Listening on port:23454"))
+		if n <= 0 || err != nil {
+			t.Errorf("failed to write port information")
+		}
 	}()
 
 	select {
