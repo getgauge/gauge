@@ -254,10 +254,6 @@ func (agent *rephraseRefactorer) createOrderOfArgs() map[int]int {
 	return orderMap
 }
 
-func (agent *rephraseRefactorer) killRunner() error {
-	return agent.runner.Kill()
-}
-
 // SliceIndex gives the index of the args.
 func SliceIndex(limit int, predicate func(i int) bool) int {
 	for i := 0; i < limit; i++ {
@@ -437,7 +433,10 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 // files changed during refactoring : specification files, concept files and the implementation files changed.
 func RefactorSteps(oldStep, newStep string, runner runner.Runner, specDirs []string) {
 	refactoringResult := GetRefactoringChanges(oldStep, newStep, runner, specDirs, true)
-	runner.Kill()
+	err := runner.Kill()
+	if err != nil {
+		logger.Errorf(true, "failed to kill runner with pid: %d", runner.Pid())
+	}
 	refactoringResult.WriteToDisk()
 	printRefactoringSummary(refactoringResult)
 }

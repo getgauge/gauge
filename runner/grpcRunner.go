@@ -285,7 +285,7 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 func setupTimer(timeout time.Duration, errChan chan error, messageType string) *time.Timer {
 	if timeout > 0 {
 		return time.AfterFunc(timeout, func() {
-			errChan <- fmt.Errorf("Request Timed out for message %s", messageType)
+			errChan <- fmt.Errorf("request timed out for message %s", messageType)
 		})
 	}
 	return nil
