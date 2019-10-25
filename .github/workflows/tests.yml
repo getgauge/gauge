@@ -1,35 +1,35 @@
 name: build
 on: [push, pull_request]
 jobs:
-  tests:
-    name: UTs ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+  # tests:
+  #   name: UTs ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, ubuntu-latest, macos-latest]
 
-    steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
+  #   steps:
+  #     - name: Set up Go 1.13
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #       id: go
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v1
 
-      - name: Test
-        run: go run build/make.go --test --verbose
+  #     - name: Test
+  #       run: go run build/make.go --test --verbose
 
   lsp-tests:
-    needs: tests
+    # needs: tests
     name: lsp-tests ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     env:
       GAUGE_TELEMETRY_ENABLED: false
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest]
     steps:
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -55,7 +55,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           go run build/make.go --install  --verbose
-          set PATH="C:\\Program Files\\gauge\\bin";%PATH%
+          set PATH="C:\\Program Files\\gauge\\bin;%PATH%"
           cd gauge-lsp-tests
           gauge install
           gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
@@ -69,46 +69,46 @@ jobs:
           gauge install
           gauge run --tags='!knownIssue & (actions_on_project_load | actions_on_file_edit)' --env=js-wd
 
-  functional-tests:
-    needs: tests
-    name: FTs ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    env:
-      GAUGE_TELEMETRY_ENABLED: false
-      TAGS: js
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
+  # functional-tests:
+  #   needs: tests
+  #   name: FTs ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   env:
+  #     GAUGE_TELEMETRY_ENABLED: false
+  #     TAGS: js
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, ubuntu-latest]
+  #   steps:
+  #     - name: Set up Go 1.13
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #       id: go
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v1
 
-      - name: Build
-        run: go run build/make.go --verbose
+  #     - name: Build
+  #       run: go run build/make.go --verbose
 
-      - name: Install gauge and Run FTs (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          go run build/make.go --install  --verbose
-          git clone https://github.com/getgauge/gauge-tests
-          cd gauge-tests
-          ${env:PATH} += ";C:\Program Files\gauge\bin"
-          gauge install
-          .\gradlew.bat clean jsFT
-        shell: pwsh
+  #     - name: Install gauge and Run FTs (windows)
+  #       if: matrix.os == 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install  --verbose
+  #         git clone https://github.com/getgauge/gauge-tests
+  #         cd gauge-tests
+  #         ${env:PATH} += ";C:\Program Files\gauge\bin"
+  #         gauge install
+  #         .\gradlew.bat clean jsFT
+  #       shell: pwsh
 
-      - name: Install gauge and Run FTs (linux/osx)
-        if: matrix.os != 'windows-latest'
-        run: |
-          go run build/make.go --install --prefix=/tmp/gauge --verbose
-          git clone https://github.com/getgauge/gauge-tests
-          cd gauge-tests
-          export PATH=$PATH:/tmp/gauge/bin
-          gauge install
-          ./gradlew clean jsFT
+  #     - name: Install gauge and Run FTs (linux/osx)
+  #       if: matrix.os != 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install --prefix=/tmp/gauge --verbose
+  #         git clone https://github.com/getgauge/gauge-tests
+  #         cd gauge-tests
+  #         export PATH=$PATH:/tmp/gauge/bin
+  #         gauge install
+  #         ./gradlew clean jsFT
