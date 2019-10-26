@@ -141,7 +141,10 @@ func init() {
 	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
 	f.StringVarP(&retryOnlyTags, retryOnlyTagsName, "", retryOnlyTagsDefault, "Retries the specs and scenarios tagged with given tags")
 	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
-	f.MarkHidden(onlyName)
+	err := f.MarkHidden(onlyName)
+	if err != nil {
+		logger.Errorf(false, fmt.Sprintf("Unable to mark '%s' flag as hidden: %s", onlyName, err.Error()))
+	}
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
 	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
@@ -151,7 +154,11 @@ func init() {
 	f.BoolVarP(&hideSuggestion, hideSuggestionName, "", hideSuggestionDefault, "Hide step implementation stub for every unimplemented step")
 	f.BoolVarP(&failSafe, failSafeName, "", failSafeDefault, "Force return 0 exit code, even in case of failures.")
 	f.BoolVarP(&skipCommandSave, skipCommandSaveName, "", skipCommandSaveDefault, "Skip saving last command in lastRunCmd.json")
-	f.MarkHidden(skipCommandSaveName)
+	err = f.MarkHidden(skipCommandSaveName)
+	if err != nil {
+		logger.Errorf(false, fmt.Sprintf("Unable to mark '%s' flag as hidden: %s", skipCommandSaveName, err.Error()))
+	}
+
 	f.StringArrayVar(&scenarios, scenarioName, scenarioNameDefault, "Set scenarios for running specs with scenario name")
 }
 
@@ -164,15 +171,24 @@ func executeFailed(cmd *cobra.Command) {
 		rerun.WritePrevArgs(os.Args)
 	}
 	handleFlags(cmd, append([]string{"gauge"}, lastState...))
-	cmd.Flags().Set(skipCommandSaveName, "true")
+	err = cmd.Flags().Set(skipCommandSaveName, "true")
+	if err != nil {
+		logger.Errorf(false, fmt.Sprintf("Unable to set '%s' flag as 'true': %s", skipCommandSaveName, err.Error()))
+	}
 	logger.Debugf(true, "Executing => %s\n", strings.Join(os.Args, " "))
-	cmd.Execute()
+	err = cmd.Execute()
+	if err != nil {
+		logger.Errorf(true, fmt.Sprintf("Unable to execute command %s: %s", cmd.Name(), err.Error()))
+	}
 }
 
 func handleFlags(cmd *cobra.Command, args []string) {
 	cmd.Flags().Visit(func(flag *pflag.Flag) {
 		if !util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
-			flag.Value.Set(flag.DefValue)
+			err := flag.Value.Set(flag.DefValue)
+			if err != nil {
+				logger.Errorf(false, fmt.Sprintf("Unable to set default value in '%s' flag: %s", flag.Name, err.Error()))
+			}
 		}
 	})
 
@@ -246,7 +262,10 @@ var repeatLastExecution = func(cmd *cobra.Command) {
 	lastState := rerun.ReadPrevArgs()
 	handleFlags(cmd, lastState)
 	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
-	cmd.Execute()
+	err := cmd.Execute()
+	if err != nil {
+		logger.Errorf(true, fmt.Sprintf("Unable to execute command %s: %s", cmd.Name(), err.Error()))
+	}
 }
 
 func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {

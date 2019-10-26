@@ -227,7 +227,8 @@ func (s *MySuite) TestSpecReporting_SimpleConsole(c *C) {
 	sc.SpecStart(&gauge.Specification{Heading: &gauge.Heading{Value: "Specification heading"}}, &result.SpecResult{Skipped: false})
 	sc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "My First scenario"}}, gauge_messages.ExecutionInfo{}, scnRes)
 	sc.StepStart("* do foo bar")
-	sc.Write([]byte("doing foo bar"))
+	_, err := sc.Write([]byte("doing foo bar"))
+	c.Assert(err, IsNil)
 	res := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_PASSED, Failed: false})
 	specInfo := gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{Name: "hello.spec"}}
 	stepExeRes := &gauge_messages.ProtoStepExecutionResult{ExecutionResult: &gauge_messages.ProtoExecutionResult{Failed: false}}

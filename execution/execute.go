@@ -152,7 +152,10 @@ var ExecuteSpecs = func(specDirs []string) int {
 	}
 	if res.SpecCollection.Size() < 1 {
 		logger.Infof(true, "No specifications found in %s.", strings.Join(specDirs, ", "))
-		res.Runner.Kill()
+		err := res.Runner.Kill()
+		if err != nil {
+			logger.Errorf(false, "unable to kill runner: %s", err.Error())
+		}
 		if res.ParseOk {
 			return Success
 		}

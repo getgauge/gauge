@@ -54,7 +54,7 @@ func removeDuplicates(steps []gauge.StepValue) []gauge.StepValue {
 	encountered := map[string]bool{}
 	result := []gauge.StepValue{}
 	for _, v := range steps {
-		if encountered[v.StepValue] != true {
+		if !encountered[v.StepValue] {
 			encountered[v.StepValue] = true
 			result = append(result, v)
 		}

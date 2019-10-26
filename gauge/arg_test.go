@@ -45,9 +45,11 @@ func (s *MySuite) TestLookupContainsArg(c *C) {
 func (s *MySuite) TestAddArgValue(c *C) {
 	lookup := new(ArgLookup)
 	lookup.AddArgName("param1")
-	lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	err := lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	c.Assert(err, IsNil)
 	lookup.AddArgName("param2")
-	lookup.AddArgValue("param2", &StepArg{Value: "value2", ArgType: Dynamic})
+	err = lookup.AddArgValue("param2", &StepArg{Value: "value2", ArgType: Dynamic})
+	c.Assert(err, IsNil)
 	stepArg, err := lookup.GetArg("param1")
 	c.Assert(err, IsNil)
 	c.Assert(stepArg.Value, Equals, "value1")
@@ -68,10 +70,13 @@ func (s *MySuite) TestErrorForInvalidArg(c *C) {
 func (s *MySuite) TestGetLookupCopy(c *C) {
 	originalLookup := new(ArgLookup)
 	originalLookup.AddArgName("param1")
-	originalLookup.AddArgValue("param1", &StepArg{Value: "oldValue", ArgType: Dynamic})
+	err := originalLookup.AddArgValue("param1", &StepArg{Value: "oldValue", ArgType: Dynamic})
+	c.Assert(err, IsNil)
 
 	copiedLookup, _ := originalLookup.GetCopy()
-	copiedLookup.AddArgValue("param1", &StepArg{Value: "new value", ArgType: Static})
+	err = copiedLookup.AddArgValue("param1", &StepArg{Value: "new value", ArgType: Static})
+	c.Assert(err, IsNil)
+
 	stepArg, err := copiedLookup.GetArg("param1")
 	c.Assert(err, IsNil)
 	c.Assert(stepArg.Value, Equals, "new value")

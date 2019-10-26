@@ -145,7 +145,10 @@ func (connectionHandler *GaugeConnectionHandler) processMessage(buffer *bytes.Bu
 // HandleMultipleConnections accepts multiple connections and Handler responds to incoming messages
 func (connectionHandler *GaugeConnectionHandler) HandleMultipleConnections() {
 	for {
-		connectionHandler.acceptConnectionWithoutTimeout()
+		_, err := connectionHandler.acceptConnectionWithoutTimeout()
+		if err != nil {
+			logger.Fatalf(true, "Unable to connect to runner: %s", err.Error())
+		}
 	}
 
 }

@@ -217,7 +217,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 	}
 
 	var want lsp.WorkspaceEdit
-	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	want.Changes = make(map[string][]lsp.TextEdit)
 	uri := util.ConvertPathToURI("file")
 	textEdit := lsp.TextEdit{
 		NewText: "file content",
@@ -252,7 +252,7 @@ func TestGenerateConceptShouldReturnFileDiff(t *testing.T) {
 	}
 
 	var want lsp.WorkspaceEdit
-	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	want.Changes = make(map[string][]lsp.TextEdit)
 	uri := util.ConvertPathToURI(filepath.Join(testData, "concept1.cpt"))
 	textEdit := lsp.TextEdit{
 		NewText: "# foo bar\n* ",
@@ -287,7 +287,7 @@ func TestGenerateConceptWithParam(t *testing.T) {
 	}
 
 	var want lsp.WorkspaceEdit
-	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	want.Changes = make(map[string][]lsp.TextEdit)
 	uri := util.ConvertPathToURI(filepath.Join(testData, "concept1.cpt"))
 	textEdit := lsp.TextEdit{
 		NewText: "# foo bar <some>\n* ",
@@ -323,8 +323,7 @@ func TestGenerateConceptInExisitingFile(t *testing.T) {
 	}
 
 	var want lsp.WorkspaceEdit
-	want.Changes = make(map[string][]lsp.TextEdit, 0)
-
+	want.Changes = make(map[string][]lsp.TextEdit)
 	textEdit := lsp.TextEdit{
 		NewText: "# concept heading\n* with a step\n\n# foo bar <some>\n* ",
 		Range: lsp.Range{
@@ -346,8 +345,17 @@ func TestGenerateConceptInNewFileWhenDefaultExisits(t *testing.T) {
 	testData := filepath.Join(cwd, "_testdata")
 
 	cptFile := filepath.Join(testData, "concept1.cpt")
-	ioutil.WriteFile(cptFile, []byte(""), common.NewFilePermissions)
-	defer common.Remove(cptFile)
+	err := ioutil.WriteFile(cptFile, []byte(""), common.NewFilePermissions)
+	if err != nil {
+		t.Fatalf("Unable to create Concept %s: %s", cptFile, err.Error())
+	}
+
+	defer func() {
+		err := common.Remove(cptFile)
+		if err != nil {
+			t.Fatalf("Unable to delete Concept %s: %s", cptFile, err.Error())
+		}
+	}()
 
 	extractConcpetParam := concpetInfo{
 		ConceptName: "# foo bar <some>\n* ",
@@ -366,7 +374,7 @@ func TestGenerateConceptInNewFileWhenDefaultExisits(t *testing.T) {
 	uri := util.ConvertPathToURI(filepath.Join(testData, "concept2.cpt"))
 
 	var want lsp.WorkspaceEdit
-	want.Changes = make(map[string][]lsp.TextEdit, 0)
+	want.Changes = make(map[string][]lsp.TextEdit)
 
 	textEdit := lsp.TextEdit{
 		NewText: "# foo bar <some>\n* ",

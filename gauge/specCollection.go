@@ -28,7 +28,7 @@ type SpecCollection struct {
 }
 
 func NewSpecCollection(s []*Specification, groupDataTableSpecs bool) *SpecCollection {
-	if groupDataTableSpecs == false {
+	if !groupDataTableSpecs {
 		var specs [][]*Specification
 		for _, spec := range s {
 			specs = append(specs, []*Specification{spec})

@@ -36,7 +36,6 @@ type scenarioExecutor struct {
 	runner               runner.Runner
 	pluginHandler        plugin.Handler
 	currentExecutionInfo *gauge_messages.ExecutionInfo
-	stepExecutor         *stepExecutor
 	errMap               *gauge.BuildErrors
 	stream               int
 	contexts             []*gauge.Step

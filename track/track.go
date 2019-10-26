@@ -45,7 +45,6 @@ const (
 	gaTestTrackingID = "UA-100778536-1"
 	appName          = "Gauge Core"
 	consoleMedium    = "console"
-	apiMedium        = "api"
 	ciMedium         = "CI"
 	timeout          = 1
 	// GaugeTelemetryMessageHeading is the header printed for telemetry warning

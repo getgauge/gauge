@@ -18,7 +18,6 @@
 package conceptExtractor
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"regexp"
@@ -60,8 +59,11 @@ func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName stri
 	if err != nil {
 		return false, err, []string{}
 	}
-	writeConceptToFile(concept, cptText, conceptFileName, info.GetFileName(), info)
-	return true, errors.New(""), []string{conceptFileName, info.GetFileName()}
+	err = writeConceptToFile(concept, cptText, conceptFileName, info.GetFileName(), info)
+	if err != nil {
+		return false, err, []string{}
+	}
+	return true, nil, []string{conceptFileName, info.GetFileName()}
 }
 
 // ReplaceExtractedStepsWithConcept replaces the steps selected for concept extraction with the concept name given.
@@ -83,18 +85,26 @@ func replaceText(content string, info *gm.TextInfo, replacement string) string {
 	return strings.Join(parts, "\n")
 }
 
-func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string, info *gm.TextInfo) {
+func writeConceptToFile(concept string, conceptUsageText string, conceptFileName string, fileName string, info *gm.TextInfo) error {
 	if _, err := os.Stat(conceptFileName); os.IsNotExist(err) {
 		basepath := path.Dir(conceptFileName)
 		if _, err := os.Stat(basepath); os.IsNotExist(err) {
-			os.MkdirAll(basepath, common.NewDirectoryPermissions)
+			err = os.MkdirAll(basepath, common.NewDirectoryPermissions)
+			return fmt.Errorf("unable to create directory %s: %s", basepath, err.Error())
 		}
-		os.Create(conceptFileName)
+		_, err = os.Create(conceptFileName)
+		if err != nil {
+			return fmt.Errorf("unable to create file %s: %s", conceptFileName, err.Error())
+		}
 	}
-	content, _ := common.ReadFileContents(conceptFileName)
+	content, err := common.ReadFileContents(conceptFileName)
+	if err != nil {
+		return fmt.Errorf("unable to read from %s: %s", conceptFileName, err.Error())
+	}
 	util.SaveFile(conceptFileName, content+"\n"+concept, true)
 	text, _ := ReplaceExtractedStepsWithConcept(info, conceptUsageText)
 	util.SaveFile(fileName, text, true)
+	return nil
 }
 
 func getExtractedConcept(conceptName *gm.Step, steps []*gm.Step, content string, cptFileName string) (string, string, error) {

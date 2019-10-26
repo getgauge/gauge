@@ -141,9 +141,9 @@ func TestGetErrorText(t *testing.T) {
 		expectedText string
 	}{
 		{
-			gaugeVersion: &version.Version{0, 9, 8},
+			gaugeVersion: &version.Version{Major: 0, Minor: 9, Patch: 8},
 			commitHash:   "",
-			pluginInfos:  []pluginInfo.PluginInfo{{Name: "java", Version: &version.Version{0, 6, 6}}},
+			pluginInfos:  []pluginInfo.PluginInfo{{Name: "java", Version: &version.Version{Major: 0, Minor: 6, Patch: 6}}},
 			expectedText: fmt.Sprintf(`Error ----------------------------------
 
 An Error has Occurred: some error
@@ -158,11 +158,11 @@ Your Environment Information -----------
 	java (0.6.6)`, runtime.GOOS),
 		},
 		{
-			gaugeVersion: &version.Version{0, 9, 8},
+			gaugeVersion: &version.Version{Major: 0, Minor: 9, Patch: 8},
 			commitHash:   "",
 			pluginInfos: []pluginInfo.PluginInfo{
-				{Name: "java", Version: &version.Version{0, 6, 6}},
-				{Name: "html-report", Version: &version.Version{0, 4, 0}},
+				{Name: "java", Version: &version.Version{Major: 0, Minor: 6, Patch: 6}},
+				{Name: "html-report", Version: &version.Version{Major: 0, Minor: 4, Patch: 0}},
 			},
 			expectedText: fmt.Sprintf(`Error ----------------------------------
 
@@ -178,11 +178,11 @@ Your Environment Information -----------
 	java (0.6.6), html-report (0.4.0)`, runtime.GOOS),
 		},
 		{
-			gaugeVersion: &version.Version{0, 9, 8},
+			gaugeVersion: &version.Version{Major: 0, Minor: 9, Patch: 8},
 			commitHash:   "59effa",
 			pluginInfos: []pluginInfo.PluginInfo{
-				{Name: "java", Version: &version.Version{0, 6, 6}},
-				{Name: "html-report", Version: &version.Version{0, 4, 0}},
+				{Name: "java", Version: &version.Version{Major: 0, Minor: 6, Patch: 6}},
+				{Name: "html-report", Version: &version.Version{Major: 0, Minor: 4, Patch: 0}},
 			},
 			expectedText: fmt.Sprintf(`Error ----------------------------------
 

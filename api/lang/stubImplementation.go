@@ -80,7 +80,7 @@ func putStubImpl(req *jsonrpc2.Request) (interface{}, error) {
 
 func getWorkspaceEditForStubImpl(fileDiff *gm.FileDiff) lsp.WorkspaceEdit {
 	var result lsp.WorkspaceEdit
-	result.Changes = make(map[string][]lsp.TextEdit, 0)
+	result.Changes = make(map[string][]lsp.TextEdit)
 	uri := util.ConvertPathToURI(fileDiff.FilePath)
 
 	var textDiffs = fileDiff.TextDiffs

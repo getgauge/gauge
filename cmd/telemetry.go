@@ -105,7 +105,10 @@ var (
 			if _, err := strconv.ParseBool(args[0]); err != nil {
 				exit(fmt.Errorf("Invalid argument. The valid options are true or false."), cmd.UsageString())
 			}
-			config.UpdateTelemetryLoggging(args[0])
+			err := config.UpdateTelemetryLoggging(args[0])
+			if err != nil {
+				exit(fmt.Errorf("unable to update telemetry logging: %s", err.Error()), "")
+			}
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {},
 		DisableAutoGenTag: true,

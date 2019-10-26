@@ -126,7 +126,10 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			}
 			e.specResult.ScenarioCount += len(scnMap)
 		} else {
-			e.executeSpec()
+			err := e.executeSpec()
+			if err != nil {
+				logger.Fatalf(true, "Failed to execute Specification %s : %s", e.specification.Heading.Value, err.Error())
+			}
 		}
 	}
 	e.specResult.SetSkipped(e.specResult.Skipped || e.specResult.ScenarioSkippedCount == len(e.specification.Scenarios))
@@ -162,7 +165,10 @@ func (e *specExecutor) executeSpec() error {
 		return err
 	}
 	e.specResult.AddScenarioResults(res)
-	e.executeTableRelatedScenarios(tableRelatedScenarios)
+	err = e.executeTableRelatedScenarios(tableRelatedScenarios)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

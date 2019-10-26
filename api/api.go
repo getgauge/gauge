@@ -97,7 +97,10 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 		select {
 		case runner := <-startChan.RunnerChan:
 			logger.Infof(true, "Got a kill message. Killing runner.")
-			runner.Kill()
+			err := runner.Kill()
+			if err != nil {
+				logger.Errorf(true, "Unable to kill runner with PID %d. %s", runner.Pid(), err.Error())
+			}
 		case err := <-startChan.ErrorChan:
 			logger.Fatalf(true, "Killing Gauge daemon. %v", err.Error())
 		}
@@ -143,7 +146,12 @@ func Start(specsDir []string) *conn.GaugeConnectionHandler {
 		logger.Fatalf(true, err.Error())
 	}
 	errChan := make(chan error)
-	go gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), errChan)
+	go func() {
+		_, err := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), errChan)
+		if err != nil {
+			logger.Fatalf(true, err.Error())
+		}
+	}()
 	go func() {
 		e := <-errChan
 		logger.Fatalf(true, e.Error())

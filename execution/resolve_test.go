@@ -35,9 +35,14 @@ func (s *MySuite) TestResolveConceptToProtoConceptItem(c *C) {
 		step("create user \"456\" \"foo\" and \"9900\"").
 		String()
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts([]string{path}, conceptDictionary)
-
-	spec, _, _ := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
+	_, _, err := parser.AddConcepts([]string{path}, conceptDictionary)
+	if err != nil {
+		c.Error(err)
+	}
+	spec, _, err := new(parser.SpecParser).Parse(specText, conceptDictionary, "")
+	if err != nil {
+		c.Error(err)
+	}
 
 	specExecutor := newSpecExecutor(spec, nil, nil, nil, 0)
 	specExecutor.errMap = getValidationErrorMap()
@@ -77,7 +82,10 @@ func (s *MySuite) TestResolveNestedConceptToProtoConceptItem(c *C) {
 		String()
 
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := parser.AddConcepts([]string{path}, conceptDictionary)
+	if err != nil {
+		c.Error(err)
+	}
 	specParser := new(parser.SpecParser)
 	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 
@@ -124,7 +132,10 @@ func TestResolveNestedConceptAndTableParamToProtoConceptItem(t *testing.T) {
 		String()
 	want := "456"
 	path, _ := filepath.Abs(filepath.Join("testdata", "conceptTable.cpt"))
-	parser.AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := parser.AddConcepts([]string{path}, conceptDictionary)
+	if err != nil {
+		t.Error(err)
+	}
 	specParser := new(parser.SpecParser)
 	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 
@@ -158,7 +169,10 @@ func (s *MySuite) TestResolveToProtoConceptItemWithDataTable(c *C) {
 		String()
 
 	path, _ := filepath.Abs(filepath.Join("testdata", "concept.cpt"))
-	parser.AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := parser.AddConcepts([]string{path}, conceptDictionary)
+	if err != nil {
+		c.Error(err)
+	}
 	specParser := new(parser.SpecParser)
 	spec, _, _ := specParser.Parse(specText, conceptDictionary, "")
 

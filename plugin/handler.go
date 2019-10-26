@@ -109,15 +109,24 @@ func (gp *GaugePlugins) killPlugin(pluginID string) {
 // GracefullyKillPlugins tells the plugins to stop, letting them cleanup whatever they need to
 func (gp *GaugePlugins) GracefullyKillPlugins() {
 	var wg sync.WaitGroup
-	for _, plugin := range gp.pluginsMap {
+	for _, pl := range gp.pluginsMap {
 		wg.Add(1)
-		logger.Debugf(true, "Sending kill message to %s plugin.", plugin.descriptor.Name)
-		go plugin.kill(&wg)
+		logger.Debugf(true, "Sending kill message to %s plugin.", pl.descriptor.Name)
+		go func(p *plugin) {
+			err := p.kill(&wg)
+			if err != nil {
+				logger.Errorf(false, "Unable to kill plugin %s : %s", p.descriptor.Name, err.Error())
+			}
+		}(pl)
 	}
 	wg.Wait()
 }
 
 // ExtendTimeout resets the kill timer of the plugin
 func (gp *GaugePlugins) ExtendTimeout(id string) {
-	gp.pluginsMap[id].rejuvenate()
+	p := gp.pluginsMap[id]
+	err := p.rejuvenate()
+	if err != nil {
+		logger.Errorf(false, "Unable to extend timeout in plugin %s: %s", p.descriptor.Name, err.Error())
+	}
 }
