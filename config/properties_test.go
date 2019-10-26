@@ -46,7 +46,10 @@ func TestPropertiesSetValue(t *testing.T) {
 	p := Properties()
 	want := "https://gauge.templates.url"
 
-	p.set(gaugeTemplatesURL, want)
+	err := p.set(gaugeTemplatesURL, want)
+	if err != nil {
+		t.Error(err)
+	}
 
 	got, err := p.get(gaugeTemplatesURL)
 	if err != nil {
@@ -66,8 +69,10 @@ func TestPropertiesFormat(t *testing.T) {
 	sort.Strings(want)
 	f := &dummyFormatter{}
 
-	p.Format(f)
-
+	_, err := p.Format(f)
+	if err != nil {
+		t.Error(err)
+	}
 	sort.Strings(f.p)
 	if !reflect.DeepEqual(f.p, want) {
 		t.Errorf("Properties Format failed, want: `%s`, got `%s`", want, f.p)
@@ -77,7 +82,11 @@ func TestPropertiesFormat(t *testing.T) {
 func TestMergedProperties(t *testing.T) {
 	want := "false"
 	idFile := filepath.Join("_testData", "config", "gauge.properties")
-	ioutil.WriteFile(idFile, []byte("check_updates=false"), common.NewFilePermissions)
+	err := ioutil.WriteFile(idFile, []byte("check_updates=false"), common.NewFilePermissions)
+	if err != nil {
+		t.Error(err)
+	}
+
 	s, err := filepath.Abs("_testData")
 	if err != nil {
 		t.Error(err)
@@ -156,7 +165,10 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 	want := strings.Split(propertiesContent, "\n\n")
 
 	writeFunc := func(wg *sync.WaitGroup) {
-		Merge()
+		err := Merge()
+		if err != nil {
+			t.Log(err)
+		}
 		wg.Done()
 	}
 
@@ -190,9 +202,12 @@ func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	oldEnv := os.Getenv("GAUGE_HOME")
 	os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
 	propFile := filepath.Join("_testData", "config", "gauge.properties")
-	ioutil.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
+	err := ioutil.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
+	if err != nil {
+		t.Error(err)
+	}
 
-	err := Merge()
+	err = Merge()
 	if err != nil {
 		t.Error(err)
 	}

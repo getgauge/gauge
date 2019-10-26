@@ -222,9 +222,12 @@ func (r *LanguageRunner) EnsureConnected() bool {
 		return false
 	}
 	c := r.connection
-	c.SetReadDeadline(time.Now())
+	err := c.SetReadDeadline(time.Now())
+	if err != nil {
+		logger.Fatalf(true, "Unable to SetReadDeadLine on runner: %s", err.Error())
+	}
 	var one []byte
-	_, err := c.Read(one)
+	_, err = c.Read(one)
 	if err == io.EOF {
 		r.lostContact = true
 		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
@@ -235,7 +238,11 @@ func (r *LanguageRunner) EnsureConnected() bool {
 		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
 	var zero time.Time
-	c.SetReadDeadline(zero)
+	err = c.SetReadDeadline(zero)
+	if err != nil {
+		logger.Fatalf(true, "Unable to SetReadDeadLine on runner: %s", err.Error())
+	}
+
 	return true
 }
 

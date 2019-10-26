@@ -101,14 +101,18 @@ func (s *MySuite) TestFindAllConceptFilesShouldFilterDirectoriesThatAreSkipped(c
 	reports, _ := createDirIn(dir, "reports")
 	env, _ := createDirIn(dir, "env")
 
-	createFileIn(git, "concept1.cpt", data)
-	createFileIn(bin, "concept2.cpt", data)
-	createFileIn(reports, "concept3.cpt", data)
-	createFileIn(env, "concept4.cpt", data)
+	_, err := createFileIn(git, "concept1.cpt", data)
+	c.Assert(err, IsNil)
+	_, err = createFileIn(bin, "concept2.cpt", data)
+	c.Assert(err, IsNil)
+	_, err = createFileIn(reports, "concept3.cpt", data)
+	c.Assert(err, IsNil)
+	_, err = createFileIn(env, "concept4.cpt", data)
+	c.Assert(err, IsNil)
 
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 0)
 
-	_, err := createFileIn(dir, "concept2.cpt", data)
+	_, err = createFileIn(dir, "concept2.cpt", data)
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 1)
 }
@@ -151,10 +155,14 @@ func (s *MySuite) TestFindAllNestedDirs(c *C) {
 	nested2 := filepath.Join(dir, "nested2")
 	nested3 := filepath.Join(dir, "nested2", "deep")
 	nested4 := filepath.Join(dir, "nested2", "deep", "deeper")
-	os.Mkdir(nested1, 0755)
-	os.Mkdir(nested2, 0755)
-	os.Mkdir(nested3, 0755)
-	os.Mkdir(nested4, 0755)
+	err := os.Mkdir(nested1, 0755)
+	c.Assert(err, IsNil)
+	err = os.Mkdir(nested2, 0755)
+	c.Assert(err, IsNil)
+	err = os.Mkdir(nested3, 0755)
+	c.Assert(err, IsNil)
+	err = os.Mkdir(nested4, 0755)
+	c.Assert(err, IsNil)
 
 	nestedDirs := FindAllNestedDirs(dir)
 	c.Assert(len(nestedDirs), Equals, 4)
@@ -197,8 +205,11 @@ func (s *MySuite) TestGetPathToFile(c *C) {
 }
 
 func createFileIn(dir string, fileName string, data []byte) (string, error) {
-	os.MkdirAll(dir, 0755)
-	err := ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
+	err := os.MkdirAll(dir, 0755)
+	if err != nil {
+		return "", err
+	}
+	err = ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
 }
 

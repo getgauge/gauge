@@ -58,12 +58,6 @@ func (file *files) content(uri lsp.DocumentURI) []string {
 	return file.cache[uri]
 }
 
-func (file *files) contentRange(uri lsp.DocumentURI, start, end int) []string {
-	file.Lock()
-	defer file.Unlock()
-	return file.cache[uri][start-1 : end]
-}
-
 func (file *files) exists(uri lsp.DocumentURI) bool {
 	file.Lock()
 	defer file.Unlock()
@@ -93,14 +87,6 @@ func getContent(uri lsp.DocumentURI) string {
 	return strings.Join(openFilesCache.content(uri), "\n")
 }
 
-func getLineCount(uri lsp.DocumentURI) int {
-	return len(openFilesCache.content(uri))
-}
-
 func isOpen(uri lsp.DocumentURI) bool {
 	return openFilesCache.exists(uri)
-}
-
-func getContentRange(uri lsp.DocumentURI, start, end int) []string {
-	return openFilesCache.contentRange(uri, start, end)
 }

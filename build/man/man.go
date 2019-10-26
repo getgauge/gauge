@@ -90,7 +90,11 @@ func main() {
 		}
 		page := strings.Replace(html, "<!--NAV-->", prepareIndex(newLinks), -1)
 		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.MarkdownCommon([]byte(t.content))), -1)
-		ioutil.WriteFile(filepath.Join(htmlPath, name), []byte(output), 0644)
+		p := filepath.Join(htmlPath, name)
+		err := ioutil.WriteFile(p, []byte(output), 0644)
+		if err != nil {
+			log.Fatalf("Unable to write file %s: %s", p, err.Error())
+		}
 	}
 	log.Printf("HTML man pages are available in %s dir\n", htmlPath)
 }

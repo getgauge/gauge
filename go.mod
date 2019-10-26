@@ -8,6 +8,7 @@ require (
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/getgauge/common v0.0.0-20180424115244-657067401e5f
+	github.com/go-check/check v0.0.0-20190902080502-41f04d3bba15 // indirect
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b // indirect
 	github.com/golang/protobuf v1.3.2-0.20190318194812-d3c38a4eb497
 	github.com/jpillora/go-ogle-analytics v0.0.0-20161213085824-14b04e0594ef

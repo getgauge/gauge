@@ -41,8 +41,8 @@ func TestFormat(t *testing.T) {
 	want := []lsp.TextEdit{
 		{
 			Range: lsp.Range{
-				Start: lsp.Position{0, 0},
-				End:   lsp.Position{5, 57},
+				Start: lsp.Position{Line: 0, Character: 0},
+				End:   lsp.Position{Line: 5, Character: 57},
 			},
 			NewText: specText + "\n",
 		},

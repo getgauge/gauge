@@ -82,4 +82,3 @@ func TestAllowUpdates(t *testing.T) {
 		t.Error("Expected CheckUpdates=true, got false")
 	}
 }
-

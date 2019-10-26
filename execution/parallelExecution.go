@@ -55,7 +55,6 @@ type parallelExecution struct {
 	manifest                 *manifest.Manifest
 	specCollection           *gauge.SpecCollection
 	pluginHandler            plugin.Handler
-	currentExecutionInfo     *gauge_messages.ExecutionInfo
 	runner                   runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
@@ -189,7 +188,10 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 		go e.startMultithreaded(crapRunner, resChan, i+1)
 	}
 	e.wg.Wait()
-	r.Cmd.Process.Kill()
+	err = r.Cmd.Process.Kill()
+	if err != nil {
+		fmt.Printf("unable to kill runner: %s", err.Error())
+	}
 	close(resChan)
 }
 
@@ -238,7 +240,10 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream)
 	se := newSimpleExecution(executionInfo, false)
 	se.execute()
-	runner.Kill()
+	err := runner.Kill()
+	if err != nil {
+		logger.Errorf(true, "Failed to kill runner. %s", err.Error())
+	}
 	resChan <- se.suiteResult
 }
 
@@ -250,7 +255,11 @@ func (e *parallelExecution) executeSpecsInSerial(s *gauge.SpecCollection) *resul
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, 1)
 	se := newSimpleExecution(executionInfo, false)
 	se.execute()
-	runner.Kill()
+	er := runner.Kill()
+	if er != nil {
+		logger.Errorf(true, "Failed to kill runner. %s", er.Error())
+	}
+
 	return se.suiteResult
 }
 
