@@ -53,7 +53,6 @@ const (
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
-	useTestGA                      = "use_test_ga"
 )
 
 var envVars map[string]string
@@ -120,7 +119,6 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
-	addEnvVar(useTestGA, "false")
 }
 
 func loadEnvDir(envName string) error {
