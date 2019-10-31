@@ -34,7 +34,7 @@ import (
 func TestGetLoggerShouldGetTheLoggerForGivenModule(t *testing.T) {
 	Initialize(false, "info", CLI)
 
-	l := GetLogger("gauge-js")
+	l := loggersMap.getLogger("gauge-js")
 	if l == nil {
 		t.Error("Expected a logger to be initilized for gauge-js")
 	}
@@ -43,7 +43,7 @@ func TestGetLoggerShouldGetTheLoggerForGivenModule(t *testing.T) {
 func TestLoggerInitWithInfoLevel(t *testing.T) {
 	Initialize(false, "info", CLI)
 
-	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
+	if !loggersMap.getLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for INFO")
 	}
 }
@@ -51,7 +51,7 @@ func TestLoggerInitWithInfoLevel(t *testing.T) {
 func TestLoggerInitWithDefaultLevel(t *testing.T) {
 	Initialize(false, "", CLI)
 
-	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
+	if !loggersMap.getLogger(gaugeModuleID).IsEnabledFor(logging.INFO) {
 		t.Error("Expected gaugeLog to be enabled for default log level")
 	}
 }
@@ -59,7 +59,7 @@ func TestLoggerInitWithDefaultLevel(t *testing.T) {
 func TestLoggerInitWithDebugLevel(t *testing.T) {
 	Initialize(false, "debug", CLI)
 
-	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.DEBUG) {
+	if !loggersMap.getLogger(gaugeModuleID).IsEnabledFor(logging.DEBUG) {
 		t.Error("Expected gaugeLog to be enabled for DEBUG")
 	}
 }
@@ -67,7 +67,7 @@ func TestLoggerInitWithDebugLevel(t *testing.T) {
 func TestLoggerInitWithWarningLevel(t *testing.T) {
 	Initialize(false, "warning", CLI)
 
-	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.WARNING) {
+	if !loggersMap.getLogger(gaugeModuleID).IsEnabledFor(logging.WARNING) {
 		t.Error("Expected gaugeLog to be enabled for WARNING")
 	}
 }
@@ -75,7 +75,7 @@ func TestLoggerInitWithWarningLevel(t *testing.T) {
 func TestLoggerInitWithErrorLevel(t *testing.T) {
 	Initialize(false, "error", CLI)
 
-	if !GetLogger(gaugeModuleID).IsEnabledFor(logging.ERROR) {
+	if !loggersMap.getLogger(gaugeModuleID).IsEnabledFor(logging.ERROR) {
 		t.Error("Expected gaugeLog to be enabled for ERROR")
 	}
 }

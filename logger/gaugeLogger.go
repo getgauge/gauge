@@ -24,7 +24,7 @@ import (
 
 // Info logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Info(stdout bool, msg string) {
-	logInfo(GetLogger(gaugeModuleID), stdout, msg)
+	logInfo(loggersMap.getLogger(gaugeModuleID), stdout, msg)
 }
 
 // Infof logs INFO messages. stdout flag indicates if message is to be written to stdout in addition to log.
@@ -34,7 +34,7 @@ func Infof(stdout bool, msg string, args ...interface{}) {
 
 // Error logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Error(stdout bool, msg string) {
-	logError(GetLogger(gaugeModuleID), stdout, msg)
+	logError(loggersMap.getLogger(gaugeModuleID), stdout, msg)
 }
 
 // Errorf logs ERROR messages. stdout flag indicates if message is to be written to stdout in addition to log.
@@ -44,7 +44,7 @@ func Errorf(stdout bool, msg string, args ...interface{}) {
 
 // Warning logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Warning(stdout bool, msg string) {
-	logWarning(GetLogger(gaugeModuleID), stdout, msg)
+	logWarning(loggersMap.getLogger(gaugeModuleID), stdout, msg)
 }
 
 // Warningf logs WARNING messages. stdout flag indicates if message is to be written to stdout in addition to log.
@@ -54,7 +54,7 @@ func Warningf(stdout bool, msg string, args ...interface{}) {
 
 // Fatal logs CRITICAL messages and exits. stdout flag indicates if message is to be written to stdout in addition to log.
 func Fatal(stdout bool, msg string) {
-	logCritical(GetLogger(gaugeModuleID), msg)
+	logCritical(loggersMap.getLogger(gaugeModuleID), msg)
 	addFatalError(gaugeModuleID, msg)
 	write(stdout, getFatalErrorMsg())
 	os.Exit(1)
@@ -67,7 +67,7 @@ func Fatalf(stdout bool, msg string, args ...interface{}) {
 
 // Debug logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
 func Debug(stdout bool, msg string) {
-	logDebug(GetLogger(gaugeModuleID), stdout, msg)
+	logDebug(loggersMap.getLogger(gaugeModuleID), stdout, msg)
 }
 
 // Debugf logs DEBUG messages. stdout flag indicates if message is to be written to stdout in addition to log.
