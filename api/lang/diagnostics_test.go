@@ -77,16 +77,16 @@ Scenario Heading
 	want := []lsp.Diagnostic{
 		{
 			Range: lsp.Range{
-				Start: lsp.Position{0, 0},
-				End:   lsp.Position{0, 21},
+				Start: lsp.Position{Line: 0, Character: 0},
+				End:   lsp.Position{Line: 0, Character: 21},
 			},
 			Message:  "Spec should have atleast one scenario",
 			Severity: 1,
 		},
 		{
 			Range: lsp.Range{
-				Start: lsp.Position{3, 0},
-				End:   lsp.Position{3, 16},
+				Start: lsp.Position{Line: 3, Character: 0},
+				End:   lsp.Position{Line: 3, Character: 16},
 			},
 			Message:  "Multiple spec headings found in same file",
 			Severity: 1,
@@ -133,7 +133,7 @@ func TestParseConcept(t *testing.T) {
 	uri := util.ConvertPathToURI(conceptFile)
 	openFilesCache.add(uri, cptText)
 
-	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
+	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic)
 
 	dictionary, err := validateConcepts(diagnostics)
 	if err != nil {
@@ -157,9 +157,13 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 
 	openFilesCache.add(uri, cptText)
 
-	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic, 0)
+	diagnostics := make(map[lsp.DocumentURI][]lsp.Diagnostic)
 
-	validateConcepts(diagnostics)
+	_, err := validateConcepts(diagnostics)
+
+	if err != nil {
+		t.Error(err)
+	}
 	if len(diagnostics[uri]) <= 0 {
 		t.Errorf("expected parse errors")
 	}
@@ -167,8 +171,8 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 	want := []lsp.Diagnostic{
 		{
 			Range: lsp.Range{
-				Start: lsp.Position{0, 0},
-				End:   lsp.Position{0, 9},
+				Start: lsp.Position{Line: 0, Character: 0},
+				End:   lsp.Position{Line: 0, Character: 9},
 			},
 			Message:  "Concept should have atleast one step",
 			Severity: 1,

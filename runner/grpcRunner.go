@@ -50,8 +50,8 @@ type GrpcRunner struct {
 func (r *GrpcRunner) execute(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_CacheFileRequest:
-		r.Client.CacheFile(context.Background(), message.CacheFileRequest)
-		return &gm.Message{}, nil
+		_, err := r.Client.CacheFile(context.Background(), message.CacheFileRequest)
+		return &gm.Message{}, err
 	case gm.Message_StepNamesRequest:
 		response, err := r.Client.GetStepNames(context.Background(), message.StepNamesRequest)
 		return &gm.Message{StepNamesResponse: response}, err
@@ -116,8 +116,11 @@ func (r *GrpcRunner) Alive() bool {
 
 // Kill closes the grpc connection and kills the process
 func (r *GrpcRunner) Kill() error {
-	r.ExecuteMessageWithTimeout(&gm.Message{MessageType: gm.Message_KillProcessRequest, KillProcessRequest: &gm.KillProcessRequest{}})
-	if err := r.conn.Close(); err != nil {
+	_, err := r.ExecuteMessageWithTimeout(&gm.Message{MessageType: gm.Message_KillProcessRequest, KillProcessRequest: &gm.KillProcessRequest{}})
+	if err != nil {
+		return err
+	}
+	if err = r.conn.Close(); err != nil {
 		return err
 	}
 	// TODO: wait for process to exit or kill forcefully after runner kill timeout

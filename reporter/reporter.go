@@ -128,7 +128,7 @@ func initParallelReporters() {
 
 // ListenExecutionEvents listens to all execution events for reporting on console
 func ListenExecutionEvents(wg *sync.WaitGroup) {
-	ch := make(chan event.ExecutionEvent, 0)
+	ch := make(chan event.ExecutionEvent)
 	initParallelReporters()
 	event.Register(ch, event.SuiteStart, event.SpecStart, event.SpecEnd, event.ScenarioStart, event.ScenarioEnd, event.StepStart, event.StepEnd, event.ConceptStart, event.ConceptEnd, event.SuiteEnd)
 	var r Reporter

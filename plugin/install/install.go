@@ -158,7 +158,13 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 	tempDir := common.GetTempDir()
-	defer common.Remove(tempDir)
+	defer func() {
+		err := common.Remove(tempDir)
+		if err != nil {
+			logger.Errorf(false, "unable to remove temp directory: %s", err.Error())
+		}
+	}()
+
 	unzippedPluginDir, err := common.UnzipArchive(zipFile, tempDir)
 	if err != nil {
 		return installError(err)
@@ -267,7 +273,12 @@ func installPluginVersion(installDesc *installDescription, versionInstallDescrip
 	}
 
 	tempDir := common.GetTempDir()
-	defer common.Remove(tempDir)
+	defer func() {
+		err := common.Remove(tempDir)
+		if err != nil {
+			logger.Errorf(false, "unable to remove temp directory: %s", err.Error())
+		}
+	}()
 	pluginZip, err := util.Download(downloadLink, tempDir, "", silent)
 	if err != nil {
 		return installError(fmt.Errorf("Failed to download the plugin. %s", err.Error()))
@@ -315,17 +326,20 @@ func UninstallPlugin(pluginName string, uninstallVersion string) {
 	}
 	var failed bool
 	pluginsDir := filepath.Join(pluginsHome, pluginName)
-	filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
+	err = filepath.Walk(pluginsDir, func(dir string, info os.FileInfo, err error) error {
 		if err == nil && info.IsDir() && dir != pluginsDir {
 			if matchesUninstallVersion(filepath.Base(dir), uninstallVersion) {
 				if err := uninstallVersionOfPlugin(dir, pluginName, filepath.Base(dir)); err != nil {
-					logger.Errorf(true, "Failed to uninstall plugin %s %s. %s", pluginName, uninstallVersion, err.Error())
 					failed = true
+					return fmt.Errorf("failed to uninstall plugin %s %s. %s", pluginName, uninstallVersion, err.Error())
 				}
 			}
 		}
 		return nil
 	})
+	if err != nil {
+		logger.Error(true, err.Error())
+	}
 	if failed {
 		os.Exit(1)
 	}
@@ -393,7 +407,12 @@ func getInstallDescription(plugin string, silent bool) (*installDescription, Ins
 		return nil, installError(fmt.Errorf("Could not construct plugin install json file URL. %s", result.Error))
 	}
 	tempDir := common.GetTempDir()
-	defer common.Remove(tempDir)
+	defer func() {
+		err := common.Remove(tempDir)
+		if err != nil {
+			logger.Errorf(false, "unable to remove temp directory: %s", err.Error())
+		}
+	}()
 
 	downloadedFile, downloadErr := util.Download(versionInstallDescriptionJSONUrl, tempDir, versionInstallDescriptionJSONFile, silent)
 	if downloadErr != nil {
@@ -454,7 +473,11 @@ func (installDesc *installDescription) sortVersionInstallDescriptions() {
 func getVersionedPluginDirName(pluginZip string) string {
 	zipFileName := filepath.Base(pluginZip)
 	if !strings.Contains(zipFileName, "nightly") {
-		re, _ := regexp.Compile("[0-9]+\\.[0-9]+\\.[0-9]+")
+		rStr := `[0-9]+\.[0-9]+\.[0-9]+`
+		re, err := regexp.Compile(rStr)
+		if err != nil {
+			logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+		}
 		return re.FindString(zipFileName)
 	}
 	rStr := `[0-9]+\.[0-9]+\.[0-9]+\.nightly-[0-9]+-[0-9]+-[0-9]+`

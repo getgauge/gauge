@@ -36,7 +36,9 @@ func (s *MySuite) TestPopulateFragmentsForSimpleStep(c *C) {
 func (s *MySuite) TestGetArgForStep(c *C) {
 	lookup := new(ArgLookup)
 	lookup.AddArgName("param1")
-	lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	err := lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	c.Assert(err, IsNil)
+
 	step := &Step{Lookup: *lookup}
 	stepArg, err := step.GetArg("param1")
 	c.Assert(err, IsNil)
@@ -46,11 +48,15 @@ func (s *MySuite) TestGetArgForStep(c *C) {
 func (s *MySuite) TestGetArgForConceptStep(c *C) {
 	lookup := new(ArgLookup)
 	lookup.AddArgName("param1")
-	lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	err := lookup.AddArgValue("param1", &StepArg{Value: "value1", ArgType: Static})
+	c.Assert(err, IsNil)
+
 	concept := &Step{Lookup: *lookup, IsConcept: true}
 	stepLookup := new(ArgLookup)
 	stepLookup.AddArgName("param1")
-	stepLookup.AddArgValue("param1", &StepArg{Value: "param1", ArgType: Dynamic})
+	err = stepLookup.AddArgValue("param1", &StepArg{Value: "param1", ArgType: Dynamic})
+	c.Assert(err, IsNil)
+
 	step := &Step{Parent: concept, Lookup: *stepLookup}
 
 	stepArg, err := step.GetArg("param1")

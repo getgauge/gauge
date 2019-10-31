@@ -57,10 +57,8 @@ type fileSystemWatcher struct {
 type watchKind int
 
 const (
-	created watchKind = iota
-	changed
-	_reserved
-	deleted
+	created watchKind = 1
+	deleted watchKind = 4
 )
 
 type textDocumentRegistrationOptions struct {
@@ -101,7 +99,7 @@ func gaugeLSPCapabilities() lsp.InitializeResult {
 	}
 }
 
-func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) {
+func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
 	fileExtensions := strings.Join(util.GaugeFileExtensions(), ",")
 	regParams := didChangeWatchedFilesRegistrationOptions{
 		Watchers: []fileSystemWatcher{{
@@ -110,7 +108,7 @@ func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) {
 		}},
 	}
 	var result interface{}
-	conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
+	return conn.Call(ctx, "client/registerCapability", registrationParams{[]registration{
 		{Id: "gauge-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: regParams},
 	}}, &result)
 }
@@ -145,8 +143,7 @@ func registerRunnerCapabilities(conn jsonrpc2.JSONRPC2, ctx context.Context) err
 		{Id: "gauge-runner-fileWatcher", Method: "workspace/didChangeWatchedFiles", RegisterOptions: didChangeWatchedFilesRegistrationOptions{Watchers: filePatterns}},
 	}
 	registrations = addReferenceCodeLensRegistration(registrations, documentSelectors)
-	conn.Call(ctx, "client/registerCapability", registrationParams{registrations}, &result)
-	return nil
+	return conn.Call(ctx, "client/registerCapability", registrationParams{registrations}, &result)
 }
 
 func addReferenceCodeLensRegistration(registrations []registration, selectors []documentSelector) []registration {

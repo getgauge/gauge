@@ -32,7 +32,6 @@ func (ctx *MockContext) Value(key interface{}) interface{} {
 type MockConn struct {
 	method  string
 	params  interface{}
-	result  interface{}
 	options []jsonrpc2.CallOption
 }
 
@@ -59,7 +58,10 @@ func TestRunnerCompatibilityWarning(t *testing.T) {
 		Type:    lsp.Warning,
 		Message: "Current gauge language runner is not compatible with gauge LSP. Some of the editing feature will not work as expected",
 	}
-	informRunnerCompatibility(ctx, conn)
+	err := informRunnerCompatibility(ctx, conn)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	if conn.method != expectedMethod {
 		t.Errorf("Expected: %s\nGot: %s", expectedMethod, conn.method)
 	}
@@ -72,7 +74,10 @@ func TestRunnerCompatibilityWarningWhenRunnerSupportLSP(t *testing.T) {
 	lRunner.lspID = "foo"
 	conn := &MockConn{}
 	ctx := &MockContext{}
-	informRunnerCompatibility(ctx, conn)
+	err := informRunnerCompatibility(ctx, conn)
+	if err != nil {
+		t.Error(err)
+	}
 	if conn.method != "" {
 		t.Errorf("\nExpected: %s\nGot: %s", "", conn.method)
 	}

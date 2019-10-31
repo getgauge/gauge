@@ -84,7 +84,8 @@ func (s *MySuite) TestDownloadFailureIfTargetDirDoesntExist(c *C) {
 }
 
 func (s *MySuite) TestDownloadSuccess(c *C) {
-	os.Mkdir("temp", 0755)
+	err := os.Mkdir("temp", 0755)
+	c.Assert(err, IsNil)
 	defer os.RemoveAll("temp")
 
 	handler := func(w http.ResponseWriter, r *http.Request) {

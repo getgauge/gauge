@@ -71,19 +71,6 @@ func (specBuilder *specBuilder) step(stepText string) *specBuilder {
 	return specBuilder
 }
 
-func (specBuilder *specBuilder) tags(tags ...string) *specBuilder {
-	tagText := ""
-	for i, tag := range tags {
-		tagText = fmt.Sprintf("%s%s", tagText, tag)
-		if i != len(tags)-1 {
-			tagText = fmt.Sprintf("%s,", tagText)
-		}
-	}
-	line := specBuilder.addPrefix("tags: ", tagText)
-	specBuilder.lines = append(specBuilder.lines, line)
-	return specBuilder
-}
-
 func (specBuilder *specBuilder) tableHeader(cells ...string) *specBuilder {
 	return specBuilder.tableRow(cells...)
 }
@@ -93,11 +80,6 @@ func (specBuilder *specBuilder) tableRow(cells ...string) *specBuilder {
 		rowInMarkdown = fmt.Sprintf("%s%s|", rowInMarkdown, cell)
 	}
 	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", rowInMarkdown))
-	return specBuilder
-}
-
-func (specBuilder *specBuilder) text(comment string) *specBuilder {
-	specBuilder.lines = append(specBuilder.lines, fmt.Sprintf("%s\n", comment))
 	return specBuilder
 }
 

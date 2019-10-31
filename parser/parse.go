@@ -37,7 +37,6 @@
 package parser
 
 import (
-	"runtime/debug"
 	"strings"
 	"sync"
 
@@ -132,12 +131,6 @@ func ParseConcepts() (*gauge.ConceptDictionary, *ParseResult, error) {
 	HandleParseResult(conceptParseResult)
 	logger.Debugf(true, "%d concepts parsing completed.", len(conceptsDictionary.ConceptsMap))
 	return conceptsDictionary, conceptParseResult, nil
-}
-
-func recoverPanic() {
-	if r := recover(); r != nil {
-		logger.Fatalf(true, "%v\n%s", r, string(debug.Stack()))
-	}
 }
 
 func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary) (*gauge.Specification, *ParseResult) {

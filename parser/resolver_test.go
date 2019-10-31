@@ -95,13 +95,15 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := AddConcepts([]string{path}, conceptDictionary)
+	c.Assert(err, IsNil)
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
-	err := PopulateConceptDynamicParams(concept, dataTableLookup)
+	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	c.Assert(err, IsNil)
+	err = PopulateConceptDynamicParams(concept, dataTableLookup)
 	c.Assert(err, IsNil)
 	useridArg, _ := concept.GetArg("user-id")
 	c.Assert(useridArg.Value, Equals, "123")
@@ -124,13 +126,15 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "dynamic_param_concept.cpt"))
-	AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := AddConcepts([]string{path}, conceptDictionary)
+	c.Assert(err, IsNil)
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
-	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
+	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	c.Assert(err, IsNil)
+	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
 
 	useridArg1, _ := concept1.GetArg("user-id")
@@ -170,14 +174,16 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
-	AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := AddConcepts([]string{path}, conceptDictionary)
+	c.Assert(err, IsNil)
 
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
-	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
+	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	c.Assert(err, IsNil)
+	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
 	useridArg1, _ := concept1.GetArg("user-id")
 	c.Assert(useridArg1.Value, Equals, "456")
@@ -205,14 +211,16 @@ func (s *MySuite) TestPopulatingConceptsWithDynamicParametersInTable(c *C) {
 		String()
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "table_param_concept.cpt"))
-	AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := AddConcepts([]string{path}, conceptDictionary)
+	c.Assert(err, IsNil)
 
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
-	err := PopulateConceptDynamicParams(concept1, dataTableLookup)
+	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	c.Assert(err, IsNil)
+	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
 	tableArg, err := concept1.Lookup.GetArg("addresses")
 	c.Assert(err, IsNil)
@@ -231,7 +239,8 @@ func (s *MySuite) TestEachConceptUsageIsUpdatedWithRespectiveParams(c *C) {
 
 	conceptDictionary := gauge.NewConceptDictionary()
 	path, _ := filepath.Abs(filepath.Join("testdata", "static_param_concept.cpt"))
-	AddConcepts([]string{path}, conceptDictionary)
+	_, _, err := AddConcepts([]string{path}, conceptDictionary)
+	c.Assert(err, IsNil)
 	spec, _, _ := parser.Parse(specText, conceptDictionary, "")
 	concept1 := spec.Scenarios[0].Steps[0]
 

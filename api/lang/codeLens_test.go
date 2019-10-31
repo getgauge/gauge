@@ -55,8 +55,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 8},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 8},
 		},
 	}
 
@@ -67,8 +67,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 10},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 10},
 		},
 	}
 
@@ -79,8 +79,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec:4"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{3, 0},
-			End:   lsp.Position{3, 12},
+			Start: lsp.Position{Line: 3, Character: 0},
+			End:   lsp.Position{Line: 3, Character: 12},
 		},
 	}
 
@@ -91,8 +91,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec:4"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{3, 0},
-			End:   lsp.Position{3, 14},
+			Start: lsp.Position{Line: 3, Character: 0},
+			End:   lsp.Position{Line: 3, Character: 14},
 		},
 	}
 
@@ -136,8 +136,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 8},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 8},
 		},
 	}
 
@@ -148,8 +148,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 10},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 10},
 		},
 	}
 
@@ -160,8 +160,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec:4"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{3, 0},
-			End:   lsp.Position{3, 12},
+			Start: lsp.Position{Line: 3, Character: 0},
+			End:   lsp.Position{Line: 3, Character: 12},
 		},
 	}
 
@@ -172,8 +172,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec:4"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{3, 0},
-			End:   lsp.Position{3, 14},
+			Start: lsp.Position{Line: 3, Character: 0},
+			End:   lsp.Position{Line: 3, Character: 14},
 		},
 	}
 
@@ -184,8 +184,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec:9"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{8, 0},
-			End:   lsp.Position{8, 12},
+			Start: lsp.Position{Line: 8, Character: 0},
+			End:   lsp.Position{Line: 8, Character: 12},
 		},
 	}
 
@@ -196,8 +196,8 @@ Another Scenario
 			Arguments: getExecutionArgs("foo.spec:9"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{8, 0},
-			End:   lsp.Position{8, 14},
+			Start: lsp.Position{Line: 8, Character: 0},
+			End:   lsp.Position{Line: 8, Character: 14},
 		},
 	}
 
@@ -245,8 +245,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 8},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 8},
 		},
 	}
 
@@ -257,8 +257,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 10},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 10},
 		},
 	}
 
@@ -269,8 +269,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 15},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 15},
 		},
 	}
 
@@ -281,8 +281,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec:12"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{11, 0},
-			End:   lsp.Position{11, 12},
+			Start: lsp.Position{Line: 11, Character: 0},
+			End:   lsp.Position{Line: 11, Character: 12},
 		},
 	}
 
@@ -293,8 +293,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec:12"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{11, 0},
-			End:   lsp.Position{11, 14},
+			Start: lsp.Position{Line: 11, Character: 0},
+			End:   lsp.Position{Line: 11, Character: 14},
 		},
 	}
 
@@ -333,8 +333,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{0, 0},
-			End:   lsp.Position{0, 8},
+			Start: lsp.Position{Line: 0, Character: 0},
+			End:   lsp.Position{Line: 0, Character: 8},
 		},
 	}
 
@@ -345,8 +345,8 @@ Scenario Heading
 			Arguments: getExecutionArgs("foo.spec:4"),
 		},
 		Range: lsp.Range{
-			Start: lsp.Position{3, 0},
-			End:   lsp.Position{3, 12},
+			Start: lsp.Position{Line: 3, Character: 0},
+			End:   lsp.Position{Line: 3, Character: 12},
 		},
 	}
 
