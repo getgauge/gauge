@@ -59,15 +59,15 @@ func (w Writer) Write(p []byte) (int, error) {
 		}
 		switch m.LogLevel {
 		case "debug":
-			logDebug(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
+			logDebug(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "info":
-			logInfo(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
+			logInfo(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "error":
-			logError(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
+			logError(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "warning":
-			logWarning(GetLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
+			logWarning(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, m.Message)
 		case "fatal":
-			logCritical(GetLogger(w.LoggerID), m.Message)
+			logCritical(loggersMap.getLogger(w.LoggerID), m.Message)
 			addFatalError(w.LoggerID, m.Message)
 		}
 	}

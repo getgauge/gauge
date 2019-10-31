@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -50,7 +51,7 @@ const (
 
 var level logging.Level
 var initialized bool
-var loggersMap map[string]*logging.Logger
+var loggersMap logCache
 var fatalErrors []string
 var fileLogFormat = logging.MustStringFormatter("%{time:02-01-2006 15:04:05.000} [%{module}] [%{level}] %{message}")
 var fileLoggerLeveled logging.LeveledBackend
@@ -59,6 +60,37 @@ var fileLoggerLeveled logging.LeveledBackend
 var ActiveLogFile string
 var machineReadable bool
 var isLSP bool
+
+type logCache struct {
+	mutex   sync.RWMutex
+	loggers map[string]*logging.Logger
+}
+
+// getLogger gets logger for given modules. It creates a new logger for the module if not exists
+func (l *logCache) getLogger(module string) *logging.Logger {
+	if !initialized {
+		return nil
+	}
+	l.mutex.RLock()
+	defer l.mutex.RUnlock()
+	if module == "" {
+		return l.loggers[gaugeModuleID]
+	}
+	if _, ok := l.loggers[module]; !ok {
+		l.mutex.RUnlock()
+		l.addLogger(module)
+		l.mutex.RLock()
+	}
+	return l.loggers[module]
+}
+
+func (l *logCache) addLogger(module string) {
+	logger := logging.MustGetLogger(module)
+	logger.SetBackend(fileLoggerLeveled)
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
+	l.loggers[module] = logger
+}
 
 // Initialize logger with given level
 func Initialize(mr bool, logLevel string, c int) {
@@ -74,20 +106,9 @@ func Initialize(mr bool, logLevel string, c int) {
 		ActiveLogFile = getLogFile(lspLogFileName)
 	}
 	initFileLoggerBackend()
-	addLogger(gaugeModuleID)
+	loggersMap = logCache{loggers: make(map[string]*logging.Logger)}
+	loggersMap.addLogger(gaugeModuleID)
 	initialized = true
-}
-
-// GetLogger gets logger for given modules. It creates a new logger for the module if not exists
-func GetLogger(module string) *logging.Logger {
-	if module == "" {
-		return loggersMap[gaugeModuleID]
-	}
-	if _, ok := loggersMap[module]; !ok {
-		addLogger(module)
-	}
-	return loggersMap[module]
-
 }
 
 func logInfo(logger *logging.Logger, stdout bool, msg string) {
@@ -174,15 +195,6 @@ func machineReadableLog(msg string) {
 	}
 }
 
-func addLogger(module string) {
-	l := logging.MustGetLogger(module)
-	if loggersMap == nil {
-		loggersMap = make(map[string]*logging.Logger)
-	}
-	l.SetBackend(fileLoggerLeveled)
-	loggersMap[module] = l
-}
-
 func initFileLoggerBackend() {
 	var backend = createFileLogger(ActiveLogFile, 10)
 	fileFormatter := logging.NewBackendFormatter(backend, fileLogFormat)
@@ -190,7 +202,7 @@ func initFileLoggerBackend() {
 	fileLoggerLeveled.SetLevel(logging.DEBUG, "")
 }
 
-func createFileLogger(name string, size int) logging.Backend {
+var createFileLogger = func(name string, size int) logging.Backend {
 	return logging.NewLogBackend(&lumberjack.Logger{
 		Filename:   name,
 		MaxSize:    size, // megabytes
