@@ -55,10 +55,11 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           go run build/make.go --install  --verbose
-          set PATH="C:\\Program Files\\gauge\\bin";%PATH%
+          ${env:PATH} += ";C:\Program Files\gauge\bin"
           cd gauge-lsp-tests
           gauge install
-          gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
+          gauge run --tags='!knownIssue & (actions_on_project_load | actions_on_file_edit)' --env=js-wd
+        shell: pwsh
 
       - name: Install gauge and Run lsp-tests (linux/osx)
         if: matrix.os != 'windows-latest'
