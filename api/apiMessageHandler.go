@@ -193,14 +193,30 @@ func (handler *gaugeAPIMessageHandler) createGetAllConceptsResponseMessageFor(co
 
 func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	refactoringRequest := message.PerformRefactoringRequest
-	startChan := StartAPI(false)
-	refactoringResult := refactor.PerformRephraseRefactoring(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), startChan, handler.specInfoGatherer.SpecDirs)
+	response := &gauge_messages.PerformRefactoringResponse{}
+	c := make(chan bool)
+	runner, err := ConnectToRunner(c, false)
+	defer func() {
+		err := runner.Kill()
+		if err != nil {
+			logger.Errorf(true, "failed to kill runner with pid: %d", runner.Pid())
+		}
+	}()
+	if err != nil {
+		response.Success = false
+		response.Errors = []string{err.Error()}
+		return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
+	}
+	refactoringResult := refactor.GetRefactoringChanges(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), runner, handler.specInfoGatherer.SpecDirs, true)
+	refactoringResult.WriteToDisk()
 	if refactoringResult.Success {
 		logger.Infof(false, "%s", refactoringResult.String())
 	} else {
 		logger.Errorf(false, "Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
 	}
-	response := &gauge_messages.PerformRefactoringResponse{Success: refactoringResult.Success, Errors: refactoringResult.Errors, FilesChanged: refactoringResult.AllFilesChanged()}
+	response.Success = refactoringResult.Success
+	response.Errors = refactoringResult.Errors
+	response.FilesChanged = refactoringResult.AllFilesChanged()
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
 }
 

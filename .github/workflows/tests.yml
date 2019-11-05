@@ -35,38 +35,54 @@ jobs:
           go-version: 1.13
         id: go
 
+      - name: Set up Nodejs
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.x'
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v1
 
       - name: Build
-        run: go run build/make.go --verbose
+        run: |
+          go run build/make.go --verbose
 
       - name: Clone LSP tests
-        run: git clone https://github.com/getgauge/gauge-lsp-tests
-
-      - name: Prep lsp tests
         run: |
+          git clone https://github.com/getgauge/gauge-lsp-tests
           cd gauge-lsp-tests
           npm install
 
-      - name: Install gauge and Run lsp-tests (windows)
+      - name: Install Gauge (windows)
         if: matrix.os == 'windows-latest'
         run: |
           go run build/make.go --install  --verbose
-          ${env:PATH} += ";C:\Program Files\gauge\bin"
-          cd gauge-lsp-tests
-          gauge install
-          gauge run --tags='!knownIssue & (actions_on_project_load | actions_on_file_edit)' --env=js-wd
-        shell: pwsh
+          echo "::add-path::C:\\Program Files\\gauge\\bin"
 
-      - name: Install gauge and Run lsp-tests (linux/osx)
+
+      - name: Install Gauge (linux)
         if: matrix.os != 'windows-latest'
         run: |
           go run build/make.go --install --prefix=/tmp/gauge --verbose
-          export PATH=$PATH:/tmp/gauge/bin
+          echo "::add-path::/tmp/gauge/bin"
+
+      - name: Prep gauge-js
+        run: |
+          git clone https://github.com/getgauge/gauge-js.git
+          cd gauge-js
+          npm install
+        shell: bash
+
+      - name: Install gauge-js
+        run: |
+          cd gauge-js
+          npm run installPlugin
+
+      - name: Run lsp-tests
+        run: |
           cd gauge-lsp-tests
           gauge install
-          gauge run --tags='!knownIssue & (actions_on_project_load | actions_on_file_edit)' --env=js-wd
+          gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
 
   functional-tests:
     needs: tests
@@ -90,23 +106,33 @@ jobs:
       - name: Build
         run: go run build/make.go --verbose
 
-      - name: Install gauge and Run FTs (windows)
+      - name: Install Gauge (windows)
         if: matrix.os == 'windows-latest'
         run: |
           go run build/make.go --install  --verbose
+          echo "::add-path::C:\\Program Files\\gauge\\bin"
+
+      - name: Install Gauge (linux)
+        if: matrix.os != 'windows-latest'
+        run: |
+          go run build/make.go --install --prefix=/tmp/gauge --verbose
+          echo "::add-path::/tmp/gauge/bin"
+
+      - name: Prep FTs
+        run: |
           git clone https://github.com/getgauge/gauge-tests
           cd gauge-tests
-          ${env:PATH} += ";C:\Program Files\gauge\bin"
           gauge install
+
+      - name: Install gauge and Run FTs (windows)
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd gauge-tests
           .\gradlew.bat clean jsFT
         shell: pwsh
 
       - name: Install gauge and Run FTs (linux/osx)
         if: matrix.os != 'windows-latest'
         run: |
-          go run build/make.go --install --prefix=/tmp/gauge --verbose
-          git clone https://github.com/getgauge/gauge-tests
           cd gauge-tests
-          export PATH=$PATH:/tmp/gauge/bin
-          gauge install
           ./gradlew clean jsFT

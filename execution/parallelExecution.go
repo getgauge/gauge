@@ -224,7 +224,7 @@ func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (ru
 	if os.Getenv("GAUGE_CUSTOM_BUILD_PATH") == "" {
 		os.Setenv("GAUGE_CUSTOM_BUILD_PATH", path.Join(os.Getenv("GAUGE_PROJECT_ROOT"), "gauge_bin"))
 	}
-	runner, err := runner.Start(e.manifest, logger.NewLogWriter(e.manifest.Language, true, stream), make(chan bool), false)
+	runner, err := runner.Start(e.manifest, stream, make(chan bool), false)
 	if err != nil {
 		logger.Errorf(true, "Failed to start runner. %s", err.Error())
 		logger.Debugf(true, "Skipping %d specifications", s.Size())
@@ -274,6 +274,9 @@ func (e *parallelExecution) finish() {
 	}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
+	if err := e.runner.Kill(); err != nil {
+		logger.Errorf(true, "Failed to kill Runner: %s", err.Error())
+	}
 }
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {

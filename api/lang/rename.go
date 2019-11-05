@@ -56,7 +56,7 @@ func renameStep(req *jsonrpc2.Request) (interface{}, error) {
 	}
 	newName := getNewStepName(params, step)
 
-	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, util.GetSpecDirs())
+	refactortingResult := refactor.GetRefactoringChanges(step.GetLineText(), newName, lRunner.runner, util.GetSpecDirs(), false)
 	for _, warning := range refactortingResult.Warnings {
 		logWarning(req, warning)
 	}
