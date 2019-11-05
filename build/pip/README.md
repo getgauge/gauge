@@ -40,7 +40,6 @@ Commands:
   man         Generate man pages
   refactor    Refactor steps
   run         Run specs
-  telemetry   Configure options for sending anonymous usage stats
   uninstall   Uninstalls a plugin
   update      Updates a plugin
   validate    Check for validation and parse errors

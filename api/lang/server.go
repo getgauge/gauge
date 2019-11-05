@@ -88,7 +88,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		if err != nil {
 			logError(req, err.Error())
 		}
-		notifyTelemetry(ctx, conn)
 		err = registerRunnerCapabilities(conn, ctx)
 		if err != nil {
 			logError(req, err.Error())
@@ -99,7 +98,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		return nil, killRunner()
 	case "exit":
 		if c, ok := conn.(*jsonrpc2.Conn); ok {
-			c.Close()
+			err := c.Close()
+			if err != nil {
+				logError(req, err.Error())
+			}
 			os.Exit(0)
 		}
 		return nil, nil

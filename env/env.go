@@ -53,8 +53,6 @@ const (
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
-	useTestGA                      = "use_test_ga"
-	telemetryInterval              = "gauge_telemetry_interval"
 )
 
 var envVars map[string]string
@@ -121,7 +119,6 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
-	addEnvVar(useTestGA, "false")
 }
 
 func loadEnvDir(envName string) error {
@@ -266,14 +263,4 @@ var SaveExecutionResult = func() bool {
 // for each parallel stream
 var EnableMultiThreadedExecution = func() bool {
 	return convertToBool(enableMultithreading, false)
-}
-
-// UseTestGA checks if test google analytics account needs to be used
-var UseTestGA = func() bool {
-	return strings.ToLower(os.Getenv(useTestGA)) == "true"
-}
-
-// TelemetryInterval allows to configure duration for which telemetry is to be sent, when UseTestGA is true.
-var TelemetryInterval = func() string {
-	return strings.ToLower(os.Getenv(telemetryInterval))
 }
