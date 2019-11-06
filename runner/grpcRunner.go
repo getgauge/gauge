@@ -215,18 +215,37 @@ func (r *GrpcRunner) Kill() error {
 		MessageType:        gm.Message_KillProcessRequest,
 		KillProcessRequest: &gm.KillProcessRequest{},
 	}
-	m, err := r.executeMessage(m, config.PluginKillTimeout())
+	m, err := r.executeMessage(m, r.Timeout)
 	if m == nil || err != nil {
 		return err
 	}
 	if r.conn == nil && r.cmd == nil {
 		return nil
 	}
-	if err = r.conn.Close(); err != nil {
-		return err
-	}
-	if err := r.cmd.Process.Kill(); err != nil {
-		return err
+	defer r.conn.Close()
+	if r.Alive() {
+		exited := make(chan bool, 1)
+		go func() {
+			for {
+				if r.Alive() {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					exited <- true
+					return
+				}
+			}
+		}()
+	
+		select {
+		case done := <-exited:
+			if done {
+				logger.Debugf(true, "Runner with PID:%d has exited", r.cmd.Process.Pid)
+				return nil
+			}
+		case <-time.After(config.PluginKillTimeout()):
+			logger.Warningf(true, "Killing runner with PID:%d forcefully", r.cmd.Process.Pid)
+			return r.cmd.Process.Kill()
+		}
 	}
 	return nil
 }
