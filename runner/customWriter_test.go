@@ -31,3 +31,32 @@ func TestCustomWriterShouldExtractPortNumberFromStdout(t *testing.T) {
 		t.Errorf("Timed out!! Failed to get port info.")
 	}
 }
+
+func TestCustomWriterShouldExtractPortNumberFromStdoutWithMultipleLines(t *testing.T) {
+	portChan := make(chan string)
+	var b bytes.Buffer
+	w := customWriter{
+		file: &b,
+		port: portChan,
+	}
+
+	go func() {
+		s := `{"logLevel": "debug", "message": "Loading step implemetations from spec0_3389569547211323752\step_impl dirs."}
+{"logLevel": "debug", "message": "Starting grpc server.."}
+{"logLevel": "info", "message": "Listening on port:50042"}`
+		n, err := w.Write([]byte(s))
+		if n <= 0 || err != nil {
+			t.Errorf("failed to write port information")
+		}
+	}()
+
+	select {
+	case port := <-portChan:
+		close(portChan)
+		if port != "50042" {
+			t.Errorf("Expected:%s\nGot     :%s", "50042", port)
+		}
+	case <-time.After(3 * time.Second):
+		t.Errorf("Timed out!! Failed to get port info.")
+	}
+}
