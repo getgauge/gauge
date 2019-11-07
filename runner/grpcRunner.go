@@ -273,6 +273,12 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 		Stdout: newCustomWriter(portChan, stdout, manifest.Language),
 	}
 	cmd, info, err := runRunnerCommand(manifest, "0", false, logWriter)
+	go func() {
+		err = cmd.Wait()
+		if err != nil {
+			logger.Errorf(true, "Error occured while waiting for runner process to finish.\nError : %s", err.Error())
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
