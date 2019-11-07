@@ -22,9 +22,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-
-	"github.com/getgauge/gauge/track"
-
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/spf13/cobra"
@@ -66,9 +63,8 @@ func printJSONVersion() {
 		Version          string        `json:"version"`
 		CommitHash       string        `json:"commitHash"`
 		Plugins          []*pluginJSON `json:"plugins"`
-		TelemetryMessage string        `json:"telemetry"`
 	}
-	gaugeVersion := versionJSON{version.FullVersion(), version.CommitHash, make([]*pluginJSON, 0), track.GaugeTelemetryMessage}
+	gaugeVersion := versionJSON{version.FullVersion(), version.CommitHash, make([]*pluginJSON, 0)}
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		fmt.Println("error:", err.Error())

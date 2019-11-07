@@ -342,8 +342,6 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writ
 	}
 	command := getOsSpecificCommand(r)
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
-	env = append(env, fmt.Sprintf("GAUGE_UNIQUE_INSTALLATION_ID=%s", config.UniqueID()))
-	env = append(env, fmt.Sprintf("GAUGE_TELEMETRY_ENABLED=%v", config.TelemetryEnabled()))
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, writer.Stdout, writer.Stderr, env)
 	return cmd, &r, err
 }
@@ -401,10 +399,10 @@ func (r *LanguageRunner) waitAndGetErrorMessage() {
 		r.mutex.Unlock()
 		if err != nil {
 			logger.Debugf(true, "Runner exited with error: %s", err)
-			r.errorChannel <- fmt.Errorf("Runner exited with error: %s\n", err.Error())
+			r.errorChannel <- fmt.Errorf("Runner exited with error: %s", err.Error())
 		}
 		if !pState.Success() {
-			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s).", pState.Pid(), pState.String())
+			r.errorChannel <- fmt.Errorf("Runner with pid %d quit unexpectedly(%s)", pState.Pid(), pState.String())
 		}
 	}()
 }

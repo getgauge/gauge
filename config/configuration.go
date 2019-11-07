@@ -18,9 +18,7 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -38,9 +36,6 @@ const (
 	runnerRequestTimeout    = "runner_request_timeout"
 	ideRequestTimeout       = "ide_request_timeout"
 	checkUpdates            = "check_updates"
-	telemetryEnabled        = "gauge_telemetry_enabled"
-	telemetryConsent        = "gauge_telemetry_action_recorded"
-	telemetryLoggingEnabled = "gauge_telemetry_log_enabled"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -111,44 +106,6 @@ func GaugeTemplatesUrl() string {
 	return getFromConfig(gaugeTemplatesURL)
 }
 
-// TelemetryEnabled determines if sending data to gauge telemetry engine is enabled
-func TelemetryEnabled() bool {
-	e := os.Getenv(strings.ToUpper(telemetryEnabled))
-	if e == "" {
-		e = getFromConfig(telemetryEnabled)
-	}
-	return convertToBool(e, telemetryEnabled, true)
-}
-
-// TelemetryLogEnabled determines if requests to gauge telemetry engine have to be logged
-func TelemetryLogEnabled() bool {
-	log := getFromConfig(telemetryLoggingEnabled)
-	return convertToBool(log, telemetryLoggingEnabled, false)
-}
-
-// TelemetryConsent determines if user has opted in/out of telemetry either via config or by setting
-// GAUGE_TELEMETRY_ENABLED environment variable
-func TelemetryConsent() bool {
-	e := os.Getenv(strings.ToUpper(telemetryEnabled))
-	if e != "" {
-		return true
-	}
-	consentVal := getFromConfig(telemetryConsent)
-	consent, err := strconv.ParseBool(strings.TrimSpace(consentVal))
-	if err != nil {
-		return false
-	}
-	return consent
-}
-
-// RecordTelemetryConsentSet records that user has opted in/out
-func RecordTelemetryConsentSet() {
-	err := Update(telemetryConsent, "true")
-	if err != nil {
-		APILog.Warningf("Unable to update configuration: %s", telemetryConsent)
-	}
-}
-
 // SetProjectRoot sets project root location in ENV.
 func SetProjectRoot(args []string) error {
 	if ProjectRoot != "" {
@@ -164,22 +121,6 @@ func SetProjectRoot(args []string) error {
 	}
 	ProjectRoot = root
 	return setCurrentProjectEnvVariable()
-}
-
-// UniqueID gets the unique installation ID.
-func UniqueID() string {
-	configDir, err := common.GetConfigurationDir()
-	if err != nil {
-		APILog.Warningf("Unable to read config dir, %s", err)
-		return ""
-	}
-	idFile := filepath.Join(configDir, "id")
-	s, err := ioutil.ReadFile(idFile)
-	if err != nil {
-		APILog.Warningf("Unable to read %s", idFile)
-		return ""
-	}
-	return string(s)
 }
 
 func setCurrentProjectEnvVariable() error {

@@ -25,13 +25,10 @@ import (
 
 func TestJSONFormatter(t *testing.T) {
 	want := []string{
-		"-------------------------------------------------------------------",
+		"------------------------------------------------------------------",
 		"Key                           	Value                              ",
 		"check_updates                 	true                               ",
 		"gauge_repository_url          	https://downloads.gauge.org/plugin ",
-		"gauge_telemetry_action_recorded	false                              ",
-		"gauge_telemetry_enabled       	true                               ",
-		"gauge_telemetry_log_enabled   	false                              ",
 		"gauge_templates_url           	https://templates.gauge.org        ",
 		"ide_request_timeout           	30000                              ",
 		"plugin_connection_timeout     	10000                              ",
@@ -48,7 +45,6 @@ func TestJSONFormatter(t *testing.T) {
 	f := &textFormatter{}
 	text, err := f.format(properties)
 
-	t.Log(text)
 	if err != nil {
 		t.Errorf("Expected error == nil when using text formatter for properties, got %s", err.Error())
 	}
