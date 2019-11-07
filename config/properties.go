@@ -116,9 +116,11 @@ func MergedProperties() (*properties, error) {
 		return p, nil
 	}
 	for k, v := range config {
-		err := p.set(k, v)
-		if err != nil {
-			return nil, err
+		if _, ok := p.p[k]; ok {
+			err := p.set(k, v)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	return p, nil
