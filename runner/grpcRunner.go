@@ -290,11 +290,12 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 	case <-time.After(config.RunnerConnectionTimeout()):
 		return nil, fmt.Errorf("Timed out connecting to %s", manifest.Language)
 	}
+	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port),
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*10)),
 		grpc.WithBlock())
-
+	logger.Debugf(true, "Successfully made the conneciton with runner with port: %s", port)
 	if err != nil {
 		return nil, err
 	}

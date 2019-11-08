@@ -1,8 +1,8 @@
 package runner
 
 import (
-	"encoding/json"
 	"io"
+	"regexp"
 	"strings"
 
 	"github.com/getgauge/gauge/logger"
@@ -15,20 +15,13 @@ type customWriter struct {
 	port chan string
 }
 
-func getLine(b []byte) string {
-	m := &logger.LogInfo{}
-	err := json.Unmarshal(b, m)
-	if err != nil {
-		return string(b)
-	}
-	return m.Message
-}
-
 func (w customWriter) Write(p []byte) (n int, err error) {
-	line := getLine(p)
+	line := string(p)
 	if strings.Contains(line, portPrefix) {
 		text := strings.Replace(line, "\r\n", "\n", -1)
-		w.port <- strings.TrimSuffix(strings.Split(text, portPrefix)[1], "\n")
+		re := regexp.MustCompile(portPrefix + "([0-9]+)")
+		f := re.FindStringSubmatch(text)
+		w.port <- f[1]
 		// return len(p), nil
 	}
 	return w.file.Write(p)
