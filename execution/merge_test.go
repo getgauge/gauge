@@ -140,7 +140,7 @@ func TestMergeResults(t *testing.T) {
 						TableRowIndex: 1,
 					},
 				},
-			}, IsTableDriven: true,
+			}, IsTableDriven: false,
 		},
 		ScenarioCount: 3, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
 	}
@@ -208,7 +208,7 @@ func TestMergeSkippedResults(t *testing.T) {
 						TableRowIndex: 1,
 					},
 				},
-			}, IsTableDriven: true,
+			}, IsTableDriven: false,
 		},
 		ScenarioCount: 3, ScenarioSkippedCount: 3, ScenarioFailedCount: 0, IsFailed: false, Skipped: true, ExecutionTime: int64(3),
 	}
@@ -300,5 +300,52 @@ func TestGetItems(t *testing.T) {
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestHasTableDrivenSpec(t *testing.T) {
+	type testcase struct {
+		results []*result.SpecResult
+		want    bool
+	}
+
+	cases := []testcase{
+		{
+			results: []*result.SpecResult{
+				{
+					ProtoSpec: &gm.ProtoSpec{
+						IsTableDriven: false,
+					},
+				},
+				{
+					ProtoSpec: &gm.ProtoSpec{
+						IsTableDriven: true,
+					},
+				},
+			},
+			want: true,
+		},
+		{
+			results: []*result.SpecResult{
+				{
+					ProtoSpec: &gm.ProtoSpec{
+						IsTableDriven: false,
+					},
+				},
+				{
+					ProtoSpec: &gm.ProtoSpec{
+						IsTableDriven: false,
+					},
+				},
+			},
+			want: false,
+		},
+	}
+
+	for _, c := range cases {
+		got := hasTableDrivenSpec(c.results)
+		if got != c.want {
+			t.Errorf("Expected hasTableDrivenSpec to be %t, got %t", c.want, got)
+		}
 	}
 }
