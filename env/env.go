@@ -53,6 +53,7 @@ const (
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
+	screenshotsDir                 = "screenshots_dir"
 )
 
 var envVars map[string]string
@@ -119,6 +120,9 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
+	defaultValue := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	addEnvVar(screenshotsDir, defaultValue)
+	os.MkdirAll(defaultValue, 0750)
 }
 
 func loadEnvDir(envName string) error {
