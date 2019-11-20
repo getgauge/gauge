@@ -87,7 +87,7 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookScreenshots(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -99,8 +99,8 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookScreenshots(t *testing.T) {
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyBeforeSuite()
 
-	beforeSuiteScreenshots := simpleExecution.suiteResult.PreHookScreenshots
-	expected := []string{"screenshot1", "screenshot2"}
+	beforeSuiteScreenshots := simpleExecution.suiteResult.PreHookScreenshotFiles
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(beforeSuiteScreenshots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(beforeSuiteScreenshots))
@@ -118,7 +118,7 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -130,8 +130,8 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyAfterSuite()
 
-	afterSuiteScreenshots := simpleExecution.suiteResult.PostHookScreenshots
-	expected := []string{"screenshot1", "screenshot2"}
+	afterSuiteScreenshots := simpleExecution.suiteResult.PostHookScreenshotFiles
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(afterSuiteScreenshots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(afterSuiteScreenshots))

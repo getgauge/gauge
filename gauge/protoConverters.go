@@ -184,8 +184,8 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		SpecsSkippedCount:   int32(suiteResult.SpecsSkippedCount),
 		PreHookMessages:     suiteResult.PreHookMessages,
 		PostHookMessages:    suiteResult.PostHookMessages,
-		PreHookScreenshots:  suiteResult.PreHookScreenshots,
-		PostHookScreenshots: suiteResult.PostHookScreenshots,
+		PreHookScreenshotFiles:  suiteResult.PreHookScreenshotFiles,
+		PostHookScreenshotFiles: suiteResult.PostHookScreenshotFiles,
 	}
 	return protoSuiteResult
 }

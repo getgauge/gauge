@@ -506,13 +506,13 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
 		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot3"), []byte("screenshot4")},
+				ScreenshotFiles:   []string{"screenshot3.png", "screenshot4.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -522,10 +522,10 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	se := newSpecExecutor(exampleSpec, mockRunner, mockHandler, errs, 0)
 	se.execute(true, false, true)
 
-	beforeSpecScreenshots := se.specResult.ProtoSpec.PreHookScreenshots
-	afterSpecScreenshots := se.specResult.ProtoSpec.PostHookScreenshots
-	expectedAfterSpecScreenshots := []string{"screenshot1", "screenshot2"}
-	expectedBeforeSpecScreenshots := []string{"screenshot3", "screenshot4"}
+	beforeSpecScreenshots := se.specResult.ProtoSpec.PreHookScreenshotFiles
+	afterSpecScreenshots := se.specResult.ProtoSpec.PostHookScreenshotFiles
+	expectedAfterSpecScreenshots := []string{"screenshot1.png", "screenshot2.png"}
+	expectedBeforeSpecScreenshots := []string{"screenshot3.png", "screenshot4.png"}
 
 	if len(beforeSpecScreenshots) != len(expectedBeforeSpecScreenshots) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(beforeSpecScreenshots))

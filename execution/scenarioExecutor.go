@@ -122,7 +122,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	e.pluginHandler.NotifyPlugins(message)
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PreHookMessages = res.Message
-	scenarioResult.ProtoScenario.PreHookScreenshots = res.Screenshots
+	scenarioResult.ProtoScenario.PreHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
@@ -136,7 +136,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PostHookMessages = res.Message
-	scenarioResult.ProtoScenario.PostHookScreenshots = res.Screenshots
+	scenarioResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)
