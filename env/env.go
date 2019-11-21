@@ -120,9 +120,12 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
-	defaultValue := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
-	addEnvVar(screenshotsDir, defaultValue)
-	os.MkdirAll(defaultValue, 0750)
+	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	addEnvVar(screenshotsDir, defaultScreenshotDir)
+	err := os.MkdirAll(defaultScreenshotDir, 0750)
+	if err != nil {
+		logger.Warningf(true, "Could not create screenshot dir at %s", err.Error())
+	}
 }
 
 func loadEnvDir(envName string) error {
