@@ -150,12 +150,12 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	properties, err1 := properties.Load(path)
+	gaugeProperties, err1 := properties.Load(path)
 	if err1 != nil {
 		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
 
-	for property, value := range properties {
+	for property, value := range gaugeProperties {
 		addEnvVar(property, value)
 	}
 

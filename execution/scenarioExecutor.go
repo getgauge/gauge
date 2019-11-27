@@ -106,14 +106,14 @@ func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 }
 
-func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
-	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
-	result.ProtoScenario.Skipped = true
-	var errors []string
+func setSkipInfoInResult(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
+	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
+	scenarioResult.ProtoScenario.Skipped = true
+	var errs []string
 	for _, err := range errMap.ScenarioErrs[scenario] {
-		errors = append(errors, err.Error())
+		errs = append(errs, err.Error())
 	}
-	result.ProtoScenario.SkipErrors = errors
+	scenarioResult.ProtoScenario.SkipErrors = errs
 }
 
 func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.ScenarioResult) {

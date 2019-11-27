@@ -46,11 +46,11 @@ func (specBuilder *specBuilder) addPrefix(prefix string, line string) string {
 }
 
 func (specBuilder *specBuilder) String() string {
-	var result string
+	var specResult string
 	for _, line := range specBuilder.lines {
-		result = fmt.Sprintf("%s%s", result, line)
+		specResult = fmt.Sprintf("%s%s", specResult, line)
 	}
-	return result
+	return specResult
 }
 
 func (specBuilder *specBuilder) specHeading(heading string) *specBuilder {
@@ -421,8 +421,7 @@ func TestExecuteShouldNotifyBeforeSpecEvent(t *testing.T) {
 		for {
 			e := <-ch
 			t.Log(e.Topic)
-			switch e.Topic {
-			case event.SpecStart:
+			if e.Topic == event.SpecStart {
 				eventRaised = true
 				wg.Done()
 			}
@@ -564,8 +563,7 @@ func TestExecuteShouldNotifyAfterSpecEvent(t *testing.T) {
 		for {
 			e := <-ch
 			t.Log(e.Topic)
-			switch e.Topic {
-			case event.SpecEnd:
+			if e.Topic == event.SpecEnd {
 				eventRaised = true
 				wg.Done()
 			}

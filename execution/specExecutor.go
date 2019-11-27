@@ -149,8 +149,8 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 		if err != nil {
 			return err
 		}
-		result := [][]result.Result{sceRes}
-		e.specResult.AddTableRelatedScenarioResult(result, index)
+		specResult := [][]result.Result{sceRes}
+		e.specResult.AddTableRelatedScenarioResult(specResult, index)
 	}
 	return nil
 }
@@ -385,16 +385,17 @@ func shouldExecuteForRow(i int) bool {
 }
 
 func getDataTableRows(tableRows string) (tableRowIndexes []int) {
-	if strings.TrimSpace(tableRows) == "" {
+	switch {
+	case strings.TrimSpace(tableRows) == "" :
 		return
-	} else if strings.Contains(tableRows, "-") {
+	case strings.Contains(tableRows, "-"):
 		indexes := strings.Split(tableRows, "-")
 		startRow, _ := strconv.Atoi(strings.TrimSpace(indexes[0]))
 		endRow, _ := strconv.Atoi(strings.TrimSpace(indexes[1]))
 		for i := startRow - 1; i < endRow; i++ {
 			tableRowIndexes = append(tableRowIndexes, i)
 		}
-	} else {
+	default:
 		indexes := strings.Split(tableRows, ",")
 		for _, i := range indexes {
 			rowNumber, _ := strconv.Atoi(strings.TrimSpace(i))

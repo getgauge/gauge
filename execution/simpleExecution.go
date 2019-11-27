@@ -197,6 +197,6 @@ func (e *simpleExecution) notifyExecutionStop() {
 	e.pluginHandler.GracefullyKillPlugins()
 }
 
-func handleHookFailure(result result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult)) {
-	f(result, execResult)
+func handleHookFailure(hookResult result.Result, execResult *gauge_messages.ProtoExecutionResult, f func(result.Result, *gauge_messages.ProtoExecutionResult)) {
+	f(hookResult, execResult)
 }
