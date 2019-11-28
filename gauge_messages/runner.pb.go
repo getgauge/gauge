@@ -8,6 +8,8 @@ import (
 	fmt "fmt"
 	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
+	codes "google.golang.org/grpc/codes"
+	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -460,6 +462,77 @@ type RunnerServer interface {
 	//
 	// Accepts a KillProcessRequest message and returns a Empty message.
 	KillProcess(context.Context, *KillProcessRequest) (*Empty, error)
+}
+
+// UnimplementedRunnerServer can be embedded to have forward compatible implementations.
+type UnimplementedRunnerServer struct {
+}
+
+func (*UnimplementedRunnerServer) ValidateStep(ctx context.Context, req *StepValidateRequest) (*StepValidateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateStep not implemented")
+}
+func (*UnimplementedRunnerServer) SuiteDataStoreInit(ctx context.Context, req *Empty) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SuiteDataStoreInit not implemented")
+}
+func (*UnimplementedRunnerServer) ExecutionStarting(ctx context.Context, req *ExecutionStartingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecutionStarting not implemented")
+}
+func (*UnimplementedRunnerServer) SpecDataStoreInit(ctx context.Context, req *Empty) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpecDataStoreInit not implemented")
+}
+func (*UnimplementedRunnerServer) SpecExecutionStarting(ctx context.Context, req *SpecExecutionStartingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpecExecutionStarting not implemented")
+}
+func (*UnimplementedRunnerServer) ScenarioDataStoreInit(ctx context.Context, req *Empty) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ScenarioDataStoreInit not implemented")
+}
+func (*UnimplementedRunnerServer) ScenarioExecutionStarting(ctx context.Context, req *ScenarioExecutionStartingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ScenarioExecutionStarting not implemented")
+}
+func (*UnimplementedRunnerServer) StepExecutionStarting(ctx context.Context, req *StepExecutionStartingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StepExecutionStarting not implemented")
+}
+func (*UnimplementedRunnerServer) ExecuteStep(ctx context.Context, req *ExecuteStepRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecuteStep not implemented")
+}
+func (*UnimplementedRunnerServer) StepExecutionEnding(ctx context.Context, req *StepExecutionEndingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StepExecutionEnding not implemented")
+}
+func (*UnimplementedRunnerServer) ScenarioExecutionEnding(ctx context.Context, req *ScenarioExecutionEndingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ScenarioExecutionEnding not implemented")
+}
+func (*UnimplementedRunnerServer) SpecExecutionEnding(ctx context.Context, req *SpecExecutionEndingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SpecExecutionEnding not implemented")
+}
+func (*UnimplementedRunnerServer) ExecutionEnding(ctx context.Context, req *ExecutionEndingRequest) (*ExecutionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExecutionEnding not implemented")
+}
+func (*UnimplementedRunnerServer) GetStepNames(ctx context.Context, req *StepNamesRequest) (*StepNamesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepNames not implemented")
+}
+func (*UnimplementedRunnerServer) CacheFile(ctx context.Context, req *CacheFileRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CacheFile not implemented")
+}
+func (*UnimplementedRunnerServer) GetStepPositions(ctx context.Context, req *StepPositionsRequest) (*StepPositionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepPositions not implemented")
+}
+func (*UnimplementedRunnerServer) GetImplementationFiles(ctx context.Context, req *Empty) (*ImplementationFileListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetImplementationFiles not implemented")
+}
+func (*UnimplementedRunnerServer) ImplementStub(ctx context.Context, req *StubImplementationCodeRequest) (*FileDiff, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ImplementStub not implemented")
+}
+func (*UnimplementedRunnerServer) GetStepName(ctx context.Context, req *StepNameRequest) (*StepNameResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStepName not implemented")
+}
+func (*UnimplementedRunnerServer) GetGlobPatterns(ctx context.Context, req *Empty) (*ImplementationFileGlobPatternResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGlobPatterns not implemented")
+}
+func (*UnimplementedRunnerServer) Refactor(ctx context.Context, req *RefactorRequest) (*RefactorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Refactor not implemented")
+}
+func (*UnimplementedRunnerServer) KillProcess(ctx context.Context, req *KillProcessRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method KillProcess not implemented")
 }
 
 func RegisterRunnerServer(s *grpc.Server, srv RunnerServer) {

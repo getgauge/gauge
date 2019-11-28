@@ -106,14 +106,14 @@ func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result
 	setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 }
 
-func setSkipInfoInResult(result *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
-	result.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
-	result.ProtoScenario.Skipped = true
-	var errors []string
+func setSkipInfoInResult(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
+	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
+	scenarioResult.ProtoScenario.Skipped = true
+	var errs []string
 	for _, err := range errMap.ScenarioErrs[scenario] {
-		errors = append(errors, err.Error())
+		errs = append(errs, err.Error())
 	}
-	result.ProtoScenario.SkipErrors = errors
+	scenarioResult.ProtoScenario.SkipErrors = errs
 }
 
 func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.ScenarioResult) {
@@ -122,7 +122,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	e.pluginHandler.NotifyPlugins(message)
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PreHookMessages = res.Message
-	scenarioResult.ProtoScenario.PreHookScreenshots = res.Screenshots
+	scenarioResult.ProtoScenario.PreHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
@@ -136,7 +136,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PostHookMessages = res.Message
-	scenarioResult.ProtoScenario.PostHookScreenshots = res.Screenshots
+	scenarioResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)

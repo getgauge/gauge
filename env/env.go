@@ -53,6 +53,7 @@ const (
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
+	screenshotsDir                 = "screenshots_dir"
 )
 
 var envVars map[string]string
@@ -119,6 +120,12 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
+	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	addEnvVar(screenshotsDir, defaultScreenshotDir)
+	err := os.MkdirAll(defaultScreenshotDir, 0750)
+	if err != nil {
+		logger.Warningf(true, "Could not create screenshot dir at %s", err.Error())
+	}
 }
 
 func loadEnvDir(envName string) error {
@@ -143,12 +150,12 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	properties, err1 := properties.Load(path)
+	gaugeProperties, err1 := properties.Load(path)
 	if err1 != nil {
 		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
 
-	for property, value := range properties {
+	for property, value := range gaugeProperties {
 		addEnvVar(property, value)
 	}
 

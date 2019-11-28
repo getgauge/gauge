@@ -42,8 +42,8 @@ type SuiteResult struct {
 	SpecsSkippedCount   int
 	PreHookMessages     []string
 	PostHookMessages    []string
-	PreHookScreenshots  [][]byte
-	PostHookScreenshots [][]byte
+	PreHookScreenshotFiles  []string
+	PostHookScreenshotFiles []string
 }
 
 // NewSuiteResult is a constructor for SuitResult
