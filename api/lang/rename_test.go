@@ -59,7 +59,7 @@ func TestRenameStep(t *testing.T) {
 	responses := map[gauge_messages.Message_MessageType]interface{}{}
 	responses[gauge_messages.Message_StepNameResponse] = &gauge_messages.StepNameResponse{}
 	responses[gauge_messages.Message_RefactorResponse] = &gauge_messages.RefactorResponse{}
-	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, Client: &mockLspClient{responses: responses}}
+	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, AuthoringClient: &mockAuthoringClient{responses: responses}}
 
 	renameParams := lsp.RenameParams{
 		NewName: `* Step text with <param>`,
@@ -131,7 +131,7 @@ func TestRenameConceptStep(t *testing.T) {
 	responses := map[gauge_messages.Message_MessageType]interface{}{}
 	responses[gauge_messages.Message_StepNameResponse] = &gauge_messages.StepNameResponse{}
 	responses[gauge_messages.Message_RefactorResponse] = &gauge_messages.RefactorResponse{}
-	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, Client: &mockLspClient{responses: responses}}
+	lRunner.runner = &runner.GrpcRunner{Timeout: time.Second * 30, AuthoringClient: &mockAuthoringClient{responses: responses}}
 
 	renameParams := lsp.RenameParams{
 		NewName: `* concpet heading with "params"`,

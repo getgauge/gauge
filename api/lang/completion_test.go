@@ -156,7 +156,7 @@ func TestCompletion(t *testing.T) {
 	p := json.RawMessage(b)
 	responses := map[gm.Message_MessageType]interface{}{}
 	responses[gm.Message_StepNamesResponse] = &gm.StepNamesResponse{Steps: []string{}}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{AuthoringClient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	got, err := completion(&jsonrpc2.Request{Params: &p})
 

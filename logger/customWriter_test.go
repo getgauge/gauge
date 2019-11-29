@@ -1,4 +1,4 @@
-package runner
+package logger
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ func TestCustomWriterShouldExtractPortNumberFromStdoutWithMultipleLines(t *testi
 	}
 
 	go func() {
-		s := `{"logLevel": "debug", "message": "Loading step implemetations from spec0_3389569547211323752\step_impl dirs."}
+		s := `{"logLevel": "debug", "message": "Loading step implementations from spec0_3389569547211323752\step_impl dirs."}
 {"logLevel": "debug", "message": "Starting grpc server.."}
 {"logLevel": "info", "message": "Listening on port:50042"}`
 		n, err := w.Write([]byte(s))

@@ -1,11 +1,9 @@
-package runner
+package logger
 
 import (
 	"io"
 	"regexp"
 	"strings"
-
-	"github.com/getgauge/gauge/logger"
 )
 
 const portPrefix = "Listening on port:"
@@ -22,15 +20,15 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 		re := regexp.MustCompile(portPrefix + "([0-9]+)")
 		f := re.FindStringSubmatch(text)
 		w.port <- f[1]
-		// return len(p), nil
+		return len(p), nil
 	}
 	return w.file.Write(p)
 }
 
-func newCustomWriter(portChan chan string, outFile io.Writer, id string) customWriter {
+func NewCustomWriter(portChan chan string, outFile io.Writer, id string) customWriter {
 	return customWriter{
 		port: portChan,
-		file: logger.Writer{
+		file: Writer{
 			File:                outFile,
 			LoggerID:            id,
 			ShouldWriteToStdout: true,

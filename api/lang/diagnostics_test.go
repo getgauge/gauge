@@ -47,7 +47,7 @@ func setup() {
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 	responses := map[gauge_messages.Message_MessageType]interface{}{}
 	responses[gauge_messages.Message_StepValidateResponse] = &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{ValidatorCLient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}

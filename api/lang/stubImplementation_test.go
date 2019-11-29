@@ -36,41 +36,42 @@ import (
 	"google.golang.org/grpc"
 )
 
-type mockLspClient struct {
+type mockAuthoringClient struct {
 	responses map[gm.Message_MessageType]interface{}
 	err       error
 }
 
-func (r *mockLspClient) GetStepNames(ctx context.Context, in *gm.StepNamesRequest, opts ...grpc.CallOption) (*gm.StepNamesResponse, error) {
+func (r *mockAuthoringClient) GetStepNames(ctx context.Context, in *gm.StepNamesRequest, opts ...grpc.CallOption) (*gm.StepNamesResponse, error) {
 	return r.responses[gm.Message_StepNamesResponse].(*gm.StepNamesResponse), r.err
 }
-func (r *mockLspClient) CacheFile(ctx context.Context, in *gm.CacheFileRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+func (r *mockAuthoringClient) CacheFile(ctx context.Context, in *gm.CacheFileRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
 	return &gm.Empty{}, r.err
 }
-func (r *mockLspClient) GetStepPositions(ctx context.Context, in *gm.StepPositionsRequest, opts ...grpc.CallOption) (*gm.StepPositionsResponse, error) {
+func (r *mockAuthoringClient) GetStepPositions(ctx context.Context, in *gm.StepPositionsRequest, opts ...grpc.CallOption) (*gm.StepPositionsResponse, error) {
 	return r.responses[gm.Message_StepPositionsResponse].(*gm.StepPositionsResponse), r.err
 }
-func (r *mockLspClient) GetImplementationFiles(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileListResponse, error) {
+func (r *mockAuthoringClient) GetImplementationFiles(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileListResponse, error) {
 	return r.responses[gm.Message_ImplementationFileListResponse].(*gm.ImplementationFileListResponse), r.err
 }
-func (r *mockLspClient) ImplementStub(ctx context.Context, in *gm.StubImplementationCodeRequest, opts ...grpc.CallOption) (*gm.FileDiff, error) {
+func (r *mockAuthoringClient) ImplementStub(ctx context.Context, in *gm.StubImplementationCodeRequest, opts ...grpc.CallOption) (*gm.FileDiff, error) {
 	return r.responses[gm.Message_FileDiff].(*gm.FileDiff), r.err
 }
-func (r *mockLspClient) ValidateStep(ctx context.Context, in *gm.StepValidateRequest, opts ...grpc.CallOption) (*gm.StepValidateResponse, error) {
+
+func (r *mockAuthoringClient) ValidateStep(ctx context.Context, in *gm.StepValidateRequest, opts ...grpc.CallOption) (*gm.StepValidateResponse, error) {
 	return r.responses[gm.Message_StepValidateResponse].(*gm.StepValidateResponse), r.err
 }
-func (r *mockLspClient) Refactor(ctx context.Context, in *gm.RefactorRequest, opts ...grpc.CallOption) (*gm.RefactorResponse, error) {
+func (r *mockAuthoringClient) Refactor(ctx context.Context, in *gm.RefactorRequest, opts ...grpc.CallOption) (*gm.RefactorResponse, error) {
 	return r.responses[gm.Message_RefactorResponse].(*gm.RefactorResponse), r.err
 }
-func (r *mockLspClient) GetStepName(ctx context.Context, in *gm.StepNameRequest, opts ...grpc.CallOption) (*gm.StepNameResponse, error) {
+func (r *mockAuthoringClient) GetStepName(ctx context.Context, in *gm.StepNameRequest, opts ...grpc.CallOption) (*gm.StepNameResponse, error) {
 	return r.responses[gm.Message_StepNameResponse].(*gm.StepNameResponse), r.err
 }
 
-func (r *mockLspClient) GetGlobPatterns(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileGlobPatternResponse, error) {
+func (r *mockAuthoringClient) GetGlobPatterns(ctx context.Context, in *gm.Empty, opts ...grpc.CallOption) (*gm.ImplementationFileGlobPatternResponse, error) {
 	return r.responses[gm.Message_ImplementationFileGlobPatternResponse].(*gm.ImplementationFileGlobPatternResponse), r.err
 }
 
-func (r *mockLspClient) KillProcess(ctx context.Context, in *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+func (r *mockAuthoringClient) KillProcess(ctx context.Context, in *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
 	return nil, nil
 }
 
@@ -86,7 +87,7 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	responses[gm.Message_ImplementationFileListResponse] = &gm.ImplementationFileListResponse{
 		ImplementationFilePaths: []string{"file"},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{AuthoringClient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
 	if err != nil {
@@ -113,7 +114,7 @@ func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t 
 		ImplementationFilePaths: nil,
 	}
 
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{AuthoringClient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	implFiles, err := getImplFiles(&jsonrpc2.Request{Params: &p})
 
@@ -208,7 +209,7 @@ func TestPutStubImplementationShouldReturnFileDiff(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{AuthoringClient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	stubImplResponse, err := putStubImpl(&jsonrpc2.Request{Params: &p})
 
@@ -303,7 +304,7 @@ func TestGenerateConceptWithParam(t *testing.T) {
 	}
 }
 
-func TestGenerateConceptInExisitingFile(t *testing.T) {
+func TestGenerateConceptInExistingFile(t *testing.T) {
 	cwd, _ := os.Getwd()
 	testData := filepath.Join(cwd, "_testdata")
 	cptFile := filepath.Join(testData, "some.cpt")

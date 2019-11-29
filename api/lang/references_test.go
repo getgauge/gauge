@@ -83,7 +83,7 @@ func TestStepValueAtShouldGive(t *testing.T) {
 			},
 		},
 	}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{AuthoringClient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	stepValue, err := stepValueAt(&jsonrpc2.Request{Params: &p})
 
