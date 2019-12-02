@@ -27,6 +27,7 @@ type pluginCapability string
 
 const (
 	streamResultCapability pluginCapability = "stream_result"
+	gRPCSupportCapability  pluginCapability = "grpc_support"
 )
 
 type pluginDescriptor struct {

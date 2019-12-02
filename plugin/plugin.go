@@ -18,6 +18,7 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -39,6 +40,7 @@ import (
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 type pluginScope string
@@ -50,11 +52,14 @@ const (
 )
 
 type plugin struct {
-	mutex      *sync.Mutex
-	connection net.Conn
-	pluginCmd  *exec.Cmd
-	descriptor *pluginDescriptor
-	killTimer  *time.Timer
+	mutex             *sync.Mutex
+	connection        net.Conn
+	grpcConn          *grpc.ClientConn
+	grpcClient        gauge_messages.ResultClient
+	grpcProcessClient gauge_messages.ProcessClient
+	pluginCmd         *exec.Cmd
+	descriptor        *pluginDescriptor
+	killTimer         *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -73,8 +78,48 @@ func (p *plugin) rejuvenate() error {
 	return nil
 }
 
+func (p *plugin) killGrpcProcess() error {
+	m, err := p.grpcProcessClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	if m == nil || err != nil {
+		return err
+	}
+	if p.grpcConn == nil && p.pluginCmd == nil {
+		return nil
+	}
+	defer p.grpcConn.Close()
+
+	if isProcessRunning(p) {
+		exited := make(chan bool, 1)
+		go func() {
+			for {
+				if isProcessRunning(p) {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					exited <- true
+					return
+				}
+			}
+		}()
+
+		select {
+		case done := <-exited:
+			if done {
+				logger.Debugf(true, "Runner with PID:%d has exited", p.pluginCmd.Process.Pid)
+				return nil
+			}
+		case <-time.After(config.PluginKillTimeout()):
+			logger.Warningf(true, "Killing runner with PID:%d forcefully", p.pluginCmd.Process.Pid)
+			return p.pluginCmd.Process.Kill()
+		}
+	}
+	return nil
+}
+
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
+	if p.grpcConn != nil {
+		return p.killGrpcProcess()
+	}
 	if isProcessRunning(p) {
 		defer p.connection.Close()
 		p.killTimer = time.NewTimer(config.PluginKillTimeout())
@@ -112,6 +157,7 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 	return nil
 }
 
+// IsPluginInstalled checks if given plugin with specific version is installed or not.
 func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	pluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
@@ -142,6 +188,7 @@ func getPluginJSONPath(pluginName, pluginVersion string) (string, error) {
 	return filepath.Join(pluginInstallDir, common.PluginJSONFile), nil
 }
 
+// GetPluginDescriptor return the information about the plugin including name, id, commands to start etc.
 func GetPluginDescriptor(pluginID, pluginVersion string) (*pluginDescriptor, error) {
 	pluginJSON, err := getPluginJSONPath(pluginID, pluginVersion)
 	if err != nil {
@@ -177,7 +224,56 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	if len(command) == 0 {
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)
 	}
+	if pd.hasCapability(gRPCSupportCapability) {
+		return startGRPCPlugin(pd, command)
+	}
+	return legacyPlugin(pd, command)
+}
 
+func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
+	portChan := make(chan string)
+	writer := &logger.LogWriter{
+		Stderr: logger.NewCustomWriter(portChan, os.Stderr, pd.ID),
+		Stdout: logger.NewCustomWriter(portChan, os.Stdout, pd.ID),
+	}
+	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
+	go func() {
+		err = cmd.Wait()
+		if err != nil {
+			logger.Errorf(true, "Error occurred while waiting for plugin process to finish.\nError : %s", err.Error())
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+
+	var port string
+	select {
+	case port = <-portChan:
+		close(portChan)
+	case <-time.After(config.PluginConnectionTimeout()):
+		return nil, fmt.Errorf("Timed out connecting to %s", pd.ID)
+	}
+	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024*15), grpc.MaxCallRecvMsgSize(1024*1024*1024*15)),
+		grpc.WithBlock())
+	plugin := &plugin{
+		pluginCmd:         cmd,
+		descriptor:        pd,
+		grpcConn:          conn,
+		grpcClient:        gauge_messages.NewResultClient(conn),
+		grpcProcessClient: gauge_messages.NewProcessClient(conn),
+	}
+	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
+	if err != nil {
+		return nil, err
+	}
+	return plugin, nil
+}
+
+func legacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	writer := logger.NewLogWriter(pd.ID, true, 0)
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 
@@ -262,6 +358,10 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
+			if plugin.grpcConn != nil {
+				handler.addPlugin(pluginID, plugin)
+				continue
+			}
 			pluginConnection, err := gaugeConnectionHandler.AcceptConnection(config.PluginConnectionTimeout(), make(chan error))
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. Failed to connect to plugin. %s", pd.Name, pd.Version, err.Error()))
@@ -301,13 +401,26 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
 	p, err := StartPlugin(pd, docScope)
 	if err != nil {
-		logger.Fatalf(true, "Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
+		logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
 	}
 	for isProcessRunning(p) {
 	}
 }
 
+func (p *plugin) invokeService(m *gauge_messages.Message) error {
+	switch m.GetMessageType() {
+	case gauge_messages.Message_SuiteExecutionResult:
+		_, err := p.grpcClient.NotifySuiteResult(context.Background(), m.GetSuiteExecutionResult())
+		return err
+	default:
+		return nil
+	}
+}
+
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
+	if p.grpcClient != nil {
+		return p.invokeService(message)
+	}
 	messageID := common.GetUniqueID()
 	message.MessageId = messageID
 	messageBytes, err := proto.Marshal(message)
