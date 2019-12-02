@@ -271,13 +271,13 @@ func (r *GrpcRunner) Pid() int {
 }
 
 // ConnectToGrpcRunner makes a connection with grpc server
-func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
+func ConnectToGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
 	portChan := make(chan string)
 	logWriter := &logger.LogWriter{
-		Stderr: logger.NewCustomWriter(portChan, stderr, manifest.Language),
-		Stdout: logger.NewCustomWriter(portChan, stdout, manifest.Language),
+		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
+		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language),
 	}
-	cmd, info, err := runRunnerCommand(manifest, "0", false, logWriter)
+	cmd, info, err := runRunnerCommand(m, "0", false, logWriter)
 	go func() {
 		err = cmd.Wait()
 		if err != nil {
@@ -293,7 +293,7 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 	case port = <-portChan:
 		close(portChan)
 	case <-time.After(config.RunnerConnectionTimeout()):
-		return nil, fmt.Errorf("Timed out connecting to %s", manifest.Language)
+		return nil, fmt.Errorf("Timed out connecting to %s", m.Language)
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port),
