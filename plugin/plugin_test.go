@@ -164,8 +164,8 @@ func TestGetPluginsWithoutScope(t *testing.T) {
 func TestSendMessageShouldUseGRPCConnectionIfAvailable(t *testing.T) {
 	c := &mockResultClient{}
 	p := &plugin{
-		grpcConn:   &grpc.ClientConn{},
-		grpcClient: c,
+		gRPCConn:     &grpc.ClientConn{},
+		ResultClient: c,
 	}
 
 	e := p.sendMessage(&gm.Message{MessageType: gm.Message_SuiteExecutionResult, SuiteExecutionResult: &gm.SuiteExecutionResult{}})

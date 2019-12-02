@@ -52,14 +52,14 @@ const (
 )
 
 type plugin struct {
-	mutex             *sync.Mutex
-	connection        net.Conn
-	grpcConn          *grpc.ClientConn
-	grpcClient        gauge_messages.ResultClient
-	grpcProcessClient gauge_messages.ProcessClient
-	pluginCmd         *exec.Cmd
-	descriptor        *pluginDescriptor
-	killTimer         *time.Timer
+	mutex         *sync.Mutex
+	connection    net.Conn
+	gRPCConn      *grpc.ClientConn
+	ResultClient  gauge_messages.ResultClient
+	ProcessClient gauge_messages.ProcessClient
+	pluginCmd     *exec.Cmd
+	descriptor    *pluginDescriptor
+	killTimer     *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -70,14 +70,14 @@ func isProcessRunning(p *plugin) bool {
 }
 
 func (p *plugin) killGrpcProcess() error {
-	m, err := p.grpcProcessClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	m, err := p.ProcessClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
 	if m == nil || err != nil {
 		return err
 	}
-	if p.grpcConn == nil && p.pluginCmd == nil {
+	if p.gRPCConn == nil && p.pluginCmd == nil {
 		return nil
 	}
-	defer p.grpcConn.Close()
+	defer p.gRPCConn.Close()
 
 	if isProcessRunning(p) {
 		exited := make(chan bool, 1)
@@ -108,7 +108,7 @@ func (p *plugin) killGrpcProcess() error {
 
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	if p.grpcConn != nil {
+	if p.gRPCConn != nil {
 		return p.killGrpcProcess()
 	}
 	if isProcessRunning(p) {
@@ -243,19 +243,19 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	case port = <-portChan:
 		close(portChan)
 	case <-time.After(config.PluginConnectionTimeout()):
-		return nil, fmt.Errorf("Timed out connecting to %s", pd.ID)
+		return nil, fmt.Errorf("timed out connecting to %s", pd.ID)
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
+	gRPCConn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024*15), grpc.MaxCallRecvMsgSize(1024*1024*1024*15)),
 		grpc.WithBlock())
 	plugin := &plugin{
-		pluginCmd:         cmd,
-		descriptor:        pd,
-		grpcConn:          conn,
-		grpcClient:        gauge_messages.NewResultClient(conn),
-		grpcProcessClient: gauge_messages.NewProcessClient(conn),
+		pluginCmd:     cmd,
+		descriptor:    pd,
+		gRPCConn:      gRPCConn,
+		ResultClient:  gauge_messages.NewResultClient(gRPCConn),
+		ProcessClient: gauge_messages.NewProcessClient(gRPCConn),
 	}
 	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
 	if err != nil {
@@ -282,9 +282,9 @@ func startLegacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) 
 	return plugin, nil
 }
 
-func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
+func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, m *manifest.Manifest, pluginEnvVars map[string]string) error {
 	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = string(action)
-	pluginEnvVars["test_language"] = manifest.Language
+	pluginEnvVars["test_language"] = m.Language
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
 		return err
 	}
@@ -300,8 +300,8 @@ func setEnvironmentProperties(properties map[string]string) error {
 	return nil
 }
 
-func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bool {
-	for _, pluginID := range manifest.Plugins {
+func IsPluginAdded(m *manifest.Manifest, descriptor *pluginDescriptor) bool {
+	for _, pluginID := range m.Plugins {
 		if pluginID == descriptor.ID {
 			return true
 		}
@@ -309,12 +309,12 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
+func startPluginsForExecution(m *manifest.Manifest) (Handler, []string) {
 	var warnings []string
 	handler := &GaugePlugins{}
 	envProperties := make(map[string]string)
 
-	for _, pluginID := range manifest.Plugins {
+	for _, pluginID := range m.Plugins {
 		pd, err := GetPluginDescriptor(pluginID, "")
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Unable to start plugin %s. %s. To install, run `gauge install %s`.", pluginID, err.Error(), pluginID))
@@ -338,7 +338,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				continue
 			}
 			envProperties["plugin_kill_timeout"] = prop["plugin_kill_timeout"]
-			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
+			err = SetEnvForPlugin(executionScope, pd, m, envProperties)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
@@ -349,7 +349,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
 			}
-			if plugin.grpcConn != nil {
+			if plugin.gRPCConn != nil {
 				handler.addPlugin(pluginID, plugin)
 				continue
 			}
@@ -401,7 +401,7 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 func (p *plugin) invokeService(m *gauge_messages.Message) error {
 	switch m.GetMessageType() {
 	case gauge_messages.Message_SuiteExecutionResult:
-		_, err := p.grpcClient.NotifySuiteResult(context.Background(), m.GetSuiteExecutionResult())
+		_, err := p.ResultClient.NotifySuiteResult(context.Background(), m.GetSuiteExecutionResult())
 		return err
 	default:
 		return nil
@@ -409,7 +409,7 @@ func (p *plugin) invokeService(m *gauge_messages.Message) error {
 }
 
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
-	if p.grpcClient != nil {
+	if p.gRPCConn != nil {
 		return p.invokeService(message)
 	}
 	messageID := common.GetUniqueID()
@@ -425,8 +425,8 @@ func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func StartPlugins(manifest *manifest.Manifest) Handler {
-	pluginHandler, warnings := startPluginsForExecution(manifest)
+func StartPlugins(m *manifest.Manifest) Handler {
+	pluginHandler, warnings := startPluginsForExecution(m)
 	logger.HandleWarningMessages(true, warnings)
 	return pluginHandler
 }
@@ -444,14 +444,14 @@ func PluginsWithoutScope() (infos []pluginInfo.PluginInfo) {
 }
 
 // GetInstallDir returns the install directory of given plugin and a given version.
-func GetInstallDir(pluginName, version string) (string, error) {
+func GetInstallDir(pluginName, v string) (string, error) {
 	allPluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
 		return "", err
 	}
 	pluginDir := filepath.Join(allPluginsInstallDir, pluginName)
-	if version != "" {
-		pluginDir = filepath.Join(pluginDir, version)
+	if v != "" {
+		pluginDir = filepath.Join(pluginDir, v)
 	} else {
 		latestPlugin, err := pluginInfo.GetLatestInstalledPlugin(pluginDir)
 		if err != nil {
