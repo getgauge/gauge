@@ -69,15 +69,6 @@ func isProcessRunning(p *plugin) bool {
 	return ps == nil || !ps.Exited()
 }
 
-func (p *plugin) rejuvenate() error {
-	if p.killTimer == nil {
-		return fmt.Errorf("timer is uninitialized. Perhaps kill is not yet invoked")
-	}
-	logger.Debugf(true, "Extending the plugin_kill_timeout for %s", p.descriptor.ID)
-	p.killTimer.Reset(config.PluginKillTimeout())
-	return nil
-}
-
 func (p *plugin) killGrpcProcess() error {
 	m, err := p.grpcProcessClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
 	if m == nil || err != nil {
@@ -227,7 +218,7 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	if pd.hasCapability(gRPCSupportCapability) {
 		return startGRPCPlugin(pd, command)
 	}
-	return legacyPlugin(pd, command)
+	return startLegacyPlugin(pd, command)
 }
 
 func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
@@ -273,7 +264,7 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	return plugin, nil
 }
 
-func legacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
+func startLegacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	writer := logger.NewLogWriter(pd.ID, true, 0)
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 
@@ -335,7 +326,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			continue
 		}
 		if pd.hasScope(executionScope) {
-			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, &keepAliveHandler{ph: handler})
+			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
 			if err != nil {
 				warnings = append(warnings, err.Error())
 				continue
