@@ -46,6 +46,7 @@ type Step struct {
 	Items          []Item
 	PreComments    []*Comment
 	Suffix         string
+	LineSpanEnd    int
 }
 
 type StepDiff struct {

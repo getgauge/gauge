@@ -78,7 +78,7 @@ Scenario Heading
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{Line: 0, Character: 0},
-				End:   lsp.Position{Line: 0, Character: 21},
+				End:   lsp.Position{Line: 1, Character: 21},
 			},
 			Message:  "Spec should have atleast one scenario",
 			Severity: 1,
@@ -86,7 +86,7 @@ Scenario Heading
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{Line: 3, Character: 0},
-				End:   lsp.Position{Line: 3, Character: 16},
+				End:   lsp.Position{Line: 4, Character: 16},
 			},
 			Message:  "Multiple spec headings found in same file",
 			Severity: 1,
