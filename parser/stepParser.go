@@ -231,7 +231,8 @@ func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string)
 }
 
 func createStepArg(argValue string, typeOfArg string, token *Token, lookup *gauge.ArgLookup, fileName string) (*gauge.StepArg, *ParseResult) {
-	if typeOfArg == "special" {
+	switch typeOfArg {
+	case "special":
 		resolvedArgValue, err := newSpecialTypeResolver().resolve(argValue)
 		if err != nil {
 			switch err.(type) {
@@ -242,9 +243,9 @@ func createStepArg(argValue string, typeOfArg string, token *Token, lookup *gaug
 			}
 		}
 		return resolvedArgValue, nil
-	} else if typeOfArg == "static" {
+	case "static":
 		return &gauge.StepArg{ArgType: gauge.Static, Value: argValue}, nil
-	} else {
+	default:
 		return validateDynamicArg(argValue, token, lookup, fileName)
 	}
 }

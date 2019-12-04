@@ -256,14 +256,14 @@ func AddConcept(concepts []*gauge.Step, file string, conceptDictionary *gauge.Co
 				SpanEnd:  conceptStep.LineSpanEnd,
 				Message:  "Duplicate concept definition found",
 				LineText: conceptStep.LineText,
-			})
-			parseErrors = append(parseErrors, ParseError{
-				FileName: dupConcept.FileName,
-				LineNo:   dupConcept.ConceptStep.LineNo,
-				SpanEnd:  conceptStep.LineSpanEnd,
-				Message:  "Duplicate concept definition found",
-				LineText: dupConcept.ConceptStep.LineText,
-			})
+			},
+				ParseError{
+					FileName: dupConcept.FileName,
+					LineNo:   dupConcept.ConceptStep.LineNo,
+					SpanEnd:  conceptStep.LineSpanEnd,
+					Message:  "Duplicate concept definition found",
+					LineText: dupConcept.ConceptStep.LineText,
+				})
 		}
 		conceptDictionary.ConceptsMap[conceptStep.Value] = &gauge.Concept{ConceptStep: conceptStep, FileName: file}
 		if err := conceptDictionary.ReplaceNestedConceptSteps(conceptStep); err != nil {

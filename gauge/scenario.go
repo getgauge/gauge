@@ -81,7 +81,7 @@ func (scenario *Scenario) InSpan(lineNumber int) bool {
 	return scenario.Span.isInRange(lineNumber)
 }
 
-func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) ([]*StepDiff, bool) {
+func (scenario *Scenario) renameSteps(oldStep *Step, newStep *Step, orderMap map[int]int) ([]*StepDiff, bool) {
 	isRefactored := false
 	diffs := []*StepDiff{}
 	isConcept := false

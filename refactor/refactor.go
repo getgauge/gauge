@@ -225,7 +225,7 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Spec
 	conceptsRefactored := make(map[string][]*gauge.StepDiff)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
-		diffs, isRefactored := spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		diffs, isRefactored := spec.RenameSteps(agent.oldStep, agent.newStep, orderMap)
 		if isRefactored {
 			specsRefactored[spec] = diffs
 		}
@@ -235,7 +235,7 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Spec
 		isRefactored := false
 		for _, item := range concept.ConceptStep.Items {
 			if item.Kind() == gauge.StepKind {
-				diff, isRefactored := item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept)
+				diff, isRefactored := item.(*gauge.Step).Rename(agent.oldStep, agent.newStep, isRefactored, orderMap, &isConcept)
 				if isRefactored {
 					conceptsRefactored[concept.FileName] = append(conceptsRefactored[concept.FileName], diff)
 				}
