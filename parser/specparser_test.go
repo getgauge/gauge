@@ -666,7 +666,7 @@ func (s *MySuite) TestParseErrorWhenCouldNotResolveExternalDataTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: gauge.CommentKind, Value: "Comment before data table", LineNo: 2},
-		&Token{Kind: gauge.DataTableKind, Value: "table: foo", LineNo: 3, LineText: "table: foo"},
+		&Token{Kind: gauge.DataTableKind, Value: "table: foo", LineNo: 3, Lines: []string{"table: foo"}},
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
 		&Token{Kind: gauge.StepKind, Value: "Step", LineNo: 5},
 	}
@@ -722,7 +722,7 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 	tokens := []*Token{
 		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 3, LineText: "*Step with a <foo>"},
+		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 3, Lines: []string{"*Step with a <foo>"}},
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
@@ -739,7 +739,7 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 		&Token{Kind: gauge.TableHeader, Args: []string{"id, name"}, LineNo: 2},
 		&Token{Kind: gauge.TableRow, Args: []string{"123, hello"}, LineNo: 3},
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 5, LineText: "*Step with a <foo>"},
+		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 5, Lines: []string{"*Step with a <foo>"}},
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
@@ -757,7 +757,7 @@ func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
 		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
 		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 2},
 		&Token{Kind: gauge.TableRow, Args: []string{"123", "hello"}, LineNo: 3},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"id"}, LineNo: 5, LineText: "*Step with a <id>"},
+		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"id"}, LineNo: 5, Lines: []string{"*Step with a <id>"}},
 		&Token{Kind: gauge.StepKind, Value: "Step"},
 	}
 
@@ -1259,7 +1259,7 @@ Scenario Heading
 }
 
 func (s *MySuite) TestExtractStepArgsFromToken(c *C) {
-	token := &Token{Kind: gauge.StepKind, LineText: `my step with "Static" and <Dynamic> params`, Value: `my step with {static} and {dynamic} params`, Args: []string{"Static", "Dynamic"}}
+	token := &Token{Kind: gauge.StepKind, Lines: []string{`my step with "Static" and <Dynamic> params`}, Value: `my step with {static} and {dynamic} params`, Args: []string{"Static", "Dynamic"}}
 
 	args, err := ExtractStepArgsFromToken(token)
 	if err != nil {

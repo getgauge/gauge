@@ -333,6 +333,7 @@ func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 type Heading struct {
 	Value       string
 	LineNo      int
+	SpanEnd     int
 	HeadingType HeadingType
 }
 

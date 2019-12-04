@@ -214,7 +214,7 @@ func (s *MySuite) TestParseSpecTags(c *C) {
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
-	c.Assert(tokens[1].LineText, Equals, "tags: tag1,tag2")
+	c.Assert(tokens[1].LineText(), Equals, "tags: tag1,tag2")
 	c.Assert(tokens[1].Value, Equals, "tag1,tag2")
 }
 
@@ -231,7 +231,7 @@ func (s *MySuite) TestParseSpecTagsWithSpace(c *C) {
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
-	c.Assert(tokens[1].LineText, Equals, " tags :tag1,tag2")
+	c.Assert(tokens[1].LineText(), Equals, " tags :tag1,tag2")
 	c.Assert(tokens[1].Value, Equals, "tag1,tag2")
 }
 
@@ -247,7 +247,7 @@ func (s *MySuite) TestParseEmptyTags(c *C) {
 	c.Assert(len(tokens[1].Args), Equals, 2)
 	c.Assert(tokens[1].Args[0], Equals, "tag1")
 	c.Assert(tokens[1].Args[1], Equals, "tag2")
-	c.Assert(tokens[1].LineText, Equals, "tags: tag1,,tag2,")
+	c.Assert(tokens[1].LineText(), Equals, "tags: tag1,,tag2,")
 	c.Assert(tokens[1].Value, Equals, "tag1,,tag2,")
 }
 
@@ -264,7 +264,7 @@ func (s *MySuite) TestParseScenarioTags(c *C) {
 	c.Assert(len(tokens[2].Args), Equals, 2)
 	c.Assert(tokens[2].Args[0], Equals, "tag1")
 	c.Assert(tokens[2].Args[1], Equals, "tag2")
-	c.Assert(tokens[2].LineText, Equals, "tags: tag1,tag2")
+	c.Assert(tokens[2].LineText(), Equals, "tags: tag1,tag2")
 	c.Assert(tokens[2].Value, Equals, "tag1,tag2")
 }
 
@@ -280,10 +280,10 @@ func (s *MySuite) TestParseScenarioWithTagsInMultipleLines(c *C) {
 	c.Assert(tokens[2].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[2].Args), Equals, 1)
 	c.Assert(tokens[2].Args[0], Equals, "tag1")
-	c.Assert(tokens[2].LineText, Equals, "tags: tag1,")
+	c.Assert(tokens[2].LineText(), Equals, "tags: tag1,")
 	c.Assert(tokens[2].Value, Equals, "tag1,")
 	c.Assert(tokens[3].Args[0], Equals, "tag2")
-	c.Assert(tokens[3].LineText, Equals, "tag2")
+	c.Assert(tokens[3].LineText(), Equals, "tag2")
 	c.Assert(tokens[3].Value, Equals, "tag2")
 }
 
@@ -299,7 +299,7 @@ func (s *MySuite) TestParseSpecTagsBeforeSpecHeading(c *C) {
 	c.Assert(tokens[0].Kind, Equals, gauge.TagKind)
 	c.Assert(len(tokens[0].Args), Equals, 1)
 	c.Assert(tokens[0].Args[0], Equals, "tag1")
-	c.Assert(tokens[0].LineText, Equals, "tags: tag1 ")
+	c.Assert(tokens[0].LineText(), Equals, "tags: tag1 ")
 	c.Assert(tokens[0].Value, Equals, "tag1")
 }
 

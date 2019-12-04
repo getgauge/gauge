@@ -15,10 +15,10 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.SpecKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading != nil {
-			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Multiple spec headings found in same file", token.LineText}}}
+			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, token.SpanEnd, "Multiple spec headings found in same file", token.LineText()}}}
 		}
 
-		spec.AddHeading(&gauge.Heading{LineNo: token.LineNo, Value: token.Value})
+		spec.AddHeading(&gauge.Heading{LineNo: token.LineNo, Value: token.Value, SpanEnd: token.SpanEnd})
 		addStates(state, specScope)
 		return ParseResult{Ok: true}
 	})
@@ -27,18 +27,18 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		return token.Kind == gauge.ScenarioKind
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		if spec.Heading == nil {
-			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Scenario should be defined after the spec heading", token.LineText}}}
+			return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, token.SpanEnd, "Scenario should be defined after the spec heading", token.LineText()}}}
 		}
 		for _, scenario := range spec.Scenarios {
 			if strings.EqualFold(scenario.Heading.Value, token.Value) {
-				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, "Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText}}}
+				return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{spec.FileName, token.LineNo, token.SpanEnd, "Duplicate scenario definition '" + scenario.Heading.Value + "' found in the same specification", token.LineText()}}}
 			}
 		}
 		scenario := &gauge.Scenario{Span: &gauge.Span{Start: token.LineNo, End: token.LineNo}}
 		if len(spec.Scenarios) > 0 {
 			spec.LatestScenario().Span.End = token.LineNo - 1
 		}
-		scenario.AddHeading(&gauge.Heading{Value: token.Value, LineNo: token.LineNo})
+		scenario.AddHeading(&gauge.Heading{Value: token.Value, LineNo: token.LineNo, SpanEnd: token.SpanEnd})
 		spec.AddScenario(scenario)
 
 		retainStates(state, specScope)
@@ -134,7 +134,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
 		if resolvedArg == nil || err != nil {
-			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText, Message: fmt.Sprintf("Could not resolve table from %s", token.LineText)}
+			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText(), Message: fmt.Sprintf("Could not resolve table from %s", token.LineText())}
 			return ParseResult{ParseErrors: []ParseError{e}, Ok: false}
 		}
 		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
@@ -146,12 +146,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			spec.AddExternalDataTable(externalTable)
 		} else if isInState(*state, specScope) && spec.DataTable.IsInitialized() {
 			value := "Multiple data table present, ignoring table"
-			spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+			spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
+			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, token.SpanEnd, value}}}
 		} else {
 			value := "Data table not associated with spec"
-			spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
-			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, value}}}
+			spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
+			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, token.SpanEnd, value}}}
 		}
 		retainStates(state, specScope)
 		addStates(state, keywordScope)
@@ -173,7 +173,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				latestTeardown := spec.LatestTeardown()
 				addInlineTableHeader(latestTeardown, token)
 			} else {
-				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			}
 		} else if isInState(*state, scenarioScope) {
 			scn := spec.LatestScenario()
@@ -182,9 +182,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				dataTable.AddHeaders(token.Args)
 				scn.AddDataTable(dataTable)
 			} else {
-				scn.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				scn.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 				return ParseResult{Ok: false, Warnings: []*Warning{
-					&Warning{spec.FileName, token.LineNo, "Multiple data table present, ignoring table"}}}
+					&Warning{spec.FileName, token.LineNo, token.SpanEnd, "Multiple data table present, ignoring table"}}}
 			}
 		} else {
 			if !spec.DataTable.Table.IsInitialized() {
@@ -192,9 +192,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				dataTable.AddHeaders(token.Args)
 				spec.AddDataTable(dataTable)
 			} else {
-				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName,
-					token.LineNo, "Multiple data table present, ignoring table"}}}
+					token.LineNo, token.SpanEnd, "Multiple data table present, ignoring table"}}}
 			}
 		}
 		retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope)
@@ -209,9 +209,9 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		//When table is to be treated as a comment
 		if !isInState(*state, tableScope) {
 			if isInState(*state, scenarioScope) {
-				spec.LatestScenario().AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				spec.LatestScenario().AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			} else {
-				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			}
 		} else if areUnderlined(token.Args) && !isInState(*state, tableSeparatorScope) {
 			retainStates(state, specScope, scenarioScope, stepScope, contextScope, tearDownScope, tableScope)
@@ -234,7 +234,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				latestTeardown := spec.LatestTeardown()
 				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
 			} else {
-				spec.AddComment(&gauge.Comment{Value: token.LineText, LineNo: token.LineNo})
+				spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			}
 		} else {
 			t := spec.DataTable
@@ -263,7 +263,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.LatestScenario().Tags.Add(tags.RawValues[0])
 			} else {
 				if spec.LatestScenario().NTags() != 0 {
-					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText}}}
+					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per scenario", LineText: token.LineText()}}}
 				}
 				spec.LatestScenario().AddTags(tags)
 			}
@@ -272,7 +272,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				spec.Tags.Add(tags.RawValues[0])
 			} else {
 				if spec.NTags() != 0 {
-					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText}}}
+					return ParseResult{Ok: false, ParseErrors: []ParseError{ParseError{FileName: spec.FileName, LineNo: token.LineNo, Message: "Tags can be defined only once per specification", LineText: token.LineText()}}}
 				}
 				spec.AddTags(tags)
 			}
@@ -327,7 +327,7 @@ func validateTableRows(token *Token, argLookup *gauge.ArgLookup, fileName string
 			file := strings.TrimSpace(strings.TrimPrefix(param, "file:"))
 			tableValues = append(tableValues, gauge.TableCell{Value: param, CellType: gauge.SpecialString})
 			if _, err := util.GetFileContents(file); err != nil {
-				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param, file), LineText: token.LineText})
+				error = append(error, ParseError{FileName: fileName, LineNo: token.LineNo, Message: fmt.Sprintf("Dynamic param <%s> could not be resolved, Missing file: %s", param, file), LineText: token.LineText()})
 			}
 		} else if dynamicArgMatcher.MatchString(tableValue) {
 			match := dynamicArgMatcher.FindAllStringSubmatch(tableValue, -1)
