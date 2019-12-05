@@ -130,7 +130,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
 			newToken = &Token{Kind: kind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine), SpanEnd: parser.lineNo}
-		} else if value, found := parser.isDataTable(trimmedLine); found {
+		} else if value, found := parser.isDataTable(trimmedLine); found { // skipcq CRT-A0013
 			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, Lines: []string{line}, Value: value, SpanEnd: parser.lineNo}
 		} else if parser.isTearDown(trimmedLine) {
 			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, Lines: []string{line}, Value: trimmedLine, SpanEnd: parser.lineNo}
