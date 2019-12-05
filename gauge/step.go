@@ -271,6 +271,7 @@ func (step *Step) CopyFrom(another *Step) {
 	step.Parent = another.Parent
 }
 
+// skipcq CRT-P0003
 func (step Step) Kind() TokenKind {
 	return StepKind
 }

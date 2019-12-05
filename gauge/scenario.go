@@ -112,6 +112,7 @@ func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
 	return UsesArgs(scenario.Steps, args...)
 }
 
+// skipcq CRT-P0003
 func (scenario Scenario) Kind() TokenKind {
 	return ScenarioKind
 }
