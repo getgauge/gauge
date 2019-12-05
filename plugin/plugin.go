@@ -52,14 +52,15 @@ const (
 )
 
 type plugin struct {
-	mutex         *sync.Mutex
-	connection    net.Conn
-	gRPCConn      *grpc.ClientConn
-	ResultClient  gauge_messages.ResultClient
-	ProcessClient gauge_messages.ProcessClient
-	pluginCmd     *exec.Cmd
-	descriptor    *pluginDescriptor
-	killTimer     *time.Timer
+	mutex           *sync.Mutex
+	connection      net.Conn
+	gRPCConn        *grpc.ClientConn
+	ResultClient    gauge_messages.ResultClient
+	ProcessClient   gauge_messages.ProcessClient
+	ExecutionClient gauge_messages.ExecutionClient
+	pluginCmd       *exec.Cmd
+	descriptor      *pluginDescriptor
+	killTimer       *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -108,7 +109,7 @@ func (p *plugin) killGrpcProcess() error {
 
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	if p.gRPCConn != nil {
+	if p.gRPCConn != nil && p.ProcessClient != nil {
 		return p.killGrpcProcess()
 	}
 	if isProcessRunning(p) {
@@ -250,17 +251,21 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 		grpc.WithInsecure(),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024*15), grpc.MaxCallRecvMsgSize(1024*1024*1024*15)),
 		grpc.WithBlock())
+	if err != nil {
+		return nil, err
+	}
 	plugin := &plugin{
 		pluginCmd:     cmd,
 		descriptor:    pd,
 		gRPCConn:      gRPCConn,
-		ResultClient:  gauge_messages.NewResultClient(gRPCConn),
 		ProcessClient: gauge_messages.NewProcessClient(gRPCConn),
+		ResultClient:  gauge_messages.NewResultClient(gRPCConn),
 	}
+	if plugin.descriptor.hasCapability(executionService) {
+		plugin.ExecutionClient = gauge_messages.NewExecutionClient(gRPCConn)
+	}
+
 	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
-	if err != nil {
-		return nil, err
-	}
 	return plugin, nil
 }
 
@@ -399,13 +404,33 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 }
 
 func (p *plugin) invokeService(m *gauge_messages.Message) error {
-	switch m.GetMessageType() {
-	case gauge_messages.Message_SuiteExecutionResult:
-		_, err := p.ResultClient.NotifySuiteResult(context.Background(), m.GetSuiteExecutionResult())
+	ctx := context.Background()
+	var err error
+	if m.MessageType == gauge_messages.Message_SuiteExecutionResult {
+		_, err = p.ResultClient.NotifySuiteResult(ctx, m.GetSuiteExecutionResult())
 		return err
-	default:
-		return nil
 	}
+	if p.ExecutionClient != nil {
+		switch m.GetMessageType() {
+		case gauge_messages.Message_ExecutionStarting:
+			_, err = p.ExecutionClient.StartExecution(ctx, m.GetExecutionStartingRequest())
+		case gauge_messages.Message_ExecutionEnding:
+			_, err = p.ExecutionClient.FinishExecution(ctx, m.GetExecutionEndingRequest())
+		case gauge_messages.Message_SpecExecutionEnding:
+			_, err = p.ExecutionClient.FinishSpecExecution(ctx, m.GetSpecExecutionEndingRequest())
+		case gauge_messages.Message_SpecExecutionStarting:
+			_, err = p.ExecutionClient.StartSpecExecution(ctx, m.GetSpecExecutionStartingRequest())
+		case gauge_messages.Message_ScenarioExecutionEnding:
+			_, err = p.ExecutionClient.FinishScenarioExecution(ctx, m.GetScenarioExecutionEndingRequest())
+		case gauge_messages.Message_ScenarioExecutionStarting:
+			_, err = p.ExecutionClient.StartScenarioExecution(ctx, m.GetScenarioExecutionStartingRequest())
+		case gauge_messages.Message_StepExecutionEnding:
+			_, err = p.ExecutionClient.FinishStepExecution(ctx, m.GetStepExecutionEndingRequest())
+		case gauge_messages.Message_StepExecutionStarting:
+			_, err 	= p.ExecutionClient.StartStepExecution(ctx, m.GetStepExecutionStartingRequest())
+		}
+	}
+	return err
 }
 
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
