@@ -126,7 +126,7 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 	}
 	for _, sce := range specification.Scenarios {
 		if len(sce.Steps) == 0 {
-			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, SpanEnd: dataTable.LineNo, Message: "Scenario should have atleast one step"}
+			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, SpanEnd: sce.Heading.SpanEnd, Message: "Scenario should have atleast one step"}
 		}
 	}
 	return nil
