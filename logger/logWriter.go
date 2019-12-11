@@ -52,7 +52,7 @@ func (w Writer) Write(p []byte) (int, error) {
 		m := &LogInfo{}
 		err := json.Unmarshal(_p, m)
 		if err != nil {
-			fmt.Fprintln(w.File, string(_p))
+			write(true, string(_p), w.File)
 		}
 		if w.stream > 0 {
 			m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
