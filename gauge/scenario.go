@@ -81,7 +81,7 @@ func (scenario *Scenario) InSpan(lineNumber int) bool {
 	return scenario.Span.isInRange(lineNumber)
 }
 
-func (scenario *Scenario) renameSteps(oldStep Step, newStep Step, orderMap map[int]int) ([]*StepDiff, bool) {
+func (scenario *Scenario) renameSteps(oldStep *Step, newStep *Step, orderMap map[int]int) ([]*StepDiff, bool) {
 	isRefactored := false
 	diffs := []*StepDiff{}
 	isConcept := false
@@ -112,6 +112,7 @@ func (scenario *Scenario) UsesArgsInSteps(args ...string) bool {
 	return UsesArgs(scenario.Steps, args...)
 }
 
+// skipcq CRT-P0003
 func (scenario Scenario) Kind() TokenKind {
 	return ScenarioKind
 }

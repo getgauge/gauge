@@ -220,7 +220,7 @@ func (spec *Specification) PopulateConceptLookup(lookup *ArgLookup, conceptArgs 
 	return nil
 }
 
-func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[int]int) ([]*StepDiff, bool) {
+func (spec *Specification) RenameSteps(oldStep *Step, newStep *Step, orderMap map[int]int) ([]*StepDiff, bool) {
 	diffs, isRefactored := spec.rename(spec.Contexts, oldStep, newStep, false, orderMap)
 	for _, scenario := range spec.Scenarios {
 		scenStepDiffs, refactor := scenario.renameSteps(oldStep, newStep, orderMap)
@@ -233,7 +233,7 @@ func (spec *Specification) RenameSteps(oldStep Step, newStep Step, orderMap map[
 	return append(diffs, teardownStepdiffs...), isRefactored
 }
 
-func (spec *Specification) rename(steps []*Step, oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int) ([]*StepDiff, bool) {
+func (spec *Specification) rename(steps []*Step, oldStep *Step, newStep *Step, isRefactored bool, orderMap map[int]int) ([]*StepDiff, bool) {
 	diffs := []*StepDiff{}
 	isConcept := false
 	for _, step := range steps {
@@ -333,6 +333,7 @@ func getIndexFor(scenario *Scenario, scenarios []*Scenario) int {
 type Heading struct {
 	Value       string
 	LineNo      int
+	SpanEnd     int
 	HeadingType HeadingType
 }
 

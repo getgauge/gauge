@@ -94,7 +94,7 @@ func TestNotifyBeforeScenarioShouldAddBeforeScenarioHookScreenshots(t *testing.T
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ScenarioExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -109,8 +109,8 @@ func TestNotifyBeforeScenarioShouldAddBeforeScenarioHookScreenshots(t *testing.T
 	}
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	sce.notifyBeforeScenarioHook(scenarioResult)
-	beforeScenarioScreenShots := scenarioResult.ProtoScenario.PreHookScreenshots
-	expected := []string{"screenshot1", "screenshot2"}
+	beforeScenarioScreenShots := scenarioResult.ProtoScenario.PreHookScreenshotFiles
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(beforeScenarioScreenShots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(beforeScenarioScreenShots))
@@ -129,7 +129,7 @@ func TestNotifyAfterScenarioShouldAddAfterScenarioHookScreenshots(t *testing.T) 
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ScenarioExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -144,8 +144,8 @@ func TestNotifyAfterScenarioShouldAddAfterScenarioHookScreenshots(t *testing.T) 
 	}
 	scenarioResult := result.NewScenarioResult(gauge.NewProtoScenario(scenario))
 	sce.notifyAfterScenarioHook(scenarioResult)
-	afterScenarioScreenShots := scenarioResult.ProtoScenario.PostHookScreenshots
-	expected := []string{"screenshot1", "screenshot2"}
+	afterScenarioScreenShots := scenarioResult.ProtoScenario.PostHookScreenshotFiles
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(afterScenarioScreenShots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(afterScenarioScreenShots))

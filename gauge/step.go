@@ -46,6 +46,7 @@ type Step struct {
 	Items          []Item
 	PreComments    []*Comment
 	Suffix         string
+	LineSpanEnd    int
 }
 
 type StepDiff struct {
@@ -80,7 +81,7 @@ func (step *Step) GetLineText() string {
 	return step.LineText
 }
 
-func (step *Step) Rename(oldStep Step, newStep Step, isRefactored bool, orderMap map[int]int, isConcept *bool) (*StepDiff, bool) {
+func (step *Step) Rename(oldStep *Step, newStep *Step, isRefactored bool, orderMap map[int]int, isConcept *bool) (*StepDiff, bool) {
 	diff := &StepDiff{OldStep: *step}
 	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
 		return nil, isRefactored
@@ -117,7 +118,7 @@ func tableUsesDynamicArgs(tableArg *StepArg, arg string) bool {
 	return false
 }
 
-func (step *Step) getArgsInOrder(newStep Step, orderMap map[int]int) []*StepArg {
+func (step *Step) getArgsInOrder(newStep *Step, orderMap map[int]int) []*StepArg {
 	args := make([]*StepArg, len(newStep.Args))
 	for key, value := range orderMap {
 		arg := &StepArg{Value: newStep.Args[key].Value, ArgType: Static}
@@ -270,6 +271,7 @@ func (step *Step) CopyFrom(another *Step) {
 	step.Parent = another.Parent
 }
 
+// skipcq CRT-P0003
 func (step Step) Kind() TokenKind {
 	return StepKind
 }

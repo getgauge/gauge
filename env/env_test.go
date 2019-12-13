@@ -19,6 +19,7 @@ package env
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/getgauge/common"
@@ -46,6 +47,8 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
 	c.Assert(os.Getenv("csv_delimiter"), Equals, ",")
+	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	c.Assert(os.Getenv("screenshots_dir"), Equals, defaultScreenshotDir)
 }
 
 // If default env dir is present, the values present in there should overwrite

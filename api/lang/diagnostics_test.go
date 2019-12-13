@@ -47,7 +47,7 @@ func setup() {
 	openFilesCache.add(util.ConvertPathToURI(specFile), "")
 	responses := map[gauge_messages.Message_MessageType]interface{}{}
 	responses[gauge_messages.Message_StepValidateResponse] = &gauge_messages.StepValidateResponse{IsValid: true}
-	lRunner.runner = &runner.GrpcRunner{Client: &mockLspClient{responses: responses}, Timeout: time.Second * 30}
+	lRunner.runner = &runner.GrpcRunner{ValidatorCLient: &mockAuthoringClient{responses: responses}, Timeout: time.Second * 30}
 
 	util.GetConceptFiles = func() []string {
 		return []string{conceptFile}
@@ -78,7 +78,7 @@ Scenario Heading
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{Line: 0, Character: 0},
-				End:   lsp.Position{Line: 0, Character: 21},
+				End:   lsp.Position{Line: 1, Character: 21},
 			},
 			Message:  "Spec should have atleast one scenario",
 			Severity: 1,
@@ -86,7 +86,7 @@ Scenario Heading
 		{
 			Range: lsp.Range{
 				Start: lsp.Position{Line: 3, Character: 0},
-				End:   lsp.Position{Line: 3, Character: 16},
+				End:   lsp.Position{Line: 4, Character: 16},
 			},
 			Message:  "Multiple spec headings found in same file",
 			Severity: 1,

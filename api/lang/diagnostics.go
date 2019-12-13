@@ -83,7 +83,8 @@ func getDiagnostics() (map[lsp.DocumentURI][]lsp.Diagnostic, error) {
 func createValidationDiagnostics(errors []error, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range errors {
 		uri := util.ConvertPathToURI(err.(validation.StepValidationError).FileName())
-		d := createDiagnostic(uri, err.(validation.StepValidationError).Message(), err.(validation.StepValidationError).Step().LineNo-1, 1)
+		s := err.(validation.StepValidationError).Step()
+		d := createDiagnostic(uri, err.(validation.StepValidationError).Message(), s.LineNo-1, s.LineSpanEnd-1, 1)
 		if err.(validation.StepValidationError).ErrorType() == gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND {
 			d.Code = err.(validation.StepValidationError).Suggestion()
 		}
@@ -151,15 +152,15 @@ func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.
 func createDiagnostics(res *parser.ParseResult, diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) {
 	for _, err := range res.ParseErrors {
 		uri := util.ConvertPathToURI(err.FileName)
-		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, 1))
+		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, err.Message, err.LineNo-1, err.SpanEnd-1, 1))
 	}
 	for _, warning := range res.Warnings {
 		uri := util.ConvertPathToURI(warning.FileName)
-		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, warning.Message, warning.LineNo-1, 2))
+		diagnostics[uri] = append(diagnostics[uri], createDiagnostic(uri, warning.Message, warning.LineNo-1, warning.LineSpanEnd-1, 2))
 	}
 }
 
-func createDiagnostic(uri lsp.DocumentURI, message string, line int, severity lsp.DiagnosticSeverity) lsp.Diagnostic {
+func createDiagnostic(uri lsp.DocumentURI, message string, line int, lineEnd int, severity lsp.DiagnosticSeverity) lsp.Diagnostic {
 	endChar := 10000
 	if isOpen(uri) {
 		endChar = len(getLine(uri, line))
@@ -167,7 +168,7 @@ func createDiagnostic(uri lsp.DocumentURI, message string, line int, severity ls
 	return lsp.Diagnostic{
 		Range: lsp.Range{
 			Start: lsp.Position{Line: line, Character: 0},
-			End:   lsp.Position{Line: line, Character: endChar},
+			End:   lsp.Position{Line: lineEnd, Character: endChar},
 		},
 		Message:  message,
 		Severity: severity,

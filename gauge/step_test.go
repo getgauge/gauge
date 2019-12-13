@@ -180,7 +180,7 @@ func (s *MySuite) TestRenameStep(c *C) {
 	orderMap[0] = 1
 	orderMap[1] = 0
 	IsConcept := false
-	diff, isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
+	diff, isRefactored := originalStep.Rename(originalStep, newStep, false, orderMap, &IsConcept)
 
 	c.Assert(isRefactored, Equals, true)
 	c.Assert(originalStep.Value, Equals, "step from {} {}")
@@ -207,7 +207,7 @@ func (s *MySuite) TestRenameConcept(c *C) {
 	orderMap := make(map[int]int)
 	orderMap[0] = -1
 	IsConcept := true
-	diff, isRefactored := originalStep.Rename(*originalStep, *newStep, false, orderMap, &IsConcept)
+	diff, isRefactored := originalStep.Rename(originalStep, newStep, false, orderMap, &IsConcept)
 	c.Assert(isRefactored, Equals, true)
 	c.Assert(originalStep.Value, Equals, "concept with text file {}")
 	c.Assert(originalStep.Args[0].Name, Equals, "arg0")

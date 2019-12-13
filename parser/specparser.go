@@ -107,26 +107,26 @@ func (parser *SpecParser) createSpecification(tokens []*Token, specFile string) 
 func (parser *SpecParser) validateSpec(specification *gauge.Specification) error {
 	if len(specification.Items) == 0 {
 		specification.AddHeading(&gauge.Heading{})
-		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec does not have any elements"}
+		return ParseError{FileName: specification.FileName, LineNo: 1, SpanEnd: 1, Message: "Spec does not have any elements"}
 	}
 	if specification.Heading == nil {
 		specification.AddHeading(&gauge.Heading{})
-		return ParseError{FileName: specification.FileName, LineNo: 1, Message: "Spec heading not found"}
+		return ParseError{FileName: specification.FileName, LineNo: 1, SpanEnd: 1, Message: "Spec heading not found"}
 	}
 	if len(strings.TrimSpace(specification.Heading.Value)) < 1 {
-		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec heading should have at least one character"}
+		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, SpanEnd: specification.Heading.LineNo, Message: "Spec heading should have at least one character"}
 	}
 
 	dataTable := specification.DataTable.Table
 	if dataTable.IsInitialized() && dataTable.GetRowCount() == 0 {
-		return ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
+		return ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, SpanEnd: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
 	if len(specification.Scenarios) == 0 {
-		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, Message: "Spec should have atleast one scenario"}
+		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, SpanEnd: specification.Heading.SpanEnd, Message: "Spec should have atleast one scenario"}
 	}
 	for _, sce := range specification.Scenarios {
 		if len(sce.Steps) == 0 {
-			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, Message: "Scenario should have atleast one step"}
+			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, SpanEnd: sce.Heading.SpanEnd, Message: "Scenario should have atleast one step"}
 		}
 	}
 	return nil
@@ -149,9 +149,10 @@ func createStep(spec *gauge.Specification, scn *gauge.Scenario, stepToken *Token
 func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileName string) (*gauge.Step, *ParseResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
-		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{specFileName, stepToken.LineNo, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText}}, Warnings: nil}
+		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{specFileName, stepToken.LineNo, stepToken.SpanEnd, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText()}}, Warnings: nil}
 	}
-	step := &gauge.Step{FileName: specFileName, LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(stepToken.LineText)}
+	lineText := strings.Join(stepToken.Lines, " ")
+	step := &gauge.Step{FileName: specFileName, LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(lineText), LineSpanEnd: stepToken.SpanEnd}
 	arguments := make([]*gauge.StepArg, 0)
 	var errors []ParseError
 	var warnings []*Warning

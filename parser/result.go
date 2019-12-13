@@ -23,6 +23,7 @@ import "fmt"
 type ParseError struct {
 	FileName string
 	LineNo   int
+	SpanEnd  int
 	Message  string
 	LineText string
 }
@@ -36,7 +37,7 @@ func (se ParseError) Error() string {
 }
 
 func (token *Token) String() string {
-	return fmt.Sprintf("kind:%d, lineNo:%d, value:%s, line:%s, args:%s", token.Kind, token.LineNo, token.Value, token.LineText, token.Args)
+	return fmt.Sprintf("kind:%d, lineNo:%d, value:%s, line:%s, args:%s", token.Kind, token.LineNo, token.Value, token.LineText(), token.Args)
 }
 
 // ParseResult is a collection of parse errors and warnings in a file.
@@ -57,9 +58,10 @@ func (result *ParseResult) Errors() (errors []string) {
 
 // Warning is used to indicate discrepancies that do not necessarily need to break flow.
 type Warning struct {
-	FileName string
-	LineNo   int
-	Message  string
+	FileName    string
+	LineNo      int
+	LineSpanEnd int
+	Message     string
 }
 
 func (warning *Warning) String() string {

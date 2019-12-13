@@ -117,7 +117,7 @@ func TestStepExecutionShouldGetScreenshotsBeforeStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png","screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -144,9 +144,9 @@ func TestStepExecutionShouldGetScreenshotsBeforeStep(t *testing.T) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 
 	stepResult := se.executeStep(step, protoStep)
-	beforeStepScreenShots := stepResult.ProtoStep.PreHookScreenshots
+	beforeStepScreenShots := stepResult.ProtoStep.PreHookScreenshotFiles
 
-	expected := []string{"screenshot1", "screenshot2"}
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(beforeStepScreenShots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(beforeStepScreenShots))
@@ -165,7 +165,7 @@ func TestStepExecutionShouldGetScreenshotsAfterStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Screenshots:   [][]byte{[]byte("screenshot1"), []byte("screenshot2")},
+				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
@@ -192,9 +192,9 @@ func TestStepExecutionShouldGetScreenshotsAfterStep(t *testing.T) {
 	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
 
 	stepResult := se.executeStep(step, protoStep)
-	afterStepScreenShots := stepResult.ProtoStep.PostHookScreenshots
+	afterStepScreenShots := stepResult.ProtoStep.PostHookScreenshotFiles
 
-	expected := []string{"screenshot1", "screenshot2"}
+	expected := []string{"screenshot1.png", "screenshot2.png"}
 
 	if len(afterStepScreenShots) != len(expected) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(afterStepScreenShots))

@@ -149,8 +149,8 @@ func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario)
 		if err != nil {
 			return err
 		}
-		result := [][]result.Result{sceRes}
-		e.specResult.AddTableRelatedScenarioResult(result, index)
+		specResult := [][]result.Result{sceRes}
+		e.specResult.AddTableRelatedScenarioResult(specResult, index)
 	}
 	return nil
 }
@@ -184,7 +184,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PreHookMessages = res.Message
-	e.specResult.ProtoSpec.PreHookScreenshots = res.Screenshots
+	e.specResult.ProtoSpec.PreHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook)
@@ -199,7 +199,7 @@ func (e *specExecutor) notifyAfterSpecHook() {
 		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PostHookMessages = res.Message
-	e.specResult.ProtoSpec.PostHookScreenshots = res.Screenshots
+	e.specResult.ProtoSpec.PostHookScreenshotFiles = res.ScreenshotFiles
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook)
@@ -385,16 +385,17 @@ func shouldExecuteForRow(i int) bool {
 }
 
 func getDataTableRows(tableRows string) (tableRowIndexes []int) {
-	if strings.TrimSpace(tableRows) == "" {
+	switch {
+	case strings.TrimSpace(tableRows) == "" :
 		return
-	} else if strings.Contains(tableRows, "-") {
+	case strings.Contains(tableRows, "-"):
 		indexes := strings.Split(tableRows, "-")
 		startRow, _ := strconv.Atoi(strings.TrimSpace(indexes[0]))
 		endRow, _ := strconv.Atoi(strings.TrimSpace(indexes[1]))
 		for i := startRow - 1; i < endRow; i++ {
 			tableRowIndexes = append(tableRowIndexes, i)
 		}
-	} else {
+	default:
 		indexes := strings.Split(tableRows, ",")
 		for _, i := range indexes {
 			rowNumber, _ := strconv.Atoi(strings.TrimSpace(i))

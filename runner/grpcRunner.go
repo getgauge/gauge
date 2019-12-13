@@ -34,124 +34,129 @@ import (
 )
 
 const (
-	host = "127.0.0.1"
+	host  = "127.0.0.1"
+	oneGB = 1024 * 1024 * 1024
 )
 
 // GrpcRunner handles grpc messages.
 type GrpcRunner struct {
 	cmd             *exec.Cmd
 	conn            *grpc.ClientConn
-	Client          gm.LspServiceClient
-	ExecutionClient gm.RunnerClient
+	LegacyClient    gm.LspServiceClient
+	AuthoringClient gm.AuthoringClient
+	ExecutionClient gm.ExecutionClient
+	ValidatorCLient gm.ValidatorClient
+	ProcessClient   gm.ProcessClient
 	Timeout         time.Duration
 }
 
-func (r *GrpcRunner) invokeLSPService(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) invokeLegacyLSPService(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_CacheFileRequest:
-		_, err := r.Client.CacheFile(context.Background(), message.CacheFileRequest)
+		_, err := r.LegacyClient.CacheFile(context.Background(), message.CacheFileRequest)
 		return &gm.Message{}, err
 	case gm.Message_StepNamesRequest:
-		response, err := r.Client.GetStepNames(context.Background(), message.StepNamesRequest)
+		response, err := r.LegacyClient.GetStepNames(context.Background(), message.StepNamesRequest)
 		return &gm.Message{StepNamesResponse: response}, err
 	case gm.Message_StepPositionsRequest:
-		response, err := r.Client.GetStepPositions(context.Background(), message.StepPositionsRequest)
+		response, err := r.LegacyClient.GetStepPositions(context.Background(), message.StepPositionsRequest)
 		return &gm.Message{StepPositionsResponse: response}, err
 	case gm.Message_ImplementationFileListRequest:
-		response, err := r.Client.GetImplementationFiles(context.Background(), &gm.Empty{})
+		response, err := r.LegacyClient.GetImplementationFiles(context.Background(), &gm.Empty{})
 		return &gm.Message{ImplementationFileListResponse: response}, err
 	case gm.Message_StubImplementationCodeRequest:
-		response, err := r.Client.ImplementStub(context.Background(), message.StubImplementationCodeRequest)
+		response, err := r.LegacyClient.ImplementStub(context.Background(), message.StubImplementationCodeRequest)
 		return &gm.Message{FileDiff: response}, err
 	case gm.Message_StepValidateRequest:
-		response, err := r.Client.ValidateStep(context.Background(), message.StepValidateRequest)
+		response, err := r.LegacyClient.ValidateStep(context.Background(), message.StepValidateRequest)
 		return &gm.Message{MessageType: gm.Message_StepValidateResponse, StepValidateResponse: response}, err
 	case gm.Message_RefactorRequest:
-		response, err := r.Client.Refactor(context.Background(), message.RefactorRequest)
+		response, err := r.LegacyClient.Refactor(context.Background(), message.RefactorRequest)
 		return &gm.Message{MessageType: gm.Message_RefactorResponse, RefactorResponse: response}, err
 	case gm.Message_StepNameRequest:
-		response, err := r.Client.GetStepName(context.Background(), message.StepNameRequest)
+		response, err := r.LegacyClient.GetStepName(context.Background(), message.StepNameRequest)
 		return &gm.Message{MessageType: gm.Message_StepNameResponse, StepNameResponse: response}, err
 	case gm.Message_ImplementationFileGlobPatternRequest:
-		response, err := r.Client.GetGlobPatterns(context.Background(), &gm.Empty{})
+		response, err := r.LegacyClient.GetGlobPatterns(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ImplementationFileGlobPatternRequest, ImplementationFileGlobPatternResponse: response}, err
 	case gm.Message_KillProcessRequest:
-		_, err := r.Client.KillProcess(context.Background(), message.KillProcessRequest)
+		_, err := r.LegacyClient.KillProcess(context.Background(), message.KillProcessRequest)
 		return &gm.Message{}, err
 	default:
 		return nil, nil
 	}
 }
 
-func (r *GrpcRunner) invokeRunnerService(message *gm.Message) (*gm.Message, error) {
+func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_SuiteDataStoreInit:
-		response, err := r.ExecutionClient.SuiteDataStoreInit(context.Background(), &gm.Empty{})
+		response, err := r.ExecutionClient.InitializeSuiteDataStore(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_SpecDataStoreInit:
-		response, err := r.ExecutionClient.SpecDataStoreInit(context.Background(), &gm.Empty{})
+		response, err := r.ExecutionClient.InitializeSpecDataStore(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ScenarioDataStoreInit:
-		response, err := r.ExecutionClient.ScenarioDataStoreInit(context.Background(), &gm.Empty{})
+		response, err := r.ExecutionClient.InitializeScenarioDataStore(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
-
 	case gm.Message_ExecutionStarting:
-		response, err := r.ExecutionClient.ExecutionStarting(context.Background(), message.ExecutionStartingRequest)
+		response, err := r.ExecutionClient.StartExecution(context.Background(), message.ExecutionStartingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_SpecExecutionStarting:
-		response, err := r.ExecutionClient.SpecExecutionStarting(context.Background(), message.SpecExecutionStartingRequest)
+		response, err := r.ExecutionClient.StartSpecExecution(context.Background(), message.SpecExecutionStartingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ScenarioExecutionStarting:
-		response, err := r.ExecutionClient.ScenarioExecutionStarting(context.Background(), message.ScenarioExecutionStartingRequest)
+		response, err := r.ExecutionClient.StartScenarioExecution(context.Background(), message.ScenarioExecutionStartingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_StepExecutionStarting:
-		response, err := r.ExecutionClient.StepExecutionStarting(context.Background(), message.StepExecutionStartingRequest)
+		response, err := r.ExecutionClient.StartStepExecution(context.Background(), message.StepExecutionStartingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ExecuteStep:
 		response, err := r.ExecutionClient.ExecuteStep(context.Background(), message.ExecuteStepRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_StepExecutionEnding:
-		response, err := r.ExecutionClient.StepExecutionEnding(context.Background(), message.StepExecutionEndingRequest)
+		response, err := r.ExecutionClient.FinishStepExecution(context.Background(), message.StepExecutionEndingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ScenarioExecutionEnding:
-		response, err := r.ExecutionClient.ScenarioExecutionEnding(context.Background(), message.ScenarioExecutionEndingRequest)
+		response, err := r.ExecutionClient.FinishScenarioExecution(context.Background(), message.ScenarioExecutionEndingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_SpecExecutionEnding:
-		response, err := r.ExecutionClient.SpecExecutionEnding(context.Background(), message.SpecExecutionEndingRequest)
+		response, err := r.ExecutionClient.FinishSpecExecution(context.Background(), message.SpecExecutionEndingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ExecutionEnding:
-		response, err := r.ExecutionClient.ExecutionEnding(context.Background(), message.ExecutionEndingRequest)
+		response, err := r.ExecutionClient.FinishExecution(context.Background(), message.ExecutionEndingRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 
 	case gm.Message_CacheFileRequest:
-		_, err := r.ExecutionClient.CacheFile(context.Background(), message.CacheFileRequest)
+		_, err := r.AuthoringClient.CacheFile(context.Background(), message.CacheFileRequest)
 		return &gm.Message{}, err
 	case gm.Message_StepNamesRequest:
-		response, err := r.ExecutionClient.GetStepNames(context.Background(), message.StepNamesRequest)
+		response, err := r.AuthoringClient.GetStepNames(context.Background(), message.StepNamesRequest)
 		return &gm.Message{StepNamesResponse: response}, err
 	case gm.Message_StepPositionsRequest:
-		response, err := r.ExecutionClient.GetStepPositions(context.Background(), message.StepPositionsRequest)
+		response, err := r.AuthoringClient.GetStepPositions(context.Background(), message.StepPositionsRequest)
 		return &gm.Message{StepPositionsResponse: response}, err
 	case gm.Message_ImplementationFileListRequest:
-		response, err := r.ExecutionClient.GetImplementationFiles(context.Background(), &gm.Empty{})
+		response, err := r.AuthoringClient.GetImplementationFiles(context.Background(), &gm.Empty{})
 		return &gm.Message{ImplementationFileListResponse: response}, err
 	case gm.Message_StubImplementationCodeRequest:
-		response, err := r.ExecutionClient.ImplementStub(context.Background(), message.StubImplementationCodeRequest)
+		response, err := r.AuthoringClient.ImplementStub(context.Background(), message.StubImplementationCodeRequest)
 		return &gm.Message{FileDiff: response}, err
-	case gm.Message_StepValidateRequest:
-		response, err := r.ExecutionClient.ValidateStep(context.Background(), message.StepValidateRequest)
-		return &gm.Message{MessageType: gm.Message_StepValidateResponse, StepValidateResponse: response}, err
 	case gm.Message_RefactorRequest:
-		response, err := r.ExecutionClient.Refactor(context.Background(), message.RefactorRequest)
+		response, err := r.AuthoringClient.Refactor(context.Background(), message.RefactorRequest)
 		return &gm.Message{MessageType: gm.Message_RefactorResponse, RefactorResponse: response}, err
 	case gm.Message_StepNameRequest:
-		response, err := r.ExecutionClient.GetStepName(context.Background(), message.StepNameRequest)
+		response, err := r.AuthoringClient.GetStepName(context.Background(), message.StepNameRequest)
 		return &gm.Message{MessageType: gm.Message_StepNameResponse, StepNameResponse: response}, err
 	case gm.Message_ImplementationFileGlobPatternRequest:
-		response, err := r.ExecutionClient.GetGlobPatterns(context.Background(), &gm.Empty{})
+		response, err := r.AuthoringClient.GetGlobPatterns(context.Background(), &gm.Empty{})
 		return &gm.Message{MessageType: gm.Message_ImplementationFileGlobPatternRequest, ImplementationFileGlobPatternResponse: response}, err
+
+	case gm.Message_StepValidateRequest:
+		response, err := r.ValidatorCLient.ValidateStep(context.Background(), message.StepValidateRequest)
+		return &gm.Message{MessageType: gm.Message_StepValidateResponse, StepValidateResponse: response}, err
+
 	case gm.Message_KillProcessRequest:
-		_, err := r.ExecutionClient.KillProcess(context.Background(), message.KillProcessRequest)
+		_, err := r.ProcessClient.Kill(context.Background(), message.KillProcessRequest)
 		return &gm.Message{}, err
 	default:
 		return nil, nil
@@ -161,10 +166,10 @@ func (r *GrpcRunner) invokeRunnerService(message *gm.Message) (*gm.Message, erro
 func (r *GrpcRunner) invokeRPC(message *gm.Message, resChan chan *gm.Message, errChan chan error) {
 	var res *gm.Message
 	var err error
-	if r.ExecutionClient != nil {
-		res, err = r.invokeRunnerService(message)
+	if r.LegacyClient != nil {
+		res, err = r.invokeLegacyLSPService(message)
 	} else {
-		res, err = r.invokeLSPService(message)
+		res, err = r.invokeServiceFor(message)
 	}
 	if err != nil {
 		errChan <- err
@@ -189,7 +194,7 @@ func (r *GrpcRunner) executeMessage(message *gm.Message, timeout time.Duration) 
 	}
 }
 
-// ExecuteMessageWithTimeout process reuqest and give back the response
+// ExecuteMessageWithTimeout process request and give back the response
 func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message, error) {
 	return r.executeMessage(message, r.Timeout)
 }
@@ -235,7 +240,7 @@ func (r *GrpcRunner) Kill() error {
 				}
 			}
 		}()
-	
+
 		select {
 		case done := <-exited:
 			if done {
@@ -266,17 +271,17 @@ func (r *GrpcRunner) Pid() int {
 }
 
 // ConnectToGrpcRunner makes a connection with grpc server
-func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
+func ConnectToGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
 	portChan := make(chan string)
 	logWriter := &logger.LogWriter{
-		Stderr: newCustomWriter(portChan, stderr, manifest.Language),
-		Stdout: newCustomWriter(portChan, stdout, manifest.Language),
+		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
+		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language),
 	}
-	cmd, info, err := runRunnerCommand(manifest, "0", false, logWriter)
+	cmd, info, err := runRunnerCommand(m, "0", false, logWriter)
 	go func() {
 		err = cmd.Wait()
 		if err != nil {
-			logger.Errorf(true, "Error occured while waiting for runner process to finish.\nError : %s", err.Error())
+			logger.Errorf(true, "Error occurred while waiting for runner process to finish.\nError : %s", err.Error())
 		}
 	}()
 	if err != nil {
@@ -288,22 +293,26 @@ func ConnectToGrpcRunner(manifest *manifest.Manifest, stdout io.Writer, stderr i
 	case port = <-portChan:
 		close(portChan)
 	case <-time.After(config.RunnerConnectionTimeout()):
-		return nil, fmt.Errorf("Timed out connecting to %s", manifest.Language)
+		return nil, fmt.Errorf("Timed out connecting to %s", m.Language)
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port),
 		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1024*10)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(oneGB), grpc.MaxCallSendMsgSize(oneGB)),
 		grpc.WithBlock())
-	logger.Debugf(true, "Successfully made the conneciton with runner with port: %s", port)
+	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
 	if err != nil {
 		return nil, err
 	}
 	r := &GrpcRunner{cmd: cmd, conn: conn, Timeout: timeout}
+
 	if info.GRPCSupport {
-		r.ExecutionClient = gm.NewRunnerClient(conn)
+		r.AuthoringClient = gm.NewAuthoringClient(conn)
+		r.ExecutionClient = gm.NewExecutionClient(conn)
+		r.ProcessClient = gm.NewProcessClient(conn)
+		r.ValidatorCLient = gm.NewValidatorClient(conn)
 	} else {
-		r.Client = gm.NewLspServiceClient(conn)
+		r.LegacyClient = gm.NewLspServiceClient(conn)
 	}
 	return r, nil
 }

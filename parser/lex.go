@@ -47,14 +47,18 @@ const (
 
 // Token defines the type of entity identified by the lexer
 type Token struct {
-	Kind     gauge.TokenKind
-	LineNo   int
-	LineText string
-	Suffix   string
-	Args     []string
-	Value    string
+	Kind    gauge.TokenKind
+	LineNo  int
+	Suffix  string
+	Args    []string
+	Value   string
+	Lines   []string
+	SpanEnd int
 }
 
+func (t *Token) LineText() string {
+	return strings.Join(t.Lines, " ")
+}
 func (parser *SpecParser) initialize() {
 	parser.processors = make(map[gauge.TokenKind]func(*SpecParser, *Token) ([]error, bool))
 	parser.processors[gauge.SpecKind] = processSpec
@@ -88,29 +92,31 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 				newToken.Suffix = "\n"
 				continue
 			}
-			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: "\n"}
+			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: "\n", SpanEnd: parser.lineNo}
 		} else if parser.isScenarioHeading(trimmedLine) {
-			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[2:])}
+			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[2:]), SpanEnd: parser.lineNo}
 		} else if parser.isSpecHeading(trimmedLine) {
-			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[1:]), SpanEnd: parser.lineNo}
 		} else if parser.isSpecUnderline(trimmedLine) {
 			if isInState(parser.currentState, commentScope) {
 				newToken = parser.tokens[len(parser.tokens)-1]
 				newToken.Kind = gauge.SpecKind
+				newToken.SpanEnd = parser.lineNo
 				parser.discardLastToken()
 			} else {
-				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
 			}
 		} else if parser.isScenarioUnderline(trimmedLine) {
 			if isInState(parser.currentState, commentScope) {
 				newToken = parser.tokens[len(parser.tokens)-1]
 				newToken.Kind = gauge.ScenarioKind
+				newToken.SpanEnd = parser.lineNo
 				parser.discardLastToken()
 			} else {
-				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
 			}
 		} else if parser.isStep(trimmedLine) {
-			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, LineText: strings.TrimSpace(trimmedLine[1:]), Value: strings.TrimSpace(trimmedLine[1:])}
+			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, Lines: []string{strings.TrimSpace(trimmedLine[1:])}, Value: strings.TrimSpace(trimmedLine[1:]), SpanEnd: parser.lineNo}
 		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
 			if isInState(parser.currentState, tagsScope) {
 				startIndex = 0
@@ -120,21 +126,24 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
 			} else {
 				parser.clearState()
 			}
-			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine[startIndex:])}
+			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[startIndex:]), SpanEnd: parser.lineNo}
 		} else if parser.isTableRow(trimmedLine) {
 			kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
-			newToken = &Token{Kind: kind, LineNo: parser.lineNo, LineText: line, Value: strings.TrimSpace(trimmedLine)}
-		} else if value, found := parser.isDataTable(trimmedLine); found {
-			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, LineText: line, Value: value}
+			newToken = &Token{Kind: kind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine), SpanEnd: parser.lineNo}
+		} else if value, found := parser.isDataTable(trimmedLine); found { // skipcq CRT-A0013
+			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, Lines: []string{line}, Value: value, SpanEnd: parser.lineNo}
 		} else if parser.isTearDown(trimmedLine) {
-			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, LineText: line, Value: trimmedLine}
+			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, Lines: []string{line}, Value: trimmedLine, SpanEnd: parser.lineNo}
 		} else if env.AllowMultiLineStep() && newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
-			v := fmt.Sprintf("%s %s", newToken.LineText, trimmedLine)
-			newToken = &Token{Kind: gauge.StepKind, LineNo: newToken.LineNo, LineText: strings.TrimSpace(v), Value: strings.TrimSpace(v)}
+			v := strings.TrimSpace(fmt.Sprintf("%s %s", newToken.LineText(), line))
+			newToken = parser.tokens[len(parser.tokens)-1]
+			newToken.Value = v
+			newToken.Lines = append(newToken.Lines, line)
+			newToken.SpanEnd = parser.lineNo
 			errors = errors[:lastTokenErrorCount]
 			parser.discardLastToken()
 		} else {
-			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, LineText: line, Value: common.TrimTrailingSpace(line)}
+			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
 		}
 		pErrs := parser.accept(newToken, fileName)
 		lastTokenErrorCount = len(pErrs)
@@ -225,7 +234,7 @@ func (parser *SpecParser) accept(token *Token, fileName string) []ParseError {
 	parser.tokens = append(parser.tokens, token)
 	var parseErrs []ParseError
 	for _, err := range errs {
-		parseErrs = append(parseErrs, ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value})
+		parseErrs = append(parseErrs, ParseError{FileName: fileName, LineNo: token.LineNo, Message: err.Error(), LineText: token.Value, SpanEnd: token.SpanEnd})
 	}
 	return parseErrs
 }

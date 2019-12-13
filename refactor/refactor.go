@@ -124,11 +124,11 @@ func (refactoringResult *refactoringResult) WriteToDisk() {
 
 // GetRefactoringChanges given an old step and new step gives the list of steps that need to be changed to perform refactoring.
 // It also provides the changes to be made on the implementation files.
-func GetRefactoringChanges(oldStep, newStep string, runner runner.Runner, specDirs []string, saveToDisk bool) *refactoringResult {
+func GetRefactoringChanges(oldStep, newStep string, r runner.Runner, specDirs []string, saveToDisk bool) *refactoringResult {
 	if newStep == oldStep {
 		return &refactoringResult{Success: true}
 	}
-	agent, errs := getRefactorAgent(oldStep, newStep, runner)
+	agent, errs := getRefactorAgent(oldStep, newStep, r)
 
 	if len(errs) > 0 {
 		var messages []string
@@ -173,8 +173,8 @@ func parseSpecsAndConcepts(specDirs []string) (*refactoringResult, []*gauge.Spec
 	return result, specs, conceptDictionary
 }
 
-func rephraseFailure(errors ...string) *refactoringResult {
-	return &refactoringResult{Success: false, Errors: errors}
+func rephraseFailure(errs ...string) *refactoringResult {
+	return &refactoringResult{Success: false, Errors: errs}
 }
 
 func addErrorsAndWarningsToRefactoringResult(refactorResult *refactoringResult, parseResults ...*parser.ParseResult) {
@@ -225,7 +225,7 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Spec
 	conceptsRefactored := make(map[string][]*gauge.StepDiff)
 	orderMap := agent.createOrderOfArgs()
 	for _, spec := range *specs {
-		diffs, isRefactored := spec.RenameSteps(*agent.oldStep, *agent.newStep, orderMap)
+		diffs, isRefactored := spec.RenameSteps(agent.oldStep, agent.newStep, orderMap)
 		if isRefactored {
 			specsRefactored[spec] = diffs
 		}
@@ -235,7 +235,7 @@ func (agent *rephraseRefactorer) rephraseInSpecsAndConcepts(specs *[]*gauge.Spec
 		isRefactored := false
 		for _, item := range concept.ConceptStep.Items {
 			if item.Kind() == gauge.StepKind {
-				diff, isRefactored := item.(*gauge.Step).Rename(*agent.oldStep, *agent.newStep, isRefactored, orderMap, &isConcept)
+				diff, isRefactored := item.(*gauge.Step).Rename(agent.oldStep, agent.newStep, isRefactored, orderMap, &isConcept)
 				if isRefactored {
 					conceptsRefactored[concept.FileName] = append(conceptsRefactored[concept.FileName], diff)
 				}
@@ -264,7 +264,7 @@ func SliceIndex(limit int, predicate func(i int) bool) int {
 	return -1
 }
 
-func getRefactorAgent(oldStepText, newStepText string, runner runner.Runner) (*rephraseRefactorer, []parser.ParseError) {
+func getRefactorAgent(oldStepText, newStepText string, r runner.Runner) (*rephraseRefactorer, []parser.ParseError) {
 	specParser := new(parser.SpecParser)
 	stepTokens, errs := specParser.GenerateTokens("* "+oldStepText+"\n"+"*"+newStepText, "")
 	if len(errs) > 0 {
@@ -279,11 +279,11 @@ func getRefactorAgent(oldStepText, newStepText string, runner runner.Runner) (*r
 		}
 		steps = append(steps, step)
 	}
-	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], runner: runner}, []parser.ParseError{}
+	return &rephraseRefactorer{oldStep: steps[0], newStep: steps[1], runner: r}, []parser.ParseError{}
 }
 
 func (agent *rephraseRefactorer) requestRunnerForRefactoring(testRunner runner.Runner, stepName string, shouldSaveChanges bool) ([]*gauge_messages.FileChanges, error) {
-	refactorRequest, err := agent.createRefactorRequest(testRunner, stepName, shouldSaveChanges)
+	refactorRequest, err := agent.createRefactorRequest(stepName, shouldSaveChanges)
 	if err != nil {
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (agent *rephraseRefactorer) sendRefactorRequest(testRunner runner.Runner, r
 }
 
 //Todo: Check for inline tables
-func (agent *rephraseRefactorer) createRefactorRequest(runner runner.Runner, stepName string, shouldSaveChanges bool) (*gauge_messages.Message, error) {
+func (agent *rephraseRefactorer) createRefactorRequest(stepName string, shouldSaveChanges bool) (*gauge_messages.Message, error) {
 	oldStepValue, err := agent.getStepValueFor(agent.oldStep, stepName)
 	if err != nil {
 		return nil, err
@@ -347,9 +347,9 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 	return parser.ConvertToStepText(agent.newStep.Fragments)
 }
 
-func (agent *rephraseRefactorer) getStepNameFromRunner(runner runner.Runner) (string, error, *parser.Warning) {
+func (agent *rephraseRefactorer) getStepNameFromRunner(r runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: agent.oldStep.Value}}
-	responseMessage, err := runner.ExecuteMessageWithTimeout(stepNameMessage)
+	responseMessage, err := r.ExecuteMessageWithTimeout(stepNameMessage)
 	if err != nil {
 		return "", err, nil
 	}
@@ -431,11 +431,11 @@ func printRefactoringSummary(refactoringResult *refactoringResult) {
 
 // RefactorSteps performs rephrase refactoring and prints the refactoring summary which includes errors and warnings generated during refactoring and
 // files changed during refactoring : specification files, concept files and the implementation files changed.
-func RefactorSteps(oldStep, newStep string, runner runner.Runner, specDirs []string) {
-	refactoringResult := GetRefactoringChanges(oldStep, newStep, runner, specDirs, true)
-	err := runner.Kill()
+func RefactorSteps(oldStep, newStep string, r runner.Runner, specDirs []string) {
+	refactoringResult := GetRefactoringChanges(oldStep, newStep, r, specDirs, true)
+	err := r.Kill()
 	if err != nil {
-		logger.Errorf(true, "failed to kill runner with pid: %d", runner.Pid())
+		logger.Errorf(true, "failed to kill runner with pid: %d", r.Pid())
 	}
 	refactoringResult.WriteToDisk()
 	printRefactoringSummary(refactoringResult)
