@@ -265,7 +265,7 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 		plugin.ExecutionClient = gauge_messages.NewExecutionClient(gRPCConn)
 	}
 
-	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
+	logger.Debugf(true, "Successfully made the connection with plugin with port: %s", port)
 	return plugin, nil
 }
 
