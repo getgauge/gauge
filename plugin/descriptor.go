@@ -26,7 +26,8 @@ import (
 type pluginCapability string
 
 const (
-	streamResultCapability pluginCapability = "stream_result"
+	gRPCSupportCapability pluginCapability = "grpc_support"
+	executionService  pluginCapability = "execution"
 )
 
 type pluginDescriptor struct {

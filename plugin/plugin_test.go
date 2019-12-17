@@ -18,17 +18,30 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	gm "github.com/getgauge/gauge/gauge_messages"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
+	"google.golang.org/grpc"
 )
+
+type mockResultClient struct {
+	invoked bool
+}
+
+func (client *mockResultClient) NotifySuiteResult(c context.Context, r *gm.SuiteExecutionResult, opts ...grpc.CallOption) (*gm.Empty, error) {
+	client.invoked = true
+	return nil, nil
+}
 
 func TestGetPluginDescriptorFromJSON(t *testing.T) {
 	testData := "_testdata"
@@ -145,5 +158,23 @@ func TestGetPluginsWithoutScope(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Failed GetPluginWithoutScope.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestSendMessageShouldUseGRPCConnectionIfAvailable(t *testing.T) {
+	c := &mockResultClient{}
+	p := &plugin{
+		gRPCConn:     &grpc.ClientConn{},
+		ResultClient: c,
+	}
+
+	e := p.sendMessage(&gm.Message{MessageType: gm.Message_SuiteExecutionResult, SuiteExecutionResult: &gm.SuiteExecutionResult{}})
+
+	if e != nil {
+		t.Errorf("Expected error to be nil. Got : %v", e)
+	}
+
+	if !c.invoked {
+		t.Errorf("Expected grpc client to be invoked")
 	}
 }

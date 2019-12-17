@@ -28,7 +28,6 @@ import (
 type Handler interface {
 	NotifyPlugins(*gauge_messages.Message)
 	GracefullyKillPlugins()
-	ExtendTimeout(string)
 }
 
 // GaugePlugins holds a reference to all plugins launched. The plugins are listed in project manifest
@@ -56,43 +55,8 @@ func (gp *GaugePlugins) NotifyPlugins(message *gauge_messages.Message) {
 		}
 	}
 
-	var pluginsWithCapabilityToChunk map[string]*plugin = make(map[string]*plugin)
-	var pluginsWithoutCapabilityToChunk map[string]*plugin = make(map[string]*plugin)
-
 	for id, plugin := range gp.pluginsMap {
-		if !plugin.descriptor.hasCapability(streamResultCapability) {
-			pluginsWithoutCapabilityToChunk[id] = plugin
-		} else {
-			pluginsWithCapabilityToChunk[id] = plugin
-		}
-	}
-
-	for id, plugin := range pluginsWithoutCapabilityToChunk {
 		handle(id, plugin, plugin.sendMessage(message))
-	}
-
-	items := []*gauge_messages.ProtoItem{}
-	for _, sr := range message.SuiteExecutionResult.GetSuiteResult().GetSpecResults() {
-		for _, i := range sr.ProtoSpec.Items {
-			i.FileName = sr.ProtoSpec.FileName
-			items = append(items, i)
-		}
-		sr.ProtoSpec.ItemCount = int64(len(sr.ProtoSpec.Items))
-		sr.ProtoSpec.Items = nil
-	}
-
-	for id, plugin := range pluginsWithCapabilityToChunk {
-		if message.MessageType == gauge_messages.Message_SuiteExecutionResult {
-			message.SuiteExecutionResult.SuiteResult.Chunked = true
-			message.SuiteExecutionResult.SuiteResult.ChunkSize = int64(len(items))
-			handle(id, plugin, plugin.sendMessage(message))
-			for _, i := range items {
-				m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteExecutionResultItem, SuiteExecutionResultItem: &gauge_messages.SuiteExecutionResultItem{ResultItem: i}}
-				handle(id, plugin, plugin.sendMessage(m))
-			}
-		} else {
-			handle(id, plugin, plugin.sendMessage(message))
-		}
 	}
 }
 
@@ -120,13 +84,4 @@ func (gp *GaugePlugins) GracefullyKillPlugins() {
 		}(pl)
 	}
 	wg.Wait()
-}
-
-// ExtendTimeout resets the kill timer of the plugin
-func (gp *GaugePlugins) ExtendTimeout(id string) {
-	p := gp.pluginsMap[id]
-	err := p.rejuvenate()
-	if err != nil {
-		logger.Errorf(false, "Unable to extend timeout in plugin %s: %s", p.descriptor.Name, err.Error())
-	}
 }
