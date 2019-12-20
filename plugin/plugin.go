@@ -52,15 +52,13 @@ const (
 )
 
 type plugin struct {
-	mutex           *sync.Mutex
-	connection      net.Conn
-	gRPCConn        *grpc.ClientConn
-	ResultClient    gauge_messages.ResultClient
-	ProcessClient   gauge_messages.ProcessClient
-	ExecutionClient gauge_messages.ExecutionClient
-	pluginCmd       *exec.Cmd
-	descriptor      *pluginDescriptor
-	killTimer       *time.Timer
+	mutex          *sync.Mutex
+	connection     net.Conn
+	gRPCConn       *grpc.ClientConn
+	ReporterClient gauge_messages.ReporterClient
+	pluginCmd      *exec.Cmd
+	descriptor     *pluginDescriptor
+	killTimer      *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -71,7 +69,7 @@ func isProcessRunning(p *plugin) bool {
 }
 
 func (p *plugin) killGrpcProcess() error {
-	m, err := p.ProcessClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	m, err := p.ReporterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
 	if m == nil || err != nil {
 		return err
 	}
@@ -109,7 +107,7 @@ func (p *plugin) killGrpcProcess() error {
 
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
-	if p.gRPCConn != nil && p.ProcessClient != nil {
+	if p.gRPCConn != nil && p.ReporterClient != nil {
 		return p.killGrpcProcess()
 	}
 	if isProcessRunning(p) {
@@ -255,14 +253,10 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 		return nil, err
 	}
 	plugin := &plugin{
-		pluginCmd:     cmd,
-		descriptor:    pd,
-		gRPCConn:      gRPCConn,
-		ProcessClient: gauge_messages.NewProcessClient(gRPCConn),
-		ResultClient:  gauge_messages.NewResultClient(gRPCConn),
-	}
-	if plugin.descriptor.hasCapability(executionService) {
-		plugin.ExecutionClient = gauge_messages.NewExecutionClient(gRPCConn)
+		pluginCmd:      cmd,
+		descriptor:     pd,
+		gRPCConn:       gRPCConn,
+		ReporterClient: gauge_messages.NewReporterClient(gRPCConn),
 	}
 
 	logger.Debugf(true, "Successfully made the connection with plugin with port: %s", port)
@@ -406,29 +400,25 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 func (p *plugin) invokeService(m *gauge_messages.Message) error {
 	ctx := context.Background()
 	var err error
-	if m.MessageType == gauge_messages.Message_SuiteExecutionResult {
-		_, err = p.ResultClient.NotifySuiteResult(ctx, m.GetSuiteExecutionResult())
-		return err
-	}
-	if p.ExecutionClient != nil {
-		switch m.GetMessageType() {
-		case gauge_messages.Message_ExecutionStarting:
-			_, err = p.ExecutionClient.StartExecution(ctx, m.GetExecutionStartingRequest())
-		case gauge_messages.Message_ExecutionEnding:
-			_, err = p.ExecutionClient.FinishExecution(ctx, m.GetExecutionEndingRequest())
-		case gauge_messages.Message_SpecExecutionEnding:
-			_, err = p.ExecutionClient.FinishSpecExecution(ctx, m.GetSpecExecutionEndingRequest())
-		case gauge_messages.Message_SpecExecutionStarting:
-			_, err = p.ExecutionClient.StartSpecExecution(ctx, m.GetSpecExecutionStartingRequest())
-		case gauge_messages.Message_ScenarioExecutionEnding:
-			_, err = p.ExecutionClient.FinishScenarioExecution(ctx, m.GetScenarioExecutionEndingRequest())
-		case gauge_messages.Message_ScenarioExecutionStarting:
-			_, err = p.ExecutionClient.StartScenarioExecution(ctx, m.GetScenarioExecutionStartingRequest())
-		case gauge_messages.Message_StepExecutionEnding:
-			_, err = p.ExecutionClient.FinishStepExecution(ctx, m.GetStepExecutionEndingRequest())
-		case gauge_messages.Message_StepExecutionStarting:
-			_, err 	= p.ExecutionClient.StartStepExecution(ctx, m.GetStepExecutionStartingRequest())
-		}
+	switch m.GetMessageType() {
+	case gauge_messages.Message_SuiteExecutionResult:
+		_, err = p.ReporterClient.NotifySuiteResult(ctx, m.GetSuiteExecutionResult())
+	case gauge_messages.Message_ExecutionStarting:
+		_, err = p.ReporterClient.NotifyExecutionStarting(ctx, m.GetExecutionStartingRequest())
+	case gauge_messages.Message_ExecutionEnding:
+		_, err = p.ReporterClient.NotifyExecutionEnding(ctx, m.GetExecutionEndingRequest())
+	case gauge_messages.Message_SpecExecutionEnding:
+		_, err = p.ReporterClient.NotifySpecExecutionEnding(ctx, m.GetSpecExecutionEndingRequest())
+	case gauge_messages.Message_SpecExecutionStarting:
+		_, err = p.ReporterClient.NotifySpecExecutionStarting(ctx, m.GetSpecExecutionStartingRequest())
+	case gauge_messages.Message_ScenarioExecutionEnding:
+		_, err = p.ReporterClient.NotifyScenarioExecutionEnding(ctx, m.GetScenarioExecutionEndingRequest())
+	case gauge_messages.Message_ScenarioExecutionStarting:
+		_, err = p.ReporterClient.NotifyScenarioExecutionStarting(ctx, m.GetScenarioExecutionStartingRequest())
+	case gauge_messages.Message_StepExecutionEnding:
+		_, err = p.ReporterClient.NotifyStepExecutionEnding(ctx, m.GetStepExecutionEndingRequest())
+	case gauge_messages.Message_StepExecutionStarting:
+		_, err = p.ReporterClient.NotifyStepExecutionStarting(ctx, m.GetStepExecutionStartingRequest())
 	}
 	return err
 }

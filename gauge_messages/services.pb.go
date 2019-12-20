@@ -25,46 +25,50 @@ const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 func init() { proto.RegisterFile("services.proto", fileDescriptor_8e16ccb8c5307b32) }
 
 var fileDescriptor_8e16ccb8c5307b32 = []byte{
-	// 616 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x56, 0xdd, 0x6e, 0xd3, 0x4c,
-	0x10, 0x95, 0x3e, 0x7d, 0x14, 0x32, 0x2d, 0x29, 0x2c, 0x22, 0xad, 0xca, 0x05, 0x05, 0xca, 0x5f,
-	0x05, 0x16, 0x0a, 0xe2, 0x01, 0x4a, 0x93, 0x46, 0x15, 0x6d, 0x15, 0xc5, 0x12, 0xa2, 0x91, 0x10,
-	0xda, 0x38, 0x13, 0x67, 0xa9, 0xed, 0x35, 0xbb, 0x63, 0xa0, 0x3c, 0x12, 0xcf, 0xc1, 0x8b, 0xf0,
-	0x26, 0xc8, 0xff, 0x49, 0x1c, 0x3b, 0x60, 0xf5, 0x2e, 0xd9, 0x39, 0x73, 0xce, 0x9c, 0x99, 0xd9,
-	0x4d, 0xa0, 0xa9, 0x51, 0x7d, 0x15, 0x16, 0x6a, 0xc3, 0x57, 0x92, 0x24, 0x6b, 0xda, 0x3c, 0xb0,
-	0xd1, 0x70, 0x51, 0x6b, 0x6e, 0xa3, 0xde, 0x69, 0xa6, 0x9f, 0xe2, 0x78, 0xfb, 0x77, 0x03, 0x1a,
-	0xdd, 0xef, 0x68, 0x05, 0x24, 0xa4, 0xc7, 0x86, 0xb0, 0x7d, 0xec, 0x09, 0x12, 0xdc, 0x11, 0x3f,
-	0xd0, 0x0c, 0x04, 0x61, 0x87, 0x13, 0x37, 0x49, 0x2a, 0x64, 0x77, 0x8d, 0x79, 0x2a, 0xa3, 0xeb,
-	0xfa, 0x74, 0xb9, 0xf3, 0xb4, 0x70, 0x9c, 0xb2, 0x99, 0xc4, 0x29, 0xd0, 0x03, 0xd4, 0xbe, 0xf4,
-	0x34, 0x32, 0x0b, 0x9a, 0x26, 0x71, 0x45, 0xb9, 0xda, 0xb3, 0xaa, 0x54, 0x45, 0xc2, 0xb3, 0x07,
-	0xf8, 0x25, 0x40, 0x4d, 0x7f, 0x2f, 0x72, 0x0e, 0x5b, 0x33, 0x06, 0x7c, 0xb4, 0xae, 0xae, 0xfe,
-	0x0b, 0x60, 0x51, 0x59, 0x21, 0x6b, 0xee, 0xe1, 0xc5, 0x62, 0xfa, 0x5c, 0xb8, 0xb6, 0x8f, 0x8f,
-	0x70, 0x6f, 0xc6, 0x87, 0x85, 0x1e, 0x57, 0x42, 0x5e, 0x9d, 0x17, 0x0d, 0xad, 0xd8, 0x4b, 0xc2,
-	0x9c, 0xfb, 0x79, 0x55, 0xf0, 0xb3, 0x08, 0xa9, 0xed, 0x29, 0x6b, 0x20, 0xa1, 0x5f, 0xd5, 0xc0,
-	0xd9, 0x70, 0x6d, 0xb1, 0x21, 0xac, 0xc7, 0x21, 0x0c, 0xf9, 0xd8, 0xc3, 0xe5, 0x79, 0x51, 0xf0,
-	0x9f, 0xb9, 0x3f, 0xc3, 0x9d, 0x23, 0xe1, 0x09, 0x3d, 0x9d, 0x77, 0xb2, 0x5f, 0xe9, 0xa4, 0xeb,
-	0x8d, 0xeb, 0xf8, 0x50, 0xb0, 0x95, 0x68, 0x15, 0x46, 0x65, 0xac, 0x1c, 0x55, 0x4d, 0xcd, 0xdc,
-	0xdf, 0xdc, 0xaa, 0xef, 0x57, 0xae, 0x7a, 0x4d, 0xad, 0x11, 0x6c, 0xc6, 0x5a, 0xb9, 0xce, 0x93,
-	0xd2, 0xdc, 0x7a, 0x1a, 0xed, 0x5f, 0xd7, 0xa0, 0x71, 0x10, 0xd0, 0x54, 0x2a, 0xe1, 0xd9, 0xac,
-	0x03, 0x8d, 0x43, 0x6e, 0x4d, 0xf1, 0x48, 0x38, 0xc8, 0x76, 0x17, 0x39, 0xb2, 0x50, 0xaa, 0xb2,
-	0xfc, 0xaa, 0xb1, 0x3e, 0xac, 0xf7, 0x30, 0x5a, 0xe5, 0x33, 0xee, 0x22, 0xbb, 0xbf, 0x6c, 0xf6,
-	0x61, 0x24, 0xa5, 0xd9, 0x2d, 0x07, 0x24, 0x9d, 0xf8, 0x04, 0x9b, 0x3d, 0xa4, 0x9e, 0x23, 0x47,
-	0x7d, 0x4e, 0x84, 0xca, 0xd3, 0x65, 0xd7, 0xfc, 0xcd, 0xe2, 0xf1, 0xb1, 0xeb, 0x3b, 0xe8, 0xa2,
-	0x47, 0x3c, 0x74, 0x1f, 0x56, 0x3f, 0x43, 0x93, 0x09, 0x98, 0xb0, 0x31, 0x53, 0xb2, 0x66, 0xa5,
-	0x25, 0xe9, 0xb4, 0xe8, 0x07, 0x15, 0x88, 0xac, 0xea, 0x5b, 0x09, 0x69, 0x5f, 0x6a, 0x11, 0xca,
-	0x6b, 0xb6, 0xb7, 0x2c, 0x2d, 0x0b, 0xa7, 0xe4, 0x8f, 0x57, 0xa0, 0x32, 0x81, 0x56, 0x0f, 0xa9,
-	0xe8, 0xb0, 0xb4, 0x3b, 0xc6, 0xea, 0xee, 0x9c, 0x08, 0x4d, 0x99, 0xc0, 0x07, 0xb8, 0x99, 0x21,
-	0x4c, 0x0a, 0x46, 0xec, 0x65, 0xb1, 0xb0, 0x60, 0x34, 0x4f, 0x72, 0x28, 0xc7, 0xd9, 0x64, 0xb7,
-	0x17, 0xe1, 0xa1, 0x42, 0x47, 0x4c, 0x26, 0xec, 0x14, 0x6e, 0x0c, 0x70, 0xc2, 0x2d, 0x92, 0xaa,
-	0xb8, 0x20, 0x69, 0xa4, 0x74, 0x41, 0x72, 0x40, 0xb2, 0xc6, 0x43, 0x58, 0x1b, 0xa0, 0x0e, 0x1c,
-	0x62, 0x7d, 0xb8, 0x7d, 0x26, 0x49, 0x4c, 0x2e, 0xa3, 0x9f, 0xe8, 0xe4, 0xb0, 0xd8, 0xf5, 0x30,
-	0x98, 0xdd, 0x89, 0x18, 0x55, 0xb2, 0xce, 0xed, 0x09, 0x34, 0xde, 0x73, 0x47, 0x8c, 0x79, 0x58,
-	0xeb, 0x39, 0x6c, 0x24, 0x5f, 0xe2, 0xc7, 0xf3, 0xd1, 0xb2, 0x49, 0xa5, 0x88, 0xb4, 0xfe, 0xbd,
-	0x6a, 0x50, 0xe2, 0xe1, 0x04, 0xae, 0xf7, 0x95, 0xb4, 0x50, 0x6b, 0x76, 0x00, 0xff, 0xbf, 0x13,
-	0x8e, 0x53, 0x7c, 0x9a, 0xc3, 0xd3, 0x04, 0x54, 0x7d, 0x09, 0xdf, 0x3e, 0x87, 0x96, 0x25, 0x5d,
-	0x83, 0xa6, 0x32, 0xb0, 0xa7, 0xf4, 0x4d, 0xaa, 0x0b, 0x1d, 0x03, 0x7f, 0xfe, 0xd7, 0xec, 0x45,
-	0x09, 0xa7, 0x49, 0xc2, 0x68, 0x2d, 0xfa, 0xbb, 0xf3, 0xfa, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff,
-	0xab, 0x5a, 0xaa, 0x6a, 0x20, 0x09, 0x00, 0x00,
+	// 688 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x57, 0xdb, 0x6e, 0xd3, 0x40,
+	0x10, 0x95, 0x10, 0x2a, 0x30, 0x2d, 0x69, 0x59, 0xd4, 0x0b, 0xad, 0x50, 0xcb, 0x1d, 0x2a, 0xb0,
+	0x50, 0x11, 0x1f, 0x00, 0xbd, 0x44, 0x15, 0xb4, 0x8a, 0x62, 0xa9, 0xa2, 0x95, 0x00, 0x6d, 0xdc,
+	0x49, 0xb2, 0xad, 0xe3, 0x35, 0xbb, 0x63, 0xa0, 0x7c, 0x12, 0x2f, 0x3c, 0xf1, 0x7f, 0xc8, 0xf1,
+	0x25, 0x89, 0xed, 0x75, 0x6a, 0xd3, 0xb7, 0x68, 0x67, 0xe6, 0x9c, 0x39, 0xbb, 0xb3, 0x7b, 0x62,
+	0x68, 0x68, 0x54, 0xdf, 0x85, 0x83, 0xda, 0xf2, 0x95, 0x24, 0xc9, 0x1a, 0x3d, 0x1e, 0xf4, 0xd0,
+	0x1a, 0xa0, 0xd6, 0xbc, 0x87, 0x7a, 0xb5, 0x91, 0xfc, 0x8a, 0xe2, 0x5b, 0x7f, 0x17, 0x60, 0xa6,
+	0x1d, 0x78, 0x1e, 0x2a, 0x76, 0x0c, 0x73, 0x47, 0xdc, 0x15, 0xa7, 0x9c, 0xd0, 0x26, 0xf4, 0xd9,
+	0x23, 0x6b, 0xb2, 0xd6, 0x0a, 0x57, 0x93, 0x8c, 0x36, 0x7e, 0x0b, 0x50, 0xd3, 0xea, 0xe3, 0xf2,
+	0x24, 0xed, 0x4b, 0x4f, 0x23, 0x3b, 0x81, 0x95, 0x7d, 0x4f, 0x90, 0xe0, 0xae, 0xf8, 0x85, 0x76,
+	0x20, 0x08, 0x77, 0x38, 0x71, 0x9b, 0xa4, 0x42, 0xb6, 0x98, 0x45, 0xd8, 0x1d, 0xf8, 0x74, 0xb1,
+	0xfa, 0x2c, 0xb7, 0xfc, 0x13, 0x9d, 0x80, 0x84, 0xf4, 0x6c, 0xe2, 0x14, 0xe8, 0x14, 0xdb, 0x81,
+	0x86, 0x4d, 0x5c, 0x51, 0x1a, 0x67, 0xcf, 0xcb, 0x4a, 0x15, 0x09, 0xaf, 0x97, 0x74, 0x7f, 0x69,
+	0x92, 0x63, 0x58, 0x1e, 0x13, 0xe0, 0xa3, 0x73, 0x75, 0xfd, 0x9f, 0x03, 0x1b, 0xb6, 0x15, 0xa2,
+	0x8e, 0x34, 0xbc, 0xcc, 0xed, 0xeb, 0x78, 0xb8, 0xb6, 0x8e, 0xcf, 0xb0, 0x36, 0xa6, 0xc3, 0x41,
+	0x8f, 0x2b, 0x21, 0xaf, 0x4e, 0x8b, 0x86, 0xa5, 0x48, 0x4b, 0x8c, 0x3c, 0xd2, 0xf3, 0x3a, 0xa7,
+	0x27, 0x9b, 0x52, 0x5b, 0x53, 0xba, 0x81, 0x84, 0x7e, 0xd9, 0x06, 0x8e, 0x87, 0x6b, 0x93, 0x9d,
+	0xc0, 0x6c, 0x14, 0x8a, 0xee, 0xc8, 0xc3, 0xe2, 0xba, 0x61, 0xb0, 0x32, 0xf6, 0x19, 0xdc, 0xdd,
+	0x13, 0x9e, 0xd0, 0xfd, 0x49, 0x25, 0x9b, 0xa5, 0x4a, 0x76, 0xbd, 0xd3, 0x3a, 0x3a, 0x14, 0x2c,
+	0xc7, 0x5c, 0xb9, 0xa3, 0xb2, 0xa6, 0x1e, 0x55, 0x4d, 0xce, 0x91, 0xbe, 0x89, 0x51, 0xdf, 0x2c,
+	0x1d, 0xf5, 0x9a, 0x5c, 0x1d, 0x98, 0x8f, 0xb8, 0x46, 0x3c, 0x4f, 0x8d, 0xb5, 0x35, 0x39, 0x76,
+	0xe0, 0xd6, 0x36, 0x77, 0xfa, 0xb8, 0x27, 0x5c, 0x64, 0x1b, 0xd9, 0xaa, 0x34, 0x94, 0xe0, 0x16,
+	0x5f, 0x2e, 0xd6, 0x82, 0xd9, 0x26, 0x0e, 0x87, 0xf7, 0x90, 0x0f, 0x90, 0xad, 0x17, 0x9d, 0x76,
+	0x18, 0x49, 0x60, 0x36, 0xcc, 0x09, 0x71, 0x5f, 0x5f, 0x61, 0xbe, 0x89, 0xd4, 0x74, 0x65, 0xa7,
+	0xc5, 0x89, 0x50, 0x79, 0xda, 0x74, 0xb1, 0xdf, 0x66, 0x97, 0xf7, 0x07, 0xbe, 0x8b, 0x03, 0xf4,
+	0x88, 0x87, 0x7a, 0xc3, 0xee, 0xc7, 0x60, 0x52, 0x02, 0x1b, 0xe6, 0xc6, 0x5a, 0xd6, 0xcc, 0xd8,
+	0x92, 0x4e, 0x9a, 0x7e, 0x50, 0x92, 0x91, 0x76, 0xbd, 0x10, 0x83, 0xb6, 0xa4, 0x16, 0x21, 0xbd,
+	0x66, 0x85, 0xee, 0x92, 0x86, 0x13, 0xf0, 0x27, 0x53, 0xb2, 0x52, 0x82, 0xa5, 0x26, 0x52, 0x5e,
+	0xa1, 0x71, 0x77, 0xac, 0xe9, 0xbb, 0xf3, 0x51, 0x68, 0x4a, 0x09, 0x3e, 0xc1, 0xed, 0x34, 0xc3,
+	0xa6, 0xa0, 0xc3, 0x5e, 0xe5, 0x1b, 0x0b, 0x3a, 0x93, 0x20, 0xdb, 0xf2, 0x34, 0x3d, 0xd9, 0x95,
+	0x6c, 0x7a, 0xc8, 0xb0, 0x23, 0xba, 0x5d, 0x76, 0x00, 0x37, 0xdb, 0xd8, 0xe5, 0x0e, 0x49, 0x95,
+	0x1f, 0x90, 0x24, 0x62, 0x1c, 0x90, 0x51, 0x42, 0xdc, 0xe8, 0x3b, 0xb8, 0xfe, 0x41, 0xb8, 0x6e,
+	0xfe, 0xf5, 0x0a, 0x57, 0x5b, 0x4a, 0x3a, 0xa8, 0x75, 0xf9, 0xd4, 0x6e, 0xfd, 0xb9, 0x11, 0xb6,
+	0xe4, 0x4b, 0x45, 0xa8, 0xd8, 0x09, 0x2c, 0x1f, 0x4a, 0x12, 0xdd, 0x8b, 0xdc, 0xfb, 0x5a, 0xc1,
+	0x8b, 0x0d, 0xd7, 0xa3, 0x03, 0x6b, 0x11, 0x76, 0xa1, 0x01, 0x56, 0xf4, 0x49, 0x03, 0xc7, 0x19,
+	0xac, 0xc7, 0x1c, 0x26, 0x53, 0xaa, 0xe1, 0x5f, 0x53, 0xf5, 0x14, 0xf9, 0x51, 0x45, 0xdb, 0x32,
+	0x70, 0x7c, 0x81, 0x7b, 0x05, 0x1c, 0xd1, 0x2b, 0x57, 0xc9, 0x4e, 0x0c, 0xf8, 0x5d, 0xb8, 0x6f,
+	0xd8, 0xaf, 0x98, 0xa3, 0xaa, 0x85, 0x4c, 0xd5, 0x91, 0x77, 0x84, 0x4a, 0xb6, 0x61, 0xc0, 0x3f,
+	0x82, 0xc5, 0xcc, 0xdc, 0xc6, 0xd8, 0x97, 0xb5, 0x0a, 0xe3, 0x93, 0x7e, 0x27, 0xee, 0x3b, 0xfc,
+	0xab, 0xdb, 0x46, 0x1d, 0xb8, 0x54, 0xf0, 0x96, 0x85, 0xc1, 0x14, 0x38, 0xca, 0x32, 0x21, 0xfe,
+	0xff, 0x8d, 0x7d, 0xff, 0x02, 0x96, 0x1c, 0x39, 0xb0, 0xa8, 0x2f, 0x83, 0x5e, 0x9f, 0x7e, 0x48,
+	0x75, 0xae, 0xa3, 0xc4, 0xdf, 0xd7, 0x1a, 0xcd, 0x61, 0xc1, 0x41, 0x5c, 0xd0, 0x99, 0x19, 0x7e,
+	0x1b, 0xbc, 0xf9, 0x17, 0x00, 0x00, 0xff, 0xff, 0x51, 0x45, 0x6d, 0x2e, 0x4d, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -75,10 +79,14 @@ var _ grpc.ClientConn
 // is compatible with the grpc package it is being compiled against.
 const _ = grpc.SupportPackageIsVersion4
 
-// ExecutionClient is the client API for Execution service.
+// RunnerClient is the client API for Runner service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ExecutionClient interface {
+type RunnerClient interface {
+	// ValidateStep is a RPC to validate a given step.
+	//
+	// Accepts a StepValidateRequest message and returns a StepValidateResponse message
+	ValidateStep(ctx context.Context, in *StepValidateRequest, opts ...grpc.CallOption) (*StepValidateResponse, error)
 	// SuiteDataStoreInit is a RPC to initialize the suite level data store.
 	//
 	// Accepts a Empty message and returns a ExecutionStatusResponse message
@@ -127,126 +135,256 @@ type ExecutionClient interface {
 	//
 	// Accepts a ExecutionEndingRequest message and returns a ExecutionStatusResponse message
 	FinishExecution(ctx context.Context, in *ExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error)
+	// CacheFile is a RPC to tell runner to load/reload/unload a implementation file.
+	//
+	// Accepts a CacheFileRequest message and returns a Empty message
+	CacheFile(ctx context.Context, in *CacheFileRequest, opts ...grpc.CallOption) (*Empty, error)
+	// GetStepName is a RPC to get information about the given step.
+	//
+	// Accepts a StepNameRequest message and returns a StepNameResponse message.
+	GetStepName(ctx context.Context, in *StepNameRequest, opts ...grpc.CallOption) (*StepNameResponse, error)
+	// GetGlobPatterns is a RPC to get the file path pattern which needs to be cached.
+	//
+	// Accepts a Empty message and returns a ImplementationFileGlobPatternResponse message.
+	GetGlobPatterns(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileGlobPatternResponse, error)
+	// GetStepNames is a RPC to get all the available steps from the runner.
+	//
+	// Accepts a StepNamesRequest message and returns a StepNamesResponse
+	GetStepNames(ctx context.Context, in *StepNamesRequest, opts ...grpc.CallOption) (*StepNamesResponse, error)
+	// GetStepPositions is a RPC to get positions of all available steps in a given file.
+	//
+	// Accepts a StepPositionsRequest message and returns a StepPositionsResponse message
+	GetStepPositions(ctx context.Context, in *StepPositionsRequest, opts ...grpc.CallOption) (*StepPositionsResponse, error)
+	// GetImplementationFiles is a RPC get all the existing implementation files.
+	//
+	// Accepts a Empty and returns a ImplementationFileListResponse message.
+	GetImplementationFiles(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileListResponse, error)
+	// ImplementStub is a RPC to to ask runner to add a given implementation to given file.
+	//
+	// Accepts a StubImplementationCodeRequest and returns a FileDiff message.
+	ImplementStub(ctx context.Context, in *StubImplementationCodeRequest, opts ...grpc.CallOption) (*FileDiff, error)
+	// Refactor is a RPC to refactor a given step in implementation file.
+	//
+	// Accepts a RefactorRequest message and returns a RefactorResponse message.
+	Refactor(ctx context.Context, in *RefactorRequest, opts ...grpc.CallOption) (*RefactorResponse, error)
+	// Kill is a RPC tell plugin to stop grpc server and kill the plugin process.
+	//
+	// Accepts a KillProcessRequest message and returns a Empty message.
+	Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
-type executionClient struct {
+type runnerClient struct {
 	cc *grpc.ClientConn
 }
 
-func NewExecutionClient(cc *grpc.ClientConn) ExecutionClient {
-	return &executionClient{cc}
+func NewRunnerClient(cc *grpc.ClientConn) RunnerClient {
+	return &runnerClient{cc}
 }
 
-func (c *executionClient) InitializeSuiteDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
-	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/InitializeSuiteDataStore", in, out, opts...)
+func (c *runnerClient) ValidateStep(ctx context.Context, in *StepValidateRequest, opts ...grpc.CallOption) (*StepValidateResponse, error) {
+	out := new(StepValidateResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/ValidateStep", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) StartExecution(ctx context.Context, in *ExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) InitializeSuiteDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/StartExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/InitializeSuiteDataStore", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) InitializeSpecDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) StartExecution(ctx context.Context, in *ExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/InitializeSpecDataStore", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/StartExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) StartSpecExecution(ctx context.Context, in *SpecExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) InitializeSpecDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/StartSpecExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/InitializeSpecDataStore", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) InitializeScenarioDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) StartSpecExecution(ctx context.Context, in *SpecExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/InitializeScenarioDataStore", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/StartSpecExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) StartScenarioExecution(ctx context.Context, in *ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) InitializeScenarioDataStore(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/StartScenarioExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/InitializeScenarioDataStore", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) StartStepExecution(ctx context.Context, in *StepExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) StartScenarioExecution(ctx context.Context, in *ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/StartStepExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/StartScenarioExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) ExecuteStep(ctx context.Context, in *ExecuteStepRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) StartStepExecution(ctx context.Context, in *StepExecutionStartingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/ExecuteStep", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/StartStepExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) FinishStepExecution(ctx context.Context, in *StepExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) ExecuteStep(ctx context.Context, in *ExecuteStepRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/FinishStepExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/ExecuteStep", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) FinishScenarioExecution(ctx context.Context, in *ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) FinishStepExecution(ctx context.Context, in *StepExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/FinishScenarioExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/FinishStepExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) FinishSpecExecution(ctx context.Context, in *SpecExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) FinishScenarioExecution(ctx context.Context, in *ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/FinishSpecExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/FinishScenarioExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *executionClient) FinishExecution(ctx context.Context, in *ExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+func (c *runnerClient) FinishSpecExecution(ctx context.Context, in *SpecExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
 	out := new(ExecutionStatusResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Execution/FinishExecution", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/FinishSpecExecution", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// ExecutionServer is the server API for Execution service.
-type ExecutionServer interface {
+func (c *runnerClient) FinishExecution(ctx context.Context, in *ExecutionEndingRequest, opts ...grpc.CallOption) (*ExecutionStatusResponse, error) {
+	out := new(ExecutionStatusResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/FinishExecution", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) CacheFile(ctx context.Context, in *CacheFileRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/CacheFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) GetStepName(ctx context.Context, in *StepNameRequest, opts ...grpc.CallOption) (*StepNameResponse, error) {
+	out := new(StepNameResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/GetStepName", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) GetGlobPatterns(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileGlobPatternResponse, error) {
+	out := new(ImplementationFileGlobPatternResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/GetGlobPatterns", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) GetStepNames(ctx context.Context, in *StepNamesRequest, opts ...grpc.CallOption) (*StepNamesResponse, error) {
+	out := new(StepNamesResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/GetStepNames", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) GetStepPositions(ctx context.Context, in *StepPositionsRequest, opts ...grpc.CallOption) (*StepPositionsResponse, error) {
+	out := new(StepPositionsResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/GetStepPositions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) GetImplementationFiles(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileListResponse, error) {
+	out := new(ImplementationFileListResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/GetImplementationFiles", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) ImplementStub(ctx context.Context, in *StubImplementationCodeRequest, opts ...grpc.CallOption) (*FileDiff, error) {
+	out := new(FileDiff)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/ImplementStub", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) Refactor(ctx context.Context, in *RefactorRequest, opts ...grpc.CallOption) (*RefactorResponse, error) {
+	out := new(RefactorResponse)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/Refactor", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *runnerClient) Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Runner/Kill", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RunnerServer is the server API for Runner service.
+type RunnerServer interface {
+	// ValidateStep is a RPC to validate a given step.
+	//
+	// Accepts a StepValidateRequest message and returns a StepValidateResponse message
+	ValidateStep(context.Context, *StepValidateRequest) (*StepValidateResponse, error)
 	// SuiteDataStoreInit is a RPC to initialize the suite level data store.
 	//
 	// Accepts a Empty message and returns a ExecutionStatusResponse message
@@ -295,405 +433,6 @@ type ExecutionServer interface {
 	//
 	// Accepts a ExecutionEndingRequest message and returns a ExecutionStatusResponse message
 	FinishExecution(context.Context, *ExecutionEndingRequest) (*ExecutionStatusResponse, error)
-}
-
-func RegisterExecutionServer(s *grpc.Server, srv ExecutionServer) {
-	s.RegisterService(&_Execution_serviceDesc, srv)
-}
-
-func _Execution_InitializeSuiteDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).InitializeSuiteDataStore(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/InitializeSuiteDataStore",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).InitializeSuiteDataStore(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_StartExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExecutionStartingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).StartExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/StartExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).StartExecution(ctx, req.(*ExecutionStartingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_InitializeSpecDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).InitializeSpecDataStore(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/InitializeSpecDataStore",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).InitializeSpecDataStore(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_StartSpecExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SpecExecutionStartingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).StartSpecExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/StartSpecExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).StartSpecExecution(ctx, req.(*SpecExecutionStartingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_InitializeScenarioDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).InitializeScenarioDataStore(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/InitializeScenarioDataStore",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).InitializeScenarioDataStore(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_StartScenarioExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ScenarioExecutionStartingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).StartScenarioExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/StartScenarioExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).StartScenarioExecution(ctx, req.(*ScenarioExecutionStartingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_StartStepExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepExecutionStartingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).StartStepExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/StartStepExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).StartStepExecution(ctx, req.(*StepExecutionStartingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_ExecuteStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExecuteStepRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).ExecuteStep(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/ExecuteStep",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).ExecuteStep(ctx, req.(*ExecuteStepRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_FinishStepExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepExecutionEndingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).FinishStepExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/FinishStepExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).FinishStepExecution(ctx, req.(*StepExecutionEndingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_FinishScenarioExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ScenarioExecutionEndingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).FinishScenarioExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/FinishScenarioExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).FinishScenarioExecution(ctx, req.(*ScenarioExecutionEndingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_FinishSpecExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SpecExecutionEndingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).FinishSpecExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/FinishSpecExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).FinishSpecExecution(ctx, req.(*SpecExecutionEndingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Execution_FinishExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ExecutionEndingRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ExecutionServer).FinishExecution(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Execution/FinishExecution",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExecutionServer).FinishExecution(ctx, req.(*ExecutionEndingRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Execution_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "gauge.messages.Execution",
-	HandlerType: (*ExecutionServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "InitializeSuiteDataStore",
-			Handler:    _Execution_InitializeSuiteDataStore_Handler,
-		},
-		{
-			MethodName: "StartExecution",
-			Handler:    _Execution_StartExecution_Handler,
-		},
-		{
-			MethodName: "InitializeSpecDataStore",
-			Handler:    _Execution_InitializeSpecDataStore_Handler,
-		},
-		{
-			MethodName: "StartSpecExecution",
-			Handler:    _Execution_StartSpecExecution_Handler,
-		},
-		{
-			MethodName: "InitializeScenarioDataStore",
-			Handler:    _Execution_InitializeScenarioDataStore_Handler,
-		},
-		{
-			MethodName: "StartScenarioExecution",
-			Handler:    _Execution_StartScenarioExecution_Handler,
-		},
-		{
-			MethodName: "StartStepExecution",
-			Handler:    _Execution_StartStepExecution_Handler,
-		},
-		{
-			MethodName: "ExecuteStep",
-			Handler:    _Execution_ExecuteStep_Handler,
-		},
-		{
-			MethodName: "FinishStepExecution",
-			Handler:    _Execution_FinishStepExecution_Handler,
-		},
-		{
-			MethodName: "FinishScenarioExecution",
-			Handler:    _Execution_FinishScenarioExecution_Handler,
-		},
-		{
-			MethodName: "FinishSpecExecution",
-			Handler:    _Execution_FinishSpecExecution_Handler,
-		},
-		{
-			MethodName: "FinishExecution",
-			Handler:    _Execution_FinishExecution_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "services.proto",
-}
-
-// AuthoringClient is the client API for Authoring service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type AuthoringClient interface {
-	// CacheFile is a RPC to tell runner to load/reload/unload a implementation file.
-	//
-	// Accepts a CacheFileRequest message and returns a Empty message
-	CacheFile(ctx context.Context, in *CacheFileRequest, opts ...grpc.CallOption) (*Empty, error)
-	// GetStepName is a RPC to get information about the given step.
-	//
-	// Accepts a StepNameRequest message and returns a StepNameResponse message.
-	GetStepName(ctx context.Context, in *StepNameRequest, opts ...grpc.CallOption) (*StepNameResponse, error)
-	// GetGlobPatterns is a RPC to get the file path pattern which needs to be cached.
-	//
-	// Accepts a Empty message and returns a ImplementationFileGlobPatternResponse message.
-	GetGlobPatterns(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileGlobPatternResponse, error)
-	// GetStepNames is a RPC to get all the available steps from the runner.
-	//
-	// Accepts a StepNamesRequest message and returns a StepNamesResponse
-	GetStepNames(ctx context.Context, in *StepNamesRequest, opts ...grpc.CallOption) (*StepNamesResponse, error)
-	// GetStepPositions is a RPC to get positions of all available steps in a given file.
-	//
-	// Accepts a StepPositionsRequest message and returns a StepPositionsResponse message
-	GetStepPositions(ctx context.Context, in *StepPositionsRequest, opts ...grpc.CallOption) (*StepPositionsResponse, error)
-	// GetImplementationFiles is a RPC get all the existing implementation files.
-	//
-	// Accepts a Empty and returns a ImplementationFileListResponse message.
-	GetImplementationFiles(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileListResponse, error)
-	// ImplementStub is a RPC to to ask runner to add a given implementation to given file.
-	//
-	// Accepts a StubImplementationCodeRequest and returns a FileDiff message.
-	ImplementStub(ctx context.Context, in *StubImplementationCodeRequest, opts ...grpc.CallOption) (*FileDiff, error)
-	// Refactor is a RPC to refactor a given step in implementation file.
-	//
-	// Accepts a RefactorRequest message and returns a RefactorResponse message.
-	Refactor(ctx context.Context, in *RefactorRequest, opts ...grpc.CallOption) (*RefactorResponse, error)
-}
-
-type authoringClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewAuthoringClient(cc *grpc.ClientConn) AuthoringClient {
-	return &authoringClient{cc}
-}
-
-func (c *authoringClient) CacheFile(ctx context.Context, in *CacheFileRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/CacheFile", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) GetStepName(ctx context.Context, in *StepNameRequest, opts ...grpc.CallOption) (*StepNameResponse, error) {
-	out := new(StepNameResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/GetStepName", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) GetGlobPatterns(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileGlobPatternResponse, error) {
-	out := new(ImplementationFileGlobPatternResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/GetGlobPatterns", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) GetStepNames(ctx context.Context, in *StepNamesRequest, opts ...grpc.CallOption) (*StepNamesResponse, error) {
-	out := new(StepNamesResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/GetStepNames", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) GetStepPositions(ctx context.Context, in *StepPositionsRequest, opts ...grpc.CallOption) (*StepPositionsResponse, error) {
-	out := new(StepPositionsResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/GetStepPositions", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) GetImplementationFiles(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ImplementationFileListResponse, error) {
-	out := new(ImplementationFileListResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/GetImplementationFiles", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) ImplementStub(ctx context.Context, in *StubImplementationCodeRequest, opts ...grpc.CallOption) (*FileDiff, error) {
-	out := new(FileDiff)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/ImplementStub", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *authoringClient) Refactor(ctx context.Context, in *RefactorRequest, opts ...grpc.CallOption) (*RefactorResponse, error) {
-	out := new(RefactorResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Authoring/Refactor", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// AuthoringServer is the server API for Authoring service.
-type AuthoringServer interface {
 	// CacheFile is a RPC to tell runner to load/reload/unload a implementation file.
 	//
 	// Accepts a CacheFileRequest message and returns a Empty message
@@ -726,401 +465,924 @@ type AuthoringServer interface {
 	//
 	// Accepts a RefactorRequest message and returns a RefactorResponse message.
 	Refactor(context.Context, *RefactorRequest) (*RefactorResponse, error)
-}
-
-func RegisterAuthoringServer(s *grpc.Server, srv AuthoringServer) {
-	s.RegisterService(&_Authoring_serviceDesc, srv)
-}
-
-func _Authoring_CacheFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CacheFileRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).CacheFile(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/CacheFile",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).CacheFile(ctx, req.(*CacheFileRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_GetStepName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepNameRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).GetStepName(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/GetStepName",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).GetStepName(ctx, req.(*StepNameRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_GetGlobPatterns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).GetGlobPatterns(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/GetGlobPatterns",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).GetGlobPatterns(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_GetStepNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepNamesRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).GetStepNames(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/GetStepNames",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).GetStepNames(ctx, req.(*StepNamesRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_GetStepPositions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepPositionsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).GetStepPositions(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/GetStepPositions",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).GetStepPositions(ctx, req.(*StepPositionsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_GetImplementationFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).GetImplementationFiles(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/GetImplementationFiles",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).GetImplementationFiles(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_ImplementStub_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StubImplementationCodeRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).ImplementStub(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/ImplementStub",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).ImplementStub(ctx, req.(*StubImplementationCodeRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Authoring_Refactor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RefactorRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(AuthoringServer).Refactor(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Authoring/Refactor",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(AuthoringServer).Refactor(ctx, req.(*RefactorRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Authoring_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "gauge.messages.Authoring",
-	HandlerType: (*AuthoringServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CacheFile",
-			Handler:    _Authoring_CacheFile_Handler,
-		},
-		{
-			MethodName: "GetStepName",
-			Handler:    _Authoring_GetStepName_Handler,
-		},
-		{
-			MethodName: "GetGlobPatterns",
-			Handler:    _Authoring_GetGlobPatterns_Handler,
-		},
-		{
-			MethodName: "GetStepNames",
-			Handler:    _Authoring_GetStepNames_Handler,
-		},
-		{
-			MethodName: "GetStepPositions",
-			Handler:    _Authoring_GetStepPositions_Handler,
-		},
-		{
-			MethodName: "GetImplementationFiles",
-			Handler:    _Authoring_GetImplementationFiles_Handler,
-		},
-		{
-			MethodName: "ImplementStub",
-			Handler:    _Authoring_ImplementStub_Handler,
-		},
-		{
-			MethodName: "Refactor",
-			Handler:    _Authoring_Refactor_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "services.proto",
-}
-
-// ResultClient is the client API for Result service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ResultClient interface {
-	// NotifySuiteResult is a RPC to tell about the end result of execution
-	//
-	// Accepts a SuiteExecutionResult message and returns a Empty message.
-	NotifySuiteResult(ctx context.Context, in *SuiteExecutionResult, opts ...grpc.CallOption) (*Empty, error)
-}
-
-type resultClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewResultClient(cc *grpc.ClientConn) ResultClient {
-	return &resultClient{cc}
-}
-
-func (c *resultClient) NotifySuiteResult(ctx context.Context, in *SuiteExecutionResult, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Result/NotifySuiteResult", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ResultServer is the server API for Result service.
-type ResultServer interface {
-	// NotifySuiteResult is a RPC to tell about the end result of execution
-	//
-	// Accepts a SuiteExecutionResult message and returns a Empty message.
-	NotifySuiteResult(context.Context, *SuiteExecutionResult) (*Empty, error)
-}
-
-func RegisterResultServer(s *grpc.Server, srv ResultServer) {
-	s.RegisterService(&_Result_serviceDesc, srv)
-}
-
-func _Result_NotifySuiteResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SuiteExecutionResult)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResultServer).NotifySuiteResult(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Result/NotifySuiteResult",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResultServer).NotifySuiteResult(ctx, req.(*SuiteExecutionResult))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Result_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "gauge.messages.Result",
-	HandlerType: (*ResultServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "NotifySuiteResult",
-			Handler:    _Result_NotifySuiteResult_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "services.proto",
-}
-
-// ValidatorClient is the client API for Validator service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ValidatorClient interface {
-	// ValidateStep is a RPC to validate a given step.
-	//
-	// Accepts a StepValidateRequest message and returns a StepValidateResponse message
-	ValidateStep(ctx context.Context, in *StepValidateRequest, opts ...grpc.CallOption) (*StepValidateResponse, error)
-}
-
-type validatorClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewValidatorClient(cc *grpc.ClientConn) ValidatorClient {
-	return &validatorClient{cc}
-}
-
-func (c *validatorClient) ValidateStep(ctx context.Context, in *StepValidateRequest, opts ...grpc.CallOption) (*StepValidateResponse, error) {
-	out := new(StepValidateResponse)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Validator/ValidateStep", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ValidatorServer is the server API for Validator service.
-type ValidatorServer interface {
-	// ValidateStep is a RPC to validate a given step.
-	//
-	// Accepts a StepValidateRequest message and returns a StepValidateResponse message
-	ValidateStep(context.Context, *StepValidateRequest) (*StepValidateResponse, error)
-}
-
-func RegisterValidatorServer(s *grpc.Server, srv ValidatorServer) {
-	s.RegisterService(&_Validator_serviceDesc, srv)
-}
-
-func _Validator_ValidateStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(StepValidateRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ValidatorServer).ValidateStep(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/gauge.messages.Validator/ValidateStep",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ValidatorServer).ValidateStep(ctx, req.(*StepValidateRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-var _Validator_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "gauge.messages.Validator",
-	HandlerType: (*ValidatorServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "ValidateStep",
-			Handler:    _Validator_ValidateStep_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "services.proto",
-}
-
-// ProcessClient is the client API for Process service.
-//
-// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
-type ProcessClient interface {
-	// Kill is a RPC tell plugin to stop grpc server and kill the plugin process.
-	//
-	// Accepts a KillProcessRequest message and returns a Empty message.
-	Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error)
-}
-
-type processClient struct {
-	cc *grpc.ClientConn
-}
-
-func NewProcessClient(cc *grpc.ClientConn) ProcessClient {
-	return &processClient{cc}
-}
-
-func (c *processClient) Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/gauge.messages.Process/Kill", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-// ProcessServer is the server API for Process service.
-type ProcessServer interface {
 	// Kill is a RPC tell plugin to stop grpc server and kill the plugin process.
 	//
 	// Accepts a KillProcessRequest message and returns a Empty message.
 	Kill(context.Context, *KillProcessRequest) (*Empty, error)
 }
 
-func RegisterProcessServer(s *grpc.Server, srv ProcessServer) {
-	s.RegisterService(&_Process_serviceDesc, srv)
+func RegisterRunnerServer(s *grpc.Server, srv RunnerServer) {
+	s.RegisterService(&_Runner_serviceDesc, srv)
 }
 
-func _Process_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _Runner_ValidateStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepValidateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).ValidateStep(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/ValidateStep",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).ValidateStep(ctx, req.(*StepValidateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_InitializeSuiteDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).InitializeSuiteDataStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/InitializeSuiteDataStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).InitializeSuiteDataStore(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_StartExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).StartExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/StartExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).StartExecution(ctx, req.(*ExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_InitializeSpecDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).InitializeSpecDataStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/InitializeSpecDataStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).InitializeSpecDataStore(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_StartSpecExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpecExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).StartSpecExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/StartSpecExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).StartSpecExecution(ctx, req.(*SpecExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_InitializeScenarioDataStore_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).InitializeScenarioDataStore(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/InitializeScenarioDataStore",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).InitializeScenarioDataStore(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_StartScenarioExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScenarioExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).StartScenarioExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/StartScenarioExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).StartScenarioExecution(ctx, req.(*ScenarioExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_StartStepExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).StartStepExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/StartStepExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).StartStepExecution(ctx, req.(*StepExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_ExecuteStep_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecuteStepRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).ExecuteStep(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/ExecuteStep",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).ExecuteStep(ctx, req.(*ExecuteStepRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_FinishStepExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).FinishStepExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/FinishStepExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).FinishStepExecution(ctx, req.(*StepExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_FinishScenarioExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScenarioExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).FinishScenarioExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/FinishScenarioExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).FinishScenarioExecution(ctx, req.(*ScenarioExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_FinishSpecExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpecExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).FinishSpecExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/FinishSpecExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).FinishSpecExecution(ctx, req.(*SpecExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_FinishExecution_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).FinishExecution(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/FinishExecution",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).FinishExecution(ctx, req.(*ExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_CacheFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CacheFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).CacheFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/CacheFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).CacheFile(ctx, req.(*CacheFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_GetStepName_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepNameRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).GetStepName(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/GetStepName",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).GetStepName(ctx, req.(*StepNameRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_GetGlobPatterns_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).GetGlobPatterns(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/GetGlobPatterns",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).GetGlobPatterns(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_GetStepNames_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepNamesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).GetStepNames(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/GetStepNames",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).GetStepNames(ctx, req.(*StepNamesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_GetStepPositions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepPositionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).GetStepPositions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/GetStepPositions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).GetStepPositions(ctx, req.(*StepPositionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_GetImplementationFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).GetImplementationFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/GetImplementationFiles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).GetImplementationFiles(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_ImplementStub_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StubImplementationCodeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).ImplementStub(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/ImplementStub",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).ImplementStub(ctx, req.(*StubImplementationCodeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_Refactor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RefactorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RunnerServer).Refactor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Runner/Refactor",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RunnerServer).Refactor(ctx, req.(*RefactorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Runner_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(KillProcessRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ProcessServer).Kill(ctx, in)
+		return srv.(RunnerServer).Kill(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gauge.messages.Process/Kill",
+		FullMethod: "/gauge.messages.Runner/Kill",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ProcessServer).Kill(ctx, req.(*KillProcessRequest))
+		return srv.(RunnerServer).Kill(ctx, req.(*KillProcessRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-var _Process_serviceDesc = grpc.ServiceDesc{
-	ServiceName: "gauge.messages.Process",
-	HandlerType: (*ProcessServer)(nil),
+var _Runner_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "gauge.messages.Runner",
+	HandlerType: (*RunnerServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "ValidateStep",
+			Handler:    _Runner_ValidateStep_Handler,
+		},
+		{
+			MethodName: "InitializeSuiteDataStore",
+			Handler:    _Runner_InitializeSuiteDataStore_Handler,
+		},
+		{
+			MethodName: "StartExecution",
+			Handler:    _Runner_StartExecution_Handler,
+		},
+		{
+			MethodName: "InitializeSpecDataStore",
+			Handler:    _Runner_InitializeSpecDataStore_Handler,
+		},
+		{
+			MethodName: "StartSpecExecution",
+			Handler:    _Runner_StartSpecExecution_Handler,
+		},
+		{
+			MethodName: "InitializeScenarioDataStore",
+			Handler:    _Runner_InitializeScenarioDataStore_Handler,
+		},
+		{
+			MethodName: "StartScenarioExecution",
+			Handler:    _Runner_StartScenarioExecution_Handler,
+		},
+		{
+			MethodName: "StartStepExecution",
+			Handler:    _Runner_StartStepExecution_Handler,
+		},
+		{
+			MethodName: "ExecuteStep",
+			Handler:    _Runner_ExecuteStep_Handler,
+		},
+		{
+			MethodName: "FinishStepExecution",
+			Handler:    _Runner_FinishStepExecution_Handler,
+		},
+		{
+			MethodName: "FinishScenarioExecution",
+			Handler:    _Runner_FinishScenarioExecution_Handler,
+		},
+		{
+			MethodName: "FinishSpecExecution",
+			Handler:    _Runner_FinishSpecExecution_Handler,
+		},
+		{
+			MethodName: "FinishExecution",
+			Handler:    _Runner_FinishExecution_Handler,
+		},
+		{
+			MethodName: "CacheFile",
+			Handler:    _Runner_CacheFile_Handler,
+		},
+		{
+			MethodName: "GetStepName",
+			Handler:    _Runner_GetStepName_Handler,
+		},
+		{
+			MethodName: "GetGlobPatterns",
+			Handler:    _Runner_GetGlobPatterns_Handler,
+		},
+		{
+			MethodName: "GetStepNames",
+			Handler:    _Runner_GetStepNames_Handler,
+		},
+		{
+			MethodName: "GetStepPositions",
+			Handler:    _Runner_GetStepPositions_Handler,
+		},
+		{
+			MethodName: "GetImplementationFiles",
+			Handler:    _Runner_GetImplementationFiles_Handler,
+		},
+		{
+			MethodName: "ImplementStub",
+			Handler:    _Runner_ImplementStub_Handler,
+		},
+		{
+			MethodName: "Refactor",
+			Handler:    _Runner_Refactor_Handler,
+		},
+		{
 			MethodName: "Kill",
-			Handler:    _Process_Kill_Handler,
+			Handler:    _Runner_Kill_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "services.proto",
+}
+
+// ReporterClient is the client API for Reporter service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
+type ReporterClient interface {
+	// NotifyExecutionStarting is a RPC to tell plugins that the execution has started.
+	//
+	// Accepts a ExecutionStartingRequest message and returns a Empty message
+	NotifyExecutionStarting(ctx context.Context, in *ExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifySpecExecutionStarting is a RPC to tell plugins that the specification execution has started.
+	//
+	// Accepts a SpecExecutionStartingRequest message and returns a Empty message
+	NotifySpecExecutionStarting(ctx context.Context, in *SpecExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifyScenarioExecutionStarting is a RPC to tell plugins that the scenario execution has started.
+	//
+	// Accepts a ScenarioExecutionStartingRequest message and returns a Empty message
+	NotifyScenarioExecutionStarting(ctx context.Context, in *ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifyStepExecutionStarting is a RPC to tell plugins that the step execution has started.
+	//
+	// Accepts a StepExecutionStartingRequest message and returns a Empty message
+	NotifyStepExecutionStarting(ctx context.Context, in *StepExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifyStepExecutionEnding is a RPC to tell plugins that the step execution has finished.
+	//
+	// Accepts a StepExecutionStartingRequest message and returns a Empty message
+	NotifyStepExecutionEnding(ctx context.Context, in *StepExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifyScenarioExecutionEnding is a RPC to tell plugins that the scenario execution has finished.
+	//
+	// Accepts a ScenarioExecutionEndingRequest message and returns a Empty message
+	NotifyScenarioExecutionEnding(ctx context.Context, in *ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifySpecExecutionEnding is a RPC to tell plugins that the specification execution has finished.
+	//
+	// Accepts a SpecExecutionStartingRequest message and returns a Empty message
+	NotifySpecExecutionEnding(ctx context.Context, in *SpecExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifyExecutionEnding is a RPC to tell plugins that the execution has finished.
+	//
+	// Accepts a ExecutionEndingRequest message and returns a Empty message
+	NotifyExecutionEnding(ctx context.Context, in *ExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error)
+	// NotifySuiteResult is a RPC to tell about the end result of execution
+	//
+	// Accepts a SuiteExecutionResult message and returns a Empty message.
+	NotifySuiteResult(ctx context.Context, in *SuiteExecutionResult, opts ...grpc.CallOption) (*Empty, error)
+	// Kill is a RPC tell plugin to stop grpc server and kill the plugin process.
+	//
+	// Accepts a KillProcessRequest message and returns a Empty message.
+	Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error)
+}
+
+type reporterClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewReporterClient(cc *grpc.ClientConn) ReporterClient {
+	return &reporterClient{cc}
+}
+
+func (c *reporterClient) NotifyExecutionStarting(ctx context.Context, in *ExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyExecutionStarting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifySpecExecutionStarting(ctx context.Context, in *SpecExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifySpecExecutionStarting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifyScenarioExecutionStarting(ctx context.Context, in *ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyScenarioExecutionStarting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifyStepExecutionStarting(ctx context.Context, in *StepExecutionStartingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyStepExecutionStarting", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifyStepExecutionEnding(ctx context.Context, in *StepExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyStepExecutionEnding", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifyScenarioExecutionEnding(ctx context.Context, in *ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyScenarioExecutionEnding", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifySpecExecutionEnding(ctx context.Context, in *SpecExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifySpecExecutionEnding", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifyExecutionEnding(ctx context.Context, in *ExecutionEndingRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifyExecutionEnding", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) NotifySuiteResult(ctx context.Context, in *SuiteExecutionResult, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/NotifySuiteResult", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *reporterClient) Kill(ctx context.Context, in *KillProcessRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/gauge.messages.Reporter/Kill", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// ReporterServer is the server API for Reporter service.
+type ReporterServer interface {
+	// NotifyExecutionStarting is a RPC to tell plugins that the execution has started.
+	//
+	// Accepts a ExecutionStartingRequest message and returns a Empty message
+	NotifyExecutionStarting(context.Context, *ExecutionStartingRequest) (*Empty, error)
+	// NotifySpecExecutionStarting is a RPC to tell plugins that the specification execution has started.
+	//
+	// Accepts a SpecExecutionStartingRequest message and returns a Empty message
+	NotifySpecExecutionStarting(context.Context, *SpecExecutionStartingRequest) (*Empty, error)
+	// NotifyScenarioExecutionStarting is a RPC to tell plugins that the scenario execution has started.
+	//
+	// Accepts a ScenarioExecutionStartingRequest message and returns a Empty message
+	NotifyScenarioExecutionStarting(context.Context, *ScenarioExecutionStartingRequest) (*Empty, error)
+	// NotifyStepExecutionStarting is a RPC to tell plugins that the step execution has started.
+	//
+	// Accepts a StepExecutionStartingRequest message and returns a Empty message
+	NotifyStepExecutionStarting(context.Context, *StepExecutionStartingRequest) (*Empty, error)
+	// NotifyStepExecutionEnding is a RPC to tell plugins that the step execution has finished.
+	//
+	// Accepts a StepExecutionStartingRequest message and returns a Empty message
+	NotifyStepExecutionEnding(context.Context, *StepExecutionEndingRequest) (*Empty, error)
+	// NotifyScenarioExecutionEnding is a RPC to tell plugins that the scenario execution has finished.
+	//
+	// Accepts a ScenarioExecutionEndingRequest message and returns a Empty message
+	NotifyScenarioExecutionEnding(context.Context, *ScenarioExecutionEndingRequest) (*Empty, error)
+	// NotifySpecExecutionEnding is a RPC to tell plugins that the specification execution has finished.
+	//
+	// Accepts a SpecExecutionStartingRequest message and returns a Empty message
+	NotifySpecExecutionEnding(context.Context, *SpecExecutionEndingRequest) (*Empty, error)
+	// NotifyExecutionEnding is a RPC to tell plugins that the execution has finished.
+	//
+	// Accepts a ExecutionEndingRequest message and returns a Empty message
+	NotifyExecutionEnding(context.Context, *ExecutionEndingRequest) (*Empty, error)
+	// NotifySuiteResult is a RPC to tell about the end result of execution
+	//
+	// Accepts a SuiteExecutionResult message and returns a Empty message.
+	NotifySuiteResult(context.Context, *SuiteExecutionResult) (*Empty, error)
+	// Kill is a RPC tell plugin to stop grpc server and kill the plugin process.
+	//
+	// Accepts a KillProcessRequest message and returns a Empty message.
+	Kill(context.Context, *KillProcessRequest) (*Empty, error)
+}
+
+func RegisterReporterServer(s *grpc.Server, srv ReporterServer) {
+	s.RegisterService(&_Reporter_serviceDesc, srv)
+}
+
+func _Reporter_NotifyExecutionStarting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyExecutionStarting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyExecutionStarting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyExecutionStarting(ctx, req.(*ExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifySpecExecutionStarting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpecExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifySpecExecutionStarting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifySpecExecutionStarting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifySpecExecutionStarting(ctx, req.(*SpecExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifyScenarioExecutionStarting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScenarioExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyScenarioExecutionStarting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyScenarioExecutionStarting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyScenarioExecutionStarting(ctx, req.(*ScenarioExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifyStepExecutionStarting_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepExecutionStartingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyStepExecutionStarting(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyStepExecutionStarting",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyStepExecutionStarting(ctx, req.(*StepExecutionStartingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifyStepExecutionEnding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StepExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyStepExecutionEnding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyStepExecutionEnding",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyStepExecutionEnding(ctx, req.(*StepExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifyScenarioExecutionEnding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ScenarioExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyScenarioExecutionEnding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyScenarioExecutionEnding",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyScenarioExecutionEnding(ctx, req.(*ScenarioExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifySpecExecutionEnding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SpecExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifySpecExecutionEnding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifySpecExecutionEnding",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifySpecExecutionEnding(ctx, req.(*SpecExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifyExecutionEnding_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ExecutionEndingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifyExecutionEnding(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifyExecutionEnding",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifyExecutionEnding(ctx, req.(*ExecutionEndingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_NotifySuiteResult_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SuiteExecutionResult)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).NotifySuiteResult(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/NotifySuiteResult",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).NotifySuiteResult(ctx, req.(*SuiteExecutionResult))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Reporter_Kill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(KillProcessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ReporterServer).Kill(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gauge.messages.Reporter/Kill",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ReporterServer).Kill(ctx, req.(*KillProcessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Reporter_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "gauge.messages.Reporter",
+	HandlerType: (*ReporterServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "NotifyExecutionStarting",
+			Handler:    _Reporter_NotifyExecutionStarting_Handler,
+		},
+		{
+			MethodName: "NotifySpecExecutionStarting",
+			Handler:    _Reporter_NotifySpecExecutionStarting_Handler,
+		},
+		{
+			MethodName: "NotifyScenarioExecutionStarting",
+			Handler:    _Reporter_NotifyScenarioExecutionStarting_Handler,
+		},
+		{
+			MethodName: "NotifyStepExecutionStarting",
+			Handler:    _Reporter_NotifyStepExecutionStarting_Handler,
+		},
+		{
+			MethodName: "NotifyStepExecutionEnding",
+			Handler:    _Reporter_NotifyStepExecutionEnding_Handler,
+		},
+		{
+			MethodName: "NotifyScenarioExecutionEnding",
+			Handler:    _Reporter_NotifyScenarioExecutionEnding_Handler,
+		},
+		{
+			MethodName: "NotifySpecExecutionEnding",
+			Handler:    _Reporter_NotifySpecExecutionEnding_Handler,
+		},
+		{
+			MethodName: "NotifyExecutionEnding",
+			Handler:    _Reporter_NotifyExecutionEnding_Handler,
+		},
+		{
+			MethodName: "NotifySuiteResult",
+			Handler:    _Reporter_NotifySuiteResult_Handler,
+		},
+		{
+			MethodName: "Kill",
+			Handler:    _Reporter_Kill_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

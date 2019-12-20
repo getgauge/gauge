@@ -43,6 +43,42 @@ func (client *mockResultClient) NotifySuiteResult(c context.Context, r *gm.Suite
 	return nil, nil
 }
 
+func (client *mockResultClient) NotifyExecutionStarting(c context.Context, r *gm.ExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyExecutionEnding(c context.Context, r *gm.ExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifySpecExecutionStarting(c context.Context, r *gm.SpecExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifySpecExecutionEnding(c context.Context, r *gm.SpecExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyScenarioExecutionStarting(c context.Context, r *gm.ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyScenarioExecutionEnding(c context.Context, r *gm.ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyStepExecutionStarting(c context.Context, r *gm.StepExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyStepExecutionEnding(c context.Context, r *gm.StepExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) Kill(c context.Context, r *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
 func TestGetPluginDescriptorFromJSON(t *testing.T) {
 	testData := "_testdata"
 	path, _ := filepath.Abs(testData)
@@ -164,8 +200,8 @@ func TestGetPluginsWithoutScope(t *testing.T) {
 func TestSendMessageShouldUseGRPCConnectionIfAvailable(t *testing.T) {
 	c := &mockResultClient{}
 	p := &plugin{
-		gRPCConn:     &grpc.ClientConn{},
-		ResultClient: c,
+		gRPCConn:       &grpc.ClientConn{},
+		ReporterClient: c,
 	}
 
 	e := p.sendMessage(&gm.Message{MessageType: gm.Message_SuiteExecutionResult, SuiteExecutionResult: &gm.SuiteExecutionResult{}})
