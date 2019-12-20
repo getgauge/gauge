@@ -27,7 +27,6 @@ type pluginCapability string
 
 const (
 	gRPCSupportCapability pluginCapability = "grpc_support"
-	executionService  pluginCapability = "execution"
 )
 
 type pluginDescriptor struct {
