@@ -180,11 +180,11 @@ type OutMessage struct {
 
 // ToJSON converts OutMessage into JSON
 func (out *OutMessage) ToJSON() (string, error) {
-	json, err := json.Marshal(out)
+	jsonMsg, err := json.Marshal(out)
 	if err != nil {
 		return "", err
 	}
-	return string(json), nil
+	return string(jsonMsg), nil
 }
 
 func machineReadableLog(msg string) {
