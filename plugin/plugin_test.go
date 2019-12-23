@@ -18,17 +18,66 @@
 package plugin
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"testing"
 
+	gm "github.com/getgauge/gauge/gauge_messages"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
+	"google.golang.org/grpc"
 )
+
+type mockResultClient struct {
+	invoked bool
+}
+
+func (client *mockResultClient) NotifySuiteResult(c context.Context, r *gm.SuiteExecutionResult, opts ...grpc.CallOption) (*gm.Empty, error) {
+	client.invoked = true
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyExecutionStarting(c context.Context, r *gm.ExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyExecutionEnding(c context.Context, r *gm.ExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifySpecExecutionStarting(c context.Context, r *gm.SpecExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifySpecExecutionEnding(c context.Context, r *gm.SpecExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyScenarioExecutionStarting(c context.Context, r *gm.ScenarioExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyScenarioExecutionEnding(c context.Context, r *gm.ScenarioExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyStepExecutionStarting(c context.Context, r *gm.StepExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyStepExecutionEnding(c context.Context, r *gm.StepExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) Kill(c context.Context, r *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
 
 func TestGetPluginDescriptorFromJSON(t *testing.T) {
 	testData := "_testdata"
@@ -145,5 +194,23 @@ func TestGetPluginsWithoutScope(t *testing.T) {
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Failed GetPluginWithoutScope.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestSendMessageShouldUseGRPCConnectionIfAvailable(t *testing.T) {
+	c := &mockResultClient{}
+	p := &plugin{
+		gRPCConn:       &grpc.ClientConn{},
+		ReporterClient: c,
+	}
+
+	e := p.sendMessage(&gm.Message{MessageType: gm.Message_SuiteExecutionResult, SuiteExecutionResult: &gm.SuiteExecutionResult{}})
+
+	if e != nil {
+		t.Errorf("Expected error to be nil. Got : %v", e)
+	}
+
+	if !c.invoked {
+		t.Errorf("Expected grpc client to be invoked")
 	}
 }

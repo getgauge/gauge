@@ -37,10 +37,6 @@ logs_directory = logs
 # Set to true to use multithreading for parallel execution
 enable_multithreading = false
 
-# Possible values for this property are 'suite', 'spec' or 'scenario'.
-# 'scenario' clears the objects after the execution of each scenario, new objects are created for next execution.
-gauge_clear_state_level = scenario
-
 # The path the gauge specifications directory. Takes a comma separated list of specification files/directories.
 gauge_specs_dir = specs
 

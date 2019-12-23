@@ -18,6 +18,7 @@
 package plugin
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net"
@@ -39,6 +40,7 @@ import (
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
+	"google.golang.org/grpc"
 )
 
 type pluginScope string
@@ -50,11 +52,13 @@ const (
 )
 
 type plugin struct {
-	mutex      *sync.Mutex
-	connection net.Conn
-	pluginCmd  *exec.Cmd
-	descriptor *pluginDescriptor
-	killTimer  *time.Timer
+	mutex          *sync.Mutex
+	connection     net.Conn
+	gRPCConn       *grpc.ClientConn
+	ReporterClient gauge_messages.ReporterClient
+	pluginCmd      *exec.Cmd
+	descriptor     *pluginDescriptor
+	killTimer      *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -64,17 +68,48 @@ func isProcessRunning(p *plugin) bool {
 	return ps == nil || !ps.Exited()
 }
 
-func (p *plugin) rejuvenate() error {
-	if p.killTimer == nil {
-		return fmt.Errorf("timer is uninitialized. Perhaps kill is not yet invoked")
+func (p *plugin) killGrpcProcess() error {
+	m, err := p.ReporterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	if m == nil || err != nil {
+		return err
 	}
-	logger.Debugf(true, "Extending the plugin_kill_timeout for %s", p.descriptor.ID)
-	p.killTimer.Reset(config.PluginKillTimeout())
+	if p.gRPCConn == nil && p.pluginCmd == nil {
+		return nil
+	}
+	defer p.gRPCConn.Close()
+
+	if isProcessRunning(p) {
+		exited := make(chan bool, 1)
+		go func() {
+			for {
+				if isProcessRunning(p) {
+					time.Sleep(100 * time.Millisecond)
+				} else {
+					exited <- true
+					return
+				}
+			}
+		}()
+
+		select {
+		case done := <-exited:
+			if done {
+				logger.Debugf(true, "Runner with PID:%d has exited", p.pluginCmd.Process.Pid)
+				return nil
+			}
+		case <-time.After(config.PluginKillTimeout()):
+			logger.Warningf(true, "Killing runner with PID:%d forcefully", p.pluginCmd.Process.Pid)
+			return p.pluginCmd.Process.Kill()
+		}
+	}
 	return nil
 }
 
 func (p *plugin) kill(wg *sync.WaitGroup) error {
 	defer wg.Done()
+	if p.gRPCConn != nil && p.ReporterClient != nil {
+		return p.killGrpcProcess()
+	}
 	if isProcessRunning(p) {
 		defer p.connection.Close()
 		p.killTimer = time.NewTimer(config.PluginKillTimeout())
@@ -112,6 +147,7 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 	return nil
 }
 
+// IsPluginInstalled checks if given plugin with specific version is installed or not.
 func IsPluginInstalled(pluginName, pluginVersion string) bool {
 	pluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
@@ -142,6 +178,7 @@ func getPluginJSONPath(pluginName, pluginVersion string) (string, error) {
 	return filepath.Join(pluginInstallDir, common.PluginJSONFile), nil
 }
 
+// GetPluginDescriptor return the information about the plugin including name, id, commands to start etc.
 func GetPluginDescriptor(pluginID, pluginVersion string) (*pluginDescriptor, error) {
 	pluginJSON, err := getPluginJSONPath(pluginID, pluginVersion)
 	if err != nil {
@@ -177,7 +214,56 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	if len(command) == 0 {
 		return nil, fmt.Errorf("Platform specific command not specified: %s.", runtime.GOOS)
 	}
+	if pd.hasCapability(gRPCSupportCapability) {
+		return startGRPCPlugin(pd, command)
+	}
+	return startLegacyPlugin(pd, command)
+}
 
+func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
+	portChan := make(chan string)
+	writer := &logger.LogWriter{
+		Stderr: logger.NewCustomWriter(portChan, os.Stderr, pd.ID),
+		Stdout: logger.NewCustomWriter(portChan, os.Stdout, pd.ID),
+	}
+	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
+	go func() {
+		err = cmd.Wait()
+		if err != nil {
+			logger.Errorf(true, "Error occurred while waiting for plugin process to finish.\nError : %s", err.Error())
+		}
+	}()
+	if err != nil {
+		return nil, err
+	}
+
+	var port string
+	select {
+	case port = <-portChan:
+		close(portChan)
+	case <-time.After(config.PluginConnectionTimeout()):
+		return nil, fmt.Errorf("timed out connecting to %s", pd.ID)
+	}
+	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
+	gRPCConn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
+		grpc.WithInsecure(),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024*15), grpc.MaxCallRecvMsgSize(1024*1024*1024*15)),
+		grpc.WithBlock())
+	if err != nil {
+		return nil, err
+	}
+	plugin := &plugin{
+		pluginCmd:      cmd,
+		descriptor:     pd,
+		gRPCConn:       gRPCConn,
+		ReporterClient: gauge_messages.NewReporterClient(gRPCConn),
+	}
+
+	logger.Debugf(true, "Successfully made the connection with plugin with port: %s", port)
+	return plugin, nil
+}
+
+func startLegacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	writer := logger.NewLogWriter(pd.ID, true, 0)
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 
@@ -195,9 +281,9 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	return plugin, nil
 }
 
-func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, manifest *manifest.Manifest, pluginEnvVars map[string]string) error {
+func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, m *manifest.Manifest, pluginEnvVars map[string]string) error {
 	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = string(action)
-	pluginEnvVars["test_language"] = manifest.Language
+	pluginEnvVars["test_language"] = m.Language
 	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
 		return err
 	}
@@ -213,8 +299,8 @@ func setEnvironmentProperties(properties map[string]string) error {
 	return nil
 }
 
-func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bool {
-	for _, pluginID := range manifest.Plugins {
+func IsPluginAdded(m *manifest.Manifest, descriptor *pluginDescriptor) bool {
+	for _, pluginID := range m.Plugins {
 		if pluginID == descriptor.ID {
 			return true
 		}
@@ -222,12 +308,12 @@ func IsPluginAdded(manifest *manifest.Manifest, descriptor *pluginDescriptor) bo
 	return false
 }
 
-func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
+func startPluginsForExecution(m *manifest.Manifest) (Handler, []string) {
 	var warnings []string
 	handler := &GaugePlugins{}
 	envProperties := make(map[string]string)
 
-	for _, pluginID := range manifest.Plugins {
+	for _, pluginID := range m.Plugins {
 		pd, err := GetPluginDescriptor(pluginID, "")
 		if err != nil {
 			warnings = append(warnings, fmt.Sprintf("Unable to start plugin %s. %s. To install, run `gauge install %s`.", pluginID, err.Error(), pluginID))
@@ -239,7 +325,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			continue
 		}
 		if pd.hasScope(executionScope) {
-			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, &keepAliveHandler{ph: handler})
+			gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, nil)
 			if err != nil {
 				warnings = append(warnings, err.Error())
 				continue
@@ -251,7 +337,7 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 				continue
 			}
 			envProperties["plugin_kill_timeout"] = prop["plugin_kill_timeout"]
-			err = SetEnvForPlugin(executionScope, pd, manifest, envProperties)
+			err = SetEnvForPlugin(executionScope, pd, m, envProperties)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error setting environment for plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
@@ -260,6 +346,10 @@ func startPluginsForExecution(manifest *manifest.Manifest) (Handler, []string) {
 			plugin, err := StartPlugin(pd, executionScope)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
+				continue
+			}
+			if plugin.gRPCConn != nil {
+				handler.addPlugin(pluginID, plugin)
 				continue
 			}
 			pluginConnection, err := gaugeConnectionHandler.AcceptConnection(config.PluginConnectionTimeout(), make(chan error))
@@ -301,13 +391,42 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
 	p, err := StartPlugin(pd, docScope)
 	if err != nil {
-		logger.Fatalf(true, "Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error())
+		logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
 	}
 	for isProcessRunning(p) {
 	}
 }
 
+func (p *plugin) invokeService(m *gauge_messages.Message) error {
+	ctx := context.Background()
+	var err error
+	switch m.GetMessageType() {
+	case gauge_messages.Message_SuiteExecutionResult:
+		_, err = p.ReporterClient.NotifySuiteResult(ctx, m.GetSuiteExecutionResult())
+	case gauge_messages.Message_ExecutionStarting:
+		_, err = p.ReporterClient.NotifyExecutionStarting(ctx, m.GetExecutionStartingRequest())
+	case gauge_messages.Message_ExecutionEnding:
+		_, err = p.ReporterClient.NotifyExecutionEnding(ctx, m.GetExecutionEndingRequest())
+	case gauge_messages.Message_SpecExecutionEnding:
+		_, err = p.ReporterClient.NotifySpecExecutionEnding(ctx, m.GetSpecExecutionEndingRequest())
+	case gauge_messages.Message_SpecExecutionStarting:
+		_, err = p.ReporterClient.NotifySpecExecutionStarting(ctx, m.GetSpecExecutionStartingRequest())
+	case gauge_messages.Message_ScenarioExecutionEnding:
+		_, err = p.ReporterClient.NotifyScenarioExecutionEnding(ctx, m.GetScenarioExecutionEndingRequest())
+	case gauge_messages.Message_ScenarioExecutionStarting:
+		_, err = p.ReporterClient.NotifyScenarioExecutionStarting(ctx, m.GetScenarioExecutionStartingRequest())
+	case gauge_messages.Message_StepExecutionEnding:
+		_, err = p.ReporterClient.NotifyStepExecutionEnding(ctx, m.GetStepExecutionEndingRequest())
+	case gauge_messages.Message_StepExecutionStarting:
+		_, err = p.ReporterClient.NotifyStepExecutionStarting(ctx, m.GetStepExecutionStartingRequest())
+	}
+	return err
+}
+
 func (p *plugin) sendMessage(message *gauge_messages.Message) error {
+	if p.gRPCConn != nil {
+		return p.invokeService(message)
+	}
 	messageID := common.GetUniqueID()
 	message.MessageId = messageID
 	messageBytes, err := proto.Marshal(message)
@@ -321,8 +440,8 @@ func (p *plugin) sendMessage(message *gauge_messages.Message) error {
 	return nil
 }
 
-func StartPlugins(manifest *manifest.Manifest) Handler {
-	pluginHandler, warnings := startPluginsForExecution(manifest)
+func StartPlugins(m *manifest.Manifest) Handler {
+	pluginHandler, warnings := startPluginsForExecution(m)
 	logger.HandleWarningMessages(true, warnings)
 	return pluginHandler
 }
@@ -340,14 +459,14 @@ func PluginsWithoutScope() (infos []pluginInfo.PluginInfo) {
 }
 
 // GetInstallDir returns the install directory of given plugin and a given version.
-func GetInstallDir(pluginName, version string) (string, error) {
+func GetInstallDir(pluginName, v string) (string, error) {
 	allPluginsInstallDir, err := common.GetPluginsInstallDir(pluginName)
 	if err != nil {
 		return "", err
 	}
 	pluginDir := filepath.Join(allPluginsInstallDir, pluginName)
-	if version != "" {
-		pluginDir = filepath.Join(pluginDir, version)
+	if v != "" {
+		pluginDir = filepath.Join(pluginDir, v)
 	} else {
 		latestPlugin, err := pluginInfo.GetLatestInstalledPlugin(pluginDir)
 		if err != nil {
