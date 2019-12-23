@@ -56,7 +56,7 @@ func Warningf(stdout bool, msg string, args ...interface{}) {
 func Fatal(stdout bool, msg string) {
 	logCritical(loggersMap.getLogger(gaugeModuleID), msg)
 	addFatalError(gaugeModuleID, msg)
-	write(stdout, getFatalErrorMsg())
+	write(stdout, getFatalErrorMsg(), os.Stdout)
 	os.Exit(1)
 }
 

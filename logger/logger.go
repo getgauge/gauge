@@ -20,6 +20,7 @@ package logger
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -113,7 +114,7 @@ func Initialize(mr bool, logLevel string, c int) {
 
 func logInfo(logger *logging.Logger, stdout bool, msg string) {
 	if level >= logging.INFO {
-		write(stdout, msg)
+		write(stdout, msg, os.Stdout)
 	}
 	if !initialized {
 		return
@@ -123,7 +124,7 @@ func logInfo(logger *logging.Logger, stdout bool, msg string) {
 
 func logError(logger *logging.Logger, stdout bool, msg string) {
 	if level >= logging.ERROR {
-		write(stdout, msg)
+		write(stdout, msg, os.Stdout)
 	}
 	if !initialized {
 		fmt.Fprint(os.Stderr, msg)
@@ -134,7 +135,7 @@ func logError(logger *logging.Logger, stdout bool, msg string) {
 
 func logWarning(logger *logging.Logger, stdout bool, msg string) {
 	if level >= logging.WARNING {
-		write(stdout, msg)
+		write(stdout, msg, os.Stdout)
 	}
 	if !initialized {
 		return
@@ -144,7 +145,7 @@ func logWarning(logger *logging.Logger, stdout bool, msg string) {
 
 func logDebug(logger *logging.Logger, stdout bool, msg string) {
 	if level >= logging.DEBUG {
-		write(stdout, msg)
+		write(stdout, msg, os.Stdout)
 	}
 	if !initialized {
 		return
@@ -161,12 +162,12 @@ func logCritical(logger *logging.Logger, msg string) {
 
 }
 
-func write(stdout bool, msg string) {
+func write(stdout bool, msg string, writer io.Writer) {
 	if !isLSP && stdout {
 		if machineReadable {
 			machineReadableLog(msg)
 		} else {
-			fmt.Println(msg)
+			fmt.Fprintln(writer, msg)
 		}
 	}
 }
@@ -179,11 +180,11 @@ type OutMessage struct {
 
 // ToJSON converts OutMessage into JSON
 func (out *OutMessage) ToJSON() (string, error) {
-	json, err := json.Marshal(out)
+	jsonMsg, err := json.Marshal(out)
 	if err != nil {
 		return "", err
 	}
-	return string(json), nil
+	return string(jsonMsg), nil
 }
 
 func machineReadableLog(msg string) {
