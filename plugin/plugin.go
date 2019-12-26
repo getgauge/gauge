@@ -32,8 +32,10 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
+	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
@@ -52,13 +54,14 @@ const (
 )
 
 type plugin struct {
-	mutex          *sync.Mutex
-	connection     net.Conn
-	gRPCConn       *grpc.ClientConn
-	ReporterClient gauge_messages.ReporterClient
-	pluginCmd      *exec.Cmd
-	descriptor     *pluginDescriptor
-	killTimer      *time.Timer
+	mutex            *sync.Mutex
+	connection       net.Conn
+	gRPCConn         *grpc.ClientConn
+	ReporterClient   gauge_messages.ReporterClient
+	DocumenterClient gauge_messages.DocumenterClient
+	pluginCmd        *exec.Cmd
+	descriptor       *pluginDescriptor
+	killTimer        *time.Timer
 }
 
 func isProcessRunning(p *plugin) bool {
@@ -69,7 +72,13 @@ func isProcessRunning(p *plugin) bool {
 }
 
 func (p *plugin) killGrpcProcess() error {
-	m, err := p.ReporterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	var m *gauge_messages.Empty
+	var err error
+	if p.ReporterClient != nil {
+		m, err = p.ReporterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	} else {
+		m, err = p.DocumenterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
+	}
 	if m == nil || err != nil {
 		return err
 	}
@@ -253,10 +262,14 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 		return nil, err
 	}
 	plugin := &plugin{
-		pluginCmd:      cmd,
-		descriptor:     pd,
-		gRPCConn:       gRPCConn,
-		ReporterClient: gauge_messages.NewReporterClient(gRPCConn),
+		pluginCmd:  cmd,
+		descriptor: pd,
+		gRPCConn:   gRPCConn,
+	}
+	if pd.hasScope(docScope) {
+		plugin.DocumenterClient = gauge_messages.NewDocumenterClient(gRPCConn)
+	} else {
+		plugin.ReporterClient = gauge_messages.NewReporterClient(gRPCConn)
 	}
 
 	logger.Debugf(true, "Successfully made the connection with plugin with port: %s", port)
@@ -370,7 +383,7 @@ func startPluginsForExecution(m *manifest.Manifest) (Handler, []string) {
 	return handler, warnings
 }
 
-func GenerateDoc(pluginName string, specDirs []string, port int) {
+func GenerateDoc(pluginName string, specDirs []string, startAPIFunc func([]string) int) {
 	pd, err := GetPluginDescriptor(pluginName, "")
 	if err != nil {
 		logger.Fatalf(true, "Error starting plugin %s. Failed to get plugin.json. %s. To install, run `gauge install %s`.", pluginName, err.Error(), pluginName)
@@ -388,12 +401,31 @@ func GenerateDoc(pluginName string, specDirs []string, port int) {
 	}
 	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, "||"))
 	os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
-	os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
-	p, err := StartPlugin(pd, docScope)
-	if err != nil {
-		logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
-	}
-	for isProcessRunning(p) {
+	if pd.hasCapability(gRPCSupportCapability) {
+		p, err := StartPlugin(pd, docScope)
+		if err != nil {
+			logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
+		}
+		_, err = p.DocumenterClient.GenerateDocs(context.Background(), getSpecDetails(specDirs))
+		if err != nil {
+			logger.Errorf(true, "Failed to generate docs. %s", err.Error())
+		}
+		err = p.killGrpcProcess()
+		if err != nil {
+			logger.Errorf(false, "Unable to kill plugin %s : %s", p.descriptor.Name, err.Error())
+		}
+	} else {
+		port := startAPIFunc(specDirs)
+		err := os.Setenv(common.APIPortEnvVariableName, strconv.Itoa(port))
+		if err != nil {
+			logger.Fatalf(true, "Failed to set env GAUGE_API_PORT. %s", err.Error())
+		}
+		p, err := StartPlugin(pd, docScope)
+		if err != nil {
+			logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
+		}
+		for isProcessRunning(p) {
+		}
 	}
 }
 
@@ -522,4 +554,23 @@ func plugins() string {
 		plugins = append(plugins, p.Name)
 	}
 	return strings.Join(plugins, ",")
+}
+
+func getSpecDetails(specDirs []string) *gauge_messages.SpecDetails {
+	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
+	sig.Init()
+	specDetails := make([]*gauge_messages.SpecDetails_SpecDetail, 0)
+	for _, d := range sig.GetAvailableSpecDetails([]string{}) {
+		detail := &gauge_messages.SpecDetails_SpecDetail{}
+		if d.HasSpec() {
+			detail.Spec = gauge.ConvertToProtoSpec(d.Spec)
+		}
+		for _, e := range d.Errs {
+			detail.ParseErrors = append(detail.ParseErrors, &gauge_messages.Error{Type: gauge_messages.Error_PARSE_ERROR, Filename: e.FileName, Message: e.Message, LineNumber: int32(e.LineNo)})
+		}
+		specDetails = append(specDetails, detail)
+	}
+	return &gauge_messages.SpecDetails{
+		Details: specDetails,
+	}
 }
