@@ -76,7 +76,7 @@ func (p *plugin) killGrpcProcess() error {
 	var err error
 	if p.ReporterClient != nil {
 		m, err = p.ReporterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
-	} else {
+	} else if p.DocumenterClient != nil {
 		m, err = p.DocumenterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
 	}
 	if m == nil || err != nil {

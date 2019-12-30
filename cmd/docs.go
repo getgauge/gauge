@@ -40,11 +40,11 @@ var docsCmd = &cobra.Command{
 			exit(fmt.Errorf("Missing argument <plugin name>."), cmd.UsageString())
 		}
 		specDirs := getSpecsDir(args[1:])
-		var startAPIFun = func(specDirs []string) int {
+		var startAPIFunc = func(specDirs []string) int {
 			gaugeConnectionHandler := api.Start(specDirs)
 			return gaugeConnectionHandler.ConnectionPortNumber()
 		}
-		plugin.GenerateDoc(args[0], specDirs, startAPIFun)
+		plugin.GenerateDoc(args[0], specDirs, startAPIFunc)
 	},
 	DisableAutoGenTag: true,
 }
