@@ -53,7 +53,8 @@ const (
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
-	screenshotsDir                 = "screenshots_dir"
+	// GaugeScreenshotsDir holds the location of screenshots dir
+	GaugeScreenshotsDir = "gauge_screenshots_dir"
 )
 
 var envVars map[string]string
@@ -121,7 +122,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
-	addEnvVar(screenshotsDir, defaultScreenshotDir)
+	addEnvVar(GaugeScreenshotsDir, defaultScreenshotDir)
 	err := os.MkdirAll(defaultScreenshotDir, 0750)
 	if err != nil {
 		logger.Warningf(true, "Could not create screenshot dir at %s", err.Error())
