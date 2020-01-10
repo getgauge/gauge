@@ -19,6 +19,7 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
@@ -188,4 +189,18 @@ func loadEnvAndReinitLogger(cmd *cobra.Command) {
 		logger.Fatalf(true, e.Error())
 	}
 	initLogger(cmd.Name())
+}
+
+func ensureScreenshotsDir() {
+	screenshotDirPath, err := filepath.Abs(os.Getenv(env.GaugeScreenshotsDir))
+	if err != nil {
+		logger.Warningf(true, "Could not create %s.  %s", env.GaugeScreenshotsDir, err.Error())
+		return
+	}
+	err = os.MkdirAll(screenshotDirPath, 0750)
+	if err != nil {
+		logger.Warningf(true, "Could not create %s %s", env.GaugeScreenshotsDir, err.Error())
+	} else {
+		logger.Debugf(true, "Created %s at %s", env.GaugeScreenshotsDir, screenshotDirPath)
+	}
 }

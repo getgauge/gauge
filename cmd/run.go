@@ -241,6 +241,7 @@ func execute(cmd *cobra.Command, args []string) {
 		logger.Debugf(true, "%s : %v", arg.Name, arg.Value)
 	}
 	loadEnvAndReinitLogger(cmd)
+	ensureScreenshotsDir()
 	if parallel && tagsToFilterForParallelRun != "" && !env.AllowFilteredParallelExecution() {
 		logger.Fatal(true, "Filtered parallel execution is a experimental feature. It can be enabled via allow_filtered_parallel_execution property.")
 	}
