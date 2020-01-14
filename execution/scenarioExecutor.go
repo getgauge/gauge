@@ -94,7 +94,7 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 
 func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutionResult {
 	msg := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioDataStoreInit,
-		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{}}
+		ScenarioDataStoreInitRequest: &gauge_messages.ScenarioDataStoreInitRequest{Stream: int32(e.stream)}}
 	return e.runner.ExecuteAndGetStatus(msg)
 }
 
@@ -118,7 +118,7 @@ func setSkipInfoInResult(scenarioResult *result.ScenarioResult, scenario *gauge.
 
 func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.ScenarioResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionStarting,
-		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		ScenarioExecutionStartingRequest: &gauge_messages.ScenarioExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(message)
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PreHookMessages = res.Message
@@ -134,7 +134,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 
 func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.ScenarioResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ScenarioExecutionEnding,
-		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		ScenarioExecutionEndingRequest: &gauge_messages.ScenarioExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PostHookMessages = res.Message
 	scenarioResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles

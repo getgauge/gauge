@@ -45,6 +45,8 @@ type GrpcRunner struct {
 	LegacyClient gm.LspServiceClient
 	RunnerClient gm.RunnerClient
 	Timeout      time.Duration
+	info         *RunnerInfo
+	IsExecuting  bool
 }
 
 func (r *GrpcRunner) invokeLegacyLSPService(message *gm.Message) (*gm.Message, error) {
@@ -87,13 +89,13 @@ func (r *GrpcRunner) invokeLegacyLSPService(message *gm.Message) (*gm.Message, e
 func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_SuiteDataStoreInit:
-		response, err := r.RunnerClient.InitializeSuiteDataStore(context.Background(), &gm.Empty{})
+		response, err := r.RunnerClient.InitializeSuiteDataStore(context.Background(), message.SuiteDataStoreInitRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_SpecDataStoreInit:
-		response, err := r.RunnerClient.InitializeSpecDataStore(context.Background(), &gm.Empty{})
+		response, err := r.RunnerClient.InitializeSpecDataStore(context.Background(), message.SpecDataStoreInitRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ScenarioDataStoreInit:
-		response, err := r.RunnerClient.InitializeScenarioDataStore(context.Background(), &gm.Empty{})
+		response, err := r.RunnerClient.InitializeScenarioDataStore(context.Background(), message.ScenarioDataStoreInitRequest)
 		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ExecutionStarting:
 		response, err := r.RunnerClient.StartExecution(context.Background(), message.ExecutionStartingRequest)
@@ -211,6 +213,9 @@ func (r *GrpcRunner) Alive() bool {
 
 // Kill closes the grpc connection and kills the process
 func (r *GrpcRunner) Kill() error {
+	if r.IsExecuting {
+		return nil
+	}
 	m := &gm.Message{
 		MessageType:        gm.Message_KillProcessRequest,
 		KillProcessRequest: &gm.KillProcessRequest{},
@@ -257,7 +262,12 @@ func (r *GrpcRunner) Connection() net.Conn {
 
 // IsMultithreaded tells if the runner has multithreaded capability
 func (r *GrpcRunner) IsMultithreaded() bool {
-	return false
+	return r.info.Multithreaded
+}
+
+// Info gives the information about runner
+func (r *GrpcRunner) Info() *RunnerInfo {
+	return r.info
 }
 
 // Pid return the runner's command pid
@@ -265,8 +275,8 @@ func (r *GrpcRunner) Pid() int {
 	return r.cmd.Process.Pid
 }
 
-// ConnectToGrpcRunner makes a connection with grpc server
-func ConnectToGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
+// StartGrpcRunner makes a connection with grpc server
+func StartGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
 	portChan := make(chan string)
 	logWriter := &logger.LogWriter{
 		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
@@ -299,7 +309,7 @@ func ConnectToGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Write
 	if err != nil {
 		return nil, err
 	}
-	r := &GrpcRunner{cmd: cmd, conn: conn, Timeout: timeout}
+	r := &GrpcRunner{cmd: cmd, conn: conn, Timeout: timeout, info: info}
 
 	if info.GRPCSupport {
 		r.RunnerClient = gm.NewRunnerClient(conn)

@@ -69,7 +69,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 }
 
 func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
-	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: protoStep.GetParsedText(), ActualStepText: protoStep.GetActualText()}
+	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: protoStep.GetParsedText(), ActualStepText: protoStep.GetActualText(), Stream: int32(e.stream)}
 	stepRequest.Parameters = getParameters(protoStep.GetFragments())
 	return stepRequest
 }
@@ -77,7 +77,7 @@ func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *g
 func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	m := &gauge_messages.Message{
 		MessageType:                  gauge_messages.Message_StepExecutionStarting,
-		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
+		StepExecutionStartingRequest: &gauge_messages.StepExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)},
 	}
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, stepResult, e.runner)
@@ -95,7 +95,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	m := &gauge_messages.Message{
 		MessageType:                gauge_messages.Message_StepExecutionEnding,
-		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo},
+		StepExecutionEndingRequest: &gauge_messages.StepExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)},
 	}
 
 	res := executeHook(m, stepResult, e.runner)

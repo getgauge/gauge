@@ -50,6 +50,11 @@ const Eager string = "eager"
 // Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
 const Lazy string = "lazy"
 
+const (
+	gaugeAPIPortsEnv            = "GAUGE_API_PORTS"
+	gaugeParallelStreamCountEnv = "GAUGE_PARALLEL_STREAMS_COUNT"
+)
+
 type parallelExecution struct {
 	wg                       sync.WaitGroup
 	manifest                 *manifest.Manifest
@@ -124,7 +129,11 @@ func (e *parallelExecution) run() *result.SuiteResult {
 
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
-		go e.executeMultithreaded(nStreams, resChan)
+		if e.runner.Info().GRPCSupport {
+			go e.executeGrpcMultithreaded(nStreams, resChan)
+		} else {
+			go e.executeLegacyMultithreaded(nStreams, resChan)
+		}
 	} else if isLazy() {
 		go e.executeLazily(nStreams, resChan)
 	} else {
@@ -155,7 +164,26 @@ func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result
 	close(resChan)
 }
 
-func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeGrpcMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
+	e.wg.Add(totalStreams)
+	os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
+	r, err := runner.StartGrpcRunner(e.manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
+	r.IsExecuting = true
+	if err != nil {
+		logger.Fatalf(true, "failed to create handler. %s", err.Error())
+	}
+	for i := 0; i < totalStreams; i++ {
+		go e.startMultithreaded(r, resChan, i+1)
+	}
+	e.wg.Wait()
+	r.IsExecuting = false
+	if err = r.Kill(); err != nil {
+		logger.Infof(true, "unable to kill runner: %s", err.Error())
+	}
+	close(resChan)
+}
+
+func (e *parallelExecution) executeLegacyMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
 	e.wg.Add(totalStreams)
 	handlers := make([]*conn.GaugeConnectionHandler, 0)
 	var ports []string
@@ -166,17 +194,16 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 		}
 		handler, err := conn.NewGaugeConnectionHandler(port, nil)
 		if err != nil {
-			fmt.Println(err)
+			logger.Errorf(true, "failed to create handler. %s", err.Error())
 		}
 		ports = append(ports, strconv.Itoa(handler.ConnectionPortNumber()))
 		handlers = append(handlers, handler)
 	}
-	os.Setenv("GAUGE_API_PORTS", strings.Join(ports, ","))
+	os.Setenv(gaugeAPIPortsEnv, strings.Join(ports, ","))
 	writer := logger.NewLogWriter(e.manifest.Language, true, 0)
-	r, err := runner.StartRunner(e.manifest, "0", writer, make(chan bool), false)
+	r, err := runner.StartLegacyRunner(e.manifest, "0", writer, make(chan bool), false)
 	if err != nil {
-		fmt.Println(err)
-		return
+		logger.Fatalf(true, "failed to start runner. %s", err.Error())
 	}
 	for i := 0; i < totalStreams; i++ {
 		connection, err := handlers[i].AcceptConnection(config.RunnerConnectionTimeout(), make(chan error))
@@ -190,7 +217,7 @@ func (e *parallelExecution) executeMultithreaded(totalStreams int, resChan chan 
 	e.wg.Wait()
 	err = r.Cmd.Process.Kill()
 	if err != nil {
-		fmt.Printf("unable to kill runner: %s", err.Error())
+		logger.Infof(true, "unable to kill runner: %s", err.Error())
 	}
 	close(resChan)
 }
