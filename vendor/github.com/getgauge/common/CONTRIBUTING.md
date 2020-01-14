@@ -23,4 +23,4 @@ Contributions can be of many forms:
 - Enhance the documentation
 - Participate in design discussions on Google Groups
 
-If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Gitter](https://gitter.im/getgauge/chat).
+If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Spectrum](https://spectrum.chat/gauge).
