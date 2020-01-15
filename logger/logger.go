@@ -265,7 +265,7 @@ func getFatalErrorMsg() string {
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://gitter.im/getgauge/chat
+	Chat:          https://spectrum.chat/gauge
 
 Your Environment Information -----------
 	%s

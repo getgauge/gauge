@@ -20,7 +20,7 @@ All repositories are hosted on GitHub. Gauge’s core is written in Golang but p
 
 There are issues of varying levels across all Gauge repositories. All issues that need to be addressed are tagged as _'Help Needed'_. One easy way to get started is to pick a small bug to fix. These have been tagged as _'Easy Picks'_.
 
-If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Gitter](https://gitter.im/getgauge/chat).
+If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Spectrum](https://spectrum.chat/gauge).
 
 ### Gauge Core v/s Plugins
 

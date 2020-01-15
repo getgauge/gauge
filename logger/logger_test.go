@@ -151,7 +151,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://gitter.im/getgauge/chat
+	Chat:          https://spectrum.chat/gauge
 
 Your Environment Information -----------
 	%s, 0.9.8
@@ -171,7 +171,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://gitter.im/getgauge/chat
+	Chat:          https://spectrum.chat/gauge
 
 Your Environment Information -----------
 	%s, 0.9.8
@@ -191,7 +191,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://gitter.im/getgauge/chat
+	Chat:          https://spectrum.chat/gauge
 
 Your Environment Information -----------
 	%s, 0.9.8, 59effa
