@@ -1,7 +1,7 @@
 <!--
 Thanks a lot for reporting issues to Gauge! This is the issue tracker for reporting bugs or for requesting new feature and enhancements.
 
-If you have any support related questions, please refer our documentation at https://gauge.org/documentation/user/current/. You can even ask questions on Google groups (http://groups.google.com/forum/#!forum/getgauge) or on gitter (https://gitter.im/getgauge/chat).
+If you have any support related questions, please refer our documentation at https://gauge.org/documentation/user/current/. You can even ask questions on Google groups (http://groups.google.com/forum/#!forum/getgauge) or on spectrum (https://spectrum.chat/gauge).
 
 This is the issue tracker for Gauge core. Find other components at https://github.com/getgauge
 
