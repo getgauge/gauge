@@ -118,6 +118,47 @@ jobs:
           go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "::add-path::/tmp/gauge/bin"
 
+      - name: Clone gauge-java
+        run: |
+          git clone https://github.com/getgauge/gauge-java
+
+      - name: Install Gauge Java plugin from source
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd gauge-java
+          ./build.sh forceinstall
+
+      - name: Install Gauge Java plugin from source
+        if: matrix.os == 'windows-latest'
+        run: |
+          cd gauge-java
+          ./build.ps1 forceinstall
+
+      - name: Install Gauge Java maven package locally
+        run: |
+          cd gauge-java
+          mvn -q install -DskipTests -"Dgpg.skip" -D"maven.javadoc.skip=true"
+
+      - name: Prep gauge-js
+        run: |
+          git clone https://github.com/getgauge/gauge-js.git
+          cd gauge-js
+          npm install
+        shell: bash
+
+      - name: Install gauge-js
+        run: |
+          cd gauge-js
+          npm run installPlugin
+
+      - name: Prep html-report
+        run: |
+          git clone https://github.com/getgauge/html-report
+          cd html-report
+          go run build/make.go && go run build/make.go --install
+        shell: bash
+
+
       - name: Prep FTs
         run: |
           git clone https://github.com/getgauge/gauge-tests

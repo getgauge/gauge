@@ -43,6 +43,8 @@ import (
 	"github.com/getgauge/gauge/version"
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type pluginScope string
@@ -80,6 +82,12 @@ func (p *plugin) killGrpcProcess() error {
 		m, err = p.DocumenterClient.Kill(context.Background(), &gauge_messages.KillProcessRequest{})
 	}
 	if m == nil || err != nil {
+		errStatus, _ := status.FromError(err)
+		if errStatus.Code() == codes.Unavailable {
+			// Ref https://www.grpc.io/docs/guides/error/#general-errors
+			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
+			return nil
+		}
 		return err
 	}
 	if p.gRPCConn == nil && p.pluginCmd == nil {
