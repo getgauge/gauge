@@ -170,22 +170,24 @@ func ConvertToProtoTable(table *Table) *gauge_messages.ProtoTable {
 
 func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.ProtoSuiteResult {
 	protoSuiteResult := &gauge_messages.ProtoSuiteResult{
-		PreHookFailure:      suiteResult.PreSuite,
-		PostHookFailure:     suiteResult.PostSuite,
-		Failed:              suiteResult.IsFailed,
-		SpecsFailedCount:    int32(suiteResult.SpecsFailedCount),
-		ExecutionTime:       suiteResult.ExecutionTime,
-		SpecResults:         convertToProtoSpecResults(suiteResult.SpecResults),
-		SuccessRate:         getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
-		Environment:         suiteResult.Environment,
-		Tags:                suiteResult.Tags,
-		ProjectName:         suiteResult.ProjectName,
-		Timestamp:           suiteResult.Timestamp,
-		SpecsSkippedCount:   int32(suiteResult.SpecsSkippedCount),
-		PreHookMessages:     suiteResult.PreHookMessages,
-		PostHookMessages:    suiteResult.PostHookMessages,
+		PreHookFailure:          suiteResult.PreSuite,
+		PostHookFailure:         suiteResult.PostSuite,
+		Failed:                  suiteResult.IsFailed,
+		SpecsFailedCount:        int32(suiteResult.SpecsFailedCount),
+		ExecutionTime:           suiteResult.ExecutionTime,
+		SpecResults:             convertToProtoSpecResults(suiteResult.SpecResults),
+		SuccessRate:             getSuccessRate(len(suiteResult.SpecResults), suiteResult.SpecsFailedCount+suiteResult.SpecsSkippedCount),
+		Environment:             suiteResult.Environment,
+		Tags:                    suiteResult.Tags,
+		ProjectName:             suiteResult.ProjectName,
+		Timestamp:               suiteResult.Timestamp,
+		SpecsSkippedCount:       int32(suiteResult.SpecsSkippedCount),
+		PreHookMessages:         suiteResult.PreHookMessages,
+		PostHookMessages:        suiteResult.PostHookMessages,
 		PreHookScreenshotFiles:  suiteResult.PreHookScreenshotFiles,
 		PostHookScreenshotFiles: suiteResult.PostHookScreenshotFiles,
+		PreHookScreenshots:      suiteResult.PreHookScreenshots,
+		PostHookScreenshots:     suiteResult.PostHookScreenshots,
 	}
 	return protoSuiteResult
 }

@@ -83,6 +83,7 @@ func (e *stepExecutor) notifyBeforeStepHook(stepResult *result.StepResult) {
 	res := executeHook(m, stepResult, e.runner)
 	stepResult.ProtoStep.PreHookMessages = res.Message
 	stepResult.ProtoStep.PreHookScreenshotFiles = res.ScreenshotFiles
+	stepResult.ProtoStep.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPreHook)
@@ -100,6 +101,7 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	res := executeHook(m, stepResult, e.runner)
 	stepResult.ProtoStep.PostHookMessages = res.Message
 	stepResult.ProtoStep.PostHookScreenshotFiles = res.ScreenshotFiles
+	stepResult.ProtoStep.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setStepFailure(e.currentExecutionInfo)
 		handleHookFailure(stepResult, res, result.AddPostHook)

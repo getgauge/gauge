@@ -40,7 +40,13 @@ type ExecTimeTracker interface {
 
 // GetProtoHookFailure returns the failure result of hook execution
 func GetProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *(gauge_messages.ProtoHookFailure) {
-	return &gauge_messages.ProtoHookFailure{StackTrace: executionResult.StackTrace, ErrorMessage: executionResult.ErrorMessage, FailureScreenshot: executionResult.ScreenShot, TableRowIndex: -1}
+	return &gauge_messages.ProtoHookFailure{
+		StackTrace:            executionResult.StackTrace,
+		ErrorMessage:          executionResult.ErrorMessage,
+		FailureScreenshot:     executionResult.FailureScreenshot,
+		FailureScreenshotFile: executionResult.FailureScreenshotFile,
+		TableRowIndex:         -1,
+	}
 }
 
 // AddPreHook adds the before hook execution result to the actual result object

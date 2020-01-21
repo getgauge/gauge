@@ -136,10 +136,22 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 		}
 		for _, res := range specResults {
 			for _, preHook := range preHookFailures {
-				res.AddPreHook(&gauge_messages.ProtoHookFailure{StackTrace: preHook.StackTrace, ErrorMessage: preHook.ErrorMessage, ScreenShot: preHook.ScreenShot, TableRowIndex: preHook.TableRowIndex})
+				res.AddPreHook(&gauge_messages.ProtoHookFailure{
+					StackTrace:            preHook.StackTrace,
+					ErrorMessage:          preHook.ErrorMessage,
+					FailureScreenshot:     preHook.FailureScreenshot,
+					FailureScreenshotFile: preHook.FailureScreenshotFile,
+					TableRowIndex:         preHook.TableRowIndex,
+				})
 			}
 			for _, postHook := range postHookFailures {
-				res.AddPostHook(&gauge_messages.ProtoHookFailure{StackTrace: postHook.StackTrace, ErrorMessage: postHook.ErrorMessage, ScreenShot: postHook.ScreenShot, TableRowIndex: postHook.TableRowIndex})
+				res.AddPostHook(&gauge_messages.ProtoHookFailure{
+					StackTrace:            postHook.StackTrace,
+					ErrorMessage:          postHook.ErrorMessage,
+					FailureScreenshot:     postHook.FailureScreenshot,
+					FailureScreenshotFile: postHook.FailureScreenshotFile,
+					TableRowIndex:         postHook.TableRowIndex,
+				})
 			}
 			results = append(results, res)
 		}
@@ -153,6 +165,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 	res := e.executeHook(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
+	e.suiteResult.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
@@ -166,6 +179,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 	res := e.executeHook(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
+	e.suiteResult.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}

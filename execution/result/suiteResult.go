@@ -44,6 +44,8 @@ type SuiteResult struct {
 	PostHookMessages    []string
 	PreHookScreenshotFiles  []string
 	PostHookScreenshotFiles []string
+	PreHookScreenshots  [][]byte
+	PostHookScreenshots [][]byte
 }
 
 // NewSuiteResult is a constructor for SuitResult
