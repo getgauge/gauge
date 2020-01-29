@@ -264,7 +264,7 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	gRPCConn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
 		grpc.WithInsecure(),
-		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024*15), grpc.MaxCallRecvMsgSize(1024*1024*1024*15)),
+		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024), grpc.MaxCallRecvMsgSize(1024*1024*1024)),
 		grpc.WithBlock())
 	if err != nil {
 		return nil, err
