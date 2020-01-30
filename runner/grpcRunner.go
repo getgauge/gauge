@@ -31,6 +31,8 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -187,6 +189,12 @@ func (r *GrpcRunner) executeMessage(message *gm.Message, timeout time.Duration) 
 	case response := <-resChan:
 		return response, nil
 	case err := <-errChan:
+		errStatus, _ := status.FromError(err)
+		if errStatus.Code() == codes.Canceled {
+			// Ref https://www.grpc.io/docs/guides/error/#general-errors
+			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
+			return nil, nil
+		}
 		return nil, err
 	}
 }
