@@ -20,15 +20,6 @@
 # Usage:
 # ./build/package.sh [--nightly]
 
-if [[ -z $GOPATH ]]; then
-    export GOPATH=`pwd`
-fi
-if [[ -z $GOBIN ]]; then
-    export GOBIN="$GOPATH/bin"
-fi
-
-cd $GOPATH/src/github.com/getgauge/gauge
-
 go run build/make.go --all-platforms $1
 
 chmod +x bin/**/* && rm -rf deploy

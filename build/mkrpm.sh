@@ -5,14 +5,6 @@
 # ./build/mkrpm.sh [--rebuild]
 
 set -e
-if [[ -z $GOPATH ]]; then
-    export GOPATH=`pwd`
-fi
-if [[ -z $GOBIN ]]; then
-    export GOBIN="$GOPATH/bin"
-fi
-
-cd $GOPATH/src/github.com/getgauge/gauge
 
 function err () {
     echo "ERROR: $1"
