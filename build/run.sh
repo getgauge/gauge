@@ -15,12 +15,6 @@
 # You should have received a copy of the GNU General Public License
 # along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
 
-if [[ -z $GOPATH ]]; then
-    export GOPATH=`pwd`
-fi
-if [[ -z $GOBIN ]]; then
-    export GOBIN="$GOPATH/bin"
-fi
 
 option="${1}"
 case ${option} in
