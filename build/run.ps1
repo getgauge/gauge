@@ -35,12 +35,6 @@ function test {
     checkLasterror
 }
 
-$env:GOPATH=$pwd
-
-$env:GOBIN="$env:GOPATH\bin"
-
-Set-Location -Path "$env:GOPATH\src\github.com\getgauge\gauge"
-
 switch ($task) {
     "test" { 
         test
