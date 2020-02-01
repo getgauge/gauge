@@ -276,6 +276,8 @@ func createWindowsInstaller() {
 	if err != nil {
 		panic(err)
 	}
+	executableFile := getGaugeExecutablePath(gauge)
+	signExecutable(executableFile, *certFile)
 	copyGaugeBinaries(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
