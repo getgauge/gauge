@@ -105,4 +105,9 @@ jobs:
               echo "$release_description" >> desc.txt
               echo "Creating new draft for release v$version"
               hub release create -d -F ./desc.txt "v$version"
+
+              echo "Start uploading artifacts"
+              for artifact in `ls gauge-*`; do
+                  hub release edit -m "" -a $artifact $version
+              done
               rm -rf desc.txt
