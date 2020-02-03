@@ -1,0 +1,32 @@
+name: Brew deploy
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+      - name: Set gauge version
+        run: |
+          gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
+          echo "::add-env:: name=GAUGE_VERSION:$gauge_version"
+          echo "::add-env:: name=GAUGE_BRANCH:gauge-$gauge_version"
+          echo "::add-env:: name=GAUGE_URL:https://github.com/getgauge/gauge/archive/v$gauge_version.tar.gz"
+
+
+      - name: Prepare shasum
+        run: |
+          curl -O -L $GAUGE_URL
+          gauge_shasum=`shasum -a 256 v$GAUGE_VERSION.tar.gz | sed 's/[ ]*v[1-9].[0-9].[0-9].tar.gz[ ]*//'`
+          echo "::add-env:: name=GAUGE_SHASUM:$gauge_shasum"
+
+      - name: Foo
+        run: |
+          cd /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core
+          git checkout . && git checkout master && (!(git show-ref --verify --quiet \"refs/heads/$GAUGE_BRANCH\") || git branch -D $GAUGE_BRANCH)"
+          brew update
+          (brew uninstall gauge || true) && (brew install gauge || brew link --overwrite gauge)
+          cat Formula/gauge.rb
+          brew bump-formula-pr --force --dry-run --write --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message=\"Created by a bot. Please cc getgauge/core on issues\"  gauge
+          cat Formula/gauge.rb
