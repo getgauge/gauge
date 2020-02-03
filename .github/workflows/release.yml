@@ -108,6 +108,6 @@ jobs:
 
               echo "Start uploading artifacts"
               for artifact in `ls gauge-*`; do
-                  hub release edit -m "" -a $artifact $version
+                  hub release edit -m "" -a $artifact v$version
               done
               rm -rf desc.txt
