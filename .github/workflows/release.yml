@@ -69,3 +69,40 @@ jobs:
               with:
                  name: gauge-windows-artifact
                  path: ./deploy
+
+    draft-release:
+        name: Create Draft with assets
+        runs-on: macos-latest
+        needs: [ package, windows-package]
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+        steps:
+          - uses: actions/checkout@v1
+
+          - name: Install hub
+            run: brew install hub
+
+          - uses: actions/download-artifact@v1
+            with:
+              name: gauge-non-windows-artifact
+              path: ./deploy
+
+          - uses: actions/download-artifact@v1
+            with:
+              name: gauge-windows-artifact
+              path: ./deploy
+
+          - name: update release note
+            run: |
+              cd deploy
+              version=$(ls gauge-*-darwin.x86.zip |  sed 's/gauge-//' | sed 's/-darwin.*//')
+              if [ -z "$version" ]; then
+                  echo "Gauge version is not set"
+                  exit 1
+              fi
+              echo -e "Gauge v$version\n\n" > desc.txt
+              release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" gauge getgauge)
+              echo "$release_description" >> desc.txt
+              echo "Creating new draft for release v$version"
+              hub release create -d -F ./desc.txt "v$version"
+              rm -rf desc.txt
