@@ -166,7 +166,10 @@ func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result
 
 func (e *parallelExecution) executeGrpcMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
 	e.wg.Add(totalStreams)
-	os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
+	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
+	if err != nil {
+		logger.Fatalf(true, "failed to set env %s. %s", gaugeParallelStreamCountEnv, err.Error())
+	}
 	r, err := runner.StartGrpcRunner(e.manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
 	r.IsExecuting = true
 	if err != nil {

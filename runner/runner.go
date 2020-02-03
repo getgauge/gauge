@@ -139,7 +139,7 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writ
 	if compatibilityErr != nil {
 		return nil, nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
-	command := getOsSpecificCommand(r)
+	command := getOsSpecificCommand(&r)
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, writer.Stdout, writer.Stderr, env)
 	return cmd, &r, err
@@ -209,7 +209,7 @@ func getCleanEnv(port string, env []string, debug bool, pathToAdd []string) []st
 	return env
 }
 
-func getOsSpecificCommand(r RunnerInfo) []string {
+func getOsSpecificCommand(r *RunnerInfo) []string {
 	var command []string
 	switch runtime.GOOS {
 	case "windows":

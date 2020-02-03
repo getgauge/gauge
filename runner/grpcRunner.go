@@ -156,6 +156,12 @@ func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) 
 		return &gm.Message{MessageType: gm.Message_StepValidateResponse, StepValidateResponse: response}, err
 	case gm.Message_KillProcessRequest:
 		_, err := r.RunnerClient.Kill(context.Background(), message.KillProcessRequest)
+		errStatus, _ := status.FromError(err)
+		if errStatus.Code() == codes.Canceled {
+			// Ref https://www.grpc.io/docs/guides/error/#general-errors
+			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
+			return &gm.Message{}, nil
+		}
 		return &gm.Message{}, err
 	default:
 		return nil, nil
@@ -189,12 +195,6 @@ func (r *GrpcRunner) executeMessage(message *gm.Message, timeout time.Duration) 
 	case response := <-resChan:
 		return response, nil
 	case err := <-errChan:
-		errStatus, _ := status.FromError(err)
-		if errStatus.Code() == codes.Canceled {
-			// Ref https://www.grpc.io/docs/guides/error/#general-errors
-			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
-			return nil, nil
-		}
 		return nil, err
 	}
 }
