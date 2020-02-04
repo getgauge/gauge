@@ -28,8 +28,6 @@ import (
 
 	"math"
 
-	"html/template"
-
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/cmd"
 	"github.com/russross/blackfriday"
@@ -52,12 +50,6 @@ type text struct {
 	name    string
 	content string
 }
-
-var indexTemplate, _ = template.New("test").Parse(`<ul>
-{{ range . }}
-	<li><a class="{{ .Class }}" href="{{ .Link }}">{{ .Name }}</a></li>
-{{ end }}
-</ul>`)
 
 type writer struct {
 	text string
@@ -88,9 +80,7 @@ func main() {
 				newLinks = append(newLinks, l)
 			}
 		}
-		page := strings.Replace(html, "<!--NAV-->", prepareIndex(newLinks), -1)
-
-		output := strings.Replace(page, "<!--CONTENT-->", string(blackfriday.Run([]byte(t.content))), -1)
+		output := strings.Replace(html, "<!--CONTENT-->", string(blackfriday.Run([]byte(t.content))), -1)
 		p := filepath.Join(htmlPath, name)
 		err := ioutil.WriteFile(p, []byte(output), 0644)
 		if err != nil {
@@ -125,15 +115,6 @@ func getLinks(texts []text) (links []link) {
 		links = append(links, link{Class: "", Name: strings.Replace(name, "_", " ", -1), Link: name + ".html"})
 	}
 	return
-}
-
-func prepareIndex(links []link) string {
-	w := &writer{}
-	err := indexTemplate.Execute(w, links)
-	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	return w.text
 }
 
 func indentText(p string) (texts []text) {
@@ -391,52 +372,6 @@ const html = `
             text-align: right;
             float: right;
         }
-
-        .man-navigation ul {
-            font-size: 16px;
-        }
-    </style>
-    <style type='text/css' media='all'>
-        .man-navigation {
-            display: block !important;
-            position: fixed;
-            top: 3px;
-            left: 113ex;
-            height: 100%;
-            width: 100%;
-            padding: 48px 0 0 0;
-            border-left: 1px solid #dbdbdb;
-            background: #333333;
-        }
-
-        .man-navigation a,
-        .man-navigation a:hover,
-        .man-navigation a:link,
-        .man-navigation a:visited {
-            display: block;
-            margin: 0;
-            padding: 5px 2px 5px 0px;
-            color: #ffffff;
-            text-decoration: none;
-        }
-
-        .man-navigation a:hover {
-            color: #f5c10e;
-            text-decoration: underline;
-        }
-
-        li {
-            list-style: none;
-        }
-
-        .mp li {
-            margin-left: -3ex;
-        }
-
-        a.active {
-            font-weight: bolder;
-            color: #f5c10e !important;
-        }
     </style>
 </head>
 
@@ -444,9 +379,6 @@ const html = `
     <div class='mp' id='man'>
         <!--CONTENT-->
 		<div><b>Complete documentation is available <a href="https://docs.gauge.org/">here</a>.</b></div>
-        <nav id="menu" class='man-navigation' style='display:none'>
-            <!--NAV-->
-        </nav>
     </div>
 
 </body>
