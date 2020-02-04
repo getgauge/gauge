@@ -1,0 +1,32 @@
+name: Choco deploy
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: windows-latest
+    steps:
+
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set gauge version
+        run: |
+          $gauge_version=($Env:GITHUB_REF -replace "[a-zA-Z//]+", '' )
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Clone chocolatey-packages
+        run: |
+          git clone https://github.com/getgauge/chocolatey-packages
+
+      - name: Deploy to Gauge $GAUGE_VERSION to choco
+        shell: pwsh
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          cd chocolatey-packages
+          $Env:GAUGE_VERSION | Set-Content version
+          cd gauge
+          ./package.ps1
+          choco push "gauge.$Env:GAUGE_VERSION.nupkg" -k $Env:API_KEY
