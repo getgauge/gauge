@@ -27,4 +27,4 @@ jobs:
           git checkout . && git checkout master && (!(git show-ref --verify --quiet \"refs/heads/$GAUGE_BRANCH\") || git branch -D $GAUGE_BRANCH)
           brew update
           (brew uninstall gauge || true) && (brew install gauge || brew link --overwrite gauge)
-          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Created by a bot. Please cc getgauge/core on issues"  gauge
+          brew bump-formula-pr --force --dry-run --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Created by a bot. Please cc getgauge/core on issues"  gauge
