@@ -1,0 +1,26 @@
+name: Brew deploy
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Prepare deb artifact
+        run: |
+          build/mkdeb.sh
+
+      - name: Deploy debian
+        run: |
+          build/publish_deb_to_bintray.sh
