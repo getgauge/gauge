@@ -1,4 +1,4 @@
-name: Brew deploy
+name: Debian deploy
 on:
   release:
     types: [published]
@@ -31,4 +31,4 @@ jobs:
           API_KEY: ${{ secrets.BINTRAY_API_KEY }}
           PASSPHRASE: ${{ secrets.BINTRAY_GPG_SIGNING_PASSPHRASE }}
         run: |
-          build/publish_deb_to_bintray.sh
+          sh build/publish_deb_to_bintray.sh
