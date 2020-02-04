@@ -127,6 +127,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	logger.Infof(true, "Executing in %s parallel streams.", strconv.Itoa(nStreams))
 	resChan := make(chan *result.SuiteResult)
 
+	// skipcq CRT-A0013
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
 		if e.runner.Info().GRPCSupport {
@@ -304,9 +305,6 @@ func (e *parallelExecution) finish() {
 	}
 	e.pluginHandler.NotifyPlugins(message)
 	e.pluginHandler.GracefullyKillPlugins()
-	if err := e.runner.Kill(); err != nil {
-		logger.Errorf(true, "Failed to kill Runner: %s", err.Error())
-	}
 }
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {
