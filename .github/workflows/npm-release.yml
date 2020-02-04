@@ -1,0 +1,35 @@
+name: Npm deploy
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+
+      - name: Set gauge version
+        run: |
+          gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Deploy to npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd build/npm
+          npm version $GAUGE_VERSION
+          echo '//registry.npmjs.org/:_authToken=$NPM_TOKEN'>~/.npmrc
+          npm publish --dry-run --access=public
+
+      - name: Clean
+        if: success()
+        run: |
+          rm ~/.npmrc
