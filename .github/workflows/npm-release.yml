@@ -27,7 +27,7 @@ jobs:
           cd build/npm
           npm version $GAUGE_VERSION
           echo '//registry.npmjs.org/:_authToken=$NPM_TOKEN'>~/.npmrc
-          npm publish --dry-run --access=public
+          npm publish --access=public
 
       - name: Clean
         if: success()
