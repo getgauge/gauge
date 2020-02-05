@@ -11,12 +11,17 @@ jobs:
       - name: Switch to $GITHUB_REF
         uses: actions/checkout@v1
 
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
       - name: Set gauge version
         run: |
           gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
 
-      - name: Deploy to npm
+      - name: Deploy to pypi
         env:
           PYPI_USER: ${{ secrets.PYPI_USER }}
           GAUGE_PACKAGE_NAME: getgauge-cli
