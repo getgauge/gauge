@@ -69,17 +69,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 	texts := indentText(mdPath)
-	links := getLinks(texts)
 	for _, t := range texts {
 		name := strings.TrimSuffix(t.name, filepath.Ext(t.name)) + ".html"
-		var newLinks []link
-		for _, l := range links {
-			if l.Link == name {
-				newLinks = append(newLinks, link{Name: l.Name, Link: l.Link, Class: "active"})
-			} else {
-				newLinks = append(newLinks, l)
-			}
-		}
 		output := strings.Replace(html, "<!--CONTENT-->", string(blackfriday.Run([]byte(t.content))), -1)
 		p := filepath.Join(htmlPath, name)
 		err := ioutil.WriteFile(p, []byte(output), 0644)
