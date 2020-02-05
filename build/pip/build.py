@@ -6,8 +6,13 @@ import shutil
 from subprocess import call
 
 
-base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
-latest_version = json.loads(requests.get(base_url).text)[0]['tag_name'].replace('v', '')
+base_url = 'https://api.github.com/repos/getgauge/gauge/releases/latest'
+try:
+    latest_version = json.loads(requests.get(base_url).text)[0]['tag_name'].replace('v', '')
+except KeyError as err:
+    if os.getenv("GAUGE_VERSION") == None:
+        message = requests.get(base_url).text
+        raise Exception('Error while fetching the latest gauge version from github: {0}. Configure GAUGE_VERSION'.format(message))
 
 def create_setup_file():
     tmpl = open("setup.tmpl", "r")
