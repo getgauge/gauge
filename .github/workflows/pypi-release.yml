@@ -1,0 +1,30 @@
+name: Pypi deploy
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    runs-on: macos-latest
+    steps:
+
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set gauge version
+        run: |
+          gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Deploy to npm
+        env:
+          PYPI_USER: ${{ secrets.PYPI_USER }}
+          GAUGE_PACKAGE_NAME: getgauge-cli
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          cd build/pip
+          pip install requests --user
+          python build.py --dist
+          pip install twine --user
+          gauge_package=`ls dist/$GAUGE_PACKAGE_NAME-$GAUGE_VERSION.tar.gz`
+          python -m twine upload -u $PYPI_USER -p $PYPI_PASSWORD $gauge_package
