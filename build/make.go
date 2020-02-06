@@ -182,13 +182,14 @@ func main() {
 	if *verbose {
 		fmt.Println("Build: " + buildMetadata)
 	}
-	if *test {
+	switch {
+	case *test:
 		runTests(*coverage)
-	} else if *install {
+	case *install:
 		installGauge()
-	} else if *distro {
+	case *distro:
 		createGaugeDistributables(*allPlatforms)
-	} else {
+	default:
 		if *allPlatforms {
 			crossCompileGauge()
 		} else {
