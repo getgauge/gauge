@@ -40,24 +40,9 @@ const (
 	maxLineLength = 77
 )
 
-type link struct {
-	Class string
-	Link  string
-	Name  string
-}
-
 type text struct {
 	name    string
 	content string
-}
-
-type writer struct {
-	text string
-}
-
-func (w *writer) Write(b []byte) (int, error) {
-	w.text += string(b)
-	return 0, nil
 }
 
 func main() {
@@ -98,14 +83,6 @@ func setupCmd() *cobra.Command {
 	cmd.GaugeCmd.Short = "A light-weight cross-platform test automation tool"
 	cmd.GaugeCmd.Long = "Gauge is a light-weight cross-platform test automation tool with the ability to author test cases in the business language."
 	return cmd.GaugeCmd
-}
-
-func getLinks(texts []text) (links []link) {
-	for _, t := range texts {
-		name := strings.TrimSuffix(t.name, filepath.Ext(t.name))
-		links = append(links, link{Class: "", Name: strings.Replace(name, "_", " ", -1), Link: name + ".html"})
-	}
-	return
 }
 
 func indentText(p string) (texts []text) {
