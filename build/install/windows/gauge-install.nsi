@@ -18,7 +18,6 @@
 ; MUI 1.67 compatible ------
 !include "MUI.nsh"
 !include "MUI2.nsh"
-!include "EnvVarUpdate.nsh"
 !include "x64.nsh"
 !include "winmessages.nsh"
 !include "FileFunc.nsh" ;For GetOptions
@@ -135,6 +134,7 @@ Section -AdditionalIcons
 SectionEnd
 
 Section -Post
+  File "update_path.ps1"
   WriteUninstaller "$INSTDIR\uninst.exe"
   WriteRegStr HKLM "${PRODUCT_DIR_REGKEY}" "" "$INSTDIR\bin\gauge.exe"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayName" "$(^Name)"
@@ -143,7 +143,7 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "DisplayVersion" "${PRODUCT_VERSION}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
-  ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\bin"
+  nsExec::ExecToLog 'powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "$INSTDIR\update_path.ps1" -Add -Path "$INSTDIR\bin"'
   SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
   RMDir /r /REBOOTOK "$%temp%\Gauge"
 
@@ -222,6 +222,7 @@ FunctionEnd
 Section Uninstall
   Delete "$INSTDIR\uninst.exe"
   Delete "$INSTDIR\plugin-install.bat"
+  Delete "$INSTDIR\update_path.ps1"
   RMDir /r "$INSTDIR\bin"
   Delete "$SMPROGRAMS\Gauge\Uninstall.lnk"
   DeleteRegKey ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}"

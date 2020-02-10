@@ -1,0 +1,113 @@
+name: Deploy
+
+on: [deployment]
+
+jobs:
+    package:
+        name: Create package
+        runs-on: macos-latest
+        steps:
+            - uses: actions/checkout@v1
+
+            - name: Set up Go 1.13
+              uses: actions/setup-go@v1
+              with:
+                go-version: 1.13
+              id: go
+
+            - name: Compile gauge
+              run: go run build/make.go --all-platforms  --skip-windows
+
+            - name: Create distro
+              run: |
+                go run build/make.go --distro --all-platforms --skip-windows
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v1
+              with:
+                 name: gauge-non-windows-artifact
+                 path: ./deploy
+
+    windows-package:
+        name: Create windows package
+        runs-on: windows-latest
+        steps:
+            - uses: actions/checkout@v1
+
+            - name: Set up Go 1.13
+              uses: actions/setup-go@v1
+              with:
+                go-version: 1.13
+              id: go
+
+            - name: Prep installer generation
+              env:
+                SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
+              run: |
+                Invoke-WebRequest https://liquidtelecom.dl.sourceforge.net/project/nsis/NSIS%203/3.05/nsis-3.05-strlen_8192.zip -UseBasicParsing -Outfile ./nsis.zip
+                Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
+                echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
+                [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
+                echo "::set-env name=CERT_FILE::$Env:GITHUB_WORKSPACE/cert.p12"
+
+            - name: Compile gauge
+              run: |
+                go run build/make.go --verbose --all-platforms
+                Get-ChildItem -Recurse .\bin
+
+            - name: Sign
+              shell: pwsh
+              run: |
+                .\build\sign_windows_artifacts.ps1
+
+            - name: Cleanup
+              if: always()
+              run: rm $Env:CERT_FILE
+
+            - name: Upload artifacts
+              uses: actions/upload-artifact@v1
+              with:
+                 name: gauge-windows-artifact
+                 path: ./deploy
+
+    draft-release:
+        name: Create Draft with assets
+        runs-on: macos-latest
+        needs: [ package, windows-package]
+        env:
+          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+        steps:
+          - uses: actions/checkout@v1
+
+          - name: Install hub
+            run: brew install hub
+
+          - uses: actions/download-artifact@v1
+            with:
+              name: gauge-non-windows-artifact
+              path: ./deploy
+
+          - uses: actions/download-artifact@v1
+            with:
+              name: gauge-windows-artifact
+              path: ./deploy
+
+          - name: update release note
+            run: |
+              cd deploy
+              version=$(ls gauge-*-darwin.x86.zip |  sed 's/gauge-//' | sed 's/-darwin.*//')
+              if [ -z "$version" ]; then
+                  echo "Gauge version is not set"
+                  exit 1
+              fi
+              echo -e "Gauge v$version\n\n" > desc.txt
+              release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" gauge getgauge)
+              echo "$release_description" >> desc.txt
+              echo "Creating new draft for release v$version"
+              hub release create -d -F ./desc.txt "v$version"
+
+              echo "Start uploading artifacts"
+              for artifact in `ls gauge-*`; do
+                  hub release edit -m "" -a $artifact v$version
+              done
+              rm -rf desc.txt

@@ -182,13 +182,14 @@ func main() {
 	if *verbose {
 		fmt.Println("Build: " + buildMetadata)
 	}
-	if *test {
+	switch {
+	case *test:
 		runTests(*coverage)
-	} else if *install {
+	case *install:
 		installGauge()
-	} else if *distro {
+	case *distro:
 		createGaugeDistributables(*allPlatforms)
-	} else {
+	default:
 		if *allPlatforms {
 			crossCompileGauge()
 		} else {
@@ -276,6 +277,8 @@ func createWindowsInstaller() {
 	if err != nil {
 		panic(err)
 	}
+	executableFile := getGaugeExecutablePath(gauge)
+	signExecutable(executableFile, *certFile)
 	copyGaugeBinaries(distroDir)
 	runProcess("makensis.exe",
 		fmt.Sprintf("/DPRODUCT_VERSION=%s", getBuildVersion()),
