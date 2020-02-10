@@ -178,6 +178,9 @@ var ExecuteSpecs = func(specDirs []string) int {
 
 func newExecution(executionInfo *executionInfo) suiteExecutor {
 	if executionInfo.inParallel {
+		if err := executionInfo.runner.Kill(); err != nil {
+			logger.Errorf(true, "failed to kill runner which was started for validation. %s", err.Error())
+		}
 		return newParallelExecution(executionInfo)
 	}
 	return newSimpleExecution(executionInfo, true)

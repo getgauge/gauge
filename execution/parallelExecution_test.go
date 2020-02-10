@@ -26,6 +26,7 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	. "gopkg.in/check.v1"
 )
 
@@ -158,6 +159,10 @@ func (f *fakeRunner) Connection() net.Conn {
 }
 func (f *fakeRunner) IsMultithreaded() bool {
 	return f.isMultiThreaded
+}
+
+func (f *fakeRunner) Info() *runner.RunnerInfo {
+	return nil
 }
 func (f *fakeRunner) Pid() int {
 	return 0
