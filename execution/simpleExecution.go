@@ -161,7 +161,7 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 
 func (e *simpleExecution) notifyBeforeSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
-		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	res := e.executeHook(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
@@ -175,7 +175,7 @@ func (e *simpleExecution) notifyBeforeSuite() {
 
 func (e *simpleExecution) notifyAfterSuite() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
-		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	res := e.executeHook(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
@@ -189,7 +189,7 @@ func (e *simpleExecution) notifyAfterSuite() {
 
 func (e *simpleExecution) initSuiteDataStore() *(gauge_messages.ProtoExecutionResult) {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit,
-		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
+		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{Stream: int32(e.stream)}}
 	return e.runner.ExecuteAndGetStatus(m)
 }
 

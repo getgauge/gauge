@@ -22,6 +22,8 @@ import (
 	"net"
 	"testing"
 
+	"github.com/getgauge/gauge/runner"
+
 	"sync"
 
 	"github.com/getgauge/gauge/execution/event"
@@ -259,6 +261,10 @@ func (r *mockRunner) Connection() net.Conn {
 
 func (r *mockRunner) IsMultithreaded() bool {
 	return false
+}
+
+func (r *mockRunner) Info() *runner.RunnerInfo {
+	return nil
 }
 
 func (r *mockRunner) Pid() int {
@@ -505,15 +511,15 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot3.png", "screenshot4.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot3.png", "screenshot4.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
