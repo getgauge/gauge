@@ -20,12 +20,11 @@ jobs:
 
       - name: Set gauge version
         run: |
-          gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
 
       - name: Setup Git User
         run: |
-          echo "$GAUGE_VERSION"
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
 

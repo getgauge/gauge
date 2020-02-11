@@ -11,11 +11,10 @@ jobs:
     steps:
       - name: Set gauge version
         run: |
-          gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
           echo "::set-env name=GAUGE_BRANCH::gauge-$gauge_version"
           echo "::set-env name=GAUGE_URL::https://github.com/getgauge/gauge/archive/v$gauge_version.tar.gz"
-
 
       - name: Prepare shasum
         run: |
@@ -31,8 +30,4 @@ jobs:
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cd /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core
-          git checkout . && git checkout master && (!(git show-ref --verify --quiet \"refs/heads/$GAUGE_BRANCH\") || git branch -D $GAUGE_BRANCH)
-          brew update
-          (brew uninstall gauge || true) && (brew install gauge || brew link --overwrite gauge)
-          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Created by a bot. Please cc getgauge/core on issues"  gauge
+          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Please cc getgauge/core on issues"  gauge
