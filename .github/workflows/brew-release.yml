@@ -30,5 +30,4 @@ jobs:
         env:
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo 'brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Please cc getgauge/core on issues"  gauge'
-          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Please cc getgauge/core on issues"  gauge -n
+          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Please cc getgauge/core on issues"  gauge
