@@ -1,9 +1,7 @@
 name: Npm deploy
-# on:
-#   release:
-#     types: [published]
-
-on: repository_dispatch
+on:
+  release:
+    types: [published]
 
 jobs:
   deploy:
