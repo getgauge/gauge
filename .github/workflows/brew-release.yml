@@ -9,9 +9,12 @@ jobs:
   deploy:
     runs-on: macos-latest
     steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
       - name: Set gauge version
         run: |
-          gauge_version=`curl --silent "https://github.com/getgauge/gauge/releases/latest" | sed 's#.*tag/\(.*\)\".*#\1#' | sed 's/[a-z\/]*//g'`
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
           echo "::set-env name=GAUGE_BRANCH::gauge-$gauge_version"
           echo "::set-env name=GAUGE_URL::https://github.com/getgauge/gauge/archive/v$gauge_version.tar.gz"
