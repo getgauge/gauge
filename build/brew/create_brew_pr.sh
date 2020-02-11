@@ -44,4 +44,4 @@ git add ./Formula/gauge.rb
 git commit -m "gauge v$GAUGE_VERSION"
 git push "https://$HOMEBREW_GITHUB_USER_NAME:$GITHUB_TOKEN@github.com/$HOMEBREW_GITHUB_USER_NAME/homebrew-core.git" "gauge-$GAUGE_VERSION"
 echo -e "gauge v$GAUGE_VERSION \n\n Please cc getgauge/core for any issue." > desc.txt
-hub pull-request --base Homebrew:master --head HOMEBREW_GITHUB_USER_NAME:$BRANCH -F ./desc.txt
+hub pull-request --base Homebrew:master --head $HOMEBREW_GITHUB_USER_NAME:$BRANCH -F ./desc.txt
