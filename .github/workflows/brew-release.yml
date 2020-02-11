@@ -16,25 +16,15 @@ jobs:
         run: |
           gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
-          echo "::set-env name=GAUGE_BRANCH::gauge-$gauge_version"
-          echo "::set-env name=GAUGE_URL::https://github.com/getgauge/gauge/archive/v$gauge_version.tar.gz"
-
-      - name: Prepare shasum
+      - name: Install hub
         run: |
-          curl -O -L $GAUGE_URL
-          gauge_shasum=`shasum -a 256 v$GAUGE_VERSION.tar.gz | sed 's/[ ]*v[1-9].[0-9].[0-9].tar.gz[ ]*//'`
-          echo "::set-env name=GAUGE_SHASUM::$gauge_shasum"
-
-      - name: Setup Git User
-        run: |
-          git config --global user.name "$HOMEBREW_GITHUB_USER_NAME"
-          git config --global user.email "$HOMEBREW_GITHUB_USER_EMAIL"
-        env:
-          HOMEBREW_GITHUB_USER_NAME: ${{ secrets.HOMEBREW_GITHUB_USER_NAME }}
-          HOMEBREW_GITHUB_USER_EMAIL: ${{ secrets.HOMEBREW_GITHUB_USER_EMAIL }}
+          brew install hub
 
       - name: Update brew formula
         env:
+          HOMEBREW_GITHUB_USER_NAME: ${{ secrets.HOMEBREW_GITHUB_USER_NAME }}
+          HOMEBREW_GITHUB_USER_EMAIL: ${{ secrets.HOMEBREW_GITHUB_USER_EMAIL }}
           HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
         run: |
-          brew bump-formula-pr --force --url=$GAUGE_URL --sha256=$GAUGE_SHASUM --message="Created by a bot. Please cc getgauge/core on issues"  gauge
+          cd build/brew
+          bash create_brew_pr.sh
