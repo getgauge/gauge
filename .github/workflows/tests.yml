@@ -21,159 +21,159 @@ jobs:
       - name: Test
         run: go run build/make.go --test --verbose
 
-  lsp-tests:
-    needs: tests
-    name: lsp-tests ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
+  # lsp-tests:
+  #   needs: tests
+  #   name: lsp-tests ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, ubuntu-latest]
+  #   steps:
+  #     - name: Set up Go 1.13
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #       id: go
 
-      - name: Set up Nodejs
-        uses: actions/setup-node@v1
-        with:
-          node-version: '12.x'
+  #     - name: Set up Nodejs
+  #       uses: actions/setup-node@v1
+  #       with:
+  #         node-version: '12.x'
 
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v1
 
-      - name: Build
-        run: |
-          go run build/make.go --verbose
+  #     - name: Build
+  #       run: |
+  #         go run build/make.go --verbose
 
-      - name: Clone LSP tests
-        run: |
-          git clone https://github.com/getgauge/gauge-lsp-tests
-          cd gauge-lsp-tests
-          npm install
+  #     - name: Clone LSP tests
+  #       run: |
+  #         git clone https://github.com/getgauge/gauge-lsp-tests
+  #         cd gauge-lsp-tests
+  #         npm install
 
-      - name: Install Gauge (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          go run build/make.go --install  --verbose
-          echo "::add-path::C:\\Program Files\\gauge\\bin"
-
-
-      - name: Install Gauge (linux)
-        if: matrix.os != 'windows-latest'
-        run: |
-          go run build/make.go --install --prefix=/tmp/gauge --verbose
-          echo "::add-path::/tmp/gauge/bin"
-
-      - name: Prep gauge-js
-        run: |
-          git clone https://github.com/getgauge/gauge-js.git
-          cd gauge-js
-          npm install
-        shell: bash
-
-      - name: Install gauge-js
-        run: |
-          cd gauge-js
-          npm run installPlugin
-
-      - name: Run lsp-tests
-        run: |
-          cd gauge-lsp-tests
-          gauge install
-          gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
-
-  functional-tests:
-    needs: tests
-    name: FTs ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    env:
-      TAGS: js
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest]
-    steps:
-      - name: Set up Go 1.13
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.13
-        id: go
-
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@v1
-
-      - name: Build
-        run: go run build/make.go --verbose
-
-      - name: Install Gauge (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          go run build/make.go --install  --verbose
-          echo "::add-path::C:\\Program Files\\gauge\\bin"
-
-      - name: Install Gauge (linux)
-        if: matrix.os != 'windows-latest'
-        run: |
-          go run build/make.go --install --prefix=/tmp/gauge --verbose
-          echo "::add-path::/tmp/gauge/bin"
-
-      - name: Clone gauge-java
-        run: |
-          git clone https://github.com/getgauge/gauge-java
-
-      - name: Install Gauge Java plugin from source
-        if: matrix.os != 'windows-latest'
-        run: |
-          cd gauge-java
-          ./build.sh forceinstall
-
-      - name: Install Gauge Java plugin from source
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd gauge-java
-          ./build.ps1 forceinstall
-
-      - name: Install Gauge Java maven package locally
-        run: |
-          cd gauge-java
-          mvn -q install -DskipTests -"Dgpg.skip" -D"maven.javadoc.skip=true"
-
-      - name: Prep gauge-js
-        run: |
-          git clone https://github.com/getgauge/gauge-js.git
-          cd gauge-js
-          npm install
-        shell: bash
-
-      - name: Install gauge-js
-        run: |
-          cd gauge-js
-          npm run installPlugin
-
-      - name: Prep html-report
-        run: |
-          git clone https://github.com/getgauge/html-report
-          cd html-report
-          go run build/make.go && go run build/make.go --install
-        shell: bash
+  #     - name: Install Gauge (windows)
+  #       if: matrix.os == 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install  --verbose
+  #         echo "::add-path::C:\\Program Files\\gauge\\bin"
 
 
-      - name: Prep FTs
-        run: |
-          git clone https://github.com/getgauge/gauge-tests
-          cd gauge-tests
-          gauge install
+  #     - name: Install Gauge (linux)
+  #       if: matrix.os != 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install --prefix=/tmp/gauge --verbose
+  #         echo "::add-path::/tmp/gauge/bin"
 
-      - name: Install gauge and Run FTs (windows)
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd gauge-tests
-          .\gradlew.bat clean jsFT
-        shell: pwsh
+  #     - name: Prep gauge-js
+  #       run: |
+  #         git clone https://github.com/getgauge/gauge-js.git
+  #         cd gauge-js
+  #         npm install
+  #       shell: bash
 
-      - name: Install gauge and Run FTs (linux/osx)
-        if: matrix.os != 'windows-latest'
-        run: |
-          cd gauge-tests
-          ./gradlew clean jsFT
+  #     - name: Install gauge-js
+  #       run: |
+  #         cd gauge-js
+  #         npm run installPlugin
+
+  #     - name: Run lsp-tests
+  #       run: |
+  #         cd gauge-lsp-tests
+  #         gauge install
+  #         gauge run --tags="!knownIssue & (actions_on_project_load | actions_on_file_edit)" --env=js-wd
+
+  # functional-tests:
+  #   needs: tests
+  #   name: FTs ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   env:
+  #     TAGS: js
+  #   strategy:
+  #     matrix:
+  #       os: [windows-latest, ubuntu-latest]
+  #   steps:
+  #     - name: Set up Go 1.13
+  #       uses: actions/setup-go@v1
+  #       with:
+  #         go-version: 1.13
+  #       id: go
+
+  #     - name: Check out code into the Go module directory
+  #       uses: actions/checkout@v1
+
+  #     - name: Build
+  #       run: go run build/make.go --verbose
+
+  #     - name: Install Gauge (windows)
+  #       if: matrix.os == 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install  --verbose
+  #         echo "::add-path::C:\\Program Files\\gauge\\bin"
+
+  #     - name: Install Gauge (linux)
+  #       if: matrix.os != 'windows-latest'
+  #       run: |
+  #         go run build/make.go --install --prefix=/tmp/gauge --verbose
+  #         echo "::add-path::/tmp/gauge/bin"
+
+  #     - name: Clone gauge-java
+  #       run: |
+  #         git clone https://github.com/getgauge/gauge-java
+
+  #     - name: Install Gauge Java plugin from source
+  #       if: matrix.os != 'windows-latest'
+  #       run: |
+  #         cd gauge-java
+  #         ./build.sh forceinstall
+
+  #     - name: Install Gauge Java plugin from source
+  #       if: matrix.os == 'windows-latest'
+  #       run: |
+  #         cd gauge-java
+  #         ./build.ps1 forceinstall
+
+  #     - name: Install Gauge Java maven package locally
+  #       run: |
+  #         cd gauge-java
+  #         mvn -q install -DskipTests -"Dgpg.skip" -D"maven.javadoc.skip=true"
+
+  #     - name: Prep gauge-js
+  #       run: |
+  #         git clone https://github.com/getgauge/gauge-js.git
+  #         cd gauge-js
+  #         npm install
+  #       shell: bash
+
+  #     - name: Install gauge-js
+  #       run: |
+  #         cd gauge-js
+  #         npm run installPlugin
+
+  #     - name: Prep html-report
+  #       run: |
+  #         git clone https://github.com/getgauge/html-report
+  #         cd html-report
+  #         go run build/make.go && go run build/make.go --install
+  #       shell: bash
+
+
+  #     - name: Prep FTs
+  #       run: |
+  #         git clone https://github.com/getgauge/gauge-tests
+  #         cd gauge-tests
+  #         gauge install
+
+  #     - name: Install gauge and Run FTs (windows)
+  #       if: matrix.os == 'windows-latest'
+  #       run: |
+  #         cd gauge-tests
+  #         .\gradlew.bat clean jsFT
+  #       shell: pwsh
+
+  #     - name: Install gauge and Run FTs (linux/osx)
+  #       if: matrix.os != 'windows-latest'
+  #       run: |
+  #         cd gauge-tests
+  #         ./gradlew clean jsFT

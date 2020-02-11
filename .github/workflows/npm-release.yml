@@ -14,22 +14,22 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '10.x'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Set gauge version
         run: |
           gauge_version=`echo $GITHUB_REF | sed 's/[a-z\/]*//g'`
           echo "::set-env name=GAUGE_VERSION::$gauge_version"
 
-      - name: Deploy to npm
+      - name: Setup Git User
+        run: |
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+
+      - name: Deploy npm
         env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           cd build/npm
           npm version $GAUGE_VERSION
-          echo '//registry.npmjs.org/:_authToken=$NPM_TOKEN'>~/.npmrc
           npm publish --access=public
-
-      - name: Clean
-        if: success()
-        run: |
-          rm ~/.npmrc
