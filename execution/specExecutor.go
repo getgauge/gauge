@@ -174,13 +174,13 @@ func (e *specExecutor) executeSpec() error {
 
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {
 	initSpecDataStoreMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecDataStoreInit,
-		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{}}
+		SpecDataStoreInitRequest: &gauge_messages.SpecDataStoreInitRequest{Stream: int32(e.stream)}}
 	return e.runner.ExecuteAndGetStatus(initSpecDataStoreMessage)
 }
 
 func (e *specExecutor) notifyBeforeSpecHook() {
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionStarting,
-		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		SpecExecutionStartingRequest: &gauge_messages.SpecExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(m)
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PreHookMessages = res.Message
@@ -197,7 +197,7 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 func (e *specExecutor) notifyAfterSpecHook() {
 	e.currentExecutionInfo.CurrentScenario = nil
 	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SpecExecutionEnding,
-		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo}}
+		SpecExecutionEndingRequest: &gauge_messages.SpecExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PostHookMessages = res.Message
 	e.specResult.ProtoSpec.PostHookScreenshotFiles = res.ScreenshotFiles
@@ -388,7 +388,7 @@ func shouldExecuteForRow(i int) bool {
 
 func getDataTableRows(tableRows string) (tableRowIndexes []int) {
 	switch {
-	case strings.TrimSpace(tableRows) == "" :
+	case strings.TrimSpace(tableRows) == "":
 		return
 	case strings.Contains(tableRows, "-"):
 		indexes := strings.Split(tableRows, "-")

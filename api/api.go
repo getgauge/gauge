@@ -33,16 +33,25 @@ import (
 	"github.com/getgauge/gauge/util"
 )
 
+type StartChannels struct {
+	// this will hold the runner
+	RunnerChan chan runner.Runner
+	// this will hold the error while creating runner
+	ErrorChan chan error
+	// this holds a flag based on which the runner is terminated
+	KillChan chan bool
+}
+
 // StartAPI calls StartAPIService and returns the channels
-func StartAPI(debug bool) *runner.StartChannels {
-	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+func StartAPI(debug bool) *StartChannels {
+	startChan := &StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 	sig := &infoGatherer.SpecInfoGatherer{}
 	go startAPIService(0, startChan, sig, debug)
 	return startChan
 }
 
 // StartAPIService starts the Gauge API service
-func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
+func startAPIService(port int, startChannels *StartChannels, sig *infoGatherer.SpecInfoGatherer, debug bool) {
 	startAPIServiceWithoutRunner(port, startChannels, sig)
 
 	runner, err := ConnectToRunner(startChannels.KillChan, debug)
@@ -53,7 +62,7 @@ func startAPIService(port int, startChannels *runner.StartChannels, sig *infoGat
 	startChannels.RunnerChan <- runner
 }
 
-func startAPIServiceWithoutRunner(port int, startChannels *runner.StartChannels, sig *infoGatherer.SpecInfoGatherer) {
+func startAPIServiceWithoutRunner(port int, startChannels *StartChannels, sig *infoGatherer.SpecInfoGatherer) {
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(port, apiHandler)
 	if err != nil {
@@ -83,7 +92,7 @@ func ConnectToRunner(killChannel chan bool, debug bool) (runner.Runner, error) {
 }
 
 func runAPIServiceIndefinitely(port int, specDirs []string) {
-	startChan := &runner.StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
+	startChan := &StartChannels{RunnerChan: make(chan runner.Runner), ErrorChan: make(chan error), KillChan: make(chan bool)}
 
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.Init()
@@ -106,7 +115,7 @@ func runAPIServiceIndefinitely(port int, specDirs []string) {
 	}
 }
 
-func checkParentIsAlive(startChannels *runner.StartChannels) {
+func checkParentIsAlive(startChannels *StartChannels) {
 	parentProcessID := os.Getppid()
 	for {
 		if !util.IsProcessRunning(parentProcessID) {

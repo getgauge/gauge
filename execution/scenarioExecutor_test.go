@@ -94,9 +94,9 @@ func TestNotifyBeforeScenarioShouldAddBeforeScenarioHookScreenshots(t *testing.T
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ScenarioExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
@@ -129,9 +129,9 @@ func TestNotifyAfterScenarioShouldAddAfterScenarioHookScreenshots(t *testing.T) 
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ScenarioExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
