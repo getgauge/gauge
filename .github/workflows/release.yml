@@ -1,113 +1,307 @@
 name: Deploy
 
-on: [deployment]
+on:
+  pull_request:
+    types: [closed]
 
 jobs:
-    package:
-        name: Create package
-        runs-on: macos-latest
-        steps:
-            - uses: actions/checkout@v1
+  package:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && contains(github.event.pull_request.labels.*.name, 'ReleaseCandidate')
+    name: Create package
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v1
 
-            - name: Set up Go 1.13
-              uses: actions/setup-go@v1
-              with:
-                go-version: 1.13
-              id: go
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
 
-            - name: Compile gauge
-              run: go run build/make.go --all-platforms  --skip-windows
+      - name: Compile gauge
+        run: go run build/make.go --all-platforms  --skip-windows
 
-            - name: Create distro
-              run: |
-                go run build/make.go --distro --all-platforms --skip-windows
+      - name: Create distro
+        run: |
+          go run build/make.go --distro --all-platforms --skip-windows
 
-            - name: Upload artifacts
-              uses: actions/upload-artifact@v1
-              with:
-                 name: gauge-non-windows-artifact
-                 path: ./deploy
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: gauge-non-windows-artifact
+          path: ./deploy
 
-    windows-package:
-        name: Create windows package
-        runs-on: windows-latest
-        steps:
-            - uses: actions/checkout@v1
+  windows-package:
+    name: Create windows package
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v1
 
-            - name: Set up Go 1.13
-              uses: actions/setup-go@v1
-              with:
-                go-version: 1.13
-              id: go
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
 
-            - name: Prep installer generation
-              env:
-                SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
-              run: |
-                Invoke-WebRequest https://liquidtelecom.dl.sourceforge.net/project/nsis/NSIS%203/3.05/nsis-3.05-strlen_8192.zip -UseBasicParsing -Outfile ./nsis.zip
-                Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
-                echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
-                [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
-                echo "::set-env name=CERT_FILE::$Env:GITHUB_WORKSPACE/cert.p12"
-
-            - name: Compile gauge
-              run: |
-                go run build/make.go --verbose --all-platforms
-                Get-ChildItem -Recurse .\bin
-
-            - name: Sign
-              shell: pwsh
-              run: |
-                .\build\sign_windows_artifacts.ps1
-
-            - name: Cleanup
-              if: always()
-              run: rm $Env:CERT_FILE
-
-            - name: Upload artifacts
-              uses: actions/upload-artifact@v1
-              with:
-                 name: gauge-windows-artifact
-                 path: ./deploy
-
-    draft-release:
-        name: Create Draft with assets
-        runs-on: macos-latest
-        needs: [ package, windows-package]
+      - name: Prep installer generation
         env:
-          GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
-        steps:
-          - uses: actions/checkout@v1
+          SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
+        run: |
+          Invoke-WebRequest https://liquidtelecom.dl.sourceforge.net/project/nsis/NSIS%203/3.05/nsis-3.05-strlen_8192.zip -UseBasicParsing -Outfile ./nsis.zip
+          Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
+          echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
+          [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
+          echo "::set-env name=CERT_FILE::$Env:GITHUB_WORKSPACE/cert.p12"
 
-          - name: Install hub
-            run: brew install hub
+      - name: Compile gauge
+        run: |
+          go run build/make.go --verbose --all-platforms
+          Get-ChildItem -Recurse .\bin
 
-          - uses: actions/download-artifact@v1
-            with:
-              name: gauge-non-windows-artifact
-              path: ./deploy
+      - name: Sign
+        shell: pwsh
+        run: |
+          .\build\sign_windows_artifacts.ps1
 
-          - uses: actions/download-artifact@v1
-            with:
-              name: gauge-windows-artifact
-              path: ./deploy
+      - name: Cleanup
+        if: always()
+        run: rm $Env:CERT_FILE
 
-          - name: update release note
-            run: |
-              cd deploy
-              version=$(ls gauge-*-darwin.x86.zip |  sed 's/gauge-//' | sed 's/-darwin.*//')
-              if [ -z "$version" ]; then
-                  echo "Gauge version is not set"
-                  exit 1
-              fi
-              echo -e "Gauge v$version\n\n" > desc.txt
-              release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" gauge getgauge)
-              echo "$release_description" >> desc.txt
-              echo "Creating new draft for release v$version"
-              hub release create -d -F ./desc.txt "v$version"
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v1
+        with:
+          name: gauge-windows-artifact
+          path: ./deploy
 
-              echo "Start uploading artifacts"
-              for artifact in `ls gauge-*`; do
-                  hub release edit -m "" -a $artifact v$version
-              done
-              rm -rf desc.txt
+  github-release:
+    name: Publish github release
+    runs-on: macos-latest
+    needs: [package, windows-package]
+    env:
+      GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Install hub
+        run: brew install hub
+
+      - uses: actions/download-artifact@v1
+        with:
+          name: gauge-non-windows-artifact
+          path: ./deploy
+
+      - uses: actions/download-artifact@v1
+        with:
+          name: gauge-windows-artifact
+          path: ./deploy
+
+      - name: update release note
+        run: |
+          cd deploy
+          version=$(ls gauge-*-darwin.x86.zip |  sed 's/gauge-//' | sed 's/-darwin.*//')
+          if [ -z "$version" ]; then
+              echo "Gauge version is not set"
+              exit 1
+          fi
+          echo -e "Gauge v$version\n\n" > desc.txt
+          release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" gauge getgauge)
+          echo "$release_description" >> desc.txt
+          echo "Creating new draft for release v$version"
+          hub release create -F ./desc.txt "v$version"
+
+          echo "Start uploading artifacts"
+          for artifact in `ls gauge-*`; do
+              hub release edit -m "" -a $artifact v$version
+          done
+          rm -rf desc.txt
+
+  pypi-release:
+    runs-on: macos-latest
+    needs: [github-release]
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.7
+
+      - name: Set gauge version
+        run: |
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Deploy to pypi
+        env:
+          PYPI_USER: ${{ secrets.PYPI_USER }}
+          GAUGE_PACKAGE_NAME: getgauge-cli
+          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          cd build/pip
+          pip install requests --user
+          python build.py --dist
+          pip install twine --user
+          gauge_package=`ls dist/$GAUGE_PACKAGE_NAME-$GAUGE_VERSION.tar.gz`
+          python -m twine upload -u $PYPI_USER -p $PYPI_PASSWORD $gauge_package
+
+  npm-release:
+    needs: [github-release]
+    runs-on: macos-latest
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Set gauge version
+        run: |
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Setup Git User
+        run: |
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+
+      - name: Deploy npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd build/npm
+          npm version $GAUGE_VERSION
+          npm publish --access=public
+
+  deb-rpm-release:
+    needs: [github-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Set up Ruby 2.6.x
+        uses: actions/setup-ruby@v1
+        with:
+          ruby-version: 2.6.x
+
+      - name: Install fpm
+        run: |
+          gem install --no-document fpm
+
+      - name: Prepare deb artifact
+        run: |
+          build/mkdeb.sh
+
+      - name: Deploy debian
+        env:
+          REPO: gauge-deb
+          PACKAGE: gauge
+          DISTRIBUTIONS: stable
+          COMPONENTS: main
+          USER: ${{ secrets.BINTRAY_API_USER }}
+          API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          PASSPHRASE: ${{ secrets.BINTRAY_GPG_SIGNING_PASSPHRASE }}
+        run: |
+          cd deploy
+          sh ../build/publish_deb_to_bintray.sh
+
+      - name: Deploy rpm
+        env:
+          REPO: gauge-rpm
+          PACKAGE: gauge
+          BINTRAY_PACKAGE: gauge-stable
+          USER: ${{ secrets.BINTRAY_API_USER }}
+          API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          PASSPHRASE: ${{ secrets.BINTRAY_GPG_SIGNING_PASSPHRASE }}
+        run: |
+          cd deploy
+          for artifact in `ls gauge-*.deb`; do
+            fpm -t rpm -s deb $artifact
+          done
+          for artifact in `ls gauge-*.rpm`; do
+            output_package=`echo "$artifact" | sed 's/-[0-9].x/-all.x/' | sed 's/-[0-9].i/-all.i/'`
+            mv -T $artifact $output_package
+          done
+          ls
+          sh ../build/publish_rpm_to_bintray.sh
+
+  choco-release:
+    needs: [github-release]
+    runs-on: windows-latest
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set gauge version
+        run: |
+          $gauge_version=($Env:GITHUB_REF -replace "[a-zA-Z//]+", '' )
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+
+      - name: Clone chocolatey-packages
+        run: |
+          git clone https://github.com/getgauge/chocolatey-packages
+
+      - name: Deploy to Gauge $GAUGE_VERSION to choco
+        shell: pwsh
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          cd chocolatey-packages
+          $Env:GAUGE_VERSION | Set-Content version
+          cd gauge
+          ./package.ps1
+          choco push "gauge.$Env:GAUGE_VERSION.nupkg" -k $Env:API_KEY
+
+  brew-release:
+    needs: [github-release]
+    runs-on: macos-latest
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set gauge version
+        run: |
+          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
+          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+      - name: Install hub
+        run: |
+          brew install hub
+
+      - name: Update brew formula
+        env:
+          HOMEBREW_GITHUB_USER_NAME: ${{ secrets.HOMEBREW_GITHUB_USER_NAME }}
+          HOMEBREW_GITHUB_USER_EMAIL: ${{ secrets.HOMEBREW_GITHUB_USER_EMAIL }}
+          HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.HOMEBREW_GITHUB_API_TOKEN }}
+        run: |
+          cd build/brew
+          bash create_brew_pr.sh
+
+  bump-version:
+    needs:
+      [pypi-release, npm-release, deb-rpm-release, choco-release, brew-release]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Switch to $GITHUB_REF
+        uses: actions/checkout@v1
+
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Bump Version
+        run: git clean -dfx
+          git checkout master && git pull --rebase
+          version=$(go run build/make.go --update-version)
+          git commit -am "Bumping up -> $version"
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" master
