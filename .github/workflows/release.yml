@@ -300,7 +300,7 @@ jobs:
 
       - name: Bump Version
         run: git clean -dfx
-          git checkout master && git pull --rebase
+          git checkout master && git checkout . && git pull --rebase
           version=$(go run build/make.go --update-version)
           git commit -am "Bumping up -> $version"
-          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git" master
+          git push "https://$GITHUB_ACTOR:$GAUGE_CI_TOKEN@github.com/$GITHUB_REPOSITORY.git" master

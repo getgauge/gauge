@@ -21,14 +21,12 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"go/ast"
-	"go/parser"
-	"go/printer"
-	"go/token"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -161,7 +159,7 @@ var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
 var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer")
-var updateVersion = flag.Bool("update-version", false, "Bump up the version in version package by parsing the varsion.go")
+var updateVersion = flag.Bool("update-version", false, "Bump up the version in version package by bumping Patch variable")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -460,49 +458,23 @@ func getPackageArchSuffix() string {
 }
 
 func bumpVersion() {
-	var newVersion string
 	wd, _ := os.Getwd()
-	file := filepath.Join(wd, "version", "version.go")
-	fileSet := token.NewFileSet()
-	f, _ := parser.ParseFile(fileSet, file, nil, parser.ParseComments)
-	for _, d := range f.Decls {
-		dec, ok := d.(*ast.GenDecl)
-		if !ok {
-			continue
+	file := filepath.Join(wd, "version", "versionVar.go")
+	c, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read file %s", file))
+	}
+	re := regexp.MustCompile(`var Patch = ([\d$])`)
+	newContent := re.ReplaceAllFunc(c, func(s []byte) []byte {
+		group := re.ReplaceAllString(string(s), `$1`)
+		i, e := strconv.Atoi(group)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to update version. %s", e.Error()))
 		}
-		v, ok := dec.Specs[0].(*ast.ValueSpec)
-		if !ok {
-			continue
-		}
-		if v.Names[0].Name == "CurrentGaugeVersion" {
-			version := v.Values[0].(*ast.UnaryExpr).X.(*ast.CompositeLit)
-			p := version.Elts[2].(*ast.BasicLit)
-			i, _ := strconv.Atoi(p.Value)
-			p.Value = strconv.Itoa(i + 1)
-			newVersion = fmt.Sprintf("v%s.%s.%s",
-				version.Elts[0].(*ast.BasicLit).Value,
-				version.Elts[1].(*ast.BasicLit).Value,
-				p.Value)
-		}
-	}
-	err := os.Remove(file)
+		return []byte(fmt.Sprintf("var Patch = %d", i+1))
+	})
+	err = ioutil.WriteFile(file, newContent, 0644)
 	if err != nil {
-		panic(fmt.Sprintf("Unable to remove file %s", file))
+		panic(fmt.Sprintf("Failed to write file %s", file))
 	}
-	fi, err := os.Create(file)
-	if err != nil {
-		panic(fmt.Sprintf("Unable to create file %s", file))
-	}
-	err = printer.Fprint(fi, fileSet, f)
-	if err != nil {
-		panic(fmt.Sprintf("Unable to write to file %s", file))
-	}
-	err = fi.Close()
-	if err != nil {
-		panic(fmt.Sprintf("Unable to close file %s", file))
-	}
-	if _, e := runCommand("go", "fmt", file); e != nil {
-		panic(fmt.Sprintf("Unable to format file %s. %s", file, e.Error()))
-	}
-	fmt.Println(newVersion)
 }
