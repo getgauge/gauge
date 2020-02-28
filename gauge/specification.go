@@ -307,13 +307,15 @@ func (spec *Specification) Filter(filter SpecItemFilter) (*Specification, *Speci
 	specWithOtherItems := new(Specification)
 	*specWithFilteredItems, *specWithOtherItems = *spec, *spec
 	for i := 0; i < len(specWithFilteredItems.Items); i++ {
-		if filter.Filter(specWithFilteredItems.Items[i]) {
+		item := specWithFilteredItems.Items[i]
+		if item.Kind() == ScenarioKind && filter.Filter(item) {
 			specWithFilteredItems.removeItem(i)
 			i--
 		}
 	}
 	for i := 0; i < len(specWithOtherItems.Items); i++ {
-		if !filter.Filter(specWithOtherItems.Items[i]) {
+		item := specWithOtherItems.Items[i]
+		if item.Kind() == ScenarioKind && !filter.Filter(specWithOtherItems.Items[i]) {
 			specWithOtherItems.removeItem(i)
 			i--
 		}

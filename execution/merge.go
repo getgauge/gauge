@@ -77,6 +77,7 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	var scnResults []*m.ProtoItem
 	table := &m.ProtoTable{}
 	dataTableScnResults := make(map[string][]*m.ProtoTableDrivenScenario)
+	includedTableRowIndexMap := make(map[int32]bool)
 	max := results[0].ExecutionTime
 	for _, res := range results {
 		specResult.ExecutionTime += res.ExecutionTime
@@ -87,23 +88,29 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
+		var tableRowIndex int32
+		var tableRows []*m.ProtoTableRow
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case m.ProtoItem_Scenario:
 				scnResults = append(scnResults, item)
 				modifySpecStats(item.Scenario, specResult)
 			case m.ProtoItem_TableDrivenScenario:
+				tableRowIndex = item.TableDrivenScenario.TableRowIndex
 				scnResults = append(scnResults, item)
 				heading := item.TableDrivenScenario.Scenario.ScenarioHeading
-				item.TableDrivenScenario.TableRowIndex = int32(len(table.Rows) - 1)
+				if _, ok := includedTableRowIndexMap[tableRowIndex]; !ok {
+					table.Rows = append(table.Rows, tableRows...)
+					includedTableRowIndexMap[tableRowIndex] = true
+				}
 				dataTableScnResults[heading] = append(dataTableScnResults[heading], item.TableDrivenScenario)
 			case m.ProtoItem_Table:
 				table.Headers = item.Table.Headers
-				table.Rows = append(table.Rows, item.Table.Rows...)
+				tableRows = item.Table.Rows
 			}
 		}
-		addHookFailure(table, res.GetPreHook(), specResult.AddPreHook)
-		addHookFailure(table, res.GetPostHook(), specResult.AddPostHook)
+		addHookFailure(tableRowIndex, res.GetPreHook(), specResult.AddPreHook)
+		addHookFailure(tableRowIndex, res.GetPostHook(), specResult.AddPostHook)
 	}
 	if InParallel {
 		specResult.ExecutionTime = max
@@ -116,9 +123,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 	return specResult
 }
 
-func addHookFailure(table *m.ProtoTable, f []*m.ProtoHookFailure, add func(...*m.ProtoHookFailure)) {
+func addHookFailure(tableRowIndex int32, f []*m.ProtoHookFailure, add func(...*m.ProtoHookFailure)) {
 	for _, h := range f {
-		h.TableRowIndex = int32(len(table.Rows) - 1)
+		h.TableRowIndex = tableRowIndex
 	}
 	add(f...)
 }
