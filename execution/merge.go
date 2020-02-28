@@ -99,15 +99,18 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 				tableRowIndex = item.TableDrivenScenario.TableRowIndex
 				scnResults = append(scnResults, item)
 				heading := item.TableDrivenScenario.Scenario.ScenarioHeading
-				if _, ok := includedTableRowIndexMap[tableRowIndex]; !ok {
-					table.Rows = append(table.Rows, tableRows...)
-					includedTableRowIndexMap[tableRowIndex] = true
-				}
 				dataTableScnResults[heading] = append(dataTableScnResults[heading], item.TableDrivenScenario)
 			case m.ProtoItem_Table:
 				table.Headers = item.Table.Headers
-				tableRows = item.Table.Rows
+				tableRows = item.Table.GetRows()
+				if res.GetPreHook() != nil {
+					tableRowIndex = res.GetPreHook()[0].GetTableRowIndex()
+				}
 			}
+		}
+		if _, ok := includedTableRowIndexMap[tableRowIndex]; !ok {
+			table.Rows = append(table.Rows, tableRows...)
+			includedTableRowIndexMap[tableRowIndex] = true
 		}
 		addHookFailure(tableRowIndex, res.GetPreHook(), specResult.AddPreHook)
 		addHookFailure(tableRowIndex, res.GetPostHook(), specResult.AddPostHook)
