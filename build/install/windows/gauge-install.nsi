@@ -68,7 +68,6 @@ OutFile "${OUTPUT_FILE_NAME}"
 ShowUnInstDetails show
 
 Section "Gauge" SEC_GAUGE
-  CreateDirectory $%temp%\Gauge
   SectionIn RO
   SetOutPath "$INSTDIR\bin"
   SetOverwrite on
@@ -144,8 +143,7 @@ Section -Post
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "URLInfoAbout" "${PRODUCT_WEB_SITE}"
   WriteRegStr ${PRODUCT_UNINST_ROOT_KEY} "${PRODUCT_UNINST_KEY}" "Publisher" "${PRODUCT_PUBLISHER}"
   nsExec::ExecToLog 'powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File "$INSTDIR\update_path.ps1" -Add -Path "$INSTDIR\bin"'
-  SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000
-  RMDir /r /REBOOTOK "$%temp%\Gauge"
+  SendMessage ${HWND_BROADCAST} ${WM_WININICHANGE} 0 "STR:Environment" /TIMEOUT=5000"
 
   Dialer::GetConnectedState
   Pop $R0
