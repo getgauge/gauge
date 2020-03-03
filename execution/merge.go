@@ -103,7 +103,7 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 			case m.ProtoItem_Table:
 				table.Headers = item.Table.Headers
 				tableRows = item.Table.GetRows()
-				if res.GetPreHook() != nil {
+				if len(res.GetPreHook()) > 0 {
 					tableRowIndex = res.GetPreHook()[0].GetTableRowIndex()
 				}
 			}
