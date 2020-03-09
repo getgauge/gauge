@@ -40,21 +40,21 @@ func (s *MySuite) TestParsingVersion(c *C) {
 
 func (s *MySuite) TestParsingErrorForIncorrectNumberOfDotCharacters(c *C) {
 	_, err := ParseVersion("1.5.9.9")
-	c.Assert(err, ErrorMatches, "Incorrect Version format. Version should be in the form 1.5.7")
+	c.Assert(err, ErrorMatches, "incorrect version format. version should be in the form 1.5.7")
 
 	_, err = ParseVersion("0.")
-	c.Assert(err, ErrorMatches, "Incorrect Version format. Version should be in the form 1.5.7")
+	c.Assert(err, ErrorMatches, "incorrect version format. version should be in the form 1.5.7")
 }
 
 func (s *MySuite) TestParsingErrorForNonIntegerVersion(c *C) {
 	_, err := ParseVersion("a.9.0")
-	c.Assert(err, ErrorMatches, `Error parsing major Version a to integer. strconv.*: parsing "a": invalid syntax`)
+	c.Assert(err, ErrorMatches, `error parsing major version a to integer. strconv.*: parsing "a": invalid syntax`)
 
 	_, err = ParseVersion("0.ffhj.78")
-	c.Assert(err, ErrorMatches, `Error parsing minor Version ffhj to integer. strconv.*: parsing "ffhj": invalid syntax`)
+	c.Assert(err, ErrorMatches, `error parsing minor version ffhj to integer. strconv.*: parsing "ffhj": invalid syntax`)
 
 	_, err = ParseVersion("8.9.opl")
-	c.Assert(err, ErrorMatches, `Error parsing patch Version opl to integer. strconv.*: parsing "opl": invalid syntax`)
+	c.Assert(err, ErrorMatches, `error parsing patch version opl to integer. strconv.*: parsing "opl": invalid syntax`)
 }
 
 func (s *MySuite) TestVersionComparisonGreaterLesser(c *C) {

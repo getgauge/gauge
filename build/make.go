@@ -21,11 +21,14 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -140,7 +143,9 @@ func copyGaugeBinaries(installPath string) {
 
 func setEnv(envVariables map[string]string) {
 	for k, v := range envVariables {
-		os.Setenv(k, v)
+		if err := os.Setenv(k, v); err != nil {
+			log.Printf("failed to set env %s", k)
+		}
 	}
 }
 
@@ -156,6 +161,7 @@ var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
 var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
 var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer")
+var updateVersion = flag.Bool("update-version", false, "Bump up the version in version package by bumping Patch variable")
 
 // Defines all the compile targets
 // Each target name is the directory name
@@ -183,6 +189,8 @@ func main() {
 		fmt.Println("Build: " + buildMetadata)
 	}
 	switch {
+	case *updateVersion:
+		bumpVersion()
 	case *test:
 		runTests(*coverage)
 	case *install:
@@ -286,7 +294,9 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 	signExecutable(installerFileName+".exe", *certFile)
 }
 
@@ -310,14 +320,18 @@ func createDarwinPackage() {
 		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
 	}
 	createZipFromUtil(deploy, gauge, packageName())
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 }
 
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 }
 
 func packageName() string {
@@ -393,7 +407,7 @@ func updateGaugeInstallPrefix() {
 		if runtime.GOOS == "windows" {
 			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
 			if *gaugeInstallPrefix == "" {
-				panic(fmt.Errorf("Failed to find programfiles"))
+				panic(fmt.Errorf("failed to find programfiles"))
 			}
 			*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, gauge)
 		} else {
@@ -449,4 +463,26 @@ func getPackageArchSuffix() string {
 		return "x86"
 	}
 	return "x86_64"
+}
+
+func bumpVersion() {
+	wd, _ := os.Getwd()
+	file := filepath.Join(wd, "version", "versionVar.go")
+	c, err := ioutil.ReadFile(file)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read file %s", file))
+	}
+	re := regexp.MustCompile(`var Patch = ([\d$])`)
+	newContent := re.ReplaceAllFunc(c, func(s []byte) []byte {
+		group := re.ReplaceAllString(string(s), `$1`)
+		i, e := strconv.Atoi(group)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to update version. %s", e.Error()))
+		}
+		return []byte(fmt.Sprintf("var Patch = %d", i+1))
+	})
+	err = ioutil.WriteFile(file, newContent, 0644)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to write file %s", file))
+	}
 }
