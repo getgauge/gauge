@@ -143,7 +143,9 @@ func copyGaugeBinaries(installPath string) {
 
 func setEnv(envVariables map[string]string) {
 	for k, v := range envVariables {
-		os.Setenv(k, v)
+		if err := os.Setenv(k, v); err != nil {
+			log.Printf("failed to set env %s", k)
+		}
 	}
 }
 
@@ -292,7 +294,9 @@ func createWindowsInstaller() {
 		fmt.Sprintf("/DOUTPUT_FILE_NAME=%s.exe", installerFileName),
 		filepath.Join("build", "install", "windows", "gauge-install.nsi"))
 	createZipFromUtil(deploy, pName, pName)
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 	signExecutable(installerFileName+".exe", *certFile)
 }
 
@@ -316,14 +320,18 @@ func createDarwinPackage() {
 		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
 	}
 	createZipFromUtil(deploy, gauge, packageName())
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 }
 
 func createLinuxPackage() {
 	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
 	createZipFromUtil(deploy, packageName(), packageName())
-	os.RemoveAll(distroDir)
+	if err := os.RemoveAll(distroDir); err != nil {
+		log.Printf("failed to remove %s", distroDir)
+	}
 }
 
 func packageName() string {
@@ -399,7 +407,7 @@ func updateGaugeInstallPrefix() {
 		if runtime.GOOS == "windows" {
 			*gaugeInstallPrefix = os.Getenv("PROGRAMFILES")
 			if *gaugeInstallPrefix == "" {
-				panic(fmt.Errorf("Failed to find programfiles"))
+				panic(fmt.Errorf("failed to find programfiles"))
 			}
 			*gaugeInstallPrefix = filepath.Join(*gaugeInstallPrefix, gauge)
 		} else {

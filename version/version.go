@@ -45,7 +45,7 @@ type VersionSupport struct {
 func ParseVersion(versionText string) (*Version, error) {
 	splits := strings.Split(versionText, ".")
 	if len(splits) != 3 {
-		return nil, fmt.Errorf("Incorrect Version format. Version should be in the form 1.5.7")
+		return nil, fmt.Errorf("incorrect version format. version should be in the form 1.5.7")
 	}
 	Major, err := strconv.Atoi(splits[0])
 	if err != nil {
@@ -64,7 +64,7 @@ func ParseVersion(versionText string) (*Version, error) {
 }
 
 func VersionError(level, text string, err error) error {
-	return fmt.Errorf("Error parsing %s Version %s to integer. %s", level, text, err.Error())
+	return fmt.Errorf("error parsing %s version %s to integer. %s", level, text, err.Error())
 }
 
 func (Version *Version) IsBetween(lower *Version, greater *Version) bool {
@@ -145,21 +145,21 @@ func GetLatestVersion(versions []*Version) *Version {
 func CheckCompatibility(currentVersion *Version, versionSupport *VersionSupport) error {
 	minSupportVersion, err := ParseVersion(versionSupport.Minimum)
 	if err != nil {
-		return fmt.Errorf("Invalid minimum support version %s. : %s. ", versionSupport.Minimum, err.Error())
+		return fmt.Errorf("invalid minimum support version %s. : %s. ", versionSupport.Minimum, err.Error())
 	}
 	if versionSupport.Maximum != "" {
 		maxSupportVersion, err := ParseVersion(versionSupport.Maximum)
 		if err != nil {
-			return fmt.Errorf("Invalid maximum support version %s. : %s. ", versionSupport.Maximum, err.Error())
+			return fmt.Errorf("invalid maximum support version %s. : %s. ", versionSupport.Maximum, err.Error())
 		}
 		if currentVersion.IsBetween(minSupportVersion, maxSupportVersion) {
 			return nil
 		}
-		return fmt.Errorf("Version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion)
+		return fmt.Errorf("version %s is not between %s and %s", currentVersion, minSupportVersion, maxSupportVersion)
 	}
 
 	if minSupportVersion.IsLesserThanEqualTo(currentVersion) {
 		return nil
 	}
-	return fmt.Errorf("Incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, currentVersion)
+	return fmt.Errorf("incompatible version. Minimum support version %s is higher than current version %s", minSupportVersion, currentVersion)
 }
