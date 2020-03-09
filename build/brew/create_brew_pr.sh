@@ -19,7 +19,6 @@
 
 set -e
 
-export GITHUB_TOKEN="$HOMEBREW_GITHUB_API_TOKEN"
 export BRANCH="gauge-$GAUGE_VERSION"
 
 git config --global user.name "$HOMEBREW_GITHUB_USER_NAME"
