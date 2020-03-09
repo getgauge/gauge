@@ -20,40 +20,49 @@ require 'uri'
 require 'json'
 
 if ARGV.length < 1
-  puts 'Usage: ruby create_release_text.rb <repo name>
-Example: ruby create_release_text.rb gauge.
+  puts 'Usage: ruby create_release_text.rb <owner> <name>
+Example: ruby create_release_text.rb getgauge gauge
 '
   exit 1
 end
 
 repo_name = ARGV[0]
 user_name = ARGV[1]
-uri = URI("https://api.github.com/repos/#{user_name}/#{repo_name}/releases/latest")
-timestamp = JSON.parse(Net::HTTP.get(uri))['published_at']
 
-if timestamp.nil? || timestamp.empty? 
-    uri = URI("https://api.github.com/search/issues?q=repo:#{user_name}/#{repo_name}+state:closed")
-else
-    uri = URI("https://api.github.com/search/issues?q=repo:#{user_name}/#{repo_name}+closed:>#{timestamp}")
+repo = "#{repo_name}/#{user_name}"
+
+api  = "https://api.github.com"
+
+latest_release = URI.join(api, "/#{repo}/releases/latest")
+timestamp = JSON.parse(Net::HTTP.get(latest_release))['published_at']
+
+issues_query = "/search/issues?q=is:pr+repo:#{repo}+state:closed"
+
+if not timestamp.nil? || timestamp.empty? 
+  issues_query += ":>#{timestamp}"
 end
-response = Net::HTTP.get(uri)
 
-data = JSON.parse(response)
+issues_json = Net::HTTP.get(URI.join(api, issues_query))
 
-categories = {"new feature" => [], "enhancement" => [], "bug" => [], "misc" => []}
-headers = {"new feature" => "New Features", "enhancement" => "Enhancements", "bug" => "Bug Fixes", "misc" => "Miscellaneous"}
+issues = JSON.parse(issues_json)
 
-data['items'].each do |i|
-    issue_text = "- ##{i['number']} - #{i['title']}"
-    issue_labels = i['labels'].map {|x| x['name']}
-    if (issue_labels & ["moved", "duplicate"]).empty?
-        label = issue_labels & categories.keys
-        categories[label[0] || "misc"] << issue_text
+categories = {"feature" => [], 
+              "bug" => []}
+
+headers = {"feature" => "Features", 
+           "bug" => "Bug Fixes"}
+
+issues['items'].each do |issue|
+    issue_text = "- ##{issue['number']} - #{issue['title']}"
+    label_for_display = issue['labels'].map {|x| x['name']} & categories.keys
+    if not label_for_display.empty?
+      categories[label_for_display[0]] << issue_text
     end
 end
 
-categories.each_key do |k|
-    puts "## #{headers[k]}\n\n"
-    categories[k].each {|v| puts v}
+categories.each_key do |category|
+    puts "## #{headers[category]}\n\n"
+    puts 'None' if categories[category].empty? 
+    categories[category].each {|v| puts v}
     puts "\n" 
 end
