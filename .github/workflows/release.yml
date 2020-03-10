@@ -102,7 +102,7 @@ jobs:
               exit 1
           fi
           echo -e "Gauge v$version\n\n" > desc.txt
-          release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" gauge getgauge)
+          release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" getgauge gauge)
           echo "$release_description" >> desc.txt
           echo "Creating new draft for release v$version"
 
