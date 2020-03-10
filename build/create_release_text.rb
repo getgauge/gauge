@@ -71,5 +71,5 @@ case response
 
       https://github.com/#{repo}
 
-    Please check the if this is valid repo"
+    Please check if this is a valid repo."
 end
