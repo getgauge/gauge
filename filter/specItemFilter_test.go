@@ -308,8 +308,7 @@ func (s *MySuite) TestToFilterSpecsByTagExpOfTwoTags(c *C) {
 	}
 
 	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
+	specs = append(specs, spec1, spec2)
 
 	c.Assert(specs[0].Tags.Values()[0], Equals, myTags[0])
 	c.Assert(specs[0].Tags.Values()[1], Equals, myTags[1])
@@ -355,8 +354,7 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 	}
 
 	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
+	specs = append(specs, spec1, spec2)
 
 	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
 	c.Assert(len(filteredSpecs), Equals, 1)
@@ -392,8 +390,7 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 	}
 
 	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
+	specs = append(specs, spec1, spec2)
 
 	c.Assert(specs[0].Tags.Values()[0], Equals, myTags[0])
 	c.Assert(specs[0].Tags.Values()[1], Equals, myTags[1])
@@ -576,9 +573,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 	}
 
 	var specs []*gauge.Specification
-	specs = append(specs, spec1)
-	specs = append(specs, spec2)
-	specs = append(specs, spec3)
+	specs = append(specs, spec1, spec2, spec3)
 
 	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag1 & tag2")
 	c.Assert(len(filteredSpecs), Equals, 2)
