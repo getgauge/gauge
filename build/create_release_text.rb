@@ -26,10 +26,7 @@ Example: ruby create_release_text.rb getgauge gauge
   exit 1
 end
 
-repo_name = ARGV[0]
-user_name = ARGV[1]
-
-repo = "#{repo_name}/#{user_name}"
+repo = "#{ARGV[0]}/#{ARGV[1]}"
 
 api  = "https://api.github.com"
 
@@ -42,27 +39,37 @@ if not timestamp.nil? || timestamp.empty?
   issues_query += ":>#{timestamp}"
 end
 
-issues_json = Net::HTTP.get(URI.join(api, issues_query))
+response = Net::HTTP.get_response(URI.join(api, issues_query))
 
-issues = JSON.parse(issues_json)
+case response
+  when Net::HTTPSuccess
+    issues = JSON.parse(response.body)
 
-categories = {"feature" => [], 
-              "bug" => []}
+    categories = {"feature" => [], 
+                  "bug" => []}
 
-headers = {"feature" => "Features", 
-           "bug" => "Bug Fixes"}
+    headers = {"feature" => "Features", 
+               "bug" => "Bug Fixes"}
 
-issues['items'].each do |issue|
-    issue_text = "- ##{issue['number']} - #{issue['title']}"
-    label_for_display = issue['labels'].map {|x| x['name']} & categories.keys
-    if not label_for_display.empty?
-      categories[label_for_display[0]] << issue_text
+    issues['items'].each do |issue|
+      issue_text = "- ##{issue['number']} - #{issue['title']}"
+      label_for_display = issue['labels'].map {|x| x['name']} & categories.keys
+      if not label_for_display.empty?
+        categories[label_for_display[0]] << issue_text
+      end
     end
-end
 
-categories.each_key do |category|
-    puts "## #{headers[category]}\n\n"
-    puts 'None' if categories[category].empty? 
-    categories[category].each {|v| puts v}
-    puts "\n" 
+    categories.each_key do |category|
+      puts "## #{headers[category]}\n\n"
+      puts 'None' if categories[category].empty? 
+      categories[category].each {|v| puts v}
+      puts "\n" 
+    end
+  else
+    raise "
+    Could not fetch release information for github repo: 
+
+      https://github.com/#{repo}
+
+    Please check the if this is valid repo"
 end
