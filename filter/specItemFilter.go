@@ -49,9 +49,6 @@ func NewScenarioFilterBasedOnSpan(lineNumbers []int) *scenarioFilterBasedOnSpan 
 }
 
 func (filter *scenarioFilterBasedOnSpan) Filter(item gauge.Item) bool {
-	if item.Kind() != gauge.ScenarioKind {
-		return false
-	}
 	for _, lineNumber := range filter.lineNumbers {
 		if item.(*gauge.Scenario).InSpan(lineNumber) {
 			return false
@@ -65,14 +62,11 @@ func NewScenarioFilterBasedOnTags(specTags []string, tagExp string) *ScenarioFil
 }
 
 func (filter *ScenarioFilterBasedOnTags) Filter(item gauge.Item) bool {
-	if item.Kind() == gauge.ScenarioKind {
-		tags := item.(*gauge.Scenario).Tags
-		if tags == nil {
-			return !filter.filterTags(filter.specTags)
-		}
-		return !filter.filterTags(append(tags.Values(), filter.specTags...))
+	tags := item.(*gauge.Scenario).Tags
+	if tags == nil {
+		return !filter.filterTags(filter.specTags)
 	}
-	return false
+	return !filter.filterTags(append(tags.Values(), filter.specTags...))
 }
 
 func newScenarioFilterBasedOnName(scenariosName []string) *scenarioFilterBasedOnName {
@@ -80,9 +74,6 @@ func newScenarioFilterBasedOnName(scenariosName []string) *scenarioFilterBasedOn
 }
 
 func (filter *scenarioFilterBasedOnName) Filter(item gauge.Item) bool {
-	if item.Kind() != gauge.ScenarioKind {
-		return false
-	}
 	return !item.(*gauge.Scenario).HasAnyHeading(filter.scenariosName)
 }
 

@@ -315,7 +315,7 @@ func (spec *Specification) Filter(filter SpecItemFilter) (*Specification, *Speci
 	}
 	for i := 0; i < len(specWithOtherItems.Items); i++ {
 		item := specWithOtherItems.Items[i]
-		if item.Kind() == ScenarioKind && !filter.Filter(specWithOtherItems.Items[i]) {
+		if item.Kind() == ScenarioKind && !filter.Filter(item) {
 			specWithOtherItems.removeItem(i)
 			i--
 		}
