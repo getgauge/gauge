@@ -793,3 +793,31 @@ func (s *MySuite) TestFilterInvalidScenarios(c *C) {
 	c.Assert(len(filteredScenarios), Equals, 1)
 	c.Assert(filteredScenarios[0], Equals, "First Scenario")
 }
+func (s *MySuite) TestScenarioTagFilterShouldNotRemoveNonScenarioKindItems(c *C) {
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{RawValues: [][]string{{"tag2"}}},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 7, End: 10},
+		Tags:    &gauge.Tags{RawValues: [][]string{{"tag1"}}},
+	}
+	spec := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3, &gauge.Table{}, &gauge.Comment{Value: "Comment", LineNo: 1}, &gauge.Step{}},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	specWithFilteredItems, specWithOtherItems := filterSpecsByTags([]*gauge.Specification{spec}, "tag1 | tag2")
+
+	c.Assert(len(specWithFilteredItems), Equals, 1)
+	c.Assert(len(specWithFilteredItems[0].Items), Equals, 5)
+
+	c.Assert(len(specWithOtherItems), Equals, 1)
+	c.Assert(len(specWithOtherItems[0].Items), Equals, 4)
+}
