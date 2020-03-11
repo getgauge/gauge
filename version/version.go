@@ -25,7 +25,7 @@ import (
 )
 
 // CurrentGaugeVersion represents the current version of Gauge
-var CurrentGaugeVersion = &Version{Major, Minor, Patch}
+var CurrentGaugeVersion = &Version{1, 0, 7}
 
 // BuildMetadata represents build information of current release (e.g, nightly build information)
 var BuildMetadata = ""

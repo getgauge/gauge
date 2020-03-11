@@ -33,3 +33,16 @@ If your contribution is a code contribution and you do send us a pull request, y
 ### Developer documentation
 
 If you are trying to write plugins for Gauge or trying to contribute to Gauge core, take a look at the [Developer Documentation](https://github.com/getgauge/gauge/wiki/Gauge-Technical-Documentation).
+
+
+## Bump up gauge version
+
+* Update the value of `CurrentGaugeVersion` variable in `version/version.go` file.
+
+Ex:
+```diff
+ // CurrentGaugeVersion represents the current version of Gauge
+-var CurrentGaugeVersion = &Version{1, 0, 7}
++var CurrentGaugeVersion = &Version{1, 0, 8}
+
+```
