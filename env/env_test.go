@@ -49,6 +49,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	c.Assert(os.Getenv("csv_delimiter"), Equals, ",")
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	c.Assert(os.Getenv("gauge_screenshots_dir"), Equals, defaultScreenshotDir)
+	c.Assert(os.Getenv("gauge_spec_file_extensions"), Equals, ".spec, .md")
 }
 
 // If default env dir is present, the values present in there should overwrite
@@ -235,4 +236,57 @@ func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
 
 	c.Assert(e, Equals, nil)
 	c.Assert(CurrentEnvironments(), Equals, "foo")
+}
+
+func (s *MySuite) TestGetDefaultSpecFileExtensions(c *C) {
+	os.Clearenv()
+	var contains = func(c []string, what string) bool {
+		for _, x := range c {
+			if x == what {
+				return true
+			}
+		}
+		return false
+	}
+
+	exts := GaugeSpecFileExtensions()
+	for _, expected := range []string{".spec", ".md"} {
+		c.Assert(contains(exts, expected), Equals, true)
+	}
+}
+
+func (s *MySuite) TestGetSpecFileExtensionsSetViaEnv(c *C) {
+	os.Clearenv()
+	os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
+	var contains = func(c []string, what string) bool {
+		for _, x := range c {
+			if x == what {
+				return true
+			}
+		}
+		return false
+	}
+
+	exts := GaugeSpecFileExtensions()
+	for _, expected := range []string{".foo", ".bar"} {
+		c.Assert(contains(exts, expected), Equals, true)
+	}
+}
+
+func (s *MySuite) TestShouldNotGetDefaultExtensionsWhenEnvIsSet(c *C) {
+	os.Clearenv()
+	os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
+	var contains = func(c []string, what string) bool {
+		for _, x := range c {
+			if x == what {
+				return true
+			}
+		}
+		return false
+	}
+
+	exts := GaugeSpecFileExtensions()
+	for _, expected := range []string{".spec", ".md"} {
+		c.Assert(contains(exts, expected), Equals, false)
+	}
 }
