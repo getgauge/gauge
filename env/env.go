@@ -54,7 +54,8 @@ const (
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
 	// GaugeScreenshotsDir holds the location of screenshots dir
-	GaugeScreenshotsDir = "gauge_screenshots_dir"
+	GaugeScreenshotsDir     = "gauge_screenshots_dir"
+	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
 )
 
 var envVars map[string]string
@@ -123,6 +124,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(allowFilteredParallelExecution, "false")
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	addEnvVar(GaugeScreenshotsDir, defaultScreenshotDir)
+	addEnvVar(gaugeSpecFileExtensions, ".spec, .md")
 	err := os.MkdirAll(defaultScreenshotDir, 0750)
 	if err != nil {
 		logger.Warningf(true, "Could not create screenshot dir at %s", err.Error())
@@ -271,4 +273,20 @@ var SaveExecutionResult = func() bool {
 // for each parallel stream
 var EnableMultiThreadedExecution = func() bool {
 	return convertToBool(enableMultithreading, false)
+}
+
+var GaugeSpecFileExtensions = func() []string {
+	e := os.Getenv(gaugeSpecFileExtensions)
+	if e == "" {
+		e = ".spec, .md" //this was earlier hardcoded, this is a failsafe if env isn't set
+	}
+	exts := strings.Split(strings.TrimSpace(e), ",")
+	var allowedExts = []string{}
+	for _, ext := range exts {
+		e := strings.TrimSpace(ext)
+		if e != "" {
+			allowedExts = append(allowedExts, e)
+		}
+	}
+	return allowedExts
 }

@@ -32,17 +32,8 @@ import (
 const (
 	gaugeExcludeDirectories = "gauge_exclude_dirs"
 	cptFileExtension        = ".cpt"
-	specFileExtension       = ".spec"
-	mdFileExtension         = ".md"
 )
 
-func init() {
-	AcceptedExtensions[specFileExtension] = true
-	AcceptedExtensions[mdFileExtension] = true
-}
-
-// AcceptedExtensions has all the file extensions that are supported by Gauge for its specs
-var AcceptedExtensions = make(map[string]bool)
 var ignoredDirectories = make(map[string]bool)
 
 func add(value string) {
@@ -97,7 +88,12 @@ func FindSpecFilesIn(dir string) []string {
 
 // IsValidSpecExtension Checks if the path has a spec file extension
 func IsValidSpecExtension(path string) bool {
-	return AcceptedExtensions[strings.ToLower(filepath.Ext(path))]
+	for _, ext := range env.GaugeSpecFileExtensions() {
+		if ext == strings.ToLower(filepath.Ext(path)) {
+			return true
+		}
+	}
+	return false
 }
 
 // FindConceptFilesIn Finds the concept files in specified directory
@@ -134,13 +130,7 @@ func IsGaugeFile(path string) bool {
 
 // IsGaugeFile Returns true if spec file or concept file
 func GaugeFileExtensions() []string {
-	extensions := []string{cptFileExtension}
-	for ext, val := range AcceptedExtensions {
-		if val {
-			extensions = append(extensions, ext)
-		}
-	}
-	return extensions
+	return append(env.GaugeSpecFileExtensions(), cptFileExtension)
 }
 
 // FindAllNestedDirs returns list of all nested directories in given path

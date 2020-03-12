@@ -24,6 +24,7 @@ import (
 	"testing"
 
 	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/env"
 	. "gopkg.in/check.v1"
 )
 
@@ -77,7 +78,7 @@ func (s *MySuite) TestFindAllConceptFiles(c *C) {
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 2)
 }
 
-func (s *MySuite) TestIsValidSpecExension(c *C) {
+func (s *MySuite) TestIsValidSpecExensionDefault(c *C) {
 	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.spec"), Equals, true)
 	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.sPeC"), Equals, true)
 	c.Assert(IsValidSpecExtension("/home/user/foo/myspec.SPEC"), Equals, true)
@@ -86,7 +87,30 @@ func (s *MySuite) TestIsValidSpecExension(c *C) {
 	c.Assert(IsValidSpecExtension("/home/user/foo/myconcept.cpt"), Equals, false)
 }
 
-func (s *MySuite) TestIsValidConcpetExension(c *C) {
+func TestIsValidSpecExensionWhenSet(t *testing.T) {
+	var tests = map[string]bool{
+		"/home/user/foo/myspec.spec":   true,
+		"/home/user/foo/myspec.sPeC":   true,
+		"/home/user/foo/myspec.SPEC":   true,
+		"/home/user/foo/myspec.md":     false,
+		"/home/user/foo/myspec.MD":     false,
+		"/home/user/foo/myspec.foo":    true,
+		"/home/user/foo/myspec.Foo":    true,
+		"/home/user/foo/myconcept.cpt": false,
+	}
+	for k, v := range tests {
+		t.Run(filepath.Ext(k), func(t *testing.T) {
+			old := env.GaugeSpecFileExtensions
+			env.GaugeSpecFileExtensions = func() []string { return []string{".spec", ".foo"} }
+			if IsValidSpecExtension(k) != v {
+				t.Errorf("Expected IsValidSpecExtension(%s) to be %t", k, v)
+			}
+			env.GaugeSpecFileExtensions = old
+		})
+	}
+}
+
+func (s *MySuite) TestIsValidConceptExension(c *C) {
 	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.cpt"), Equals, true)
 	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.CPT"), Equals, true)
 	c.Assert(IsValidConceptExtension("/home/user/foo/myconcept.cPt"), Equals, true)
