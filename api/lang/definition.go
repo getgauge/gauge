@@ -83,9 +83,9 @@ func searchStep(req *jsonrpc2.Request, step *gauge.Step) (interface{}, error) {
 	}
 
 	if responseMessage.IsExternal {
-		logError(req, "Source location not found for step : %s.\nIt's might being referred from and external library.")
-		return nil, fmt.Errorf("Source location not found for step : %s.\nIt's might being referred from and external library.", step.Value)
+		return nil, fmt.Errorf("implementation source not found: Step implementation referred from an external project or library")
 	}
+
 	return getLspLocationForStep(responseMessage.GetFileName(), responseMessage.GetSpan()), nil
 }
 
