@@ -147,6 +147,10 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 		val, err := definition(req)
 		if err != nil {
 			logDebug(req, err.Error())
+			if e := showErrorMessageOnClient(ctx, conn, err); e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
+
 		}
 		return val, err
 	case "textDocument/formatting":

@@ -359,6 +359,9 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(r runner.Runner) (string,
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
 		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
 	}
+	if responseMessage.GetStepNameResponse().GetIsExternal() {
+		return "", fmt.Errorf("external step : '%s' cannot be refactored", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
+	}
 	return responseMessage.GetStepNameResponse().GetStepName()[0], nil, nil
 }
 
