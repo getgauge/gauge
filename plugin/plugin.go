@@ -273,6 +273,7 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 		pluginCmd:  cmd,
 		descriptor: pd,
 		gRPCConn:   gRPCConn,
+		mutex: &sync.Mutex{},
 	}
 	if pd.hasScope(docScope) {
 		plugin.DocumenterClient = gauge_messages.NewDocumenterClient(gRPCConn)
