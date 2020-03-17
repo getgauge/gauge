@@ -19,7 +19,10 @@ package lang
 
 import (
 	"encoding/json"
+	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/runner"
 	"testing"
+	"time"
 
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
@@ -66,5 +69,31 @@ func TestConceptDefinitionInConceptFile(t *testing.T) {
 	want := lsp.Location{URI: uri, Range: lsp.Range{Start: lsp.Position{Line: 0, Character: 0}, End: lsp.Position{Line: 0, Character: 10}}}
 	if got != want {
 		t.Errorf("Wrong definition found, got: `%v`, want: `%v`", got, want)
+	}
+}
+
+func TestExternalStepDefinition(t *testing.T) {
+	openFilesCache = &files{cache: make(map[lsp.DocumentURI][]string)}
+	uri := lsp.DocumentURI(util.ConvertPathToURI("spec_uri.spec"))
+	openFilesCache.add(uri, "# Specification \n\n## Scenario\n\n* a step")
+	provider = &dummyInfoProvider{}
+	position := lsp.Position{Line: 4, Character: len("* a step")}
+	b, _ := json.Marshal(lsp.TextDocumentPositionParams{TextDocument: lsp.TextDocumentIdentifier{URI: uri}, Position: position})
+	p := json.RawMessage(b)
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_StepNameResponse] = &gm.StepNameResponse{
+		HasAlias:      false,
+		IsExternal:    true,
+		IsStepPresent: true,
+	}
+
+	lRunner.runner = &runner.GrpcRunner{LegacyClient: &mockClient{responses: responses}, Timeout: time.Second * 30}
+	_, err := definition(&jsonrpc2.Request{Params: &p})
+	if err == nil {
+		t.Errorf("expected error to not be nil.")
+	}
+	expected := `implementation source not found: Step implementation referred from an external project or library`
+	if err.Error() != expected {
+		t.Errorf("Expected: `%s`\nGot: `%s`", expected, err.Error())
 	}
 }

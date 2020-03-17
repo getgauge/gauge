@@ -350,6 +350,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 func (agent *rephraseRefactorer) getStepNameFromRunner(r runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: agent.oldStep.Value}}
 	responseMessage, err := r.ExecuteMessageWithTimeout(stepNameMessage)
+
 	if err != nil {
 		return "", err, nil
 	}
