@@ -44,7 +44,7 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 		for _, concept := range concepts {
 			for _, step := range concept.ConceptSteps {
 				if (step.LineNo - 1) == params.Position.Line {
-					return search(step)
+					return search(req, step)
 				}
 			}
 		}
@@ -54,7 +54,7 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 			if item.Kind() == gauge.StepKind {
 				step := item.(*gauge.Step)
 				if (step.LineNo - 1) == params.Position.Line {
-					return search(step)
+					return search(req, step)
 				}
 			}
 		}
@@ -62,15 +62,15 @@ func definition(req *jsonrpc2.Request) (interface{}, error) {
 	return nil, nil
 }
 
-func search(step *gauge.Step) (interface{}, error) {
+func search(req *jsonrpc2.Request, step *gauge.Step) (interface{}, error) {
 	if loc, _ := searchConcept(step); loc != nil {
 		return loc, nil
 	}
-	return searchStep(step)
+	return searchStep(req, step)
 
 }
 
-func searchStep(step *gauge.Step) (interface{}, error) {
+func searchStep(req *jsonrpc2.Request, step *gauge.Step) (interface{}, error) {
 	if lRunner.runner == nil {
 		return nil, nil
 	}
@@ -81,6 +81,11 @@ func searchStep(step *gauge.Step) (interface{}, error) {
 	if responseMessage == nil || !(responseMessage.GetIsStepPresent()) {
 		return nil, fmt.Errorf("Step implementation not found for step : %s", step.Value)
 	}
+
+	if responseMessage.IsExternal {
+		return nil, fmt.Errorf("implementation source not found: Step implementation referred from an external project or library")
+	}
+
 	return getLspLocationForStep(responseMessage.GetFileName(), responseMessage.GetSpan()), nil
 }
 

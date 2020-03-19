@@ -18,6 +18,7 @@
 package refactor
 
 import (
+	"github.com/getgauge/gauge/gauge_messages"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
@@ -494,4 +495,25 @@ func (s *MySuite) TestRefactoringInTearDownStep(c *C) {
 	c.Assert(specs[0].TearDownSteps[0].Args[1].Value, Equals, "address")
 	c.Assert(specs[0].TearDownSteps[0].Args[2].Value, Equals, "number")
 	c.Assert(specs[0].TearDownSteps[0].Args[3].Value, Equals, "name")
+}
+
+func (s *MySuite) TestRefactoringExternalSteps(c *C) {
+	oldStep := "first step"
+	newStep := "second step"
+	agent, _ := getRefactorAgent(oldStep, newStep, nil)
+	r := &mockRunner{
+		response: &gauge_messages.Message{
+			StepNameResponse: &gauge_messages.StepNameResponse{
+				IsExternal:    true,
+				IsStepPresent: true,
+				HasAlias:      false,
+				StepName:      []string{oldStep},
+			},
+		},
+	}
+
+	stepName, err, _ := agent.getStepNameFromRunner(r)
+	c.Assert(err, NotNil)
+	c.Assert(err.Error(), Equals, "external step: Cannot refactor 'first step' is in external project or library")
+	c.Assert(stepName, Equals, "")
 }

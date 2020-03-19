@@ -350,6 +350,7 @@ func (agent *rephraseRefactorer) generateNewStepName(args []string, orderMap map
 func (agent *rephraseRefactorer) getStepNameFromRunner(r runner.Runner) (string, error, *parser.Warning) {
 	stepNameMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_StepNameRequest, StepNameRequest: &gauge_messages.StepNameRequest{StepValue: agent.oldStep.Value}}
 	responseMessage, err := r.ExecuteMessageWithTimeout(stepNameMessage)
+
 	if err != nil {
 		return "", err, nil
 	}
@@ -358,6 +359,9 @@ func (agent *rephraseRefactorer) getStepNameFromRunner(r runner.Runner) (string,
 	}
 	if responseMessage.GetStepNameResponse().GetHasAlias() {
 		return "", fmt.Errorf("steps with aliases : '%s' cannot be refactored", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
+	}
+	if responseMessage.GetStepNameResponse().GetIsExternal() {
+		return "", fmt.Errorf("external step: Cannot refactor '%s' is in external project or library", strings.Join(responseMessage.GetStepNameResponse().GetStepName(), "', '")), nil
 	}
 	return responseMessage.GetStepNameResponse().GetStepName()[0], nil, nil
 }

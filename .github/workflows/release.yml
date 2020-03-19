@@ -8,7 +8,7 @@ jobs:
     name: Create package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -34,7 +34,7 @@ jobs:
     name: Create windows package
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -79,7 +79,7 @@ jobs:
     env:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
 
       - uses: geertvdc/setup-hub@master
 
@@ -121,7 +121,7 @@ jobs:
     needs: [github-release]
     steps:
       - name: Switch to $GITHUB_REF
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Set up Python 3.7
         uses: actions/setup-python@v1
@@ -151,7 +151,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Switch to $GITHUB_REF
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - uses: actions/setup-node@v1
         with:
@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Switch to $GITHUB_REF
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Set up Go 1.13
         uses: actions/setup-go@v1
@@ -240,7 +240,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Switch to $GITHUB_REF
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
 
       - name: Set gauge version
         run: |
@@ -266,7 +266,7 @@ jobs:
     needs: [github-release]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - uses: geertvdc/setup-hub@master
 
       - name: Set gauge version
