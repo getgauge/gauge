@@ -1,25 +1,50 @@
 <!--
-Thanks a lot for reporting issues to Gauge! This is the issue tracker for reporting bugs or for requesting new feature and enhancements.
+This is the issue tracker for reporting bugs or for requesting 
+new feature and enhancements.
 
-If you have any support related questions, please refer our documentation at https://gauge.org/documentation/user/current/. You can even ask questions on Google groups (http://groups.google.com/forum/#!forum/getgauge) or on spectrum (https://spectrum.chat/gauge).
+If you have any support related questions, first refer 
+our documentation at: 
 
-This is the issue tracker for Gauge core. Find other components at https://github.com/getgauge
+https://docs.gauge.org
 
-Please delete irrelevant sections below. 
+before asking questions at:
+
+https://spectrum.chat/gauge
+
+Or mailing: 
+
+getgauge@googlegroups.com 
+
+NOTE: Please report only bugs, features and enhancements here.
+Issues that don't fall in this category will be closed and 
+redirected to the forums so that everyone 
+can benefit from the discussions.
+
+Please delete irrelevant sections if you 
+are requesting a feature or enhancement. 
+
+If you are reporting a bug please fill ALL the sections, this
+will increase your chances of getting help.
 -->
 
-### Expected behavior
-Tell us what should happen
+### Describe the bug
 
-### Actual behavior
-Tell us what happens instead
 
-### Steps to reproduce
-1.
-2.
-3.
+### What command(s) did you run when you found the bug?
 
-### Gauge version
+For e.g. 
 ```
-Run gauge -v on your system and paste the results here.
+gauge run specs
 ```
+
+### Output, stack trace or logs related to the bug 
+
+### Versions 
+
+#### Gauge (Output of `gauge -v`)
+
+#### Node.js/Java/Python/.Net/Ruby version
+
+#### Operating System information
+
+#### IDE information
