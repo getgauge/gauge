@@ -162,6 +162,10 @@ func IsDir(path string) bool {
 var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
 	for _, path := range paths {
+		if !common.FileExists(path) {
+			logger.Errorf(true, "Specs directory %s does not exists", path)
+			os.Exit(1)
+		}
 		if common.DirExists(path) {
 			specFiles = append(specFiles, FindSpecFilesIn(path)...)
 		} else if common.FileExists(path) && IsValidSpecExtension(path) {
