@@ -167,7 +167,12 @@ var GetSpecFiles = func(paths []string) []string {
 			os.Exit(1)
 		}
 		if common.DirExists(path) {
-			specFiles = append(specFiles, FindSpecFilesIn(path)...)
+			specFilesInpath := FindSpecFilesIn(path)
+			if len(specFilesInpath) < 1 {
+				logger.Errorf(true, "No specifications found in %s.", path)
+				os.Exit(1)
+			}
+			specFiles = append(specFiles, specFilesInpath...)
 		} else if common.FileExists(path) && IsValidSpecExtension(path) {
 			f, _ := filepath.Abs(path)
 			specFiles = append(specFiles, f)
