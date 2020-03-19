@@ -225,12 +225,6 @@ func (s *MySuite) TestGetAllSpecsShouldDeDuplicateIndexedSpecs(c *C) {
 	}
 }
 
-func (s *MySuite) TestGetAllSpecsForIndexedNonExistingSpec(c *C) {
-	_, indexedSpecs := getAllSpecFiles([]string{"example.spec" + ":1"})
-
-	c.Assert(len(indexedSpecs), Equals, 0)
-}
-
 func (s *MySuite) TestToCheckIfItsIndexedSpec(c *C) {
 	c.Assert(isIndexedSpec("specs/hello_world:as"), Equals, false)
 	c.Assert(isIndexedSpec("specs/hello_world.spec:0"), Equals, true)
