@@ -18,6 +18,7 @@
 package util
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -226,6 +227,35 @@ func (s *MySuite) TestGetPathToFile(c *C) {
 
 	path = GetPathToFile("resources")
 	c.Assert(path, Equals, filepath.Join(config.ProjectRoot, "resources"))
+}
+
+func (s *MySuite) TestGetSpecFilesWhenSpecsDirDoesNotExists(c *C) {
+	var expectedErrorMessage string
+	exitWithMessage = func(message string) {
+		expectedErrorMessage = message
+	}
+	GetSpecFiles([]string{"dir1"})
+	c.Assert(expectedErrorMessage, Equals, "Specs directory dir1 does not exists.")
+}
+
+func (s *MySuite) TestGetSpecFilesWhenSpecsDirIsEmpty(c *C) {
+	var expectedErrorMessage string
+	exitWithMessage = func(message string) {
+		expectedErrorMessage = message
+	}
+	GetSpecFiles([]string{dir})
+	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No specifications found in %s.", dir))
+}
+
+func (s *MySuite) TestGetSpecFiles(c *C) {
+	expectedSpecFiles := []string{"spec-file-1.spec", "spec-file2.spec"}
+	old := FindSpecFilesIn
+	FindSpecFilesIn = func(dir string) []string {
+		return []string{"spec-file-1.spec", "spec-file2.spec"}
+	}
+	actualSpecFiles := GetSpecFiles([]string{dir})
+	c.Assert(actualSpecFiles, DeepEquals, expectedSpecFiles)
+	FindSpecFilesIn = old
 }
 
 func createFileIn(dir string, fileName string, data []byte) (string, error) {

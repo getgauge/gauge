@@ -18,6 +18,7 @@
 package util
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -80,7 +81,7 @@ func findFilesIn(dirRoot string, isValidFile func(path string) bool, shouldSkip 
 }
 
 // FindSpecFilesIn Finds spec files in the given directory
-func FindSpecFilesIn(dir string) []string {
+var FindSpecFilesIn = func (dir string) []string {
 	return findFilesIn(dir, IsValidSpecExtension, func(path string, f os.FileInfo) bool {
 		return false
 	})
@@ -159,21 +160,23 @@ func IsDir(path string) bool {
 
 // GetSpecFiles returns the list of spec files present at the given path.
 // If the path itself represents a spec file, it returns the same.
+var exitWithMessage = func(message string) {
+	logger.Errorf(true, message)
+	os.Exit(1)
+}
 var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
 	for _, path := range paths {
 		if !common.FileExists(path) {
-			logger.Errorf(true, "Specs directory %s does not exists", path)
-			os.Exit(1)
+			exitWithMessage(fmt.Sprintf("Specs directory %s does not exists.", path))
 		}
 		if common.DirExists(path) {
 			specFilesInpath := FindSpecFilesIn(path)
 			if len(specFilesInpath) < 1 {
-				logger.Errorf(true, "No specifications found in %s.", path)
-				os.Exit(1)
+				exitWithMessage(fmt.Sprintf("No specifications found in %s.", path))
 			}
 			specFiles = append(specFiles, specFilesInpath...)
-		} else if common.FileExists(path) && IsValidSpecExtension(path) {
+		} else if IsValidSpecExtension(path) {
 			f, _ := filepath.Abs(path)
 			specFiles = append(specFiles, f)
 		}
