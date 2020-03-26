@@ -38,7 +38,6 @@ Commands:
   install     Download and install plugin(s)
   list        List specifications, scenarios or tags for a gauge project
   man         Generate man pages
-  refactor    Refactor steps
   run         Run specs
   uninstall   Uninstalls a plugin
   update      Updates a plugin

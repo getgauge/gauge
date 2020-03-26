@@ -30,7 +30,6 @@ package refactor
 import (
 	"errors"
 	"fmt"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -414,33 +413,4 @@ func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.Conce
 		conceptFiles = append(conceptFiles, &gauge_messages.FileChanges{FileName: file, FileContent: conceptMap[file], Diffs: createDiffs(diffs)})
 	}
 	return specFiles, conceptFiles
-}
-
-func printRefactoringSummary(refactoringResult *refactoringResult) {
-	exitCode := 0
-	if !refactoringResult.Success {
-		exitCode = 1
-		for _, err := range refactoringResult.Errors {
-			logger.Errorf(true, "%s \n", err)
-		}
-	}
-	for _, warning := range refactoringResult.Warnings {
-		logger.Warningf(true, "%s \n", warning)
-	}
-	logger.Infof(true, "%d specifications changed.\n", len(refactoringResult.specFilesChanged()))
-	logger.Infof(true, "%d concepts changed.\n", len(refactoringResult.conceptFilesChanged()))
-	logger.Infof(true, "%d files in code changed.\n", len(refactoringResult.RunnerFilesChanged))
-	os.Exit(exitCode)
-}
-
-// RefactorSteps performs rephrase refactoring and prints the refactoring summary which includes errors and warnings generated during refactoring and
-// files changed during refactoring : specification files, concept files and the implementation files changed.
-func RefactorSteps(oldStep, newStep string, r runner.Runner, specDirs []string) {
-	refactoringResult := GetRefactoringChanges(oldStep, newStep, r, specDirs, true)
-	err := r.Kill()
-	if err != nil {
-		logger.Errorf(true, "failed to kill runner with pid: %d", r.Pid())
-	}
-	refactoringResult.WriteToDisk()
-	printRefactoringSummary(refactoringResult)
 }
