@@ -286,25 +286,32 @@ func (r *GrpcRunner) Pid() int {
 // StartGrpcRunner makes a connection with grpc server
 func StartGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
 	portChan := make(chan string)
+	errChan := make(chan error)
 	logWriter := &logger.LogWriter{
 		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
 		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language),
 	}
 	cmd, info, err := runRunnerCommand(m, "0", false, logWriter)
+	if err != nil {
+		return nil, fmt.Errorf("Error occurred while starting runner process.\nError : %w", err)
+	}
+
 	go func() {
 		err = cmd.Wait()
 		if err != nil {
-			logger.Errorf(true, "Error occurred while waiting for runner process to finish.\nError : %s", err.Error())
+			e := fmt.Errorf("Error occurred while waiting for runner process to finish.\nError : %w", err)
+			logger.Errorf(true, e.Error())
+			errChan <- e
 		}
+		errChan <- nil
 	}()
-	if err != nil {
-		return nil, err
-	}
 
 	var port string
 	select {
 	case port = <-portChan:
 		close(portChan)
+	case err = <-errChan:
+		return nil, err
 	case <-time.After(config.RunnerConnectionTimeout()):
 		return nil, fmt.Errorf("Timed out connecting to %s", m.Language)
 	}
