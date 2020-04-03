@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/getgauge/gauge/config"
@@ -30,6 +31,7 @@ import (
 	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -208,6 +210,23 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
 	res, err := r.executeMessage(m, 0)
 	if err != nil {
+		e, ok := status.FromError(err)
+		if ok {
+			var stackTrace = ""
+			for _, detail := range e.Details() {
+				if t, ok := detail.(*errdetails.DebugInfo); ok {
+					for _, entry := range t.GetStackEntries() {
+						stackTrace = fmt.Sprintf("%s%s\n", stackTrace, entry)
+					}
+				}
+			}
+			var data = strings.Split(e.Message(), "||")
+			var message = data[0]
+			if len(data) > 1 && stackTrace == "" {
+				stackTrace = data[1]
+			}
+			return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
+		}
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
 	return res.ExecutionStatusResponse.ExecutionResult
