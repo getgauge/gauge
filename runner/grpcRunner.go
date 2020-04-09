@@ -225,6 +225,9 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 			if len(data) > 1 && stackTrace == "" {
 				stackTrace = data[1]
 			}
+			if e.Code() == codes.Unavailable {
+				logger.Fatalf(true, "%s runner quit unexpectedly. Check logs for more details.\nErrorMessage: %s\n%s", r.Info().Id, message, stackTrace)
+			}
 			return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
 		}
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
