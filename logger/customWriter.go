@@ -25,13 +25,14 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 	return w.file.Write(p)
 }
 
-func NewCustomWriter(portChan chan string, outFile io.Writer, id string) customWriter {
+func NewCustomWriter(portChan chan string, outFile io.Writer, id string, isErrorStream bool) customWriter {
 	return customWriter{
 		port: portChan,
 		file: Writer{
 			File:                outFile,
 			LoggerID:            id,
 			ShouldWriteToStdout: true,
+			isErrorStream:       isErrorStream,
 		},
 	}
 }

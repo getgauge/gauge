@@ -286,25 +286,29 @@ func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 	return ctx, jsonrpc2.NewConn(ctx, jsonrpc2.NewBufferedStream(stdRWC{}, jsonrpc2.VSCodeObjectCodec{}), newHandler(), connOpt...)
 }
 
-func initializeRunner() {
+func initializeRunner() error {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
 		logDebug(nil, "Current runner is not compatible with gauge LSP.")
-		return
+		return err
 	}
 	err = startRunner()
 	if err != nil {
 		logDebug(nil, "%s\nSome of the gauge lsp feature will not work as expected.", err.Error())
-		return
+		return err
 	}
 	lRunner.lspID = id
+	return nil
 }
 
 func Start(p infoProvider, logLevel string) {
 	provider = p
 	provider.Init()
-	initializeRunner()
+	err := initializeRunner()
 	ctx, conn := startLsp(logLevel)
+	if err != nil {
+		_ = showErrorMessageOnClient(ctx, conn, err)
+	}
 	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
 	logInfo(nil, "Connection closed")

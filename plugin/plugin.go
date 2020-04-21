@@ -240,8 +240,8 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	portChan := make(chan string)
 	writer := &logger.LogWriter{
-		Stderr: logger.NewCustomWriter(portChan, os.Stderr, pd.ID),
-		Stdout: logger.NewCustomWriter(portChan, os.Stdout, pd.ID),
+		Stderr: logger.NewCustomWriter(portChan, os.Stderr, pd.ID, true),
+		Stdout: logger.NewCustomWriter(portChan, os.Stdout, pd.ID, false),
 	}
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 	go func() {

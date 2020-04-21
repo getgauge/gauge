@@ -310,8 +310,8 @@ func StartGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, t
 	portChan := make(chan string)
 	errChan := make(chan error)
 	logWriter := &logger.LogWriter{
-		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
-		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language),
+		Stderr: logger.NewCustomWriter(portChan, stdout, m.Language, true),
+		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language, false),
 	}
 	cmd, info, err := runRunnerCommand(m, "0", false, logWriter)
 	if err != nil {

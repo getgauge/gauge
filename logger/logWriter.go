@@ -32,6 +32,7 @@ type Writer struct {
 	ShouldWriteToStdout bool
 	stream              int
 	File                io.Writer
+	isErrorStream       bool
 }
 
 // LogInfo repesents the log message structure for plugins
@@ -52,7 +53,11 @@ func (w Writer) Write(p []byte) (int, error) {
 		m := &LogInfo{}
 		err := json.Unmarshal(_p, m)
 		if err != nil {
-			write(true, string(_p), w.File)
+			if w.isErrorStream {
+				logError(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, string(_p))
+			} else {
+				logInfo(loggersMap.getLogger(w.LoggerID), w.ShouldWriteToStdout, string(_p))
+			}
 		}
 		if w.stream > 0 {
 			m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
