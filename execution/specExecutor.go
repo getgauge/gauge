@@ -303,7 +303,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 
 		shouldRetry = !(specFilter.Filter(scenario))
 	}
-
+	retriesCount := 0
 	for i := 0; i < MaxRetriesCount; i++ {
 		e.currentExecutionInfo.CurrentScenario = &gauge_messages.ScenarioInfo{
 			Name:     scenario.Heading.Value,
@@ -320,9 +320,8 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 		if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
 			return nil, err
 		}
-
 		e.scenarioExecutor.execute(scenario, scenarioResult)
-
+		retriesCount++
 		if scenarioResult.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED {
 			e.specResult.ScenarioSkippedCount++
 		}
@@ -331,6 +330,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			break
 		}
 	}
+	scenarioResult.ProtoScenario.RetriesCount = int64(retriesCount)
 	return scenarioResult, nil
 }
 
