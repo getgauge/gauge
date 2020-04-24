@@ -14,6 +14,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/template"
 )
 
 func CreateSkelFilesIfRequired() {
@@ -32,6 +33,11 @@ func CreateSkelFilesIfRequired() {
 	err = config.Merge()
 	if err != nil {
 		logger.Debugf(true, "Unable to create gauge.properties. Error: %s", err.Error())
+	}
+
+	err = template.Merge()
+	if err != nil {
+		logger.Debugf(true, "Unable to create tempate.properties. Error: %s", err.Error())
 	}
 	writeFile(filepath.Join(p, "notice.md"), Notice, true)
 	writeFile(filepath.Join(p, "skel", "example.spec"), ExampleSpec, false)

@@ -9,6 +9,7 @@ package projectInit
 import (
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/runner"
+	"github.com/getgauge/gauge/template"
 	"github.com/getgauge/gauge/util"
 )
 
@@ -29,6 +31,7 @@ const (
 	gitignoreFileName = ".gitignore"
 	envDefaultDirName = "default"
 	metadataFileName  = "metadata.json"
+	https             = "https"
 )
 
 var defaultPlugins = []string{"html-report"}
@@ -41,12 +44,11 @@ type templateMetadata struct {
 	PostInstallMsg string
 }
 
-func initializeTemplate(templateName string) error {
+func initializeTemplate(templateName string, templateUrl string) error {
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
-	templateURL := getTemplateURL(templateName)
-	logger.Debugf(true, "Initializing template from %s", templateURL)
-	unzippedTemplate, err := util.DownloadAndUnzip(templateURL, tempDir)
+	logger.Infof(true, "Initializing template from %s", templateUrl)
+	unzippedTemplate, err := util.DownloadAndUnzip(templateUrl, tempDir)
 	if err != nil {
 		return err
 	}
@@ -99,12 +101,14 @@ func initializeTemplate(templateName string) error {
 	return nil
 }
 
-func getTemplateURL(templateName string) string {
-	return config.GaugeTemplatesUrl() + "/" + templateName + ".zip"
-}
-
 func getTemplateLanguage(templateName string) string {
 	return strings.Split(templateName, "_")[0]
+}
+
+func getTemplateName(templateURL string) string {
+	parts := strings.Split(templateURL, "/")
+	basename := parts[len(parts)-1]
+	return strings.TrimSuffix(basename, filepath.Ext(basename))
 }
 
 func isGaugeProject() bool {
@@ -119,24 +123,18 @@ func installRunner(templateName string, silent bool) {
 	language := getTemplateLanguage(templateName)
 	if !install.IsCompatiblePluginInstalled(language, true) {
 		logger.Infof(true, "Compatible language plugin %s is not installed. Installing plugin...", language)
-
 		install.HandleInstallResult(install.Plugin(language, "", silent), language, true)
 	}
 }
 
 // InitializeProject initializes a Gauge project with specified template
 func InitializeProject(templateName string, silent bool) {
-	wd, err := os.Getwd()
-	if err != nil {
-		logger.Fatalf(true, "Failed to find working directory. %s", err.Error())
-	}
-	config.ProjectRoot = wd
-	if isGaugeProject() {
-		logger.Fatalf(true, "This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
-	}
-	exists, _ := common.UrlExists(getTemplateURL(templateName))
-	if exists {
-		err = initializeTemplate(templateName)
+	validateDirectory()
+	templateURL, err := template.Get(templateName)
+	logger.Debugf(true, "Failed to get template download info for '%s'.", templateName)
+	if err == nil {
+		checkURLSecurity(templateURL)
+		err = initializeTemplate(templateName, templateURL)
 		installRunner(templateName, silent)
 	} else {
 		installRunner(templateName, silent)
@@ -145,6 +143,42 @@ func InitializeProject(templateName string, silent bool) {
 	if err != nil {
 		logger.Fatalf(true, "Failed to initialize project. %s", err.Error())
 	}
+}
+
+// InitializeProject initializes a Gauge project with specified template URL
+func InitializeProjectFromURL(templateURL string, silent bool) {
+	validateDirectory()
+	name := getTemplateName(templateURL)
+	checkURLSecurity(templateURL)
+	if err := initializeTemplate(name, templateURL); err != nil {
+		logger.Fatalf(true, "Failed to initialize project. %s", err.Error())
+	}
+	installRunner(name, silent)
+
+}
+
+func validateDirectory() {
+	wd, err := os.Getwd()
+	if err != nil {
+		logger.Fatalf(true, "Failed to find working directory. %s", err.Error())
+	}
+	config.ProjectRoot = wd
+	if isGaugeProject() {
+		logger.Fatalf(true, "This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
+	}
+}
+
+func checkURLSecurity(templateURL string) {
+	u, err := url.Parse(templateURL)
+	if err != nil {
+		logger.Fatalf(true, "Failed to parse URL '%s'.  %s", templateURL, err.Error())
+	}
+	if u.Scheme != https && !config.AllowInsecureDownload() {
+		logger.Fatalf(true, "The url '%s' in not secure and 'allow_insecure_download' is set to false.\n"+
+			"To allow insecure downloads set 'allow_insecure_download' configuration to true.\n"+
+			"Run 'gauge config allow_insecure_download true' to the same.", templateURL)
+	}
+
 }
 
 func showMessage(action, filename string) {

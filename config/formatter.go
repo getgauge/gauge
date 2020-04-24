@@ -13,21 +13,21 @@ import (
 )
 
 type formatter interface {
-	format([]property) (string, error)
+	Format([]Property) (string, error)
 }
 
 type jsonFormatter struct {
 }
 
-func (f jsonFormatter) format(p []property) (string, error) {
+func (f jsonFormatter) Format(p []Property) (string, error) {
 	bytes, err := json.MarshalIndent(p, "", "\t")
 	return string(bytes), err
 }
 
-type textFormatter struct {
+type TextFormatter struct {
 }
 
-func (f textFormatter) format(p []property) (string, error) {
+func (f TextFormatter) Format(p []Property) (string, error) {
 	format := "%-30s\t%-35s"
 	var s []string
 	max := 0

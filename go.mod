@@ -14,7 +14,7 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday v2.0.0+incompatible
-	github.com/satori/go.uuid v1.2.0
+	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a
 	github.com/spf13/cobra v0.0.6-0.20191019221741-77e4d5aecc4d

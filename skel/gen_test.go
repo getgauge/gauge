@@ -18,6 +18,7 @@ func TestCreateSkelFilesIfRequired(t *testing.T) {
 	config := "config"
 	origGaugeHome := os.Getenv("GAUGE_HOME")
 	gaugeHomeDir := filepath.Join("_testdata", "GaugeHome")
+	os.RemoveAll(gaugeHomeDir)
 	err := os.Mkdir(gaugeHomeDir, common.NewDirectoryPermissions)
 	if err != nil {
 		t.Fatalf("Unable to create Gauge Root Dir, %s", err)
