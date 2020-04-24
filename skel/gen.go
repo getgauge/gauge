@@ -25,7 +25,6 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
-	uuid "github.com/satori/go.uuid"
 )
 
 func CreateSkelFilesIfRequired() {
@@ -49,11 +48,6 @@ func CreateSkelFilesIfRequired() {
 	writeFile(filepath.Join(p, "skel", "example.spec"), ExampleSpec, false)
 	writeFile(filepath.Join(p, "skel", "env", "default.properties"), DefaultProperties, false)
 	writeFile(filepath.Join(p, "skel", ".gitignore"), Gitignore, false)
-
-	idFile := filepath.Join(p, "id")
-	if !common.FileExists(idFile) {
-		writeFile(idFile, uuid.NewV4().String(), false)
-	}
 }
 
 func writeFile(path, text string, overwrite bool) {
