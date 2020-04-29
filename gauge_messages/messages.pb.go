@@ -18,7 +18,7 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
 type StepValidateResponse_ErrorType int32
 
@@ -48,15 +48,15 @@ func (StepValidateResponse_ErrorType) EnumDescriptor() ([]byte, []int) {
 type CacheFileRequest_FileStatus int32
 
 const (
-	/// The file content was changed in the client
+	// / The file content was changed in the client
 	CacheFileRequest_CHANGED CacheFileRequest_FileStatus = 0
-	/// The file was closed in the client
+	// / The file was closed in the client
 	CacheFileRequest_CLOSED CacheFileRequest_FileStatus = 1
-	/// The file was created on the client
+	// / The file was created on the client
 	CacheFileRequest_CREATED CacheFileRequest_FileStatus = 2
-	/// The file was deleted on the client
+	// / The file was deleted on the client
 	CacheFileRequest_DELETED CacheFileRequest_FileStatus = 3
-	/// The file is opened in the client
+	// / The file is opened in the client
 	CacheFileRequest_OPENED CacheFileRequest_FileStatus = 4
 )
 
@@ -208,7 +208,7 @@ func (Message_MessageType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_4dc296cbfe5ffcd5, []int{45, 0}
 }
 
-/// Default request. Tells the runner to shutdown.
+// / Default request. Tells the runner to shutdown.
 type KillProcessRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -240,10 +240,10 @@ func (m *KillProcessRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_KillProcessRequest proto.InternalMessageInfo
 
-/// Sends to any request which needs a execution status as response
-/// usually step execution, hooks etc will return this
+// / Sends to any request which needs a execution status as response
+// / usually step execution, hooks etc will return this
 type ExecutionStatusResponse struct {
-	/// Holds the suite result after suite execution done.
+	// / Holds the suite result after suite execution done.
 	ExecutionResult      *ProtoExecutionResult `protobuf:"bytes,1,opt,name=executionResult,proto3" json:"executionResult,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}              `json:"-"`
 	XXX_unrecognized     []byte                `json:"-"`
@@ -282,12 +282,12 @@ func (m *ExecutionStatusResponse) GetExecutionResult() *ProtoExecutionResult {
 	return nil
 }
 
-/// Sent at start of Suite Execution. Tells the runner to execute `before_suite` hook.
+// / Sent at start of Suite Execution. Tells the runner to execute `before_suite` hook.
 type ExecutionStartingRequest struct {
-	/// Holds the current suite execution info.
+	// / Holds the current suite execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds the suite result in execution starting.
-	/// Some fields will not be populated before execution.
+	// / Holds the suite result in execution starting.
+	// / Some fields will not be populated before execution.
 	SuiteResult          *ProtoSuiteResult `protobuf:"bytes,2,opt,name=suiteResult,proto3" json:"suiteResult,omitempty"`
 	Stream               int32             `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
@@ -341,11 +341,11 @@ func (m *ExecutionStartingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at end of Suite Execution. Tells the runner to execute `after_suite` hook.
+// / Sent at end of Suite Execution. Tells the runner to execute `after_suite` hook.
 type ExecutionEndingRequest struct {
-	/// Holds the current suite execution info.
+	// / Holds the current suite execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds the suite result in execution ending.
+	// / Holds the suite result in execution ending.
 	SuiteResult          *ProtoSuiteResult `protobuf:"bytes,2,opt,name=suiteResult,proto3" json:"suiteResult,omitempty"`
 	Stream               int32             `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
@@ -399,12 +399,12 @@ func (m *ExecutionEndingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at start of Spec Execution. Tells the runner to execute `before_spec` hook.
+// / Sent at start of Spec Execution. Tells the runner to execute `before_spec` hook.
 type SpecExecutionStartingRequest struct {
-	/// Holds the current spec execution info.
+	// / Holds the current spec execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds the specs result in spec execution starting.
-	/// Some fields will not be populated before execution.
+	// / Holds the specs result in spec execution starting.
+	// / Some fields will not be populated before execution.
 	SpecResult           *ProtoSpecResult `protobuf:"bytes,2,opt,name=specResult,proto3" json:"specResult,omitempty"`
 	Stream               int32            `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
@@ -458,11 +458,11 @@ func (m *SpecExecutionStartingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at end of Spec Execution. Tells the runner to execute `after_spec` hook.
+// / Sent at end of Spec Execution. Tells the runner to execute `after_spec` hook.
 type SpecExecutionEndingRequest struct {
-	/// Holds the current spec execution info.
+	// / Holds the current spec execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds the specs result in spec execution ending.
+	// / Holds the specs result in spec execution ending.
 	SpecResult           *ProtoSpecResult `protobuf:"bytes,2,opt,name=specResult,proto3" json:"specResult,omitempty"`
 	Stream               int32            `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
@@ -516,12 +516,12 @@ func (m *SpecExecutionEndingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at start of Scenario Execution. Tells the runner to execute `before_scenario` hook.
+// / Sent at start of Scenario Execution. Tells the runner to execute `before_scenario` hook.
 type ScenarioExecutionStartingRequest struct {
-	/// Holds the current sceanrio execution info.
+	// / Holds the current sceanrio execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds the scenarion result in scenarion execution starting.
-	/// Some fields will not be populated before execution.
+	// / Holds the scenarion result in scenarion execution starting.
+	// / Some fields will not be populated before execution.
 	ScenarioResult       *ProtoScenarioResult `protobuf:"bytes,2,opt,name=scenarioResult,proto3" json:"scenarioResult,omitempty"`
 	Stream               int32                `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
@@ -575,9 +575,9 @@ func (m *ScenarioExecutionStartingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at end of Scenario Execution. Tells the runner to execute `after_scenario` hook.
+// / Sent at end of Scenario Execution. Tells the runner to execute `after_scenario` hook.
 type ScenarioExecutionEndingRequest struct {
-	/// Holds the current scenario execution info.
+	// / Holds the current scenario execution info.
 	CurrentExecutionInfo *ExecutionInfo       `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
 	ScenarioResult       *ProtoScenarioResult `protobuf:"bytes,2,opt,name=scenarioResult,proto3" json:"scenarioResult,omitempty"`
 	Stream               int32                `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
@@ -632,12 +632,12 @@ func (m *ScenarioExecutionEndingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at start of Step Execution. Tells the runner to execute `before_step` hook.
+// / Sent at start of Step Execution. Tells the runner to execute `before_step` hook.
 type StepExecutionStartingRequest struct {
-	/// Holds the current step execution info.
+	// / Holds the current step execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds step result in step execution starting.
-	/// Some fields will not be populated before execution.
+	// / Holds step result in step execution starting.
+	// / Some fields will not be populated before execution.
 	StepResult           *ProtoStepResult `protobuf:"bytes,2,opt,name=stepResult,proto3" json:"stepResult,omitempty"`
 	Stream               int32            `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
@@ -691,11 +691,11 @@ func (m *StepExecutionStartingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Sent at end of Step Execution. Tells the runner to execute `after_step` hook.
+// / Sent at end of Step Execution. Tells the runner to execute `after_step` hook.
 type StepExecutionEndingRequest struct {
-	/// Holds the current step execution info.
+	// / Holds the current step execution info.
 	CurrentExecutionInfo *ExecutionInfo `protobuf:"bytes,1,opt,name=currentExecutionInfo,proto3" json:"currentExecutionInfo,omitempty"`
-	/// Holds step result in step execution ending.
+	// / Holds step result in step execution ending.
 	StepResult           *ProtoStepResult `protobuf:"bytes,2,opt,name=stepResult,proto3" json:"stepResult,omitempty"`
 	Stream               int32            `protobuf:"varint,3,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
@@ -749,11 +749,11 @@ func (m *StepExecutionEndingRequest) GetStream() int32 {
 	return 0
 }
 
-/// Contains command line arguments which passed by user during execution.
+// / Contains command line arguments which passed by user during execution.
 type ExecutionArg struct {
-	/// Holds the flag name passed from command line.
+	// / Holds the flag name passed from command line.
 	FlagName string `protobuf:"bytes,1,opt,name=flagName,proto3" json:"flagName,omitempty"`
-	/// Holds the flag value passed from command line.
+	// / Holds the flag value passed from command line.
 	FlagValue            []string `protobuf:"bytes,2,rep,name=flagValue,proto3" json:"flagValue,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -799,24 +799,24 @@ func (m *ExecutionArg) GetFlagValue() []string {
 	return nil
 }
 
-/// Contains details of the execution.
-/// Depending on the context (Step, Scenario, Spec or Suite), the respective fields are set.
+// / Contains details of the execution.
+// / Depending on the context (Step, Scenario, Spec or Suite), the respective fields are set.
 type ExecutionInfo struct {
-	/// Holds the information of the current Spec. Valid in context of Spec execution.
+	// / Holds the information of the current Spec. Valid in context of Spec execution.
 	CurrentSpec *SpecInfo `protobuf:"bytes,1,opt,name=currentSpec,proto3" json:"currentSpec,omitempty"`
-	/// Holds the information of the current Scenario. Valid in context of Scenario execution.
+	// / Holds the information of the current Scenario. Valid in context of Scenario execution.
 	CurrentScenario *ScenarioInfo `protobuf:"bytes,2,opt,name=currentScenario,proto3" json:"currentScenario,omitempty"`
-	/// Holds the information of the current Step. Valid in context of Step execution.
+	// / Holds the information of the current Step. Valid in context of Step execution.
 	CurrentStep *StepInfo `protobuf:"bytes,3,opt,name=currentStep,proto3" json:"currentStep,omitempty"`
-	/// Stacktrace of the execution. Valid only if there is an error in execution.
+	// / Stacktrace of the execution. Valid only if there is an error in execution.
 	Stacktrace string `protobuf:"bytes,4,opt,name=stacktrace,proto3" json:"stacktrace,omitempty"`
-	/// Holds the project name
+	// / Holds the project name
 	ProjectName string `protobuf:"bytes,5,opt,name=projectName,proto3" json:"projectName,omitempty"`
-	/// Holds the command line arguments.
+	// / Holds the command line arguments.
 	ExecutionArgs []*ExecutionArg `protobuf:"bytes,6,rep,name=ExecutionArgs,proto3" json:"ExecutionArgs,omitempty"`
-	/// Holds the number of running execution streams.
+	// / Holds the number of running execution streams.
 	NumberOfExecutionStreams int32 `protobuf:"varint,7,opt,name=numberOfExecutionStreams,proto3" json:"numberOfExecutionStreams,omitempty"`
-	/// Holds the runner id for parallel execution.
+	// / Holds the runner id for parallel execution.
 	RunnerId             int32    `protobuf:"varint,8,opt,name=runnerId,proto3" json:"runnerId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -904,15 +904,15 @@ func (m *ExecutionInfo) GetRunnerId() int32 {
 	return 0
 }
 
-/// Contains details of the Spec execution.
+// / Contains details of the Spec execution.
 type SpecInfo struct {
-	/// Name of the current Spec being executed.
+	// / Name of the current Spec being executed.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	/// Full File path containing the current Spec being executed.
+	// / Full File path containing the current Spec being executed.
 	FileName string `protobuf:"bytes,2,opt,name=fileName,proto3" json:"fileName,omitempty"`
-	/// Flag to indicate if the current Spec execution failed.
+	// / Flag to indicate if the current Spec execution failed.
 	IsFailed bool `protobuf:"varint,3,opt,name=isFailed,proto3" json:"isFailed,omitempty"`
-	/// Tags relevant to the current Spec execution.
+	// / Tags relevant to the current Spec execution.
 	Tags                 []string `protobuf:"bytes,4,rep,name=tags,proto3" json:"tags,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -972,13 +972,13 @@ func (m *SpecInfo) GetTags() []string {
 	return nil
 }
 
-/// Contains details of the Scenario execution.
+// / Contains details of the Scenario execution.
 type ScenarioInfo struct {
-	/// Name of the current Scenario being executed.
+	// / Name of the current Scenario being executed.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	/// Flag to indicate if the current Scenario execution failed.
+	// / Flag to indicate if the current Scenario execution failed.
 	IsFailed bool `protobuf:"varint,2,opt,name=isFailed,proto3" json:"isFailed,omitempty"`
-	/// Tags relevant to the current Scenario execution.
+	// / Tags relevant to the current Scenario execution.
 	Tags                 []string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1031,15 +1031,15 @@ func (m *ScenarioInfo) GetTags() []string {
 	return nil
 }
 
-/// Contains details of the Step execution.
+// / Contains details of the Step execution.
 type StepInfo struct {
-	/// The current request to execute Step
+	// / The current request to execute Step
 	Step *ExecuteStepRequest `protobuf:"bytes,1,opt,name=step,proto3" json:"step,omitempty"`
-	/// Flag to indicate if the current Step execution failed.
+	// / Flag to indicate if the current Step execution failed.
 	IsFailed bool `protobuf:"varint,2,opt,name=isFailed,proto3" json:"isFailed,omitempty"`
-	/// The current stack trace in case of failure
+	// / The current stack trace in case of failure
 	StackTrace string `protobuf:"bytes,3,opt,name=stackTrace,proto3" json:"stackTrace,omitempty"`
-	/// The error message in case of failure
+	// / The error message in case of failure
 	ErrorMessage         string   `protobuf:"bytes,4,opt,name=errorMessage,proto3" json:"errorMessage,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1099,17 +1099,17 @@ func (m *StepInfo) GetErrorMessage() string {
 	return ""
 }
 
-/// Request sent ot the runner to Execute a Step
+// / Request sent ot the runner to Execute a Step
 type ExecuteStepRequest struct {
-	/// Contains the actual text of the Step being executed.
-	/// This contains the parameters as defined in the Spec.
+	// / Contains the actual text of the Step being executed.
+	// / This contains the parameters as defined in the Spec.
 	ActualStepText string `protobuf:"bytes,1,opt,name=actualStepText,proto3" json:"actualStepText,omitempty"`
-	/// Contains the parsed text of the Step being executed.
-	/// The paramters are replaced with placeholders.
+	// / Contains the parsed text of the Step being executed.
+	// / The paramters are replaced with placeholders.
 	ParsedStepText string `protobuf:"bytes,2,opt,name=parsedStepText,proto3" json:"parsedStepText,omitempty"`
-	/// Flag to indicate if the execution of the Scenario, containing the current Step, failed.
+	// / Flag to indicate if the execution of the Scenario, containing the current Step, failed.
 	ScenarioFailing bool `protobuf:"varint,3,opt,name=scenarioFailing,proto3" json:"scenarioFailing,omitempty"`
-	/// Collection of parameters applicable to the current Step.
+	// / Collection of parameters applicable to the current Step.
 	Parameters           []*Parameter `protobuf:"bytes,4,rep,name=parameters,proto3" json:"parameters,omitempty"`
 	Stream               int32        `protobuf:"varint,5,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
@@ -1177,14 +1177,14 @@ func (m *ExecuteStepRequest) GetStream() int32 {
 	return 0
 }
 
-/// Request sent ot the runner to check if given Step is valid.
-/// The runner should check if there is an implementation defined for the given Step Text.
+// / Request sent ot the runner to check if given Step is valid.
+// / The runner should check if there is an implementation defined for the given Step Text.
 type StepValidateRequest struct {
-	/// The text is used to lookup Step implementation
+	// / The text is used to lookup Step implementation
 	StepText string `protobuf:"bytes,1,opt,name=stepText,proto3" json:"stepText,omitempty"`
-	/// The number of paramters in the Step
+	// / The number of paramters in the Step
 	NumberOfParameters int32 `protobuf:"varint,2,opt,name=numberOfParameters,proto3" json:"numberOfParameters,omitempty"`
-	///This is use to generate step implementation template
+	// /This is use to generate step implementation template
 	StepValue            *ProtoStepValue `protobuf:"bytes,3,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}        `json:"-"`
 	XXX_unrecognized     []byte          `json:"-"`
@@ -1237,10 +1237,10 @@ func (m *StepValidateRequest) GetStepValue() *ProtoStepValue {
 	return nil
 }
 
-/// Response of StepValidateRequest.
-/// The runner tells the caller if the Request was valid,
-/// i.e. an implementation exists for given Step text.
-/// Returns an error message if it is an error response.
+// / Response of StepValidateRequest.
+// / The runner tells the caller if the Request was valid,
+// / i.e. an implementation exists for given Step text.
+// / Returns an error message if it is an error response.
 type StepValidateResponse struct {
 	IsValid              bool                           `protobuf:"varint,1,opt,name=isValid,proto3" json:"isValid,omitempty"`
 	ErrorMessage         string                         `protobuf:"bytes,2,opt,name=errorMessage,proto3" json:"errorMessage,omitempty"`
@@ -1304,7 +1304,7 @@ func (m *StepValidateResponse) GetSuggestion() string {
 	return ""
 }
 
-/// Result of the Suite Execution.
+// / Result of the Suite Execution.
 type SuiteExecutionResult struct {
 	SuiteResult          *ProtoSuiteResult `protobuf:"bytes,1,opt,name=suiteResult,proto3" json:"suiteResult,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
@@ -1383,7 +1383,7 @@ func (m *SuiteExecutionResultItem) GetResultItem() *ProtoItem {
 	return nil
 }
 
-/// Requests Gauge to give all Step Names.
+// / Requests Gauge to give all Step Names.
 type StepNamesRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1415,9 +1415,9 @@ func (m *StepNamesRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StepNamesRequest proto.InternalMessageInfo
 
-/// Response to StepNamesRequest
+// / Response to StepNamesRequest
 type StepNamesResponse struct {
-	/// Collection of strings corresponding to Step texts.
+	// / Collection of strings corresponding to Step texts.
 	Steps                []string `protobuf:"bytes,1,rep,name=steps,proto3" json:"steps,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1456,8 +1456,8 @@ func (m *StepNamesResponse) GetSteps() []string {
 	return nil
 }
 
-/// Request runner to initialize Scenario DataStore
-/// Scenario Datastore is reset after every Scenario execution.
+// / Request runner to initialize Scenario DataStore
+// / Scenario Datastore is reset after every Scenario execution.
 type ScenarioDataStoreInitRequest struct {
 	Stream               int32    `protobuf:"varint,1,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1497,8 +1497,8 @@ func (m *ScenarioDataStoreInitRequest) GetStream() int32 {
 	return 0
 }
 
-/// Request runner to initialize Spec DataStore
-/// Spec Datastore is reset after every Spec execution.
+// / Request runner to initialize Spec DataStore
+// / Spec Datastore is reset after every Spec execution.
 type SpecDataStoreInitRequest struct {
 	Stream               int32    `protobuf:"varint,1,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1538,8 +1538,8 @@ func (m *SpecDataStoreInitRequest) GetStream() int32 {
 	return 0
 }
 
-/// Request runner to initialize Suite DataStore
-/// Suite Datastore is reset after every Suite execution.
+// / Request runner to initialize Suite DataStore
+// / Suite Datastore is reset after every Suite execution.
 type SuiteDataStoreInitRequest struct {
 	Stream               int32    `protobuf:"varint,1,opt,name=stream,proto3" json:"stream,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1579,8 +1579,8 @@ func (m *SuiteDataStoreInitRequest) GetStream() int32 {
 	return 0
 }
 
-/// Holds the new and old positions of a parameter.
-/// Used when refactoring a Step.
+// / Holds the new and old positions of a parameter.
+// / Used when refactoring a Step.
 type ParameterPosition struct {
 	OldPosition          int32    `protobuf:"varint,1,opt,name=oldPosition,proto3" json:"oldPosition,omitempty"`
 	NewPosition          int32    `protobuf:"varint,2,opt,name=newPosition,proto3" json:"newPosition,omitempty"`
@@ -1628,15 +1628,15 @@ func (m *ParameterPosition) GetNewPosition() int32 {
 	return 0
 }
 
-/// Tells the runner to refactor the specified Step.
+// / Tells the runner to refactor the specified Step.
 type RefactorRequest struct {
-	/// Old value, used to lookup Step to refactor
+	// / Old value, used to lookup Step to refactor
 	OldStepValue *ProtoStepValue `protobuf:"bytes,1,opt,name=oldStepValue,proto3" json:"oldStepValue,omitempty"`
-	/// New value, the to-be value of Step being refactored.
+	// / New value, the to-be value of Step being refactored.
 	NewStepValue *ProtoStepValue `protobuf:"bytes,2,opt,name=newStepValue,proto3" json:"newStepValue,omitempty"`
-	/// Holds parameter positions of all parameters. Contains old and new parameter positions.
+	// / Holds parameter positions of all parameters. Contains old and new parameter positions.
 	ParamPositions []*ParameterPosition `protobuf:"bytes,3,rep,name=paramPositions,proto3" json:"paramPositions,omitempty"`
-	/// If set to true, the refactored files should be saved to the file system before returning the response.
+	// / If set to true, the refactored files should be saved to the file system before returning the response.
 	SaveChanges          bool     `protobuf:"varint,4,opt,name=saveChanges,proto3" json:"saveChanges,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1696,7 +1696,7 @@ func (m *RefactorRequest) GetSaveChanges() bool {
 	return false
 }
 
-/// Give all file changes to be made to file system
+// / Give all file changes to be made to file system
 type FileChanges struct {
 	FileName             string      `protobuf:"bytes,1,opt,name=fileName,proto3" json:"fileName,omitempty"`
 	FileContent          string      `protobuf:"bytes,2,opt,name=fileContent,proto3" json:"fileContent,omitempty"` // Deprecated: Do not use.
@@ -1753,15 +1753,15 @@ func (m *FileChanges) GetDiffs() []*TextDiff {
 	return nil
 }
 
-/// Response of a RefactorRequest
+// / Response of a RefactorRequest
 type RefactorResponse struct {
-	/// Flag indicating the success of Refactor operation.
+	// / Flag indicating the success of Refactor operation.
 	Success bool `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	/// Error message, valid only if Refactor wasn't successful
+	// / Error message, valid only if Refactor wasn't successful
 	Error string `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
-	/// List of files that were affected because of the refactoring.
+	// / List of files that were affected because of the refactoring.
 	FilesChanged []string `protobuf:"bytes,3,rep,name=filesChanged,proto3" json:"filesChanged,omitempty"`
-	/// List of file changes to be made to successfully achieve refactoring.
+	// / List of file changes to be made to successfully achieve refactoring.
 	FileChanges          []*FileChanges `protobuf:"bytes,4,rep,name=fileChanges,proto3" json:"fileChanges,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}       `json:"-"`
 	XXX_unrecognized     []byte         `json:"-"`
@@ -1821,10 +1821,10 @@ func (m *RefactorResponse) GetFileChanges() []*FileChanges {
 	return nil
 }
 
-/// Request for details on a Single Step.
+// / Request for details on a Single Step.
 type StepNameRequest struct {
-	/// Step text to lookup the Step.
-	/// This is the parsed step value, i.e. with placeholders for parameters.
+	// / Step text to lookup the Step.
+	// / This is the parsed step value, i.e. with placeholders for parameters.
 	StepValue            string   `protobuf:"bytes,1,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1863,19 +1863,19 @@ func (m *StepNameRequest) GetStepValue() string {
 	return ""
 }
 
-/// Response to StepNameRequest.
+// / Response to StepNameRequest.
 type StepNameResponse struct {
-	/// Flag indicating if there is a match for the given Step Text.
+	// / Flag indicating if there is a match for the given Step Text.
 	IsStepPresent bool `protobuf:"varint,1,opt,name=isStepPresent,proto3" json:"isStepPresent,omitempty"`
-	/// The Step name of the given step.
+	// / The Step name of the given step.
 	StepName []string `protobuf:"bytes,2,rep,name=stepName,proto3" json:"stepName,omitempty"`
-	/// Flag indicating if the given Step is an alias.
+	// / Flag indicating if the given Step is an alias.
 	HasAlias bool `protobuf:"varint,3,opt,name=hasAlias,proto3" json:"hasAlias,omitempty"`
-	/// File name in which the step implementation exists
+	// / File name in which the step implementation exists
 	FileName string `protobuf:"bytes,4,opt,name=fileName,proto3" json:"fileName,omitempty"`
-	/// Range of step
+	// / Range of step
 	Span *Span `protobuf:"bytes,5,opt,name=span,proto3" json:"span,omitempty"`
-	/// Flag indicating if the given Step defined in some external library and the source code can not be accessed.
+	// / Flag indicating if the given Step defined in some external library and the source code can not be accessed.
 	IsExternal           bool     `protobuf:"varint,6,opt,name=isExternal,proto3" json:"isExternal,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1949,7 +1949,7 @@ func (m *StepNameResponse) GetIsExternal() bool {
 	return false
 }
 
-/// Response when a unsupported message request is sent.
+// / Response when a unsupported message request is sent.
 type UnsupportedMessageResponse struct {
 	Message              string   `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -1989,17 +1989,17 @@ func (m *UnsupportedMessageResponse) GetMessage() string {
 	return ""
 }
 
-/// Request for caching a file.
-/// Gauge sends this request when running in LSP mode,
-/// so runner can cache file contents present on the client(an editor).
+// / Request for caching a file.
+// / Gauge sends this request when running in LSP mode,
+// / so runner can cache file contents present on the client(an editor).
 type CacheFileRequest struct {
-	/// File content of the file to be cached
+	// / File content of the file to be cached
 	Content string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
-	/// File path of the file to be cached
+	// / File path of the file to be cached
 	FilePath string `protobuf:"bytes,2,opt,name=filePath,proto3" json:"filePath,omitempty"`
-	/// Specifies if the file is closed
+	// / Specifies if the file is closed
 	IsClosed bool `protobuf:"varint,3,opt,name=isClosed,proto3" json:"isClosed,omitempty"`
-	/// Specifies the status of the file
+	// / Specifies the status of the file
 	Status               CacheFileRequest_FileStatus `protobuf:"varint,4,opt,name=status,proto3,enum=gauge.messages.CacheFileRequest_FileStatus" json:"status,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
 	XXX_unrecognized     []byte                      `json:"-"`
@@ -2059,9 +2059,9 @@ func (m *CacheFileRequest) GetStatus() CacheFileRequest_FileStatus {
 	return CacheFileRequest_CHANGED
 }
 
-/// Request for find step positions
+// / Request for find step positions
 type StepPositionsRequest struct {
-	/// Get step positions for file path
+	// / Get step positions for file path
 	FilePath             string   `protobuf:"bytes,1,opt,name=filePath,proto3" json:"filePath,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2100,11 +2100,11 @@ func (m *StepPositionsRequest) GetFilePath() string {
 	return ""
 }
 
-/// Response for find step positions
+// / Response for find step positions
 type StepPositionsResponse struct {
-	/// Step Position
+	// / Step Position
 	StepPositions []*StepPositionsResponse_StepPosition `protobuf:"bytes,1,rep,name=stepPositions,proto3" json:"stepPositions,omitempty"`
-	/// Error message
+	// / Error message
 	Error                string   `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2150,11 +2150,11 @@ func (m *StepPositionsResponse) GetError() string {
 	return ""
 }
 
-/// Step position for each step implementation
+// / Step position for each step implementation
 type StepPositionsResponse_StepPosition struct {
-	/// Step Value
+	// / Step Value
 	StepValue string `protobuf:"bytes,1,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
-	/// Range of step
+	// / Range of step
 	Span                 *Span    `protobuf:"bytes,2,opt,name=span,proto3" json:"span,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2200,7 +2200,7 @@ func (m *StepPositionsResponse_StepPosition) GetSpan() *Span {
 	return nil
 }
 
-/// Request for getting Implementation file glob pattern
+// / Request for getting Implementation file glob pattern
 type ImplementationFileGlobPatternRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2232,9 +2232,9 @@ func (m *ImplementationFileGlobPatternRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ImplementationFileGlobPatternRequest proto.InternalMessageInfo
 
-/// Response for getting Implementation file glob pattern
+// / Response for getting Implementation file glob pattern
 type ImplementationFileGlobPatternResponse struct {
-	/// List of implementation file glob patterns
+	// / List of implementation file glob patterns
 	GlobPatterns         []string `protobuf:"bytes,1,rep,name=globPatterns,proto3" json:"globPatterns,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2273,7 +2273,7 @@ func (m *ImplementationFileGlobPatternResponse) GetGlobPatterns() []string {
 	return nil
 }
 
-/// Request for getting Implementation file list
+// / Request for getting Implementation file list
 type ImplementationFileListRequest struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2305,9 +2305,9 @@ func (m *ImplementationFileListRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_ImplementationFileListRequest proto.InternalMessageInfo
 
-/// Response for getting Implementation file list
+// / Response for getting Implementation file list
 type ImplementationFileListResponse struct {
-	/// List of implementation files
+	// / List of implementation files
 	ImplementationFilePaths []string `protobuf:"bytes,1,rep,name=implementationFilePaths,proto3" json:"implementationFilePaths,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
 	XXX_unrecognized        []byte   `json:"-"`
@@ -2346,11 +2346,11 @@ func (m *ImplementationFileListResponse) GetImplementationFilePaths() []string {
 	return nil
 }
 
-/// Request for injecting code snippet into implementation file
+// / Request for injecting code snippet into implementation file
 type StubImplementationCodeRequest struct {
-	/// Path of the file where the new stub implementation will be added
+	// / Path of the file where the new stub implementation will be added
 	ImplementationFilePath string `protobuf:"bytes,1,opt,name=implementationFilePath,proto3" json:"implementationFilePath,omitempty"`
-	/// List of implementation codes to be appended to implementation file.
+	// / List of implementation codes to be appended to implementation file.
 	Codes                []string `protobuf:"bytes,2,rep,name=codes,proto3" json:"codes,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2396,11 +2396,11 @@ func (m *StubImplementationCodeRequest) GetCodes() []string {
 	return nil
 }
 
-/// A Single Replace Diff Element to be applied
+// / A Single Replace Diff Element to be applied
 type TextDiff struct {
-	/// Range of file to be replaced
+	// / Range of file to be replaced
 	Span *Span `protobuf:"bytes,1,opt,name=span,proto3" json:"span,omitempty"`
-	/// New content to replace the content in the span
+	// / New content to replace the content in the span
 	Content              string   `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2446,11 +2446,11 @@ func (m *TextDiff) GetContent() string {
 	return ""
 }
 
-/// Diffs to be applied to a file
+// / Diffs to be applied to a file
 type FileDiff struct {
-	/// File Path where the new content needs to be put in
+	// / File Path where the new content needs to be put in
 	FilePath string `protobuf:"bytes,1,opt,name=filePath,proto3" json:"filePath,omitempty"`
-	/// The diffs which need to be applied to this file
+	// / The diffs which need to be applied to this file
 	TextDiffs            []*TextDiff `protobuf:"bytes,2,rep,name=textDiffs,proto3" json:"textDiffs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
@@ -2496,9 +2496,9 @@ func (m *FileDiff) GetTextDiffs() []*TextDiff {
 	return nil
 }
 
-/// Tell gauge to reset the kill timer, thus extending the life
+// / Tell gauge to reset the kill timer, thus extending the life
 type KeepAlive struct {
-	/// ID of the plugin initiating this request
+	// / ID of the plugin initiating this request
 	PluginId             string   `protobuf:"bytes,1,opt,name=pluginId,proto3" json:"pluginId,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2538,7 +2538,7 @@ func (m *KeepAlive) GetPluginId() string {
 }
 
 type SpecDetails struct {
-	/// Holds a collection of Spec details.
+	// / Holds a collection of Spec details.
 	Details              []*SpecDetails_SpecDetail `protobuf:"bytes,1,rep,name=details,proto3" json:"details,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
 	XXX_unrecognized     []byte                    `json:"-"`
@@ -2578,9 +2578,9 @@ func (m *SpecDetails) GetDetails() []*SpecDetails_SpecDetail {
 }
 
 type SpecDetails_SpecDetail struct {
-	/// Holds a collection of Specs that are defined in the project.
+	// / Holds a collection of Specs that are defined in the project.
 	Spec *ProtoSpec `protobuf:"bytes,1,opt,name=spec,proto3" json:"spec,omitempty"`
-	/// Holds a collection of parse errors present in the above spec.
+	// / Holds a collection of parse errors present in the above spec.
 	ParseErrors          []*Error `protobuf:"bytes,2,rep,name=parseErrors,proto3" json:"parseErrors,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2658,83 +2658,83 @@ func (m *Empty) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Empty proto.InternalMessageInfo
 
-/// This is the message which gets transferred all the time
-/// with proper message type set
-/// One of the Request/Response fields will have value, depending on the MessageType set.
+// / This is the message which gets transferred all the time
+// / with proper message type set
+// / One of the Request/Response fields will have value, depending on the MessageType set.
 type Message struct {
 	MessageType Message_MessageType `protobuf:"varint,1,opt,name=messageType,proto3,enum=gauge.messages.Message_MessageType" json:"messageType,omitempty"`
-	/// A unique id to represent this message. A response to the message should copy over this value.
-	/// This is used to synchronize messages & responses
+	// / A unique id to represent this message. A response to the message should copy over this value.
+	// / This is used to synchronize messages & responses
 	MessageId int64 `protobuf:"varint,2,opt,name=messageId,proto3" json:"messageId,omitempty"`
-	/// [ExecutionStartingRequest](#gauge.messages.ExecutionStartingRequest)
+	// / [ExecutionStartingRequest](#gauge.messages.ExecutionStartingRequest)
 	ExecutionStartingRequest *ExecutionStartingRequest `protobuf:"bytes,3,opt,name=executionStartingRequest,proto3" json:"executionStartingRequest,omitempty"`
-	/// [SpecExecutionStartingRequest](#gauge.messages.SpecExecutionStartingRequest)
+	// / [SpecExecutionStartingRequest](#gauge.messages.SpecExecutionStartingRequest)
 	SpecExecutionStartingRequest *SpecExecutionStartingRequest `protobuf:"bytes,4,opt,name=specExecutionStartingRequest,proto3" json:"specExecutionStartingRequest,omitempty"`
-	/// [SpecExecutionEndingRequest](#gauge.messages.SpecExecutionEndingRequest)
+	// / [SpecExecutionEndingRequest](#gauge.messages.SpecExecutionEndingRequest)
 	SpecExecutionEndingRequest *SpecExecutionEndingRequest `protobuf:"bytes,5,opt,name=specExecutionEndingRequest,proto3" json:"specExecutionEndingRequest,omitempty"`
-	/// [ScenarioExecutionStartingRequest](#gauge.messages.ScenarioExecutionStartingRequest)
+	// / [ScenarioExecutionStartingRequest](#gauge.messages.ScenarioExecutionStartingRequest)
 	ScenarioExecutionStartingRequest *ScenarioExecutionStartingRequest `protobuf:"bytes,6,opt,name=scenarioExecutionStartingRequest,proto3" json:"scenarioExecutionStartingRequest,omitempty"`
-	/// [ScenarioExecutionEndingRequest](#gauge.messages.ScenarioExecutionEndingRequest)
+	// / [ScenarioExecutionEndingRequest](#gauge.messages.ScenarioExecutionEndingRequest)
 	ScenarioExecutionEndingRequest *ScenarioExecutionEndingRequest `protobuf:"bytes,7,opt,name=scenarioExecutionEndingRequest,proto3" json:"scenarioExecutionEndingRequest,omitempty"`
-	/// [StepExecutionStartingRequest](#gauge.messages.StepExecutionStartingRequest)
+	// / [StepExecutionStartingRequest](#gauge.messages.StepExecutionStartingRequest)
 	StepExecutionStartingRequest *StepExecutionStartingRequest `protobuf:"bytes,8,opt,name=stepExecutionStartingRequest,proto3" json:"stepExecutionStartingRequest,omitempty"`
-	/// [StepExecutionEndingRequest](#gauge.messages.StepExecutionEndingRequest)
+	// / [StepExecutionEndingRequest](#gauge.messages.StepExecutionEndingRequest)
 	StepExecutionEndingRequest *StepExecutionEndingRequest `protobuf:"bytes,9,opt,name=stepExecutionEndingRequest,proto3" json:"stepExecutionEndingRequest,omitempty"`
-	/// [ExecuteStepRequest](#gauge.messages.ExecuteStepRequest)
+	// / [ExecuteStepRequest](#gauge.messages.ExecuteStepRequest)
 	ExecuteStepRequest *ExecuteStepRequest `protobuf:"bytes,10,opt,name=executeStepRequest,proto3" json:"executeStepRequest,omitempty"`
-	/// [ExecutionEndingRequest](#gauge.messages.ExecutionEndingRequest)
+	// / [ExecutionEndingRequest](#gauge.messages.ExecutionEndingRequest)
 	ExecutionEndingRequest *ExecutionEndingRequest `protobuf:"bytes,11,opt,name=executionEndingRequest,proto3" json:"executionEndingRequest,omitempty"`
-	/// [StepValidateRequest](#gauge.messages.StepValidateRequest)
+	// / [StepValidateRequest](#gauge.messages.StepValidateRequest)
 	StepValidateRequest *StepValidateRequest `protobuf:"bytes,12,opt,name=stepValidateRequest,proto3" json:"stepValidateRequest,omitempty"`
-	/// [StepValidateResponse](#gauge.messages.StepValidateResponse)
+	// / [StepValidateResponse](#gauge.messages.StepValidateResponse)
 	StepValidateResponse *StepValidateResponse `protobuf:"bytes,13,opt,name=stepValidateResponse,proto3" json:"stepValidateResponse,omitempty"`
-	/// [ExecutionStatusResponse](#gauge.messages.ExecutionStatusResponse)
+	// / [ExecutionStatusResponse](#gauge.messages.ExecutionStatusResponse)
 	ExecutionStatusResponse *ExecutionStatusResponse `protobuf:"bytes,14,opt,name=executionStatusResponse,proto3" json:"executionStatusResponse,omitempty"`
-	/// [StepNamesRequest](#gauge.messages.StepNamesRequest)
+	// / [StepNamesRequest](#gauge.messages.StepNamesRequest)
 	StepNamesRequest *StepNamesRequest `protobuf:"bytes,15,opt,name=stepNamesRequest,proto3" json:"stepNamesRequest,omitempty"`
-	/// [StepNamesResponse](#gauge.messages.StepNamesResponse)
+	// / [StepNamesResponse](#gauge.messages.StepNamesResponse)
 	StepNamesResponse *StepNamesResponse `protobuf:"bytes,16,opt,name=stepNamesResponse,proto3" json:"stepNamesResponse,omitempty"`
-	/// [SuiteExecutionResult ](#gauge.messages.SuiteExecutionResult )
+	// / [SuiteExecutionResult ](#gauge.messages.SuiteExecutionResult )
 	SuiteExecutionResult *SuiteExecutionResult `protobuf:"bytes,17,opt,name=suiteExecutionResult,proto3" json:"suiteExecutionResult,omitempty"`
-	/// [KillProcessRequest](#gauge.messages.KillProcessRequest)
+	// / [KillProcessRequest](#gauge.messages.KillProcessRequest)
 	KillProcessRequest *KillProcessRequest `protobuf:"bytes,18,opt,name=killProcessRequest,proto3" json:"killProcessRequest,omitempty"`
-	/// [ScenarioDataStoreInitRequest](#gauge.messages.ScenarioDataStoreInitRequest)
+	// / [ScenarioDataStoreInitRequest](#gauge.messages.ScenarioDataStoreInitRequest)
 	ScenarioDataStoreInitRequest *ScenarioDataStoreInitRequest `protobuf:"bytes,19,opt,name=scenarioDataStoreInitRequest,proto3" json:"scenarioDataStoreInitRequest,omitempty"`
-	/// [SpecDataStoreInitRequest](#gauge.messages.SpecDataStoreInitRequest)
+	// / [SpecDataStoreInitRequest](#gauge.messages.SpecDataStoreInitRequest)
 	SpecDataStoreInitRequest *SpecDataStoreInitRequest `protobuf:"bytes,20,opt,name=specDataStoreInitRequest,proto3" json:"specDataStoreInitRequest,omitempty"`
-	/// [SuiteDataStoreInitRequest](#gauge.messages.SuiteDataStoreInitRequest)
+	// / [SuiteDataStoreInitRequest](#gauge.messages.SuiteDataStoreInitRequest)
 	SuiteDataStoreInitRequest *SuiteDataStoreInitRequest `protobuf:"bytes,21,opt,name=suiteDataStoreInitRequest,proto3" json:"suiteDataStoreInitRequest,omitempty"`
-	/// [StepNameRequest](#gauge.messages.StepNameRequest)
+	// / [StepNameRequest](#gauge.messages.StepNameRequest)
 	StepNameRequest *StepNameRequest `protobuf:"bytes,22,opt,name=stepNameRequest,proto3" json:"stepNameRequest,omitempty"`
-	/// [StepNameResponse](#gauge.messages.StepNameResponse)
+	// / [StepNameResponse](#gauge.messages.StepNameResponse)
 	StepNameResponse *StepNameResponse `protobuf:"bytes,23,opt,name=stepNameResponse,proto3" json:"stepNameResponse,omitempty"`
-	/// [RefactorRequest](#gauge.messages.RefactorRequest)
+	// / [RefactorRequest](#gauge.messages.RefactorRequest)
 	RefactorRequest *RefactorRequest `protobuf:"bytes,24,opt,name=refactorRequest,proto3" json:"refactorRequest,omitempty"`
-	/// [RefactorResponse](#gauge.messages.RefactorResponse)
+	// / [RefactorResponse](#gauge.messages.RefactorResponse)
 	RefactorResponse *RefactorResponse `protobuf:"bytes,25,opt,name=refactorResponse,proto3" json:"refactorResponse,omitempty"`
-	/// [UnsupportedMessageResponse](#gauge.messages.UnsupportedMessageResponse)
+	// / [UnsupportedMessageResponse](#gauge.messages.UnsupportedMessageResponse)
 	UnsupportedMessageResponse *UnsupportedMessageResponse `protobuf:"bytes,26,opt,name=unsupportedMessageResponse,proto3" json:"unsupportedMessageResponse,omitempty"`
-	/// [CacheFileRequest](#gauge.messages.CacheFileRequest)
+	// / [CacheFileRequest](#gauge.messages.CacheFileRequest)
 	CacheFileRequest *CacheFileRequest `protobuf:"bytes,27,opt,name=cacheFileRequest,proto3" json:"cacheFileRequest,omitempty"`
-	/// [StepPositionsRequest](#gauge.messages.StepPositionsRequest)
+	// / [StepPositionsRequest](#gauge.messages.StepPositionsRequest)
 	StepPositionsRequest *StepPositionsRequest `protobuf:"bytes,28,opt,name=stepPositionsRequest,proto3" json:"stepPositionsRequest,omitempty"`
-	/// [StepPositionsResponse](#gauge.messages.StepPositionsResponse)
+	// / [StepPositionsResponse](#gauge.messages.StepPositionsResponse)
 	StepPositionsResponse *StepPositionsResponse `protobuf:"bytes,29,opt,name=stepPositionsResponse,proto3" json:"stepPositionsResponse,omitempty"`
-	/// [ImplementationFileListRequest](#gauge.messages.ImplementationFileListRequest)
+	// / [ImplementationFileListRequest](#gauge.messages.ImplementationFileListRequest)
 	ImplementationFileListRequest *ImplementationFileListRequest `protobuf:"bytes,30,opt,name=implementationFileListRequest,proto3" json:"implementationFileListRequest,omitempty"`
-	/// [ImplementationFileListResponse](#gauge.messages.ImplementationFileListResponse)
+	// / [ImplementationFileListResponse](#gauge.messages.ImplementationFileListResponse)
 	ImplementationFileListResponse *ImplementationFileListResponse `protobuf:"bytes,31,opt,name=implementationFileListResponse,proto3" json:"implementationFileListResponse,omitempty"`
-	/// [StubImplementationCodeRequest](#gauge.messages.StubImplementationCodeRequest)
+	// / [StubImplementationCodeRequest](#gauge.messages.StubImplementationCodeRequest)
 	StubImplementationCodeRequest *StubImplementationCodeRequest `protobuf:"bytes,32,opt,name=stubImplementationCodeRequest,proto3" json:"stubImplementationCodeRequest,omitempty"`
-	/// [FileDiff](#gauge.messages.FileDiff)
+	// / [FileDiff](#gauge.messages.FileDiff)
 	FileDiff *FileDiff `protobuf:"bytes,33,opt,name=fileDiff,proto3" json:"fileDiff,omitempty"`
-	/// [ImplementationFileGlobPatternRequest](#gauge.messages.ImplementationFileGlobPatternRequest)
+	// / [ImplementationFileGlobPatternRequest](#gauge.messages.ImplementationFileGlobPatternRequest)
 	ImplementationFileGlobPatternRequest *ImplementationFileGlobPatternRequest `protobuf:"bytes,34,opt,name=implementationFileGlobPatternRequest,proto3" json:"implementationFileGlobPatternRequest,omitempty"`
-	/// [ImplementationFileGlobPatternResponse](#gauge.messages.ImplementationFileGlobPatternResponse)
+	// / [ImplementationFileGlobPatternResponse](#gauge.messages.ImplementationFileGlobPatternResponse)
 	ImplementationFileGlobPatternResponse *ImplementationFileGlobPatternResponse `protobuf:"bytes,35,opt,name=implementationFileGlobPatternResponse,proto3" json:"implementationFileGlobPatternResponse,omitempty"`
-	/// [SuiteExecutionResult ](#gauge.messages.SuiteExecutionResult )
+	// / [SuiteExecutionResult ](#gauge.messages.SuiteExecutionResult )
 	SuiteExecutionResultItem *SuiteExecutionResultItem `protobuf:"bytes,36,opt,name=suiteExecutionResultItem,proto3" json:"suiteExecutionResultItem,omitempty"`
-	/// [KeepAlive ](#gauge.messages.KeepAlive )
+	// / [KeepAlive ](#gauge.messages.KeepAlive )
 	KeepAlive            *KeepAlive `protobuf:"bytes,37,opt,name=keepAlive,proto3" json:"keepAlive,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`

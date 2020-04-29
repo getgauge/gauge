@@ -2,7 +2,7 @@ Name:           gauge
 Version:        <version>
 Release:        <release>
 Summary:        Cross-platform test automation
-License:        GPLv3
+License:        Apache-2.0
 URL:            https://gauge.org/
 Prefix:         /usr/local
 

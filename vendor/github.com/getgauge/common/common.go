@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of getgauge/common.
-
-// getgauge/common is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// getgauge/common is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with getgauge/common.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 // Package common functions shared across all files
 package common
@@ -36,7 +25,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dmotylev/goproperties"
+	properties "github.com/dmotylev/goproperties"
 )
 
 const (
@@ -329,13 +318,19 @@ func IsPluginInstalled(name, version string) bool {
 	return DirExists(filepath.Join(pluginsDir, name, version))
 }
 
-// GetGaugeConfiguration parsed the gauge.properties file and other config files from GAUGE_HOME and returns the contents
+// GetGaugeConfiguration parsed the gauge.properties file from GAUGE_HOME and returns the contents
 func GetGaugeConfiguration() (properties.Properties, error) {
+	fmt.Println("[DEPRECATED]: Please use GetGaugeConfigurationFor(propertiesFileName)")
+	return GetGaugeConfigurationFor(GaugePropertiesFile)
+}
+
+// GetGaugeConfiguration parsed the given properties file from GAUGE_HOME and returns the contents
+func GetGaugeConfigurationFor(propertiesFileName string) (properties.Properties, error) {
 	configDir, err := GetConfigurationDir()
 	if err != nil {
 		return nil, err
 	}
-	propertiesFile := filepath.Join(configDir, GaugePropertiesFile)
+	propertiesFile := filepath.Join(configDir, propertiesFileName)
 	config, err := properties.Load(propertiesFile)
 	if err != nil {
 		return nil, err

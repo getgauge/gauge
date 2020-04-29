@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 package skel
 
@@ -84,7 +73,7 @@ var Notice = `
 | Dependency Name | Copyright Information | Description |	Repo URL | License Type	| License URL |	Forked from |
 |-----------------|-----------------------|-------------|----------|--------------|-------------|-------------|
 |Goproperties|Copyright (c) 2012 The Goproperties Authors.|Simple library for reading .properties (java properties) files for Go	|github.com/dmotylev/goproperties	|BSD Styled|	https://raw.githubusercontent.com/dmotylev/goproperties/master/LICENSE|
-|Gauge Common|	Copyright 2015 ThoughtWorks, Inc|	|	github.com/getgauge/common|	GPLv3	|||
+|Gauge Common|	Copyright 2015 ThoughtWorks, Inc|	|	github.com/getgauge/common|	Apache2.0	|||
 |terminal|	Copyright (c) 2013 Meng Zhang	|Colorful terminal output for Golang|github.com/wsxiaoys/terminal	|BSD Styled|https://raw.githubusercontent.com/wsxiaoys/terminal/master/LICENSE||
 |gocheck| Copyright (c) 2010-2013 Gustavo Niemeyer <gustavo@niemeyer.net>	|Rich testing for the Go language	|gopkg.in/check.v1	|Simplified BSD	|https://raw.githubusercontent.com/go-check/check/v1/LICENSE||
 |protobuf	|Copyright 2010 The Go Authors.	|Go support for Google's protocol buffers	|https://github.com/golang/protobuf	|BSD Styled	|https://raw.githubusercontent.com/golang/protobuf/master/LICENSE|
@@ -98,7 +87,7 @@ var Notice = `
 |go.uuid|Copyright (C) 2013-2016 by Maxim Bublis <b@codemonkey.ru>|UUID package for Go|github.com/satori/go.uuid|MIT|https://github.com/satori/go.uuid/blob/master/LICENSE||
 |go-langserver|Copyright (c) 2016 Sourcegraph|Go language server to add Go support to editors and other tools that use the Language Server Protocol (LSP)|github.com/sourcegraph/go-langserver|MIT|https://github.com/sourcegraph/go-langserver/blob/master/LICENSE||
 |jsonrpc2|Copyright (c) 2016 Sourcegraph Inc|Package jsonrpc2 provides a client and server implementation of JSON-RPC 2.0|github.com/sourcegraph/jsonrpc2|MIT|https://github.com/sourcegraph/jsonrpc2/blob/master/LICENSE||
-|cobra|Copyright © 2015 Steve Francia <spf@spf13.com>.|A Commander for modern Go CLI interactions|github.com/spf13/cobra|Apache 2.0|https://github.com/spf13/cobra/blob/master/LICENSE.txt||
+|cobra|Copyright © 2015 Steve Francia <spf@spf13.com>.|A Commander for modern Go CLI interactions|github.com/spf13/cobra|Apache 2.0|https://github.com/spf13/cobra/blob/master/LICENSE||
 |pflag|Copyright (c) 2012 Alex Ogier. All rights reserved.Copyright (c) 2012 The Go Authors. All rights reserved.|Drop-in replacement for Go's flag package, implementing POSIX/GNU-style --flags.|github.com/spf13/pflag|BSD 3-clause|https://github.com/spf13/pflag/blob/master/LICENSE|https://github.com/ogier/pflag|
 `
 
