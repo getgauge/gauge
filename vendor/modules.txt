@@ -8,7 +8,7 @@ github.com/daviddengcn/go-colortext
 github.com/dmotylev/goproperties
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/getgauge/common v0.0.0-20180424115244-657067401e5f
+# github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6
 github.com/getgauge/common
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
@@ -46,6 +46,7 @@ github.com/spf13/cobra/doc
 # github.com/spf13/pflag v1.0.5
 github.com/spf13/pflag
 # golang.org/x/net v0.0.0-20191014212845-da9a3fd4c582
+golang.org/x/net/context
 golang.org/x/net/http/httpguts
 golang.org/x/net/http2
 golang.org/x/net/http2/hpack

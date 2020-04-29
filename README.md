@@ -62,8 +62,7 @@ Copy the text below and add it to the README.md of your project using Gauge, and
 
 ## License
 
-![GNU Public License version 3.0](http://www.gnu.org/graphics/gplv3-127x51.png)
-Gauge is released under [GNU Public License version 3.0](http://www.gnu.org/licenses/gpl-3.0.txt)
+Gauge is released under the Apache License, Version 2.0. See [LICENSE](LICENSE) for the full license text.
 
 ## Copyright
 

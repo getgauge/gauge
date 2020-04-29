@@ -41,7 +41,7 @@
 ; Welcome page
 !insertmacro MUI_PAGE_WELCOME
 ; License page
-!insertmacro MUI_PAGE_LICENSE "gpl.txt"
+!insertmacro MUI_PAGE_LICENSE "license.txt"
 ; Plugin options page
 !insertmacro MUI_PAGE_COMPONENTS
 ; Directory page

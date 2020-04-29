@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 package reporter
 
@@ -276,7 +265,7 @@ func (s *MySuite) TestScenarioEndWithBeforeStepHookFailure_JSONConsole(c *C) {
 		ScenarioHeading: "Scenario",
 		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
-			&gauge_messages.ProtoItem{
+			{
 				ItemType: gauge_messages.ProtoItem_Step,
 				Step: &gauge_messages.ProtoStep{
 					ActualText: "Step",
@@ -343,7 +332,7 @@ func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 		ScenarioHeading: "Scenario",
 		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
-			&gauge_messages.ProtoItem{
+			{
 				ItemType: gauge_messages.ProtoItem_Step,
 				Step:     protoStep,
 			},
@@ -422,7 +411,7 @@ func (s *MySuite) TestScenarioEndWithConceptFailure_JSONConsole(c *C) {
 		ScenarioHeading: "Scenario",
 		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
-			&gauge_messages.ProtoItem{
+			{
 				ItemType: gauge_messages.ProtoItem_Step,
 				Step:     protoStep,
 			},
@@ -499,7 +488,7 @@ func (s *MySuite) TestScenarioEndWithAfterStepHookFailure_JSONConsole(c *C) {
 		ScenarioHeading: "Scenario",
 		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
-			&gauge_messages.ProtoItem{
+			{
 				ItemType: gauge_messages.ProtoItem_Step,
 				Step: &gauge_messages.ProtoStep{
 					ActualText: "Step",
