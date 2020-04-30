@@ -99,7 +99,7 @@ func Properties() *properties {
 
 func MergedProperties() (*properties, error) {
 	p := Properties()
-	config, err := common.GetGaugeConfiguration()
+	config, err := common.GetGaugeConfigurationFor(common.GaugePropertiesFile)
 	if err != nil {
 		// if unable to get from gauge.properties, just return defaults.
 		return p, nil

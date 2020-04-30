@@ -135,7 +135,7 @@ func convertToBool(value string, property string, defaultValue bool) bool {
 }
 
 var getFromConfig = func(propertyName string) string {
-	config, err := common.GetGaugeConfiguration()
+	config, err := common.GetGaugeConfigurationFor(common.GaugePropertiesFile)
 	if err != nil {
 		APILog.Warningf("Failed to get configuration from Gauge properties file. Error: %s", err.Error())
 		return ""

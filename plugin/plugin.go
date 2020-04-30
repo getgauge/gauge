@@ -342,7 +342,7 @@ func startPluginsForExecution(m *manifest.Manifest) (Handler, []string) {
 				continue
 			}
 			envProperties[pluginConnectionPortEnv] = strconv.Itoa(gaugeConnectionHandler.ConnectionPortNumber())
-			prop, err := common.GetGaugeConfiguration()
+			prop, err := common.GetGaugeConfigurationFor(common.GaugePropertiesFile)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Unable to read Gauge configuration. %s", err.Error()))
 				continue
