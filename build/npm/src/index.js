@@ -4,16 +4,16 @@
 
 const install = require("./install"),
     path = require("path"),
-    request = require('request'),
     unzip = require('unzipper'),
     fs = require('fs'),
+    request = require('superagent'),
     packageJsonPath = path.join(__dirname, "..", "package.json"),
     binPath = "./bin";
 
 
-var downloadAndExtract = async function(version) {
+var downloadAndExtract = function(version) {
     console.log(`Fetching download url for Gauge version ${version}`);
-    let url = await install.getBinaryUrl(version);
+    let url = install.getBinaryUrl(version);
     let gaugeExecutable = process.platform === "win32" ? "gauge.exe" : "gauge"
     console.log(`Downloading ${url} to ${binPath}`);
     return unzip.Open.url(request, url).then((d) => {
