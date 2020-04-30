@@ -1,7 +1,5 @@
 // +build !windows
 
-// Copyright 2019 ThoughtWorks, Inc.
-
 /*----------------------------------------------------------------
  *  Copyright (c) ThoughtWorks, Inc.
  *  Licensed under the Apache License, Version 2.0
