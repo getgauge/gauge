@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 package execution
 
@@ -119,9 +108,9 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_ExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
@@ -203,8 +192,8 @@ func TestExecuteSpecsShouldAddsBeforeSpecHookFailureScreenshotBytes(t *testing.T
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				Failed:                true,
-				ExecutionTime:         10,
+				Failed:            true,
+				ExecutionTime:     10,
 				FailureScreenshot: []byte("before spec hook failure screenshot byte"),
 			}
 		}
@@ -230,8 +219,8 @@ func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotBytes(t *testing.T)
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				Failed:                true,
-				ExecutionTime:         10,
+				Failed:            true,
+				ExecutionTime:     10,
 				FailureScreenshot: []byte("after spec hook failure screenshot bytes"),
 			}
 		}
@@ -250,9 +239,6 @@ func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotBytes(t *testing.T)
 		t.Errorf("Expected `%s` screenshot, got : %s", expectedScreenshotBytes, actualScreenshotBytes)
 	}
 }
-
-
-
 
 func createSpecCollection() *gauge.SpecCollection {
 	var specs []*gauge.Specification

@@ -18,9 +18,9 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
-/// Execution Status
+// / Execution Status
 type ExecutionStatus int32
 
 const (
@@ -52,7 +52,7 @@ func (ExecutionStatus) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_423806180556987f, []int{0}
 }
 
-/// Enumerates various item types that the proto item can contain. Valid types are: Step, Comment, Concept, Scenario, TableDrivenScenario, Table, Tags
+// / Enumerates various item types that the proto item can contain. Valid types are: Step, Comment, Concept, Scenario, TableDrivenScenario, Table, Tags
 type ProtoItem_ItemType int32
 
 const (
@@ -93,7 +93,7 @@ func (ProtoItem_ItemType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_423806180556987f, []int{1, 0}
 }
 
-/// Enum representing the types of Fragment
+// / Enum representing the types of Fragment
 type Fragment_FragmentType int32
 
 const (
@@ -119,7 +119,7 @@ func (Fragment_FragmentType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_423806180556987f, []int{8, 0}
 }
 
-/// Enum representing types of Parameter.
+// / Enum representing types of Parameter.
 type Parameter_ParameterType int32
 
 const (
@@ -204,41 +204,41 @@ func (Error_ErrorType) EnumDescriptor() ([]byte, []int) {
 	return fileDescriptor_423806180556987f, []int{20, 0}
 }
 
-/// A proto object representing a Specification
-/// A specification can contain Scenarios or Steps, besides Comments
+// / A proto object representing a Specification
+// / A specification can contain Scenarios or Steps, besides Comments
 type ProtoSpec struct {
-	/// Heading describing the Specification
+	// / Heading describing the Specification
 	SpecHeading string `protobuf:"bytes,1,opt,name=specHeading,proto3" json:"specHeading,omitempty"`
-	/// A collection of items that come under this step
+	// / A collection of items that come under this step
 	Items []*ProtoItem `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
-	/// Flag indicating if this is a Table Driven Specification. The table is defined in the context, this is different from using a table parameter.
+	// / Flag indicating if this is a Table Driven Specification. The table is defined in the context, this is different from using a table parameter.
 	IsTableDriven bool `protobuf:"varint,3,opt,name=isTableDriven,proto3" json:"isTableDriven,omitempty"`
-	/// Contains a 'before' hook failure message. This happens when the `before_spec` hook has an error.
+	// / Contains a 'before' hook failure message. This happens when the `before_spec` hook has an error.
 	PreHookFailures []*ProtoHookFailure `protobuf:"bytes,4,rep,name=preHookFailures,proto3" json:"preHookFailures,omitempty"`
-	/// Contains a 'before' hook failure message. This happens when the `after_hook` hook has an error.
+	// / Contains a 'before' hook failure message. This happens when the `after_hook` hook has an error.
 	PostHookFailures []*ProtoHookFailure `protobuf:"bytes,5,rep,name=postHookFailures,proto3" json:"postHookFailures,omitempty"`
-	/// Contains the filename for that holds this specification.
+	// / Contains the filename for that holds this specification.
 	FileName string `protobuf:"bytes,6,opt,name=fileName,proto3" json:"fileName,omitempty"`
-	/// Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
+	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
 	Tags []string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	/// Additional information at pre hook exec time to be available on reports
+	// / Additional information at pre hook exec time to be available on reports
 	PreHookMessages []string `protobuf:"bytes,8,rep,name=preHookMessages,proto3" json:"preHookMessages,omitempty"`
-	/// Additional information at post hook exec time to be available on reports
+	// / Additional information at post hook exec time to be available on reports
 	PostHookMessages []string `protobuf:"bytes,9,rep,name=postHookMessages,proto3" json:"postHookMessages,omitempty"`
-	/// [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
 	PreHookMessage []string `protobuf:"bytes,10,rep,name=preHookMessage,proto3" json:"preHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
 	PostHookMessage []string `protobuf:"bytes,11,rep,name=postHookMessage,proto3" json:"postHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
 	PreHookScreenshots [][]byte `protobuf:"bytes,12,rep,name=preHookScreenshots,proto3" json:"preHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
 	PostHookScreenshots [][]byte `protobuf:"bytes,13,rep,name=postHookScreenshots,proto3" json:"postHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// meta field to indicate the number of items in the list
-	/// used when items are sent as individual chunk
+	// / meta field to indicate the number of items in the list
+	// / used when items are sent as individual chunk
 	ItemCount int64 `protobuf:"varint,14,opt,name=itemCount,proto3" json:"itemCount,omitempty"`
-	/// Screenshots captured on pre hook exec time to be available on reports
+	// / Screenshots captured on pre hook exec time to be available on reports
 	PreHookScreenshotFiles []string `protobuf:"bytes,15,rep,name=preHookScreenshotFiles,proto3" json:"preHookScreenshotFiles,omitempty"`
-	/// Screenshots captured on post hook exec time to be available on reports
+	// / Screenshots captured on post hook exec time to be available on reports
 	PostHookScreenshotFiles []string `protobuf:"bytes,16,rep,name=postHookScreenshotFiles,proto3" json:"postHookScreenshotFiles,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
 	XXX_unrecognized        []byte   `json:"-"`
@@ -386,25 +386,25 @@ func (m *ProtoSpec) GetPostHookScreenshotFiles() []string {
 	return nil
 }
 
-/// Container for all valid Items under a Specification.
+// / Container for all valid Items under a Specification.
 type ProtoItem struct {
-	/// Itemtype of the current ProtoItem
+	// / Itemtype of the current ProtoItem
 	ItemType ProtoItem_ItemType `protobuf:"varint,1,opt,name=itemType,proto3,enum=gauge.messages.ProtoItem_ItemType" json:"itemType,omitempty"`
-	/// Holds the Step definition. Valid only if ItemType = Step
+	// / Holds the Step definition. Valid only if ItemType = Step
 	Step *ProtoStep `protobuf:"bytes,2,opt,name=step,proto3" json:"step,omitempty"`
-	/// Holds the Concept definition. Valid only if ItemType = Concept
+	// / Holds the Concept definition. Valid only if ItemType = Concept
 	Concept *ProtoConcept `protobuf:"bytes,3,opt,name=concept,proto3" json:"concept,omitempty"`
-	/// Holds the Scenario definition. Valid only if ItemType = Scenario
+	// / Holds the Scenario definition. Valid only if ItemType = Scenario
 	Scenario *ProtoScenario `protobuf:"bytes,4,opt,name=scenario,proto3" json:"scenario,omitempty"`
-	/// Holds the TableDrivenScenario definition. Valid only if ItemType = TableDrivenScenario
+	// / Holds the TableDrivenScenario definition. Valid only if ItemType = TableDrivenScenario
 	TableDrivenScenario *ProtoTableDrivenScenario `protobuf:"bytes,5,opt,name=tableDrivenScenario,proto3" json:"tableDrivenScenario,omitempty"`
-	/// Holds the Comment definition. Valid only if ItemType = Comment
+	// / Holds the Comment definition. Valid only if ItemType = Comment
 	Comment *ProtoComment `protobuf:"bytes,6,opt,name=comment,proto3" json:"comment,omitempty"`
-	/// Holds the Table definition. Valid only if ItemType = Table
+	// / Holds the Table definition. Valid only if ItemType = Table
 	Table *ProtoTable `protobuf:"bytes,7,opt,name=table,proto3" json:"table,omitempty"`
-	/// Holds the Tags definition. Valid only if ItemType = Tags
+	// / Holds the Tags definition. Valid only if ItemType = Tags
 	Tags *ProtoTags `protobuf:"bytes,8,opt,name=tags,proto3" json:"tags,omitempty"`
-	/// Holds the Filename that the item belongs to
+	// / Holds the Filename that the item belongs to
 	FileName             string   `protobuf:"bytes,9,opt,name=fileName,proto3" json:"fileName,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -499,53 +499,53 @@ func (m *ProtoItem) GetFileName() string {
 	return ""
 }
 
-/// A proto object representing a Scenario
+// / A proto object representing a Scenario
 type ProtoScenario struct {
-	/// Heading of the given Scenario
+	// / Heading of the given Scenario
 	ScenarioHeading string `protobuf:"bytes,1,opt,name=scenarioHeading,proto3" json:"scenarioHeading,omitempty"`
-	/// Flag to indicate if the Scenario execution failed
+	// / Flag to indicate if the Scenario execution failed
 	Failed bool `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"` // Deprecated: Do not use.
-	/// Collection of Context steps. The Context steps are executed before every run.
+	// / Collection of Context steps. The Context steps are executed before every run.
 	Contexts []*ProtoItem `protobuf:"bytes,3,rep,name=contexts,proto3" json:"contexts,omitempty"`
-	/// Collection of Items under a scenario. These could be Steps, Comments, Tags, TableDrivenScenarios or Tables
+	// / Collection of Items under a scenario. These could be Steps, Comments, Tags, TableDrivenScenarios or Tables
 	ScenarioItems []*ProtoItem `protobuf:"bytes,4,rep,name=scenarioItems,proto3" json:"scenarioItems,omitempty"`
-	/// Contains a 'before' hook failure message. This happens when the `before_scenario` hook has an error.
+	// / Contains a 'before' hook failure message. This happens when the `before_scenario` hook has an error.
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,5,opt,name=preHookFailure,proto3" json:"preHookFailure,omitempty"`
-	/// Contains a 'after' hook failure message. This happens when the `after_scenario` hook has an error.
+	// / Contains a 'after' hook failure message. This happens when the `after_scenario` hook has an error.
 	PostHookFailure *ProtoHookFailure `protobuf:"bytes,6,opt,name=postHookFailure,proto3" json:"postHookFailure,omitempty"`
-	/// Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
+	// / Contains a list of tags that are defined at the specification level. Scenario tags are not present here.
 	Tags []string `protobuf:"bytes,7,rep,name=tags,proto3" json:"tags,omitempty"`
-	/// Holds the time taken for executing this scenario.
+	// / Holds the time taken for executing this scenario.
 	ExecutionTime int64 `protobuf:"varint,8,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Flag to indicate if the Scenario execution is skipped
+	// / Flag to indicate if the Scenario execution is skipped
 	Skipped bool `protobuf:"varint,9,opt,name=skipped,proto3" json:"skipped,omitempty"` // Deprecated: Do not use.
-	/// Holds the error messages for skipping scenario from execution
+	// / Holds the error messages for skipping scenario from execution
 	SkipErrors []string `protobuf:"bytes,10,rep,name=skipErrors,proto3" json:"skipErrors,omitempty"`
-	/// Holds the unique Identifier of a scenario.
+	// / Holds the unique Identifier of a scenario.
 	ID string `protobuf:"bytes,11,opt,name=ID,proto3" json:"ID,omitempty"`
-	/// Collection of Teardown steps. The Teardown steps are executed after every run.
+	// / Collection of Teardown steps. The Teardown steps are executed after every run.
 	TearDownSteps []*ProtoItem `protobuf:"bytes,12,rep,name=tearDownSteps,proto3" json:"tearDownSteps,omitempty"`
-	/// Span(start, end) of scenario
+	// / Span(start, end) of scenario
 	Span *Span `protobuf:"bytes,13,opt,name=span,proto3" json:"span,omitempty"`
-	/// Execution status for the scenario
+	// / Execution status for the scenario
 	ExecutionStatus ExecutionStatus `protobuf:"varint,14,opt,name=executionStatus,proto3,enum=gauge.messages.ExecutionStatus" json:"executionStatus,omitempty"`
-	/// Additional information at pre hook exec time to be available on reports
+	// / Additional information at pre hook exec time to be available on reports
 	PreHookMessages []string `protobuf:"bytes,15,rep,name=preHookMessages,proto3" json:"preHookMessages,omitempty"`
-	/// Additional information at post hook exec time to be available on reports
+	// / Additional information at post hook exec time to be available on reports
 	PostHookMessages []string `protobuf:"bytes,16,rep,name=postHookMessages,proto3" json:"postHookMessages,omitempty"`
-	/// [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
 	PreHookMessage []string `protobuf:"bytes,17,rep,name=preHookMessage,proto3" json:"preHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
 	PostHookMessage []string `protobuf:"bytes,18,rep,name=postHookMessage,proto3" json:"postHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
 	PreHookScreenshots [][]byte `protobuf:"bytes,19,rep,name=preHookScreenshots,proto3" json:"preHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
 	PostHookScreenshots [][]byte `protobuf:"bytes,20,rep,name=postHookScreenshots,proto3" json:"postHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// Screenshots captured on pre hook exec time to be available on reports
+	// / Screenshots captured on pre hook exec time to be available on reports
 	PreHookScreenshotFiles []string `protobuf:"bytes,21,rep,name=preHookScreenshotFiles,proto3" json:"preHookScreenshotFiles,omitempty"`
-	/// Screenshots captured on post hook exec time to be available on reports
+	// / Screenshots captured on post hook exec time to be available on reports
 	PostHookScreenshotFiles []string `protobuf:"bytes,22,rep,name=postHookScreenshotFiles,proto3" json:"postHookScreenshotFiles,omitempty"`
-	/// Number of retires
+	// / Number of retires
 	RetriesCount         int64    `protobuf:"varint,23,opt,name=retriesCount,proto3" json:"retriesCount,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -744,7 +744,7 @@ func (m *ProtoScenario) GetRetriesCount() int64 {
 	return 0
 }
 
-/// A proto object representing a Span of content
+// / A proto object representing a Span of content
 type Span struct {
 	Start                int64    `protobuf:"varint,1,opt,name=start,proto3" json:"start,omitempty"`
 	End                  int64    `protobuf:"varint,2,opt,name=end,proto3" json:"end,omitempty"`
@@ -808,21 +808,21 @@ func (m *Span) GetEndChar() int64 {
 	return 0
 }
 
-/// A proto object representing a TableDrivenScenario
+// / A proto object representing a TableDrivenScenario
 type ProtoTableDrivenScenario struct {
-	/// Scenario under Table driven execution
+	// / Scenario under Table driven execution
 	Scenario *ProtoScenario `protobuf:"bytes,1,opt,name=scenario,proto3" json:"scenario,omitempty"`
-	/// Row Index of data table against which the current scenario is executed
+	// / Row Index of data table against which the current scenario is executed
 	TableRowIndex int32 `protobuf:"varint,2,opt,name=tableRowIndex,proto3" json:"tableRowIndex,omitempty"`
-	/// Row Index of scenario data table against which the current scenario is executed
+	// / Row Index of scenario data table against which the current scenario is executed
 	ScenarioTableRowIndex int32 `protobuf:"varint,3,opt,name=scenarioTableRowIndex,proto3" json:"scenarioTableRowIndex,omitempty"`
-	/// Executed against a spec data table
+	// / Executed against a spec data table
 	IsSpecTableDriven bool `protobuf:"varint,4,opt,name=isSpecTableDriven,proto3" json:"isSpecTableDriven,omitempty"`
-	/// Executed against a scenario data table
+	// / Executed against a scenario data table
 	IsScenarioTableDriven bool `protobuf:"varint,5,opt,name=isScenarioTableDriven,proto3" json:"isScenarioTableDriven,omitempty"`
-	/// Holds the scenario data table
+	// / Holds the scenario data table
 	ScenarioDataTable *ProtoTable `protobuf:"bytes,6,opt,name=scenarioDataTable,proto3" json:"scenarioDataTable,omitempty"`
-	/// Hold the row of scenario data table.
+	// / Hold the row of scenario data table.
 	ScenarioTableRow     *ProtoTable `protobuf:"bytes,7,opt,name=scenarioTableRow,proto3" json:"scenarioTableRow,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
@@ -903,27 +903,27 @@ func (m *ProtoTableDrivenScenario) GetScenarioTableRow() *ProtoTable {
 	return nil
 }
 
-/// A proto object representing a Step
+// / A proto object representing a Step
 type ProtoStep struct {
-	/// Holds the raw text of the Step as defined in the spec file. This contains the actual parameter values.
+	// / Holds the raw text of the Step as defined in the spec file. This contains the actual parameter values.
 	ActualText string `protobuf:"bytes,1,opt,name=actualText,proto3" json:"actualText,omitempty"`
-	/// Contains the parsed text of the Step. This will have placeholders for the parameters.
+	// / Contains the parsed text of the Step. This will have placeholders for the parameters.
 	ParsedText string `protobuf:"bytes,2,opt,name=parsedText,proto3" json:"parsedText,omitempty"`
-	/// Collection of a list of fragments for a Step. A fragment could be either text or parameter.
+	// / Collection of a list of fragments for a Step. A fragment could be either text or parameter.
 	Fragments []*Fragment `protobuf:"bytes,3,rep,name=fragments,proto3" json:"fragments,omitempty"`
-	/// Holds the result from the execution.
+	// / Holds the result from the execution.
 	StepExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,4,opt,name=stepExecutionResult,proto3" json:"stepExecutionResult,omitempty"`
-	/// Additional information at pre hook exec time to be available on reports
+	// / Additional information at pre hook exec time to be available on reports
 	PreHookMessages []string `protobuf:"bytes,5,rep,name=preHookMessages,proto3" json:"preHookMessages,omitempty"`
-	/// Additional information at post hook exec time to be available on reports
+	// / Additional information at post hook exec time to be available on reports
 	PostHookMessages []string `protobuf:"bytes,6,rep,name=postHookMessages,proto3" json:"postHookMessages,omitempty"`
-	/// [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
 	PreHookScreenshots [][]byte `protobuf:"bytes,7,rep,name=preHookScreenshots,proto3" json:"preHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
 	PostHookScreenshots [][]byte `protobuf:"bytes,8,rep,name=postHookScreenshots,proto3" json:"postHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// Screenshots captured on pre hook exec time to be available on reports
+	// / Screenshots captured on pre hook exec time to be available on reports
 	PreHookScreenshotFiles []string `protobuf:"bytes,9,rep,name=preHookScreenshotFiles,proto3" json:"preHookScreenshotFiles,omitempty"`
-	/// Screenshots captured on post hook exec time to be available on reports
+	// / Screenshots captured on post hook exec time to be available on reports
 	PostHookScreenshotFiles []string `protobuf:"bytes,10,rep,name=postHookScreenshotFiles,proto3" json:"postHookScreenshotFiles,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
 	XXX_unrecognized        []byte   `json:"-"`
@@ -1027,15 +1027,15 @@ func (m *ProtoStep) GetPostHookScreenshotFiles() []string {
 	return nil
 }
 
-/// Concept is a type of step, that can have multiple Steps.
-/// But from a caller's perspective, it is still used as any other Step
-/// A proto object representing a Concept
+// / Concept is a type of step, that can have multiple Steps.
+// / But from a caller's perspective, it is still used as any other Step
+// / A proto object representing a Concept
 type ProtoConcept struct {
-	/// Represents the Step value of a Concept.
+	// / Represents the Step value of a Concept.
 	ConceptStep *ProtoStep `protobuf:"bytes,1,opt,name=conceptStep,proto3" json:"conceptStep,omitempty"`
-	/// Collection of Steps in the given concepts.
+	// / Collection of Steps in the given concepts.
 	Steps []*ProtoItem `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
-	/// Holds the execution result.
+	// / Holds the execution result.
 	ConceptExecutionResult *ProtoStepExecutionResult `protobuf:"bytes,3,opt,name=conceptExecutionResult,proto3" json:"conceptExecutionResult,omitempty"`
 	XXX_NoUnkeyedLiteral   struct{}                  `json:"-"`
 	XXX_unrecognized       []byte                    `json:"-"`
@@ -1088,9 +1088,9 @@ func (m *ProtoConcept) GetConceptExecutionResult() *ProtoStepExecutionResult {
 	return nil
 }
 
-/// A proto object representing Tags
+// / A proto object representing Tags
 type ProtoTags struct {
-	/// A collection of Tags
+	// / A collection of Tags
 	Tags                 []string `protobuf:"bytes,1,rep,name=tags,proto3" json:"tags,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1129,14 +1129,14 @@ func (m *ProtoTags) GetTags() []string {
 	return nil
 }
 
-/// A proto object representing Fragment.
-/// Fragments, put together make up A Step
+// / A proto object representing Fragment.
+// / Fragments, put together make up A Step
 type Fragment struct {
-	/// Type of Fragment, valid values are Text, Parameter
+	// / Type of Fragment, valid values are Text, Parameter
 	FragmentType Fragment_FragmentType `protobuf:"varint,1,opt,name=fragmentType,proto3,enum=gauge.messages.Fragment_FragmentType" json:"fragmentType,omitempty"`
-	/// Text part of the Fragment, valid only if FragmentType=Text
+	// / Text part of the Fragment, valid only if FragmentType=Text
 	Text string `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
-	/// Parameter part of the Fragment, valid only if FragmentType=Parameter
+	// / Parameter part of the Fragment, valid only if FragmentType=Parameter
 	Parameter            *Parameter `protobuf:"bytes,3,opt,name=parameter,proto3" json:"parameter,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
 	XXX_unrecognized     []byte     `json:"-"`
@@ -1189,15 +1189,15 @@ func (m *Fragment) GetParameter() *Parameter {
 	return nil
 }
 
-/// A proto object representing Fragment.
+// / A proto object representing Fragment.
 type Parameter struct {
-	/// Type of the Parameter. Valid values: Static, Dynamic, Special_String, Special_Table, Table
+	// / Type of the Parameter. Valid values: Static, Dynamic, Special_String, Special_Table, Table
 	ParameterType Parameter_ParameterType `protobuf:"varint,1,opt,name=parameterType,proto3,enum=gauge.messages.Parameter_ParameterType" json:"parameterType,omitempty"`
-	/// Holds the value of the parameter
+	// / Holds the value of the parameter
 	Value string `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	/// Holds the name of the parameter, used as Key to lookup the value.
+	// / Holds the name of the parameter, used as Key to lookup the value.
 	Name string `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	/// Holds the table value, if parameterType=Table or Special_Table
+	// / Holds the table value, if parameterType=Table or Special_Table
 	Table                *ProtoTable `protobuf:"bytes,4,opt,name=table,proto3" json:"table,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}    `json:"-"`
 	XXX_unrecognized     []byte      `json:"-"`
@@ -1257,9 +1257,9 @@ func (m *Parameter) GetTable() *ProtoTable {
 	return nil
 }
 
-/// A proto object representing Comment.
+// / A proto object representing Comment.
 type ProtoComment struct {
-	/// Text representing the Comment.
+	// / Text representing the Comment.
 	Text                 string   `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1298,11 +1298,11 @@ func (m *ProtoComment) GetText() string {
 	return ""
 }
 
-/// A proto object representing Table.
+// / A proto object representing Table.
 type ProtoTable struct {
-	/// Contains the Headers for the table
+	// / Contains the Headers for the table
 	Headers *ProtoTableRow `protobuf:"bytes,1,opt,name=headers,proto3" json:"headers,omitempty"`
-	/// Contains the Rows for the table
+	// / Contains the Rows for the table
 	Rows                 []*ProtoTableRow `protobuf:"bytes,2,rep,name=rows,proto3" json:"rows,omitempty"`
 	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
 	XXX_unrecognized     []byte           `json:"-"`
@@ -1348,9 +1348,9 @@ func (m *ProtoTable) GetRows() []*ProtoTableRow {
 	return nil
 }
 
-/// A proto object representing Table.
+// / A proto object representing Table.
 type ProtoTableRow struct {
-	/// Represents the cells of a given table
+	// / Represents the cells of a given table
 	Cells                []string `protobuf:"bytes,1,rep,name=cells,proto3" json:"cells,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1389,13 +1389,13 @@ func (m *ProtoTableRow) GetCells() []string {
 	return nil
 }
 
-/// A proto object representing Step Execution result
+// / A proto object representing Step Execution result
 type ProtoStepExecutionResult struct {
-	/// The actual result of the execution
+	// / The actual result of the execution
 	ExecutionResult *ProtoExecutionResult `protobuf:"bytes,1,opt,name=executionResult,proto3" json:"executionResult,omitempty"`
-	/// Contains a 'before' hook failure message. This happens when the `before_step` hook has an error.
+	// / Contains a 'before' hook failure message. This happens when the `before_step` hook has an error.
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure,proto3" json:"preHookFailure,omitempty"`
-	/// Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
+	// / Contains a 'after' hook failure message. This happens when the `after_step` hook has an error.
 	PostHookFailure      *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure,proto3" json:"postHookFailure,omitempty"`
 	Skipped              bool              `protobuf:"varint,4,opt,name=skipped,proto3" json:"skipped,omitempty"`
 	SkippedReason        string            `protobuf:"bytes,5,opt,name=skippedReason,proto3" json:"skippedReason,omitempty"`
@@ -1464,31 +1464,31 @@ func (m *ProtoStepExecutionResult) GetSkippedReason() string {
 	return ""
 }
 
-/// A proto object representing the result of an execution
+// / A proto object representing the result of an execution
 type ProtoExecutionResult struct {
-	/// Flag to indicate failure
+	// / Flag to indicate failure
 	Failed bool `protobuf:"varint,1,opt,name=failed,proto3" json:"failed,omitempty"`
-	/// Flag to indicate if the error is recoverable from.
+	// / Flag to indicate if the error is recoverable from.
 	RecoverableError bool `protobuf:"varint,2,opt,name=recoverableError,proto3" json:"recoverableError,omitempty"`
-	/// The actual error message.
+	// / The actual error message.
 	ErrorMessage string `protobuf:"bytes,3,opt,name=errorMessage,proto3" json:"errorMessage,omitempty"`
-	/// Stacktrace of the error
+	// / Stacktrace of the error
 	StackTrace string `protobuf:"bytes,4,opt,name=stackTrace,proto3" json:"stackTrace,omitempty"`
-	/// [DEPRECATED, use failureScreenshotFile] Bytes containing screenshot taken at the time of failure.
+	// / [DEPRECATED, use failureScreenshotFile] Bytes containing screenshot taken at the time of failure.
 	ScreenShot []byte `protobuf:"bytes,5,opt,name=screenShot,proto3" json:"screenShot,omitempty"` // Deprecated: Do not use.
-	/// Holds the time taken for executing this scenario.
+	// / Holds the time taken for executing this scenario.
 	ExecutionTime int64 `protobuf:"varint,6,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Additional information at exec time to be available on reports
+	// / Additional information at exec time to be available on reports
 	Message []string `protobuf:"bytes,7,rep,name=message,proto3" json:"message,omitempty"`
-	/// Type of the Error. Valid values: ASSERTION, VERIFICATION. Default: ASSERTION
+	// / Type of the Error. Valid values: ASSERTION, VERIFICATION. Default: ASSERTION
 	ErrorType ProtoExecutionResult_ErrorType `protobuf:"varint,8,opt,name=errorType,proto3,enum=gauge.messages.ProtoExecutionResult_ErrorType" json:"errorType,omitempty"`
-	/// [DEPRECATED, use failureScreenshotFile] Bytes containing screenshot taken at the time of failure.
+	// / [DEPRECATED, use failureScreenshotFile] Bytes containing screenshot taken at the time of failure.
 	FailureScreenshot []byte `protobuf:"bytes,9,opt,name=failureScreenshot,proto3" json:"failureScreenshot,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use screenshotFiles] Bytes array containing screenshots at the time of it invoked
+	// / [DEPRECATED, use screenshotFiles] Bytes array containing screenshots at the time of it invoked
 	Screenshots [][]byte `protobuf:"bytes,10,rep,name=screenshots,proto3" json:"screenshots,omitempty"` // Deprecated: Do not use.
-	/// Path to the screenshot file captured at the time of failure.
+	// / Path to the screenshot file captured at the time of failure.
 	FailureScreenshotFile string `protobuf:"bytes,11,opt,name=failureScreenshotFile,proto3" json:"failureScreenshotFile,omitempty"`
-	/// Path to the screenshot files captured using Gauge screenshsot API.
+	// / Path to the screenshot files captured using Gauge screenshsot API.
 	ScreenshotFiles      []string `protobuf:"bytes,12,rep,name=screenshotFiles,proto3" json:"screenshotFiles,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -1607,20 +1607,20 @@ func (m *ProtoExecutionResult) GetScreenshotFiles() []string {
 	return nil
 }
 
-/// A proto object representing a pre-hook failure.
-/// Used to hold failure information for before_suite, before_spec, before_scenario and before_spec hooks.
+// / A proto object representing a pre-hook failure.
+// / Used to hold failure information for before_suite, before_spec, before_scenario and before_spec hooks.
 type ProtoHookFailure struct {
-	/// Stacktrace from the failure
+	// / Stacktrace from the failure
 	StackTrace string `protobuf:"bytes,1,opt,name=stackTrace,proto3" json:"stackTrace,omitempty"`
-	/// Error message from the failure
+	// / Error message from the failure
 	ErrorMessage string `protobuf:"bytes,2,opt,name=errorMessage,proto3" json:"errorMessage,omitempty"`
-	/// [DEPRECATED, use failureScreenshotFile] Bytes holding the screenshot taken at the time of failure.
+	// / [DEPRECATED, use failureScreenshotFile] Bytes holding the screenshot taken at the time of failure.
 	ScreenShot []byte `protobuf:"bytes,3,opt,name=screenShot,proto3" json:"screenShot,omitempty"` // Deprecated: Do not use.
 	// / Contains table row index corresponding to datatable rows
 	TableRowIndex int32 `protobuf:"varint,4,opt,name=tableRowIndex,proto3" json:"tableRowIndex,omitempty"`
-	/// [DEPRECATED, use failureScreenshotFile] Bytes holding the screenshot taken at the time of failure.
+	// / [DEPRECATED, use failureScreenshotFile] Bytes holding the screenshot taken at the time of failure.
 	FailureScreenshot []byte `protobuf:"bytes,5,opt,name=failureScreenshot,proto3" json:"failureScreenshot,omitempty"` // Deprecated: Do not use.
-	/// Path to the screenshot file captured at the time of failure.
+	// / Path to the screenshot file captured at the time of failure.
 	FailureScreenshotFile string   `protobuf:"bytes,6,opt,name=failureScreenshotFile,proto3" json:"failureScreenshotFile,omitempty"`
 	XXX_NoUnkeyedLiteral  struct{} `json:"-"`
 	XXX_unrecognized      []byte   `json:"-"`
@@ -1696,50 +1696,50 @@ func (m *ProtoHookFailure) GetFailureScreenshotFile() string {
 	return ""
 }
 
-/// A proto object representing the result of entire Suite execution.
+// / A proto object representing the result of entire Suite execution.
 type ProtoSuiteResult struct {
-	/// Contains the result from the execution
+	// / Contains the result from the execution
 	SpecResults []*ProtoSpecResult `protobuf:"bytes,1,rep,name=specResults,proto3" json:"specResults,omitempty"`
-	/// Contains a 'before' hook failure message. This happens when the `before_suite` hook has an error
+	// / Contains a 'before' hook failure message. This happens when the `before_suite` hook has an error
 	PreHookFailure *ProtoHookFailure `protobuf:"bytes,2,opt,name=preHookFailure,proto3" json:"preHookFailure,omitempty"`
-	/// Contains a 'after' hook failure message. This happens when the `after_suite` hook has an error
+	// / Contains a 'after' hook failure message. This happens when the `after_suite` hook has an error
 	PostHookFailure *ProtoHookFailure `protobuf:"bytes,3,opt,name=postHookFailure,proto3" json:"postHookFailure,omitempty"`
-	/// Flag to indicate failure
+	// / Flag to indicate failure
 	Failed bool `protobuf:"varint,4,opt,name=failed,proto3" json:"failed,omitempty"`
-	/// Holds the count of number of Specifications that failed.
+	// / Holds the count of number of Specifications that failed.
 	SpecsFailedCount int32 `protobuf:"varint,5,opt,name=specsFailedCount,proto3" json:"specsFailedCount,omitempty"`
-	/// Holds the time taken for executing the whole suite.
+	// / Holds the time taken for executing the whole suite.
 	ExecutionTime int64 `protobuf:"varint,6,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Holds a metric indicating the success rate of the execution.
+	// / Holds a metric indicating the success rate of the execution.
 	SuccessRate float32 `protobuf:"fixed32,7,opt,name=successRate,proto3" json:"successRate,omitempty"`
-	/// The environment against which execution was done
+	// / The environment against which execution was done
 	Environment string `protobuf:"bytes,8,opt,name=environment,proto3" json:"environment,omitempty"`
-	/// Tag expression used for filtering specification
+	// / Tag expression used for filtering specification
 	Tags string `protobuf:"bytes,9,opt,name=tags,proto3" json:"tags,omitempty"`
-	/// Project name
+	// / Project name
 	ProjectName string `protobuf:"bytes,10,opt,name=projectName,proto3" json:"projectName,omitempty"`
-	/// Timestamp of when execution started
+	// / Timestamp of when execution started
 	Timestamp         string `protobuf:"bytes,11,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	SpecsSkippedCount int32  `protobuf:"varint,12,opt,name=specsSkippedCount,proto3" json:"specsSkippedCount,omitempty"`
-	/// Additional information at pre hook exec time to be available on reports
+	// / Additional information at pre hook exec time to be available on reports
 	PreHookMessages []string `protobuf:"bytes,13,rep,name=preHookMessages,proto3" json:"preHookMessages,omitempty"`
-	/// Additional information at post hook exec time to be available on reports
+	// / Additional information at post hook exec time to be available on reports
 	PostHookMessages []string `protobuf:"bytes,14,rep,name=postHookMessages,proto3" json:"postHookMessages,omitempty"`
-	/// [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookMessages] Additional information at pre hook exec time to be available on reports
 	PreHookMessage []string `protobuf:"bytes,15,rep,name=preHookMessage,proto3" json:"preHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookMessages] Additional information at post hook exec time to be available on reports
 	PostHookMessage []string `protobuf:"bytes,16,rep,name=postHookMessage,proto3" json:"postHookMessage,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
+	// / [DEPRECATED, use preHookScreenshotFiles] Capture Screenshot at pre hook exec time to be available on reports
 	PreHookScreenshots [][]byte `protobuf:"bytes,17,rep,name=preHookScreenshots,proto3" json:"preHookScreenshots,omitempty"` // Deprecated: Do not use.
-	/// [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
+	// / [DEPRECATED, use postHookScreenshotFiles] Capture Screenshot at post hook exec time to be available on reports
 	PostHookScreenshots [][]byte `protobuf:"bytes,18,rep,name=postHookScreenshots,proto3" json:"postHookScreenshots,omitempty"` // Deprecated: Do not use.
 	// Indicates if the result is sent in chunks
 	Chunked bool `protobuf:"varint,19,opt,name=chunked,proto3" json:"chunked,omitempty"`
 	// Indicates the number of chunks to expect after this
 	ChunkSize int64 `protobuf:"varint,20,opt,name=chunkSize,proto3" json:"chunkSize,omitempty"`
-	/// Screenshots captured on pre hook exec time to be available on reports
+	// / Screenshots captured on pre hook exec time to be available on reports
 	PreHookScreenshotFiles []string `protobuf:"bytes,21,rep,name=preHookScreenshotFiles,proto3" json:"preHookScreenshotFiles,omitempty"`
-	/// Screenshots captured on post hook exec time to be available on reports
+	// / Screenshots captured on post hook exec time to be available on reports
 	PostHookScreenshotFiles []string `protobuf:"bytes,22,rep,name=postHookScreenshotFiles,proto3" json:"postHookScreenshotFiles,omitempty"`
 	XXX_NoUnkeyedLiteral    struct{} `json:"-"`
 	XXX_unrecognized        []byte   `json:"-"`
@@ -1929,29 +1929,29 @@ func (m *ProtoSuiteResult) GetPostHookScreenshotFiles() []string {
 	return nil
 }
 
-/// A proto object representing the result of Spec execution.
+// / A proto object representing the result of Spec execution.
 type ProtoSpecResult struct {
-	/// Represents the corresponding Specification
+	// / Represents the corresponding Specification
 	ProtoSpec *ProtoSpec `protobuf:"bytes,1,opt,name=protoSpec,proto3" json:"protoSpec,omitempty"`
-	/// Holds the number of Scenarios executed
+	// / Holds the number of Scenarios executed
 	ScenarioCount int32 `protobuf:"varint,2,opt,name=scenarioCount,proto3" json:"scenarioCount,omitempty"`
-	/// Holds the number of Scenarios failed
+	// / Holds the number of Scenarios failed
 	ScenarioFailedCount int32 `protobuf:"varint,3,opt,name=scenarioFailedCount,proto3" json:"scenarioFailedCount,omitempty"`
-	/// Flag to indicate failure
+	// / Flag to indicate failure
 	Failed bool `protobuf:"varint,4,opt,name=failed,proto3" json:"failed,omitempty"`
-	/// Holds the row numbers, which caused the execution to fail.
+	// / Holds the row numbers, which caused the execution to fail.
 	FailedDataTableRows []int32 `protobuf:"varint,5,rep,packed,name=failedDataTableRows,proto3" json:"failedDataTableRows,omitempty"`
-	/// Holds the time taken for executing the spec.
+	// / Holds the time taken for executing the spec.
 	ExecutionTime int64 `protobuf:"varint,6,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Flag to indicate if spec is skipped
+	// / Flag to indicate if spec is skipped
 	Skipped bool `protobuf:"varint,7,opt,name=skipped,proto3" json:"skipped,omitempty"`
-	/// Holds the number of Scenarios skipped
+	// / Holds the number of Scenarios skipped
 	ScenarioSkippedCount int32 `protobuf:"varint,8,opt,name=scenarioSkippedCount,proto3" json:"scenarioSkippedCount,omitempty"`
-	/// Holds the row numbers, for which the execution skipped.
+	// / Holds the row numbers, for which the execution skipped.
 	SkippedDataTableRows []int32 `protobuf:"varint,9,rep,packed,name=skippedDataTableRows,proto3" json:"skippedDataTableRows,omitempty"`
-	/// Holds parse, validation and skipped errors.
+	// / Holds parse, validation and skipped errors.
 	Errors []*Error `protobuf:"bytes,10,rep,name=errors,proto3" json:"errors,omitempty"`
-	/// Holds the timestamp of event starting.
+	// / Holds the timestamp of event starting.
 	Timestamp            string   `protobuf:"bytes,11,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2060,13 +2060,13 @@ func (m *ProtoSpecResult) GetTimestamp() string {
 	return ""
 }
 
-/// A proto object representing the result of Scenario execution.
+// / A proto object representing the result of Scenario execution.
 type ProtoScenarioResult struct {
-	/// Collection of scenarios in scenario execution result.
+	// / Collection of scenarios in scenario execution result.
 	ProtoItem *ProtoItem `protobuf:"bytes,1,opt,name=protoItem,proto3" json:"protoItem,omitempty"`
-	/// Holds the time taken for executing the whole suite.
+	// / Holds the time taken for executing the whole suite.
 	ExecutionTime int64 `protobuf:"varint,2,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Holds the timestamp of event starting.
+	// / Holds the timestamp of event starting.
 	Timestamp            string   `protobuf:"bytes,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2119,13 +2119,13 @@ func (m *ProtoScenarioResult) GetTimestamp() string {
 	return ""
 }
 
-/// A proto object representing the result of Step execution.
+// / A proto object representing the result of Step execution.
 type ProtoStepResult struct {
-	/// Collection of steps in step execution result.
+	// / Collection of steps in step execution result.
 	ProtoItem *ProtoItem `protobuf:"bytes,1,opt,name=protoItem,proto3" json:"protoItem,omitempty"`
-	/// Holds the time taken for executing the whole suite.
+	// / Holds the time taken for executing the whole suite.
 	ExecutionTime int64 `protobuf:"varint,2,opt,name=executionTime,proto3" json:"executionTime,omitempty"`
-	/// Holds the timestamp of event starting.
+	// / Holds the timestamp of event starting.
 	Timestamp            string   `protobuf:"bytes,3,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2178,15 +2178,15 @@ func (m *ProtoStepResult) GetTimestamp() string {
 	return ""
 }
 
-/// A proto object representing an error in spec/Scenario.
+// / A proto object representing an error in spec/Scenario.
 type Error struct {
-	/// Holds the type of error
+	// / Holds the type of error
 	Type Error_ErrorType `protobuf:"varint,1,opt,name=type,proto3,enum=gauge.messages.Error_ErrorType" json:"type,omitempty"`
-	/// Holds the filename.
+	// / Holds the filename.
 	Filename string `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
-	/// Holds the line number of the error in file.
+	// / Holds the line number of the error in file.
 	LineNumber int32 `protobuf:"varint,3,opt,name=lineNumber,proto3" json:"lineNumber,omitempty"`
-	/// Holds the error message.
+	// / Holds the error message.
 	Message              string   `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -2246,13 +2246,13 @@ func (m *Error) GetMessage() string {
 	return ""
 }
 
-/// A proto object representing a Step value.
+// / A proto object representing a Step value.
 type ProtoStepValue struct {
-	/// The actual string value describing he Step
+	// / The actual string value describing he Step
 	StepValue string `protobuf:"bytes,1,opt,name=stepValue,proto3" json:"stepValue,omitempty"`
-	/// The parameterized string value describing he Step. The parameters are replaced with placeholders.
+	// / The parameterized string value describing he Step. The parameters are replaced with placeholders.
 	ParameterizedStepValue string `protobuf:"bytes,2,opt,name=parameterizedStepValue,proto3" json:"parameterizedStepValue,omitempty"`
-	/// A collection of strings representing the parameters.
+	// / A collection of strings representing the parameters.
 	Parameters           []string `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`

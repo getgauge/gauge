@@ -1,9 +1,16 @@
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
+
 package lang
 
 import (
-	"google.golang.org/grpc"
 	"context"
+
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"google.golang.org/grpc"
 )
 
 type mockClient struct {

@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 package execution
 
@@ -295,8 +284,8 @@ var exampleSpecWithScenarios = &gauge.Specification{
 	FileName: "example.spec",
 	Tags:     &gauge.Tags{},
 	Scenarios: []*gauge.Scenario{
-		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
-		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 2"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
+		{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
+		{Heading: &gauge.Heading{Value: "Example Scenario 2"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{}, Span: &gauge.Span{}},
 	},
 }
 
@@ -647,7 +636,7 @@ var exampleSpecWithTags = &gauge.Specification{
 	FileName: "example.spec",
 	Tags:     &gauge.Tags{RawValues: [][]string{{"tagSpec"}}},
 	Scenarios: []*gauge.Scenario{
-		&gauge.Scenario{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{RawValues: [][]string{{"tagSce"}}}, Span: &gauge.Span{}},
+		{Heading: &gauge.Heading{Value: "Example Scenario 1"}, Items: make([]gauge.Item, 0), Tags: &gauge.Tags{RawValues: [][]string{{"tagSce"}}}, Span: &gauge.Span{}},
 	},
 }
 
