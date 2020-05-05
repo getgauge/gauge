@@ -1,19 +1,8 @@
-// Copyright 2015 ThoughtWorks, Inc.
-
-// This file is part of Gauge.
-
-// Gauge is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// Gauge is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with Gauge.  If not, see <http://www.gnu.org/licenses/>.
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
 
 package execution
 
@@ -117,9 +106,9 @@ func TestStepExecutionShouldGetScreenshotsBeforeStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionStarting {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png","screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}
@@ -165,9 +154,9 @@ func TestStepExecutionShouldGetScreenshotsAfterStep(t *testing.T) {
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
 		if m.MessageType == gauge_messages.Message_StepExecutionEnding {
 			return &gauge_messages.ProtoExecutionResult{
-				ScreenshotFiles:   []string{"screenshot1.png", "screenshot2.png"},
-				Failed:        false,
-				ExecutionTime: 10,
+				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
+				Failed:          false,
+				ExecutionTime:   10,
 			}
 		}
 		return &gauge_messages.ProtoExecutionResult{}

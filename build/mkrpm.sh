@@ -1,4 +1,11 @@
 #!/bin/bash
+
+# ----------------------------------------------------------------
+#   Copyright (c) ThoughtWorks, Inc.
+#   Licensed under the Apache License, Version 2.0
+#   See LICENSE.txt in the project root for license information.
+# ----------------------------------------------------------------
+
 # Original source: https://github.com/gauge/gauge/blob/master/script/mkrpm
 
 # Usage:
