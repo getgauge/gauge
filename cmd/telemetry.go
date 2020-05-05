@@ -12,51 +12,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	telemetryCmd = &cobra.Command{
-		Use:   "telemetry [command]",
-		Short: "Configure options for sending anonymous usage stats",
-		Long:  `Configure options for sending anonymous usage stats.`,
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
-		},
-		DisableAutoGenTag: false,
-	}
-
-	onCmd = &cobra.Command{
-		Use:   "on",
-		Short: "Turn telemetry on",
-		Long:  "Turn telemetry on.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
-		},
-		DisableAutoGenTag: false,
-	}
-
-	offCmd = &cobra.Command{
-		Use:   "off",
-		Short: "Turn telemetry off",
-		Long:  "Turn telemetry off.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
-		},
-		DisableAutoGenTag: false,
-	}
-
-	logCmd = &cobra.Command{
-		Use:   "log <value>",
-		Short: "Enable/disable telemetry logging",
-		Long:  "Enable/disable telemetry logging.",
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("This command is deprecated, since Gauge no longer collects telemetry.")
-		},
-		DisableAutoGenTag: false,
-	}
-)
-
 func init() {
-	telemetryCmd.AddCommand(onCmd)
-	telemetryCmd.AddCommand(offCmd)
-	telemetryCmd.AddCommand(logCmd)
+	// This command is deprecated, it's going to be removed in the future
+	telemetryCmd := &cobra.Command{
+		Use: "telemetry [command]",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("Gauge does not gather telemetry data. This command exists to notify this deprecation and shall be removed in the future")
+		},
+		Hidden: true,
+	}
+
 	GaugeCmd.AddCommand(telemetryCmd)
 }
