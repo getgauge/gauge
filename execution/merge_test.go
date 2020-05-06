@@ -203,9 +203,7 @@ func TestMergeSkippedResults(t *testing.T) {
 	got := mergeResults([]*result.SpecResult{
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
 				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
 				Items: []*gm.ProtoItem{
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
 					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading1", SkipErrors: []string{"error"}}},
@@ -221,9 +219,7 @@ func TestMergeSkippedResults(t *testing.T) {
 		},
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
 				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
 				Items: []*gm.ProtoItem{
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
 					{
@@ -239,9 +235,7 @@ func TestMergeSkippedResults(t *testing.T) {
 	})
 	want := &result.SpecResult{
 		ProtoSpec: &gm.ProtoSpec{
-			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			Items: []*gm.ProtoItem{
 				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading1"}},
