@@ -25,7 +25,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/skel"
 
 	"fmt"
@@ -48,10 +47,8 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
-	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/reporter"
-	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/validation"
 )
 
@@ -87,36 +84,6 @@ type suiteExecutor interface {
 
 type executor interface {
 	execute(i gauge.Item, r result.Result)
-}
-
-type executionInfo struct {
-	manifest        *manifest.Manifest
-	specs           *gauge.SpecCollection
-	runner          runner.Runner
-	pluginHandler   plugin.Handler
-	errMaps         *gauge.BuildErrors
-	inParallel      bool
-	numberOfStreams int
-	tagsToFilter    string
-	stream          int
-}
-
-func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
-	m, err := manifest.ProjectManifest()
-	if err != nil {
-		logger.Fatalf(true, err.Error())
-	}
-	return &executionInfo{
-		manifest:        m,
-		specs:           s,
-		runner:          r,
-		pluginHandler:   ph,
-		errMaps:         e,
-		inParallel:      p,
-		numberOfStreams: NumberOfExecutionStreams,
-		tagsToFilter:    TagsToFilterForParallelRun,
-		stream:          stream,
-	}
 }
 
 // ExecuteSpecs : Check for updates, validates the specs (by invoking the respective language runners), initiates the registry which is needed for console reporting, execution API and Rerunning of specs
@@ -160,57 +127,9 @@ var ExecuteSpecs = func(specDirs []string) int {
 	defer wg.Wait()
 	ei := newExecutionInfo(res.SpecCollection, res.Runner, nil, res.ErrMap, InParallel, 0)
 
-	e := newExecution(ei)
+	e := ei.getExecutor()
 	logger.Debug(true, "Run started")
 	return printExecutionResult(e.run(), res.ParseOk)
-}
-
-func newExecution(executionInfo *executionInfo) suiteExecutor {
-	if executionInfo.inParallel {
-		if err := executionInfo.runner.Kill(); err != nil {
-			logger.Errorf(true, "failed to kill runner which was started for validation. %s", err.Error())
-		}
-		return newParallelExecution(executionInfo)
-	}
-	return newSimpleExecution(executionInfo, true)
-}
-
-type executionStatus struct {
-	Type          string `json:"type"`
-	SpecsExecuted int    `json:"specsExecuted"`
-	SpecsPassed   int    `json:"specsPassed"`
-	SpecsFailed   int    `json:"specsFailed"`
-	SpecsSkipped  int    `json:"specsSkipped"`
-	SceExecuted   int    `json:"sceExecuted"`
-	ScePassed     int    `json:"scePassed"`
-	SceFailed     int    `json:"sceFailed"`
-	SceSkipped    int    `json:"sceSkipped"`
-}
-
-func (status *executionStatus) getJSON() (string, error) {
-	j, err := json.Marshal(status)
-	if err != nil {
-		return "", err
-	}
-	return string(j), nil
-}
-
-func statusJSON(executedSpecs, passedSpecs, failedSpecs, skippedSpecs, executedScenarios, passedScenarios, failedScenarios, skippedScenarios int) string {
-	executionStatus := &executionStatus{}
-	executionStatus.Type = "out"
-	executionStatus.SpecsExecuted = executedSpecs
-	executionStatus.SpecsPassed = passedSpecs
-	executionStatus.SpecsFailed = failedSpecs
-	executionStatus.SpecsSkipped = skippedSpecs
-	executionStatus.SceExecuted = executedScenarios
-	executionStatus.ScePassed = passedScenarios
-	executionStatus.SceFailed = failedScenarios
-	executionStatus.SceSkipped = skippedScenarios
-	s, err := executionStatus.getJSON()
-	if err != nil {
-		logger.Fatalf(true, "Unable to parse execution status information : %v", err.Error())
-	}
-	return s
 }
 
 func writeExecutionResult(content string) {

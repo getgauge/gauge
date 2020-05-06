@@ -112,22 +112,21 @@ func (e *parallelExecution) run() *result.SuiteResult {
 		}
 	}
 
-	nStreams := e.numberOfStreams()
-	logger.Infof(true, "Executing in %s parallel streams.", strconv.Itoa(nStreams))
+	logger.Infof(true, "Executing in %d parallel streams.", e.numberOfStreams())
 	resChan := make(chan *result.SuiteResult)
 
 	// skipcq CRT-A0013
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
 		if e.runner.Info().GRPCSupport {
-			go e.executeGrpcMultithreaded(nStreams, resChan)
+			go e.executeGrpcMultithreaded(resChan)
 		} else {
-			go e.executeLegacyMultithreaded(nStreams, resChan)
+			go e.executeLegacyMultithreaded(resChan)
 		}
 	} else if isLazy() {
-		go e.executeLazily(nStreams, resChan)
+		go e.executeLazily(resChan)
 	} else {
-		go e.executeEagerly(nStreams, resChan)
+		go e.executeEagerly(resChan)
 	}
 
 	for r := range resChan {
@@ -145,7 +144,8 @@ func printAdditionalExecutionInfo(p []*gauge.Specification, s []*gauge.Specifica
 	logger.Infof(true, "No of specs to be executed in parallel : %d", len(p))
 }
 
-func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeLazily(resChan chan *result.SuiteResult) {
+	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
 		go e.startStream(e.specCollection, resChan, i+1)
@@ -154,7 +154,8 @@ func (e *parallelExecution) executeLazily(totalStreams int, resChan chan *result
 	close(resChan)
 }
 
-func (e *parallelExecution) executeGrpcMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeGrpcMultithreaded(resChan chan *result.SuiteResult) {
+	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
 	if err != nil {
@@ -176,7 +177,8 @@ func (e *parallelExecution) executeGrpcMultithreaded(totalStreams int, resChan c
 	close(resChan)
 }
 
-func (e *parallelExecution) executeLegacyMultithreaded(totalStreams int, resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeLegacyMultithreaded(resChan chan *result.SuiteResult) {
+	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	handlers := make([]*conn.GaugeConnectionHandler, 0)
 	var ports []string
@@ -220,7 +222,8 @@ func (e *parallelExecution) startMultithreaded(r runner.Runner, resChan chan *re
 	e.startSpecsExecutionWithRunner(e.specCollection, resChan, r, stream)
 }
 
-func (e *parallelExecution) executeEagerly(distributions int, resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeEagerly(resChan chan *result.SuiteResult) {
+	distributions := e.numberOfStreams()
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
 	for i, s := range specs {
