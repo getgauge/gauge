@@ -46,9 +46,6 @@ func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handle
 
 func (executionInfo *executionInfo) getExecutor() suiteExecutor {
 	if executionInfo.inParallel {
-		if err := executionInfo.runner.Kill(); err != nil {
-			logger.Errorf(true, "failed to kill runner which was started for validation. %s", err.Error())
-		}
 		return newParallelExecution(executionInfo)
 	}
 	return newSimpleExecution(executionInfo, true)

@@ -149,7 +149,7 @@ func (e *parallelExecution) executeLazily() {
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
-		go e.startStream(e.specCollection, e.resultChan, i+1)
+		go e.startStream(e.specCollection, i+1)
 	}
 	e.wg.Wait()
 }
@@ -219,28 +219,32 @@ func (e *parallelExecution) executeLegacyMultithreaded() {
 
 func (e *parallelExecution) startMultithreaded(r runner.Runner, resChan chan *result.SuiteResult, stream int) {
 	defer e.wg.Done()
-	e.startSpecsExecutionWithRunner(e.specCollection, resChan, r, stream)
+	e.startSpecsExecutionWithRunner(e.specCollection, r, stream)
 }
 
-func (e *parallelExecution) executeEagerly(resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeEagerly() {
+	defer close(e.resultChan)
 	distributions := e.numberOfStreams()
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
 	for i, s := range specs {
-		go e.startStream(s, resChan, i+1)
+		go e.startStream(s, i+1)
 	}
 	e.wg.Wait()
-	close(resChan)
 }
 
-func (e *parallelExecution) startStream(s *gauge.SpecCollection, resChan chan *result.SuiteResult, stream int) {
+func (e *parallelExecution) startStream(s *gauge.SpecCollection, stream int) {
 	defer e.wg.Done()
-	runner, err := e.startRunner(s, stream)
-	if len(err) > 0 {
-		resChan <- &result.SuiteResult{UnhandledErrors: err}
-		return
+	if stream == 1 {
+		e.startSpecsExecutionWithRunner(s, e.runner, stream)
+	} else {
+		r, err := e.startRunner(s, stream)
+		if len(err) > 0 {
+			e.resultChan <- &result.SuiteResult{UnhandledErrors: err}
+			return
+		}
+		e.startSpecsExecutionWithRunner(s, r, stream)
 	}
-	e.startSpecsExecutionWithRunner(s, resChan, runner, stream)
 }
 
 func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (runner.Runner, []error) {
@@ -259,7 +263,7 @@ func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (ru
 	return runner, nil
 }
 
-func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, resChan chan *result.SuiteResult, runner runner.Runner, stream int) {
+func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, runner runner.Runner, stream int) {
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream)
 	se := newSimpleExecution(executionInfo, false)
 	se.execute()
@@ -267,7 +271,7 @@ func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollectio
 	if err != nil {
 		logger.Errorf(true, "Failed to kill runner. %s", err.Error())
 	}
-	resChan <- se.suiteResult
+	e.resultChan <- se.suiteResult
 }
 
 func (e *parallelExecution) executeSpecsInSerial(s *gauge.SpecCollection) *result.SuiteResult {
