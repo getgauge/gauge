@@ -55,6 +55,7 @@ type parallelExecution struct {
 	tagsToFilter             string
 	errMaps                  *gauge.BuildErrors
 	startTime                time.Time
+	resultChan               chan *result.SuiteResult
 }
 
 func newParallelExecution(e *executionInfo) *parallelExecution {
@@ -66,6 +67,7 @@ func newParallelExecution(e *executionInfo) *parallelExecution {
 		numberOfExecutionStreams: e.numberOfStreams,
 		tagsToFilter:             e.tagsToFilter,
 		errMaps:                  e.errMaps,
+		resultChan:               make(chan *result.SuiteResult),
 	}
 }
 
@@ -113,23 +115,21 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	}
 
 	logger.Infof(true, "Executing in %d parallel streams.", e.numberOfStreams())
-	resChan := make(chan *result.SuiteResult)
-
 	// skipcq CRT-A0013
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
 		if e.runner.Info().GRPCSupport {
-			go e.executeGrpcMultithreaded(resChan)
+			go e.executeGrpcMultithreaded()
 		} else {
-			go e.executeLegacyMultithreaded(resChan)
+			go e.executeLegacyMultithreaded()
 		}
 	} else if isLazy() {
-		go e.executeLazily(resChan)
+		go e.executeLazily()
 	} else {
-		go e.executeEagerly(resChan)
+		go e.executeEagerly()
 	}
 
-	for r := range resChan {
+	for r := range e.resultChan {
 		res = append(res, r)
 	}
 	e.aggregateResults(res)
@@ -144,17 +144,18 @@ func printAdditionalExecutionInfo(p []*gauge.Specification, s []*gauge.Specifica
 	logger.Infof(true, "No of specs to be executed in parallel : %d", len(p))
 }
 
-func (e *parallelExecution) executeLazily(resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeLazily() {
+	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	for i := 0; i < totalStreams; i++ {
-		go e.startStream(e.specCollection, resChan, i+1)
+		go e.startStream(e.specCollection, e.resultChan, i+1)
 	}
 	e.wg.Wait()
-	close(resChan)
 }
 
-func (e *parallelExecution) executeGrpcMultithreaded(resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeGrpcMultithreaded() {
+	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
@@ -167,17 +168,17 @@ func (e *parallelExecution) executeGrpcMultithreaded(resChan chan *result.SuiteR
 		logger.Fatalf(true, "failed to create handler. %s", err.Error())
 	}
 	for i := 0; i < totalStreams; i++ {
-		go e.startMultithreaded(r, resChan, i+1)
+		go e.startMultithreaded(r, e.resultChan, i+1)
 	}
 	e.wg.Wait()
 	r.IsExecuting = false
 	if err = r.Kill(); err != nil {
 		logger.Infof(true, "unable to kill runner: %s", err.Error())
 	}
-	close(resChan)
 }
 
-func (e *parallelExecution) executeLegacyMultithreaded(resChan chan *result.SuiteResult) {
+func (e *parallelExecution) executeLegacyMultithreaded() {
+	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
 	handlers := make([]*conn.GaugeConnectionHandler, 0)
@@ -207,14 +208,13 @@ func (e *parallelExecution) executeLegacyMultithreaded(resChan chan *result.Suit
 		}
 		crapRunner := &runner.MultithreadedRunner{}
 		crapRunner.SetConnection(connection)
-		go e.startMultithreaded(crapRunner, resChan, i+1)
+		go e.startMultithreaded(crapRunner, e.resultChan, i+1)
 	}
 	e.wg.Wait()
 	err = r.Cmd.Process.Kill()
 	if err != nil {
 		logger.Infof(true, "unable to kill runner: %s", err.Error())
 	}
-	close(resChan)
 }
 
 func (e *parallelExecution) startMultithreaded(r runner.Runner, resChan chan *result.SuiteResult, stream int) {
