@@ -99,6 +99,11 @@ var ExecuteSpecs = func(specDirs []string) int {
 		defer i.PrintUpdateBuffer()
 	}
 	skel.SetupPlugins(MachineReadable)
+	err = os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(NumberOfExecutionStreams))
+	if err != nil {
+		logger.Fatalf(true, "failed to set env %s. %s", gaugeParallelStreamCountEnv, err.Error())
+	}
+
 	res := validation.ValidateSpecs(specDirs, false)
 	if len(res.Errs) > 0 {
 		if res.ParseOk {

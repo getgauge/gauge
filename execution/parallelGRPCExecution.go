@@ -2,10 +2,7 @@ package execution
 
 import (
 	"fmt"
-	"os"
-	"strconv"
 
-	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/gauge_messages"
@@ -17,15 +14,11 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
-	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
-	if err != nil {
-		logger.Fatalf(true, "failed to set env %s. %s", gaugeParallelStreamCountEnv, err.Error())
+	r, ok := e.runner.(*runner.GrpcRunner)
+	if !ok {
+		logger.Fatalf(true, "Expected GrpcRunner, but got %T instead. Gauge cannot use this runner.", e.runner)
 	}
-	r, err := runner.StartGrpcRunner(e.manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
 	r.IsExecuting = true
-	if err != nil {
-		logger.Fatalf(true, "failed to create handler. %s", err.Error())
-	}
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	res := initSuiteDataStore(r)
 	if res.GetFailed() {
@@ -51,7 +44,7 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 	e.notifyAfterSuite()
 	e.wg.Wait()
 	r.IsExecuting = false
-	if err = r.Kill(); err != nil {
+	if err := r.Kill(); err != nil {
 		logger.Infof(true, "unable to kill runner: %s", err.Error())
 	}
 }
