@@ -154,29 +154,6 @@ func (e *parallelExecution) executeLazily() {
 	e.wg.Wait()
 }
 
-func (e *parallelExecution) executeGrpcMultithreaded() {
-	defer close(e.resultChan)
-	totalStreams := e.numberOfStreams()
-	e.wg.Add(totalStreams)
-	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
-	if err != nil {
-		logger.Fatalf(true, "failed to set env %s. %s", gaugeParallelStreamCountEnv, err.Error())
-	}
-	r, err := runner.StartGrpcRunner(e.manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
-	r.IsExecuting = true
-	if err != nil {
-		logger.Fatalf(true, "failed to create handler. %s", err.Error())
-	}
-	for i := 0; i < totalStreams; i++ {
-		go e.startMultithreaded(r, e.resultChan, i+1)
-	}
-	e.wg.Wait()
-	r.IsExecuting = false
-	if err = r.Kill(); err != nil {
-		logger.Infof(true, "unable to kill runner: %s", err.Error())
-	}
-}
-
 func (e *parallelExecution) executeLegacyMultithreaded() {
 	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
@@ -265,7 +242,7 @@ func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (ru
 
 func (e *parallelExecution) startSpecsExecutionWithRunner(s *gauge.SpecCollection, runner runner.Runner, stream int) {
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, stream)
-	se := newSimpleExecution(executionInfo, false)
+	se := newSimpleExecution(executionInfo, false, false)
 	se.execute()
 	err := runner.Kill()
 	if err != nil {
@@ -280,7 +257,7 @@ func (e *parallelExecution) executeSpecsInSerial(s *gauge.SpecCollection) *resul
 		return &result.SuiteResult{UnhandledErrors: err}
 	}
 	executionInfo := newExecutionInfo(s, runner, e.pluginHandler, e.errMaps, false, 1)
-	se := newSimpleExecution(executionInfo, false)
+	se := newSimpleExecution(executionInfo, false, false)
 	se.execute()
 	er := runner.Kill()
 	if er != nil {

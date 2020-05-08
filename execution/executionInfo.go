@@ -48,5 +48,5 @@ func (executionInfo *executionInfo) getExecutor() suiteExecutor {
 	if executionInfo.inParallel {
 		return newParallelExecution(executionInfo)
 	}
-	return newSimpleExecution(executionInfo, true)
+	return newSimpleExecution(executionInfo, true, false)
 }

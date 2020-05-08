@@ -1,0 +1,98 @@
+package execution
+
+import (
+	"fmt"
+	"os"
+	"strconv"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/execution/result"
+	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/runner"
+)
+
+func (e *parallelExecution) executeGrpcMultithreaded() {
+	defer close(e.resultChan)
+	totalStreams := e.numberOfStreams()
+	e.wg.Add(totalStreams)
+	err := os.Setenv(gaugeParallelStreamCountEnv, strconv.Itoa(totalStreams))
+	if err != nil {
+		logger.Fatalf(true, "failed to set env %s. %s", gaugeParallelStreamCountEnv, err.Error())
+	}
+	r, err := runner.StartGrpcRunner(e.manifest, os.Stdout, os.Stderr, config.RunnerRequestTimeout(), true)
+	r.IsExecuting = true
+	if err != nil {
+		logger.Fatalf(true, "failed to create handler. %s", err.Error())
+	}
+	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
+	res := initSuiteDataStore(r)
+	if res.GetFailed() {
+		e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", res.GetErrorMessage()))
+		return
+	}
+	e.notifyBeforeSuite()
+
+	for i := 1; i <= totalStreams; i++ {
+		go func(stream int) {
+			defer e.wg.Done()
+			executionInfo := newExecutionInfo(e.specCollection, r, e.pluginHandler, e.errMaps, false, stream)
+			se := newSimpleExecution(executionInfo, false, true)
+			se.execute()
+			err := r.Kill()
+			if err != nil {
+				logger.Errorf(true, "Failed to kill runner. %s", err.Error())
+			}
+			e.resultChan <- se.suiteResult
+		}(i)
+	}
+
+	e.notifyAfterSuite()
+	e.wg.Wait()
+	r.IsExecuting = false
+	if err = r.Kill(); err != nil {
+		logger.Infof(true, "unable to kill runner: %s", err.Error())
+	}
+}
+
+func initSuiteDataStore(r runner.Runner) *gauge_messages.ProtoExecutionResult {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_SuiteDataStoreInit,
+		SuiteDataStoreInitRequest: &gauge_messages.SuiteDataStoreInitRequest{}}
+	return r.ExecuteAndGetStatus(m)
+}
+
+func (e *parallelExecution) notifyBeforeSuite() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionStarting,
+		ExecutionStartingRequest: &gauge_messages.ExecutionStartingRequest{
+			CurrentExecutionInfo: &gauge_messages.ExecutionInfo{},
+			Stream:               1},
+	}
+	res := e.runner.ExecuteAndGetStatus(m)
+	e.pluginHandler.NotifyPlugins(m)
+	e.suiteResult.PreHookMessages = res.Message
+	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
+	e.suiteResult.PreHookScreenshots = res.Screenshots
+	if res.GetFailed() {
+		result.AddPreHook(e.suiteResult, res)
+	}
+	m.ExecutionStartingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+}
+
+func (e *parallelExecution) notifyAfterSuite() {
+	m := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecutionEnding,
+		ExecutionEndingRequest: &gauge_messages.ExecutionEndingRequest{
+			CurrentExecutionInfo: &gauge_messages.ExecutionInfo{},
+			Stream:               1,
+		},
+	}
+	res := e.runner.ExecuteAndGetStatus(m)
+	e.pluginHandler.NotifyPlugins(m)
+	e.suiteResult.PostHookMessages = res.Message
+	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
+	e.suiteResult.PostHookScreenshots = res.Screenshots
+	if res.GetFailed() {
+		result.AddPostHook(e.suiteResult, res)
+	}
+	m.ExecutionEndingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+}
