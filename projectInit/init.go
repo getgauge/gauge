@@ -44,7 +44,7 @@ type templateMetadata struct {
 	PostInstallMsg string
 }
 
-func initializeTemplate(templateName string, templateUrl string) error {
+func initializeTemplate(templateName, templateUrl string) error {
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
 	logger.Infof(true, "Initializing template from %s", templateUrl)

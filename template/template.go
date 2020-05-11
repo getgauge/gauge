@@ -77,7 +77,10 @@ func Update(name, value string) error {
 	if err != nil {
 		return err
 	}
-	t.update(name, value)
+	if err := t.update(name, value); err != nil {
+		return err
+	}
+
 	return t.write()
 }
 

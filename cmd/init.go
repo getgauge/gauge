@@ -24,7 +24,7 @@ var (
 			if templates {
 				l, err := template.All()
 				if err != nil {
-					exit(fmt.Errorf("Failed to get templates. %w", err), cmd.UsageString())
+					exit(fmt.Errorf("failed to get templates. %w", err), cmd.UsageString())
 				}
 				fmt.Println(l)
 				return

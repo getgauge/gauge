@@ -126,7 +126,7 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 	return time.Millisecond * time.Duration(intValue)
 }
 
-func convertToBool(value string, property string, defaultValue bool) bool {
+func convertToBool(value, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
 		APILog.Warningf("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)

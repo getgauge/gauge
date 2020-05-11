@@ -30,7 +30,7 @@ var (
 				return
 			}
 			if len(args) == 0 {
-				exit(fmt.Errorf("Template command needs argument(s)."), cmd.UsageString())
+				exit(fmt.Errorf("template command needs argument(s)"), cmd.UsageString())
 			}
 			if len(args) == 1 {
 				text, err := template.Get(args[0])
@@ -42,7 +42,7 @@ var (
 			}
 			err := template.Update(args[0], args[1])
 			if err != nil {
-				exit(fmt.Errorf("Template URL should be a valid link of zip."), cmd.UsageString())
+				exit(fmt.Errorf("template URL should be a valid link of zip"), cmd.UsageString())
 			}
 		},
 		DisableAutoGenTag: true,

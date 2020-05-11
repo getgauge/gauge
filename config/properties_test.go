@@ -82,7 +82,7 @@ func TestMergedProperties(t *testing.T) {
 	}
 	os.Setenv("GAUGE_HOME", s)
 
-	p, err := MergedProperties()
+	p, err := mergedProperties()
 	if err != nil {
 		t.Errorf("Unable to read MergedProperties: %s", err.Error())
 	}

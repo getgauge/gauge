@@ -100,7 +100,7 @@ func defaults() *properties {
 	}}
 }
 
-func MergedProperties() (*properties, error) {
+func mergedProperties() (*properties, error) {
 	p := defaults()
 	config, err := common.GetGaugeConfigurationFor(common.GaugePropertiesFile)
 	if err != nil {
@@ -119,7 +119,7 @@ func MergedProperties() (*properties, error) {
 }
 
 func Update(name, value string) error {
-	p, err := MergedProperties()
+	p, err := mergedProperties()
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func Update(name, value string) error {
 func Merge() error {
 	v, err := GaugeVersionInPropertiesFile(common.GaugePropertiesFile)
 	if err != nil || version.CompareVersions(v, version.CurrentGaugeVersion, version.LesserThanFunc) {
-		mp, err := MergedProperties()
+		mp, err := mergedProperties()
 		if err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func Merge() error {
 }
 
 func GetProperty(name string) (string, error) {
-	mp, err := MergedProperties()
+	mp, err := mergedProperties()
 	if err != nil {
 		return "", err
 	}
@@ -164,7 +164,7 @@ func List(machineReadable bool) (string, error) {
 	if machineReadable {
 		f = &jsonFormatter{}
 	}
-	mp, err := MergedProperties()
+	mp, err := mergedProperties()
 	if err != nil {
 		return "", err
 	}
@@ -180,7 +180,7 @@ func NewProperty(key, defaultValue, description string) *Property {
 	}
 }
 
-func Write(text string, file string) error {
+func Write(text, file string) error {
 	file, err := FilePath(file)
 	if err != nil {
 		return err
