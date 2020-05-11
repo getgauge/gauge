@@ -1,9 +1,16 @@
+/*----------------------------------------------------------------
+ *  Copyright (c) ThoughtWorks, Inc.
+ *  Licensed under the Apache License, Version 2.0
+ *  See LICENSE in the project root for license information.
+ *----------------------------------------------------------------*/
+
 package refactor
 
 import (
+	"net"
+
 	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
-	"net"
 )
 
 type mockRunner struct {

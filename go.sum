@@ -28,8 +28,12 @@ github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 h1:sP2APvSdZ
 github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47/go.mod h1:f2V6964+f0p8Asqy8mIK5cKyyVc6MP9PFzGVNRcnYJQ=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
-github.com/getgauge/common v0.0.0-20180424115244-657067401e5f h1:2oIXAhN/mLgicSV5U4Ik4n+rLKOVArHg/hYyj7bPnDI=
-github.com/getgauge/common v0.0.0-20180424115244-657067401e5f/go.mod h1:tHtGp+rvfECQYRDCNQX46uQTO6qHpdDrikX9ZkBjkSA=
+github.com/getgauge/common v0.0.0-20200424085520-f47b2c0d1793 h1:T5vUgya5iUXeXwhjyBMZbM3dhdaxMUxPROCsinW7NsI=
+github.com/getgauge/common v0.0.0-20200424085520-f47b2c0d1793/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
+github.com/getgauge/common v0.0.0-20200429083145-b5f3fadf2bd3 h1:Tf6p6IAwlmAZo5Vr5Wp8SGoCFpEEpYbALptiYjH7PV0=
+github.com/getgauge/common v0.0.0-20200429083145-b5f3fadf2bd3/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
+github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6 h1:A9c4GzoZwS5Z+yx+UszPnnhleF8GtlP1cqjibKKS7qU=
+github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
 github.com/go-check/check v0.0.0-20190902080502-41f04d3bba15 h1:xJdCV5uP69sUzCIIzmhAw6EKKdVk3Tu48oLzM86+XPI=
 github.com/go-check/check v0.0.0-20190902080502-41f04d3bba15/go.mod h1:9ES+weclKsC9YodN5RgxqK/VD9HM9JsCSh7rNhMZE98=

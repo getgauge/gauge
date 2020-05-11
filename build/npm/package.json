@@ -18,7 +18,7 @@
     "gauge"
   ],
   "author": "getgauge",
-  "license": "GPL-3.0",
+  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/getgauge/gauge/issues"
   },
@@ -29,7 +29,7 @@
     "sinon": "^6.2.0"
   },
   "dependencies": {
-    "request": "^2.88.0",
+    "superagent": "^5.2.2",
     "unzipper": "^0.9.3"
   }
 }

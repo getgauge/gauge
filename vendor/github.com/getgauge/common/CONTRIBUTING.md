@@ -12,7 +12,7 @@ So, depending on where you see your contribution fit, please focus on the respec
 
 ## Contribution process
 
-Please read about the Contribution Process [here](http://getgauge.io/contribute/), if you are happy please sign the [Contributor's License Agreement](http://getgauge.io/cla/). 
+Please read about the Contribution Process [here](https://github.com/getgauge/gauge/blob/master/CONTRIBUTING.md). If you are contributing code, ensure that your commits are signed-off, to comply with the Developer Certificate of Origin (DCO).
 
 ## How can I contribute
 
@@ -23,4 +23,4 @@ Contributions can be of many forms:
 - Enhance the documentation
 - Participate in design discussions on Google Groups
 
-If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Gitter](https://gitter.im/getgauge/chat).
+If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Spectrum](https://spectrum.chat/gauge).
