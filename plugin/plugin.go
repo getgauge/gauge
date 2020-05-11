@@ -51,7 +51,7 @@ type plugin struct {
 	ReporterClient   gauge_messages.ReporterClient
 	DocumenterClient gauge_messages.DocumenterClient
 	pluginCmd        *exec.Cmd
-	descriptor       *pluginDescriptor
+	descriptor       *PluginDescriptor
 	killTimer        *time.Timer
 }
 
@@ -185,7 +185,7 @@ func getPluginJSONPath(pluginName, pluginVersion string) (string, error) {
 }
 
 // GetPluginDescriptor return the information about the plugin including name, id, commands to start etc.
-func GetPluginDescriptor(pluginID, pluginVersion string) (*pluginDescriptor, error) {
+func GetPluginDescriptor(pluginID, pluginVersion string) (*PluginDescriptor, error) {
 	pluginJSON, err := getPluginJSONPath(pluginID, pluginVersion)
 	if err != nil {
 		return nil, err
@@ -193,12 +193,12 @@ func GetPluginDescriptor(pluginID, pluginVersion string) (*pluginDescriptor, err
 	return GetPluginDescriptorFromJSON(pluginJSON)
 }
 
-func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
+func GetPluginDescriptorFromJSON(pluginJSON string) (*PluginDescriptor, error) {
 	pluginJSONContents, err := common.ReadFileContents(pluginJSON)
 	if err != nil {
 		return nil, err
 	}
-	var pd pluginDescriptor
+	var pd PluginDescriptor
 	if err = json.Unmarshal([]byte(pluginJSONContents), &pd); err != nil {
 		return nil, fmt.Errorf("%s: %s", pluginJSON, err.Error())
 	}
@@ -207,7 +207,7 @@ func GetPluginDescriptorFromJSON(pluginJSON string) (*pluginDescriptor, error) {
 	return &pd, nil
 }
 
-func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
+func startPlugin(pd *PluginDescriptor, action pluginScope) (*plugin, error) {
 	var command []string
 	switch runtime.GOOS {
 	case "windows":
@@ -226,7 +226,7 @@ func StartPlugin(pd *pluginDescriptor, action pluginScope) (*plugin, error) {
 	return startLegacyPlugin(pd, command)
 }
 
-func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
+func startGRPCPlugin(pd *PluginDescriptor, command []string) (*plugin, error) {
 	portChan := make(chan string)
 	writer := &logger.LogWriter{
 		Stderr: logger.NewCustomWriter(portChan, os.Stderr, pd.ID, true),
@@ -274,7 +274,7 @@ func startGRPCPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
 	return plugin, nil
 }
 
-func startLegacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) {
+func startLegacyPlugin(pd *PluginDescriptor, command []string) (*plugin, error) {
 	writer := logger.NewLogWriter(pd.ID, true, 0)
 	cmd, err := common.ExecuteCommand(command, pd.pluginPath, writer.Stdout, writer.Stderr)
 
@@ -292,13 +292,10 @@ func startLegacyPlugin(pd *pluginDescriptor, command []string) (*plugin, error) 
 	return plugin, nil
 }
 
-func SetEnvForPlugin(action pluginScope, pd *pluginDescriptor, m *manifest.Manifest, pluginEnvVars map[string]string) error {
+func SetEnvForPlugin(action pluginScope, pd *PluginDescriptor, m *manifest.Manifest, pluginEnvVars map[string]string) error {
 	pluginEnvVars[fmt.Sprintf("%s_action", pd.ID)] = string(action)
 	pluginEnvVars["test_language"] = m.Language
-	if err := setEnvironmentProperties(pluginEnvVars); err != nil {
-		return err
-	}
-	return nil
+	return setEnvironmentProperties(pluginEnvVars)
 }
 
 func setEnvironmentProperties(properties map[string]string) error {
@@ -310,7 +307,7 @@ func setEnvironmentProperties(properties map[string]string) error {
 	return nil
 }
 
-func IsPluginAdded(m *manifest.Manifest, descriptor *pluginDescriptor) bool {
+func IsPluginAdded(m *manifest.Manifest, descriptor *PluginDescriptor) bool {
 	for _, pluginID := range m.Plugins {
 		if pluginID == descriptor.ID {
 			return true
@@ -354,7 +351,7 @@ func startPluginsForExecution(m *manifest.Manifest) (Handler, []string) {
 				continue
 			}
 			logger.Debugf(true, "Starting %s plugin", pd.Name)
-			plugin, err := StartPlugin(pd, executionScope)
+			plugin, err := startPlugin(pd, executionScope)
 			if err != nil {
 				warnings = append(warnings, fmt.Sprintf("Error starting plugin %s %s. %s", pd.Name, pd.Version, err.Error()))
 				continue
@@ -400,7 +397,7 @@ func GenerateDoc(pluginName string, specDirs []string, startAPIFunc func([]strin
 	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, "||"))
 	os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
 	if pd.hasCapability(gRPCSupportCapability) {
-		p, err := StartPlugin(pd, docScope)
+		p, err := startPlugin(pd, docScope)
 		if err != nil {
 			logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
 		}
@@ -418,7 +415,7 @@ func GenerateDoc(pluginName string, specDirs []string, startAPIFunc func([]strin
 		if err != nil {
 			logger.Fatalf(true, "Failed to set env GAUGE_API_PORT. %s", err.Error())
 		}
-		p, err := StartPlugin(pd, docScope)
+		p, err := startPlugin(pd, docScope)
 		if err != nil {
 			logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
 		}

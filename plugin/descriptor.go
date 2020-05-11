@@ -18,7 +18,7 @@ const (
 	gRPCSupportCapability pluginCapability = "grpc_support"
 )
 
-type pluginDescriptor struct {
+type PluginDescriptor struct {
 	ID          string
 	Version     string
 	Name        string
@@ -34,7 +34,7 @@ type pluginDescriptor struct {
 	Capabilities        []string
 }
 
-func (pd *pluginDescriptor) hasScope(scope pluginScope) bool {
+func (pd *PluginDescriptor) hasScope(scope pluginScope) bool {
 	for _, s := range pd.Scope {
 		if strings.ToLower(s) == string(scope) {
 			return true
@@ -43,13 +43,13 @@ func (pd *pluginDescriptor) hasScope(scope pluginScope) bool {
 	return false
 }
 
-func (pd *pluginDescriptor) hasAnyScope() bool {
+func (pd *PluginDescriptor) hasAnyScope() bool {
 	return len(pd.Scope) > 0
 }
 
-func (pd *pluginDescriptor) hasCapability(cap pluginCapability) bool {
+func (pd *PluginDescriptor) hasCapability(capability pluginCapability) bool {
 	for _, c := range pd.Capabilities {
-		if strings.ToLower(c) == string(cap) {
+		if strings.ToLower(c) == string(capability) {
 			return true
 		}
 	}

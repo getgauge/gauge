@@ -37,7 +37,7 @@ func (w Writer) Write(p []byte) (int, error) {
 	logEntries := strings.Split(logEntry, "\n")
 	for _, _logEntry := range logEntries {
 		_logEntry = strings.Trim(_logEntry, " ")
-		if len(_logEntry) == 0 {
+		if _logEntry == "" {
 			continue
 		}
 		_p := []byte(_logEntry)
