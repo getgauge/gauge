@@ -14,7 +14,7 @@ import (
 )
 
 // CurrentGaugeVersion represents the current version of Gauge
-var CurrentGaugeVersion = &Version{1, 0, 8}
+var CurrentGaugeVersion = &Version{1, 0, 9}
 
 // BuildMetadata represents build information of current release (e.g, nightly build information)
 var BuildMetadata = ""
@@ -56,7 +56,7 @@ func VersionError(level, text string, err error) error {
 	return fmt.Errorf("error parsing %s version %s to integer. %s", level, text, err.Error())
 }
 
-func (Version *Version) IsBetween(lower *Version, greater *Version) bool {
+func (Version *Version) IsBetween(lower, greater *Version) bool {
 	return Version.IsGreaterThanEqualTo(lower) && Version.IsLesserThanEqualTo(greater)
 }
 
@@ -80,7 +80,7 @@ func (Version *Version) IsEqualTo(version1 *Version) bool {
 	return IsEqual(Version.Major, version1.Major) && IsEqual(Version.Minor, version1.Minor) && IsEqual(Version.Patch, version1.Patch)
 }
 
-func CompareVersions(first *Version, second *Version, compareFunc func(int, int) bool) bool {
+func CompareVersions(first, second *Version, compareFunc func(int, int) bool) bool {
 	if compareFunc(first.Major, second.Major) {
 		return true
 	} else if IsEqual(first.Major, second.Major) {

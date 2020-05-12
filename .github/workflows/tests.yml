@@ -195,3 +195,30 @@ jobs:
         with:
           name: ft-logs-${{ matrix.os }}
           path: gauge-tests/logs
+
+  build:
+    name: Build ${{ matrix.os }} artifacts
+    runs-on: ${{ matrix.os }}
+    needs: [ functional-tests, lsp-tests ]
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Build distro for ${{ matrix.os }}
+        run: go run build/make.go  && go run build/make.go --distro
+
+      - name: Upload artifacts for ${{ matrix.os }}
+        uses: actions/upload-artifact@v1
+        with:
+          name: gauge-artifact-for-${{ matrix.os }}
+          path: deploy

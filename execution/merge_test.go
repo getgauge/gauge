@@ -77,16 +77,14 @@ func TestMergeResults(t *testing.T) {
 	got := mergeResults([]*result.SpecResult{
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
+				SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
 				Items: []*gm.ProtoItem{
-					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"d"}}}}},
 					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
 							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 0,
+							TableRowIndex: 2,
 						},
 					},
 				},
@@ -94,9 +92,21 @@ func TestMergeResults(t *testing.T) {
 		},
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
+				SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex: 0,
+						},
+					},
+				},
+			}, ExecutionTime: int64(2),
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
 				Items: []*gm.ProtoItem{
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
 					{
@@ -111,11 +121,9 @@ func TestMergeResults(t *testing.T) {
 	})
 	want := &result.SpecResult{
 		ProtoSpec: &gm.ProtoSpec{
-			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
-			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
+			SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
 			Items: []*gm.ProtoItem{
-				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
+				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"d"}}, {Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"}},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
@@ -129,9 +137,61 @@ func TestMergeResults(t *testing.T) {
 						TableRowIndex: 1,
 					},
 				},
+				{
+					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex: 2,
+					},
+				},
 			}, IsTableDriven: false,
 		},
-		ScenarioCount: 3, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(3),
+		ScenarioCount: 4, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(5),
+	}
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestMergeResultsWithPreHookFailure(t *testing.T) {
+	got := mergeResults([]*result.SpecResult{
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
+				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
+				},
+			}, ExecutionTime: int64(1),
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
+				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"d"}}}}},
+				},
+			}, ExecutionTime: int64(2),
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace2"}},
+				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
+				},
+			}, ExecutionTime: int64(2),
+		},
+	})
+	want := &result.SpecResult{
+		ProtoSpec: &gm.ProtoSpec{
+			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}, {StackTrace: "stacktrace2", TableRowIndex: 2}},
+			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
+			Items: []*gm.ProtoItem{
+				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"d"}}, {Cells: []string{"c"}}}}},
+			}, IsTableDriven: false,
+		},
+		ScenarioCount: 0, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(5),
 	}
 
 	if !reflect.DeepEqual(got, want) {
@@ -143,9 +203,7 @@ func TestMergeSkippedResults(t *testing.T) {
 	got := mergeResults([]*result.SpecResult{
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
 				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}},
 				Items: []*gm.ProtoItem{
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
 					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading1", SkipErrors: []string{"error"}}},
@@ -161,9 +219,7 @@ func TestMergeSkippedResults(t *testing.T) {
 		},
 		{
 			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
 				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace1"}},
 				Items: []*gm.ProtoItem{
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
 					{
@@ -179,9 +235,7 @@ func TestMergeSkippedResults(t *testing.T) {
 	})
 	want := &result.SpecResult{
 		ProtoSpec: &gm.ProtoSpec{
-			PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-			PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "stacktrace"}, {StackTrace: "stacktrace1", TableRowIndex: 1}},
 			Items: []*gm.ProtoItem{
 				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading1"}},
@@ -200,123 +254,6 @@ func TestMergeSkippedResults(t *testing.T) {
 			}, IsTableDriven: false,
 		},
 		ScenarioCount: 3, ScenarioSkippedCount: 3, ScenarioFailedCount: 0, IsFailed: false, Skipped: true, ExecutionTime: int64(3),
-	}
-
-	if !reflect.DeepEqual(got, want) {
-		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
-	}
-}
-
-func TestMergeParallelTagFiltersExecutionResults(t *testing.T) {
-	got := mergeResults([]*result.SpecResult{
-		{
-			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "pre stacktrace0 for scenario Heading1"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "post stacktrace0 for scenario Heading1"}},
-				Items: []*gm.ProtoItem{
-					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
-					{
-						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"},
-							TableRowIndex: 0,
-						},
-					},
-				},
-			}, ExecutionTime: int64(1),
-		},
-		{
-			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "pre stacktrace1 for scenario Heading1"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "post stacktrace1 for scenario Heading1"}},
-				Items: []*gm.ProtoItem{
-					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
-					{
-						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"},
-							TableRowIndex: 1,
-						},
-					},
-				},
-			}, ExecutionTime: int64(1),
-		},
-		{
-			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "pre stacktrace0 for scenario Heading2"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "post stacktrace0 for scenario Heading2"}},
-				Items: []*gm.ProtoItem{
-					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
-					{
-						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 0,
-						},
-					},
-				},
-			}, ExecutionTime: int64(2),
-		},
-		{
-			ProtoSpec: &gm.ProtoSpec{
-				PreHookFailures: []*gm.ProtoHookFailure{{StackTrace: "pre stacktrace1 for scenario Heading2"}},
-				SpecHeading:     "heading", FileName: "filename", Tags: []string{"tags"},
-				PostHookFailures: []*gm.ProtoHookFailure{{StackTrace: "post stacktrace1 for scenario Heading2"}},
-				Items: []*gm.ProtoItem{
-					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
-					{
-						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 1,
-						},
-					},
-				},
-			}, ExecutionTime: int64(2),
-		},
-	})
-	want := &result.SpecResult{
-		ProtoSpec: &gm.ProtoSpec{
-			PreHookFailures: []*gm.ProtoHookFailure{
-				{StackTrace: "pre stacktrace0 for scenario Heading1"},
-				{StackTrace: "pre stacktrace1 for scenario Heading1", TableRowIndex: 1},
-				{StackTrace: "pre stacktrace0 for scenario Heading2"},
-				{StackTrace: "pre stacktrace1 for scenario Heading2", TableRowIndex: 1},
-			},
-			SpecHeading: "heading", FileName: "filename", Tags: []string{"tags"},
-			PostHookFailures: []*gm.ProtoHookFailure{
-				{StackTrace: "post stacktrace0 for scenario Heading1"},
-				{StackTrace: "post stacktrace1 for scenario Heading1", TableRowIndex: 1},
-				{StackTrace: "post stacktrace0 for scenario Heading2"},
-				{StackTrace: "post stacktrace1 for scenario Heading2", TableRowIndex: 1}},
-			Items: []*gm.ProtoItem{
-				{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}}},
-				{
-					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"},
-						TableRowIndex: 0,
-					},
-				},
-				{
-					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"},
-						TableRowIndex: 1,
-					},
-				},
-				{
-					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 0,
-					},
-				},
-				{
-					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 1,
-					},
-				},
-			}, IsTableDriven: false,
-		},
-		ScenarioCount: 4, ScenarioSkippedCount: 0, ScenarioFailedCount: 0, IsFailed: false, Skipped: false, ExecutionTime: int64(6),
 	}
 
 	if !reflect.DeepEqual(got, want) {
