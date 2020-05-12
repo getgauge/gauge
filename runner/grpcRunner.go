@@ -295,12 +295,12 @@ func (r *GrpcRunner) Pid() int {
 }
 
 // StartGrpcRunner makes a connection with grpc server
-func StartGrpcRunner(m *manifest.Manifest, stdout io.Writer, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
+func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout time.Duration, shouldWriteToStdout bool) (*GrpcRunner, error) {
 	portChan := make(chan string)
 	errChan := make(chan error)
 	logWriter := &logger.LogWriter{
-		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language),
-		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language),
+		Stderr: logger.NewCustomWriter(portChan, stderr, m.Language, true),
+		Stdout: logger.NewCustomWriter(portChan, stdout, m.Language, false),
 	}
 	cmd, info, err := runRunnerCommand(m, "0", false, logWriter)
 	if err != nil {

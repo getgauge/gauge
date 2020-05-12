@@ -14,15 +14,15 @@ import (
 
 const portPrefix = "Listening on port:"
 
-type customWriter struct {
+type CustomWriter struct {
 	file io.Writer
 	port chan string
 }
 
-func (w customWriter) Write(p []byte) (n int, err error) {
+func (w CustomWriter) Write(p []byte) (n int, err error) {
 	line := string(p)
 	if strings.Contains(line, portPrefix) {
-		text := strings.Replace(line, "\r\n", "\n", -1)
+		text := strings.ReplaceAll(line, "\r\n", "\n")
 		re := regexp.MustCompile(portPrefix + "([0-9]+)")
 		f := re.FindStringSubmatch(text)
 		w.port <- f[1]
@@ -31,13 +31,14 @@ func (w customWriter) Write(p []byte) (n int, err error) {
 	return w.file.Write(p)
 }
 
-func NewCustomWriter(portChan chan string, outFile io.Writer, id string) customWriter {
-	return customWriter{
+func NewCustomWriter(portChan chan string, outFile io.Writer, id string, isErrorStream bool) CustomWriter {
+	return CustomWriter{
 		port: portChan,
 		file: Writer{
 			File:                outFile,
 			LoggerID:            id,
 			ShouldWriteToStdout: true,
+			isErrorStream:       isErrorStream,
 		},
 	}
 }
