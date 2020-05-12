@@ -19,14 +19,14 @@ var (
 		Use:     "template [flags] [args]",
 		Short:   "Change template configurations",
 		Long:    `Change template configurations.`,
-		Example: `  gauge template java getgauge/java-template`,
+		Example: `  gauge template custom-template ate https://example.org/templates/custom-template.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if templateList || machineReadable {
 				text, err := template.List(machineReadable)
 				if err != nil {
 					logger.Fatalf(true, err.Error())
 				}
-				logger.Infof(true, text)
+				fmt.Println(text)
 				return
 			}
 			if len(args) == 0 {
@@ -42,7 +42,7 @@ var (
 			}
 			err := template.Update(args[0], args[1])
 			if err != nil {
-				exit(fmt.Errorf("template URL should be a valid link of zip"), cmd.UsageString())
+				logger.Fatalf(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,

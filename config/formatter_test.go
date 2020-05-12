@@ -31,7 +31,7 @@ func TestJSONFormatter(t *testing.T) {
 		properties = append(properties, *p)
 	}
 
-	f := &TextFormatter{}
+	f := &TextFormatter{Headers: []string{"Key", "Value"}}
 	text, err := f.Format(properties)
 
 	if err != nil {

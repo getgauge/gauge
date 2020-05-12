@@ -12,19 +12,20 @@ import (
 	"strings"
 )
 
-type formatter interface {
+type Formatter interface {
 	Format([]Property) (string, error)
 }
 
-type jsonFormatter struct {
+type JsonFormatter struct {
 }
 
-func (f jsonFormatter) Format(p []Property) (string, error) {
+func (f JsonFormatter) Format(p []Property) (string, error) {
 	bytes, err := json.MarshalIndent(p, "", "\t")
 	return string(bytes), err
 }
 
 type TextFormatter struct {
+	Headers []string
 }
 
 func (f TextFormatter) Format(p []Property) (string, error) {
@@ -38,6 +39,9 @@ func (f TextFormatter) Format(p []Property) (string, error) {
 			max = len(text)
 		}
 	}
-	s = append([]string{fmt.Sprintf(format, "Key", "Value"), strings.Repeat("-", max)}, s...)
+	if len(f.Headers) == 0 {
+		f.Headers = []string{"Key", "Value"}
+	}
+	s = append([]string{fmt.Sprintf(format, f.Headers[0], f.Headers[1]), strings.Repeat("-", max)}, s...)
 	return strings.Join(s, "\n"), nil
 }

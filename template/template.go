@@ -45,9 +45,11 @@ func (t *templates) String() (string, error) {
 	return buffer.String(), nil
 }
 
-func (t *templates) update(k, v string) error {
-	if _, err := url.Parse(v); err != nil {
-		return err
+func (t *templates) update(k, v string, validate bool) error {
+	if validate {
+		if _, err := url.ParseRequestURI(v); err != nil {
+			return fmt.Errorf("Failed to add template '%s'. The template location must be a valid (https) URI", k)
+		}
 	}
 	if _, ok := t.t[k]; ok {
 		t.t[k].Value = v
@@ -77,7 +79,7 @@ func Update(name, value string) error {
 	if err != nil {
 		return err
 	}
-	if err := t.update(name, value); err != nil {
+	if err := t.update(name, value, true); err != nil {
 		return err
 	}
 
@@ -118,7 +120,11 @@ func All() (string, error) {
 }
 
 func List(machineReadable bool) (string, error) {
-	f := config.TextFormatter{}
+	var f config.Formatter
+	f = config.TextFormatter{Headers: []string{"Template Name", "Location"}}
+	if machineReadable {
+		f = config.JsonFormatter{}
+	}
 	t, err := mergeTemplates()
 	if err != nil {
 		return "", err
@@ -132,7 +138,7 @@ func List(machineReadable bool) (string, error) {
 
 func defaults() *templates {
 	return &templates{t: map[string]*config.Property{
-		"dotnet":              getProperty("template-dotnet", "dontet"),
+		"dotnet":              getProperty("template-dotnet", "dotnet"),
 		"java":                getProperty("template-java", "java"),
 		"java_gradle":         getProperty("template-java-gradle", "java_gradle"),
 		"java_maven":          getProperty("template-java-maven", "java_maven"),
@@ -154,7 +160,7 @@ func mergeTemplates() (*templates, error) {
 		return t, nil
 	}
 	for k, v := range config {
-		if err := t.update(k, v); err != nil {
+		if err := t.update(k, v, false); err != nil {
 			return nil, err
 		}
 	}

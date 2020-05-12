@@ -133,7 +133,7 @@ func InitializeProject(templateName string, silent bool) {
 	templateURL, err := template.Get(templateName)
 	logger.Debugf(true, "Failed to get template download info for '%s'.", templateName)
 	if err == nil {
-		checkURLSecurity(templateURL)
+		checkURL(templateURL)
 		err = initializeTemplate(templateName, templateURL)
 		installRunner(templateName, silent)
 	} else {
@@ -149,7 +149,7 @@ func InitializeProject(templateName string, silent bool) {
 func InitializeProjectFromURL(templateURL string, silent bool) {
 	validateDirectory()
 	name := getTemplateName(templateURL)
-	checkURLSecurity(templateURL)
+	checkURL(templateURL)
 	if err := initializeTemplate(name, templateURL); err != nil {
 		logger.Fatalf(true, "Failed to initialize project. %s", err.Error())
 	}
@@ -168,10 +168,10 @@ func validateDirectory() {
 	}
 }
 
-func checkURLSecurity(templateURL string) {
-	u, err := url.Parse(templateURL)
+func checkURL(templateURL string) {
+	u, err := url.ParseRequestURI(templateURL)
 	if err != nil {
-		logger.Fatalf(true, "Failed to parse URL '%s'.  %s", templateURL, err.Error())
+		logger.Fatalf(true, "Failed to parse template URL '%s'. The template location must be a valid (https) URI", templateURL)
 	}
 	if u.Scheme != https && !config.AllowInsecureDownload() {
 		logger.Fatalf(true, "The url '%s' in not secure and 'allow_insecure_download' is set to false.\n"+

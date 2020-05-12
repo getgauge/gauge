@@ -50,7 +50,7 @@ func (p *properties) get(k string) (string, error) {
 	return "", fmt.Errorf("config '%s' doesn't exist", k)
 }
 
-func (p *properties) Format(f formatter) (string, error) {
+func (p *properties) Format(f Formatter) (string, error) {
 	var all []Property
 	for _, v := range p.p {
 		all = append(all, *v)
@@ -159,10 +159,10 @@ func GetProperty(name string) (string, error) {
 }
 
 func List(machineReadable bool) (string, error) {
-	var f formatter
-	f = TextFormatter{}
+	var f Formatter
+	f = TextFormatter{Headers: []string{"Key", "Value"}}
 	if machineReadable {
-		f = &jsonFormatter{}
+		f = &JsonFormatter{}
 	}
 	mp, err := mergedProperties()
 	if err != nil {
