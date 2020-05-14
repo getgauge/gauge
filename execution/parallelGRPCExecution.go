@@ -33,10 +33,6 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 			executionInfo := newExecutionInfo(e.specCollection, r, e.pluginHandler, e.errMaps, false, stream)
 			se := newSimpleExecution(executionInfo, false, true)
 			se.execute()
-			err := r.Kill()
-			if err != nil {
-				logger.Errorf(true, "Failed to kill runner. %s", err.Error())
-			}
 			e.resultChan <- se.suiteResult
 		}(i)
 	}
