@@ -37,8 +37,8 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 		}(i)
 	}
 
-	e.notifyAfterSuite()
 	e.wg.Wait()
+	e.notifyAfterSuite()
 	r.IsExecuting = false
 	if err := r.Kill(); err != nil {
 		logger.Infof(true, "unable to kill runner: %s", err.Error())
