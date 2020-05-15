@@ -42,7 +42,7 @@ type simpleExecution struct {
 	skipSuiteEvents      bool
 }
 
-func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs bool, skipSuiteEvents bool) *simpleExecution {
+func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs, skipSuiteEvents bool) *simpleExecution {
 	if combineDataTableSpecs {
 		executionInfo.specs = gauge.NewSpecCollection(executionInfo.specs.Specs(), true)
 	}
@@ -74,7 +74,7 @@ func (e *simpleExecution) execute() {
 		logger.Debug(true, "Initialising suite data store.")
 		initSuiteDataStoreResult := e.initSuiteDataStore()
 		if initSuiteDataStoreResult.GetFailed() {
-			e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
+			e.suiteResult.AddUnhandledError(fmt.Errorf("failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
 			return
 		}
 		e.notifyBeforeSuite()

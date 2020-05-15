@@ -22,7 +22,7 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
 	res := initSuiteDataStore(r)
 	if res.GetFailed() {
-		e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", res.GetErrorMessage()))
+		e.suiteResult.AddUnhandledError(fmt.Errorf("failed to initialize suite datastore. Error: %s", res.GetErrorMessage()))
 		return
 	}
 	e.notifyBeforeSuite()
