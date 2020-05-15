@@ -61,6 +61,30 @@ func TestLogWriterToLogPlainStrings(t *testing.T) {
 	assertLogContains(t, []string{"Foo Bar"})
 }
 
+func TestUnformattedLogWrittenToStderrShouldBePrefixedWithError(t *testing.T) {
+	defer tearDown(t)
+	setupLogger("debug")
+	l := newLogWriter("js")
+
+	if _, err := l.Stderr.Write([]byte("Foo Bar\n")); err != nil {
+		t.Fatalf("Unable to write to logWriter")
+	}
+
+	assertLogContains(t, []string{"[ERROR]"})
+}
+
+func TestUnformattedLogWrittenToStdoutShouldBePrefixedWithInfo(t *testing.T) {
+	defer tearDown(t)
+	setupLogger("debug")
+	l := newLogWriter("js")
+
+	if _, err := l.Stdout.Write([]byte("Foo Bar\n")); err != nil {
+		t.Fatalf("Unable to write to logWriter")
+	}
+
+	assertLogContains(t, []string{"[INFO]"})
+}
+
 func TestLoggingFromDifferentWritersAtSameTime(t *testing.T) {
 	defer tearDown(t)
 	setupLogger("info")
@@ -125,7 +149,7 @@ func setupLogger(level string) {
 func newLogWriter(loggerID string) *LogWriter {
 	f, _ := os.OpenFile(ActiveLogFile, os.O_RDWR, 0)
 	return &LogWriter{
-		Stderr: Writer{ShouldWriteToStdout: false, stream: 0, LoggerID: loggerID, File: f},
+		Stderr: Writer{ShouldWriteToStdout: false, stream: 0, LoggerID: loggerID, File: f, isErrorStream: true},
 		Stdout: Writer{ShouldWriteToStdout: false, stream: 0, LoggerID: loggerID, File: f},
 	}
 }

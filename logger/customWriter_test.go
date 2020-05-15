@@ -15,7 +15,7 @@ import (
 func TestCustomWriterShouldExtractPortNumberFromStdout(t *testing.T) {
 	portChan := make(chan string)
 	var b bytes.Buffer
-	w := customWriter{
+	w := CustomWriter{
 		file: &b,
 		port: portChan,
 	}
@@ -41,7 +41,7 @@ func TestCustomWriterShouldExtractPortNumberFromStdout(t *testing.T) {
 func TestCustomWriterShouldExtractPortNumberFromStdoutWithMultipleLines(t *testing.T) {
 	portChan := make(chan string)
 	var b bytes.Buffer
-	w := customWriter{
+	w := CustomWriter{
 		file: &b,
 		port: portChan,
 	}
