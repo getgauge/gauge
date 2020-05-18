@@ -161,6 +161,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 func (e *parallelExecution) executeLazily() {
 	defer close(e.resultChan)
 	e.wg.Add(e.numberOfStreams())
+	e.startRunnersForRemainingStreams()
 
 	for i := 1; i <= len(e.runners); i++ {
 		go func(stream int) {
@@ -221,7 +222,10 @@ func (e *parallelExecution) executeEagerly() {
 	distributions := e.numberOfStreams()
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
+	e.startRunnersForRemainingStreams()
+
 	for i, s := range specs {
+		i, s := i, s
 		go func(j int) {
 			defer e.wg.Done()
 			e.startSpecsExecutionWithRunner(s, e.runners[j], j+1)
