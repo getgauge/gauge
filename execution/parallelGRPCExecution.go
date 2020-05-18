@@ -14,9 +14,9 @@ func (e *parallelExecution) executeGrpcMultithreaded() {
 	defer close(e.resultChan)
 	totalStreams := e.numberOfStreams()
 	e.wg.Add(totalStreams)
-	r, ok := e.runner.(*runner.GrpcRunner)
+	r, ok := e.runners[0].(*runner.GrpcRunner)
 	if !ok {
-		logger.Fatalf(true, "Expected GrpcRunner, but got %T instead. Gauge cannot use this runner.", e.runner)
+		logger.Fatalf(true, "Expected GrpcRunner, but got %T instead. Gauge cannot use this runner.", e.runners[0])
 	}
 	r.IsExecuting = true
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
@@ -57,7 +57,7 @@ func (e *parallelExecution) notifyBeforeSuite() {
 			CurrentExecutionInfo: &gauge_messages.ExecutionInfo{},
 			Stream:               1},
 	}
-	res := e.runner.ExecuteAndGetStatus(m)
+	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.pluginHandler.NotifyPlugins(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
@@ -75,7 +75,7 @@ func (e *parallelExecution) notifyAfterSuite() {
 			Stream:               1,
 		},
 	}
-	res := e.runner.ExecuteAndGetStatus(m)
+	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.pluginHandler.NotifyPlugins(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles

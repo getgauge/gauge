@@ -49,7 +49,7 @@ type parallelExecution struct {
 	manifest                 *manifest.Manifest
 	specCollection           *gauge.SpecCollection
 	pluginHandler            plugin.Handler
-	runner                   runner.Runner
+	runners                  []runner.Runner
 	suiteResult              *result.SuiteResult
 	numberOfExecutionStreams int
 	tagsToFilter             string
@@ -62,7 +62,7 @@ func newParallelExecution(e *executionInfo) *parallelExecution {
 	return &parallelExecution{
 		manifest:                 e.manifest,
 		specCollection:           e.specs,
-		runner:                   e.runner,
+		runners:                  []runner.Runner{e.runner},
 		pluginHandler:            e.pluginHandler,
 		numberOfExecutionStreams: e.numberOfStreams,
 		tagsToFilter:             e.tagsToFilter,
@@ -99,6 +99,24 @@ func (e *parallelExecution) start() {
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
+func (e *parallelExecution) startRunnersForRemainingStreams() {
+	totalStreams := e.numberOfStreams()
+	rChan := make(chan runner.Runner, totalStreams-1)
+	for i := 2; i <= totalStreams; i++ {
+		go func(stream int) {
+			r, err := e.startRunner(e.specCollection, stream)
+			if len(err) > 0 {
+				e.resultChan <- &result.SuiteResult{UnhandledErrors: err}
+				return
+			}
+			rChan <- r
+		}(i)
+	}
+	for i := 1; i < totalStreams; i++ {
+		e.runners = append(e.runners, <-rChan)
+	}
+}
+
 func (e *parallelExecution) run() *result.SuiteResult {
 	e.start()
 	var res []*result.SuiteResult
@@ -120,7 +138,7 @@ func (e *parallelExecution) run() *result.SuiteResult {
 	// skipcq CRT-A0013
 	if e.isMultithreaded() {
 		logger.Debugf(true, "Using multithreading for parallel execution.")
-		if e.runner.Info().GRPCSupport {
+		if e.runners[0].Info().GRPCSupport {
 			go e.executeGrpcMultithreaded()
 		} else {
 			go e.executeLegacyMultithreaded()
@@ -142,10 +160,13 @@ func (e *parallelExecution) run() *result.SuiteResult {
 
 func (e *parallelExecution) executeLazily() {
 	defer close(e.resultChan)
-	totalStreams := e.numberOfStreams()
-	e.wg.Add(totalStreams)
-	for i := 0; i < totalStreams; i++ {
-		go e.startStream(e.specCollection, i+1)
+	e.wg.Add(e.numberOfStreams())
+
+	for i := 1; i <= len(e.runners); i++ {
+		go func(stream int) {
+			defer e.wg.Done()
+			e.startSpecsExecutionWithRunner(e.specCollection, e.runners[stream-1], stream)
+		}(i)
 	}
 	e.wg.Wait()
 }
@@ -201,23 +222,12 @@ func (e *parallelExecution) executeEagerly() {
 	specs := filter.DistributeSpecs(e.specCollection.Specs(), distributions)
 	e.wg.Add(distributions)
 	for i, s := range specs {
-		go e.startStream(s, i+1)
+		go func(j int) {
+			defer e.wg.Done()
+			e.startSpecsExecutionWithRunner(s, e.runners[j], j+1)
+		}(i)
 	}
 	e.wg.Wait()
-}
-
-func (e *parallelExecution) startStream(s *gauge.SpecCollection, stream int) {
-	defer e.wg.Done()
-	if stream == 1 {
-		e.startSpecsExecutionWithRunner(s, e.runner, stream)
-	} else {
-		r, err := e.startRunner(s, stream)
-		if len(err) > 0 {
-			e.resultChan <- &result.SuiteResult{UnhandledErrors: err}
-			return
-		}
-		e.startSpecsExecutionWithRunner(s, r, stream)
-	}
 }
 
 func (e *parallelExecution) startRunner(s *gauge.SpecCollection, stream int) (runner.Runner, []error) {
@@ -312,7 +322,7 @@ func (e *parallelExecution) isMultithreaded() bool {
 	if !env.EnableMultiThreadedExecution() {
 		return false
 	}
-	if !e.runner.IsMultithreaded() {
+	if !e.runners[0].IsMultithreaded() {
 		logger.Warningf(true, "Runner doesn't support mutithreading, using multiprocess parallel execution.")
 		return false
 	}
