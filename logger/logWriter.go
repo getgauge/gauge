@@ -34,7 +34,7 @@ type LogInfo struct {
 
 func (w Writer) Write(p []byte) (int, error) {
 	logEntry := string(p)
-	logEntries := strings.Split(logEntry, "\n")
+	logEntries := strings.Split(strings.ReplaceAll(logEntry, "\r\n", "\n"), "\n")
 	for _, _logEntry := range logEntries {
 		_logEntry = strings.Trim(_logEntry, " ")
 		if _logEntry == "" {
