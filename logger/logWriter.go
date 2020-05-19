@@ -9,6 +9,7 @@
 package logger
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,8 +17,8 @@ import (
 	"strings"
 )
 
-// Writer reperesnts to a custom writer.
-// It intercents the log messages and redirects them to logger according the log level given in info
+// Writer represents to a custom writer.
+// It intercepts the log messages and redirects them to logger according the log level given in info
 type Writer struct {
 	LoggerID            string
 	ShouldWriteToStdout bool
@@ -26,17 +27,16 @@ type Writer struct {
 	isErrorStream       bool
 }
 
-// LogInfo repesents the log message structure for plugins
+// LogInfo represents the log message structure for plugins
 type LogInfo struct {
 	LogLevel string `json:"logLevel"`
 	Message  string `json:"message"`
 }
 
 func (w Writer) Write(p []byte) (int, error) {
-	logEntry := string(p)
-	logEntries := strings.Split(strings.ReplaceAll(logEntry, "\r\n", "\n"), "\n")
-	for _, _logEntry := range logEntries {
-		_logEntry = strings.Trim(_logEntry, " ")
+	scanner := bufio.NewScanner(strings.NewReader(string(p)))
+	for scanner.Scan() {
+		_logEntry := strings.Trim(scanner.Text(), " ")
 		if _logEntry == "" {
 			continue
 		}
@@ -70,7 +70,7 @@ func (w Writer) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-// LogWriter reperesents the type which consists of two custom writers
+// LogWriter represents the type which consists of two custom writers
 type LogWriter struct {
 	Stderr io.Writer
 	Stdout io.Writer
