@@ -111,7 +111,7 @@ func (s *MySuite) TestIsMultiThreadedWithEnvSetToFalse(c *C) {
 }
 
 func (s *MySuite) TestIsMultiThreadedWithRunnerWhenSupportsMultithreading(c *C) {
-	e := parallelExecution{errMaps: getValidationErrorMap(), runner: &fakeRunner{isMultiThreaded: true}}
+	e := parallelExecution{errMaps: getValidationErrorMap(), runners: []runner.Runner{&fakeRunner{isMultiThreaded: true}}}
 
 	env.EnableMultiThreadedExecution = func() bool { return true }
 
@@ -119,7 +119,7 @@ func (s *MySuite) TestIsMultiThreadedWithRunnerWhenSupportsMultithreading(c *C) 
 }
 
 func (s *MySuite) TestIsMultiThreadedWithRunnerWhenDoesNotSupportMultithreading(c *C) {
-	e := parallelExecution{errMaps: getValidationErrorMap(), runner: &fakeRunner{isMultiThreaded: false}}
+	e := parallelExecution{errMaps: getValidationErrorMap(), runners: []runner.Runner{&fakeRunner{isMultiThreaded: false}}}
 
 	env.EnableMultiThreadedExecution = func() bool { return true }
 
