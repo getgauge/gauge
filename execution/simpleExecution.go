@@ -39,19 +39,21 @@ type simpleExecution struct {
 	errMaps              *gauge.BuildErrors
 	startTime            time.Time
 	stream               int
+	skipSuiteEvents      bool
 }
 
-func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs bool) *simpleExecution {
+func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs, skipSuiteEvents bool) *simpleExecution {
 	if combineDataTableSpecs {
 		executionInfo.specs = gauge.NewSpecCollection(executionInfo.specs.Specs(), true)
 	}
 	return &simpleExecution{
-		manifest:       executionInfo.manifest,
-		specCollection: executionInfo.specs,
-		runner:         executionInfo.runner,
-		pluginHandler:  executionInfo.pluginHandler,
-		errMaps:        executionInfo.errMaps,
-		stream:         executionInfo.stream,
+		manifest:        executionInfo.manifest,
+		specCollection:  executionInfo.specs,
+		runner:          executionInfo.runner,
+		pluginHandler:   executionInfo.pluginHandler,
+		errMaps:         executionInfo.errMaps,
+		stream:          executionInfo.stream,
+		skipSuiteEvents: skipSuiteEvents,
 	}
 }
 
@@ -64,26 +66,28 @@ func (e *simpleExecution) run() *result.SuiteResult {
 
 func (e *simpleExecution) execute() {
 	e.suiteResult = result.NewSuiteResult(ExecuteTags, e.startTime)
-	setResultMeta := func() {
+	defer func() {
 		e.suiteResult.UpdateExecTime(e.startTime)
 		e.suiteResult.SetSpecsSkippedCount()
-	}
-	logger.Debug(true, "Initialising suite data store.")
-	initSuiteDataStoreResult := e.initSuiteDataStore()
-	if initSuiteDataStoreResult.GetFailed() {
-		e.suiteResult.AddUnhandledError(fmt.Errorf("Failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
-		setResultMeta()
-		return
+	}()
+	if !e.skipSuiteEvents {
+		logger.Debug(true, "Initialising suite data store.")
+		initSuiteDataStoreResult := e.initSuiteDataStore()
+		if initSuiteDataStoreResult.GetFailed() {
+			e.suiteResult.AddUnhandledError(fmt.Errorf("failed to initialize suite datastore. Error: %s", initSuiteDataStoreResult.GetErrorMessage()))
+			return
+		}
+		e.notifyBeforeSuite()
 	}
 
-	e.notifyBeforeSuite()
 	if !e.suiteResult.GetFailed() {
 		results := e.executeSpecs(e.specCollection)
 		e.suiteResult.AddSpecResults(results)
 	}
-	e.notifyAfterSuite()
 
-	setResultMeta()
+	if !e.skipSuiteEvents {
+		e.notifyAfterSuite()
+	}
 }
 
 func (e *simpleExecution) start() {
