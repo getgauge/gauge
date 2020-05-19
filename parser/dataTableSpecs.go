@@ -24,14 +24,16 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 				if len(tableRelatedScenarios) > 0 {
 					s := createSpecsForTableRows(spec, tableRelatedScenarios, errMap)
 					s[0].Scenarios = append(s[0].Scenarios, nonTableRelatedScenarios...)
+					for _, scn := range nonTableRelatedScenarios {
+						s[0].Items = append(s[0].Items, scn)
+					}
 					specs = append(specs, s...)
 				} else {
 					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
 				}
 			}
 		} else {
-			spec.Scenarios = copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap)
-			specs = append(specs, spec)
+			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
 		}
 	}
 	return

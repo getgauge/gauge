@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"reflect"
 
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -102,6 +103,50 @@ func TestGetSpecsForDataTableRows(t *testing.T) {
 	}
 }
 
+func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenariosAndItemCollection(t *testing.T) {
+	specs := []*gauge.Specification{
+		{
+			Heading: &gauge.Heading{},
+			Scenarios: []*gauge.Scenario{
+				{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}},
+				{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "param1", ArgType: gauge.Static, Name: "param1"}}}}},
+			},
+			DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
+			}, 0)},
+		},
+	}
+	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+
+	if len(actualSpecs[0].Scenarios) != len(actualSpecs[0].Items) {
+		t.Errorf("Failed: Wanted: %d scenarios in items Got: %d scenarios", len(actualSpecs[0].Scenarios), len(actualSpecs[0].Items))
+	}
+}
+
+func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenariosAndItemCollectionForScenarioDataTable(t *testing.T) {
+	old := env.AllowScenarioDatatable
+	env.AllowScenarioDatatable = func() bool {
+		return true
+	}
+	specs := []*gauge.Specification{
+		{
+			Heading: &gauge.Heading{},
+			Scenarios: []*gauge.Scenario{
+				{
+					Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
+					DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+						{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}, {Value: "row3", CellType: gauge.Static}},
+					}, 0)}},
+			},
+		},
+	}
+	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+
+	if len(actualSpecs[0].Scenarios) != len(actualSpecs[0].Items) {
+		t.Errorf("Failed: Wanted: %d scenarios in items Got: %d scenarios", len(actualSpecs[0].Scenarios), len(actualSpecs[0].Items))
+	}
+	env.AllowScenarioDatatable = old
+}
 func TestGetTableWithOneRow(t *testing.T) {
 	table := *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 		{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
