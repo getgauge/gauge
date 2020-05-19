@@ -8,6 +8,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/getgauge/gauge/template"
 
 	"github.com/getgauge/gauge/projectInit"
@@ -27,24 +28,27 @@ var (
 					exit(fmt.Errorf("failed to get templates. %w", err), cmd.UsageString())
 				}
 				fmt.Println(l)
-				return
 			} else if url != "" {
-				projectInit.InitializeProjectFromURL(url, machineReadable)
-				return
+				projectInit.FromURL(url, machineReadable)
+			} else if file != "" {
+				projectInit.FromZipFile(file, machineReadable)
+			} else {
+				if len(args) < 1 {
+					exit(fmt.Errorf("missing argument <template name>. To see all the templates, run 'gauge init -t'"), cmd.UsageString())
+				}
+				projectInit.FromTemplate(args[0], machineReadable)
 			}
-			if len(args) < 1 {
-				exit(fmt.Errorf("Missing argument <template name>. To see all the templates, run 'gauge init -t'"), cmd.UsageString())
-			}
-			projectInit.InitializeProject(args[0], machineReadable)
 		},
 		DisableAutoGenTag: true,
 	}
 	templates bool
 	url       string
+	file      string
 )
 
 func init() {
 	GaugeCmd.AddCommand(initCmd)
 	initCmd.Flags().BoolVarP(&templates, "templates", "t", false, "Lists all available templates")
 	initCmd.Flags().StringVarP(&url, "url", "u", "", "Initialize a project from given template URL")
+	initCmd.Flags().StringVarP(&file, "file", "f", "", "Initialize a project from given zip file")
 }

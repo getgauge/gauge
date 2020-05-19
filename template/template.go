@@ -8,20 +8,23 @@ package template
 
 import (
 	"fmt"
-	"github.com/getgauge/gauge/config"
 	"net/url"
 	"sort"
 	"strings"
 
+	"github.com/getgauge/gauge/config"
+
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/version"
+	"github.com/schollz/closestmatch"
 )
 
 const comment = `This file contains Gauge template configurations. Do not delete`
 const templateProperties = "template.properties"
 
 type templates struct {
-	t map[string]*config.Property
+	t     map[string]*config.Property
+	names []string
 }
 
 func (t *templates) String() (string, error) {
@@ -30,12 +33,7 @@ func (t *templates) String() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var keys []string
-	for k := range t.t {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	for _, k := range keys {
+	for _, k := range t.names {
 		v := t.t[k]
 		_, err := buffer.WriteString(fmt.Sprintf("\n# %s\n%s = %s\n", v.Description, v.Key, v.Value))
 		if err != nil {
@@ -63,7 +61,23 @@ func (t *templates) get(k string) (string, error) {
 	if _, ok := t.t[k]; ok {
 		return t.t[k].Value, nil
 	}
-	return "", fmt.Errorf("config '%s' doesn't exist", k)
+	matches := t.closestMatch(k)
+	if len(matches) > 0 {
+		return "", fmt.Errorf("cannot find a Gauge template '%s'.\nThe most similar template names are\n\n\t%s", k, strings.Join(matches, "\n\t"))
+	}
+	return "", fmt.Errorf("cannot find a Gauge template '%s'", k)
+}
+
+func (t *templates) closestMatch(k string) []string {
+	matches := []string{}
+	cm := closestmatch.New(t.names, []int{2})
+	for _, m := range cm.ClosestN(k, 5) {
+		if m != "" {
+			matches = append(matches, m)
+		}
+	}
+	sort.Strings(matches)
+	return matches
 }
 
 func (t *templates) write() error {
@@ -111,12 +125,7 @@ func All() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var all []string
-	for k := range t.t {
-		all = append(all, k)
-	}
-	sort.Strings(all)
-	return strings.Join(all, "\n"), nil
+	return strings.Join(t.names, "\n"), nil
 }
 
 func List(machineReadable bool) (string, error) {
@@ -137,7 +146,7 @@ func List(machineReadable bool) (string, error) {
 }
 
 func defaults() *templates {
-	return &templates{t: map[string]*config.Property{
+	prop := map[string]*config.Property{
 		"dotnet":              getProperty("template-dotnet", "dotnet"),
 		"java":                getProperty("template-java", "java"),
 		"java_gradle":         getProperty("template-java-gradle", "java_gradle"),
@@ -150,16 +159,26 @@ func defaults() *templates {
 		"ruby":                getProperty("template-ruby", "ruby"),
 		"ruby_selenium":       getProperty("template-ruby-selenium", "ruby_selenium"),
 		"ts":                  getProperty("template-ts", "ts"),
-	}}
+	}
+	return &templates{t: prop, names: getKeys(prop)}
+}
+
+func getKeys(prop map[string]*config.Property) []string {
+	var keys []string
+	for k := range prop {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func mergeTemplates() (*templates, error) {
 	t := defaults()
-	config, err := common.GetGaugeConfigurationFor(templateProperties)
+	configs, err := common.GetGaugeConfigurationFor(templateProperties)
 	if err != nil {
 		return t, nil
 	}
-	for k, v := range config {
+	for k, v := range configs {
 		if err := t.update(k, v, false); err != nil {
 			return nil, err
 		}
@@ -169,7 +188,7 @@ func mergeTemplates() (*templates, error) {
 
 func getProperty(repoName, templateName string) *config.Property {
 	f := "https://github.com/getgauge/%s/releases/latest/download/%s.zip"
-	url := fmt.Sprintf(f, repoName, templateName)
+	templateURL := fmt.Sprintf(f, repoName, templateName)
 	desc := fmt.Sprintf("Template download information for gauge %s projects", templateName)
-	return config.NewProperty(templateName, url, desc)
+	return config.NewProperty(templateName, templateURL, desc)
 }

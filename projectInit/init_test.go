@@ -20,12 +20,6 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func (s *MySuite) TestGetTemplateLanguage(c *C) {
-	c.Assert(getTemplateLanguage("java"), Equals, "java")
-	c.Assert(getTemplateLanguage("java_maven"), Equals, "java")
-	c.Assert(getTemplateLanguage("java_maven_selenium"), Equals, "java")
-}
-
 func (s *MySuite) TestIfGaugeProjectGivenEmptyDir(c *C) {
 	path, _ := filepath.Abs("_testdata")
 	config.ProjectRoot = path

@@ -8,10 +8,11 @@ package template
 
 import (
 	"fmt"
-	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/version"
 	"strings"
 	"testing"
+
+	"github.com/getgauge/gauge/config"
+	"github.com/getgauge/gauge/version"
 )
 
 var templatesContent = "# Version " + version.CurrentGaugeVersion.String() + `
@@ -86,6 +87,29 @@ func TestGetShouldGetTemplateIfDoesNotExists(t *testing.T) {
 	if e == nil {
 		t.Errorf("expected error. got nil")
 	}
+	expected := "cannot find a Gauge template 'hello'"
+	if e.Error() != expected {
+		t.Errorf("expected error to be \n'%s'\nGot:\n'%s'", expected, e.Error())
+	}
+}
+
+func TestGetShouldGetSimilarTemplatesIfDoesNotExists(t *testing.T) {
+	temp := defaults()
+	_, e := temp.get("jaba")
+	if e == nil {
+		t.Errorf("expected error. got nil")
+	}
+	expected := `cannot find a Gauge template 'jaba'.
+The most similar template names are
+
+	java
+	java_gradle
+	java_maven
+	java_maven_selenium`
+
+	if e.Error() != expected {
+		t.Errorf("expected error to be \n'%s'\nGot:\n'%s'", expected, e.Error())
+	}
 }
 
 func TestGetShouldGetTemplateIfExists(t *testing.T) {
@@ -102,6 +126,23 @@ func TestGetShouldGetTemplateIfExists(t *testing.T) {
 
 	if v != "/foo/bar" {
 		t.Errorf("Expected: '/foo/bar'\nGot: '%s'", v)
+	}
+}
+
+func TestTemplateAll(t *testing.T) {
+	want := defaults().names
+	s, err := All()
+	if err != nil {
+		t.Error(err)
+	}
+	got := strings.Split(s, "\n")
+
+	for i, x := range want {
+		if got[i] != x {
+			fmt.Printf("'%s'\n", got[i])
+			fmt.Printf("'%s'\n", x)
+			t.Errorf("Expected property no %d = %s, got %s", i, x, got[i])
+		}
 	}
 }
 
@@ -123,6 +164,38 @@ func TestTemplateString(t *testing.T) {
 			fmt.Printf("'%s'\n", got[i])
 			fmt.Printf("'%s'\n", x)
 			t.Errorf("Expected property no %d = %s, got %s", i, x, got[i])
+		}
+	}
+}
+
+func TestTemplateList(t *testing.T) {
+	want := []string{
+		"Template Name                 \tLocation                           ",
+		"----------------------------------------------------------------------------------------------------------------------------------------",
+		"dotnet                        \thttps://github.com/getgauge/template-dotnet/releases/latest/download/dotnet.zip",
+		"java                          \thttps://github.com/getgauge/template-java/releases/latest/download/java.zip",
+		"java_gradle                   \thttps://github.com/getgauge/template-java-gradle/releases/latest/download/java_gradle.zip",
+		"java_maven                    \thttps://github.com/getgauge/template-java-maven/releases/latest/download/java_maven.zip",
+		"java_maven_selenium           \thttps://github.com/getgauge/template-java-maven-selenium/releases/latest/download/java_maven_selenium.zip",
+		"js                            \thttps://github.com/getgauge/template-js/releases/latest/download/js.zip",
+		"js_simple                     \thttps://github.com/getgauge/template-js-simple/releases/latest/download/js_simple.zip",
+		"python                        \thttps://github.com/getgauge/template-python/releases/latest/download/python.zip",
+		"python_selenium               \thttps://github.com/getgauge/template-python-selenium/releases/latest/download/python_selenium.zip",
+		"ruby                          \thttps://github.com/getgauge/template-ruby/releases/latest/download/ruby.zip",
+		"ruby_selenium                 \thttps://github.com/getgauge/template-ruby-selenium/releases/latest/download/ruby_selenium.zip",
+		"ts                            \thttps://github.com/getgauge/template-ts/releases/latest/download/ts.zip",
+	}
+	s, err := List(false)
+	if err != nil {
+		t.Error(err)
+	}
+	got := strings.Split(s, "\n")
+	if len(got) != len(want) {
+		t.Errorf("Expected %d entries, got %d", len(want), len(got))
+	}
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Properties text Format failed\nwant:`%s`\ngot: `%s`", x, got[i])
 		}
 	}
 }
