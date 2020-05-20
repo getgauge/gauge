@@ -117,10 +117,26 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 		},
 	}
 	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
-
-	if len(actualSpecs[0].Scenarios) != len(actualSpecs[0].Items) {
-		t.Errorf("Failed: Wanted: %d scenarios in items Got: %d scenarios", len(actualSpecs[0].Scenarios), len(actualSpecs[0].Items))
+	if !containsScenario(actualSpecs[0].Scenarios, actualSpecs[0].Items) {
+		itemsJSON, _ := json.Marshal(actualSpecs[0].Items)
+		scnJSON, _ := json.Marshal(actualSpecs[0].Scenarios)
+		t.Errorf("Failed: Wanted items:\n\n%s\n\nto contain all scenarios: \n\n%s", itemsJSON, scnJSON)
 	}
+}
+
+func containsScenario(scenarios []*gauge.Scenario, items []gauge.Item) bool {
+	for _, scenario := range scenarios {
+		contains := false
+		for _, item := range items {
+			if item.Kind() == gauge.ScenarioKind && reflect.DeepEqual(scenario, item.(*gauge.Scenario)) {
+				contains = true
+			}
+		}
+		if !contains {
+			return false
+		}
+	}
+	return true
 }
 
 func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenariosAndItemCollectionForScenarioDataTable(t *testing.T) {
@@ -142,8 +158,10 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 	}
 	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
 
-	if len(actualSpecs[0].Scenarios) != len(actualSpecs[0].Items) {
-		t.Errorf("Failed: Wanted: %d scenarios in items Got: %d scenarios", len(actualSpecs[0].Scenarios), len(actualSpecs[0].Items))
+	if !containsScenario(actualSpecs[0].Scenarios, actualSpecs[0].Items) {
+		itemsJSON, _ := json.Marshal(actualSpecs[0].Items)
+		scnJSON, _ := json.Marshal(actualSpecs[0].Scenarios)
+		t.Errorf("Failed: Wanted items:\n\n%s\n\nto contain all scenarios: \n\n%s", itemsJSON, scnJSON)
 	}
 	env.AllowScenarioDatatable = old
 }
