@@ -29,7 +29,7 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookMessages(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyBeforeSuite()
 
@@ -57,7 +57,7 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookMessages(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyAfterSuite()
 
@@ -85,7 +85,7 @@ func TestNotifyBeforeSuiteShouldAddsBeforeSuiteHookScreenshots(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyBeforeSuite()
 
@@ -116,7 +116,7 @@ func TestNotifyAfterSuiteShouldAddsAfterSuiteHookScreenshots(t *testing.T) {
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	simpleExecution.notifyAfterSuite()
 
@@ -146,7 +146,7 @@ func TestExecuteSpecsShouldAddsBeforeSpecHookFailureScreenshotFile(t *testing.T)
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	specsC := createSpecCollection()
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	specResult := simpleExecution.executeSpecs(specsC)
@@ -173,7 +173,7 @@ func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotFile(t *testing.T) 
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	specsC := createSpecCollection()
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	specResult := simpleExecution.executeSpecs(specsC)
@@ -200,7 +200,7 @@ func TestExecuteSpecsShouldAddsBeforeSpecHookFailureScreenshotBytes(t *testing.T
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	specsC := createSpecCollection()
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	specResult := simpleExecution.executeSpecs(specsC)
@@ -227,7 +227,7 @@ func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotBytes(t *testing.T)
 		return &gauge_messages.ProtoExecutionResult{}
 	}
 	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false)
+	simpleExecution := newSimpleExecution(ei, false, false)
 	specsC := createSpecCollection()
 	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
 	specResult := simpleExecution.executeSpecs(specsC)
