@@ -131,9 +131,19 @@ func installRunner(silent bool) {
 	}
 }
 
-// FromTemplate initializes a Gauge project with specified template
-func FromTemplate(templateName string, silent bool) {
+func Template(name string, silent bool) {
 	validateDirectory()
+	if common.FileExists(name) {
+		fromZipFile(name, silent)
+	} else if isURL(name) {
+		fromURL(name, silent)
+	} else {
+		fromTemplateName(name, silent)
+	}
+}
+
+// FromTemplate initializes a Gauge project with specified template
+func fromTemplateName(templateName string, silent bool) {
 	templateURL, err := template.Get(templateName)
 	if err != nil {
 		logger.Fatalf(true, fmt.Errorf("failed to initialize project. %w", err).Error())
@@ -146,8 +156,7 @@ func FromTemplate(templateName string, silent bool) {
 }
 
 // FromURL initializes a Gauge project with specified template URL
-func FromURL(templateURL string, silent bool) {
-	validateDirectory()
+func fromURL(templateURL string, silent bool) {
 	checkURL(templateURL)
 	if err := initializeTemplate(templateURL); err != nil {
 		logger.Fatalf(true, "Failed to initialize project. %s", err.Error())
@@ -155,8 +164,8 @@ func FromURL(templateURL string, silent bool) {
 	installRunner(silent)
 }
 
-// FromZipFile initializes a Gauge project with specified zip file
-func FromZipFile(templateFile string, silent bool) {
+// fromZipFile initializes a Gauge project with specified zip file
+func fromZipFile(templateFile string, silent bool) {
 	validateDirectory()
 	tempDir := common.GetTempDir()
 	defer util.Remove(tempDir)
@@ -180,6 +189,11 @@ func validateDirectory() {
 	if isGaugeProject() {
 		logger.Fatalf(true, "This is already a Gauge Project. Please try to initialize a Gauge project in a different location.")
 	}
+}
+
+func isURL(name string) bool {
+	u, err := url.ParseRequestURI(name)
+	return err == nil && u.Scheme != ""
 }
 
 func checkURL(templateURL string) {
