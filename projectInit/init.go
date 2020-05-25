@@ -259,8 +259,5 @@ func createManifestFile(language string) error {
 		showMessage("skip", common.ManifestFile)
 	}
 	manifest := &manifest.Manifest{Language: language, Plugins: defaultPlugins}
-	if err := manifest.Save(); err != nil {
-		return err
-	}
-	return nil
+	return manifest.Save()
 }

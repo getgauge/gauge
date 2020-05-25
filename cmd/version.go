@@ -65,7 +65,7 @@ func printJSONVersion() {
 	}
 	b, err := json.MarshalIndent(gaugeVersion, "", "    ")
 	if err != nil {
-		z	fmt.Println("Error fetching version info as JSON:", err.Error())
+		fmt.Println("Error fetching version info as JSON:", err.Error())
 		return
 	}
 	// logger can not be used, since it breaks the json format,
