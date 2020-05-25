@@ -199,7 +199,7 @@ func (e *parallelExecution) executeLegacyMultithreaded() {
 	for i := 0; i < totalStreams; i++ {
 		connection, err := handlers[i].AcceptConnection(config.RunnerConnectionTimeout(), make(chan error))
 		if err != nil {
-			fmt.Println(err)
+			logger.Errorf(true, err.Error())
 		}
 		crapRunner := &runner.MultithreadedRunner{}
 		crapRunner.SetConnection(connection)

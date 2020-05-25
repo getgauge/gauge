@@ -7,8 +7,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"github.com/getgauge/gauge/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +16,7 @@ func init() {
 	telemetryCmd := &cobra.Command{
 		Use: "telemetry [command]",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Gauge does not gather telemetry data. This command exists to notify this deprecation and shall be removed in the future")
+			logger.Infof(true, "Gauge does not gather telemetry data. This command exists to notify this deprecation and shall be removed in the future")
 		},
 		Hidden: true,
 	}

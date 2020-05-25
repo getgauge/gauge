@@ -93,7 +93,7 @@ func initializeTemplate(templateName string) error {
 			return err
 		}
 	}
-	logger.Infof(true, "Successfully initialized the project. %s\n", metadata.PostInstallMsg)
+	logger.Infof(true, "Successfully initialized the project. %s", metadata.PostInstallMsg)
 
 	util.Remove(metadataFile)
 	return nil
@@ -110,7 +110,6 @@ func getTemplateLanguage(templateName string) string {
 func isGaugeProject() bool {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Debugf(true, "Gauge manifest file doesn't exist. %s", err.Error())
 		return false
 	}
 	return m.Language != ""
@@ -171,7 +170,7 @@ func createProjectTemplate(language string) error {
 	if err := createEnvDirectory(); err != nil {
 		return err
 	}
-	fmt.Println("Successfully initialized the project. Run specifications with \"gauge run specs/\".")
+	logger.Infof(true, "Successfully initialized the project. Run specifications with \"gauge run specs/\".")
 	return nil
 }
 

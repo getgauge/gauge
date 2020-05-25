@@ -10,6 +10,7 @@ import (
 	"fmt"
 
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 )
 
 var message = map[gm.StepValidateResponse_ErrorType]string{
@@ -19,10 +20,10 @@ var message = map[gm.StepValidateResponse_ErrorType]string{
 func showSuggestion(validationErrors validationErrors) {
 	if !HideSuggestion {
 		for t, errs := range groupErrors(validationErrors) {
-			fmt.Println(getSuggestionMessage(t))
+			logger.Infof(true, getSuggestionMessage(t))
 			suggestions := filterDuplicateSuggestions(errs)
 			for _, suggestion := range suggestions {
-				fmt.Println(suggestion)
+				logger.Infof(true, suggestion)
 			}
 		}
 	}

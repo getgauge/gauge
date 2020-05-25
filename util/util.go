@@ -45,8 +45,7 @@ func DownloadAndUnzip(downloadLink string, tempDir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to Unzip file %s: %s", downloadedFile, err.Error())
 	}
-	logger.Debugf(true, "Unzipped to => %s\n", unzippedPluginDir)
-
+	logger.Debugf(true, "Unzipped to => %s", unzippedPluginDir)
 	return unzippedPluginDir, nil
 }
 
