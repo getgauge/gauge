@@ -9,7 +9,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/getgauge/gauge/logger"
@@ -59,6 +58,7 @@ func printJSONVersion() {
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
 		logger.Errorf(false, "Error fetching plugins info: %s", err.Error())
+
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
@@ -68,24 +68,24 @@ func printJSONVersion() {
 		fmt.Println("Error fetching version info as JSON:", err.Error())
 		return
 	}
+	// logger can not be used, since it breaks the json format,
+	// The logger adds out, nessage as key which vscode plugin does not understand.
 	fmt.Println(fmt.Sprintf("%s\n", string(b)))
 }
 
 func printTextVersion() {
-	fmt.Printf("Gauge version: %s\n", version.FullVersion())
+	logger.Infof(true, "Gauge version: %s", version.FullVersion())
 	v := version.CommitHash
 	if v != "" {
-		fmt.Printf("Commit Hash: %s\n", v)
+		logger.Infof(true, "Commit Hash: %s\n", v)
 
 	}
-	fmt.Printf("\nPlugins\n-------\n")
+	logger.Infof(true, "Plugins\n-------")
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		fmt.Println("No plugins found")
-		fmt.Println("Plugins can be installed with `gauge install {plugin-name}`")
-		os.Exit(0)
+		logger.Fatalf(true, "No plugins found\nPlugins can be installed with `gauge install {plugin-name}`")
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
-		fmt.Printf("%s (%s)\n", pluginInfo.Name, filepath.Base(pluginInfo.Path))
+		logger.Infof(true, "%s (%s)", pluginInfo.Name, filepath.Base(pluginInfo.Path))
 	}
 }
