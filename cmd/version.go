@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
 	"github.com/spf13/cobra"
@@ -57,14 +58,15 @@ func printJSONVersion() {
 	gaugeVersion := versionJSON{version.FullVersion(), version.CommitHash, make([]*pluginJSON, 0)}
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		fmt.Println("error:", err.Error())
+		logger.Errorf(false, "Error fetching plugins info: %s", err.Error())
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
 		gaugeVersion.Plugins = append(gaugeVersion.Plugins, &pluginJSON{pluginInfo.Name, filepath.Base(pluginInfo.Path)})
 	}
 	b, err := json.MarshalIndent(gaugeVersion, "", "    ")
 	if err != nil {
-		fmt.Println("error:", err.Error())
+		fmt.Println("Error fetching version info as JSON:", err.Error())
+		return
 	}
 	fmt.Println(fmt.Sprintf("%s\n", string(b)))
 }
