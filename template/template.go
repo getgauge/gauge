@@ -53,7 +53,9 @@ func (t *templates) update(k, v string, validate bool) error {
 		t.t[k].Value = v
 	} else {
 		t.t[k] = config.NewProperty(k, v, fmt.Sprintf("Template download information for gauge %s projects", k))
+		t.names = append(t.names, k)
 	}
+	sort.Strings(t.names)
 	return nil
 }
 
@@ -96,7 +98,6 @@ func Update(name, value string) error {
 	if err := t.update(name, value, true); err != nil {
 		return err
 	}
-
 	return t.write()
 }
 
