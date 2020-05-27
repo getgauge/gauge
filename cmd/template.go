@@ -19,7 +19,7 @@ var (
 		Use:     "template [flags] [args]",
 		Short:   "Change template configurations",
 		Long:    `Change template configurations.`,
-		Example: `  gauge template custom-template ate https://example.org/templates/custom-template.zip`,
+		Example: `  gauge template custom-template https://example.org/templates/custom-template.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if templateList || machineReadable {
 				text, err := template.List(machineReadable)
