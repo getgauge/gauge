@@ -44,7 +44,7 @@ func initializeTemplate(templateUrl string) error {
 	logger.Infof(true, "Initializing template from %s", templateUrl)
 	unzippedTemplate, err := util.DownloadAndUnzip(templateUrl, tempDir)
 	if err != nil {
-		return fmt.Errorf("%w. Please sure that this is a valid Gauge template URI or there are no problems with the network connection", err)
+		return fmt.Errorf("%w. Please use a valid Gauge template URI or check network connection", err)
 	}
 	return copyTemplateContents(unzippedTemplate)
 }
