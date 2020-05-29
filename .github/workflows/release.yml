@@ -116,6 +116,14 @@ jobs:
 
           rm -rf desc.txt
 
+          echo $version > version.txt
+
+      - name: Upload version
+        uses: actions/upload-artifact@v1
+        with:
+          name: gauge-version
+          path: ./version.txt
+
   pypi-release:
     runs-on: ubuntu-latest
     needs: [github-release]
@@ -129,9 +137,12 @@ jobs:
           python-version: 3.7
 
       - name: Set gauge version
+        uses: actions/download-artifact@v1
+        with:
+          name: gauge-version
+          path: ./version.txt
         run: |
-          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
-          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+          echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
       - name: Deploy to pypi
         env:
@@ -159,9 +170,12 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Set gauge version
+        uses: actions/download-artifact@v1
+        with:
+          name: gauge-version
+          path: ./version.txt
         run: |
-          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
-          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+          echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
       - name: Setup Git User
         run: |
@@ -242,9 +256,12 @@ jobs:
       - run: git fetch --prune --unshallow
 
       - name: Set gauge version
+        uses: actions/download-artifact@v1
+        with:
+          name: gauge-version
+          path: ./version.txt
         run: |
-          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
-          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+          echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
         shell: bash
 
       - name: Clone chocolatey-packages
@@ -277,9 +294,12 @@ jobs:
           ruby-version: 2.6.x
 
       - name: Set gauge version
+        uses: actions/download-artifact@v1
+        with:
+          name: gauge-version
+          path: ./version.txt
         run: |
-          gauge_version=`git describe --abbrev=0 --tags | sed 's/[a-z\/]*//g'`
-          echo "::set-env name=GAUGE_VERSION::$gauge_version"
+          echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
       - name: Update brew formula
         env:
