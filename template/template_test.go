@@ -24,32 +24,14 @@ dotnet = https://github.com/getgauge/template-dotnet/releases/latest/download/do
 # Template download information for gauge java projects
 java = https://github.com/getgauge/template-java/releases/latest/download/java.zip
 
-# Template download information for gauge java_gradle projects
-java_gradle = https://github.com/getgauge/template-java-gradle/releases/latest/download/java_gradle.zip
-
-# Template download information for gauge java_maven projects
-java_maven = https://github.com/getgauge/template-java-maven/releases/latest/download/java_maven.zip
-
-# Template download information for gauge java_maven_selenium projects
-java_maven_selenium = https://github.com/getgauge/template-java-maven-selenium/releases/latest/download/java_maven_selenium.zip
-
 # Template download information for gauge js projects
 js = https://github.com/getgauge/template-js/releases/latest/download/js.zip
-
-# Template download information for gauge js_simple projects
-js_simple = https://github.com/getgauge/template-js-simple/releases/latest/download/js_simple.zip
 
 # Template download information for gauge python projects
 python = https://github.com/getgauge/template-python/releases/latest/download/python.zip
 
-# Template download information for gauge python_selenium projects
-python_selenium = https://github.com/getgauge/template-python-selenium/releases/latest/download/python_selenium.zip
-
 # Template download information for gauge ruby projects
 ruby = https://github.com/getgauge/template-ruby/releases/latest/download/ruby.zip
-
-# Template download information for gauge ruby_selenium projects
-ruby_selenium = https://github.com/getgauge/template-ruby-selenium/releases/latest/download/ruby_selenium.zip
 
 # Template download information for gauge ts projects
 ts = https://github.com/getgauge/template-ts/releases/latest/download/ts.zip
@@ -102,10 +84,7 @@ func TestGetShouldGetSimilarTemplatesIfDoesNotExists(t *testing.T) {
 	expected := `cannot find a Gauge template 'jaba'.
 The most similar template names are
 
-	java
-	java_gradle
-	java_maven
-	java_maven_selenium`
+	java`
 
 	if e.Error() != expected {
 		t.Errorf("expected error to be \n'%s'\nGot:\n'%s'", expected, e.Error())
@@ -171,18 +150,12 @@ func TestTemplateString(t *testing.T) {
 func TestTemplateList(t *testing.T) {
 	want := []string{
 		"Template Name                 \tLocation                           ",
-		"----------------------------------------------------------------------------------------------------------------------------------------",
+		"--------------------------------------------------------------------------------------------------------------",
 		"dotnet                        \thttps://github.com/getgauge/template-dotnet/releases/latest/download/dotnet.zip",
 		"java                          \thttps://github.com/getgauge/template-java/releases/latest/download/java.zip",
-		"java_gradle                   \thttps://github.com/getgauge/template-java-gradle/releases/latest/download/java_gradle.zip",
-		"java_maven                    \thttps://github.com/getgauge/template-java-maven/releases/latest/download/java_maven.zip",
-		"java_maven_selenium           \thttps://github.com/getgauge/template-java-maven-selenium/releases/latest/download/java_maven_selenium.zip",
 		"js                            \thttps://github.com/getgauge/template-js/releases/latest/download/js.zip",
-		"js_simple                     \thttps://github.com/getgauge/template-js-simple/releases/latest/download/js_simple.zip",
 		"python                        \thttps://github.com/getgauge/template-python/releases/latest/download/python.zip",
-		"python_selenium               \thttps://github.com/getgauge/template-python-selenium/releases/latest/download/python_selenium.zip",
 		"ruby                          \thttps://github.com/getgauge/template-ruby/releases/latest/download/ruby.zip",
-		"ruby_selenium                 \thttps://github.com/getgauge/template-ruby-selenium/releases/latest/download/ruby_selenium.zip",
 		"ts                            \thttps://github.com/getgauge/template-ts/releases/latest/download/ts.zip",
 	}
 	s, err := List(false)
