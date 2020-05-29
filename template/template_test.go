@@ -8,16 +8,16 @@ package template
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
-	"github.com/getgauge/gauge/version"
 )
 
-var templatesContent = "# Version " + version.CurrentGaugeVersion.String() + `
-# This file contains Gauge template configurations. Do not delete
-
+var templatesContent = `
 # Template download information for gauge dotnet projects
 dotnet = https://github.com/getgauge/template-dotnet/releases/latest/download/dotnet.zip
 
@@ -36,6 +36,25 @@ ruby = https://github.com/getgauge/template-ruby/releases/latest/download/ruby.z
 # Template download information for gauge ts projects
 ts = https://github.com/getgauge/template-ts/releases/latest/download/ts.zip
 `
+
+func TestMain(m *testing.M) {
+	oldHome := os.Getenv("GAUGE_HOME")
+	var assertNil = func(err error) {
+		if err != nil {
+			fmt.Println("Failed to setup test data")
+			os.Exit(1)
+		}
+	}
+	home, err := filepath.Abs("_testdata")
+	assertNil(err)
+	assertNil(os.Setenv("GAUGE_HOME", "_testdata"))
+	assertNil(os.MkdirAll(filepath.Join(home, "config"), common.NewDirectoryPermissions))
+	assertNil(Generate())
+	e := m.Run()
+	assertNil(os.Setenv("GAUGE_HOME", oldHome))
+	assertNil(os.RemoveAll(home))
+	os.Exit(e)
+}
 
 func TestUpdateShouldAddTemplateIfDoesNotExistss(t *testing.T) {
 	temp := &templates{
@@ -163,6 +182,38 @@ func TestTemplateList(t *testing.T) {
 		t.Error(err)
 	}
 	got := strings.Split(s, "\n")
+	if len(got) != len(want) {
+		t.Errorf("Expected %d entries, got %d", len(want), len(got))
+	}
+	for i, x := range want {
+		if got[i] != x {
+			t.Errorf("Properties text Format failed\nwant:`%s`\ngot: `%s`", x, got[i])
+		}
+	}
+}
+
+func TestTemplateListAfterUpdate(t *testing.T) {
+
+	want := []string{
+		"Template Name                 \tLocation                           ",
+		"--------------------------------------------------------------------------------------------------------------",
+		"dotnet                        \thttps://github.com/getgauge/template-dotnet/releases/latest/download/dotnet.zip",
+		"foo                           \thttps://github.com/getgauge/template-foo/releases/latest/download/foo.zip",
+		"java                          \thttps://github.com/getgauge/template-java/releases/latest/download/java.zip",
+		"js                            \thttps://github.com/getgauge/template-js/releases/latest/download/js.zip",
+		"python                        \thttps://github.com/getgauge/template-python/releases/latest/download/python.zip",
+		"ruby                          \thttps://github.com/getgauge/template-ruby/releases/latest/download/ruby.zip",
+		"ts                            \thttps://github.com/getgauge/template-ts/releases/latest/download/ts.zip",
+	}
+	err := Update("foo", "https://github.com/getgauge/template-foo/releases/latest/download/foo.zip")
+	if err != nil {
+		t.Error(err)
+	}
+	s, err := List(false)
+	got := strings.Split(s, "\n")
+	if err != nil {
+		t.Error(err)
+	}
 	if len(got) != len(want) {
 		t.Errorf("Expected %d entries, got %d", len(want), len(got))
 	}

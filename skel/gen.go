@@ -35,7 +35,7 @@ func CreateSkelFilesIfRequired() {
 		logger.Debugf(true, "Unable to create gauge.properties. Error: %s", err.Error())
 	}
 
-	err = template.Merge()
+	err = template.Generate()
 	if err != nil {
 		logger.Debugf(true, "Unable to create tempate.properties. Error: %s", err.Error())
 	}

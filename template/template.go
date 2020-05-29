@@ -9,17 +9,16 @@ package template
 import (
 	"fmt"
 	"net/url"
+	"path/filepath"
 	"sort"
 	"strings"
 
+	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 
-	"github.com/getgauge/common"
-	"github.com/getgauge/gauge/version"
 	"github.com/schollz/closestmatch"
 )
 
-const comment = `This file contains Gauge template configurations. Do not delete`
 const templateProperties = "template.properties"
 
 type templates struct {
@@ -29,10 +28,6 @@ type templates struct {
 
 func (t *templates) String() (string, error) {
 	var buffer strings.Builder
-	_, err := buffer.WriteString(fmt.Sprintf("# Version %s\n# %s\n", version.FullVersion(), comment))
-	if err != nil {
-		return "", err
-	}
 	for _, k := range t.names {
 		v := t.t[k]
 		_, err := buffer.WriteString(fmt.Sprintf("\n# %s\n%s = %s\n", v.Description, v.Key, v.Value))
@@ -91,7 +86,7 @@ func (t *templates) write() error {
 }
 
 func Update(name, value string) error {
-	t, err := mergeTemplates()
+	t, err := getTemplates()
 	if err != nil {
 		return err
 	}
@@ -101,20 +96,19 @@ func Update(name, value string) error {
 	return t.write()
 }
 
-func Merge() error {
-	v, err := config.GaugeVersionInPropertiesFile(templateProperties)
-	if err != nil || version.CompareVersions(v, version.CurrentGaugeVersion, version.LesserThanFunc) {
-		t, err := mergeTemplates()
-		if err != nil {
-			return err
-		}
-		return t.write()
+func Generate() error {
+	cd, err := common.GetConfigurationDir()
+	if err != nil {
+		return err
+	}
+	if !common.FileExists(filepath.Join(cd, templateProperties)) {
+		return defaults().write()
 	}
 	return nil
 }
 
 func Get(name string) (string, error) {
-	mp, err := mergeTemplates()
+	mp, err := getTemplates()
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +116,7 @@ func Get(name string) (string, error) {
 }
 
 func All() (string, error) {
-	t, err := mergeTemplates()
+	t, err := getTemplates()
 	if err != nil {
 		return "", err
 	}
@@ -135,7 +129,7 @@ func List(machineReadable bool) (string, error) {
 	if machineReadable {
 		f = config.JsonFormatter{}
 	}
-	t, err := mergeTemplates()
+	t, err := getTemplates()
 	if err != nil {
 		return "", err
 	}
@@ -167,13 +161,13 @@ func getKeys(prop map[string]*config.Property) []string {
 	return keys
 }
 
-func mergeTemplates() (*templates, error) {
-	t := defaults()
-	configs, err := common.GetGaugeConfigurationFor(templateProperties)
+func getTemplates() (*templates, error) {
+	prop, err := common.GetGaugeConfigurationFor(templateProperties)
 	if err != nil {
-		return t, nil
+		return nil, err
 	}
-	for k, v := range configs {
+	t := &templates{t: make(map[string]*config.Property), names: []string{}}
+	for k, v := range prop {
 		if err := t.update(k, v, false); err != nil {
 			return nil, err
 		}

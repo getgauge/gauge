@@ -72,6 +72,10 @@ jobs:
           go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "::add-path::/tmp/gauge/bin"
 
+      - name: Add js_simple template
+        run: |
+          gauge template js_simple https://github.com/getgauge/template-js-simple/releases/latest/download/js_simple.zip
+
       - name: Prep gauge-js
         run: |
           git clone https://github.com/getgauge/gauge-js.git
@@ -128,6 +132,10 @@ jobs:
         run: |
           go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "::add-path::/tmp/gauge/bin"
+
+      - name: Add js_simple template
+        run: |
+          gauge template js_simple https://github.com/getgauge/template-js-simple/releases/latest/download/js_simple.zip
 
       - name: Clone gauge-java
         run: |
