@@ -136,11 +136,13 @@ jobs:
         with:
           python-version: 3.7
 
-      - name: Set gauge version
+      - name: Fetch gauge version
         uses: actions/download-artifact@v1
         with:
           name: gauge-version
           path: ./version.txt
+
+      - name: Set gauge version
         run: |
           echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
@@ -169,11 +171,13 @@ jobs:
           node-version: '10.x'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Set gauge version
+      - name: Fetch gauge version
         uses: actions/download-artifact@v1
         with:
           name: gauge-version
           path: ./version.txt
+
+      - name: Set gauge version
         run: |
           echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
@@ -255,11 +259,13 @@ jobs:
       - uses: actions/checkout@v2
       - run: git fetch --prune --unshallow
 
-      - name: Set gauge version
+      - name: Fetch gauge version
         uses: actions/download-artifact@v1
         with:
           name: gauge-version
           path: ./version.txt
+
+      - name: Set gauge version
         run: |
           echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
         shell: bash
@@ -293,11 +299,13 @@ jobs:
         with:
           ruby-version: 2.6.x
 
-      - name: Set gauge version
+      - name: Fetch gauge version
         uses: actions/download-artifact@v1
         with:
           name: gauge-version
           path: ./version.txt
+
+      - name: Set gauge version
         run: |
           echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
 
