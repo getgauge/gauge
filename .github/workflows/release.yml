@@ -116,7 +116,7 @@ jobs:
 
           rm -rf desc.txt
 
-          echo $version > version.txt
+          echo $version > ../version.txt
 
       - name: upload gauge version
         uses: actions/upload-artifact@v1
