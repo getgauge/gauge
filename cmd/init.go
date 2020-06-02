@@ -21,7 +21,7 @@ var (
 		Short: "Initialize project structure in the current directory",
 		Long:  `Initialize project structure in the current directory.`,
 		Example: `  gauge init java
-  gauge init https://template.org/java.zip
+  gauge init https://github.com/getgauge/template-js/releases/latest/download/js.zip
   gauge init /Users/user/Download/foo.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if templates {
