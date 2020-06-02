@@ -199,7 +199,7 @@ func isURL(name string) bool {
 func checkURL(templateURL string) {
 	u, err := url.ParseRequestURI(templateURL)
 	if err != nil {
-		logger.Fatalf(true, "Failed to parse template URL '%s'. The template location must be a secure and valid  URI", templateURL)
+		logger.Fatalf(true, "Failed to parse template URL '%s'. The template location must be a secure and valid URI", templateURL)
 	}
 	if u.Scheme != https && !config.AllowInsecureDownload() {
 		logger.Fatalf(true, "The url '%s' in not secure and 'allow_insecure_download' is set to false.\n"+
