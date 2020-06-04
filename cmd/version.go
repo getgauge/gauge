@@ -83,7 +83,7 @@ func printTextVersion() {
 	logger.Infof(true, "Plugins\n-------")
 	allPluginsWithVersion, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		logger.Fatalf(true, "No plugins found\nPlugins can be installed with `gauge install {plugin-name}`")
+		logger.Infof(true, "No plugins found\nPlugins can be installed with `gauge install {plugin-name}`")
 	}
 	for _, pluginInfo := range allPluginsWithVersion {
 		logger.Infof(true, "%s (%s)", pluginInfo.Name, filepath.Base(pluginInfo.Path))
