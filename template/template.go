@@ -142,12 +142,18 @@ func List(machineReadable bool) (string, error) {
 
 func defaults() *templates {
 	prop := map[string]*config.Property{
-		"dotnet": getProperty("template-dotnet", "dotnet"),
-		"java":   getProperty("template-java", "java"),
-		"js":     getProperty("template-js", "js"),
-		"python": getProperty("template-python", "python"),
-		"ruby":   getProperty("template-ruby", "ruby"),
-		"ts":     getProperty("template-ts", "ts"),
+		"dotnet":              getProperty("template-dotnet", "dotnet"),
+		"java":                getProperty("template-java", "java"),
+		"java_gradle":         getProperty("template-java-gradle", "java_gradle"),
+		"java_maven":          getProperty("template-java-maven", "java_maven"),
+		"java_maven_selenium": getProperty("template-java-maven-selenium", "java_maven_selenium"),
+		"js":                  getProperty("template-js", "js"),
+		"js_simple":           getProperty("template-js-simple", "js_simple"),
+		"python":              getProperty("template-python", "python"),
+		"python_selenium":     getProperty("template-python-selenium", "python_selenium"),
+		"ruby":                getProperty("template-ruby", "ruby"),
+		"ruby_selenium":       getProperty("template-ruby-selenium", "ruby_selenium"),
+		"ts":                  getProperty("template-ts", "ts"),
 	}
 	return &templates{t: prop, names: getKeys(prop)}
 }
@@ -178,6 +184,6 @@ func getTemplates() (*templates, error) {
 func getProperty(repoName, templateName string) *config.Property {
 	f := "https://github.com/getgauge/%s/releases/latest/download/%s.zip"
 	templateURL := fmt.Sprintf(f, repoName, templateName)
-	desc := fmt.Sprintf("Template download information for gauge %s projects", templateName)
+	desc := fmt.Sprintf("Template for gauge %s projects", templateName)
 	return config.NewProperty(templateName, templateURL, desc)
 }
