@@ -224,7 +224,7 @@ jobs:
           path: deploy
 
   benchmark:
-    name: Build ${{ matrix.os }} artifacts
+    name: Benchmark ${{ matrix.project }} | PARALLEL= ${{ matrix.parallel }}
     runs-on: ubuntu-latest
     needs: [ functional-tests, lsp-tests ]
     strategy:
@@ -248,7 +248,7 @@ jobs:
 
       - name: Install Gauge
         run: |
-          go run build/make.go --install --prefix=/tmp/gauge --verbose
+          go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "::add-path::/tmp/gauge/bin"
 
       - name: Install gauge-java
