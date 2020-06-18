@@ -222,3 +222,65 @@ jobs:
         with:
           name: gauge-artifact-for-${{ matrix.os }}
           path: deploy
+
+  benchmark:
+    name: Build ${{ matrix.os }} artifacts
+    runs-on: ubuntu-latest
+    needs: [ functional-tests, lsp-tests ]
+    strategy:
+      matrix:
+        project: [java_simple, java_maven, java_gradle]
+        parallel: [true, false, multithreaded]
+
+    env:
+      PARALLEL: ${{ matrix.parallel }}
+      BENCHMARK_OUT_DIR: "../benchmarks"
+
+    steps:
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
+
+      - name: Install Gauge
+          go run build/make.go --install --prefix=/tmp/gauge --verbose
+          echo "::add-path::/tmp/gauge/bin"
+
+      - name: Install gauge-java
+        run: gauge install java
+
+      - name: Prep benchmark
+        run: |
+          git clone https://github.com/getgauge-contrib/gauge-benchmarks
+
+      - name: Run benchmark ${{matrix.project}} | Multithreaded
+        if: matrix.parallel == 'multithreaded'
+        env:
+          PARALLEL: true
+          enable_multithreading: true
+        run: |
+          cd gauge-benchmarks/${{matrix.project}}
+          ./run.sh
+
+      - name: Run benchmark ${{matrix.project}} | PARALLEL=${{matrix.parallel}}
+        if: matrix.parallel != 'multithreaded'
+        run: |
+          cd gauge-benchmarks/${{matrix.project}}
+          ./run.sh
+
+      - name: Commit files
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -s -m "add benchmark for ${{$GITHUB_REF}}" -a
+
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          directory: "benchmarks"
+          branch: $GITHUB_REF
