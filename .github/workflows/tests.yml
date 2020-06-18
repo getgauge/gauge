@@ -243,6 +243,11 @@ jobs:
           go-version: 1.13
         id: go
 
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
 
