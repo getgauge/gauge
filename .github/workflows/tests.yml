@@ -234,7 +234,7 @@ jobs:
 
     env:
       PARALLEL: ${{ matrix.parallel }}
-      BENCHMARK_OUT_DIR: "$GITHUB_WORKSPACE/benchmarks"
+      BENCHMARK_OUT_DIR: "../../benchmarks"
 
     steps:
       - name: Set up Go 1.13
