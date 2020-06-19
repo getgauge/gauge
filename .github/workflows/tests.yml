@@ -313,7 +313,7 @@ jobs:
           git clone https://github.com/getgauge-contrib/gauge-benchmarks
 
       - name: Download benchmark results
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v2
         with:
           path: gauge-benchmarks/out
 
