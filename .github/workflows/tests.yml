@@ -231,11 +231,11 @@ jobs:
     strategy:
       matrix:
         project: [java_simple, java_maven, java_gradle]
-        parallel: [true, false, multithreaded]
+        parallel: ['true', 'false', 'multithreaded']
 
     env:
       PARALLEL: ${{ matrix.parallel }}
-      BENCHMARK_OUT_DIR: "../docs/data/gauge"
+      BENCHMARK_OUT_DIR: "../out"
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
@@ -280,26 +280,11 @@ jobs:
           cd gauge-benchmarks/${{matrix.project}}
           ./run.sh
 
-      - name: Upload benchmark | parallel | multithreaded
+      - name: Upload benchmark
         uses: actions/upload-artifact@v1
-        if: matrix.parallel == 'multithreaded'
         with:
           name: ${{matrix.project}}_parallel_multithreaded.csv
-          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel_multithreaded.csv
-
-      - name: Upload benchmark | parallel
-        uses: actions/upload-artifact@v1
-        if: matrix.parallel == 'true'
-        with:
-          name: ${{matrix.project}}_parallel.csv
-          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel.csv
-
-      - name: Upload benchmark | serial
-        uses: actions/upload-artifact@v1
-        if: matrix.parallel == 'false'
-        with:
-          name: ${{matrix.project}}_serial.csv
-          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_serial.csv
+          path: out
 
   publish-benchmark:
     name: Publish Benchmark
@@ -315,29 +300,7 @@ jobs:
       - name: Download benchmark results
         uses: actions/download-artifact@v2
         with:
-          path: gauge-benchmarks/out
+          path: gauge-benchmarks/out/
 
       - name: List
         run: ls -R gauge-benchmarks/out
-
-      # - name: Commit and Push results
-      #   run: |
-      #     cd gauge-benchmarks
-      #     git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-      #     git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-      #     git add docs/data
-      #     git commit -sm "add benchmark for $GITHUB_REF"
-
-      # - name: Step that prints name of pull request's base branch
-      #   run: |
-      #     echo "Pull request's base branch is: ${BASE_BRANCH}"
-      #   env:
-      #     BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
-
-      # - name: Commit and Push results
-      #   run: |
-      #     git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
-      #     git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-      #     git add benchmarks
-      #     git commit -s -m "add benchmark for $GITHUB_REF"
-      #     git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY" $GITHUB_BASE_REF
