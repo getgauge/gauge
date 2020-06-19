@@ -315,7 +315,7 @@ jobs:
       - name: Download benchmark results
         uses: actions/download-artifact@v1
         with:
-          name: *.csv
+          name: '*.csv'
           path: gauge-benchmarks/out
 
       - name: List
