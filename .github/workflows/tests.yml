@@ -235,7 +235,7 @@ jobs:
 
     env:
       PARALLEL: ${{ matrix.parallel }}
-      BENCHMARK_OUT_DIR: "../../benchmarks"
+      BENCHMARK_OUT_DIR: "docs/data/gauge"
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
@@ -280,10 +280,55 @@ jobs:
           cd gauge-benchmarks/${{matrix.project}}
           ./run.sh
 
-      - name: Publish Results
-        uses: mikeal/publish-to-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload benchmark | multithreaded
+        uses: actions/upload-artifact@v1
+        if: success() && matrix.parallel == 'multithreaded'
+        with:
+          name: ${{matrix.project}}_parallel_multithreaded.csv
+          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel_multithreaded.csv
+
+      - name: Upload benchmark | multithreaded
+        uses: actions/upload-artifact@v1
+        if: success() && matrix.parallel == 'true'
+        with:
+          name: ${{matrix.project}}_parallel.csv
+          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel.csv
+
+      - name: Upload benchmark | multithreaded
+        uses: actions/upload-artifact@v1
+        if: success() && matrix.parallel == 'false'
+        with:
+          name: ${{matrix.project}}_serial.csv
+          path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_serial.csv
+
+  publish-benchmark:
+    name: Publish Benchmark
+    runs-on: ubuntu-latest
+    needs: [ benchmark ]
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Prep benchmark
+        run: |
+          git clone https://github.com/getgauge-contrib/gauge-benchmarks
+
+      - name: Download benchmark results
+        uses: actions/download-artifact@v1
+        with:
+          name: *.csv
+          path: gauge-benchmarks/out
+
+      - name: List
+        runs: ls -R gauge-benchmarks/out
+
+      # - name: Commit and Push results
+      #   run: |
+      #     cd gauge-benchmarks
+      #     git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+      #     git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+      #     git add docs/data
+      #     git commit -sm "add benchmark for $GITHUB_REF"
+
       # - name: Step that prints name of pull request's base branch
       #   run: |
       #     echo "Pull request's base branch is: ${BASE_BRANCH}"
