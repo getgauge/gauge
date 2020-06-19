@@ -235,6 +235,7 @@ jobs:
     env:
       PARALLEL: ${{ matrix.parallel }}
       BENCHMARK_OUT_DIR: "../../benchmarks"
+      GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
       - name: Set up Go 1.13
@@ -270,26 +271,18 @@ jobs:
           enable_multithreading: true
         run: |
           cd gauge-benchmarks/${{matrix.project}}
-          gauge run specs/example.spec
           ./run.sh
 
       - name: Run benchmark ${{matrix.project}} | PARALLEL=${{matrix.parallel}}
         if: matrix.parallel != 'multithreaded'
         run: |
           cd gauge-benchmarks/${{matrix.project}}
-          gauge run specs/example.spec
           ./run.sh
 
-      - name: Commit files
+      - name: Commit and Push results
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git add benchmarks
           git commit -s -m "add benchmark for $GITHUB_REF"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          directory: "benchmarks"
-          branch: $GITHUB_REF
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/getgauge/gauge-repository.git" $GITHUB_REF
