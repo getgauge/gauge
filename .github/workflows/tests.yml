@@ -285,4 +285,4 @@ jobs:
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git add benchmarks
           git commit -s -m "add benchmark for $GITHUB_REF"
-          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY" $GITHUB_REF
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY" $GITHUB_BASE_REF
