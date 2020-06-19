@@ -239,52 +239,56 @@ jobs:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
 
     steps:
-      # - name: Set up Go 1.13
-      #   uses: actions/setup-go@v1
-      #   with:
-      #     go-version: 1.13
-      #   id: go
+      - name: Set up Go 1.13
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.13
+        id: go
 
-      # - name: Setup java
-      #   uses: actions/setup-java@v1
-      #   with:
-      #     java-version: 11
+      - name: Setup java
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
 
-      # - name: Check out code into the Go module directory
-      #   uses: actions/checkout@v2
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@v2
 
-      # - name: Install Gauge
-      #   run: |
-      #     go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
-      #     echo "::add-path::/tmp/gauge/bin"
-
-      # - name: Install gauge-java
-      #   run: gauge install java
-
-      # - name: Prep benchmark
-      #   run: |
-      #     git clone https://github.com/getgauge-contrib/gauge-benchmarks
-
-      # - name: Run benchmark ${{matrix.project}} | Multithreaded
-      #   if: matrix.parallel == 'multithreaded'
-      #   env:
-      #     PARALLEL: true
-      #     enable_multithreading: true
-      #   run: |
-      #     cd gauge-benchmarks/${{matrix.project}}
-      #     ./run.sh
-
-      # - name: Run benchmark ${{matrix.project}} | PARALLEL=${{matrix.parallel}}
-      #   if: matrix.parallel != 'multithreaded'
-      #   run: |
-      #     cd gauge-benchmarks/${{matrix.project}}
-      #     ./run.sh
-
-      - name: Step that prints name of pull request's base branch
+      - name: Install Gauge
         run: |
-          echo "Pull request's base branch is: ${BASE_BRANCH}"
+          go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
+          echo "::add-path::/tmp/gauge/bin"
+
+      - name: Install gauge-java
+        run: gauge install java
+
+      - name: Prep benchmark
+        run: |
+          git clone https://github.com/getgauge-contrib/gauge-benchmarks
+
+      - name: Run benchmark ${{matrix.project}} | Multithreaded
+        if: matrix.parallel == 'multithreaded'
         env:
-          BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PARALLEL: true
+          enable_multithreading: true
+        run: |
+          cd gauge-benchmarks/${{matrix.project}}
+          ./run.sh
+
+      - name: Run benchmark ${{matrix.project}} | PARALLEL=${{matrix.parallel}}
+        if: matrix.parallel != 'multithreaded'
+        run: |
+          cd gauge-benchmarks/${{matrix.project}}
+          ./run.sh
+
+      - name: Publish Results
+        uses: mikeal/publish-to-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Step that prints name of pull request's base branch
+      #   run: |
+      #     echo "Pull request's base branch is: ${BASE_BRANCH}"
+      #   env:
+      #     BASE_BRANCH: ${{ github.event.pull_request.head.ref }}
 
       # - name: Commit and Push results
       #   run: |
