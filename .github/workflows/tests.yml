@@ -264,6 +264,7 @@ jobs:
       - name: Prep benchmark
         run: |
           git clone https://github.com/getgauge-contrib/gauge-benchmarks
+          mkdir gauge-benchmarks/out
 
       - name: Run benchmark ${{matrix.project}} | Multithreaded
         if: matrix.parallel == 'multithreaded'
