@@ -280,23 +280,23 @@ jobs:
           cd gauge-benchmarks/${{matrix.project}}
           ./run.sh
 
-      - name: Upload benchmark | multithreaded
+      - name: Upload benchmark | parallel | multithreaded
         uses: actions/upload-artifact@v1
-        if: success() && matrix.parallel == 'multithreaded'
+        if: matrix.parallel == 'multithreaded'
         with:
           name: ${{matrix.project}}_parallel_multithreaded.csv
           path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel_multithreaded.csv
 
-      - name: Upload benchmark | multithreaded
+      - name: Upload benchmark | parallel
         uses: actions/upload-artifact@v1
-        if: success() && matrix.parallel == 'true'
+        if: matrix.parallel == 'true'
         with:
           name: ${{matrix.project}}_parallel.csv
           path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_parallel.csv
 
-      - name: Upload benchmark | multithreaded
+      - name: Upload benchmark | serial
         uses: actions/upload-artifact@v1
-        if: success() && matrix.parallel == 'false'
+        if: matrix.parallel == 'false'
         with:
           name: ${{matrix.project}}_serial.csv
           path: gauge-benchmarks/docs/data/gauge/${{matrix.project}}_serial.csv
