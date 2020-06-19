@@ -285,7 +285,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{matrix.project}}_parallel_multithreaded.csv
-          path: out
+          path: gauge-benchmarks/out
 
   publish-benchmark:
     name: Publish Benchmark
