@@ -319,7 +319,7 @@ jobs:
           path: gauge-benchmarks/out
 
       - name: List
-        runs: ls -R gauge-benchmarks/out
+        run: ls -R gauge-benchmarks/out
 
       # - name: Commit and Push results
       #   run: |
