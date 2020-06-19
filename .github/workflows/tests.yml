@@ -231,7 +231,7 @@ jobs:
     strategy:
       matrix:
         project: [java_simple, java_maven, java_gradle]
-        parallel: ['true', 'false', 'multithreaded']
+        parallel: ['parallel', 'serial', 'multithreaded']
 
     env:
       PARALLEL: ${{ matrix.parallel }}
@@ -266,17 +266,10 @@ jobs:
           git clone https://github.com/getgauge-contrib/gauge-benchmarks
           mkdir gauge-benchmarks/out
 
-      - name: Run benchmark ${{matrix.project}} | Multithreaded
-        if: matrix.parallel == 'multithreaded'
+      - name: Run benchmark ${{matrix.project}} | ${{matrix.parallel}}
         env:
-          PARALLEL: true
-          enable_multithreading: true
-        run: |
-          cd gauge-benchmarks/${{matrix.project}}
-          ./run.sh
-
-      - name: Run benchmark ${{matrix.project}} | PARALLEL=${{matrix.parallel}}
-        if: matrix.parallel != 'multithreaded'
+          PARALLEL: ${{ matrix.parallel != 'serial' }}
+          enable_multithreading: ${{ matrix.parallel == 'multithreaded'}}
         run: |
           cd gauge-benchmarks/${{matrix.project}}
           ./run.sh
@@ -284,7 +277,7 @@ jobs:
       - name: Upload benchmark
         uses: actions/upload-artifact@v1
         with:
-          name: ${{matrix.project}}_${{matrix.parallel}}.csv
+          name: ${{matrix.project}}_${{matrix.parallel}}
           path: gauge-benchmarks/out
 
   publish-benchmark:
@@ -303,5 +296,12 @@ jobs:
         with:
           path: gauge-benchmarks/out/
 
-      - name: List
-        run: ls -R gauge-benchmarks/out
+      - name: Publish Results
+        env:
+          GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
+        run: |
+          find gauge-benchmarks/out -name '*.csv' -printf "cat %p >> gauge-benchmarks/data/gauge/%f\n" | sh
+          git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
+          git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
+          git commit -sam "add benchmark for $GITHUB_SHA"
+          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/getgauge-contrib/gauge-benchmarks.git" master
