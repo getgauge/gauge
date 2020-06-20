@@ -263,8 +263,8 @@ jobs:
 
       - name: Prep benchmark
         run: |
-          git clone https://github.com/getgauge/gauge-benchmarks
-          mkdir gauge-benchmarks/out
+          git clone https://github.com/getgauge/gauge-benchmarks ../gauge-benchmarks
+          mkdir ../gauge-benchmarks/out
 
       - name: Run benchmark ${{matrix.project}} | ${{matrix.parallel}}
         env:
@@ -273,8 +273,8 @@ jobs:
         run: |
           for i in {1..50}
           do
-            $(cd gauge-benchmarks/${{matrix.project}} && ./run.sh)
-            git reset --hard HEAD~1
+            $(cd ../gauge-benchmarks/${{matrix.project}} && ./run.sh)
+            git checkout HEAD~1
             go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
           done
 
@@ -283,7 +283,7 @@ jobs:
         uses: actions/upload-artifact@v1
         with:
           name: ${{matrix.project}}_${{matrix.parallel}}
-          path: gauge-benchmarks/out
+          path: ../gauge-benchmarks/out
 
   publish-benchmark:
     name: Publish Benchmark
@@ -294,18 +294,18 @@ jobs:
     steps:
       - name: Prep benchmark
         run: |
-          git clone https://github.com/getgauge/gauge-benchmarks
+          git clone https://github.com/getgauge/gauge-benchmarks ../gauge-benchmarks
 
       - name: Download benchmark results
         uses: actions/download-artifact@v2
         with:
-          path: gauge-benchmarks/out/
+          path: ../gauge-benchmarks/out/
 
       - name: Publish Results
         env:
           GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
         run: |
-          cd gauge-benchmarks
+          cd ../gauge-benchmarks
           find ./out -name '*.csv' -printf "cat %p >> docs/data/gauge/%f\n" | sh
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
