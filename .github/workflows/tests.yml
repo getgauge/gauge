@@ -273,6 +273,11 @@ jobs:
         run: |
           cd gauge-benchmarks/${{matrix.project}}
           ./run.sh
+          for i in {1..50}
+          do
+            $(cd gauge-benchmarks/${{matrix.project}} && ./run.sh)
+          done
+
 
       - name: Upload benchmark
         uses: actions/upload-artifact@v1
