@@ -276,7 +276,7 @@ jobs:
           for i in {1..50}
           do
             $(cd ../gauge-benchmarks/${{matrix.project}} && ./run.sh)
-            git checkout HEAD~1
+            git reset --hard HEAD~1
             go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
           done
 
