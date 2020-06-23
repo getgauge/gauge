@@ -170,15 +170,22 @@ func substituteEnvVars() error {
 		// if value contains an env var E.g. ${foo}
 		if contains {
 			for _, match := range matches {
-				// check if match is from properties file
-				// if not, get from system env
 				envKey, property := match[0], match[1]
-				// error if env property is not found
-				if !isPropertySet(property) {
-					return fmt.Errorf("'%s' env variable was not set", property)
+				var propertyValue string
+				// check if match is system env
+				// if not, get from from properties file
+				if isPropertySet(property) {
+					// get env var from system
+					propertyValue = os.Getenv(property)
+				} else {
+					if val, ok := envVars[property]; ok {
+						// get from from properties file
+						propertyValue = val
+					} else {
+						// error if env property is not found
+						return fmt.Errorf("'%s' env variable was not set", property)
+					}
 				}
-				// get env var from system
-				propertyValue := os.Getenv(property)
 				// replace env key with property value
 				value = strings.Replace(value, envKey, propertyValue, -1)
 			}
