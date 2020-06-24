@@ -289,9 +289,10 @@ jobs:
           cd ../gauge-repository
           git checkout -b foo
           touch foo.txt
+          git add foo.txt
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
-          git commit -sam "foo"
+          git commit -sm "foo"
           git push "https://$GITHUB_ACTOR:${{ secrets.GAUGEBOT_GITHUB_TOKEN }}@github.com/getgauge/gauge-repository.git" foo
 
   publish-benchmark:
