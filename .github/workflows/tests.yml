@@ -252,8 +252,6 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
-        with:
-          fetch-depth: 50
 
       - name: Install Gauge
         run: |
@@ -273,13 +271,7 @@ jobs:
           PARALLEL: ${{ matrix.parallel != 'serial' }}
           enable_multithreading: ${{ matrix.parallel == 'multithreaded'}}
         run: |
-          for i in {1..49}
-          do
-            $(cd ../gauge-benchmarks/${{matrix.project}} && ./run.sh)
-            git reset --hard HEAD~1
-            go run build/make.go && go run build/make.go --install --prefix=/tmp/gauge --verbose
-          done
-
+          $(cd ../gauge-benchmarks/${{matrix.project}} && ./run.sh)
 
       - name: Upload benchmark
         uses: actions/upload-artifact@v1
