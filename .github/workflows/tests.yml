@@ -302,4 +302,4 @@ jobs:
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git commit -sam "add benchmark for $GITHUB_SHA"
-          git push "https://${{ secrets.GAUGEBOT_GITHUB_TOKEN }}@github.com/getgauge/gauge-benchmarks.git"
+          git push "https://gaugebot:${{ secrets.GAUGEBOT_GITHUB_TOKEN }}@github.com/getgauge/gauge-benchmarks.git"
