@@ -296,12 +296,10 @@ jobs:
           path: ../gauge-benchmarks/out/
 
       - name: Publish Results
-        env:
-          GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
         run: |
           cd ../gauge-benchmarks
           find ./out -name '*.csv' -printf "cat %p >> docs/data/gauge/%f\n" | sh
           git config --global user.name "$(git --no-pager log --format=format:'%an' -n 1)"
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
           git commit -sam "add benchmark for $GITHUB_SHA"
-          git push "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com/getgauge/gauge-benchmarks.git"
+          git push "https://${{ secrets.GAUGEBOT_GITHUB_TOKEN }}@github.com/getgauge/gauge-benchmarks.git"
