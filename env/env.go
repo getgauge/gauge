@@ -187,7 +187,7 @@ func substituteEnvVars() error {
 					}
 				}
 				// replace env key with property value
-				value = strings.Replace(value, envKey, propertyValue, -1)
+				value = strings.ReplaceAll(value, envKey, propertyValue)
 			}
 			// overwrite the envVar value
 			envVars[name] = value
