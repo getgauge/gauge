@@ -165,10 +165,16 @@ func isPropertiesFile(path string) bool {
 }
 
 func substituteEnvVars() error {
+	maxDepth := 100
 	for name, value := range envVars {
-		contains, matches := containsEnvVar(value)
-		// if value contains an env var E.g. ${foo}
-		if contains {
+		depth := 0
+		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
+			// check for probable cyclic property definition
+			depth++
+			if depth > maxDepth {
+				return fmt.Errorf("'%s' env variable could not be resolved past %v after %v attempts. Check for cyclic property definitions", name, value, depth)
+			}
+
 			for _, match := range matches {
 				envKey, property := match[0], match[1]
 				var propertyValue string
@@ -189,9 +195,9 @@ func substituteEnvVars() error {
 				// replace env key with property value
 				value = strings.ReplaceAll(value, envKey, propertyValue)
 			}
-			// overwrite the envVar value
-			envVars[name] = value
 		}
+		// overwrite the envVar value
+		envVars[name] = value
 	}
 	return nil
 }
