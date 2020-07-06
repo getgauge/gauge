@@ -1,0 +1,19 @@
+name: 'Posts benchmark summary to the PR'
+description: 'Scans Pull Requests for benchmark data, and publishes it, if present, as a comment'
+author: 'Gauge Team'
+inputs:
+  token:
+    description: "Secret token that has access to comment on the PR"
+    required: true
+  workflow_file_name:
+    description: "Path of the Github workflow file that contains the job with artifact. Has to be relative to project root"
+    default: ".github/workflows/tests.yml"
+  artifact_name:
+    description: "Artifact name to download."
+    default: "benchmark_results.md"
+  file_name:
+    description: "Filename to extract from the artifact downloaded"
+    default: "benchmark_results.md"
+runs:
+  using: "node12"
+  main: "src/index.js"
