@@ -313,8 +313,20 @@ func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell
 	c.Assert(os.Getenv("nested"), Equals, "http://system.service.com/api/default/endpoint")
 }
 
-func (s *MySuite) TestLoadEnvWithSubstitutedVariablesCyclicCheck(c *C) {
+func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, ".*env variable could not be resolved past.*")
+	c.Assert(e, ErrorMatches, "(?s)circular reference found in env variable.*")
+}
+
+func (s *MySuite) TestLoadEnvWithNonCyclicProperties(c *C) {
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("acyclic")
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("a"), Equals, "slashdot/slashdot/slashdot")
+	c.Assert(os.Getenv("b"), Equals, "slashdot")
+	c.Assert(os.Getenv("c"), Equals, "slashdot")
+	c.Assert(os.Getenv("d"), Equals, "slashdot")
+	c.Assert(os.Getenv("e"), Equals, "slashdot")
+	c.Assert(os.Getenv("f"), Equals, "slashdot")
 }

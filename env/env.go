@@ -7,6 +7,7 @@
 package env
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -164,19 +165,36 @@ func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
 }
 
-func substituteEnvVars() error {
-	maxDepth := 100
-	for name, value := range envVars {
-		depth := 0
-		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
-			// check for probable cyclic property definition
-			depth++
-			if depth > maxDepth {
-				return fmt.Errorf("'%s' env variable could not be resolved past %v after %v attempts. Check for cyclic property definitions", name, value, depth)
-			}
+type PropertyNode struct {
+	Value string
+	Depth int
+}
 
+func prettyPrintPropertyNodeMap(m map[string]PropertyNode) string {
+    var b bytes.Buffer
+	for key, node := range m {
+		fmt.Fprintf(&b, "%s=%s\n", key, node.Value)
+	}
+    return b.String()
+}
+
+func substituteEnvVars() error {
+	for name, value := range envVars {
+
+		// create dependant properties map to allow for circular reference check
+		depth := 0
+		dependentProperties := make(map[string]PropertyNode)
+		dependentProperties[name] = PropertyNode{value, depth}
+
+		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
+			depth++
 			for _, match := range matches {
 				envKey, property := match[0], match[1]
+
+				// check for cyclic property definition
+				if val, exists := dependentProperties[property]; exists && val.Depth < depth {
+					return fmt.Errorf("circular reference found in env variable '%s'. Check for cyclic property definitions in:\n%s", name, prettyPrintPropertyNodeMap(dependentProperties))
+				}
 				var propertyValue string
 				// check if match is system env
 				// if not, get from from properties file
@@ -192,6 +210,7 @@ func substituteEnvVars() error {
 						return fmt.Errorf("'%s' env variable was not set", property)
 					}
 				}
+				dependentProperties[property] = PropertyNode{propertyValue, depth}
 				// replace env key with property value
 				value = strings.ReplaceAll(value, envKey, propertyValue)
 			}
