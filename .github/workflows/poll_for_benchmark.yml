@@ -6,6 +6,7 @@ on:
 
 jobs:
   publish_benchmark:
+    runs-on: ubuntu-latest
     steps:
       - name: publish benchmark
         uses: getgauge-contrib/artifact_as_comment@master
