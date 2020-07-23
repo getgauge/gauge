@@ -7,9 +7,9 @@ on:
 jobs:
   publish_benchmark:
     steps:
-      name: publish benchmark
-      uses: getgauge-contrib/artifact_as_comment@master
-      with:
-        workflow_file_name: ".github/workflows/tests.yml"
-        artifact_name: "benchmark"
-        file_name: "results.md"
+      - name: publish benchmark
+        uses: getgauge-contrib/artifact_as_comment@master
+        with:
+          workflow_file_name: ".github/workflows/tests.yml"
+          artifact_name: "benchmark"
+          file_name: "results.md"
