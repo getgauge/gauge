@@ -279,3 +279,54 @@ func (s *MySuite) TestShouldNotGetDefaultExtensionsWhenEnvIsSet(c *C) {
 		c.Assert(contains(exts, expected), Equals, false)
 	}
 }
+
+func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariablesFromProperties(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv(common.DefaultEnvDir)
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("service_url"), Equals, "http://default.service.com")
+	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
+	c.Assert(os.Getenv("api_url"), Equals, "http://default.service.com/api/default/endpoint")
+}
+
+func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromProperties(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("foo")
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("service_url"), Equals, "http://foo.service.com")
+	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
+	c.Assert(os.Getenv("api_url"), Equals, "http://foo.service.com/api/default/endpoint")
+	c.Assert(os.Getenv("nested"), Equals, "http://foo.service.com/api/default/endpoint")
+}
+
+func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell(c *C) {
+	os.Clearenv()
+	os.Setenv("service_url", "http://system.service.com")
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("foo")
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("service_url"), Equals, "http://system.service.com")
+	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
+	c.Assert(os.Getenv("api_url"), Equals, "http://system.service.com/api/default/endpoint")
+	c.Assert(os.Getenv("nested"), Equals, "http://system.service.com/api/default/endpoint")
+}
+
+func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("cyclic")
+	c.Assert(e, ErrorMatches, "(?s)circular reference found in env variable.*")
+}
+
+func (s *MySuite) TestLoadEnvWithNonCyclicProperties(c *C) {
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("acyclic")
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("a"), Equals, "foo/foo/foo")
+	c.Assert(os.Getenv("b"), Equals, "foo")
+	c.Assert(os.Getenv("c"), Equals, "foo")
+	c.Assert(os.Getenv("d"), Equals, "foo")
+	c.Assert(os.Getenv("e"), Equals, "foo")
+	c.Assert(os.Getenv("f"), Equals, "foo")
+}

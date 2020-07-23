@@ -7,6 +7,7 @@
 package env
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -164,27 +165,58 @@ func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
 }
 
+type PropertyNode struct {
+	Value string
+	Depth int
+}
+
+func prettyPrintPropertyNodeMap(m map[string]PropertyNode) string {
+    var b bytes.Buffer
+	for key, node := range m {
+		fmt.Fprintf(&b, "%s=%s\n", key, node.Value)
+	}
+    return b.String()
+}
+
 func substituteEnvVars() error {
 	for name, value := range envVars {
-		contains, matches := containsEnvVar(value)
-		// if value contains an env var E.g. ${foo}
-		if contains {
+
+		// create dependant properties map to allow for circular reference check
+		depth := 0
+		dependentProperties := make(map[string]PropertyNode)
+		dependentProperties[name] = PropertyNode{value, depth}
+
+		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
+			depth++
 			for _, match := range matches {
-				// check if match is from properties file
-				// if not, get from system env
 				envKey, property := match[0], match[1]
-				// error if env property is not found
-				if !isPropertySet(property) {
-					return fmt.Errorf("'%s' env variable was not set", property)
+
+				// check for cyclic property definition
+				if val, exists := dependentProperties[property]; exists && val.Depth < depth {
+					return fmt.Errorf("circular reference found in env variable '%s'. Check for cyclic property definitions in:\n%s", name, prettyPrintPropertyNodeMap(dependentProperties))
 				}
-				// get env var from system
-				propertyValue := os.Getenv(property)
+				var propertyValue string
+				// check if match is system env
+				// if not, get from from properties file
+				if isPropertySet(property) {
+					// get env var from system
+					propertyValue = os.Getenv(property)
+				} else {
+					if val, ok := envVars[property]; ok {
+						// get from from properties file
+						propertyValue = val
+					} else {
+						// error if env property is not found
+						return fmt.Errorf("'%s' env variable was not set", property)
+					}
+				}
+				dependentProperties[property] = PropertyNode{propertyValue, depth}
 				// replace env key with property value
-				value = strings.Replace(value, envKey, propertyValue, -1)
+				value = strings.ReplaceAll(value, envKey, propertyValue)
 			}
-			// overwrite the envVar value
-			envVars[name] = value
 		}
+		// overwrite the envVar value
+		envVars[name] = value
 	}
 	return nil
 }
