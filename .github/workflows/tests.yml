@@ -134,16 +134,10 @@ jobs:
           git clone https://github.com/getgauge/gauge-java
 
       - name: Install Gauge Java plugin from source
-        if: matrix.os != 'windows-latest'
         run: |
           cd gauge-java
-          ./build.sh forceinstall
+          go run build/make.go && go run build/make.go --install
 
-      - name: Install Gauge Java plugin from source
-        if: matrix.os == 'windows-latest'
-        run: |
-          cd gauge-java
-          ./build.ps1 forceinstall
 
       - name: Install Gauge Java maven package locally
         run: |
