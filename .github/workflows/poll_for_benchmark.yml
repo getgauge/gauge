@@ -1,0 +1,16 @@
+name: Poll for Benchmarks on open PRs
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+
+jobs:
+  publish_benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - name: publish benchmark
+        uses: getgauge-contrib/artifact_as_comment@master
+        with:
+          workflow_file_name: ".github/workflows/tests.yml"
+          artifact_name: "benchmark"
+          file_name: "results.md"
