@@ -19,7 +19,7 @@ repo = "#{ARGV[0]}/#{ARGV[1]}"
 
 api  = "https://api.github.com"
 
-latest_release = URI.join(api, "/#{repo}/releases/latest")
+latest_release = URI.join(api, "/repos/#{repo}/releases/latest")
 timestamp = JSON.parse(Net::HTTP.get(latest_release))['published_at']
 
 issues_query = "/search/issues?q=is:pr+repo:#{repo}+state:closed"
