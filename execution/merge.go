@@ -62,7 +62,11 @@ func hasTableDrivenSpec(results []*result.SpecResult) bool {
 }
 
 func mergeResults(results []*result.SpecResult) *result.SpecResult {
-	specResult := &result.SpecResult{ProtoSpec: &m.ProtoSpec{IsTableDriven: hasTableDrivenSpec(results)}}
+	specResult := &result.SpecResult{ProtoSpec: &m.ProtoSpec{
+		IsTableDriven:    hasTableDrivenSpec(results),
+		PreHookMessages:  results[0].ProtoSpec.PreHookMessages,
+		PostHookMessages: results[len(results)-1].ProtoSpec.PostHookMessages,
+	}}
 	var scnResults []*m.ProtoItem
 	table := &m.ProtoTable{}
 	dataTableScnResults := make(map[string][]*m.ProtoTableDrivenScenario)
