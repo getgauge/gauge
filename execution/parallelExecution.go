@@ -134,26 +134,29 @@ func (e *parallelExecution) run() *result.SuiteResult {
 		}
 	}
 
-	logger.Infof(true, "Executing in %d parallel streams.", e.numberOfStreams())
-	// skipcq CRT-A0013
-	if e.isMultithreaded() {
-		logger.Debugf(true, "Using multithreading for parallel execution.")
-		if e.runners[0].Info().GRPCSupport {
-			go e.executeGrpcMultithreaded()
+	if e.specCollection.Size() > 0 {
+		logger.Infof(true, "Executing in %d parallel streams.", e.numberOfStreams())
+		// skipcq CRT-A0013
+		if e.isMultithreaded() {
+			logger.Debugf(true, "Using multithreading for parallel execution.")
+			if e.runners[0].Info().GRPCSupport {
+				go e.executeGrpcMultithreaded()
+			} else {
+				go e.executeLegacyMultithreaded()
+			}
+		} else if isLazy() {
+			go e.executeLazily()
 		} else {
-			go e.executeLegacyMultithreaded()
+			go e.executeEagerly()
 		}
-	} else if isLazy() {
-		go e.executeLazily()
-	} else {
-		go e.executeEagerly()
-	}
 
-	for r := range e.resultChan {
-		res = append(res, r)
+		for r := range e.resultChan {
+			res = append(res, r)
+		}
+	} else {
+		logger.Infof(true, "No specs remains to execute in parallel.")
 	}
 	e.aggregateResults(res)
-
 	e.finish()
 	return e.suiteResult
 }
