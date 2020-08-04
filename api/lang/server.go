@@ -63,10 +63,6 @@ func (h *LangHandler) handle(ctx context.Context, conn *jsonrpc2.Conn, req *json
 func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *jsonrpc2.Request) (interface{}, error) {
 	switch req.Method {
 	case "initialize":
-		if err := informRunnerCompatibility(ctx, conn); err != nil {
-			logError(req, err.Error())
-			return nil, err
-		}
 		if err := cacheInitializeParams(req); err != nil {
 			logError(req, err.Error())
 			return nil, err
@@ -278,8 +274,9 @@ func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 func initializeRunner() error {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
-		logDebug(nil, "Current runner is not compatible with gauge LSP.")
-		return err
+		e := fmt.Errorf("Current runner is not compatible with gauge LSP. Some of the gauge lsp feature will not work as expected.")
+		logDebug(nil, "%s", e.Error())
+		return e
 	}
 	err = startRunner()
 	if err != nil {

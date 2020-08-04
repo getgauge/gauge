@@ -31,7 +31,7 @@ var lRunner langRunner
 func startRunner() error {
 	var err = connectToRunner()
 	if err != nil {
-		return fmt.Errorf("unable to connect to runner : %s", err.Error())
+		return fmt.Errorf("Gauge could not connect to the runner. Check the logs for more info")
 	}
 	return nil
 }
