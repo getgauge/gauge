@@ -274,7 +274,7 @@ func startLsp(logLevel string) (context.Context, *jsonrpc2.Conn) {
 func initializeRunner() error {
 	id, err := getLanguageIdentifier()
 	if err != nil || id == "" {
-		e := fmt.Errorf("Current runner is not compatible with gauge LSP. Some of the gauge lsp feature will not work as expected.")
+		e := fmt.Errorf("There are version incompatibilities between Gauge and it's plugins in this project. Some features will not work as expected.")
 		logDebug(nil, "%s", e.Error())
 		return e
 	}
