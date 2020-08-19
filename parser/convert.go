@@ -143,7 +143,21 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText(), Message: fmt.Sprintf("Could not resolve table from %s", token.LineText())}
 			return ParseResult{ParseErrors: []ParseError{e}, Ok: false}
 		}
-		if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
+		if isInAnyState(*state, scenarioScope) {
+			scn := spec.LatestScenario()
+			if !scn.DataTable.IsInitialized() && env.AllowScenarioDatatable() {
+				externalTable := &gauge.DataTable{}
+				externalTable.Table = resolvedArg.Table
+				externalTable.LineNo = token.LineNo
+				externalTable.Value = token.Value
+				externalTable.IsExternal = true
+				scn.AddExternalDataTable(externalTable)
+			} else {
+				value := "Multiple data table present, ignoring table"
+				scn.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
+				return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, token.SpanEnd, value}}}
+			}
+		} else if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
 			externalTable := &gauge.DataTable{}
 			externalTable.Table = resolvedArg.Table
 			externalTable.LineNo = token.LineNo
@@ -155,11 +169,11 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, token.SpanEnd, value}}}
 		} else {
-			value := "Data table not associated with spec"
+			value := "Data table not associated with spec or scenario"
 			spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			return ParseResult{Ok: false, Warnings: []*Warning{&Warning{spec.FileName, token.LineNo, token.SpanEnd, value}}}
 		}
-		retainStates(state, specScope)
+		retainStates(state, specScope, scenarioScope)
 		addStates(state, keywordScope)
 		return ParseResult{Ok: true}
 	})

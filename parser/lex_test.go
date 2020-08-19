@@ -547,6 +547,18 @@ func (s *MySuite) TestParsingSimpleScenarioDataTable(c *C) {
 
 }
 
+func (s *MySuite) TestParsingExternalScenarioDataTable(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().specHeading("Spec heading").
+		scenarioHeading("Scenario Heading").
+		text("table:data/foo.csv").String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 3)
+	c.Assert(tokens[2].Kind, Equals, gauge.DataTableKind)
+}
+
 func (s *MySuite) TestParsingStepWIthNewlineAndTableParam(c *C) {
 	parser := new(SpecParser)
 	specText := newSpecBuilder().
