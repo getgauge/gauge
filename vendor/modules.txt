@@ -8,7 +8,7 @@ github.com/daviddengcn/go-colortext
 github.com/dmotylev/goproperties
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
-# github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6
+# github.com/getgauge/common v0.0.0-20200824023809-24587c106922
 github.com/getgauge/common
 # github.com/golang/protobuf v1.3.2
 github.com/golang/protobuf/proto
@@ -32,8 +32,6 @@ github.com/op/go-logging
 github.com/russross/blackfriday
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
-# github.com/satori/go.uuid v1.2.0
-github.com/satori/go.uuid
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
 # github.com/sourcegraph/go-langserver v2.0.0+incompatible

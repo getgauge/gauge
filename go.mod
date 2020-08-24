@@ -7,14 +7,13 @@ require (
 	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
 	github.com/fsnotify/fsnotify v1.4.7
-	github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6
+	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
 	github.com/golang/protobuf v1.3.2
 	github.com/golangplus/bytes v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday v2.0.0+incompatible
-	github.com/satori/go.uuid v1.2.0
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a
 	github.com/spf13/cobra v0.0.6-0.20191019221741-77e4d5aecc4d
