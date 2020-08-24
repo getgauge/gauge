@@ -129,7 +129,7 @@ func init() {
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
 	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
 	f.StringVarP(&retryOnlyTags, retryOnlyTagsName, "", retryOnlyTagsDefault, "Retries the specs and scenarios tagged with given tags")
-	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Specify number of parallel execution streams")
+	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Execute only the specs and scenarios tagged with given tags in parallel, rest will be run in serial. Applicable only if run in parallel.")
 	err := f.MarkHidden(onlyName)
 	if err != nil {
 		logger.Errorf(false, fmt.Sprintf("Unable to mark '%s' flag as hidden: %s", onlyName, err.Error()))
