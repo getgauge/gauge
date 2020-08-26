@@ -18,13 +18,13 @@ import (
 
 const (
 	gaugeRepositoryURL      = "gauge_repository_url"
-	gaugeTemplatesURL       = "gauge_templates_url"
 	runnerConnectionTimeout = "runner_connection_timeout"
 	pluginConnectionTimeout = "plugin_connection_timeout"
 	pluginKillTimeOut       = "plugin_kill_timeout"
 	runnerRequestTimeout    = "runner_request_timeout"
 	ideRequestTimeout       = "ide_request_timeout"
 	checkUpdates            = "check_updates"
+	allowInsecureDownload   = "allow_insecure_download"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -85,14 +85,15 @@ func IdeRequestTimeout() time.Duration {
 	return convertToTime(intervalString, defaultIdeRequestTimeout, ideRequestTimeout)
 }
 
+// AllowInsecureDownload determines if insecure download is enabled
+func AllowInsecureDownload() bool {
+	allow := getFromConfig(allowInsecureDownload)
+	return convertToBool(allow, allowInsecureDownload, false)
+}
+
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
 func GaugeRepositoryUrl() string {
 	return getFromConfig(gaugeRepositoryURL)
-}
-
-// GaugeTemplatesUrl fetches the URL to be used to download project templates
-func GaugeTemplatesUrl() string {
-	return getFromConfig(gaugeTemplatesURL)
 }
 
 // SetProjectRoot sets project root location in ENV.
@@ -125,7 +126,7 @@ func convertToTime(value string, defaultValue time.Duration, name string) time.D
 	return time.Millisecond * time.Duration(intValue)
 }
 
-func convertToBool(value string, property string, defaultValue bool) bool {
+func convertToBool(value, property string, defaultValue bool) bool {
 	boolValue, err := strconv.ParseBool(strings.TrimSpace(value))
 	if err != nil {
 		APILog.Warningf("Incorrect value for %s in property file. Cannot convert %s to boolean.", property, value)

@@ -9,25 +9,33 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/getgauge/gauge/template"
+
 	"github.com/getgauge/gauge/projectInit"
 	"github.com/spf13/cobra"
 )
 
 var (
 	initCmd = &cobra.Command{
-		Use:     "init [flags] <template>",
-		Short:   "Initialize project structure in the current directory",
-		Long:    `Initialize project structure in the current directory.`,
-		Example: "  gauge init java",
+		Use:   "init <template> [flags]",
+		Short: "Initialize project structure in the current directory",
+		Long:  `Initialize project structure in the current directory.`,
+		Example: `  gauge init java
+  gauge init https://github.com/getgauge/template-js/releases/latest/download/js.zip
+  gauge init /Users/user/Download/foo.zip`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if templates {
-				projectInit.ListTemplates()
-				return
+				l, err := template.All()
+				if err != nil {
+					exit(fmt.Errorf("failed to get templates. %w", err), cmd.UsageString())
+				}
+				fmt.Println(l)
+			} else {
+				if len(args) < 1 {
+					exit(fmt.Errorf("missing argument <template name, URL or filepath>. To see all the templates, run 'gauge init -t'"), cmd.UsageString())
+				}
+				projectInit.Template(args[0], machineReadable)
 			}
-			if len(args) < 1 {
-				exit(fmt.Errorf("Missing argument <template name>. To see all the templates, run 'gauge init -t'"), cmd.UsageString())
-			}
-			projectInit.InitializeProject(args[0], machineReadable)
 		},
 		DisableAutoGenTag: true,
 	}
