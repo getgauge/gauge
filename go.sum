@@ -28,10 +28,6 @@ github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 h1:sP2APvSdZ
 github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47/go.mod h1:f2V6964+f0p8Asqy8mIK5cKyyVc6MP9PFzGVNRcnYJQ=
 github.com/fsnotify/fsnotify v1.4.7 h1:IXs+QLmnXW2CcXuY+8Mzv/fWEsPGWxqefPtCP5CnV9I=
 github.com/fsnotify/fsnotify v1.4.7/go.mod h1:jwhsz4b93w/PPRr/qN1Yymfu8t87LnFCMoQvtojpjFo=
-github.com/getgauge/common v0.0.0-20200424085520-f47b2c0d1793 h1:T5vUgya5iUXeXwhjyBMZbM3dhdaxMUxPROCsinW7NsI=
-github.com/getgauge/common v0.0.0-20200424085520-f47b2c0d1793/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
-github.com/getgauge/common v0.0.0-20200429083145-b5f3fadf2bd3 h1:Tf6p6IAwlmAZo5Vr5Wp8SGoCFpEEpYbALptiYjH7PV0=
-github.com/getgauge/common v0.0.0-20200429083145-b5f3fadf2bd3/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
 github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6 h1:A9c4GzoZwS5Z+yx+UszPnnhleF8GtlP1cqjibKKS7qU=
 github.com/getgauge/common v0.0.0-20200429105102-5b0a7c1a1bd6/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
@@ -117,6 +113,8 @@ github.com/russross/blackfriday/v2 v2.0.1 h1:lPqVAte+HuHNfhJ/0LC98ESWRz8afy9tM/0
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
 github.com/satori/go.uuid v1.2.0/go.mod h1:dA0hQrYB0VpLJoorglMZABFdXlWrHn1NEOzdhQKdks0=
+github.com/schollz/closestmatch v2.1.0+incompatible h1:Uel2GXEpJqOWBrlyI+oY9LTiyyjYS17cCYRqP13/SHk=
+github.com/schollz/closestmatch v2.1.0+incompatible/go.mod h1:RtP1ddjLong6gTkbtmuhtR2uUrrJOpYzYRvbcPAid+g=
 github.com/shurcooL/sanitized_anchor_name v1.0.0 h1:PdmoCO6wvbs+7yrJyMORt4/BmY5IYyJwS/kOiWx8mHo=
 github.com/shurcooL/sanitized_anchor_name v1.0.0/go.mod h1:1NzhyTcUVG4SuEtjjoZeVRXNmyL/1OwPU0+IJeTBvfc=
 github.com/sirupsen/logrus v1.2.0/go.mod h1:LxeOpSwHxABJmUn/MG1IvRgCAasNZTLOkJPxbbu5VWo=

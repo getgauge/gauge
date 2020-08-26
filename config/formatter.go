@@ -9,25 +9,29 @@ package config
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 )
 
-type formatter interface {
-	format([]property) (string, error)
+type Formatter interface {
+	Format([]Property) (string, error)
 }
 
-type jsonFormatter struct {
+type JsonFormatter struct {
 }
 
-func (f jsonFormatter) format(p []property) (string, error) {
+func (f JsonFormatter) Format(p []Property) (string, error) {
+	sort.Sort(byPropertyKey(p))
 	bytes, err := json.MarshalIndent(p, "", "\t")
 	return string(bytes), err
 }
 
-type textFormatter struct {
+type TextFormatter struct {
+	Headers []string
 }
 
-func (f textFormatter) format(p []property) (string, error) {
+func (f TextFormatter) Format(p []Property) (string, error) {
+	sort.Sort(byPropertyKey(p))
 	format := "%-30s\t%-35s"
 	var s []string
 	max := 0
@@ -38,6 +42,15 @@ func (f textFormatter) format(p []property) (string, error) {
 			max = len(text)
 		}
 	}
-	s = append([]string{fmt.Sprintf(format, "Key", "Value"), strings.Repeat("-", max)}, s...)
+	if len(f.Headers) == 0 {
+		f.Headers = []string{"Key", "Value"}
+	}
+	s = append([]string{fmt.Sprintf(format, f.Headers[0], f.Headers[1]), strings.Repeat("-", max)}, s...)
 	return strings.Join(s, "\n"), nil
 }
+
+type byPropertyKey []Property
+
+func (a byPropertyKey) Len() int           { return len(a) }
+func (a byPropertyKey) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byPropertyKey) Less(i, j int) bool { return a[i].Key < a[j].Key }
