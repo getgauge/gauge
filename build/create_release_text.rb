@@ -19,16 +19,21 @@ repo = "#{ARGV[0]}/#{ARGV[1]}"
 
 api  = "https://api.github.com"
 
-latest_release = URI.join(api, "/#{repo}/releases/latest")
+latest_release = URI.join(api, "/repos/#{repo}/releases/latest")
 timestamp = JSON.parse(Net::HTTP.get(latest_release))['published_at']
 
-issues_query = "/search/issues?q=is:pr+repo:#{repo}+state:closed"
+issues_query = "/search/issues?q=is:pr+repo:#{repo}+closed"
 
 if not timestamp.nil? || timestamp.empty? 
   issues_query += ":>#{timestamp}"
 end
 
-response = Net::HTTP.get_response(URI.join(api, issues_query))
+uri = URI.join(api, issues_query)
+req = Net::HTTP::Get.new(uri)
+req['Accept'] = "application/vnd.github.v3.full+json"
+http = Net::HTTP.new(uri.hostname, uri.port)
+http.use_ssl = true
+response = http.request(req)
 
 case response
   when Net::HTTPSuccess
