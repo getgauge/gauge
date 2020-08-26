@@ -60,9 +60,9 @@ func (t *templates) get(k string) (string, error) {
 	}
 	matches := t.closestMatch(k)
 	if len(matches) > 0 {
-		return "", fmt.Errorf("cannot find a Gauge template '%s'.\nThe most similar template names are\n\n\t%s", k, strings.Join(matches, "\n\t"))
+		return "", fmt.Errorf("Cannot find a Gauge template '%s'.\nThe most similar template names are\n\n\t%s", k, strings.Join(matches, "\n\t"))
 	}
-	return "", fmt.Errorf("cannot find a Gauge template '%s'", k)
+	return "", fmt.Errorf("Cannot find a Gauge template '%s'", k)
 }
 
 func (t *templates) closestMatch(k string) []string {
