@@ -32,6 +32,8 @@ github.com/op/go-logging
 github.com/russross/blackfriday
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
+# github.com/schollz/closestmatch v2.1.0+incompatible
+github.com/schollz/closestmatch
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
 # github.com/sourcegraph/go-langserver v2.0.0+incompatible

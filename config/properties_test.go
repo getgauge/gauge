@@ -24,7 +24,7 @@ type dummyFormatter struct {
 	p []string
 }
 
-func (f *dummyFormatter) format(p []property) (string, error) {
+func (f *dummyFormatter) Format(p []Property) (string, error) {
 	for _, prop := range p {
 		f.p = append(f.p, prop.Value)
 	}
@@ -32,25 +32,25 @@ func (f *dummyFormatter) format(p []property) (string, error) {
 }
 
 func TestPropertiesSetValue(t *testing.T) {
-	p := Properties()
-	want := "https://gauge.templates.url"
+	p := defaults()
+	want := "https://gauge.trepo.url"
 
-	err := p.set(gaugeTemplatesURL, want)
+	err := p.set(gaugeRepositoryURL, want)
 	if err != nil {
 		t.Error(err)
 	}
 
-	got, err := p.get(gaugeTemplatesURL)
+	got, err := p.get(gaugeRepositoryURL)
 	if err != nil {
 		t.Errorf("Expected error == nil when setting property, got %s", err.Error())
 	}
 	if got != want {
-		t.Errorf("Setting Property `%s` failed, want: `%s`, got `%s`", gaugeTemplatesURL, want, got)
+		t.Errorf("Setting Property `%s` failed, want: `%s`, got `%s`", gaugeRepositoryURL, want, got)
 	}
 }
 
 func TestPropertiesFormat(t *testing.T) {
-	p := Properties()
+	p := defaults()
 	var want []string
 	for _, p := range p.p {
 		want = append(want, (*p).Value)
@@ -82,7 +82,7 @@ func TestMergedProperties(t *testing.T) {
 	}
 	os.Setenv("GAUGE_HOME", s)
 
-	p, err := MergedProperties()
+	p, err := mergedProperties()
 	if err != nil {
 		t.Errorf("Unable to read MergedProperties: %s", err.Error())
 	}
@@ -105,14 +105,14 @@ func TestMergedProperties(t *testing.T) {
 var propertiesContent = "# Version " + version.CurrentGaugeVersion.String() + `
 # This file contains Gauge specific internal configurations. Do not delete
 
+# Allow Gauge to download template from insecure URLs.
+allow_insecure_download = false
+
 # Allow Gauge and its plugin updates to be notified.
 check_updates = true
 
 # Url to get plugin versions
 gauge_repository_url = https://downloads.gauge.org/plugin
-
-# Url to get templates list
-gauge_templates_url = https://templates.gauge.org
 
 # Timeout in milliseconds for requests from runner when invoked for ide.
 ide_request_timeout = 30000
@@ -133,7 +133,7 @@ runner_request_timeout = 30000
 func TestPropertiesString(t *testing.T) {
 	want := strings.Split(propertiesContent, "\n\n")
 
-	s, err := Properties().String()
+	s, err := defaults().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -170,7 +170,7 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 
 	wg.Wait()
 
-	s, err := Properties().String()
+	s, err := defaults().String()
 	if err != nil {
 		t.Error(err)
 	}
@@ -202,7 +202,7 @@ func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	}
 
 	want := version.FullVersion()
-	got, err := gaugeVersionInProperties()
+	got, err := GaugeVersionInPropertiesFile(common.GaugePropertiesFile)
 	if err != nil {
 		t.Error(err)
 	}
