@@ -70,7 +70,7 @@ type Property struct {
 func GetProjectRoot() (string, error) {
 	pwd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("Failed to find project root directory. %s\n", err.Error())
+		return "", fmt.Errorf("Failed to find Gauge project root directory. Missing manifest.json file: %s\n", err.Error())
 	}
 	return findManifestInPath(pwd)
 }
@@ -78,7 +78,7 @@ func GetProjectRoot() (string, error) {
 func findManifestInPath(pwd string) (string, error) {
 	wd, err := filepath.Abs(pwd)
 	if err != nil {
-		return "", fmt.Errorf("Failed to find project directory: %s", err)
+		return "", fmt.Errorf("Failed to find Gauge project directory. Missing manifest.json file: %s", err)
 	}
 	manifestExists := func(dir string) bool {
 		return FileExists(filepath.Join(dir, ManifestFile))
@@ -90,12 +90,12 @@ func findManifestInPath(pwd string) (string, error) {
 			return dir, nil
 		}
 		if dir == filepath.Clean(fmt.Sprintf("%c", os.PathSeparator)) || dir == "" {
-			return "", fmt.Errorf("Failed to find project directory")
+			return "", fmt.Errorf("Failed to find Gauge project directory. Missing manifest.json file.")
 		}
 		oldDir := dir
 		dir = filepath.Clean(fmt.Sprintf("%s%c..", dir, os.PathSeparator))
 		if dir == oldDir {
-			return "", fmt.Errorf("Failed to find project directory")
+			return "", fmt.Errorf("Failed to find Gauge project directory. Missing manifest.json file.")
 		}
 	}
 }
