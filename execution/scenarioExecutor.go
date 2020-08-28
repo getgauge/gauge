@@ -72,10 +72,13 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	if !scenarioResult.GetFailed() {
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
+		// context and steps are not appended together since sometime it cause the issue and the steps in step list and proto step list differs.
+		// This is done to fix https://github.com/getgauge/gauge/issues/1629
 		if e.executeSteps(e.contexts, protoContexts, scenarioResult) {
-			_ = e.executeSteps(scenario.Steps, protoScenItems, scenarioResult)
+			e.executeSteps(scenario.Steps, protoScenItems, scenarioResult)
 		}
-		_ = e.executeSteps(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
+		// teardowns are not appended to previous call to executeSteps to ensure they are run irrespective of context/step failure
+		e.executeSteps(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
 	}
 
 	e.notifyAfterScenarioHook(scenarioResult)
