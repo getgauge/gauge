@@ -29,7 +29,6 @@
     "sinon": "^6.2.0"
   },
   "dependencies": {
-    "superagent": "^5.2.2",
     "unzipper": "^0.9.3"
   }
 }
