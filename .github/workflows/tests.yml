@@ -174,7 +174,7 @@ jobs:
 
       - name: Prep FTs
         run: |
-          git clone https://github.com/getgauge/gauge-tests -b template-failure-assertion
+          git clone https://github.com/getgauge/gauge-tests
           cd gauge-tests
           gauge install
 

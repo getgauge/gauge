@@ -106,7 +106,7 @@ func TestGetShouldGetTemplateIfDoesNotExists(t *testing.T) {
 	if e == nil {
 		t.Errorf("expected error. got nil")
 	}
-	expected := "cannot find a Gauge template 'hello'"
+	expected := "Cannot find Gauge template 'hello'"
 	if e.Error() != expected {
 		t.Errorf("expected error to be \n'%s'\nGot:\n'%s'", expected, e.Error())
 	}
@@ -118,7 +118,7 @@ func TestGetShouldGetSimilarTemplatesIfDoesNotExists(t *testing.T) {
 	if e == nil {
 		t.Errorf("expected error. got nil")
 	}
-	expected := `cannot find a Gauge template 'jaba'.
+	expected := `Cannot find Gauge template 'jaba'.
 The most similar template names are
 
 	java
