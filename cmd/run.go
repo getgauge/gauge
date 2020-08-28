@@ -79,7 +79,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			logger.Debugf(true, "gauge %s %v", cmd.Name(), strings.Join(args, " "))
 			if err := config.SetProjectRoot(args); err != nil {
-				exit(err, cmd.UsageString())
+				exit(err, "")
 			}
 			if er := handleConflictingParams(cmd.Flags(), args); er != nil {
 				exit(er, "")

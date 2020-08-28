@@ -54,3 +54,5 @@ dist/
 *.zip
 build/pip/setup.py
 .eggs
+
+coverage.out
