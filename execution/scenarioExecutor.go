@@ -72,8 +72,12 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	if !scenarioResult.GetFailed() {
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
-		e.executeSteps(append(e.contexts, scenario.Steps...), append(protoContexts, protoScenItems...), scenarioResult)
-		// teardowns are not appended to previous call to executeSteps to ensure they are run irrespective of context/step failures
+		// context and steps are not appended together since sometime it cause the issue and the steps in step list and proto step list differs.
+		// This is done to fix https://github.com/getgauge/gauge/issues/1629
+		if e.executeSteps(e.contexts, protoContexts, scenarioResult) {
+			e.executeSteps(scenario.Steps, protoScenItems, scenarioResult)
+		}
+		// teardowns are not appended to previous call to executeSteps to ensure they are run irrespective of context/step failure
 		e.executeSteps(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
 	}
 
@@ -136,7 +140,7 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	e.pluginHandler.NotifyPlugins(message)
 }
 
-func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) {
+func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) bool {
 	var stepsIndex int
 	for _, protoItem := range protoItems {
 		if protoItem.GetItemType() == gauge_messages.ProtoItem_Concept || protoItem.GetItemType() == gauge_messages.ProtoItem_Step {
@@ -145,11 +149,12 @@ func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge
 			if failed {
 				scenarioResult.SetFailure()
 				if !recoverable {
-					return
+					return false
 				}
 			}
 		}
 	}
+	return true
 }
 
 func (e *scenarioExecutor) executeStep(step *gauge.Step, protoItem *gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) (bool, bool) {
