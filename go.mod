@@ -5,16 +5,15 @@ go 1.13
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
-	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
 	github.com/golang/protobuf v1.3.2
 	github.com/golangplus/bytes v1.0.0 // indirect
+	github.com/magiconair/properties v1.8.0
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday v2.0.0+incompatible
-	github.com/satori/go.uuid v1.2.0 // indirect
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20190106185902-35a74f039c6a

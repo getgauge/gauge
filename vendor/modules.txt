@@ -22,6 +22,8 @@ github.com/inconshreveable/mousetrap
 github.com/kr/pretty
 # github.com/kr/text v0.1.0
 github.com/kr/text
+# github.com/magiconair/properties v1.8.0
+github.com/magiconair/properties
 # github.com/mattn/go-isatty v0.0.10
 github.com/mattn/go-isatty
 # github.com/natefinch/lumberjack v2.0.0+incompatible

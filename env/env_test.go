@@ -147,6 +147,18 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "custom_specs_dir")
 }
 
+func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShells(c *C) {
+	os.Clearenv()
+	os.Setenv("gauge_reports_dir", "custom_reports_dir")
+	os.Setenv("gauge_specs_dir", "custom_specs_dir")
+	config.ProjectRoot = "_testdata/proj1"
+
+	e := LoadEnv("test")
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("TEST_URL"), Equals, "http://testurl")
+}
+
 func (s *MySuite) TestLoadMultipleEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
