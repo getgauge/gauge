@@ -140,24 +140,33 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 	if err1 != nil {
 		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
-	processedProperties := GetProcessedPropertiesMap(gaugeProperties)
+	processedProperties, err1 := GetProcessedPropertiesMap(gaugeProperties)
+	if err1 != nil {
+		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
+	}
 	LoadEnvProperties(processedProperties)
 
 	return nil
 }
 
-func GetProcessedPropertiesMap(propertiesMap *properties.Properties) *properties.Properties {
+func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {
 	for key, _ := range propertiesMap.Map() {
 		// Update properties if an env var is set.
 		if envVarValue, present := os.LookupEnv(key); present {
-			propertiesMap.Set(key, envVarValue)
+			_, _, err := propertiesMap.Set(key, envVarValue)
+			if err != nil {
+				return propertiesMap, fmt.Errorf("%s", err.Error())
+			}
 		}
 		// Update the properties if it has already been added to envVars map.
 		if _, ok := envVars[key]; ok {
-			propertiesMap.Set(key, envVars[key])
+			_, _, err := propertiesMap.Set(key, envVars[key])
+			if err != nil {
+				return propertiesMap, fmt.Errorf("%s", err.Error())
+			}
 		}
 	}
-	return propertiesMap
+	return propertiesMap, nil
 }
 
 func LoadEnvProperties(propertiesMap *properties.Properties) {
