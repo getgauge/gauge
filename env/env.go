@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 
 	"strings"
@@ -47,6 +48,7 @@ const (
 )
 
 var envVars map[string]string
+var expansionVars map[string]string
 
 var currentEnvironments = []string{}
 
@@ -60,6 +62,7 @@ func LoadEnv(envName string) error {
 	allEnvs := strings.Split(envName, ",")
 
 	envVars = make(map[string]string)
+	expansionVars = make(map[string]string)
 
 	defaultEnvLoaded := false
 	for _, env := range allEnvs {
@@ -85,8 +88,12 @@ func LoadEnv(envName string) error {
 	}
 
 	loadDefaultEnvVars()
+	err := checkEnvVarsExpanded()
+	if err != nil {
+		return fmt.Errorf("%s", err.Error())
+	}
 
-	err := setEnvVars()
+	err = setEnvVars()
 	if err != nil {
 		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
@@ -171,9 +178,44 @@ func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*propertie
 
 func LoadEnvProperties(propertiesMap *properties.Properties) {
 	for property, value := range propertiesMap.Map() {
-		propertiesMap.MustGetString(property)
+		if contains, matches := containsEnvVar(value); contains {
+			for _, match := range matches {
+				expansionVars[match[1]] = match[0]
+			}
+		}
 		addEnvVar(property, propertiesMap.GetString(property, value))
 	}
+}
+
+func checkEnvVarsExpanded() error {
+	for key, _ := range expansionVars {
+		_, ok := envVars[key]
+		if ok || isPropertySet(key) {
+			delete(expansionVars, key)
+		}
+	}
+	if len(expansionVars) > 0 {
+		keys := make([]string, 0, len(expansionVars))
+		for key, _ := range expansionVars {
+			keys = append(keys, key)
+		}
+		return fmt.Errorf("[%s] env variable(s) are not set.", strings.Join(keys, ", "))
+	}
+	return nil
+}
+
+func containsEnvVar(value string) (contains bool, matches [][]string) {
+	// match for any ${foo}
+	rStr := `\$\{(\w+)\}`
+	r, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
+	contains = r.MatchString(value)
+	if contains {
+		matches = r.FindAllStringSubmatch(value, -1)
+	}
+	return
 }
 
 func addEnvVar(name, value string) {
