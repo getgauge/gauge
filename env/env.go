@@ -188,7 +188,7 @@ func LoadEnvProperties(propertiesMap *properties.Properties) {
 }
 
 func checkEnvVarsExpanded() error {
-	for key, _ := range expansionVars {
+	for key := range expansionVars {
 		_, ok := envVars[key]
 		if ok || isPropertySet(key) {
 			delete(expansionVars, key)
@@ -196,7 +196,7 @@ func checkEnvVarsExpanded() error {
 	}
 	if len(expansionVars) > 0 {
 		keys := make([]string, 0, len(expansionVars))
-		for key, _ := range expansionVars {
+		for key := range expansionVars {
 			keys = append(keys, key)
 		}
 		return fmt.Errorf("[%s] env variable(s) are not set.", strings.Join(keys, ", "))
