@@ -43,6 +43,7 @@ jobs:
         id: go
 
       - name: Prep installer generation
+        shell: powershell
         env:
           SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
         run: |
