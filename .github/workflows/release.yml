@@ -46,6 +46,7 @@ jobs:
         env:
           SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
         run: |
+          Start-Sleep -Milliseconds 1
           Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-strlen_8192.zip/download?use_mirror=excellmedia" -UseBasicParsing -UserAgent ([Microsoft.PowerShell.Commands.PSUserAgent]::Chrome) -Outfile "./nsis.zip"
           Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
           echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
