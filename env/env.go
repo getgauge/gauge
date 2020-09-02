@@ -7,13 +7,11 @@
 package env
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 
-	"regexp"
 	"strings"
 
 	"github.com/getgauge/common"
@@ -88,12 +86,7 @@ func LoadEnv(envName string) error {
 
 	loadDefaultEnvVars()
 
-	err := substituteEnvVars()
-	if err != nil {
-		return fmt.Errorf("%s", err.Error())
-	}
-
-	err = setEnvVars()
+	err := setEnvVars()
 	if err != nil {
 		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
@@ -143,15 +136,39 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 
-	gaugeProperties := properties.MustLoadFile(path, properties.UTF8)
-	for property, value := range gaugeProperties.Map() {
-		addEnvVar(property, value)
+	gaugeProperties, err1 := properties.LoadFile(path, properties.UTF8)
+	if err1 != nil {
+		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
+	processedProperties := GetProcessedPropertiesMap(gaugeProperties)
+	LoadEnvProperties(processedProperties)
 
 	return nil
 }
 
+func GetProcessedPropertiesMap(propertiesMap *properties.Properties) *properties.Properties {
+	for key, _ := range propertiesMap.Map() {
+		// Update properties if an env var is set.
+		if envVarValue, present := os.LookupEnv(key); present {
+			propertiesMap.Set(key, envVarValue)
+		}
+		// Update the properties if it has already been added to envVars map.
+		if _, ok := envVars[key]; ok {
+			propertiesMap.Set(key, envVars[key])
+		}
+	}
+	return propertiesMap
+}
+
+func LoadEnvProperties(propertiesMap *properties.Properties) {
+	for property, value := range propertiesMap.Map() {
+		propertiesMap.MustGetString(property)
+		addEnvVar(property, propertiesMap.GetString(property, value))
+	}
+}
+
 func addEnvVar(name, value string) {
+	// hello
 	if _, ok := envVars[name]; !ok {
 		envVars[name] = value
 	}
@@ -159,62 +176,6 @@ func addEnvVar(name, value string) {
 
 func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
-}
-
-type PropertyNode struct {
-	Value string
-	Depth int
-}
-
-func prettyPrintPropertyNodeMap(m map[string]PropertyNode) string {
-    var b bytes.Buffer
-	for key, node := range m {
-		fmt.Fprintf(&b, "%s=%s\n", key, node.Value)
-	}
-    return b.String()
-}
-
-func substituteEnvVars() error {
-	for name, value := range envVars {
-
-		// create dependant properties map to allow for circular reference check
-		depth := 0
-		dependentProperties := make(map[string]PropertyNode)
-		dependentProperties[name] = PropertyNode{value, depth}
-
-		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
-			depth++
-			for _, match := range matches {
-				envKey, property := match[0], match[1]
-
-				// check for cyclic property definition
-				if val, exists := dependentProperties[property]; exists && val.Depth < depth {
-					return fmt.Errorf("circular reference found in env variable '%s'. Check for cyclic property definitions in:\n%s", name, prettyPrintPropertyNodeMap(dependentProperties))
-				}
-				var propertyValue string
-				// check if match is system env
-				// if not, get from from properties file
-				if isPropertySet(property) {
-					// get env var from system
-					propertyValue = os.Getenv(property)
-				} else {
-					if val, ok := envVars[property]; ok {
-						// get from from properties file
-						propertyValue = val
-					} else {
-						// error if env property is not found
-						return fmt.Errorf("'%s' env variable was not set", property)
-					}
-				}
-				dependentProperties[property] = PropertyNode{propertyValue, depth}
-				// replace env key with property value
-				value = strings.ReplaceAll(value, envKey, propertyValue)
-			}
-		}
-		// overwrite the envVar value
-		envVars[name] = value
-	}
-	return nil
 }
 
 func setEnvVars() error {
@@ -231,20 +192,6 @@ func setEnvVars() error {
 
 func isPropertySet(property string) bool {
 	return len(os.Getenv(property)) > 0
-}
-
-func containsEnvVar(value string) (contains bool, matches [][]string) {
-	// match for any ${foo}
-	rStr := `\$\{(\w+)\}`
-	r, err := regexp.Compile(rStr)
-	if err != nil {
-		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
-	}
-	contains = r.MatchString(value)
-	if contains {
-		matches = r.FindAllStringSubmatch(value, -1)
-	}
-	return
 }
 
 // comma-separated value of environments

@@ -221,12 +221,6 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 
 }
 
-func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
-	config.ProjectRoot = "_testdata/proj3"
-	e := LoadEnv(common.DefaultEnvDir)
-	c.Assert(e, ErrorMatches, ".*env variable was not set")
-}
-
 func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
@@ -324,12 +318,14 @@ func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell
 }
 
 func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, "(?s)circular reference found in env variable.*")
+	c.Assert(e, ErrorMatches, ".*circular reference")
 }
 
-func (s *MySuite) TestLoadEnvWithNonCyclicProperties(c *C) {
+func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("acyclic")
 	c.Assert(e, Equals, nil)
