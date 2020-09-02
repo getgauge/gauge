@@ -43,10 +43,13 @@ jobs:
         id: go
 
       - name: Prep installer generation
+        shell: powershell
         env:
           SIGNING_CERT: ${{ secrets.WINDOWS_SIGNING_CERT }}
         run: |
-          Invoke-WebRequest https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-strlen_8192.zip/download?use_mirror=excellmedia -UseBasicParsing -Outfile ./nsis.zip
+          Start-Sleep -Milliseconds 1
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-strlen_8192.zip/download" -UseBasicParsing -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome -Outfile "./nsis.zip"
           Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
           echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
           [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
