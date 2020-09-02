@@ -335,4 +335,5 @@ func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
 	c.Assert(os.Getenv("d"), Equals, "foo")
 	c.Assert(os.Getenv("e"), Equals, "foo")
 	c.Assert(os.Getenv("f"), Equals, "foo")
+	c.Assert(os.Getenv("g"), Equals, "")
 }
