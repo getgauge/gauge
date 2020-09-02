@@ -150,7 +150,7 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 }
 
 func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {
-	for key, _ := range propertiesMap.Map() {
+	for key := range propertiesMap.Map() {
 		// Update properties if an env var is set.
 		if envVarValue, present := os.LookupEnv(key); present {
 			_, _, err := propertiesMap.Set(key, envVarValue)
