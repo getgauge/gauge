@@ -218,7 +218,13 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	c.Assert(os.Getenv("property1"), Equals, "value1")
 	c.Assert(os.Getenv("property3"), Equals, "bar/value1")
 	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
+}
 
+func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj5"
+	e := LoadEnv(common.DefaultEnvDir)
+	c.Assert(e.Error(), Equals, "[missingProperty] env variable(s) are not set.")
 }
 
 func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
@@ -335,5 +341,4 @@ func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
 	c.Assert(os.Getenv("d"), Equals, "foo")
 	c.Assert(os.Getenv("e"), Equals, "foo")
 	c.Assert(os.Getenv("f"), Equals, "foo")
-	c.Assert(os.Getenv("g"), Equals, "")
 }
