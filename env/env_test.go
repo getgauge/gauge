@@ -167,6 +167,7 @@ func (s *MySuite) TestLoadMultipleEnv(c *C) {
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
 	c.Assert(os.Getenv("logs_directory"), Equals, "bar/logs")
 }
+
 func (s *MySuite) TestLoadMultipleEnvEnsureFirstOneDecides(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
