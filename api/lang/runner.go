@@ -41,7 +41,7 @@ func startRunner() error {
 		var installMessage = ""
 		m, e := manifest.ProjectManifest()
 		if e == nil {
-			installMessage = fmt.Sprintf(" Install '%s' extension for code insights", recommendedExtensions[m.Language])
+			installMessage = fmt.Sprintf(" Install '%s' extension for code insights.", recommendedExtensions[m.Language])
 		}
 		errStr := "Gauge could not initialize.%s For more information see" +
 			"Problems](command:workbench.actions.view.problems), check logs." +
