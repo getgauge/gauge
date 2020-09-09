@@ -7,7 +7,6 @@
 package lang
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/sourcegraph/jsonrpc2"
 )
 
 type langRunner struct {
@@ -164,15 +162,4 @@ func getLanguageIdentifier() (string, error) {
 		return "", err
 	}
 	return info.LspLangId, nil
-}
-
-func informRunnerCompatibility(ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	if lRunner.lspID != "" {
-		return nil
-	}
-	var params = lsp.ShowMessageParams{
-		Type:    lsp.Warning,
-		Message: "Current gauge language runner is not compatible with gauge LSP. Some of the editing feature will not work as expected",
-	}
-	return conn.Notify(ctx, "window/showMessage", params)
 }
