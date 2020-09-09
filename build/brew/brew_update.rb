@@ -4,7 +4,6 @@
 #   See LICENSE.txt in the project root for license information.
 # ----------------------------------------------------------------
 
-
 require 'parser/current'
 require 'net/http'
 require 'uri'
