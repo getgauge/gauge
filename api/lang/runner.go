@@ -44,7 +44,7 @@ func startRunner() error {
 			installMessage = fmt.Sprintf(" Install '%s' extension for code insights.", recommendedExtensions[m.Language])
 		}
 		errStr := "Gauge could not initialize.%s For more information see" +
-			"Problems](command:workbench.actions.view.problems), check logs." +
+			"[Problems](command:workbench.actions.view.problems), check logs." +
 			"[Troubleshooting](https://docs.gauge.org/troubleshooting.html?language=javascript&ide=vscode#gauge-could-not-initialize-for-more-information-see-problems)"
 		return fmt.Errorf(errStr, installMessage)
 	}
