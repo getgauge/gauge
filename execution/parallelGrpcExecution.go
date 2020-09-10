@@ -57,8 +57,8 @@ func (e *parallelExecution) notifyBeforeSuite() {
 			CurrentExecutionInfo: &gauge_messages.ExecutionInfo{},
 			Stream:               1},
 	}
-	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.pluginHandler.NotifyPlugins(m)
+	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
 	e.suiteResult.PreHookScreenshots = res.Screenshots
@@ -66,6 +66,7 @@ func (e *parallelExecution) notifyBeforeSuite() {
 		result.AddPreHook(e.suiteResult, res)
 	}
 	m.ExecutionStartingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
 
 func (e *parallelExecution) notifyAfterSuite() {
@@ -75,8 +76,8 @@ func (e *parallelExecution) notifyAfterSuite() {
 			Stream:               1,
 		},
 	}
-	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.pluginHandler.NotifyPlugins(m)
+	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
 	e.suiteResult.PostHookScreenshots = res.Screenshots
@@ -84,4 +85,5 @@ func (e *parallelExecution) notifyAfterSuite() {
 		result.AddPostHook(e.suiteResult, res)
 	}
 	m.ExecutionEndingRequest.SuiteResult = gauge.ConvertToProtoSuiteResult(e.suiteResult)
+	e.pluginHandler.NotifyPlugins(m)
 }
