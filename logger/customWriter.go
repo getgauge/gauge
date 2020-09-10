@@ -25,8 +25,10 @@ func (w CustomWriter) Write(p []byte) (n int, err error) {
 		text := strings.ReplaceAll(line, "\r\n", "\n")
 		re := regexp.MustCompile(portPrefix + "([0-9]+)")
 		f := re.FindStringSubmatch(text)
-		w.port <- f[1]
-		return len(p), nil
+		if len(f) > 0 {
+			w.port <- f[1]
+			return len(p), nil
+		}
 	}
 	return w.file.Write(p)
 }
