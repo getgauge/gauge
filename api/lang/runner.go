@@ -7,7 +7,6 @@
 package lang
 
 import (
-	"context"
 	"fmt"
 	"os"
 
@@ -18,7 +17,6 @@ import (
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
-	"github.com/sourcegraph/jsonrpc2"
 )
 
 type langRunner struct {
@@ -28,10 +26,25 @@ type langRunner struct {
 
 var lRunner langRunner
 
+var recommendedExtensions = map[string]string{
+	"java":   "vscjava.vscode-java-pack",
+	"dotnet": "ms-dotnettools.csharp",
+	"python": "ms-python.python",
+	"ruby":   "rebornix.ruby",
+}
+
 func startRunner() error {
 	var err = connectToRunner()
 	if err != nil {
-		return fmt.Errorf("Gauge could not initialize. Check the logs for more info")
+		var installMessage = ""
+		m, e := manifest.ProjectManifest()
+		if e == nil {
+			installMessage = fmt.Sprintf(" Install '%s' extension for code insights.", recommendedExtensions[m.Language])
+		}
+		errStr := "Gauge could not initialize.%s For more information see" +
+			"[Problems](command:workbench.actions.view.problems), check logs." +
+			"[Troubleshooting](https://docs.gauge.org/troubleshooting.html?language=javascript&ide=vscode#gauge-could-not-initialize-for-more-information-see-problems)"
+		return fmt.Errorf(errStr, installMessage)
 	}
 	return nil
 }
@@ -149,15 +162,4 @@ func getLanguageIdentifier() (string, error) {
 		return "", err
 	}
 	return info.LspLangId, nil
-}
-
-func informRunnerCompatibility(ctx context.Context, conn jsonrpc2.JSONRPC2) error {
-	if lRunner.lspID != "" {
-		return nil
-	}
-	var params = lsp.ShowMessageParams{
-		Type:    lsp.Warning,
-		Message: "Current gauge language runner is not compatible with gauge LSP. Some of the editing feature will not work as expected",
-	}
-	return conn.Notify(ctx, "window/showMessage", params)
 }
