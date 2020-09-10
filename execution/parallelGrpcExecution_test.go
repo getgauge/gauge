@@ -19,7 +19,7 @@ import (
 
 func TestSuiteHooksAreExecutedOncePerRun(t *testing.T) {
 	specs := createSpecsList(6)
-	var recievedMesseges []*gauge_messages.Message
+	var receivedMesseges []*gauge_messages.Message
 	runner1 := &fakeGrpcRunner{messageCount: make(map[gauge_messages.Message_MessageType]int)}
 	runner2 := &fakeGrpcRunner{messageCount: make(map[gauge_messages.Message_MessageType]int)}
 	e := parallelExecution{
@@ -27,12 +27,12 @@ func TestSuiteHooksAreExecutedOncePerRun(t *testing.T) {
 		specCollection:           gauge.NewSpecCollection(specs, false),
 		runners:                  []runner.Runner{runner1, runner2},
 		pluginHandler: &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {
-			recievedMesseges = append(recievedMesseges, m)
+			receivedMesseges = append(receivedMesseges, m)
 		}},
 	}
 
 	t.Run("BeforeSuite", func(t *testing.T) {
-		recievedMesseges = []*gauge_messages.Message{}
+		receivedMesseges = []*gauge_messages.Message{}
 		e.suiteResult = result.NewSuiteResult("", time.Now())
 		runner1.mockResult = &gauge_messages.ProtoExecutionResult{}
 		e.notifyBeforeSuite()
@@ -44,13 +44,13 @@ func TestSuiteHooksAreExecutedOncePerRun(t *testing.T) {
 		if r2count != 0 {
 			t.Errorf("Expected runner2 to have received 0 ExecutionStarting request, got %d", r2count)
 		}
-		if len(recievedMesseges) != 2 {
-			t.Errorf("Expected plugins to have received 2 ExecutionStarting notifications, got %d", len(recievedMesseges))
+		if len(receivedMesseges) != 2 {
+			t.Errorf("Expected plugins to have received 2 ExecutionStarting notifications, got %d", len(receivedMesseges))
 		}
 	})
 
 	t.Run("AfterSuite", func(t *testing.T) {
-		recievedMesseges = []*gauge_messages.Message{}
+		receivedMesseges = []*gauge_messages.Message{}
 		e.notifyAfterSuite()
 		e.suiteResult = result.NewSuiteResult("", time.Now())
 		runner1.mockResult = &gauge_messages.ProtoExecutionResult{}
@@ -62,8 +62,8 @@ func TestSuiteHooksAreExecutedOncePerRun(t *testing.T) {
 		if r2count != 0 {
 			t.Errorf("Expected runner2 to have received 0 ExecutionEnding request, got %d", r2count)
 		}
-		if len(recievedMesseges) != 2 {
-			t.Errorf("Expected plugins to have received 2 ExecutionStarting notifications, got %d", len(recievedMesseges))
+		if len(receivedMesseges) != 2 {
+			t.Errorf("Expected plugins to have received 2 ExecutionStarting notifications, got %d", len(receivedMesseges))
 		}
 	})
 }
