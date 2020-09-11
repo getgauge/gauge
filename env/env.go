@@ -92,7 +92,6 @@ func LoadEnv(envName string) error {
 	if err != nil {
 		return fmt.Errorf("%s", err.Error())
 	}
-
 	err = setEnvVars()
 	if err != nil {
 		return fmt.Errorf("Failed to load env. %s", err.Error())
@@ -188,7 +187,11 @@ func LoadEnvProperties(propertiesMap *properties.Properties) {
 }
 
 func checkEnvVarsExpanded() error {
-	for key := range expansionVars {
+	for key, value := range expansionVars {
+		err := isCircular(key, value)
+		if err != nil {
+			return err
+		}
 		_, ok := envVars[key]
 		if ok || isPropertySet(key) {
 			delete(expansionVars, key)
@@ -200,6 +203,20 @@ func checkEnvVarsExpanded() error {
 			keys = append(keys, key)
 		}
 		return fmt.Errorf("[%s] env variable(s) are not set.", strings.Join(keys, ", "))
+	}
+	return nil
+}
+
+func isCircular(key, value string) error {
+	keyValue, exists := envVars[key]
+	if exists && !isPropertySet(key) {
+		if len(keyValue) > 0 {
+			value = keyValue
+		}
+		_, err := properties.LoadString(fmt.Sprintf("%s=%s", key, value))
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
 	}
 	return nil
 }

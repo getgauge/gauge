@@ -331,6 +331,13 @@ func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	c.Assert(e, ErrorMatches, ".*circular reference")
 }
 
+func (s *MySuite) TestLoadEnvWithCircularProperties(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj6"
+	e := LoadEnv("circular")
+	c.Assert(e, ErrorMatches, ".*circular reference")
+}
+
 func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
