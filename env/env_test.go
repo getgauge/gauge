@@ -205,7 +205,7 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 	c.Assert(e.Error(), Equals, "Failed to load env. bar environment does not exist")
 }
 
-func (s *MySuite) TestLoadDefaultEnvWithSubwstitutedVariables(c *C) {
+func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")
 	os.Setenv("property1", "value1")
