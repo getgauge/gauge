@@ -205,7 +205,7 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 	c.Assert(e.Error(), Equals, "Failed to load env. bar environment does not exist")
 }
 
-func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
+func (s *MySuite) TestLoadDefaultEnvWithSubwstitutedVariables(c *C) {
 	os.Clearenv()
 	os.Setenv("foo", "bar")
 	os.Setenv("property1", "value1")
@@ -225,14 +225,14 @@ func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariable(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj5"
 	e := LoadEnv(common.DefaultEnvDir)
-	c.Assert(e.Error(), Equals, "[missingProperty] env variable(s) are not set.")
+	c.Assert(e.Error(), Equals, "Failed to load env. [missingProperty] env variable(s) are not set")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableWhenAssignedToProperty(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("missing")
-	c.Assert(e.Error(), Equals, "[c] env variable(s) are not set.")
+	c.Assert(e.Error(), Equals, "Failed to load env. [c] env variable(s) are not set")
 }
 
 func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
@@ -335,21 +335,21 @@ func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, ".*circular reference.*")
+	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse: _testdata/proj4/env/cyclic/cyclic.properties. circular reference.*")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossEnvironments(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj6"
 	e := LoadEnv("circular")
-	c.Assert(e, ErrorMatches, ".*circular reference.*")
+	c.Assert(e, ErrorMatches, "Failed to load env. circular reference in.*")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossFiles(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("circular")
-	c.Assert(e, ErrorMatches, ".*circular reference in.*")
+	c.Assert(e, ErrorMatches, "Failed to load env. circular reference in.*")
 }
 
 func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
