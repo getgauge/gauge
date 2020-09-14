@@ -179,7 +179,11 @@ func LoadEnvProperties(propertiesMap *properties.Properties) {
 	for property, value := range propertiesMap.Map() {
 		if contains, matches := containsEnvVar(value); contains {
 			for _, match := range matches {
-				expansionVars[match[1]] = match[0]
+				key, def := match[1], match[0]
+				// Dont need to add to expansions if it's already set by env var
+				if (!isPropertySet(key)) {
+					expansionVars[key] = propertiesMap.GetString(key, def)
+				}
 			}
 		}
 		addEnvVar(property, propertiesMap.GetString(property, value))
@@ -188,13 +192,12 @@ func LoadEnvProperties(propertiesMap *properties.Properties) {
 
 func checkEnvVarsExpanded() error {
 	for key, value := range expansionVars {
+		if _, ok := envVars[key] ; ok {
+			delete(expansionVars, key)
+		}
 		err := isCircular(key, value)
 		if err != nil {
 			return err
-		}
-		_, ok := envVars[key]
-		if ok || isPropertySet(key) {
-			delete(expansionVars, key)
 		}
 	}
 	if len(expansionVars) > 0 {
@@ -208,8 +211,7 @@ func checkEnvVarsExpanded() error {
 }
 
 func isCircular(key, value string) error {
-	keyValue, exists := envVars[key]
-	if exists && !isPropertySet(key) {
+	if keyValue, exists := envVars[key] ; exists {
 		if len(keyValue) > 0 {
 			value = keyValue
 		}
@@ -236,7 +238,6 @@ func containsEnvVar(value string) (contains bool, matches [][]string) {
 }
 
 func addEnvVar(name, value string) {
-	// hello
 	if _, ok := envVars[name]; !ok {
 		envVars[name] = value
 	}

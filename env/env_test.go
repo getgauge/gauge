@@ -221,11 +221,18 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
 }
 
-func (s *MySuite) TestLoadDefaultEnvWithInvalidSubstitutedVariable(c *C) {
+func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariable(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj5"
 	e := LoadEnv(common.DefaultEnvDir)
 	c.Assert(e.Error(), Equals, "[missingProperty] env variable(s) are not set.")
+}
+
+func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableWhenAssignedToProperty(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("missing")
+	c.Assert(e.Error(), Equals, "[c] env variable(s) are not set.")
 }
 
 func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
@@ -331,9 +338,16 @@ func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	c.Assert(e, ErrorMatches, ".*circular reference")
 }
 
-func (s *MySuite) TestLoadEnvWithCircularProperties(c *C) {
+func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossEnvironments(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj6"
+	e := LoadEnv("circular")
+	c.Assert(e, ErrorMatches, ".*circular reference")
+}
+
+func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossFiles(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("circular")
 	c.Assert(e, ErrorMatches, ".*circular reference")
 }
