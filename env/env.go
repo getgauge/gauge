@@ -90,7 +90,7 @@ func LoadEnv(envName string) error {
 	loadDefaultEnvVars()
 	err := checkEnvVarsExpanded()
 	if err != nil {
-		return fmt.Errorf("%s", err.Error())
+		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
 	err = setEnvVars()
 	if err != nil {
@@ -205,7 +205,7 @@ func checkEnvVarsExpanded() error {
 		for key := range expansionVars {
 			keys = append(keys, key)
 		}
-		return fmt.Errorf("[%s] env variable(s) are not set.", strings.Join(keys, ", "))
+		return fmt.Errorf("[%s] env variable(s) are not set", strings.Join(keys, ", "))
 	}
 	return nil
 }
