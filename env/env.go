@@ -146,28 +146,25 @@ func loadEnvFile(path string, info os.FileInfo, err error) error {
 	if err1 != nil {
 		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
-	processedProperties, err1 := GetProcessedPropertiesMap(gaugeProperties)
-	if err1 != nil {
+	processedProperties, err := GetProcessedPropertiesMap(gaugeProperties)
+	if  err != nil {
 		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
 	}
 	LoadEnvProperties(processedProperties)
-
 	return nil
 }
 
 func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {
-	for key := range propertiesMap.Map() {
+	for propertyKey := range propertiesMap.Map() {
 		// Update properties if an env var is set.
-		if envVarValue, present := os.LookupEnv(key); present {
-			_, _, err := propertiesMap.Set(key, envVarValue)
-			if err != nil {
+		if envVarValue, present := os.LookupEnv(propertyKey); present {
+			if _, _, err := propertiesMap.Set(propertyKey, envVarValue) ; err != nil {
 				return propertiesMap, fmt.Errorf("%s", err.Error())
 			}
 		}
 		// Update the properties if it has already been added to envVars map.
-		if _, ok := envVars[key]; ok {
-			_, _, err := propertiesMap.Set(key, envVars[key])
-			if err != nil {
+		if _, ok := envVars[propertyKey]; ok {
+			if _, _, err := propertiesMap.Set(propertyKey, envVars[propertyKey]); err != nil {
 				return propertiesMap, fmt.Errorf("%s", err.Error())
 			}
 		}
@@ -176,17 +173,17 @@ func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*propertie
 }
 
 func LoadEnvProperties(propertiesMap *properties.Properties) {
-	for property, value := range propertiesMap.Map() {
-		if contains, matches := containsEnvVar(value); contains {
+	for propertyKey, propertyValue := range propertiesMap.Map() {
+		if contains, matches := containsEnvVar(propertyValue); contains {
 			for _, match := range matches {
-				key, def := match[1], match[0]
+				key, defaultValue := match[1], match[0]
 				// Dont need to add to expansions if it's already set by env var
-				if (!isPropertySet(key)) {
-					expansionVars[key] = propertiesMap.GetString(key, def)
+				if !isPropertySet(key) {
+					expansionVars[key] = propertiesMap.GetString(key, defaultValue)
 				}
 			}
 		}
-		addEnvVar(property, propertiesMap.GetString(property, value))
+		addEnvVar(propertyKey, propertiesMap.GetString(propertyKey, propertyValue))
 	}
 }
 
@@ -195,8 +192,7 @@ func checkEnvVarsExpanded() error {
 		if _, ok := envVars[key] ; ok {
 			delete(expansionVars, key)
 		}
-		err := isCircular(key, value)
-		if err != nil {
+		if err := isCircular(key, value) ; err != nil {
 			return err
 		}
 	}
