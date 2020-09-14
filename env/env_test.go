@@ -335,7 +335,7 @@ func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse: _testdata/proj4/env/cyclic/cyclic.properties. circular reference.*")
+	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse: .*cyclic.properties. circular reference.*")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossEnvironments(c *C) {
