@@ -235,6 +235,13 @@ func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableWhenAssignedTo
 	c.Assert(e.Error(), Equals, "Failed to load env. [c] env variable(s) are not set")
 }
 
+func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableAcrossMultipleFiles(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj4"
+	e := LoadEnv("missing-multi")
+	c.Assert(e.Error(), Equals, "Failed to load env. [d] env variable(s) are not set")
+}
+
 func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
