@@ -8,7 +8,7 @@ require (
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.4.2
 	github.com/golangplus/bytes v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
