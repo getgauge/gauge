@@ -70,6 +70,26 @@ func (s *MySuite) TestFormatTable(c *C) {
 	c.Assert(got, Equals, want)
 }
 
+func (s *MySuite) TestFormatTableWithUmlautChars(c *C) {
+	// umlaut characters are unicode and can take up twice the space of regular chars
+	cell1 := gauge.TableCell{Value: "Büsingen", CellType: gauge.Static}
+	cell2 := gauge.TableCell{Value: "Hauptstraße", CellType: gauge.Static}
+
+	headers := []string{"col1", "col2"}
+	cols := [][]gauge.TableCell{{cell1}, {cell2}}
+
+	table := gauge.NewTable(headers, cols, 10)
+
+	got := FormatTable(table)
+	want := `
+   |col1    |col2       |
+   |--------|-----------|
+   |Büsingen|Hauptstraße|
+`
+
+	c.Assert(got, Equals, want)
+}
+
 func (s *MySuite) TestFormatConcepts(c *C) {
 	dictionary := gauge.NewConceptDictionary()
 	step1 := &gauge.Step{Value: "sdsf", LineText: "sdsf", IsConcept: true, LineNo: 1, PreComments: []*gauge.Comment{&gauge.Comment{Value: "COMMENT", LineNo: 1}}}
