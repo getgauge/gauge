@@ -159,14 +159,15 @@ func FormatTable(table *gauge.Table) string {
 }
 
 func addPaddingToCell(cellValue string, width int) string {
-	padding := getRepeatedChars(" ", width-len(cellValue))
-	return fmt.Sprintf("%s%s", cellValue, padding)
+	cellRunes := []rune(cellValue)
+	padding := getRepeatedChars(" ", width-len(cellRunes))
+	return fmt.Sprintf("%s%s", string(cellRunes), padding)
 }
 
 func findLongestCellWidth(columnCells []gauge.TableCell, minValue int) int {
 	longestLength := minValue
 	for _, cellValue := range columnCells {
-		cellValueLen := len(cellValue.GetValue())
+		cellValueLen := len([]rune(cellValue.GetValue()))
 		if cellValueLen > longestLength {
 			longestLength = cellValueLen
 		}
