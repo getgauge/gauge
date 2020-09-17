@@ -77,8 +77,6 @@ SectionEnd
 SectionGroup /e "Language Plugins" SEC_LANGUAGES
   Section /o "Java" SEC_JAVA
   SectionEnd
-  Section /o "C#" SEC_CSHARP
-  SectionEnd
   Section /o "Ruby" SEC_RUBY
   SectionEnd
   Section /o "JavaScript" SEC_JAVASCRIPT
@@ -104,7 +102,6 @@ SectionGroupEnd
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_GAUGE} "Will install Gauge Core (gauge.exe)."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_LANGUAGES} "Check to install language runners that needs to be installed. You need at least one language runner to run Gauge specs."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVA} "Java language runner, enables writing implementations using Java."
-  !insertmacro MUI_DESCRIPTION_TEXT ${SEC_CSHARP} "C# language runner, enables writing implementations using C#."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_RUBY} "Ruby language runner, enables writing implementations using Ruby."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_JAVASCRIPT} "JavaScript language runner, enables writing implementations using JavaScript."
   !insertmacro MUI_DESCRIPTION_TEXT ${SEC_PYTHON} "Python language runner, enables writing implementations using Python."
@@ -149,8 +146,7 @@ Section -Post
   Pop $R0
 
   ${If} $R0 == 'online'
-    SectionGetFlags ${SEC_JAVA} $R0
-    SectionGetFlags ${SEC_CSHARP} $R1
+    SectionGetFlags ${SEC_JAVA} $R1
     SectionGetFlags ${SEC_RUBY} $R2
     SectionGetFlags ${SEC_JAVASCRIPT} $R3
     SectionGetFlags ${SEC_PYTHON} $R4
@@ -158,14 +154,9 @@ Section -Post
     SectionGetFlags ${SEC_XML} $R6
     SectionGetFlags ${SEC_SPECTACLE} $R7
 
-    ${If} $R0 == 1
+    ${If} $R1 == 1
       DetailPrint "Installing plugin : java"
       nsExec::ExecToLog 'gauge install java'
-    ${EndIf}
-
-    ${If} $R1 == 1
-      DetailPrint "Installing plugin : csharp"
-      nsExec::ExecToLog 'gauge install csharp'
     ${EndIf}
 
     ${If} $R2 == 1
