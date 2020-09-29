@@ -342,21 +342,21 @@ func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse: .*cyclic.properties. circular reference.*")
+	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse:.* circular reference in:\n.*\n.*\n.*\n.*\n")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossEnvironments(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj6"
 	e := LoadEnv("circular")
-	c.Assert(e, ErrorMatches, "Failed to load env. circular reference in.*")
+	c.Assert(e.Error(), Equals, "Failed to load env. circular reference in:\na=${a}\n")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossFiles(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("circular")
-	c.Assert(e, ErrorMatches, "Failed to load env. circular reference in.*")
+	c.Assert(e.Error(), Equals, "Failed to load env. circular reference in:\na=${a}\n")
 }
 
 func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
