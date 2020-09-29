@@ -10,7 +10,7 @@ require (
 	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
 	github.com/golang/protobuf v1.3.2
 	github.com/golangplus/bytes v1.0.0 // indirect
-	github.com/magiconair/properties v1.8.3
+	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.10 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
