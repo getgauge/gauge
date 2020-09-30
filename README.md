@@ -25,7 +25,7 @@ Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb48
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 [branding-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
 
-[userdocs]:https://docs.gauge.org/latest
+[userdocs]:https://docs.gauge.org/
 [get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
