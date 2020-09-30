@@ -24,6 +24,6 @@ func main() {
 
 func recoverPanic() {
 	if r := recover(); r != nil {
-		logger.Fatalf(true, "Panicing : %v\n%s", r, string(debug.Stack()))
+		logger.Fatalf(true, "Error: %v\n%s", r, string(debug.Stack()))
 	}
 }
