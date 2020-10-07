@@ -26,7 +26,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
@@ -47,7 +47,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
@@ -65,7 +65,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirAndOverwritePassedEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	e := LoadEnv("bar")
+	e := LoadEnv("bar", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
@@ -80,7 +80,7 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = ""
 
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
@@ -98,7 +98,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("foo"), Equals, "bar")
@@ -111,7 +111,7 @@ func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesNotSetInShell(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("property1"), Equals, "value1")
@@ -121,7 +121,7 @@ func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
@@ -137,7 +137,7 @@ func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "custom_reports_dir")
@@ -151,7 +151,7 @@ func (s *MySuite) TestLoadCustomEnvWithCommentsInPropertiesSet(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv("test")
+	e := LoadEnv("test", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("test_url"), Equals, "http://testurl")
@@ -161,7 +161,7 @@ func (s *MySuite) TestLoadMultipleEnv(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	e := LoadEnv("bar, foo")
+	e := LoadEnv("bar, foo", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
@@ -172,7 +172,7 @@ func (s *MySuite) TestLoadMultipleEnvEnsureFirstOneDecides(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj2"
 
-	e := LoadEnv("bar, default")
+	e := LoadEnv("bar, default", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
@@ -201,7 +201,7 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv("bar")
+	e := LoadEnv("bar", nil)
 	c.Assert(e.Error(), Equals, "Failed to load env. bar environment does not exist")
 }
 
@@ -212,7 +212,7 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 
 	config.ProjectRoot = "_testdata/proj3"
 
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 
 	c.Assert(e, Equals, nil)
 
@@ -224,21 +224,21 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariable(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj5"
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 	c.Assert(e.Error(), Equals, "Failed to load env. [missingProperty] env variable(s) are not set")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableWhenAssignedToProperty(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("missing")
+	e := LoadEnv("missing", nil)
 	c.Assert(e.Error(), Equals, "Failed to load env. [c] env variable(s) are not set")
 }
 
 func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariableAcrossMultipleFiles(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("missing-multi")
+	e := LoadEnv("missing-multi", nil)
 	c.Assert(e.Error(), Equals, "Failed to load env. [d] env variable(s) are not set")
 }
 
@@ -246,7 +246,7 @@ func (s *MySuite) TestCurrentEnvironmentIsPopulated(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj1"
 
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 
 	c.Assert(e, Equals, nil)
 	c.Assert(CurrentEnvironments(), Equals, "foo")
@@ -308,7 +308,7 @@ func (s *MySuite) TestShouldNotGetDefaultExtensionsWhenEnvIsSet(c *C) {
 func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariablesFromProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv(common.DefaultEnvDir)
+	e := LoadEnv(common.DefaultEnvDir, nil)
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("service_url"), Equals, "http://default.service.com")
 	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
@@ -318,7 +318,7 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariablesFromProperties(c *C)
 func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("service_url"), Equals, "http://foo.service.com")
 	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
@@ -330,7 +330,7 @@ func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell
 	os.Clearenv()
 	os.Setenv("service_url", "http://system.service.com")
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("foo")
+	e := LoadEnv("foo", nil)
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("service_url"), Equals, "http://system.service.com")
 	c.Assert(os.Getenv("path"), Equals, "api/default/endpoint")
@@ -338,31 +338,26 @@ func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell
 	c.Assert(os.Getenv("nested"), Equals, "http://system.service.com/api/default/endpoint")
 }
 
-func (s *MySuite) TestLoadEnvWithCyclicProperties(c *C) {
-	os.Clearenv()
-	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("cyclic")
-	c.Assert(e, ErrorMatches, "Failed to load env. Failed to parse:.* circular reference in:\n.*\n.*\n.*\n.*\n")
-}
-
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossEnvironments(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj6"
-	e := LoadEnv("circular")
-	c.Assert(e.Error(), Equals, "Failed to load env. circular reference in:\na=${a}\n")
+	e := LoadEnv("circular", nil)
+	c.Assert(e, ErrorMatches, "Failed to load env. circular reference in:\n.*\n")
 }
 
 func (s *MySuite) TestLoadEnvWithCircularPropertiesAcrossFiles(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("circular")
-	c.Assert(e.Error(), Equals, "Failed to load env. circular reference in:\na=${a}\n")
+	e := LoadEnv("circular", func(err error) {
+		c.Assert(err, ErrorMatches, "circular reference in:\n.*\n.*\n.*\n")
+	})
+	c.Assert(e, Equals, nil)
 }
 
 func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj4"
-	e := LoadEnv("acyclic")
+	e := LoadEnv("acyclic", nil)
 	c.Assert(e, Equals, nil)
 	c.Assert(os.Getenv("a"), Equals, "foo/foo/foo")
 	c.Assert(os.Getenv("b"), Equals, "foo")

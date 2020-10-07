@@ -58,7 +58,8 @@ var currentEnvironments = []string{}
 // but are not present in the map.
 //
 // Finally, all the env vars present in the map are actually set in the shell.
-func LoadEnv(envName string) error {
+func LoadEnv(envName string, errorHandler properties.ErrorHandlerFunc) error {
+	properties.ErrorHandler = errorHandler
 	allEnvs := strings.Split(envName, ",")
 
 	envVars = make(map[string]string)
@@ -130,25 +131,14 @@ func loadEnvDir(envName string) error {
 	}
 	addEnvVar(GaugeEnvironment, envName)
 	logger.Debugf(true, "'%s' set to '%s'", GaugeEnvironment, envName)
-	return filepath.Walk(envDirPath, loadEnvFile)
-}
-
-func loadEnvFile(path string, info os.FileInfo, err error) error {
-	if err != nil {
-		return err
-	}
-
-	if !isPropertiesFile(path) {
-		return nil
-	}
-
-	gaugeProperties, err1 := properties.LoadFile(path, properties.UTF8)
-	if err1 != nil {
-		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
-	}
+	files := common.FindFilesInDir(envDirPath,
+		isPropertiesFile,
+		func(p string, f os.FileInfo) bool { return false },
+	)
+	gaugeProperties := properties.MustLoadFiles(files, properties.UTF8, false)
 	processedProperties, err := GetProcessedPropertiesMap(gaugeProperties)
-	if  err != nil {
-		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
+	if err != nil {
+		return fmt.Errorf("Failed to parse properties in %s. %s", envDirPath, err.Error())
 	}
 	LoadEnvProperties(processedProperties)
 	return nil
@@ -158,7 +148,7 @@ func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*propertie
 	for propertyKey := range propertiesMap.Map() {
 		// Update properties if an env var is set.
 		if envVarValue, present := os.LookupEnv(propertyKey); present {
-			if _, _, err := propertiesMap.Set(propertyKey, envVarValue) ; err != nil {
+			if _, _, err := propertiesMap.Set(propertyKey, envVarValue); err != nil {
 				return propertiesMap, fmt.Errorf("%s", err.Error())
 			}
 		}
@@ -189,10 +179,10 @@ func LoadEnvProperties(propertiesMap *properties.Properties) {
 
 func checkEnvVarsExpanded() error {
 	for key, value := range expansionVars {
-		if _, ok := envVars[key] ; ok {
+		if _, ok := envVars[key]; ok {
 			delete(expansionVars, key)
 		}
-		if err := isCircular(key, value) ; err != nil {
+		if err := isCircular(key, value); err != nil {
 			return err
 		}
 	}
@@ -207,7 +197,7 @@ func checkEnvVarsExpanded() error {
 }
 
 func isCircular(key, value string) error {
-	if keyValue, exists := envVars[key] ; exists {
+	if keyValue, exists := envVars[key]; exists {
 		if len(keyValue) > 0 {
 			value = keyValue
 		}
