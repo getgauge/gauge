@@ -224,12 +224,12 @@ func (s *MySuite) TestFormatStep(c *C) {
 
 func (s *MySuite) TestFormatStepsWithResolveArgs(c *C) {
 	step := &gauge.Step{Value: "my step with {}, {}", Args: []*gauge.StepArg{&gauge.StepArg{Value: "static \"foo\"", ArgType: gauge.Static},
-		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Static}},
+		&gauge.StepArg{Name: "dynamic", Value: "\"foo\"", ArgType: gauge.Dynamic}},
 		Fragments: []*gauge_messages.Fragment{
 			&gauge_messages.Fragment{Text: "my step with "},
 			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "static \"foo\"", ParameterType: gauge_messages.Parameter_Static}},
 			&gauge_messages.Fragment{Text: ", "},
-			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "\"foo\"", ParameterType: gauge_messages.Parameter_Static}}}}
+			&gauge_messages.Fragment{FragmentType: gauge_messages.Fragment_Parameter, Parameter: &gauge_messages.Parameter{Value: "\"foo\"", ParameterType: gauge_messages.Parameter_Dynamic}}}}
 	formatted := FormatStepWithResolvedArgs(step)
 	c.Assert(formatted, Equals, `* my step with "static "foo"", ""foo""
 `)
