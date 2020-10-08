@@ -105,7 +105,6 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				if _, ok := scnMap[s.Span.Start]; !ok {
 					scnMap[s.Span.Start] = true
 				}
-
 				r, err := e.executeScenario(s)
 				if err != nil {
 					logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
@@ -339,6 +338,7 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 		return err
 	}
 	if scenario.ScenarioDataTableRow.IsInitialized() {
+		parser.GetResolvedDataTablerows(scenario.ScenarioDataTableRow)
 		if err = lookup.ReadDataTableRow(&scenario.ScenarioDataTableRow, 0); err != nil {
 			return err
 		}
