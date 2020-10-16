@@ -297,6 +297,9 @@ func Start(p infoProvider, logLevel string) {
 	}
 	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
+	if killRunner() != nil {
+		logInfo(nil, "failed to kill runner with pid %d", lRunner.runner.Pid())
+	}
 	logInfo(nil, "Connection closed")
 }
 
