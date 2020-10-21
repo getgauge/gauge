@@ -12,12 +12,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime/debug"
+	"syscall"
 
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
 	gm "github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge/logger"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -292,15 +295,25 @@ func Start(p infoProvider, logLevel string) {
 	provider.Init()
 	err := initializeRunner()
 	ctx, conn := startLsp(logLevel)
+	sigs := make(chan os.Signal, 1)
+	//nolint:staticcheck
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	go func() {
+		<-sigs
+		if killRunner() != nil {
+			logger.Errorf(false, "failed to kill runner with pid %d", lRunner.runner.Pid())
+		}
+		conn.Close()
+	}()
 	if err != nil {
 		_ = showErrorMessageOnClient(ctx, conn, err)
 	}
 	initialize(ctx, conn)
 	<-conn.DisconnectNotify()
 	if killRunner() != nil {
-		logInfo(nil, "failed to kill runner with pid %d", lRunner.runner.Pid())
+		logger.Errorf(false, "failed to kill runner with pid %d", lRunner.runner.Pid())
 	}
-	logInfo(nil, "Connection closed")
+	logger.Errorf(false, "Connection closed")
 }
 
 func recoverPanic(req *jsonrpc2.Request) {
