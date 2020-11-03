@@ -164,6 +164,12 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 }
 
+func (s *MySuite) TestGetConceptFilesWhenSpecDirIsOutsideProjectRoot(c *C) {
+	config.ProjectRoot = "_testdata"
+	os.Setenv(env.SpecsDir, "_testSpecDir")
+	c.Assert(len(GetConceptFiles()), Equals, 3)
+}
+
 func (s *MySuite) TestFindAllNestedDirs(c *C) {
 	nested1 := filepath.Join(dir, "nested")
 	nested2 := filepath.Join(dir, "nested2")
