@@ -11,8 +11,11 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"os/exec"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/getgauge/gauge/config"
@@ -336,6 +339,15 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 		return nil, err
 	}
 	r := &GrpcRunner{cmd: cmd, conn: conn, Timeout: timeout, info: info}
+
+	sig := make(chan os.Signal, 1)
+
+    signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+    go func() {
+        <-sig
+        r.Kill()
+    }()
 
 	if info.GRPCSupport {
 		r.RunnerClient = gm.NewRunnerClient(conn)
