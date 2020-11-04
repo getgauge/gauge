@@ -346,7 +346,9 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 
     go func() {
         <-sig
-        r.Kill()
+		if r.Kill() != nil {
+			logger.Errorf(false, "failed to kill runner with pid %d", r.Pid())
+		}
     }()
 
 	if info.GRPCSupport {
