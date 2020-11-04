@@ -9,7 +9,9 @@ package execution
 import (
 	"fmt"
 	"time"
+	"path/filepath"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
@@ -46,6 +48,13 @@ func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs, ski
 	if combineDataTableSpecs {
 		executionInfo.specs = gauge.NewSpecCollection(executionInfo.specs.Specs(), true)
 	}
+	ei := &gauge_messages.ExecutionInfo{
+		ProjectName:              filepath.Base(config.ProjectRoot),
+		NumberOfExecutionStreams: int32(NumberOfExecutionStreams),
+		RunnerId:                 int32(executionInfo.stream),
+		ExecutionArgs:            gauge.ConvertToProtoExecutionArg(ExecutionArgs),
+	}
+
 	return &simpleExecution{
 		manifest:        executionInfo.manifest,
 		specCollection:  executionInfo.specs,
@@ -54,6 +63,7 @@ func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs, ski
 		errMaps:         executionInfo.errMaps,
 		stream:          executionInfo.stream,
 		skipSuiteEvents: skipSuiteEvents,
+		currentExecutionInfo: ei,
 	}
 }
 
