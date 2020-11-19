@@ -42,7 +42,7 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 		`# Spec Heading
 ## Scenario Heading
 * Example step
-* Step with inline table`+" "+`
+* Step with inline table
 
    |id |name|
    |---|----|
@@ -318,7 +318,7 @@ func (s *MySuite) TestFormatSpecificationWithTableContainingDynamicParameters(c 
    |1 |f  |
 ## Scenario Heading
 * Example step
-* Step with inline table 
+* Step with inline table
 
    |id|name |
    |--|-----|
@@ -354,7 +354,7 @@ func (s *MySuite) TestFormatShouldRetainNewlines(c *C) {
    |--|----|
    |1 |foo |
    |2 |bar |
-* Example step 
+* Example step
 
    |id|name |
    |--|-----|
@@ -411,7 +411,7 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTable(c *C) 
    |--|----|
    |1 |foo |
    |2 |bar |
-* Example step 
+* Example step
 
    |id|name |
    |--|-----|
@@ -453,7 +453,7 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTableInTeard
    |--|----|
    |1 |foo |
    |2 |bar |
-* Example step 
+* Example step
 
    |id|name |
    |--|-----|
@@ -462,7 +462,7 @@ func (s *MySuite) TestFormatShouldStripDuplicateNewlinesBeforeInlineTableInTeard
 
 ____
 
-* Example step 
+* Example step
 
    |id|name |
    |--|-----|
