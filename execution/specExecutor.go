@@ -62,6 +62,10 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler,
 
 func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *result.SpecResult {
 	e.specResult = gauge.NewSpecResult(e.specification)
+	if(e.runner.Info().Killed){
+		e.specResult.SetSkipped(true)
+		return e.specResult
+	}
 	if errs, ok := e.errMap.SpecErrs[e.specification]; ok {
 		if hasParseError(errs) {
 			e.failSpec()
