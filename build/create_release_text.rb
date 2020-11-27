@@ -39,26 +39,10 @@ case response
   when Net::HTTPSuccess
     issues = JSON.parse(response.body)
 
-    categories = {"feature" => [], 
-                  "bug" => []}
-
-    headers = {"feature" => "Features", 
-               "bug" => "Bug Fixes"}
-
     issues['items'].each do |issue|
-      issue_text = "- ##{issue['number']} - #{issue['title']}"
-      label_for_display = issue['labels'].map {|x| x['name']} & categories.keys
-      if not label_for_display.empty?
-        categories[label_for_display[0]] << issue_text
-      end
+      puts "- ##{issue['number']} - #{issue['title']}"
     end
 
-    categories.each_key do |category|
-      puts "## #{headers[category]}\n\n"
-      puts 'None' if categories[category].empty? 
-      categories[category].each {|v| puts v}
-      puts "\n" 
-    end
   else
     raise "
     Could not fetch release information for github repo: 
