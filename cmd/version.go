@@ -70,7 +70,7 @@ func printJSONVersion() {
 	}
 	// logger can not be used, since it breaks the json format,
 	// The logger adds out, nessage as key which vscode plugin does not understand.
-	fmt.Println(fmt.Sprintf("%s\n", string(b)))
+	fmt.Printf("%s\n\n", string(b))
 }
 
 func printTextVersion() {

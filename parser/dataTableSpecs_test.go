@@ -28,7 +28,7 @@ var tests = []DataTableSpecTest{
 			{
 				Heading:   &gauge.Heading{},
 				Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}}},
-				DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 				}, 0)},
 			},
@@ -51,7 +51,7 @@ var tests = []DataTableSpecTest{
 			{
 				Heading:   &gauge.Heading{},
 				Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}}},
-				DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 				}, 0)},
 			},
@@ -68,7 +68,7 @@ var tests = []DataTableSpecTest{
 			{
 				Heading:   &gauge.Heading{},
 				Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "abc", ArgType: gauge.Static}}}}}},
-				DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 				}, 0)},
 				Contexts: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
@@ -82,7 +82,7 @@ var tests = []DataTableSpecTest{
 			{
 				Heading:   &gauge.Heading{},
 				Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "abc", ArgType: gauge.Static}}}}}},
-				DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 				}, 0)},
 				TearDownSteps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
@@ -111,7 +111,7 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 				{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}},
 				{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "param1", ArgType: gauge.Static, Name: "param1"}}}}},
 			},
-			DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+			DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 			}, 0)},
 		},
@@ -150,7 +150,7 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 			Scenarios: []*gauge.Scenario{
 				{
 					Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
-					DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+					DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 						{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}, {Value: "row3", CellType: gauge.Static}},
 					}, 0)}},
 			},
@@ -166,7 +166,7 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 	env.AllowScenarioDatatable = old
 }
 func TestGetTableWithOneRow(t *testing.T) {
-	table := *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+	table := gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 		{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 	}, 0)
 
@@ -183,12 +183,12 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 	spec := &gauge.Specification{
 		Heading:   &gauge.Heading{},
 		Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}}},
-		DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+		DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 			{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 		}, 0)},
 		Contexts: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
 		Items: []gauge.Item{
-			&gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+			&gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}},
 			}, 0)},
 			&gauge.Scenario{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}},
@@ -202,12 +202,12 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 			Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}, SpecDataTableRow: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row1", CellType: gauge.Static}},
 			}, 0), SpecDataTableRowIndex: 0}},
-			DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+			DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row1", CellType: gauge.Static}},
 			}, 0)},
 			Contexts: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
 			Items: []gauge.Item{
-				&gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				&gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row1", CellType: gauge.Static}},
 				}, 0)},
 				&gauge.Scenario{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}, SpecDataTableRow: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
@@ -221,12 +221,12 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 			Scenarios: []*gauge.Scenario{{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}, SpecDataTableRow: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row2", CellType: gauge.Static}},
 			}, 0), SpecDataTableRowIndex: 1}},
-			DataTable: gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+			DataTable: gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 				{{Value: "row2", CellType: gauge.Static}},
 			}, 0)},
 			Contexts: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}},
 			Items: []gauge.Item{
-				&gauge.DataTable{Table: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
+				&gauge.DataTable{Table: gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
 					{{Value: "row2", CellType: gauge.Static}},
 				}, 0)},
 				&gauge.Scenario{Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "header", ArgType: gauge.Dynamic, Name: "header"}}}}, SpecDataTableRow: *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{
