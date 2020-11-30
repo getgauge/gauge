@@ -48,13 +48,14 @@ type refactoringResult struct {
 	Warnings           []string
 }
 
-func (refactoringResult *refactoringResult) String() string {
-	result := fmt.Sprintf("Refactoring result from gauge:\n")
-	result += fmt.Sprintf("Specs changed        : %s\n", refactoringResult.specFilesChanged())
-	result += fmt.Sprintf("Concepts changed     : %s\n", refactoringResult.conceptFilesChanged())
-	result += fmt.Sprintf("Source files changed : %s\n", refactoringResult.runnerFilesChanged())
-	result += fmt.Sprintf("Warnings             : %s\n", refactoringResult.Warnings)
-	return result
+func (res *refactoringResult) String() string {
+	o := `Refactoring result from gauge:
+Specs changed        : %s
+Concepts changed     : %s
+Source files changed : %s
+Warnings             : %s
+`
+	return fmt.Sprintf(o, res.specFilesChanged(), res.conceptFilesChanged(), res.runnerFilesChanged(), res.Warnings)
 }
 
 func (refactoringResult *refactoringResult) appendWarnings(warnings []*parser.Warning) {

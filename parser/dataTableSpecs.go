@@ -49,7 +49,7 @@ func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, 
 }
 
 func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specification, errMap *gauge.BuildErrors) *gauge.Specification {
-	dt := &gauge.DataTable{Table: *table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
+	dt := &gauge.DataTable{Table: table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
 	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags}
 	index := 0
 	for _, item := range spec.Items {
@@ -107,7 +107,7 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 	return
 }
 
-func getTableWithOneRow(t gauge.Table, i int) *gauge.Table {
+func getTableWithOneRow(t *gauge.Table, i int) *gauge.Table {
 	var row [][]gauge.TableCell
 	for _, c := range t.Columns {
 		row = append(row, []gauge.TableCell{c[i]})
