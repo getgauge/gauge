@@ -137,7 +137,7 @@ func (spec *Specification) AddComment(comment *Comment) {
 }
 
 func (spec *Specification) AddDataTable(table *Table) {
-	spec.DataTable.Table = *table
+	spec.DataTable.Table = table
 	spec.AddItem(&spec.DataTable)
 }
 

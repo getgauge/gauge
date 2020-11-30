@@ -263,7 +263,7 @@ func formatItem(item gauge.Item) string {
 		return FormatStep(step)
 	case gauge.DataTableKind:
 		dataTable := item.(*gauge.DataTable)
-		return FormatTable(&dataTable.Table)
+		return FormatTable(dataTable.Table)
 	case gauge.TagKind:
 		tags := item.(*gauge.Tags)
 		return FormatTags(tags)
