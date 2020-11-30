@@ -122,9 +122,9 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 }
 
 func createStep(spec *gauge.Specification, scn *gauge.Scenario, stepToken *Token) (*gauge.Step, *ParseResult) {
-	tables := []*gauge.Table{&spec.DataTable.Table}
+	tables := []*gauge.Table{spec.DataTable.Table}
 	if scn != nil {
-		tables = append(tables, &scn.DataTable.Table)
+		tables = append(tables, scn.DataTable.Table)
 	}
 	dataTableLookup := new(gauge.ArgLookup).FromDataTables(tables...)
 	stepToAdd, parseDetails := CreateStepUsingLookup(stepToken, dataTableLookup, spec.FileName)

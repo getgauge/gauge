@@ -39,7 +39,7 @@ func (sc *simpleConsole) SpecStart(spec *gauge.Specification, res result.Result)
 	defer sc.mu.Unlock()
 	formattedHeading := formatSpec(spec.Heading.Value)
 	logger.Info(false, formattedHeading)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", formattedHeading, newline))
+	fmt.Fprintf(sc.writer, "%s%s", formattedHeading, newline)
 }
 
 func (sc *simpleConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
@@ -62,7 +62,7 @@ func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_message
 	sc.indentation += scenarioIndentation
 	formattedHeading := formatScenario(scenario.Heading.Value)
 	logger.Info(false, formattedHeading)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(formattedHeading, sc.indentation), newline))
+	fmt.Fprintf(sc.writer, "%s%s", indent(formattedHeading, sc.indentation), newline)
 }
 
 func (sc *simpleConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
@@ -82,7 +82,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	sc.indentation += stepIndentation
 	logger.Debug(false, stepText)
 	if Verbose {
-		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(stepText), sc.indentation), newline))
+		fmt.Fprintf(sc.writer, "%s%s", indent(strings.TrimSpace(stepText), sc.indentation), newline)
 	}
 }
 
@@ -116,7 +116,7 @@ func (sc *simpleConsole) ConceptStart(conceptHeading string) {
 	sc.indentation += stepIndentation
 	logger.Debug(false, conceptHeading)
 	if Verbose {
-		fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", indent(strings.TrimSpace(conceptHeading), sc.indentation), newline))
+		fmt.Fprintf(sc.writer, "%s%s", indent(strings.TrimSpace(conceptHeading), sc.indentation), newline)
 	}
 }
 
@@ -151,7 +151,7 @@ func (sc *simpleConsole) Errorf(err string, args ...interface{}) {
 	errorMessage := fmt.Sprintf(err, args...)
 	logger.Error(false, errorMessage)
 	errorString := indent(errorMessage, sc.indentation+errorIndentation)
-	fmt.Fprint(sc.writer, fmt.Sprintf("%s%s", errorString, newline))
+	fmt.Fprintf(sc.writer, "%s%s", errorString, newline)
 }
 
 func (sc *simpleConsole) Write(b []byte) (int, error) {
