@@ -147,7 +147,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			scn := spec.LatestScenario()
 			if !scn.DataTable.IsInitialized() && env.AllowScenarioDatatable() {
 				externalTable := &gauge.DataTable{}
-				externalTable.Table = resolvedArg.Table
+				externalTable.Table = &resolvedArg.Table
 				externalTable.LineNo = token.LineNo
 				externalTable.Value = token.Value
 				externalTable.IsExternal = true
@@ -159,7 +159,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else if isInState(*state, specScope) && !spec.DataTable.IsInitialized() {
 			externalTable := &gauge.DataTable{}
-			externalTable.Table = resolvedArg.Table
+			externalTable.Table = &resolvedArg.Table
 			externalTable.LineNo = token.LineNo
 			externalTable.Value = token.Value
 			externalTable.IsExternal = true
@@ -240,19 +240,19 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			result = ParseResult{Ok: true}
 		} else if isInState(*state, stepScope) {
 			latestScenario := spec.LatestScenario()
-			tables := []*gauge.Table{&spec.DataTable.Table}
+			tables := []*gauge.Table{spec.DataTable.Table}
 			if latestScenario.DataTable.IsInitialized() {
-				tables = append(tables, &latestScenario.DataTable.Table)
+				tables = append(tables, latestScenario.DataTable.Table)
 			}
 			latestStep := latestScenario.LatestStep()
 			result = addInlineTableRow(latestStep, token, new(gauge.ArgLookup).FromDataTables(tables...), spec.FileName)
 		} else if isInState(*state, contextScope) {
 			latestContext := spec.LatestContext()
-			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
+			result = addInlineTableRow(latestContext, token, new(gauge.ArgLookup).FromDataTables(spec.DataTable.Table), spec.FileName)
 		} else if isInState(*state, tearDownScope) {
 			if len(spec.TearDownSteps) > 0 {
 				latestTeardown := spec.LatestTeardown()
-				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTables(&spec.DataTable.Table), spec.FileName)
+				result = addInlineTableRow(latestTeardown, token, new(gauge.ArgLookup).FromDataTables(spec.DataTable.Table), spec.FileName)
 			} else {
 				spec.AddComment(&gauge.Comment{Value: token.LineText(), LineNo: token.LineNo})
 			}
@@ -262,7 +262,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 				t = spec.LatestScenario().DataTable
 			}
 
-			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTables(&t.Table), spec.FileName)
+			tableValues, warnings, err := validateTableRows(token, new(gauge.ArgLookup).FromDataTables(t.Table), spec.FileName)
 			if len(err) > 0 {
 				result = ParseResult{Ok: false, Warnings: warnings, ParseErrors: err}
 			} else {

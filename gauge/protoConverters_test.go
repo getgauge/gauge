@@ -75,7 +75,7 @@ func (s *MySuite) TestConvertToProtoSpecWithDataTable(c *C) {
 			Value: "Spec Heading",
 		},
 		FileName:  "example.spec",
-		DataTable: DataTable{Table: Table{headerIndexMap: make(map[string]int)}},
+		DataTable: DataTable{Table: &Table{headerIndexMap: make(map[string]int)}},
 	}
 	protoSpec := ConvertToProtoSpec(spec)
 

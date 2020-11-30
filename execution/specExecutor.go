@@ -109,7 +109,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				if err != nil {
 					logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 				}
-				e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(&s.DataTable.Table),
+				e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(s.DataTable.Table),
 					s.ScenarioDataTableRowIndex, s.SpecDataTableRowIndex, s.SpecDataTableRow.IsInitialized())
 			}
 			e.specResult.ScenarioCount += len(scnMap)
@@ -259,7 +259,7 @@ func (e *specExecutor) getItemsForScenarioExecution(steps []*gauge.Step) ([]*gau
 
 func (e *specExecutor) dataTableLookup() (*gauge.ArgLookup, error) {
 	l := new(gauge.ArgLookup)
-	err := l.ReadDataTableRow(&e.specification.DataTable.Table, 0)
+	err := l.ReadDataTableRow(e.specification.DataTable.Table, 0)
 	return l, err
 }
 
@@ -303,7 +303,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			ProtoScenario:             gauge.NewProtoScenario(scenario),
 			ScenarioDataTableRow:      gauge.ConvertToProtoTable(&scenario.ScenarioDataTableRow),
 			ScenarioDataTableRowIndex: scenario.ScenarioDataTableRowIndex,
-			ScenarioDataTable:         gauge.ConvertToProtoTable(&scenario.DataTable.Table),
+			ScenarioDataTable:         gauge.ConvertToProtoTable(scenario.DataTable.Table),
 		}
 		if err := e.addAllItemsForScenarioExecution(scenario, scenarioResult); err != nil {
 			return nil, err
@@ -338,7 +338,7 @@ func (e *specExecutor) addAllItemsForScenarioExecution(scenario *gauge.Scenario,
 		return err
 	}
 	if scenario.ScenarioDataTableRow.IsInitialized() {
-		parser.GetResolvedDataTablerows(scenario.ScenarioDataTableRow)
+		parser.GetResolvedDataTablerows(&scenario.ScenarioDataTableRow)
 		if err = lookup.ReadDataTableRow(&scenario.ScenarioDataTableRow, 0); err != nil {
 			return err
 		}

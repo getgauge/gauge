@@ -46,7 +46,7 @@ func (formatter *formatter) Table(table *gauge.Table) {
 
 func (formatter *formatter) DataTable(dataTable *gauge.DataTable) {
 	if !dataTable.IsExternal {
-		formatter.Table(&(dataTable.Table))
+		formatter.Table(dataTable.Table)
 	} else {
 		formatter.buffer.WriteString(formatExternalDataTable(dataTable))
 	}
