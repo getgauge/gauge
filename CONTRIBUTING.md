@@ -8,7 +8,7 @@ Please read this document to understand the process for contributing.
 
 * You can [report an issue](https://github.com/getgauge/gauge/issues) you found
 * Help us [test Gauge](https://github.com/getgauge/gauge-tests) by adding to our existing automated tests
-* Help someone get started with Gauge on [our discussion forum](https://groups.google.com/forum/#!forum/getgauge)
+* Help someone get started with Gauge on [our discussion forum](https://spectrum.chat/gauge)
 * Contribute [to our blog](https://gauge.org/blog/) 
 * Add to our [set of examples](https://docs.gauge.org/examples.html) to help someone new to Gauge get started easily
 * Help us improve [our documentation](https://github.com/getgauge/documentation)
