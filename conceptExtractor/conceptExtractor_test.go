@@ -142,7 +142,7 @@ func (s *MySuite) TestExtractConceptWithSkippedTableAsArg(c *C) {
 	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP, Table: table, ParamTableName: tableName},
 		&gauge_messages.Step{Name: STEP, Table: table, ParamTableName: tableName}, &gauge_messages.Step{Name: STEP, Table: table}}, "# sdfdsf\nsome comment\n* some step\n## sce\n* step", "")
 
-	c.Assert(concept, Equals, "# concept with <table1>\n* step that takes a table <table1>\n* step that takes a table <table1>\n* step that takes a table "+`
+	c.Assert(concept, Equals, "# concept with <table1>\n* step that takes a table <table1>\n* step that takes a table <table1>\n* step that takes a table"+`
 
    |id|name|
    |--|----|
@@ -170,7 +170,7 @@ func (s *MySuite) TestExtractConceptWithTableWithDynamicArgs(c *C) {
 	concept, conceptText, _ := getExtractedConcept(conceptName, []*gauge_messages.Step{&gauge_messages.Step{Name: STEP, Table: table}},
 		"# sdfdsf\n\n|foo|name|\n|hey|hello|\n\n##helloasdasdasd\n\n* step", "")
 
-	c.Assert(concept, Equals, "# concept with <foo>\n* step that takes a table "+`
+	c.Assert(concept, Equals, "# concept with <foo>\n* step that takes a table"+`
 
    |id|name |
    |--|-----|
