@@ -53,7 +53,7 @@ jobs:
           Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
           echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
           [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
-          echo "::set-env name=CERT_FILE::$Env:GITHUB_WORKSPACE/cert.p12"
+          echo "CERT_FILE=$Env:GITHUB_WORKSPACE/cert.p12" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Compile gauge
         run: |
@@ -146,7 +146,7 @@ jobs:
           path: .
 
       - name: Set gauge version
-        run: echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
+        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
 
       - name: Deploy to pypi
         env:
@@ -180,7 +180,7 @@ jobs:
           path: .
 
       - name: Set gauge version
-        run: echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
+        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
 
       - name: Setup Git User
         run: |
@@ -267,7 +267,7 @@ jobs:
           path: .
 
       - name: Set gauge version
-        run: echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
+        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
         shell: bash
 
       - name: Clone chocolatey-packages
@@ -306,7 +306,7 @@ jobs:
           path: .
 
       - name: Set gauge version
-        run: echo "::set-env name=GAUGE_VERSION::`cat version.txt`"
+        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
 
       - name: Update brew formula
         env:

@@ -90,7 +90,7 @@ func (s *MySuite) TestPopulatingConceptLookup(c *C) {
 	concept := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	err = dataTableLookup.ReadDataTableRow(spec.DataTable.Table, 0)
 	c.Assert(err, IsNil)
 	err = PopulateConceptDynamicParams(concept, dataTableLookup)
 	c.Assert(err, IsNil)
@@ -121,7 +121,7 @@ func (s *MySuite) TestPopulatingNestedConceptLookup(c *C) {
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	err = dataTableLookup.ReadDataTableRow(spec.DataTable.Table, 0)
 	c.Assert(err, IsNil)
 	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
@@ -170,7 +170,7 @@ func (s *MySuite) TestPopulatingNestedConceptsWithStaticParametersLookup(c *C) {
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	err = dataTableLookup.ReadDataTableRow(spec.DataTable.Table, 0)
 	c.Assert(err, IsNil)
 	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
@@ -207,7 +207,7 @@ func (s *MySuite) TestPopulatingConceptsWithDynamicParametersInTable(c *C) {
 	concept1 := spec.Scenarios[0].Steps[0]
 
 	dataTableLookup := new(gauge.ArgLookup)
-	err = dataTableLookup.ReadDataTableRow(&spec.DataTable.Table, 0)
+	err = dataTableLookup.ReadDataTableRow(spec.DataTable.Table, 0)
 	c.Assert(err, IsNil)
 	err = PopulateConceptDynamicParams(concept1, dataTableLookup)
 	c.Assert(err, IsNil)
