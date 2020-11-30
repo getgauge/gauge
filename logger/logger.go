@@ -273,7 +273,7 @@ func addFatalError(module, msg string) {
 func getPluginVersions() string {
 	pis, err := pluginInfo.GetAllInstalledPluginsWithVersion()
 	if err != nil {
-		return fmt.Sprintf("Could not retrieve plugin information.")
+		return "Could not retrieve plugin information."
 	}
 	pluginVersions := make([]string, 0)
 	for _, pi := range pis {

@@ -373,7 +373,7 @@ func TestScenarioWithDataTable(t *testing.T) {
 	t.Run("Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
 		env.AllowScenarioDatatable = func() bool { return true }
 		s := subject()
-		if &s.DataTable.Table == nil {
+		if s.DataTable.Table == nil {
 			t.Error("expected scenario datatable to be not nil")
 		}
 		v := len(s.Items)

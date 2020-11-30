@@ -129,7 +129,7 @@ func convertToProtoCommentItem(comment *Comment) *gauge_messages.ProtoItem {
 }
 
 func convertToProtoDataTableItem(dataTable *DataTable) *gauge_messages.ProtoItem {
-	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: ConvertToProtoTable(&dataTable.Table)}
+	return &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_Table, Table: ConvertToProtoTable(dataTable.Table)}
 }
 
 func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
@@ -149,6 +149,9 @@ func convertToProtoParameter(arg *StepArg) *gauge_messages.Parameter {
 }
 
 func ConvertToProtoTable(table *Table) *gauge_messages.ProtoTable {
+	if table == nil {
+		return nil
+	}
 	protoTableParam := &gauge_messages.ProtoTable{Rows: make([]*gauge_messages.ProtoTableRow, 0)}
 	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
 	for _, row := range table.Rows() {

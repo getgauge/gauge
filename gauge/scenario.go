@@ -66,7 +66,7 @@ func (scenario *Scenario) AddComment(comment *Comment) {
 }
 
 func (scenario *Scenario) AddDataTable(table *Table) {
-	scenario.DataTable.Table = *table
+	scenario.DataTable.Table = table
 	scenario.AddItem(&scenario.DataTable)
 }
 

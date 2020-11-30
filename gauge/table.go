@@ -16,7 +16,7 @@ type Table struct {
 }
 
 type DataTable struct {
-	Table      Table
+	Table      *Table
 	Value      string
 	LineNo     int
 	IsExternal bool
@@ -42,7 +42,7 @@ func NewTable(headers []string, cols [][]TableCell, lineNo int) *Table {
 }
 
 func (table *Table) IsInitialized() bool {
-	return table.headerIndexMap != nil
+	return table != nil && table.headerIndexMap != nil
 }
 
 func (cell *TableCell) GetValue() string {
@@ -54,7 +54,7 @@ func (cell *TableCell) GetValue() string {
 }
 
 func (dataTable *DataTable) IsInitialized() bool {
-	return dataTable.Table.headerIndexMap != nil
+	return dataTable.Table != nil && dataTable.Table.headerIndexMap != nil
 }
 
 func (table *Table) String() string {
