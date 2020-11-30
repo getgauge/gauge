@@ -61,14 +61,16 @@ func FormatStep(step *gauge.Step) string {
 	for i := 0; i < paramCount; i++ {
 		argument := step.Args[i]
 		var formattedArg string
+		stripBeforeArg := ""
 		if argument.ArgType == gauge.TableArg {
 			formattedArg = fmt.Sprintf("\n%s", FormatTable(&argument.Table))
+			stripBeforeArg = " "
 		} else if argument.ArgType == gauge.Dynamic || argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable {
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
 		} else {
 			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
-		text = strings.Replace(text, gauge.ParameterPlaceholder, formattedArg, 1)
+		text = strings.Replace(text, stripBeforeArg + gauge.ParameterPlaceholder, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
