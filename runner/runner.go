@@ -58,6 +58,7 @@ type RunnerInfo struct {
 	GaugeVersionSupport version.VersionSupport
 	LspLangId           string
 	GRPCSupport         bool
+	Killed				bool
 }
 
 func ExecuteInitHookForRunner(language string) error {
