@@ -51,9 +51,9 @@ jobs:
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-strlen_8192.zip/download" -UseBasicParsing -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome -Outfile "./nsis.zip"
           Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
-          echo "::add-path::C:\Program Files (x86)\Windows kits\10\App Certification Kit\"
+          echo "C:\Program Files (x86)\Windows kits\10\App Certification Kit\" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           [IO.File]::WriteAllBytes('.\cert.p12', [Convert]::FromBase64String($Env:SIGNING_CERT))
-          echo "CERT_FILE=$Env:GITHUB_WORKSPACE/cert.p12" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          echo "CERT_FILE=$Env:GITHUB_WORKSPACE/cert.p12" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Compile gauge
         run: |
