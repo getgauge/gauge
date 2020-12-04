@@ -48,6 +48,11 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	scenarioResult := r.(*result.ScenarioResult)
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
 	scenarioResult.ProtoScenario.Skipped = false
+	if(e.runner.Info().Killed){
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("skipped Reason: Runner is not alive")}, e.errMap.ScenarioErrs[scenario]...)
+		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
+		return
+	}
 	if scenario.SpecDataTableRow.IsInitialized() && !shouldExecuteForRow(scenario.SpecDataTableRowIndex) {
 		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("skipped Reason: Doesn't satisfy --table-rows flag condition")}, e.errMap.ScenarioErrs[scenario]...)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)

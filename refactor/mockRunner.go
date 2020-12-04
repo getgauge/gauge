@@ -42,7 +42,7 @@ func (r *mockRunner) IsMultithreaded() bool {
 }
 
 func (r *mockRunner) Info() *runner.RunnerInfo {
-	return nil
+	return &runner.RunnerInfo{Killed:false}
 }
 
 func (r *mockRunner) Pid() int {
