@@ -197,6 +197,9 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 
 // ExecuteAndGetStatus executes a given message and response without timeout.
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
+	if r.Info().Killed {
+		return &gauge_messages.ProtoExecutionResult{Failed: true,  ErrorMessage:"Runner is not Alive"}
+	}
 	res, err := r.executeMessage(m, 0)
 	if err != nil {
 		e, ok := status.FromError(err)
@@ -215,7 +218,8 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 				stackTrace = data[1]
 			}
 			if e.Code() == codes.Unavailable {
-				logger.Fatalf(true, "%s runner quit unexpectedly. Check logs for more details.\nErrorMessage: %s\n%s", r.Info().Id, message, stackTrace)
+				r.Info().Killed = true
+				return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
 			}
 			return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
 		}
