@@ -84,8 +84,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: geertvdc/setup-hub@master
-
       - uses: actions/download-artifact@v1
         with:
           name: gauge-non-windows-artifact
@@ -291,8 +289,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: git fetch --prune --unshallow
-
-      - uses: geertvdc/setup-hub@master
 
       - name: Set up Ruby 2.6.x
         uses: actions/setup-ruby@v1
