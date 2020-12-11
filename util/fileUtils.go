@@ -196,7 +196,19 @@ var GetConceptFiles = func() []string {
 		}
 		files = append(files, FindConceptFilesIn(absSpecPath)...)
 	}
-	return files
+	return removeDuplicateValues(files)
+}
+
+func removeDuplicateValues(slice []string) []string {
+	keys := make(map[string]bool)
+	list := []string{}
+	for _, entry := range slice {
+		if _, value := keys[entry]; !value {
+			keys[entry] = true
+			list = append(list, entry)
+		}
+	}
+	return list
 }
 
 // SaveFile saves contents at the given path
