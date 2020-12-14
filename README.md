@@ -40,12 +40,12 @@ Context specific **Troubleshooting** guide is available in relevant pages of the
 
 Please see below for the best place to ask a query:
 
-- How do I? -- [Spectrum #General](https://spectrum.chat/gauge/general?tab=posts)
-- I got this error, why? -- [Spectrum #General Chat](https://spectrum.chat/gauge/general?tab=posts)
+- How do I? -- [Discussions](https://github.com/getgauge/gauge/discussions)
+- I got this error, why? -- [Discussions](https://github.com/getgauge/gauge/discussions)
 - I got this error and I'm sure it's a bug -- file an [issue](https://github.com/getgauge/gauge/issues)
 - I have an idea/request -- file an [issue](https://github.com/getgauge/gauge/issues)
-- Why do you? -- [Spectrum #Meta](https://spectrum.chat/gauge/meta?tab=posts)
-- When will you? -- [Spectrum #Meta](https://spectrum.chat/gauge/meta?tab=posts)
+- Why do you? -- [Discussions](https://github.com/getgauge/gauge/discussions)
+- When will you? -- [Discussions](https://github.com/getgauge/gauge/discussions)
 
 ### Other projects
 
