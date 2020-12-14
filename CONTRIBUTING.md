@@ -8,10 +8,10 @@ Please read this document to understand the process for contributing.
 
 * You can [report an issue](https://github.com/getgauge/gauge/issues) you found
 * Help us [test Gauge](https://github.com/getgauge/gauge-tests) by adding to our existing automated tests
-* Help someone get started with Gauge on [our discussion forum](https://spectrum.chat/gauge)
+* Help someone get started with Gauge on [our discussion forum](https://github.com/getgauge/gauge/discussions)
 * Contribute [to our blog](https://gauge.org/blog/) 
 * Add to our [set of examples](https://docs.gauge.org/examples.html) to help someone new to Gauge get started easily
-* Help us improve [our documentation](https://github.com/getgauge/documentation)
+* Help us improve [our documentation](https://github.com/getgauge/docs.gauge.org)
 * Contribute code to Gauge! 
 
 All repositories are hosted on GitHub. Gauge’s core is written in Golang but plugins are, and can be, written in any popular language. Pick up any pending feature or bug, big or small, then send us a pull request. Even fixing broken links is a big, big help!
@@ -20,7 +20,7 @@ All repositories are hosted on GitHub. Gauge’s core is written in Golang but p
 
 There are issues of varying levels across all Gauge repositories. All issues that need to be addressed are tagged as _'Help Needed'_. One easy way to get started is to pick a small bug to fix. These have been tagged as _'Easy Picks'_.
 
-If you need help in getting started with contribution, feel free to reach out on the [Google Groups](https://groups.google.com/forum/#!forum/getgauge) or [Spectrum](https://spectrum.chat/gauge).
+If you need help in getting started with contribution, feel free to reach out on [Discussions](https://github.com/getgauge/gauge/discussions)
 
 ### Gauge Core v/s Plugins
 

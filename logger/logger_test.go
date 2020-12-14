@@ -140,7 +140,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://spectrum.chat/gauge
+	Chat:          https://github.com/getgauge/gauge/discussions
 
 Your Environment Information -----------
 	%s, 0.9.8
@@ -160,7 +160,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://spectrum.chat/gauge
+	Chat:          https://github.com/getgauge/gauge/discussions
 
 Your Environment Information -----------
 	%s, 0.9.8
@@ -180,7 +180,7 @@ An Error has Occurred: some error
 Get Support ----------------------------
 	Docs:          https://docs.gauge.org
 	Bugs:          https://github.com/getgauge/gauge/issues
-	Chat:          https://spectrum.chat/gauge
+	Chat:          https://github.com/getgauge/gauge/discussions
 
 Your Environment Information -----------
 	%s, 0.9.8, 59effa
