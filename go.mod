@@ -7,7 +7,7 @@ require (
 	github.com/daviddengcn/go-colortext v0.0.0-20180409174941-186a3d44e920
 	github.com/fsnotify/fsnotify v1.4.7
 	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
-	github.com/golang/protobuf v1.3.2
+	github.com/golang/protobuf v1.3.3
 	github.com/golangplus/bytes v1.0.0 // indirect
 	github.com/magiconair/properties v1.8.4
 	github.com/mattn/go-isatty v0.0.10 // indirect
@@ -24,7 +24,7 @@ require (
 	golang.org/x/sys v0.0.0-20191010194322-b09406accb47 // indirect
 	golang.org/x/text v0.3.2 // indirect
 	google.golang.org/genproto v0.0.0-20191009194640-548a555dbc03
-	google.golang.org/grpc v1.24.0
+	google.golang.org/grpc v1.32.0
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 	gopkg.in/yaml.v2 v2.2.4 // indirect
