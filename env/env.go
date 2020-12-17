@@ -7,19 +7,18 @@
 package env
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 
-	"regexp"
 	"strings"
 
-	properties "github.com/dmotylev/goproperties"
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	properties "github.com/magiconair/properties"
 )
 
 const (
@@ -49,6 +48,7 @@ const (
 )
 
 var envVars map[string]string
+var expansionVars map[string]string
 
 var currentEnvironments = []string{}
 
@@ -58,10 +58,12 @@ var currentEnvironments = []string{}
 // but are not present in the map.
 //
 // Finally, all the env vars present in the map are actually set in the shell.
-func LoadEnv(envName string) error {
+func LoadEnv(envName string, errorHandler properties.ErrorHandlerFunc) error {
+	properties.ErrorHandler = errorHandler
 	allEnvs := strings.Split(envName, ",")
 
 	envVars = make(map[string]string)
+	expansionVars = make(map[string]string)
 
 	defaultEnvLoaded := false
 	for _, env := range allEnvs {
@@ -87,12 +89,10 @@ func LoadEnv(envName string) error {
 	}
 
 	loadDefaultEnvVars()
-
-	err := substituteEnvVars()
+	err := checkEnvVarsExpanded()
 	if err != nil {
-		return fmt.Errorf("%s", err.Error())
+		return fmt.Errorf("Failed to load env. %s", err.Error())
 	}
-
 	err = setEnvVars()
 	if err != nil {
 		return fmt.Errorf("Failed to load env. %s", err.Error())
@@ -131,28 +131,96 @@ func loadEnvDir(envName string) error {
 	}
 	addEnvVar(GaugeEnvironment, envName)
 	logger.Debugf(true, "'%s' set to '%s'", GaugeEnvironment, envName)
-	return filepath.Walk(envDirPath, loadEnvFile)
+	files := common.FindFilesInDir(envDirPath,
+		isPropertiesFile,
+		func(p string, f os.FileInfo) bool { return false },
+	)
+	gaugeProperties := properties.MustLoadFiles(files, properties.UTF8, false)
+	processedProperties, err := GetProcessedPropertiesMap(gaugeProperties)
+	if err != nil {
+		return fmt.Errorf("Failed to parse properties in %s. %s", envDirPath, err.Error())
+	}
+	LoadEnvProperties(processedProperties)
+	return nil
 }
 
-func loadEnvFile(path string, info os.FileInfo, err error) error {
-	if err != nil {
-		return err
+func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {
+	for propertyKey := range propertiesMap.Map() {
+		// Update properties if an env var is set.
+		if envVarValue, present := os.LookupEnv(propertyKey); present {
+			if _, _, err := propertiesMap.Set(propertyKey, envVarValue); err != nil {
+				return propertiesMap, fmt.Errorf("%s", err.Error())
+			}
+		}
+		// Update the properties if it has already been added to envVars map.
+		if _, ok := envVars[propertyKey]; ok {
+			if _, _, err := propertiesMap.Set(propertyKey, envVars[propertyKey]); err != nil {
+				return propertiesMap, fmt.Errorf("%s", err.Error())
+			}
+		}
 	}
+	return propertiesMap, nil
+}
 
-	if !isPropertiesFile(path) {
-		return nil
+func LoadEnvProperties(propertiesMap *properties.Properties) {
+	for propertyKey, propertyValue := range propertiesMap.Map() {
+		if contains, matches := containsEnvVar(propertyValue); contains {
+			for _, match := range matches {
+				key, defaultValue := match[1], match[0]
+				// Dont need to add to expansions if it's already set by env var
+				if !isPropertySet(key) {
+					expansionVars[key] = propertiesMap.GetString(key, defaultValue)
+				}
+			}
+		}
+		addEnvVar(propertyKey, propertiesMap.GetString(propertyKey, propertyValue))
 	}
+}
 
-	gaugeProperties, err1 := properties.Load(path)
-	if err1 != nil {
-		return fmt.Errorf("Failed to parse: %s. %s", path, err1.Error())
+func checkEnvVarsExpanded() error {
+	for key, value := range expansionVars {
+		if _, ok := envVars[key]; ok {
+			delete(expansionVars, key)
+		}
+		if err := isCircular(key, value); err != nil {
+			return err
+		}
 	}
-
-	for property, value := range gaugeProperties {
-		addEnvVar(property, value)
+	if len(expansionVars) > 0 {
+		keys := make([]string, 0, len(expansionVars))
+		for key := range expansionVars {
+			keys = append(keys, key)
+		}
+		return fmt.Errorf("[%s] env variable(s) are not set", strings.Join(keys, ", "))
 	}
-
 	return nil
+}
+
+func isCircular(key, value string) error {
+	if keyValue, exists := envVars[key]; exists {
+		if len(keyValue) > 0 {
+			value = keyValue
+		}
+		_, err := properties.LoadString(fmt.Sprintf("%s=%s", key, value))
+		if err != nil {
+			return fmt.Errorf(err.Error())
+		}
+	}
+	return nil
+}
+
+func containsEnvVar(value string) (contains bool, matches [][]string) {
+	// match for any ${foo}
+	rStr := `\$\{(\w+)\}`
+	r, err := regexp.Compile(rStr)
+	if err != nil {
+		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
+	}
+	contains = r.MatchString(value)
+	if contains {
+		matches = r.FindAllStringSubmatch(value, -1)
+	}
+	return
 }
 
 func addEnvVar(name, value string) {
@@ -163,62 +231,6 @@ func addEnvVar(name, value string) {
 
 func isPropertiesFile(path string) bool {
 	return filepath.Ext(path) == ".properties"
-}
-
-type PropertyNode struct {
-	Value string
-	Depth int
-}
-
-func prettyPrintPropertyNodeMap(m map[string]PropertyNode) string {
-    var b bytes.Buffer
-	for key, node := range m {
-		fmt.Fprintf(&b, "%s=%s\n", key, node.Value)
-	}
-    return b.String()
-}
-
-func substituteEnvVars() error {
-	for name, value := range envVars {
-
-		// create dependant properties map to allow for circular reference check
-		depth := 0
-		dependentProperties := make(map[string]PropertyNode)
-		dependentProperties[name] = PropertyNode{value, depth}
-
-		for contains, matches := containsEnvVar(value); contains; contains, matches = containsEnvVar(value) {
-			depth++
-			for _, match := range matches {
-				envKey, property := match[0], match[1]
-
-				// check for cyclic property definition
-				if val, exists := dependentProperties[property]; exists && val.Depth < depth {
-					return fmt.Errorf("circular reference found in env variable '%s'. Check for cyclic property definitions in:\n%s", name, prettyPrintPropertyNodeMap(dependentProperties))
-				}
-				var propertyValue string
-				// check if match is system env
-				// if not, get from from properties file
-				if isPropertySet(property) {
-					// get env var from system
-					propertyValue = os.Getenv(property)
-				} else {
-					if val, ok := envVars[property]; ok {
-						// get from from properties file
-						propertyValue = val
-					} else {
-						// error if env property is not found
-						return fmt.Errorf("'%s' env variable was not set", property)
-					}
-				}
-				dependentProperties[property] = PropertyNode{propertyValue, depth}
-				// replace env key with property value
-				value = strings.ReplaceAll(value, envKey, propertyValue)
-			}
-		}
-		// overwrite the envVar value
-		envVars[name] = value
-	}
-	return nil
 }
 
 func setEnvVars() error {
@@ -235,20 +247,6 @@ func setEnvVars() error {
 
 func isPropertySet(property string) bool {
 	return len(os.Getenv(property)) > 0
-}
-
-func containsEnvVar(value string) (contains bool, matches [][]string) {
-	// match for any ${foo}
-	rStr := `\$\{(\w+)\}`
-	r, err := regexp.Compile(rStr)
-	if err != nil {
-		logger.Errorf(false, "Unable to compile regex %s: %s", rStr, err.Error())
-	}
-	contains = r.MatchString(value)
-	if contains {
-		matches = r.FindAllStringSubmatch(value, -1)
-	}
-	return
 }
 
 // comma-separated value of environments

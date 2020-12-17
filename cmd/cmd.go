@@ -7,6 +7,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -173,7 +174,10 @@ var exit = func(err error, additionalText string) {
 }
 
 func loadEnvAndReinitLogger(cmd *cobra.Command) {
-	if e := env.LoadEnv(environment); e != nil {
+	var handler = func(err error) {
+		logger.Fatal(true, fmt.Sprintf("Failed to load env. %s", err.Error()))
+	}
+	if e := env.LoadEnv(environment, handler); e != nil {
 		logger.Fatalf(true, e.Error())
 	}
 	initLogger(cmd.Name())
