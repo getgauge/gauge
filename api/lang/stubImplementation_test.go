@@ -49,6 +49,25 @@ func TestGetImplementationFilesShouldReturnFilePaths(t *testing.T) {
 	}
 }
 
+func TestGetImplementationFilesShouldReturnFilePathsIfParamIsNil(t *testing.T) {
+	responses := map[gm.Message_MessageType]interface{}{}
+	responses[gm.Message_ImplementationFileListResponse] = &gm.ImplementationFileListResponse{
+		ImplementationFilePaths: []string{"file"},
+	}
+	lRunner.runner = &runner.GrpcRunner{LegacyClient: &mockClient{responses: responses}, Timeout: time.Second * 30}
+	implFiles, err := getImplFiles(&jsonrpc2.Request{})
+
+	if err != nil {
+		t.Fatalf("Got error %s", err.Error())
+	}
+
+	want := []string{"file"}
+
+	if !reflect.DeepEqual(implFiles, want) {
+		t.Errorf("want: `%s`,\n got: `%s`", want, implFiles)
+	}
+}
+
 func TestGetImplementationFilesShouldReturnEmptyArrayForNoImplementationFiles(t *testing.T) {
 	var params = struct {
 		Concept bool
