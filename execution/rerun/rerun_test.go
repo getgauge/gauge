@@ -13,10 +13,10 @@ import (
 	"testing"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 
 	"sort"

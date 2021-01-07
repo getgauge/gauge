@@ -21,19 +21,19 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 type pluginScope string

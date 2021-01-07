@@ -7,7 +7,7 @@
 package result
 
 import (
-	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 )
 
 type ScenarioResult struct {

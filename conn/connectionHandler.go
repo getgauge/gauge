@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/getgauge/gauge/logger"
-
 	"github.com/golang/protobuf/proto"
 )
 

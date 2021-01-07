@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"

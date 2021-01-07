@@ -7,10 +7,10 @@
 package execution
 
 import (
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 )

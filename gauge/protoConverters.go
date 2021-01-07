@@ -9,8 +9,8 @@ package gauge
 import (
 	"time"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
-	"github.com/getgauge/gauge/gauge_messages"
 )
 
 func ConvertToProtoItem(item Item) *gauge_messages.ProtoItem {

@@ -11,20 +11,20 @@ import (
 	"path/filepath"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/conceptExtractor"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 )
 
 type gaugeAPIMessageHandler struct {

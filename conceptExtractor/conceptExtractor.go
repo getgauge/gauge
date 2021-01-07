@@ -15,9 +15,9 @@ import (
 	"path"
 
 	"github.com/getgauge/common"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
 )

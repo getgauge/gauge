@@ -11,7 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	gm "github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"
 	"github.com/sourcegraph/jsonrpc2"

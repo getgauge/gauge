@@ -11,8 +11,8 @@ import (
 
 	"reflect"
 
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
-	gm "github.com/getgauge/gauge/gauge_messages"
 )
 
 type stat struct {

@@ -9,9 +9,9 @@ package event
 import (
 	"testing"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 

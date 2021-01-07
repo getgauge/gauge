@@ -9,7 +9,7 @@ package lang
 import (
 	"context"
 
-	gm "github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"google.golang.org/grpc"
 )
 

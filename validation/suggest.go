@@ -9,7 +9,7 @@ package validation
 import (
 	"fmt"
 
-	gm "github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 )
 

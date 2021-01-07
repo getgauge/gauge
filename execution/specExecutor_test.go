@@ -15,10 +15,10 @@ import (
 
 	"sync"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/validation"
 	. "gopkg.in/check.v1"
