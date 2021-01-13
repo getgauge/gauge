@@ -82,7 +82,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if executeBefore {
-		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, e.currentExecutionInfo))
 		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
 			if res := e.initSpecDataStore(); res.GetFailed() {
 				e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
@@ -129,7 +129,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
 			e.notifyAfterSpecHook()
 		}
-		event.Notify(event.NewExecutionEvent(event.SpecEnd, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.SpecEnd, e.specification, e.specResult, e.stream, e.currentExecutionInfo))
 	}
 	return e.specResult
 }

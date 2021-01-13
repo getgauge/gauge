@@ -55,7 +55,7 @@ func (c *verboseColoredConsole) SpecEnd(spec *gauge.Specification, res result.Re
 	c.writer.Reset()
 }
 
-func (c *verboseColoredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+func (c *verboseColoredConsole) ScenarioStart(scenario *gauge.Scenario, i *gauge_messages.ExecutionInfo, res result.Result) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -68,7 +68,7 @@ func (c *verboseColoredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_
 	c.writer.Reset()
 }
 
-func (c *verboseColoredConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+func (c *verboseColoredConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i *gauge_messages.ExecutionInfo) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -91,7 +91,7 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 	}
 }
 
-func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 	c.writer.Clear()
 	if !(hookFailed(res.GetPreHook) || hookFailed(res.GetPostHook)) {

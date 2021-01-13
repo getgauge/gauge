@@ -91,8 +91,8 @@ func (s *MySuite) TestNotify(c *C) {
 	stepRes := result.NewStepResult(protoStep)
 
 	step := &gauge.Step{Value: stepText}
-	stepStartEvent := NewExecutionEvent(StepStart, step, nil, 0, gauge_messages.ExecutionInfo{})
-	stepEndEvent := NewExecutionEvent(StepEnd, nil, stepRes, 0, gauge_messages.ExecutionInfo{})
+	stepStartEvent := NewExecutionEvent(StepStart, step, nil, 0, &gauge_messages.ExecutionInfo{})
+	stepEndEvent := NewExecutionEvent(StepEnd, nil, stepRes, 0, &gauge_messages.ExecutionInfo{})
 
 	Notify(stepStartEvent)
 	c.Assert(<-ch1, DeepEquals, stepStartEvent)
