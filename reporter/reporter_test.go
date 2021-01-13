@@ -9,10 +9,10 @@ package reporter
 import (
 	"sync"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
@@ -26,7 +26,7 @@ func (s *MySuite) TestSubscribeSpecEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.SpecEnd, &gauge.Specification{}, &DummyResult{}, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SpecEnd, &gauge.Specification{}, &DummyResult{}, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.SpecEnd)
 }
 
@@ -37,7 +37,7 @@ func (s *MySuite) TestSubscribeSuiteStart(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.SuiteStart)
 }
 
@@ -49,7 +49,7 @@ func (s *MySuite) TestSubscribeSpecStart(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SpecStart, spec, nil, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.SpecStart)
 }
 
@@ -63,7 +63,7 @@ func (s *MySuite) TestSubscribeScenarioStart(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.ScenarioStart)
 }
 
@@ -85,7 +85,7 @@ func (s *MySuite) TestSubscribeScenarioStartWithDataTable(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, sce, sceRes, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, dataTableEvent)
 	c.Assert(<-e, Equals, event.ScenarioStart)
 }
@@ -98,7 +98,7 @@ func (s *MySuite) TestSubscribeScenarioEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{}, sceRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ScenarioEnd, &gauge.Scenario{}, sceRes, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.ScenarioEnd)
 }
 
@@ -111,7 +111,7 @@ func (s *MySuite) TestSubscribeStepStart(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.StepStart)
 }
 
@@ -124,7 +124,7 @@ func (s *MySuite) TestSubscribeStepEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, gauge.Step{}, stepRes, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.StepEnd)
 }
 
@@ -139,7 +139,7 @@ func (s *MySuite) TestSubscribeConceptStart(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, concept, nil, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.ConceptStart)
 }
 
@@ -152,7 +152,7 @@ func (s *MySuite) TestSubscribeConceptEnd(c *C) {
 
 	ListenExecutionEvents(&sync.WaitGroup{})
 
-	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptRes, 0, &gauge_messages.ExecutionInfo{}))
 	c.Assert(<-e, Equals, event.ConceptEnd)
 }
 
@@ -163,7 +163,7 @@ func (s *MySuite) TestSubscribeSuiteEnd(c *C) {
 	suiteRes := &result.SuiteResult{UnhandledErrors: []error{}}
 
 	ListenExecutionEvents(&sync.WaitGroup{})
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, suiteRes, 0, &gauge_messages.ExecutionInfo{}))
 
 	c.Assert(<-e, Equals, event.SuiteEnd)
 }
@@ -184,11 +184,11 @@ func (dc *dummyConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	dc.event <- event.SpecEnd
 }
 
-func (dc *dummyConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+func (dc *dummyConsole) ScenarioStart(scenario *gauge.Scenario, i *gauge_messages.ExecutionInfo, res result.Result) {
 	dc.event <- event.ScenarioStart
 }
 
-func (dc *dummyConsole) ScenarioEnd(s *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+func (dc *dummyConsole) ScenarioEnd(s *gauge.Scenario, res result.Result, i *gauge_messages.ExecutionInfo) {
 	dc.event <- event.ScenarioEnd
 }
 
@@ -196,7 +196,7 @@ func (dc *dummyConsole) StepStart(stepText string) {
 	dc.event <- event.StepStart
 }
 
-func (dc *dummyConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+func (dc *dummyConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	dc.event <- event.StepEnd
 }
 

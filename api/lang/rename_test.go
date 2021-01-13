@@ -14,7 +14,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"github.com/sourcegraph/go-langserver/pkg/lsp"

@@ -11,10 +11,10 @@ import (
 
 	"errors"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
@@ -60,12 +60,12 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 	if _, ok := e.errMap.ScenarioErrs[scenario]; ok {
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
-		event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
-		event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, e.currentExecutionInfo))
 		return
 	}
-	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
-	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, *e.currentExecutionInfo))
+	event.Notify(event.NewExecutionEvent(event.ScenarioStart, scenario, scenarioResult, e.stream, e.currentExecutionInfo))
+	defer event.Notify(event.NewExecutionEvent(event.ScenarioEnd, scenario, scenarioResult, e.stream, e.currentExecutionInfo))
 
 	res := e.initScenarioDataStore()
 	if res.GetFailed() {
@@ -182,8 +182,8 @@ func (e *scenarioExecutor) executeStep(step *gauge.Step, protoItem *gauge_messag
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
 	cptResult := result.NewConceptResult(protoConcept)
-	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, *e.currentExecutionInfo))
-	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, *e.currentExecutionInfo))
+	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, e.currentExecutionInfo))
+	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
 
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {

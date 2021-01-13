@@ -17,6 +17,6 @@ gopkg.in/yaml.v2,Apache-2.0
 github.com/dmotylev/goproperties,MIT
 github.com/op/go-logging,BSD-3-Clause
 github.com/natefinch/lumberjack,MIT
-github.com/golang/protobuf,BSD-3-Clause
+google.golang.org/protobuf,BSD-3-Clause
 golang.org/x/net,BSD-3-Clause
 github.com/spf13/pflag,BSD-3-Clause

@@ -7,9 +7,9 @@
 package reporter
 
 import (
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	. "gopkg.in/check.v1"
 )
 
@@ -65,7 +65,7 @@ func (s *MySuite) TestScenarioStart_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -103,7 +103,7 @@ func (s *MySuite) TestScenarioEnd_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -147,7 +147,7 @@ func (s *MySuite) TestScenarioEndWithPreHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -191,7 +191,7 @@ func (s *MySuite) TestScenarioEndWithPostHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -239,7 +239,7 @@ func (s *MySuite) TestScenarioEndWithPreAndPostHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -294,7 +294,7 @@ func (s *MySuite) TestScenarioEndWithBeforeStepHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -352,7 +352,7 @@ func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -431,7 +431,7 @@ func (s *MySuite) TestScenarioEndWithConceptFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",
@@ -517,7 +517,7 @@ func (s *MySuite) TestScenarioEndWithAfterStepHookFailure_JSONConsole(c *C) {
 		},
 	}
 
-	info := gauge_messages.ExecutionInfo{
+	info := &gauge_messages.ExecutionInfo{
 		CurrentSpec: &gauge_messages.SpecInfo{
 			Name:     "Specification",
 			FileName: "file",

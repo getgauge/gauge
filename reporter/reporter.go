@@ -14,11 +14,11 @@ import (
 
 	"sync"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -46,10 +46,10 @@ type Reporter interface {
 	SuiteStart()
 	SpecStart(*gauge.Specification, result.Result)
 	SpecEnd(*gauge.Specification, result.Result)
-	ScenarioStart(*gauge.Scenario, gauge_messages.ExecutionInfo, result.Result)
-	ScenarioEnd(*gauge.Scenario, result.Result, gauge_messages.ExecutionInfo)
+	ScenarioStart(*gauge.Scenario, *gauge_messages.ExecutionInfo, result.Result)
+	ScenarioEnd(*gauge.Scenario, result.Result, *gauge_messages.ExecutionInfo)
 	StepStart(string)
-	StepEnd(gauge.Step, result.Result, gauge_messages.ExecutionInfo)
+	StepEnd(gauge.Step, result.Result, *gauge_messages.ExecutionInfo)
 	ConceptStart(string)
 	ConceptEnd(result.Result)
 	DataTable(string)

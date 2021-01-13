@@ -12,9 +12,9 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -53,7 +53,7 @@ func (sc *simpleConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	fmt.Fprintln(sc.writer)
 }
 
-func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i *gauge_messages.ExecutionInfo, res result.Result) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -65,7 +65,7 @@ func (sc *simpleConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_message
 	fmt.Fprintf(sc.writer, "%s%s", indent(formattedHeading, sc.indentation), newline)
 }
 
-func (sc *simpleConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+func (sc *simpleConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i *gauge_messages.ExecutionInfo) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -86,7 +86,7 @@ func (sc *simpleConsole) StepStart(stepText string) {
 	}
 }
 
-func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+func (sc *simpleConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	sc.mu.Lock()
 	defer sc.mu.Unlock()
 	printHookFailureSC(sc, res, res.GetPreHook)

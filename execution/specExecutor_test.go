@@ -15,10 +15,10 @@ import (
 
 	"sync"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/validation"
 	. "gopkg.in/check.v1"
@@ -185,7 +185,7 @@ func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
 
 	errs := se.convertErrors([]error{e})
 
-	expected := gauge_messages.Error{
+	expected := &gauge_messages.Error{
 		Type:       gauge_messages.Error_PARSE_ERROR,
 		Message:    "filename:5 Message => ''",
 		LineNumber: 5,
@@ -193,7 +193,7 @@ func (s *MySuite) TestConvertParseErrorToGaugeMessagesError(c *C) {
 	}
 
 	c.Assert(len(errs), DeepEquals, 1)
-	c.Assert(*(errs[0]), DeepEquals, expected)
+	c.Assert(errs[0], DeepEquals, expected)
 }
 
 func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
@@ -204,13 +204,13 @@ func (s *MySuite) TestConvertSpecValidationErrorToGaugeMessagesError(c *C) {
 
 	errs := se.convertErrors([]error{e})
 
-	expected := gauge_messages.Error{
+	expected := &gauge_messages.Error{
 		Type:    gauge_messages.Error_VALIDATION_ERROR,
 		Message: "filename Message",
 	}
 
 	c.Assert(len(errs), DeepEquals, 1)
-	c.Assert(*(errs[0]), DeepEquals, expected)
+	c.Assert(errs[0], DeepEquals, expected)
 }
 
 func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
@@ -221,13 +221,13 @@ func (s *MySuite) TestConvertStepValidationErrorToGaugeMessagesError(c *C) {
 
 	errs := se.convertErrors([]error{e})
 
-	expected := gauge_messages.Error{
+	expected := &gauge_messages.Error{
 		Type:    gauge_messages.Error_VALIDATION_ERROR,
 		Message: "filename:3 Step Message => 'step'",
 	}
 
 	c.Assert(len(errs), DeepEquals, 1)
-	c.Assert(*(errs[0]), DeepEquals, expected)
+	c.Assert(errs[0], DeepEquals, expected)
 }
 
 type mockRunner struct {

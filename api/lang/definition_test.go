@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	gm "github.com/getgauge/gauge/gauge_messages"
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 
 	"github.com/getgauge/gauge/util"

@@ -14,9 +14,9 @@ import (
 
 	"github.com/apoorvam/goterminal"
 	ct "github.com/daviddengcn/go-colortext"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 )
 
@@ -53,7 +53,7 @@ func (c *coloredConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	c.writer.Reset()
 }
 
-func (c *coloredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_messages.ExecutionInfo, res result.Result) {
+func (c *coloredConsole) ScenarioStart(scenario *gauge.Scenario, i *gauge_messages.ExecutionInfo, res result.Result) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -65,7 +65,7 @@ func (c *coloredConsole) ScenarioStart(scenario *gauge.Scenario, i gauge_message
 	c.displayMessage(indentedText, ct.Yellow)
 }
 
-func (c *coloredConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gauge_messages.ExecutionInfo) {
+func (c *coloredConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i *gauge_messages.ExecutionInfo) {
 	if res.(*result.ScenarioResult).ProtoScenario.ExecutionStatus == gauge_messages.ExecutionStatus_SKIPPED {
 		return
 	}
@@ -88,7 +88,7 @@ func (c *coloredConsole) StepStart(stepText string) {
 	logger.Debug(false, stepText)
 }
 
-func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo gauge_messages.ExecutionInfo) {
+func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 	if !(hookFailed(res.GetPreHook) || hookFailed(res.GetPostHook)) {
 		if stepRes.GetStepFailed() {

@@ -7,10 +7,10 @@
 package execution
 
 import (
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
 )
@@ -34,7 +34,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 			stepFragmet.GetParameter().Value = protoStepFragmet.GetParameter().Value
 		}
 	}
-	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, *e.currentExecutionInfo))
+	event.Notify(event.NewExecutionEvent(event.StepStart, step, nil, e.stream, e.currentExecutionInfo))
 
 	e.notifyBeforeStepHook(stepResult)
 	if !stepResult.GetFailed() {
@@ -52,7 +52,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	}
 	e.notifyAfterStepHook(stepResult)
 
-	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, *e.currentExecutionInfo))
+	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, e.currentExecutionInfo))
 	defer e.currentExecutionInfo.CurrentStep.Reset()
 	return stepResult
 }
