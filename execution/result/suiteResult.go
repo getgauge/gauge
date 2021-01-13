@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
-	"github.com/getgauge/gauge/gauge_messages"
 )
 
 // SuitResult represents the result of suit execution

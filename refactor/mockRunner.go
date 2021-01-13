@@ -9,7 +9,7 @@ package refactor
 import (
 	"net"
 
-	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/runner"
 )
 
@@ -42,7 +42,7 @@ func (r *mockRunner) IsMultithreaded() bool {
 }
 
 func (r *mockRunner) Info() *runner.RunnerInfo {
-	return &runner.RunnerInfo{Killed:false}
+	return &runner.RunnerInfo{Killed: false}
 }
 
 func (r *mockRunner) Pid() int {

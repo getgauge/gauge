@@ -9,7 +9,7 @@ package result
 import (
 	"testing"
 
-	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	gc "gopkg.in/check.v1"
 )
 

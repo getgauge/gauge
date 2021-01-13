@@ -7,9 +7,9 @@
 package event
 
 import (
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 )
 
 // ExecutionEvent represents an event raised during various phases of the
@@ -19,11 +19,11 @@ type ExecutionEvent struct {
 	Item          gauge.Item
 	Result        result.Result
 	Stream        int
-	ExecutionInfo gauge_messages.ExecutionInfo
+	ExecutionInfo *gauge_messages.ExecutionInfo
 }
 
 // NewExecutionEvent creates a new execution event.
-func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int, executionInfo gauge_messages.ExecutionInfo) ExecutionEvent {
+func NewExecutionEvent(t Topic, i gauge.Item, r result.Result, stream int, executionInfo *gauge_messages.ExecutionInfo) ExecutionEvent {
 	return ExecutionEvent{
 		Topic:         t,
 		Item:          i,

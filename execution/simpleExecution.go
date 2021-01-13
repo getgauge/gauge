@@ -8,14 +8,14 @@ package execution
 
 import (
 	"fmt"
-	"time"
 	"path/filepath"
+	"time"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
@@ -102,13 +102,13 @@ func (e *simpleExecution) execute() {
 
 func (e *simpleExecution) start() {
 	e.startTime = time.Now()
-	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, &gauge_messages.ExecutionInfo{}))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
 func (e *simpleExecution) finish() {
 	e.suiteResult = mergeDataTableSpecResults(e.suiteResult)
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, &gauge_messages.ExecutionInfo{}))
 	e.notifyExecutionResult()
 	e.stopAllPlugins()
 }

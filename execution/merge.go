@@ -11,8 +11,8 @@ import (
 
 	"strings"
 
+	m "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
-	m "github.com/getgauge/gauge/gauge_messages"
 )
 
 func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult {

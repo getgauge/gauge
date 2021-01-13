@@ -13,10 +13,10 @@ import (
 	"testing"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/util"
 
 	"sort"
@@ -57,7 +57,7 @@ func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {
 	sce := &gauge.Scenario{Span: &gauge.Span{Start: 2}}
 	sr1 := &result.ScenarioResult{ProtoScenario: &gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED}}
 
-	prepareScenarioFailedMetadata(sr1, sce, gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: spec1Abs}})
+	prepareScenarioFailedMetadata(sr1, sce, &gauge_messages.ExecutionInfo{CurrentSpec: &gauge_messages.SpecInfo{FileName: spec1Abs}})
 
 	c.Assert(len(failedMeta.failedItemsMap[spec1Abs]), Equals, 1)
 	c.Assert(failedMeta.failedItemsMap[spec1Abs][spec1Rel+":2"], Equals, true)

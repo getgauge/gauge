@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/conn"
 	"github.com/getgauge/gauge/env"
@@ -23,7 +24,6 @@ import (
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
 	"github.com/getgauge/gauge/plugin"
@@ -95,7 +95,7 @@ func (e *parallelExecution) numberOfStreams() int {
 
 func (e *parallelExecution) start() {
 	e.startTime = time.Now()
-	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteStart, nil, nil, 0, &gauge_messages.ExecutionInfo{}))
 	e.pluginHandler = plugin.StartPlugins(e.manifest)
 }
 
@@ -282,7 +282,7 @@ func (e *parallelExecution) executeSpecsInSerial(s *gauge.SpecCollection) *resul
 
 func (e *parallelExecution) finish() {
 	e.suiteResult = mergeDataTableSpecResults(e.suiteResult)
-	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, gauge_messages.ExecutionInfo{}))
+	event.Notify(event.NewExecutionEvent(event.SuiteEnd, nil, e.suiteResult, 0, &gauge_messages.ExecutionInfo{}))
 	message := &gauge_messages.Message{
 		MessageType: gauge_messages.Message_SuiteExecutionResult,
 		SuiteExecutionResult: &gauge_messages.SuiteExecutionResult{

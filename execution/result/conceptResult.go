@@ -6,7 +6,7 @@
 
 package result
 
-import "github.com/getgauge/gauge/gauge_messages"
+import "github.com/getgauge/gauge-proto/go/gauge_messages"
 
 // ConceptResult represents result of a concept execution
 type ConceptResult struct {

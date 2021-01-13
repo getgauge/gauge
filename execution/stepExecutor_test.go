@@ -11,7 +11,7 @@ import (
 
 	"github.com/getgauge/gauge/gauge"
 
-	"github.com/getgauge/gauge/gauge_messages"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 )
 
 func TestStepExecutionShouldAddBeforeStepHookMessages(t *testing.T) {

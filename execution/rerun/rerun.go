@@ -16,11 +16,11 @@ import (
 	"sync"
 
 	"github.com/getgauge/common"
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
@@ -97,7 +97,7 @@ func ListenFailedScenarios(wg *sync.WaitGroup, specDirs []string) {
 	}()
 }
 
-func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenario, executionInfo gauge_messages.ExecutionInfo) {
+func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenario, executionInfo *gauge_messages.ExecutionInfo) {
 	if res.GetFailed() {
 		specPath := executionInfo.GetCurrentSpec().GetFileName()
 		failedScenario := util.RelPathToProjectRoot(specPath)

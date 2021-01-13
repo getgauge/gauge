@@ -11,8 +11,8 @@ import (
 	"reflect"
 	"testing"
 
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 )
 
 var implNotFound = gm.StepValidateResponse_STEP_IMPLEMENTATION_NOT_FOUND

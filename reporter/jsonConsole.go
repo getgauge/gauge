@@ -14,10 +14,10 @@ import (
 	"strings"
 	"sync"
 
+	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/formatter"
 	"github.com/getgauge/gauge/gauge"
-	gm "github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/util"
 )
@@ -145,7 +145,7 @@ func (c *jsonConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	c.write(e)
 }
 
-func (c *jsonConsole) ScenarioStart(scenario *gauge.Scenario, i gm.ExecutionInfo, res result.Result) {
+func (c *jsonConsole) ScenarioStart(scenario *gauge.Scenario, i *gm.ExecutionInfo, res result.Result) {
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.SpecDataTableRow.IsInitialized()
@@ -163,7 +163,7 @@ func (c *jsonConsole) ScenarioStart(scenario *gauge.Scenario, i gm.ExecutionInfo
 	c.write(e)
 }
 
-func (c *jsonConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i gm.ExecutionInfo) {
+func (c *jsonConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i *gm.ExecutionInfo) {
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.SpecDataTableRow.IsInitialized()
@@ -195,7 +195,7 @@ func getAllStepsFromScenario(scenario *gm.ProtoScenario) []*gm.ProtoItem {
 func (c *jsonConsole) StepStart(stepText string) {
 }
 
-func (c *jsonConsole) StepEnd(step gauge.Step, res result.Result, execInfo gm.ExecutionInfo) {
+func (c *jsonConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gm.ExecutionInfo) {
 	si := &stepInfo{step: &step, protoStep: res.(*result.StepResult).Item().(*gm.ProtoStep)}
 	c.stepCache[execInfo.CurrentScenario] = append(c.stepCache[execInfo.CurrentScenario], si)
 }
@@ -256,7 +256,7 @@ func getStatus(failed, skipped bool) status {
 	return pass
 }
 
-func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem, id string, execInfo gm.ExecutionInfo) (errors []executionError) {
+func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem, id string, execInfo *gm.ExecutionInfo) (errors []executionError) {
 	for _, item := range items {
 		executionResult := item.GetStep().GetStepExecutionResult()
 		res := executionResult.GetExecutionResult()
@@ -292,7 +292,7 @@ func getErrors(stepCache map[*gm.ScenarioInfo][]*stepInfo, items []*gm.ProtoItem
 	return
 }
 
-func getFileName(file string, stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info gm.ExecutionInfo) string {
+func getFileName(file string, stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info *gm.ExecutionInfo) string {
 	for _, si := range stepCache[info.CurrentScenario] {
 		if si.protoStep == step {
 			return si.step.FileName
@@ -301,7 +301,7 @@ func getFileName(file string, stepCache map[*gm.ScenarioInfo][]*stepInfo, step *
 	return file
 }
 
-func getLineNo(stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info gm.ExecutionInfo) string {
+func getLineNo(stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, info *gm.ExecutionInfo) string {
 	for _, si := range stepCache[info.CurrentScenario] {
 		if si.protoStep == step {
 			return strconv.Itoa(si.step.LineNo)

@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
 	"github.com/getgauge/gauge/filter"
 	"github.com/getgauge/gauge/gauge"
-	"github.com/getgauge/gauge/gauge_messages"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
@@ -62,7 +62,7 @@ func newSpecExecutor(s *gauge.Specification, r runner.Runner, ph plugin.Handler,
 
 func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *result.SpecResult {
 	e.specResult = gauge.NewSpecResult(e.specification)
-	if(e.runner.Info().Killed){
+	if e.runner.Info().Killed {
 		e.specResult.SetSkipped(true)
 		return e.specResult
 	}
@@ -82,7 +82,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	e.specResult.AddSpecItems(resolvedSpecItems)
 	if executeBefore {
-		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.SpecStart, e.specification, e.specResult, e.stream, e.currentExecutionInfo))
 		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
 			if res := e.initSpecDataStore(); res.GetFailed() {
 				e.skipSpecForError(fmt.Errorf("Failed to initialize spec datastore. Error: %s", res.GetErrorMessage()))
@@ -129,7 +129,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 		if _, ok := e.errMap.SpecErrs[e.specification]; !ok {
 			e.notifyAfterSpecHook()
 		}
-		event.Notify(event.NewExecutionEvent(event.SpecEnd, e.specification, e.specResult, e.stream, *e.currentExecutionInfo))
+		event.Notify(event.NewExecutionEvent(event.SpecEnd, e.specification, e.specResult, e.stream, e.currentExecutionInfo))
 	}
 	return e.specResult
 }
