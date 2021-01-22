@@ -147,7 +147,7 @@ func loadEnvDir(envName string) error {
 func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {
 	for propertyKey := range propertiesMap.Map() {
 		// Update properties if an env var is set.
-		if envVarValue, present := os.LookupEnv(propertyKey); present {
+		if envVarValue, present := os.LookupEnv(propertyKey); present && len(envVarValue) > 0 {
 			if _, _, err := propertiesMap.Set(propertyKey, envVarValue); err != nil {
 				return propertiesMap, fmt.Errorf("%s", err.Error())
 			}

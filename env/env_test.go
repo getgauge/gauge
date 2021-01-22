@@ -221,6 +221,19 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	c.Assert(os.Getenv("property2"), Equals, "value1/value2")
 }
 
+func (s *MySuite) TestLoadDefaultEmptyEnvWithSubstitutedVariables(c *C) {
+	os.Clearenv()
+	os.Setenv("property1", "")
+
+	config.ProjectRoot = "_testdata/proj1"
+
+	e := LoadEnv(common.DefaultEnvDir, nil)
+
+	c.Assert(e, Equals, nil)
+
+	c.Assert(os.Getenv("property1"), Equals, "value1")
+}
+
 func (s *MySuite) TestLoadDefaultEnvWithMissingSubstitutedVariable(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj5"
