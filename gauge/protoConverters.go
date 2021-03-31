@@ -154,7 +154,7 @@ func ConvertToProtoTable(table *Table) *gauge_messages.ProtoTable {
 	}
 	protoTableParam := &gauge_messages.ProtoTable{Rows: make([]*gauge_messages.ProtoTableRow, 0)}
 	protoTableParam.Headers = &gauge_messages.ProtoTableRow{Cells: table.Headers}
-	for _, row := range table.Rows() {
+	for _, row := range table.Rows() { // nolint
 		protoTableParam.Rows = append(protoTableParam.Rows, &gauge_messages.ProtoTableRow{Cells: row})
 	}
 	return protoTableParam

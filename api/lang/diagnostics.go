@@ -127,7 +127,7 @@ func validateConcepts(diagnostics map[lsp.DocumentURI][]lsp.Diagnostic) (*gauge.
 			return nil, fmt.Errorf("unable to read file %s", err)
 		}
 		cpts, pRes := new(parser.ConceptParser).Parse(content, conceptFile)
-		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary)
+		pErrs, err := parser.AddConcept(cpts, conceptFile, conceptDictionary) // nolint
 		if err != nil {
 			return nil, err
 		}

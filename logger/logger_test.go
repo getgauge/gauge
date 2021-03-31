@@ -17,7 +17,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/plugin/pluginInfo"
 	"github.com/getgauge/gauge/version"
-	"github.com/op/go-logging"
+	logging "github.com/op/go-logging"
 )
 
 func TestGetLoggerShouldGetTheLoggerForGivenModule(t *testing.T) {

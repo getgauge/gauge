@@ -55,7 +55,7 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(r *ScenarioResult, t 
 		specResult.ScenarioFailedCount++
 	}
 	specResult.AddExecTime(r.ExecTime())
-	pItem := &gauge_messages.ProtoItem{
+	pItem := &gauge_messages.ProtoItem{ // nolint
 		ItemType: gauge_messages.ProtoItem_TableDrivenScenario,
 		TableDrivenScenario: &gauge_messages.ProtoTableDrivenScenario{
 			Scenario:              r.Item().(*gauge_messages.ProtoScenario),
@@ -88,7 +88,7 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 				TableRowIndex:    int32(index),
 				ScenarioTableRow: eachRow[scenarioIndex].(*ScenarioResult).ScenarioDataTableRow,
 			}
-			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario}
+			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario} // nolint
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}
 		if scenarioFailed {

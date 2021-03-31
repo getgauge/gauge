@@ -10,11 +10,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-
-	"github.com/getgauge/gauge/gauge"
-
 	"strings"
-
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
