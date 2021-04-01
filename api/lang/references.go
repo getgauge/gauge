@@ -17,11 +17,11 @@ import (
 )
 
 func stepReferences(req *jsonrpc2.Request) (interface{}, error) {
-	var params string
+	var params []string
 	if err := json.Unmarshal(*req.Params, &params); err != nil {
 		return nil, fmt.Errorf("failed to parse request %v", err)
 	}
-	return getLocationFor(params)
+	return getLocationFor(params[0])
 }
 
 func stepValueAt(req *jsonrpc2.Request) (interface{}, error) {

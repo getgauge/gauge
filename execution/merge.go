@@ -81,7 +81,9 @@ func mergeResults(results []*result.SpecResult) *result.SpecResult {
 		if res.GetFailed() {
 			specResult.IsFailed = true
 		}
-		var tableRows []*m.ProtoTableRow
+
+		var tableRows []*m.ProtoTableRow // nolint
+
 		for _, item := range res.ProtoSpec.Items {
 			switch item.ItemType {
 			case m.ProtoItem_Scenario:
