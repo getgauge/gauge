@@ -11,7 +11,7 @@
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
 
 ## Get Started
-Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb4848cd) can be used, its [terminologies](https://docs.gauge.org/latest/writing-specifications.html) and [**get started...**](https://docs.gauge.org/getting_started/installing-gauge.html)
+Read more about [Why Gauge](https://gauge.org/2018/05/15/why-we-built-gauge/) can be used, its [terminologies](https://docs.gauge.org/writing-specifications.html) and [**get started...**](https://docs.gauge.org/getting_started/installing-gauge.html)
 
 ## Find out more
 
@@ -34,7 +34,7 @@ Read more about [Why Gauge](https://blog.getgauge.io/why-we-built-gauge-6e31bb48
 ## Questions or need help?
 
 ### Troubleshooting
-Context specific **Troubleshooting** guide is available in relevant pages of the [Gauge Documentation](https://docs.gauge.org/latest).
+Context specific **Troubleshooting** guide is available in relevant pages of the [Gauge Documentation](https://docs.gauge.org/).
 
 ### Talk to us
 
