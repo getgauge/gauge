@@ -7,7 +7,8 @@ const fs = require('fs');
 const BASE_URL="https://github.com/getgauge/gauge/releases/download/",
     ARCH_MAPPING = {
         "ia32": "x86",
-        "x64": "x86_64"
+        "x64": "x86_64",
+        "arm64": "arm64"
     },
     PLATFORM_MAPPING = {
         "darwin": "darwin",
