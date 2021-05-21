@@ -16,11 +16,13 @@ class CustomInstallCommand(install):
     """Customized setuptools install command to download and setup."""
 
     _base_url = 'https://api.github.com/repos/getgauge/gauge/releases'
-    _arch_map = {{"ia32": "x86", "x64": "x86_64"}}
+    _arch_map = {{"ia32": "x86", "x64": "x86_64", "arm64": "arm64"}}
     _os_map = {{"Darwin": "darwin", "Linux": "linux", "Windows": "windows"}}
     _os_name = _os_map[platform.system()]
 
     def _get_arch(self):
+        if 'arm64' in platform.platform():
+            return self._arch_map['arm64']
         if '64' in platform.architecture()[0]:
             return self._arch_map['x64']
         else:
