@@ -18,10 +18,10 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Setup java

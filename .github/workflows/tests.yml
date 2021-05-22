@@ -15,10 +15,10 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Check out code into the Go module directory
@@ -35,10 +35,10 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Set up Nodejs
@@ -104,10 +104,10 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Setup java
@@ -207,10 +207,10 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Check out code into the Go module directory
@@ -238,10 +238,10 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - name: Set up Go 1.13
+      - name: Set up Go 1.16
         uses: actions/setup-go@v1
         with:
-          go-version: 1.13
+          go-version: 1.16
         id: go
 
       - name: Setup java
