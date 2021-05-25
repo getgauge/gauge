@@ -55,10 +55,6 @@ jobs:
           go run build/make.go --verbose --all-platforms
           Get-ChildItem -Recurse .\bin
 
-      - name: Cleanup
-        if: always()
-        run: rm $Env:CERT_FILE
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
