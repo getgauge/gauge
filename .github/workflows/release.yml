@@ -55,6 +55,12 @@ jobs:
           go run build/make.go --verbose --all-platforms
           Get-ChildItem -Recurse .\bin
 
+      - name: Sign
+        shell: pwsh
+        run: |
+          go run build/make.go --distro --bin-dir bin\windows_amd64
+          go run build/make.go --distro --bin-dir bin\windows_386
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v1
         with:
