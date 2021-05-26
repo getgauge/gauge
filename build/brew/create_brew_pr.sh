@@ -26,7 +26,7 @@ git branch -D $BRANCH || true
 git checkout -b $BRANCH
 
 gem install parser
-ruby ./brew_update.rb $GAUGE_VERSION ./Formula/gauge.rb
+ruby ../brew_update.rb $GAUGE_VERSION ./Formula/gauge.rb
 
 git add ./Formula/gauge.rb
 git commit -m "gauge $GAUGE_VERSION"
