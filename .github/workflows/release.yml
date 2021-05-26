@@ -55,7 +55,7 @@ jobs:
           go run build/make.go --verbose --all-platforms
           Get-ChildItem -Recurse .\bin
 
-      - name: Sign
+      - name: Create Distro
         shell: pwsh
         run: |
           go run build/make.go --distro --bin-dir bin\windows_amd64
