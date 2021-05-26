@@ -295,14 +295,14 @@ func signExecutable(exeFilePath string, certFilePath string) {
 }
 
 func createDarwinPackage() {
-	distroDir := filepath.Join(deploy, gauge)
+	distroDir := filepath.Join(deploy, packageName())
 	copyGaugeBinaries(distroDir)
 	if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
-		log.Printf("No singning identity found . Executable won't be signed.")
+		log.Printf("No signing identity found . Executable won't be signed.")
 	} else {
 		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
 	}
-	createZipFromUtil(deploy, gauge, packageName())
+	createZipFromUtil(deploy, packageName(), packageName())
 	if err := os.RemoveAll(distroDir); err != nil {
 		log.Printf("failed to remove %s", distroDir)
 	}
@@ -442,7 +442,7 @@ func getPackageArchSuffix() string {
 		return "x86_64"
 	}
 
-	if arch := getGOARCH(); arch == "arm" {
+	if arch := getGOARCH(); arch == "arm64" {
 		return "arm64"
 	}
 

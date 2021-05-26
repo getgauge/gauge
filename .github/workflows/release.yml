@@ -55,7 +55,7 @@ jobs:
           go run build/make.go --verbose --all-platforms
           Get-ChildItem -Recurse .\bin
 
-      - name: Sign
+      - name: Create Distro
         shell: pwsh
         run: |
           go run build/make.go --distro --bin-dir bin\windows_amd64
@@ -184,64 +184,6 @@ jobs:
           cd build/npm
           npm version $GAUGE_VERSION
           npm publish --access=public
-
-  deb-rpm-release:
-    needs: [github-release]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Set up Go 1.16
-        uses: actions/setup-go@v1
-        with:
-          go-version: 1.16
-        id: go
-
-      - name: Set up Ruby 2.6.x
-        uses: actions/setup-ruby@v1
-        with:
-          ruby-version: 2.6.x
-
-      - name: Install fpm
-        run: |
-          gem install --no-document fpm
-
-      - name: Prepare deb artifact
-        run: |
-          build/mkdeb.sh
-
-      - name: Deploy debian
-        env:
-          REPO: gauge-deb
-          PACKAGE: gauge
-          DISTRIBUTIONS: stable
-          COMPONENTS: main
-          USER: ${{ secrets.BINTRAY_API_USER }}
-          API_KEY: ${{ secrets.BINTRAY_API_KEY }}
-          PASSPHRASE: ${{ secrets.BINTRAY_GPG_SIGNING_PASSPHRASE }}
-        run: |
-          cd deploy
-          sh ../build/publish_deb_to_bintray.sh
-
-      - name: Deploy rpm
-        env:
-          REPO: gauge-rpm
-          PACKAGE: gauge
-          BINTRAY_PACKAGE: gauge-stable
-          USER: ${{ secrets.BINTRAY_API_USER }}
-          API_KEY: ${{ secrets.BINTRAY_API_KEY }}
-          PASSPHRASE: ${{ secrets.BINTRAY_GPG_SIGNING_PASSPHRASE }}
-        run: |
-          cd deploy
-          for artifact in `ls gauge-*.deb`; do
-            fpm -t rpm -s deb $artifact
-          done
-          for artifact in `ls gauge-*.rpm`; do
-            output_package=`echo "$artifact" | sed 's/-[0-9].x/-all.x/' | sed 's/-[0-9].i/-all.i/'`
-            mv -T $artifact $output_package
-          done
-          ls
-          sh ../build/publish_rpm_to_bintray.sh
 
   choco-release:
     needs: [github-release]
