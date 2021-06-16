@@ -22,7 +22,6 @@ import (
 
 // SpecInfoGatherer contains the caches for specs, concepts, and steps
 type SpecInfoGatherer struct {
-	waitGroup         sync.WaitGroup
 	conceptDictionary *gauge.ConceptDictionary
 	specsCache        specsCache
 	conceptsCache     conceptCache
@@ -73,16 +72,15 @@ func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGa
 
 // Init initializes all the SpecInfoGatherer caches
 func (s *SpecInfoGatherer) Init() {
-	go s.watchForFileChanges()
-	s.waitGroup.Wait()
-
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	s.initConceptsCache()
 	s.initSpecsCache()
 	s.initStepsCache()
 	s.initParamsCache()
 	s.initTagsCache()
+	go s.watchForFileChanges()
 }
+
 func (s *SpecInfoGatherer) initTagsCache() {
 	s.tagsCache.mutex.Lock()
 	defer s.tagsCache.mutex.Unlock()
@@ -91,7 +89,7 @@ func (s *SpecInfoGatherer) initTagsCache() {
 	for file, specDetail := range s.specsCache.specDetails {
 		s.updateTagsCacheFromSpecs(file, specDetail)
 	}
-	defer s.specsCache.mutex.Unlock()
+	s.specsCache.mutex.Unlock()
 }
 
 func (s *SpecInfoGatherer) initParamsCache() {
@@ -224,7 +222,11 @@ func removeDuplicateTags(tags []string) []string {
 }
 
 func (s *SpecInfoGatherer) addToSpecsCache(key string, value *SpecDetail) {
-	s.specsCache.specDetails[key] = value
+	if s.specsCache.specDetails != nil {
+		s.specsCache.specDetails[key] = value
+	} else {
+		logger.Debugf(false, "specsCache does not have specDetails initialized. Skip adding %s to specsCache", key)
+	}
 }
 
 func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) {
@@ -243,7 +245,9 @@ func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 }
 
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.Step) {
-	s.stepsCache.steps[fileName] = allSteps
+	if s.stepsCache.steps != nil {
+		s.stepsCache.steps[fileName] = allSteps
+	}
 }
 
 func (s *SpecInfoGatherer) getParsedSpecs(specFiles []string) []*SpecDetail {
@@ -407,8 +411,6 @@ func (s *SpecInfoGatherer) onFileRename(watcher *fsnotify.Watcher, file string) 
 }
 
 func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.Watcher) {
-	s.waitGroup.Wait()
-
 	file, err := filepath.Abs(event.Name)
 	if err != nil {
 		logger.Errorf(false, "Failed to get abs file path for %s: %s", event.Name, err)
@@ -429,15 +431,12 @@ func (s *SpecInfoGatherer) handleEvent(event fsnotify.Event, watcher *fsnotify.W
 }
 
 func (s *SpecInfoGatherer) watchForFileChanges() {
-	s.waitGroup.Add(1)
-
 	watcher, err := fsnotify.NewWatcher()
 	if err != nil {
 		logger.Errorf(false, "Error creating fileWatcher: %s", err)
 	}
 	defer watcher.Close()
 
-	done := make(chan bool)
 	go func() {
 		for {
 			select {
@@ -461,8 +460,6 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	for _, dir := range allDirsToWatch {
 		addDirToFileWatcher(watcher, dir)
 	}
-	s.waitGroup.Done()
-	<-done
 }
 
 // GetAvailableSpecs returns the list of all the specs in the gauge project

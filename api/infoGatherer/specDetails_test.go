@@ -194,7 +194,6 @@ func (s *MySuite) TestInitSpecsCache(c *C) {
 	_, err := createFileIn(s.specsDir, "spec1.spec", spec1)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initSpecsCache()
 
@@ -207,7 +206,6 @@ func (s *MySuite) TestInitConceptsCache(c *C) {
 	_, err = createFileIn(s.specsDir, "concept2.cpt", concept2)
 	c.Assert(err, Equals, nil)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.projectDir + string(filepath.Separator) + specDir}}
-	specInfoGatherer.waitGroup.Add(1)
 
 	specInfoGatherer.initConceptsCache()
 
@@ -220,7 +218,6 @@ func (s *MySuite) TestInitStepsCache(c *C) {
 	f1, _ := createFileIn(s.specsDir, "concept2.cpt", concept2)
 	f1, _ = filepath.Abs(f1)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(3)
 
 	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
@@ -237,7 +234,6 @@ func (s *MySuite) TestInitTagsCache(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initTagsCache()
@@ -256,7 +252,6 @@ func (s *MySuite) TestInitTagsCacheWithMultipleFiles(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initTagsCache()
@@ -267,7 +262,6 @@ func (s *MySuite) TestGetStepsFromCachedSpecs(c *C) {
 	f, _ := createFileIn(s.specsDir, "spec1.spec", spec1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(3)
 	specInfoGatherer.initSpecsCache()
 
 	stepsFromSpecsMap := specInfoGatherer.getStepsFromCachedSpecs()
@@ -280,7 +274,6 @@ func (s *MySuite) TestGetStepsFromCachedConcepts(c *C) {
 	f, _ := createFileIn(s.specsDir, "concept1.cpt", concept1)
 	f, _ = filepath.Abs(f)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(3)
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initConceptsCache()
 
@@ -299,7 +292,6 @@ func (s *MySuite) TestGetAvailableSteps(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
 
@@ -321,7 +313,6 @@ func (s *MySuite) TestGetAvailableStepsShouldFilterDuplicates(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
 
@@ -348,7 +339,6 @@ func (s *MySuite) TestGetAvailableStepsShouldFilterConcepts(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(3)
 	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
@@ -378,7 +368,6 @@ func (s *MySuite) TestGetAvailableAllStepsShouldFilterConcepts(c *C) {
 	}
 
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(3)
 	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
@@ -461,7 +450,6 @@ func (s *MySuite) TestParamsForStepFile(c *C) {
 	file, _ := createFileIn(s.specsDir, "spec3.spec", spec3)
 	file, _ = filepath.Abs(file)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
@@ -497,7 +485,6 @@ func (s *MySuite) TestParamsForConceptFile(c *C) {
 	file, _ := createFileIn(s.specsDir, "concept3.cpt", concept3)
 	file, _ = filepath.Abs(file)
 	specInfoGatherer := &SpecInfoGatherer{SpecDirs: []string{s.specsDir}}
-	specInfoGatherer.waitGroup.Add(2)
 	specInfoGatherer.initConceptsCache()
 	specInfoGatherer.initSpecsCache()
 	specInfoGatherer.initStepsCache()
