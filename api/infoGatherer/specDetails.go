@@ -73,15 +73,15 @@ func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGa
 
 // Init initializes all the SpecInfoGatherer caches
 func (s *SpecInfoGatherer) Init() {
-	go s.watchForFileChanges()
-	s.waitGroup.Wait()
-
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	s.initConceptsCache()
 	s.initSpecsCache()
 	s.initStepsCache()
 	s.initParamsCache()
 	s.initTagsCache()
+
+	go s.watchForFileChanges()
+	s.waitGroup.Wait()
 }
 func (s *SpecInfoGatherer) initTagsCache() {
 	s.tagsCache.mutex.Lock()
