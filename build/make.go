@@ -156,6 +156,7 @@ var (
 		map[string]string{GOARCH: X86_64, GOOS: darwin, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: linux, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86_64, GOOS: linux, CGO_ENABLED: "0"},
+		map[string]string{GOARCH: ARM64, GOOS: linux, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: freebsd, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86_64, GOOS: freebsd, CGO_ENABLED: "0"},
 		map[string]string{GOARCH: X86, GOOS: windows, CC: "i586-mingw32-gcc", CGO_ENABLED: "1"},
