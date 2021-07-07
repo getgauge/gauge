@@ -33,6 +33,7 @@ const (
 	pluginJSON = "plugin.json"
 	jsonExt    = ".json"
 	x86        = "386"
+	arm64      = "arm64"
 )
 
 type installDescription struct {
@@ -49,8 +50,9 @@ type versionInstallDescription struct {
 }
 
 type downloadUrls struct {
-	X86 platformSpecificURL
-	X64 platformSpecificURL
+	X86   platformSpecificURL
+	X64   platformSpecificURL
+	ARM64 platformSpecificURL
 }
 
 type platformSpecificCommand struct {
@@ -120,6 +122,9 @@ type GaugePlugin struct {
 
 func getGoArch() string {
 	arch := runtime.GOARCH
+	if arch == arm64 {
+		return arm64
+	}
 	if arch == x86 {
 		return "x86"
 	}
@@ -368,10 +373,18 @@ func uninstallVersionOfPlugin(pluginDir, pluginName, uninstallVersion string) er
 
 func getDownloadLink(downloadUrls downloadUrls) (string, error) {
 	var platformLinks *platformSpecificURL
-	if strings.Contains(runtime.GOARCH, "64") {
-		platformLinks = &downloadUrls.X64
-	} else {
+	switch getGoArch() {
+	case arm64:
+		if downloadUrls.ARM64.Linux == "" {
+			logger.Info(true, "Download URL for 'arm64' architecture is not set for this plugin. Falling back to 'x86_64', but this may cause issues.")
+			platformLinks = &downloadUrls.X64
+		} else {
+			platformLinks = &downloadUrls.ARM64
+		}
+	case x86:
 		platformLinks = &downloadUrls.X86
+	default:
+		platformLinks = &downloadUrls.X64
 	}
 
 	var downloadLink string
