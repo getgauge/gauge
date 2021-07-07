@@ -161,21 +161,21 @@ func NewValidationResult(s *gauge.SpecCollection, errMap *gauge.BuildErrors, r r
 }
 
 // ValidateSpecs parses the specs, creates a new validator and call the runner to get the validation result.
-func ValidateSpecs(args []string, debug bool) *ValidationResult {
+func ValidateSpecs(specsToValidate []string, debug bool) *ValidationResult {
 	logger.Debug(true, "Parsing started.")
 	conceptDict, res, err := parser.ParseConcepts()
 	if err != nil {
 		logger.Fatalf(true, "Unable to parse : %s", err.Error())
 	}
 	errMap := gauge.NewBuildErrors()
-	s, specsFailed := parser.ParseSpecs(args, conceptDict, errMap)
+	specs, specsFailed := parser.ParseSpecs(specsToValidate, conceptDict, errMap)
 	logger.Debug(true, "Parsing completed.")
 	r := startAPI(debug)
-	vErrs := NewValidator(s, r, conceptDict).Validate()
-	errMap = getErrMap(errMap, vErrs)
-	s = parser.GetSpecsForDataTableRows(s, errMap)
-	printValidationFailures(vErrs)
-	showSuggestion(vErrs)
+	validationErrors := NewValidator(specs, r, conceptDict).Validate()
+	errMap = getErrMap(errMap, validationErrors)
+	specs = parser.GetSpecsForDataTableRows(specs, errMap)
+	printValidationFailures(validationErrors)
+	showSuggestion(validationErrors)
 	if !res.Ok {
 		err := r.Kill()
 		if err != nil {
@@ -184,9 +184,9 @@ func ValidateSpecs(args []string, debug bool) *ValidationResult {
 		return NewValidationResult(nil, nil, nil, false, errors.New("Parsing failed"))
 	}
 	if specsFailed {
-		return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, false)
+		return NewValidationResult(gauge.NewSpecCollection(specs, false), errMap, r, false)
 	}
-	return NewValidationResult(gauge.NewSpecCollection(s, false), errMap, r, true)
+	return NewValidationResult(gauge.NewSpecCollection(specs, false), errMap, r, true)
 }
 
 func getErrMap(errMap *gauge.BuildErrors, validationErrors validationErrors) *gauge.BuildErrors {

@@ -345,7 +345,7 @@ func (s *MySuite) TestToEvaluateTagExpression(c *C) {
 	var specs []*gauge.Specification
 	specs = append(specs, spec1, spec2)
 
-	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag1 & !(tag1 & tag4) & (tag2 | tag3)")
+	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "Tag1 & !(tag1 & tag4) & (tag2 | tag3)")
 	c.Assert(len(filteredSpecs), Equals, 1)
 	c.Assert(len(filteredSpecs[0].Scenarios), Equals, 2)
 	c.Assert(filteredSpecs[0].Scenarios[0], Equals, scenario3)
@@ -392,7 +392,7 @@ func (s *MySuite) TestToFilterSpecsByWrongTagExpression(c *C) {
 }
 
 func (s *MySuite) TestToFilterMultipleScenariosByMultipleTags(c *C) {
-	myTags := []string{"tag1", "tag2"}
+	myTags := []string{"tag1", "Tag2"}
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
 		Span:    &gauge.Span{Start: 1, End: 3},
@@ -524,9 +524,23 @@ func (s *MySuite) TestFilterTags(c *C) {
 	c.Assert(evaluateTrue, Equals, true)
 }
 
+func (s *MySuite) TestFilterMixedCaseTags(c *C) {
+	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & FOO bar")
+	evaluateTrue := tagFilter.filterTags(specTags)
+	c.Assert(evaluateTrue, Equals, true)
+}
+
 func (s *MySuite) TestSanitizeTags(c *C) {
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo bar | true")
+	evaluateTrue := tagFilter.filterTags(specTags)
+	c.Assert(evaluateTrue, Equals, true)
+}
+
+func (s *MySuite) TestSanitizeMixedCaseTags(c *C) {
+	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo Bar | true")
 	evaluateTrue := tagFilter.filterTags(specTags)
 	c.Assert(evaluateTrue, Equals, true)
 }
@@ -582,6 +596,57 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 
 }
 
+func (s *MySuite) TestToFilterSpecsByMixedTags(c *C) {
+	myTags := []string{"tag1", "TAG2"}
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+		Tags:    &gauge.Tags{RawValues: [][]string{myTags}},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2},
+	}
+	spec2 := &gauge.Specification{
+		Items:     []gauge.Item{scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario2, scenario3},
+	}
+
+	spec3 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1, spec2, spec3)
+
+	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag1 & Tag2")
+	c.Assert(len(filteredSpecs), Equals, 2)
+	c.Assert(len(filteredSpecs[0].Scenarios), Equals, 1)
+	c.Assert(len(filteredSpecs[1].Scenarios), Equals, 1)
+	c.Assert(filteredSpecs[0].Scenarios[0], Equals, scenario1)
+	c.Assert(filteredSpecs[1].Scenarios[0], Equals, scenario1)
+
+	c.Assert(len(otherSpecs), Equals, 3)
+	c.Assert(len(otherSpecs[0].Scenarios), Equals, 1)
+	c.Assert(len(otherSpecs[1].Scenarios), Equals, 2)
+	c.Assert(len(otherSpecs[2].Scenarios), Equals, 1)
+	c.Assert(otherSpecs[0].Scenarios[0], Equals, scenario2)
+	c.Assert(otherSpecs[1].Scenarios[0], Equals, scenario2)
+	c.Assert(otherSpecs[1].Scenarios[1], Equals, scenario3)
+	c.Assert(otherSpecs[2].Scenarios[0], Equals, scenario3)
+
+}
+
 func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 	myTags := []string{"tag1", "tag2"}
 
@@ -609,6 +674,42 @@ func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 	specs = append(specs, spec1)
 
 	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag1 & tag2")
+	c.Assert(len(filteredSpecs[0].Scenarios), Equals, 1)
+	c.Assert(filteredSpecs[0].Scenarios[0], Equals, scenario2)
+
+	c.Assert(len(otherSpecs), Equals, 1)
+	c.Assert(len(otherSpecs[0].Scenarios), Equals, 2)
+	c.Assert(otherSpecs[0].Scenarios[0], Equals, scenario1)
+	c.Assert(otherSpecs[0].Scenarios[1], Equals, scenario3)
+}
+
+func (s *MySuite) TestToFilterScenariosByMixedCaseTag(c *C) {
+	myTags := []string{"Tag-1", "tag2"}
+
+	scenario1 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "First Scenario"},
+		Span:    &gauge.Span{Start: 1, End: 3},
+	}
+	scenario2 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Second Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+		Tags:    &gauge.Tags{RawValues: [][]string{myTags}},
+	}
+
+	scenario3 := &gauge.Scenario{
+		Heading: &gauge.Heading{Value: "Third Scenario"},
+		Span:    &gauge.Span{Start: 4, End: 6},
+	}
+
+	spec1 := &gauge.Specification{
+		Items:     []gauge.Item{scenario1, scenario2, scenario3},
+		Scenarios: []*gauge.Scenario{scenario1, scenario2, scenario3},
+	}
+
+	var specs []*gauge.Specification
+	specs = append(specs, spec1)
+
+	filteredSpecs, otherSpecs := filterSpecsByTags(specs, "tag-1 & tag2")
 	c.Assert(len(filteredSpecs[0].Scenarios), Equals, 1)
 	c.Assert(filteredSpecs[0].Scenarios[0], Equals, scenario2)
 
