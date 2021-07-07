@@ -525,7 +525,7 @@ func (s *MySuite) TestFilterTags(c *C) {
 }
 
 func (s *MySuite) TestFilterMixedCaseTags(c *C) {
-	specTags := []string{"abcd", "foo", "bar", "foo bar"}
+	specTags := []string{"abcd", "foo", "BAR", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & FOO bar")
 	evaluateTrue := tagFilter.filterTags(specTags)
 	c.Assert(evaluateTrue, Equals, true)
