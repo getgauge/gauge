@@ -7,6 +7,7 @@
 package filter
 
 import (
+	"os"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
@@ -18,6 +19,11 @@ func Test(t *testing.T) { TestingT(t) }
 type MySuite struct{}
 
 var _ = Suite(&MySuite{})
+
+func setCaseInsensitiveTagsVariable() {
+	os.Clearenv()
+	os.Setenv("allow_case_insensitive_tags", "true")
+}
 
 func (s *MySuite) TestToEvaluateTagExpressionWithTwoTags(c *C) {
 	filter := &ScenarioFilterBasedOnTags{tagExpression: "tag1 & tag3"}
@@ -525,6 +531,7 @@ func (s *MySuite) TestFilterTags(c *C) {
 }
 
 func (s *MySuite) TestFilterMixedCaseTags(c *C) {
+	setCaseInsensitiveTagsVariable()
 	specTags := []string{"abcd", "foo", "BAR", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & FOO bar")
 	evaluateTrue := tagFilter.filterTags(specTags)
@@ -539,6 +546,7 @@ func (s *MySuite) TestSanitizeTags(c *C) {
 }
 
 func (s *MySuite) TestSanitizeMixedCaseTags(c *C) {
+	setCaseInsensitiveTagsVariable()
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo Bar | true")
 	evaluateTrue := tagFilter.filterTags(specTags)
@@ -597,6 +605,7 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 }
 
 func (s *MySuite) TestToFilterSpecsByMixedTags(c *C) {
+	setCaseInsensitiveTagsVariable()
 	myTags := []string{"tag1", "TAG2"}
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
