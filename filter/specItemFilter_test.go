@@ -22,7 +22,7 @@ var _ = Suite(&MySuite{})
 
 func before()  {
 	os.Clearenv()
-	os.Setenv("allow_case_insensitive_tags", "true")
+	os.Setenv("allow_case_sensitive_tags", "false")
 }
 
 func after() {

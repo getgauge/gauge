@@ -38,7 +38,7 @@ const (
 	saveExecutionResult = "save_execution_result"
 	// CsvDelimiter holds delimiter used to parse csv files
 	CsvDelimiter                   = "csv_delimiter"
-	allowCaseInSensitiveTags       = "allow_case_insensitive_tags"
+	allowCaseSensitiveTags         = "allow_case_sensitive_tags"
 	allowMultilineStep             = "allow_multiline_step"
 	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
@@ -116,7 +116,7 @@ func loadDefaultEnvVars() {
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	addEnvVar(GaugeScreenshotsDir, defaultScreenshotDir)
 	addEnvVar(gaugeSpecFileExtensions, ".spec, .md")
-	addEnvVar(allowCaseInSensitiveTags, "false")
+	addEnvVar(allowCaseSensitiveTags, "false")
 	err := os.MkdirAll(defaultScreenshotDir, 0750)
 	if err != nil {
 		logger.Warningf(true, "Could not create screenshot dir at %s", err.Error())
@@ -312,7 +312,7 @@ var GaugeSpecFileExtensions = func() []string {
 	return allowedExts
 }
 
-// AllowCaseInSensitiveTags determines if the casing is ignored in tags filtering
-var AllowCaseInSensitiveTags = func() bool {
-	return convertToBool(allowCaseInSensitiveTags, false)
+// AllowCaseSensitiveTags determines if the casing is ignored in tags filtering
+var AllowCaseSensitiveTags = func() bool {
+	return convertToBool(allowCaseSensitiveTags, false)
 }
