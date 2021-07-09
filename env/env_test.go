@@ -39,6 +39,7 @@ func (s *MySuite) TestLoadDefaultEnv(c *C) {
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	c.Assert(os.Getenv("gauge_screenshots_dir"), Equals, defaultScreenshotDir)
 	c.Assert(os.Getenv("gauge_spec_file_extensions"), Equals, ".spec, .md")
+	c.Assert(os.Getenv("allow_case_sensitive_tags"), Equals, "false")
 }
 
 // If default env dir is present, the values present in there should overwrite

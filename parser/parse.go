@@ -104,8 +104,8 @@ func ParseSpecFiles(specFiles []string, conceptDictionary *gauge.ConceptDictiona
 }
 
 // ParseSpecs parses specs in the give directory and gives specification and pass/fail status, used in validation.
-func ParseSpecs(args []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
-	specs, failed := parseSpecsInDirs(conceptsDictionary, args, buildErrors)
+func ParseSpecs(specsToParse []string, conceptsDictionary *gauge.ConceptDictionary, buildErrors *gauge.BuildErrors) ([]*gauge.Specification, bool) {
+	specs, failed := parseSpecsInDirs(conceptsDictionary, specsToParse, buildErrors)
 	specsToExecute := order.Sort(filter.FilterSpecs(specs))
 	return specsToExecute, failed
 }
