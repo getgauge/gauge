@@ -8,6 +8,7 @@ package filter
 
 import (
 	"errors"
+	"github.com/getgauge/gauge/env"
 	"go/constant"
 	"go/token"
 	"go/types"
@@ -70,7 +71,10 @@ func sanitize(tag string) string {
 	if _, err := strconv.ParseBool(tag); err == nil {
 		return fmt.Sprintf("{%s}", tag)
 	}
-	return tag
+	if env.AllowCaseSensitiveTags() {
+		return tag
+	}
+	return strings.ToLower(tag)
 }
 
 func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
