@@ -142,7 +142,6 @@ func isPlatformIndependent(zipfile string) bool {
 func isOSCompatible(zipfile string) bool {
 	os := runtime.GOOS
 	arch := getGoArch()
-	fmt.Println(os + "/" + arch)
 	if os == "darwin" && arch == "arm64" {
 		// darwin/arm64 can run darwin/x86_64 binaries under rosetta.
 		return strings.Contains(zipfile, "darwin.arm64") || strings.Contains(zipfile, "darwin.x86_64")
