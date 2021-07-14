@@ -139,15 +139,19 @@ func isPlatformIndependent(zipfile string) bool {
 	return !re.MatchString(zipfile)
 }
 
-func isOsOSCompatible(zipfile string) bool {
+func isOSCompatible(zipfile string) bool {
 	os := runtime.GOOS
 	arch := getGoArch()
+	if os == "darwin" && arch == "arm64" {
+		// darwin/arm64 can run darwin/x86_64 binaries under rosetta.
+		return strings.Contains(zipfile, "darwin.arm64") || strings.Contains(zipfile, "darwin.x86_64")
+	}
 	return strings.Contains(zipfile, fmt.Sprintf("%s.%s", os, arch))
 }
 
 // InstallPluginFromZipFile installs plugin from given zip file
 func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
-	if !isPlatformIndependent(zipFile) && !isOsOSCompatible(zipFile) {
+	if !isPlatformIndependent(zipFile) && !isOSCompatible(zipFile) {
 		err := fmt.Errorf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH)
 		return installError(err)
 	}
