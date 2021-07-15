@@ -73,15 +73,15 @@ func NewSpecInfoGatherer(conceptDictionary *gauge.ConceptDictionary) *SpecInfoGa
 
 // Init initializes all the SpecInfoGatherer caches
 func (s *SpecInfoGatherer) Init() {
-	go s.watchForFileChanges()
-	s.waitGroup.Wait()
-
 	// Concepts parsed first because we need to create a concept dictionary that spec parsing can use
 	s.initConceptsCache()
 	s.initSpecsCache()
 	s.initStepsCache()
 	s.initParamsCache()
 	s.initTagsCache()
+
+	go s.watchForFileChanges()
+	s.waitGroup.Wait()
 }
 func (s *SpecInfoGatherer) initTagsCache() {
 	s.tagsCache.mutex.Lock()
@@ -224,10 +224,16 @@ func removeDuplicateTags(tags []string) []string {
 }
 
 func (s *SpecInfoGatherer) addToSpecsCache(key string, value *SpecDetail) {
+	if s.specsCache.specDetails == nil {
+		return
+	}
 	s.specsCache.specDetails[key] = value
 }
 
 func (s *SpecInfoGatherer) addToConceptsCache(key string, value *gauge.Concept) {
+	if s.conceptsCache.concepts == nil {
+		return
+	}
 	if s.conceptsCache.concepts[key] == nil {
 		s.conceptsCache.concepts[key] = make([]*gauge.Concept, 0)
 	}
@@ -243,6 +249,9 @@ func (s *SpecInfoGatherer) deleteFromConceptDictionary(file string) {
 }
 
 func (s *SpecInfoGatherer) addToStepsCache(fileName string, allSteps []*gauge.Step) {
+	if s.stepsCache.steps == nil {
+		return
+	}
 	s.stepsCache.steps[fileName] = allSteps
 }
 
@@ -304,7 +313,7 @@ func (s *SpecInfoGatherer) getStepsFromCachedConcepts() map[string][]*gauge.Step
 }
 
 func (s *SpecInfoGatherer) OnSpecFileModify(file string) {
-	logger.Infof(false, "Spec file added / modified: %s", file)
+	logger.Debugf(false, "Spec file added / modified: %s", file)
 
 	details := s.getParsedSpecs([]string{file})
 	s.specsCache.mutex.Lock()
@@ -330,7 +339,7 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 
-	logger.Infof(false, "Concept file added / modified: %s", file)
+	logger.Debugf(false, "Concept file added / modified: %s", file)
 	s.deleteFromConceptDictionary(file)
 	concepts, parseErrors, err := parser.AddConcepts([]string{file}, s.conceptDictionary)
 	if err != nil {
@@ -356,7 +365,7 @@ func (s *SpecInfoGatherer) OnConceptFileModify(file string) {
 }
 
 func (s *SpecInfoGatherer) onSpecFileRemove(file string) {
-	logger.Infof(false, "Spec file removed: %s", file)
+	logger.Debugf(false, "Spec file removed: %s", file)
 	s.specsCache.mutex.Lock()
 	defer s.specsCache.mutex.Unlock()
 	delete(s.specsCache.specDetails, file)
@@ -369,7 +378,7 @@ func (s *SpecInfoGatherer) removeStepsFromCache(fileName string) {
 }
 
 func (s *SpecInfoGatherer) onConceptFileRemove(file string) {
-	logger.Infof(false, "Concept file removed: %s", file)
+	logger.Debugf(false, "Concept file removed: %s", file)
 	s.conceptsCache.mutex.Lock()
 	defer s.conceptsCache.mutex.Unlock()
 	s.deleteFromConceptDictionary(file)
@@ -596,14 +605,14 @@ func addDirToFileWatcher(watcher *fsnotify.Watcher, dir string) {
 	if err != nil {
 		logger.Errorf(false, "Unable to add directory %v to file watcher: %s", dir, err.Error())
 	} else {
-		logger.Infof(false, "Watching directory: %s", dir)
+		logger.Debugf(false, "Watching directory: %s", dir)
 		files, _ := ioutil.ReadDir(dir)
 		logger.Debugf(false, "Found %d files", len(files))
 	}
 }
 
 func removeWatcherOn(watcher *fsnotify.Watcher, path string) {
-	logger.Infof(false, "Removing watcher on : %s", path)
+	logger.Debugf(false, "Removing watcher on : %s", path)
 	err := watcher.Remove(path)
 	if err != nil {
 		logger.Errorf(false, "Unable to remove watcher on: %s. %s", path, err.Error())
