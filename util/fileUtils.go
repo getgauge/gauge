@@ -228,7 +228,7 @@ func GetPathToFile(path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(config.ProjectRoot, path)
+	return filepath.Join(config.ProjectRoot, env.GaugeDataDir(), path)
 }
 
 // Remove removes all the files and directories recursively for the given path
