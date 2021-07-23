@@ -140,7 +140,12 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 	}, func(token *Token, spec *gauge.Specification, state *int) ParseResult {
 		resolvedArg, err := newSpecialTypeResolver().resolve(token.Value)
 		if resolvedArg == nil || err != nil {
-			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText(), Message: fmt.Sprintf("Could not resolve table from %s", token.LineText())}
+			errMessage := fmt.Sprintf("Could not resolve table. %s", err)
+			gaugeDataDir := env.GaugeDataDir()
+			if gaugeDataDir != "." {
+				errMessage = fmt.Sprintf("%s GAUGE_DATA_DIR property is set to '%s', Gauge will look for data files in this location.", errMessage, gaugeDataDir)
+			}
+			e := ParseError{FileName: spec.FileName, LineNo: token.LineNo, LineText: token.LineText(), Message: errMessage}
 			return ParseResult{ParseErrors: []ParseError{e}, Ok: false}
 		}
 		if isInAnyState(*state, scenarioScope) {
