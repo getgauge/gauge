@@ -86,7 +86,7 @@ func (s *MySuite) TestTableInputFromInvalidFileAndDataTableNotInitialized(c *C) 
 
 	_, parseRes, err := parser.Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(err, IsNil)
-	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table. File inputinvalid.csv doesn't exist.")
 	c.Assert(parseRes.Ok, Equals, false)
 }
 
@@ -96,7 +96,7 @@ func (s *MySuite) TestTableInputFromFile(c *C) {
 
 	_, parseRes, err := parser.Parse(specText, gauge.NewConceptDictionary(), "")
 	c.Assert(err, IsNil)
-	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table from Table: inputinvalid.csv")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Could not resolve table. File inputinvalid.csv doesn't exist.")
 	c.Assert(parseRes.Ok, Equals, false)
 }
 
@@ -119,10 +119,10 @@ func (s *MySuite) TestToSplitTagNames(c *C) {
 
 func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
-		&Token{Kind: gauge.SpecKind, Value: "Another Heading", LineNo: 4},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
+		{Kind: gauge.SpecKind, Value: "Another Heading", LineNo: 4},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -135,9 +135,9 @@ func (s *MySuite) TestThrowsErrorForMultipleSpecHeading(c *C) {
 
 func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 1},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 2},
-		&Token{Kind: gauge.CommentKind, Value: "Comment", LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 1},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 2},
+		{Kind: gauge.CommentKind, Value: "Comment", LineNo: 3},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -154,10 +154,10 @@ func (s *MySuite) TestThrowsErrorForScenarioWithoutSpecHeading(c *C) {
 
 func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -170,9 +170,9 @@ func (s *MySuite) TestThrowsErrorForDuplicateScenariosWithinTheSameSpec(c *C) {
 
 func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 3},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -195,12 +195,12 @@ func (s *MySuite) TestSpecWithHeadingAndSimpleSteps(c *C) {
 
 func (s *MySuite) TestStepsAndComments(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.CommentKind, Value: "A comment with some text and **bold** characters", LineNo: 2},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
-		&Token{Kind: gauge.CommentKind, Value: "Another comment", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 5},
-		&Token{Kind: gauge.CommentKind, Value: "Third comment", LineNo: 6},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.CommentKind, Value: "A comment with some text and **bold** characters", LineNo: 2},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		{Kind: gauge.CommentKind, Value: "Another comment", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 5},
+		{Kind: gauge.CommentKind, Value: "Third comment", LineNo: 6},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -244,17 +244,17 @@ func (s *MySuite) TestTableFromInvalidFile(c *C) {
 	_, res, err := parser.CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(err, IsNil)
 	c.Assert(len(res.ParseErrors) > 0, Equals, true)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Could not resolve table from table: inputinvalid.csv")
+	c.Assert(res.ParseErrors[0].Message, Equals, "Could not resolve table. File inputinvalid.csv doesn't exist.")
 }
 
 func (s *MySuite) TestStepsWithParam(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"1"}, LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "enter {static} with {dynamic}", LineNo: 5, Args: []string{"user \\n foo", "id"}},
-		&Token{Kind: gauge.StepKind, Value: "sample \\{static\\}", LineNo: 6},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"id"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"1"}, LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "enter {static} with {dynamic}", LineNo: 5, Args: []string{"user \\n foo", "id"}},
+		{Kind: gauge.StepKind, Value: "sample \\{static\\}", LineNo: 6},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -277,9 +277,9 @@ func (s *MySuite) TestStepsWithParam(c *C) {
 
 func (s *MySuite) TestStepsWithKeywords(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "sample {static} and {dynamic}", LineNo: 3, Args: []string{"name"}},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "sample {static} and {dynamic}", LineNo: 3, Args: []string{"name"}},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -294,10 +294,10 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 
 func (s *MySuite) TestContextWithKeywords(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.StepKind, Value: "sample {static} and {dynamic}", LineNo: 3, Args: []string{"name"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.StepKind, Value: "sample {static} and {dynamic}", LineNo: 3, Args: []string{"name"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -310,14 +310,14 @@ func (s *MySuite) TestContextWithKeywords(c *C) {
 
 func (s *MySuite) TestSpecWithDataTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
-		&Token{Kind: gauge.StepKind, Value: "my step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+		{Kind: gauge.StepKind, Value: "my step"},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -346,14 +346,14 @@ func (s *MySuite) TestSpecWithDataTable(c *C) {
 func TestScenarioWithDataTable(t *testing.T) {
 	var subject = func() *gauge.Scenario {
 		tokens := []*Token{
-			&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-			&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-			&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
-			&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-			&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-			&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-			&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-			&Token{Kind: gauge.StepKind, Value: "my step"},
+			{Kind: gauge.SpecKind, Value: "Spec Heading"},
+			{Kind: gauge.CommentKind, Value: "Comment before data table"},
+			{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+			{Kind: gauge.CommentKind, Value: "Comment before data table"},
+			{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+			{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+			{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+			{Kind: gauge.StepKind, Value: "my step"},
 		}
 		spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 		if err != nil {
@@ -412,15 +412,15 @@ func TestScenarioWithDataTable(t *testing.T) {
 
 func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"", ""}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
-		&Token{Kind: gauge.StepKind, Value: "my step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		{Kind: gauge.TableRow, Args: []string{"", ""}},
+		{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+		{Kind: gauge.StepKind, Value: "my step"},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -472,12 +472,12 @@ func (s *MySuite) TestSpecWithStepUsingInlineTableWhichUsagesDynamicParamFromSce
 
 func (s *MySuite) TestStepWithInlineTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -507,15 +507,15 @@ func (s *MySuite) TestStepWithInlineTable(c *C) {
 
 func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"type1", "type2"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "2"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "<type1>"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "<type2>"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"<2>", "<type3>"}},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"type1", "type2"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "2"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "<type1>"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "<type2>"}},
+		{Kind: gauge.TableRow, Args: []string{"<2>", "<type3>"}},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -550,14 +550,14 @@ func (s *MySuite) TestStepWithInlineTableWithDynamicParam(c *C) {
 
 func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"type1", "type2"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "2"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "<invalid>"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "<type2>"}},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"type1", "type2"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "2"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "<invalid>"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "<type2>"}},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -572,14 +572,14 @@ func (s *MySuite) TestStepWithInlineTableWithUnResolvableDynamicParam(c *C) {
 
 func (s *MySuite) TestContextWithInlineTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.StepKind, Value: "Context with inline table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"3", "not a <dynamic>"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading"},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		{Kind: gauge.StepKind, Value: "Context with inline table"},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		{Kind: gauge.TableRow, Args: []string{"3", "not a <dynamic>"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading"},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -616,9 +616,9 @@ func (s *MySuite) TestContextWithInlineTable(c *C) {
 
 func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -630,17 +630,17 @@ func (s *MySuite) TestErrorWhenDataTableHasOnlyHeader(c *C) {
 
 func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading"},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table"},
-		&Token{Kind: gauge.TableHeader, Args: []string{"phone"}, LineNo: 7},
-		&Token{Kind: gauge.TableRow, Args: []string{"1"}},
-		&Token{Kind: gauge.TableRow, Args: []string{"2"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
-		&Token{Kind: gauge.StepKind, Value: "my step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading"},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		{Kind: gauge.TableRow, Args: []string{"1", "foo"}},
+		{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+		{Kind: gauge.CommentKind, Value: "Comment before data table"},
+		{Kind: gauge.TableHeader, Args: []string{"phone"}, LineNo: 7},
+		{Kind: gauge.TableRow, Args: []string{"1"}},
+		{Kind: gauge.TableRow, Args: []string{"2"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario heading"},
+		{Kind: gauge.StepKind, Value: "my step"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
@@ -653,27 +653,27 @@ func (s *MySuite) TestWarningWhenParsingMultipleDataTable(c *C) {
 
 func (s *MySuite) TestParseErrorWhenCouldNotResolveExternalDataTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.CommentKind, Value: "Comment before data table", LineNo: 2},
-		&Token{Kind: gauge.DataTableKind, Value: "table: foo", LineNo: 3, Lines: []string{"table: foo"}},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "Step", LineNo: 5},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.CommentKind, Value: "Comment before data table", LineNo: 2},
+		{Kind: gauge.DataTableKind, Value: "table: foo", LineNo: 3, Lines: []string{"table: foo"}},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "Step", LineNo: 5},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "foo.spec")
 	c.Assert(err, IsNil)
 	c.Assert(result.Ok, Equals, false)
 	c.Assert(len(result.Warnings), Equals, 0)
-	c.Assert(result.Errors()[0], Equals, "[ParseError] foo.spec:3 Could not resolve table from table: foo => 'table: foo'")
+	c.Assert(result.Errors()[0], Equals, "[ParseError] foo.spec:3 Could not resolve table. File foo doesn't exist. => 'table: foo'")
 
 }
 
 func (s *MySuite) TestAddSpecTags(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -686,11 +686,11 @@ func (s *MySuite) TestAddSpecTags(c *C) {
 
 func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
-		&Token{Kind: gauge.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TagKind, Args: []string{"tag1", "tag2"}, LineNo: 2},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		{Kind: gauge.TagKind, Args: []string{"tag3", "tag4"}, LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	spec, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -709,10 +709,10 @@ func (s *MySuite) TestAddSpecTagsAndScenarioTags(c *C) {
 
 func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 3, Lines: []string{"*Step with a <foo>"}},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 3, Lines: []string{"*Step with a <foo>"}},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -724,12 +724,12 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutADataTable(c *C) {
 
 func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id, name"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"123, hello"}, LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 5, Lines: []string{"*Step with a <foo>"}},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"id, name"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"123, hello"}, LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"foo"}, LineNo: 5, Lines: []string{"*Step with a <foo>"}},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -742,12 +742,12 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
 	env.AllowScenarioDatatable = func() bool { return true }
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "hello"}, LineNo: 3},
-		&Token{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"id"}, LineNo: 5, Lines: []string{"*Step with a <id>"}},
-		&Token{Kind: gauge.StepKind, Value: "Step"},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.TableHeader, Args: []string{"id", "name"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"123", "hello"}, LineNo: 3},
+		{Kind: gauge.StepKind, Value: "Step with a {dynamic}", Args: []string{"id"}, LineNo: 5, Lines: []string{"*Step with a <id>"}},
+		{Kind: gauge.StepKind, Value: "Step"},
 	}
 
 	_, result, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -757,9 +757,9 @@ func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
 
 func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "test concept step 1", LineNo: 3},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "test concept step 1", LineNo: 3},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
@@ -778,10 +778,10 @@ func (s *MySuite) TestCreateStepFromSimpleConcept(c *C) {
 
 func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "assign id {static} and name {static}", Args: []string{"foo", "foo1"}, LineNo: 3},
-		&Token{Kind: gauge.StepKind, Value: "assign id {static} and name {static}", Args: []string{"bar", "bar1"}, LineNo: 4},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "assign id {static} and name {static}", Args: []string{"foo", "foo1"}, LineNo: 3},
+		{Kind: gauge.StepKind, Value: "assign id {static} and name {static}", Args: []string{"bar", "bar1"}, LineNo: 4},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
@@ -821,11 +821,11 @@ func (s *MySuite) TestCreateStepFromConceptWithParameters(c *C) {
 
 func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin fellow"}, LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "assign id {dynamic} and name {dynamic}", Args: []string{"id", "description"}, LineNo: 5},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"123", "Admin fellow"}, LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "assign id {dynamic} and name {dynamic}", Args: []string{"id", "description"}, LineNo: 5},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
@@ -865,12 +865,12 @@ func (s *MySuite) TestCreateStepFromConceptWithDynamicParameters(c *C) {
 
 func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 3},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 4},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 5},
-		&Token{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 6},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 3},
+		{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 4},
+		{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 5},
+		{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 6},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
@@ -892,14 +892,14 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTable(c *C) {
 
 func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 3},
-		&Token{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 4},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 5},
-		&Token{Kind: gauge.StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 6},
-		&Token{Kind: gauge.TableHeader, Args: []string{"user-id", "description", "name"}, LineNo: 7},
-		&Token{Kind: gauge.TableRow, Args: []string{"<id>", "<description>", "root"}, LineNo: 8},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 3},
+		{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 4},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 5},
+		{Kind: gauge.StepKind, Value: "assign id {static} and name", Args: []string{"sdf"}, LineNo: 6},
+		{Kind: gauge.TableHeader, Args: []string{"user-id", "description", "name"}, LineNo: 7},
+		{Kind: gauge.TableRow, Args: []string{"<id>", "<description>", "root"}, LineNo: 8},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()
@@ -931,11 +931,11 @@ func (s *MySuite) TestCreateStepFromConceptWithInlineTableHavingDynamicParam(c *
 
 func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.TableHeader, Args: []string{"unknown:foo", "description"}, LineNo: 2},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 3},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "Example {special} step", LineNo: 3, Args: []string{"unknown:foo"}},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.TableHeader, Args: []string{"unknown:foo", "description"}, LineNo: 2},
+		{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 3},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "Example {special} step", LineNo: 3, Args: []string{"unknown:foo"}},
 	}
 	spec, parseResults, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
 	c.Assert(err, IsNil)
@@ -946,16 +946,16 @@ func (s *MySuite) TestCreateInValidSpecialArgInStep(c *C) {
 
 func (s *MySuite) TestTearDownSteps(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.CommentKind, Value: "A comment with some text and **bold** characters", LineNo: 2},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
-		&Token{Kind: gauge.CommentKind, Value: "Another comment", LineNo: 4},
-		&Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 5},
-		&Token{Kind: gauge.CommentKind, Value: "Third comment", LineNo: 6},
-		&Token{Kind: gauge.TearDownKind, Value: "____", LineNo: 7},
-		&Token{Kind: gauge.StepKind, Value: "Example step1", LineNo: 8},
-		&Token{Kind: gauge.CommentKind, Value: "Fourth comment", LineNo: 9},
-		&Token{Kind: gauge.StepKind, Value: "Example step2", LineNo: 10},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.CommentKind, Value: "A comment with some text and **bold** characters", LineNo: 2},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 3},
+		{Kind: gauge.CommentKind, Value: "Another comment", LineNo: 4},
+		{Kind: gauge.StepKind, Value: "Example step", LineNo: 5},
+		{Kind: gauge.CommentKind, Value: "Third comment", LineNo: 6},
+		{Kind: gauge.TearDownKind, Value: "____", LineNo: 7},
+		{Kind: gauge.StepKind, Value: "Example step1", LineNo: 8},
+		{Kind: gauge.CommentKind, Value: "Fourth comment", LineNo: 9},
+		{Kind: gauge.StepKind, Value: "Example step2", LineNo: 10},
 	}
 
 	spec, _, err := new(SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
@@ -983,12 +983,12 @@ func (s *MySuite) TestParsingOfTableWithHyphens(c *C) {
 
 func (s *MySuite) TestCreateStepWithNewlineBetweenTextAndTable(c *C) {
 	tokens := []*Token{
-		&Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
-		&Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&Token{Kind: gauge.StepKind, Value: "some random step\n", LineNo: 3},
-		&Token{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 5},
-		&Token{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 6},
-		&Token{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 7},
+		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		{Kind: gauge.StepKind, Value: "some random step\n", LineNo: 3},
+		{Kind: gauge.TableHeader, Args: []string{"id", "description"}, LineNo: 5},
+		{Kind: gauge.TableRow, Args: []string{"123", "Admin"}, LineNo: 6},
+		{Kind: gauge.TableRow, Args: []string{"456", "normal fellow"}, LineNo: 7},
 	}
 
 	conceptDictionary := gauge.NewConceptDictionary()

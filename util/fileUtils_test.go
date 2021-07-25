@@ -230,6 +230,29 @@ func (s *MySuite) TestGetPathToFile(c *C) {
 	c.Assert(path, Equals, filepath.Join(config.ProjectRoot, "resources"))
 }
 
+func (s *MySuite) TestGetPathToFileInGaugeDataDir(c *C) {
+	var path string
+	config.ProjectRoot = "PROJECT_ROOT"
+	oldGaugeDataDirFn := env.GaugeDataDir
+	defer func(fn func() string) {env.GaugeDataDir = fn }(oldGaugeDataDirFn)
+	env.GaugeDataDir = func() string { return "foo" }
+
+	absPath, _ := filepath.Abs("foo.csv")
+	path = GetPathToFile(absPath)
+	c.Assert(path, Equals, absPath)
+}
+
+func (s *MySuite) TestGetPathToAbsFileWithGaugeDataDir(c *C) {
+	var path string
+	config.ProjectRoot = "PROJECT_ROOT"
+	oldGaugeDataDirFn := env.GaugeDataDir
+	defer func(fn func() string	) {env.GaugeDataDir = fn }(oldGaugeDataDirFn)
+	env.GaugeDataDir = func() string { return "foo" }
+
+	path = GetPathToFile("foo.csv")
+	c.Assert(path, Equals, filepath.Join(config.ProjectRoot, "foo", "foo.csv"))
+}
+
 func (s *MySuite) TestGetSpecFilesWhenSpecsDirDoesNotExists(c *C) {
 	var expectedErrorMessage string
 	exitWithMessage = func(message string) {
