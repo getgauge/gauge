@@ -18,6 +18,7 @@ import (
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/manifest"
 	properties "github.com/magiconair/properties"
 )
 
@@ -46,6 +47,7 @@ const (
 	// GaugeScreenshotsDir holds the location of screenshots dir
 	GaugeScreenshotsDir     = "gauge_screenshots_dir"
 	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
+	envDirEnvVar            = "gauge_env_dir"
 )
 
 var envVars map[string]string
@@ -124,7 +126,11 @@ func loadDefaultEnvVars() {
 }
 
 func loadEnvDir(envName string) error {
-	envDirPath := filepath.Join(config.ProjectRoot, common.EnvDirectoryName, envName)
+	e, err := getEnvDir()
+	if err != nil {
+		return err
+	}
+	envDirPath := filepath.Join(config.ProjectRoot, e, envName)
 	if !common.DirExists(envDirPath) {
 		if envName != common.DefaultEnvDir {
 			return fmt.Errorf("%s environment does not exist", envName)
@@ -144,6 +150,28 @@ func loadEnvDir(envName string) error {
 	}
 	LoadEnvProperties(processedProperties)
 	return nil
+}
+
+func getEnvDir() (string, error) {
+	envDir := os.Getenv(envDirEnvVar)
+	if envDir != "" {
+		if filepath.IsAbs(envDir) {
+			return "", fmt.Errorf("'%s' environment variable is set to an absolute path. It must be relative to project root.", envDir)
+		}
+		logger.Debugf(true, "'%s' env variable is set to '%s'. env will be loaded from this location.", envDirEnvVar, envDir)
+		return envDir, nil
+	}
+	m, err := manifest.ProjectManifest()
+	if err != nil {
+		logger.Debugf(true, "Failed to load env from manifest - %s\nenv will be loaded from default directory 'env'", err.Error())
+		return common.EnvDirectoryName, nil
+	}
+	if m.EnvironmentDir != "" {
+		logger.Debugf(true, "'EnvironmentDir' is set to '%s' in manifest.json. env will be loaded from this location.", m.EnvironmentDir)
+		return m.EnvironmentDir, nil
+	}
+	logger.Debugf(true, "env will be loaded from default directory 'env'")
+	return common.EnvDirectoryName, nil
 }
 
 func GetProcessedPropertiesMap(propertiesMap *properties.Properties) (*properties.Properties, error) {

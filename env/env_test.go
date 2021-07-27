@@ -59,6 +59,78 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "anotherSpecDir")
 }
 
+func (s *MySuite) TestLoadDefaultEnvFromCustomDir(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj9"
+	os.Setenv("gauge_env_dir", "customEnv")
+
+	e := LoadEnv(common.DefaultEnvDir, nil)
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("gauge_environment"), Equals, common.DefaultEnvDir)
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
+	c.Assert(os.Getenv("csv_delimiter"), Equals, ",")
+	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	c.Assert(os.Getenv("gauge_screenshots_dir"), Equals, defaultScreenshotDir)
+	c.Assert(os.Getenv("gauge_spec_file_extensions"), Equals, ".spec, .md")
+	c.Assert(os.Getenv("allow_case_sensitive_tags"), Equals, "false")
+}
+
+func (s *MySuite) TestLoadDefaultEnvFromDirIfPresentFromCustomDir(c *C) {
+	os.Clearenv()
+	os.Setenv("gauge_env_dir", "customEnv")
+	config.ProjectRoot = "_testdata/proj10"
+
+	e := LoadEnv("foo", nil)
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "foo")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "anotherSpecDir")
+}
+
+func (s *MySuite) TestLoadDefaultEnvFromManifestDir(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj7"
+
+	e := LoadEnv(common.DefaultEnvDir, nil)
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports")
+	c.Assert(os.Getenv("gauge_environment"), Equals, common.DefaultEnvDir)
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "true")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "true")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "specs")
+	c.Assert(os.Getenv("csv_delimiter"), Equals, ",")
+	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
+	c.Assert(os.Getenv("gauge_screenshots_dir"), Equals, defaultScreenshotDir)
+	c.Assert(os.Getenv("gauge_spec_file_extensions"), Equals, ".spec, .md")
+	c.Assert(os.Getenv("allow_case_sensitive_tags"), Equals, "false")
+}
+
+func (s *MySuite) TestLoadDefaultEnvFromDirIfPresentFromManifestDir(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/proj8"
+
+	e := LoadEnv("foo", nil)
+
+	c.Assert(e, Equals, nil)
+	c.Assert(os.Getenv("gauge_reports_dir"), Equals, "reports_dir")
+	c.Assert(os.Getenv("gauge_environment"), Equals, "foo")
+	c.Assert(os.Getenv("overwrite_reports"), Equals, "false")
+	c.Assert(os.Getenv("screenshot_on_failure"), Equals, "false")
+	c.Assert(os.Getenv("logs_directory"), Equals, "logs")
+	c.Assert(os.Getenv("gauge_specs_dir"), Equals, "anotherSpecDir")
+}
+
 // If default env dir is present, the values present in there should overwrite
 // the default values (present in the code), even when env flag is passed.
 // If the passed env also has the same values, that should take precedence.
