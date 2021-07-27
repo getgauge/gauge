@@ -231,7 +231,7 @@ func GetPathToFile(path string) string {
 
 	gaugeDataDir := env.GaugeDataDir()
 	if gaugeDataDir != "." && filepath.IsAbs((env.GaugeDataDir())) {
-		logger.Warningf(true, "'gauge_data_dir' property should be relative to Project Root. Found absolute path: %s", gaugeDataDir)
+		logger.Warningf(true, "'gauge_data_dir' property must be relative to Project Root. Found absolute path: %s", gaugeDataDir)
 	}
 
 	pathToFile := filepath.Join(config.ProjectRoot, gaugeDataDir, path)
