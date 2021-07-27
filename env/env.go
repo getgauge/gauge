@@ -49,6 +49,7 @@ const (
 	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
 	envDirEnvVar            = "gauge_env_dir"
 	gaugeDataDir            = "gauge_data_dir"
+	envDirEnvVar            = "gauge_env_dir"
 )
 
 var envVars map[string]string
