@@ -46,6 +46,7 @@ const (
 	// GaugeScreenshotsDir holds the location of screenshots dir
 	GaugeScreenshotsDir     = "gauge_screenshots_dir"
 	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
+	gaugeDataDir            = "gauge_data_dir"
 )
 
 var envVars map[string]string
@@ -315,4 +316,13 @@ var GaugeSpecFileExtensions = func() []string {
 // AllowCaseSensitiveTags determines if the casing is ignored in tags filtering
 var AllowCaseSensitiveTags = func() bool {
 	return convertToBool(allowCaseSensitiveTags, false)
+}
+
+// GaugeDataDir gets the data files location. This location should be relative to GAUGE_PROJECT_ROOT
+var GaugeDataDir = func() string {
+	d := os.Getenv(gaugeDataDir)
+	if d == "" {
+		return "."
+	}
+	return d
 }

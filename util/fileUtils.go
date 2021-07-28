@@ -228,7 +228,15 @@ func GetPathToFile(path string) string {
 	if filepath.IsAbs(path) {
 		return path
 	}
-	return filepath.Join(config.ProjectRoot, path)
+
+	gaugeDataDir := env.GaugeDataDir()
+	if gaugeDataDir != "." && filepath.IsAbs((env.GaugeDataDir())) {
+		logger.Warningf(true, "'gauge_data_dir' property must be relative to Project Root. Found absolute path: %s", gaugeDataDir)
+	}
+
+	pathToFile := filepath.Join(config.ProjectRoot, gaugeDataDir, path)
+	logger.Debugf(true, "Reading data file: %s", pathToFile)
+	return pathToFile
 }
 
 // Remove removes all the files and directories recursively for the given path
