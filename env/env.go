@@ -47,7 +47,6 @@ const (
 	// GaugeScreenshotsDir holds the location of screenshots dir
 	GaugeScreenshotsDir     = "gauge_screenshots_dir"
 	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
-	envDirEnvVar            = "gauge_env_dir"
 	gaugeDataDir            = "gauge_data_dir"
 	envDirEnvVar            = "gauge_env_dir"
 )
