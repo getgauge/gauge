@@ -19,8 +19,9 @@ import (
 )
 
 type Manifest struct {
-	Language string
-	Plugins  []string
+	Language       string
+	Plugins        []string
+	EnvironmentDir string
 }
 
 func ProjectManifest() (*Manifest, error) {
