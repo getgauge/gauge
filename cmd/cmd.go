@@ -7,7 +7,9 @@
 package cmd
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -122,6 +124,24 @@ func InitHelp(c *cobra.Command) {
 }
 
 func getSpecsDir(args []string) []string {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		logger.Debugf(true, "Unable to read from os.Stdin. Specs passed in via pipe will not be executed. Error: %s", err.Error())
+	} else {
+		if !(fi.Mode()&os.ModeNamedPipe == 0) && fi.Size() > 0 {
+			logger.Debug(true, "Reading specs to execute from stdin pipe.")
+			var stdinSpecs []string
+			reader := bufio.NewReader(os.Stdin)
+			for {
+				input, _, err := reader.ReadLine()
+				if err != nil && err == io.EOF {
+					break
+				}
+				stdinSpecs = append(stdinSpecs, string(input))
+			}
+			return stdinSpecs
+		}
+	}
 	if len(args) > 0 {
 		return args
 	}
