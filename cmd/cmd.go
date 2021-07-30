@@ -22,6 +22,7 @@ import (
 	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +42,8 @@ var (
 	GaugeCmd = &cobra.Command{
 		Use: "gauge <command> [flags] [args]",
 		Example: `  gauge run specs/
-  gauge run --parallel specs/`,
+  gauge run --parallel specs/
+  cat run.txt | gauge run # run.txt contains list of specs to execute`,
 		Run: func(cmd *cobra.Command, args []string) {
 			if gaugeVersion {
 				printVersion()
@@ -124,23 +126,18 @@ func InitHelp(c *cobra.Command) {
 }
 
 func getSpecsDir(args []string) []string {
-	fi, err := os.Stdin.Stat()
-	if err != nil {
-		logger.Debugf(true, "Unable to read from os.Stdin. Specs passed in via pipe will not be executed. Error: %s", err.Error())
-	} else {
-		if !(fi.Mode()&os.ModeNamedPipe == 0) && fi.Size() > 0 {
-			logger.Debug(true, "Reading specs to execute from stdin pipe.")
-			var stdinSpecs []string
-			reader := bufio.NewReader(os.Stdin)
-			for {
-				input, _, err := reader.ReadLine()
-				if err != nil && err == io.EOF {
-					break
-				}
-				stdinSpecs = append(stdinSpecs, string(input))
+	if !isatty.IsTerminal(os.Stdin.Fd()) {
+		logger.Info(true, "Reading specs to execute from stdin pipe.")
+		var stdinSpecs []string
+		reader := bufio.NewReader(os.Stdin)
+		for {
+			input, _, err := reader.ReadLine()
+			if err != nil && err == io.EOF {
+				break
 			}
-			return stdinSpecs
+			stdinSpecs = append(stdinSpecs, string(input))
 		}
+		return stdinSpecs
 	}
 	if len(args) > 0 {
 		return args
