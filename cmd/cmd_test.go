@@ -27,7 +27,10 @@ func TestGetSpecsDirFromStdin(t *testing.T) {
 	}
 
 	if os.Getenv("TEST_EXITS") == "1" {
-		testCmd.Execute()
+		err := testCmd.Execute()
+		if err != nil {
+			t.Fatalf("unable to execute testCmd - %s", err)
+		}
 	}
 	var stdout bytes.Buffer
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
