@@ -138,6 +138,8 @@ func getSpecsDir(args []string) []string {
 			stdinSpecs = append(stdinSpecs, string(input))
 		}
 		return stdinSpecs
+	} else {
+		logger.Info(true, "stdin is not a tty")
 	}
 	if len(args) > 0 {
 		return args
