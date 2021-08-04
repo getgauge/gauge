@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -22,13 +22,21 @@ func TestGetSpecsDirFromStdin(t *testing.T) {
 		}
 		return
 	}
-	var stdout bytes.Buffer
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
-	cmd.Stdout = &stdout
-	cmd.Stdin = strings.NewReader(specsInput)
-	err := cmd.Run()
+	stdin, err := cmd.StdinPipe()
 	if err != nil {
-		t.Fatalf("%s process ran with err %v, want exit status 0. Stdout:\n%s", os.Args, err, stdout.Bytes())
+		t.Fatal("unable to get stdinpipe for subprocess")
+	}
+	go func() {
+		defer stdin.Close()
+		_, err = io.WriteString(stdin, specsInput)
+		if err != nil {
+			panic("unable to get stdinpipe for subprocess")
+		}
+	}()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("%s process ran with err %v, want exit status 0. Stdout:\n%s", os.Args, err, out)
 	}
 }
