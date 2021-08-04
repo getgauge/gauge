@@ -13,7 +13,7 @@ require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/magiconair/properties v1.8.5
-	github.com/mattn/go-isatty v0.0.13
+	github.com/mattn/go-isatty v0.0.13 // indirect
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/rogpeppe/go-internal v1.8.0 // indirect

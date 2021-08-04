@@ -22,7 +22,6 @@ import (
 	"github.com/getgauge/gauge/skel"
 	"github.com/getgauge/gauge/util"
 	"github.com/getgauge/gauge/validation"
-	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -126,20 +125,23 @@ func InitHelp(c *cobra.Command) {
 }
 
 func getSpecsDir(args []string) []string {
-	if !isatty.IsTerminal(os.Stdin.Fd()) {
-		logger.Info(true, "Reading specs to execute from stdin pipe.")
-		var stdinSpecs []string
-		reader := bufio.NewReader(os.Stdin)
-		for {
-			input, _, err := reader.ReadLine()
-			if err != nil && err == io.EOF {
-				break
-			}
-			stdinSpecs = append(stdinSpecs, string(input))
-		}
-		return stdinSpecs
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		logger.Debugf(true, "Unable to read from os.Stdin. Specs passed in via pipe will not be executed. Error: %s", err.Error())
 	} else {
-		logger.Info(true, "stdin is not a tty")
+		if !(fi.Mode()&os.ModeNamedPipe == 0) && fi.Size() > 0 {
+			logger.Debug(true, "Reading specs to execute from stdin pipe.")
+			var stdinSpecs []string
+			reader := bufio.NewReader(os.Stdin)
+			for {
+				input, _, err := reader.ReadLine()
+				if err != nil && err == io.EOF {
+					break
+				}
+				stdinSpecs = append(stdinSpecs, string(input))
+			}
+			return stdinSpecs
+		}
 	}
 	if len(args) > 0 {
 		return args
