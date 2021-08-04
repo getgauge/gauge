@@ -129,7 +129,7 @@ func getSpecsDir(args []string) []string {
 	if err != nil {
 		logger.Debugf(true, "Unable to read from os.Stdin. Specs passed in via pipe will not be executed. Error: %s", err.Error())
 	} else {
-		if !(fi.Mode()&os.ModeNamedPipe == 0) && fi.Size() > 0 {
+		if !(fi.Mode()&os.ModeNamedPipe == 0) {
 			logger.Debug(true, "Reading specs to execute from stdin pipe.")
 			var stdinSpecs []string
 			reader := bufio.NewReader(os.Stdin)
