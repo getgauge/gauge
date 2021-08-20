@@ -402,12 +402,12 @@ func GenerateDoc(pluginName string, specDirs []string, startAPIFunc func([]strin
 			logger.Fatalf(true, " %s %s. %s", pd.Name, pd.Version, err.Error())
 		}
 		_, err = p.DocumenterClient.GenerateDocs(context.Background(), getSpecDetails(specDirs))
-		if err != nil {
-			logger.Errorf(true, "Failed to generate docs. %s", err.Error())
+		grpcErr := p.killGrpcProcess()
+		if grpcErr != nil {
+			logger.Errorf(false, "Unable to kill plugin %s : %s", p.descriptor.Name, grpcErr.Error())
 		}
-		err = p.killGrpcProcess()
 		if err != nil {
-			logger.Errorf(false, "Unable to kill plugin %s : %s", p.descriptor.Name, err.Error())
+			logger.Fatalf(true, "Failed to generate docs. %s", err.Error())
 		}
 	} else {
 		port := startAPIFunc(specDirs)
