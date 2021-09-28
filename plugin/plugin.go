@@ -555,7 +555,7 @@ func getSpecDetails(specDirs []string) *gauge_messages.SpecDetails {
 	sig := &infoGatherer.SpecInfoGatherer{SpecDirs: specDirs}
 	sig.Init()
 	specDetails := make([]*gauge_messages.SpecDetails_SpecDetail, 0)
-	for _, d := range sig.GetAvailableSpecDetails([]string{}) {
+	for _, d := range sig.GetAvailableSpecDetails(specDirs) {
 		detail := &gauge_messages.SpecDetails_SpecDetail{}
 		if d.HasSpec() {
 			detail.Spec = gauge.ConvertToProtoSpec(d.Spec)
