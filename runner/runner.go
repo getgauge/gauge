@@ -227,7 +227,7 @@ func Start(manifest *manifest.Manifest, stream int, killChannel chan bool, debug
 	if err != nil {
 		return nil, err
 	}
-	logger.Debugf(true, "Staring %s runner", manifest.Language)
+	logger.Debugf(true, "Starting %s runner", manifest.Language)
 	runner, err := StartLegacyRunner(manifest, strconv.Itoa(handler.ConnectionPortNumber()), writer, killChannel, debug)
 	if err != nil {
 		return nil, err
