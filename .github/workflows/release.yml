@@ -2,6 +2,9 @@ name: Deploy
 
 on: deployment
 
+permissions:
+  contents: read
+
 jobs:
   package:
     if: github.event.deployment.environment == 'production'
