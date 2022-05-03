@@ -148,7 +148,9 @@ func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) 
 	case gm.Message_KillProcessRequest:
 		_, err := r.RunnerClient.Kill(context.Background(), message.KillProcessRequest)
 		errStatus, _ := status.FromError(err)
-		if errStatus.Code() == codes.Canceled {
+		if errStatus.Code() == codes.Canceled || errStatus.Code() == codes.OK {
+			// return nil error when status == OK
+
 			// Ref https://www.grpc.io/docs/guides/error/#general-errors
 			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
 			return &gm.Message{}, nil
@@ -198,7 +200,7 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 // ExecuteAndGetStatus executes a given message and response without timeout.
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
 	if r.Info().Killed {
-		return &gauge_messages.ProtoExecutionResult{Failed: true,  ErrorMessage:"Runner is not Alive"}
+		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "Runner is not Alive"}
 	}
 	res, err := r.executeMessage(m, 0)
 	if err != nil {
