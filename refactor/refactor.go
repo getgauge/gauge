@@ -103,11 +103,13 @@ func (refactoringResult *refactoringResult) WriteToDisk() {
 	if !refactoringResult.Success {
 		return
 	}
+	// fileChange.FileContent need not be deprecated. To save the refactored file, it is much simpler and less error prone
+	// to replace the file with new content, rather than parsing again and replacing specific lines.
 	for _, fileChange := range refactoringResult.SpecsChanged {
-		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true) //nolint:staticcheck
 	}
 	for _, fileChange := range refactoringResult.ConceptsChanged {
-		util.SaveFile(fileChange.FileName, fileChange.FileContent, true)
+		util.SaveFile(fileChange.FileName, fileChange.FileContent, true) //nolint:staticcheck
 	}
 }
 

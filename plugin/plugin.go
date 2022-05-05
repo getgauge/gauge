@@ -32,6 +32,7 @@ import (
 	"github.com/getgauge/gauge/version"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )
@@ -252,7 +253,7 @@ func startGRPCPlugin(pd *PluginDescriptor, command []string) (*plugin, error) {
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	gRPCConn, err := grpc.Dial(fmt.Sprintf("%s:%s", "127.0.0.1", port),
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(1024*1024*1024), grpc.MaxCallRecvMsgSize(1024*1024*1024)),
 		grpc.WithBlock())
 	if err != nil {
