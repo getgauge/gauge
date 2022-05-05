@@ -186,60 +186,6 @@ func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotFile(t *testing.T) 
 	}
 }
 
-func TestExecuteSpecsShouldAddsBeforeSpecHookFailureScreenshotBytes(t *testing.T) {
-	r := &mockRunner{}
-	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
-	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
-			return &gauge_messages.ProtoExecutionResult{
-				Failed:            true,
-				ExecutionTime:     10,
-				FailureScreenshot: []byte("before spec hook failure screenshot byte"),
-			}
-		}
-		return &gauge_messages.ProtoExecutionResult{}
-	}
-	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false, false)
-	specsC := createSpecCollection()
-	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
-	specResult := simpleExecution.executeSpecs(specsC)
-
-	actualScreenshotBytes := specResult[0].ProtoSpec.PreHookFailures[0].FailureScreenshot
-	expectedScreenshotBytes := "before spec hook failure screenshot byte"
-
-	if string(actualScreenshotBytes) != expectedScreenshotBytes {
-		t.Errorf("Expected `%s` screenshot, got : %s", expectedScreenshotBytes, actualScreenshotBytes)
-	}
-}
-
-func TestExecuteSpecsShouldAddsAfterSpecHookFailureScreenshotBytes(t *testing.T) {
-	r := &mockRunner{}
-	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
-	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
-			return &gauge_messages.ProtoExecutionResult{
-				Failed:            true,
-				ExecutionTime:     10,
-				FailureScreenshot: []byte("after spec hook failure screenshot bytes"),
-			}
-		}
-		return &gauge_messages.ProtoExecutionResult{}
-	}
-	ei := &executionInfo{runner: r, pluginHandler: h, errMaps: &gauge.BuildErrors{}}
-	simpleExecution := newSimpleExecution(ei, false, false)
-	specsC := createSpecCollection()
-	simpleExecution.suiteResult = result.NewSuiteResult(ExecuteTags, simpleExecution.startTime)
-	specResult := simpleExecution.executeSpecs(specsC)
-
-	actualScreenshotBytes := specResult[0].ProtoSpec.PostHookFailures[0].FailureScreenshot
-	expectedScreenshotBytes := "after spec hook failure screenshot bytes"
-
-	if string(actualScreenshotBytes) != expectedScreenshotBytes {
-		t.Errorf("Expected `%s` screenshot, got : %s", expectedScreenshotBytes, actualScreenshotBytes)
-	}
-}
-
 func createSpecCollection() *gauge.SpecCollection {
 	var specs []*gauge.Specification
 	specs = append(specs, &gauge.Specification{

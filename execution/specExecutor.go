@@ -177,7 +177,6 @@ func (e *specExecutor) notifyBeforeSpecHook() {
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PreHookMessages = res.Message
 	e.specResult.ProtoSpec.PreHookScreenshotFiles = res.ScreenshotFiles
-	e.specResult.ProtoSpec.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPreHook)
@@ -193,7 +192,6 @@ func (e *specExecutor) notifyAfterSpecHook() {
 	res := executeHook(m, e.specResult, e.runner)
 	e.specResult.ProtoSpec.PostHookMessages = res.Message
 	e.specResult.ProtoSpec.PostHookScreenshotFiles = res.ScreenshotFiles
-	e.specResult.ProtoSpec.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setSpecFailure(e.currentExecutionInfo)
 		handleHookFailure(e.specResult, res, result.AddPostHook)
