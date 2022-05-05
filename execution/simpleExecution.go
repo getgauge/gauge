@@ -56,13 +56,13 @@ func newSimpleExecution(executionInfo *executionInfo, combineDataTableSpecs, ski
 	}
 
 	return &simpleExecution{
-		manifest:        executionInfo.manifest,
-		specCollection:  executionInfo.specs,
-		runner:          executionInfo.runner,
-		pluginHandler:   executionInfo.pluginHandler,
-		errMaps:         executionInfo.errMaps,
-		stream:          executionInfo.stream,
-		skipSuiteEvents: skipSuiteEvents,
+		manifest:             executionInfo.manifest,
+		specCollection:       executionInfo.specs,
+		runner:               executionInfo.runner,
+		pluginHandler:        executionInfo.pluginHandler,
+		errMaps:              executionInfo.errMaps,
+		stream:               executionInfo.stream,
+		skipSuiteEvents:      skipSuiteEvents,
 		currentExecutionInfo: ei,
 	}
 }
@@ -142,7 +142,6 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 				res.AddPreHook(&gauge_messages.ProtoHookFailure{
 					StackTrace:            preHook.StackTrace,
 					ErrorMessage:          preHook.ErrorMessage,
-					FailureScreenshot:     preHook.FailureScreenshot,
 					FailureScreenshotFile: preHook.FailureScreenshotFile,
 					TableRowIndex:         preHook.TableRowIndex,
 				})
@@ -151,7 +150,6 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 				res.AddPostHook(&gauge_messages.ProtoHookFailure{
 					StackTrace:            postHook.StackTrace,
 					ErrorMessage:          postHook.ErrorMessage,
-					FailureScreenshot:     postHook.FailureScreenshot,
 					FailureScreenshotFile: postHook.FailureScreenshotFile,
 					TableRowIndex:         postHook.TableRowIndex,
 				})
@@ -168,7 +166,6 @@ func (e *simpleExecution) notifyBeforeSuite() {
 	res := e.executeHook(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
-	e.suiteResult.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPreHook)
 	}
@@ -182,7 +179,6 @@ func (e *simpleExecution) notifyAfterSuite() {
 	res := e.executeHook(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
-	e.suiteResult.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		handleHookFailure(e.suiteResult, res, result.AddPostHook)
 	}

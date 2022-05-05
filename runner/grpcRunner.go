@@ -23,6 +23,7 @@ import (
 	errdetails "google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 )
 
@@ -42,6 +43,7 @@ type GrpcRunner struct {
 	IsExecuting  bool
 }
 
+//nolint:staticcheck
 func (r *GrpcRunner) invokeLegacyLSPService(message *gm.Message) (*gm.Message, error) {
 	switch message.MessageType {
 	case gm.Message_CacheFileRequest:
@@ -326,7 +328,7 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port),
-		grpc.WithInsecure(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(oneGB), grpc.MaxCallSendMsgSize(oneGB)),
 		grpc.WithBlock())
 	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)

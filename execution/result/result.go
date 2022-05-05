@@ -32,7 +32,6 @@ func GetProtoHookFailure(executionResult *gauge_messages.ProtoExecutionResult) *
 	return &gauge_messages.ProtoHookFailure{
 		StackTrace:            executionResult.StackTrace,
 		ErrorMessage:          executionResult.ErrorMessage,
-		FailureScreenshot:     executionResult.FailureScreenshot,
 		FailureScreenshotFile: executionResult.FailureScreenshotFile,
 		TableRowIndex:         -1,
 	}

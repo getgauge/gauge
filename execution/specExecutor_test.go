@@ -258,7 +258,7 @@ func (r *mockRunner) IsMultithreaded() bool {
 }
 
 func (r *mockRunner) Info() *runner.RunnerInfo {
-	return &runner.RunnerInfo{Killed:false}
+	return &runner.RunnerInfo{Killed: false}
 }
 
 func (r *mockRunner) Pid() int {
@@ -714,7 +714,6 @@ func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {
 	se := newSpecExecutor(exampleSpecWithScenarios, r, nil, errs, 0)
 	se.scenarioExecutor = &mockExecutor{
 		executeFunc: func(i gauge.Item, r result.Result) {
-			r.(*result.ScenarioResult).ProtoScenario.Skipped = true
 			r.(*result.ScenarioResult).ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
 		},
 	}
