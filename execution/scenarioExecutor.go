@@ -47,8 +47,7 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	scenario := i.(*gauge.Scenario)
 	scenarioResult := r.(*result.ScenarioResult)
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_PASSED
-	scenarioResult.ProtoScenario.Skipped = false
-	if(e.runner.Info().Killed){
+	if e.runner.Info().Killed {
 		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New("skipped Reason: Runner is not alive")}, e.errMap.ScenarioErrs[scenario]...)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 		return
@@ -106,7 +105,6 @@ func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result
 
 func setSkipInfoInResult(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, errMap *gauge.BuildErrors) {
 	scenarioResult.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
-	scenarioResult.ProtoScenario.Skipped = true
 	var errs []string
 	for _, err := range errMap.ScenarioErrs[scenario] {
 		errs = append(errs, err.Error())
@@ -121,7 +119,6 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PreHookMessages = res.Message
 	scenarioResult.ProtoScenario.PreHookScreenshotFiles = res.ScreenshotFiles
-	scenarioResult.ProtoScenario.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
@@ -136,7 +133,6 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	res := executeHook(message, scenarioResult, e.runner)
 	scenarioResult.ProtoScenario.PostHookMessages = res.Message
 	scenarioResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles
-	scenarioResult.ProtoScenario.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPostHook)

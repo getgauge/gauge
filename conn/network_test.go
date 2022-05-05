@@ -15,7 +15,12 @@ import (
 	"time"
 
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
-	"github.com/golang/protobuf/proto"
+
+	// github.com/golang/protobuf/proto is deprecated, however this package is used by the legacy API
+	// which is consumed only by IntelliJ IDEA presently. Since IDEA does not plan to implement LSP
+	// gauge will have to keep this alive. Upgrading to google.golang.org/protobuf/proto is not a drop in change
+	// since the newer library does not support DecodeVarint. The whole message handling will need to be refactored.
+	"github.com/golang/protobuf/proto" //nolint:staticcheck
 )
 
 var id int64
