@@ -61,7 +61,6 @@ func (e *parallelExecution) notifyBeforeSuite() {
 	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.suiteResult.PreHookMessages = res.Message
 	e.suiteResult.PreHookScreenshotFiles = res.ScreenshotFiles
-	e.suiteResult.PreHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		result.AddPreHook(e.suiteResult, res)
 	}
@@ -80,7 +79,6 @@ func (e *parallelExecution) notifyAfterSuite() {
 	res := e.runners[0].ExecuteAndGetStatus(m)
 	e.suiteResult.PostHookMessages = res.Message
 	e.suiteResult.PostHookScreenshotFiles = res.ScreenshotFiles
-	e.suiteResult.PostHookScreenshots = res.Screenshots
 	if res.GetFailed() {
 		result.AddPostHook(e.suiteResult, res)
 	}

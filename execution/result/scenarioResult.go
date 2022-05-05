@@ -24,7 +24,6 @@ func NewScenarioResult(sce *gauge_messages.ProtoScenario) *ScenarioResult {
 // SetFailure sets the scenarioResult as failed
 func (s ScenarioResult) SetFailure() {
 	s.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_FAILED
-	s.ProtoScenario.Failed = true
 }
 
 // GetFailed returns the state of the scenario result
