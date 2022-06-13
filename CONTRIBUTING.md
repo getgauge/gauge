@@ -66,7 +66,7 @@ Gauge uses [GaugeBot](https://github.com/getgauge/gauge-bot) to check for presen
 
 If you are trying to write plugins for Gauge or trying to contribute to Gauge core, take a look at the [Developer Documentation](https://github.com/getgauge/gauge/wiki/Gauge-Technical-Documentation).
 
-
+user: whiteapple602
 ## Bump up gauge version
 
 * Update the value of `CurrentGaugeVersion` variable in `version/version.go` file.
