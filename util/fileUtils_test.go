@@ -259,7 +259,7 @@ func (s *MySuite) TestGetSpecFilesWhenSpecsDirDoesNotExists(c *C) {
 		expectedErrorMessage = message
 	}
 	GetSpecFiles([]string{"dir1"})
-	c.Assert(expectedErrorMessage, Equals, "Specs directory dir1 does not exists.")
+	c.Assert(expectedErrorMessage, Equals, "Specs directory dir1 does not exist.")
 }
 
 func (s *MySuite) TestGetSpecFilesWhenSpecsDirIsEmpty(c *C) {
