@@ -70,21 +70,6 @@ func (step *Step) GetLineText() string {
 	return step.LineText
 }
 
-func (step *Step) Rename(oldStep *Step, newStep *Step, isRefactored bool, orderMap map[int]int, isConcept *bool) (*StepDiff, bool) {
-	diff := &StepDiff{OldStep: *step}
-	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
-		return nil, isRefactored
-	}
-	if step.IsConcept {
-		*isConcept = true
-	}
-	step.Value = newStep.Value
-	diff.IsConcept = *isConcept
-	step.Args = step.getArgsInOrder(newStep, orderMap)
-	diff.NewStep = step
-	return diff, true
-}
-
 func (step *Step) UsesDynamicArgs(args ...string) bool {
 	for _, arg := range args {
 		for _, stepArg := range step.Args {

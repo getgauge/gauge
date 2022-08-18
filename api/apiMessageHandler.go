@@ -21,7 +21,6 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
-	"github.com/getgauge/gauge/refactor"
 	"github.com/getgauge/gauge/runner"
 	"github.com/getgauge/gauge/util"
 	"google.golang.org/protobuf/proto"
@@ -57,9 +56,6 @@ func (handler *gaugeAPIMessageHandler) MessageBytesReceived(bytesRead []byte, co
 			responseMessage = handler.getLanguagePluginLibPath(apiMessage)
 		case gauge_messages.APIMessage_GetAllConceptsRequest:
 			responseMessage = handler.getAllConceptsRequestResponse(apiMessage)
-		case gauge_messages.APIMessage_PerformRefactoringRequest:
-			responseMessage = handler.performRefactoring(apiMessage)
-			handler.performRefresh(responseMessage.PerformRefactoringResponse.FilesChanged)
 		case gauge_messages.APIMessage_ExtractConceptRequest:
 			responseMessage = handler.extractConcept(apiMessage)
 		case gauge_messages.APIMessage_FormatSpecsRequest:
@@ -178,35 +174,6 @@ func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*
 
 func (handler *gaugeAPIMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*gauge_messages.ConceptInfo) *gauge_messages.GetAllConceptsResponse {
 	return &gauge_messages.GetAllConceptsResponse{Concepts: conceptInfos}
-}
-
-func (handler *gaugeAPIMessageHandler) performRefactoring(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
-	refactoringRequest := message.PerformRefactoringRequest
-	response := &gauge_messages.PerformRefactoringResponse{}
-	c := make(chan bool)
-	runner, err := ConnectToRunner(c, false)
-	defer func() {
-		err := runner.Kill()
-		if err != nil {
-			logger.Errorf(true, "failed to kill runner with pid: %d", runner.Pid())
-		}
-	}()
-	if err != nil {
-		response.Success = false
-		response.Errors = []string{err.Error()}
-		return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
-	}
-	refactoringResult := refactor.GetRefactoringChanges(refactoringRequest.GetOldStep(), refactoringRequest.GetNewStep(), runner, handler.specInfoGatherer.SpecDirs, true)
-	refactoringResult.WriteToDisk()
-	if refactoringResult.Success {
-		logger.Infof(false, "%s", refactoringResult.String())
-	} else {
-		logger.Errorf(false, "Refactoring response from gauge. Errors : %s", refactoringResult.Errors)
-	}
-	response.Success = refactoringResult.Success
-	response.Errors = refactoringResult.Errors
-	response.FilesChanged = refactoringResult.AllFilesChanged()
-	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_PerformRefactoringResponse, PerformRefactoringResponse: response}
 }
 
 func (handler *gaugeAPIMessageHandler) performRefresh(files []string) {

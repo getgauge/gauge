@@ -149,62 +149,6 @@ func (s *MySuite) TestUpdatePropertiesFromAnotherConcept(c *C) {
 	c.Assert(destinationConcept, DeepEquals, originalConcept)
 }
 
-func (s *MySuite) TestRenameStep(c *C) {
-	argsInStep := []*StepArg{&StepArg{Name: "arg1", Value: "value", ArgType: Static}, &StepArg{Name: "arg2", Value: "value1", ArgType: Static}}
-	originalStep := &Step{
-		LineNo:         12,
-		Value:          "step with {}",
-		Args:           argsInStep,
-		IsConcept:      false,
-		HasInlineTable: false}
-
-	argsInStep = []*StepArg{&StepArg{Name: "arg2", Value: "value1", ArgType: Static}, &StepArg{Name: "arg1", Value: "value", ArgType: Static}}
-	newStep := &Step{
-		LineNo:         12,
-		Value:          "step from {} {}",
-		Args:           argsInStep,
-		IsConcept:      false,
-		HasInlineTable: false}
-	orderMap := make(map[int]int)
-	orderMap[0] = 1
-	orderMap[1] = 0
-	IsConcept := false
-	diff, isRefactored := originalStep.Rename(originalStep, newStep, false, orderMap, &IsConcept)
-
-	c.Assert(isRefactored, Equals, true)
-	c.Assert(originalStep.Value, Equals, "step from {} {}")
-	c.Assert(originalStep.Args[0].Name, Equals, "arg2")
-	c.Assert(originalStep.Args[1].Name, Equals, "arg1")
-	c.Assert(diff.OldStep.Value, Equals, "step with {}")
-	c.Assert(diff.NewStep.Value, Equals, "step from {} {}")
-}
-
-func (s *MySuite) TestRenameConcept(c *C) {
-	originalStep := &Step{
-		LineNo:         3,
-		Value:          "concept with text file",
-		IsConcept:      true,
-		HasInlineTable: false}
-
-	argsInStep := []*StepArg{&StepArg{Name: "file:foo.txt", Value: "text from file", ArgType: SpecialString}}
-	newStep := &Step{
-		LineNo:         3,
-		Value:          "concept with text file {}",
-		Args:           argsInStep,
-		IsConcept:      true,
-		HasInlineTable: false}
-	orderMap := make(map[int]int)
-	orderMap[0] = -1
-	IsConcept := true
-	diff, isRefactored := originalStep.Rename(originalStep, newStep, false, orderMap, &IsConcept)
-	c.Assert(isRefactored, Equals, true)
-	c.Assert(originalStep.Value, Equals, "concept with text file {}")
-	c.Assert(originalStep.Args[0].Name, Equals, "arg0")
-	c.Assert(newStep.Args[0].Name, Equals, "file:foo.txt")
-	c.Assert(diff.OldStep.Value, Equals, "concept with text file")
-	c.Assert(diff.NewStep.Value, Equals, "concept with text file {}")
-}
-
 func (s *MySuite) TestGetLineTextForStep(c *C) {
 	step := &Step{LineText: "foo"}
 
