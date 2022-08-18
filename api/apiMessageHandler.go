@@ -22,7 +22,6 @@ import (
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/runner"
-	"github.com/getgauge/gauge/util"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -174,19 +173,6 @@ func (handler *gaugeAPIMessageHandler) createSpecsResponseMessageFor(details []*
 
 func (handler *gaugeAPIMessageHandler) createGetAllConceptsResponseMessageFor(conceptInfos []*gauge_messages.ConceptInfo) *gauge_messages.GetAllConceptsResponse {
 	return &gauge_messages.GetAllConceptsResponse{Concepts: conceptInfos}
-}
-
-func (handler *gaugeAPIMessageHandler) performRefresh(files []string) {
-	for _, file := range files {
-		if util.IsConcept(file) {
-			handler.specInfoGatherer.OnConceptFileModify(file)
-		}
-	}
-	for _, file := range files {
-		if util.IsSpec(file) {
-			handler.specInfoGatherer.OnSpecFileModify(file)
-		}
-	}
 }
 
 func (handler *gaugeAPIMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
