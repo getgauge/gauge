@@ -58,7 +58,7 @@ jobs:
 
       - name: Clone LSP tests
         run: |
-          git clone https://github.com/getgauge/gauge-lsp-tests
+          git clone https://github.com/dorion/gauge-lsp-tests
           cd gauge-lsp-tests
           npm install
 
