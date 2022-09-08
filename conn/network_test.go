@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"reflect"
 	"testing"
 	"time"
 
@@ -42,9 +41,7 @@ func (m mockConn) Read(b []byte) (n int, err error) {
 	}
 
 	data := append(proto.EncodeVarint(uint64(len(messageBytes))), messageBytes...)
-	for i := 0; i < len(data); i++ {
-		b[i] = data[i]
-	}
+	copy(b, data)
 	return len(data), nil
 }
 
@@ -176,7 +173,7 @@ func TestGetResponseForGaugeMessageShoudGiveErrorForUnsupportedMessage(t *testin
 
 	expected := errors.New("Unsupported Message response received. Message not supported.")
 
-	if reflect.DeepEqual(err, expected) {
+	if err != expected {
 		t.Errorf("expected %v\n got %v", expected, err)
 	}
 
@@ -206,7 +203,7 @@ func TestGetResponseForGaugeMessageShoudErrorWithTimeOut(t *testing.T) {
 	_, err := GetResponseForMessageWithTimeout(message, conn, 1*time.Second)
 
 	expected := fmt.Errorf("Request timed out for Message with ID => %v and Type => StepNameRequest", id)
-	if !reflect.DeepEqual(err, expected) {
+	if err != expected {
 		t.Errorf("expected %v\n got %v", expected, err)
 	}
 }
