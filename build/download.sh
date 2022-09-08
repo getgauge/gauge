@@ -93,6 +93,9 @@ set_os_architecture() {
         x86_64 | x86-64 | x64 | amd64)
             local _cputype=x86_64
             ;;
+        arm64 | aarch64)
+            local _cputype=arm64
+            ;;
         *)
             err "Unknown CPU type: $_cputype"
             ;;
