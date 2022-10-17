@@ -125,13 +125,8 @@ func (e *simpleExecution) executeSpecs(sc *gauge.SpecCollection) (results []*res
 		specs := sc.Next()
 		var preHookFailures, postHookFailures []*gauge_messages.ProtoHookFailure
 		var specResults []*result.SpecResult
-		var before, after = true, false
-		for i, spec := range specs {
-			if i == len(specs)-1 {
-				after = true
-			}
-			res := newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(before, preHookFailures == nil, after)
-			before = false
+		for _, spec := range specs {
+			res := newSpecExecutor(spec, e.runner, e.pluginHandler, e.errMaps, e.stream).execute(true, preHookFailures == nil, true)
 			specResults = append(specResults, res)
 			preHookFailures = append(preHookFailures, res.GetPreHook()...)
 			postHookFailures = append(postHookFailures, res.GetPostHook()...)
