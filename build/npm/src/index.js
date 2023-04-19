@@ -4,10 +4,22 @@
 
 const install = require("./install"),
     path = require("path"),
-    unzip = require('unzipper'),
+    AdmZip = require('adm-zip'),
     https = require('https'),
     packageJsonPath = path.join(__dirname, "..", "package.json"),
     binPath = "./bin";
+
+var extractZipArchive = function(buffer) {
+    return new Promise(function(resolve, reject) {
+        try {
+            const zip = new AdmZip(buffer);
+            zip.extractAllTo(path.normalize(binPath), true, true);
+            resolve();
+        } catch (err) {
+            reject(new Error(`Failed to extract archive from buffer: ${err.message}`));
+        }
+    })
+}
 
 var downloadFollowingRedirect = function(url, resolve, reject) {
     https.get(url, { headers: { 'accept-encoding': 'gzip,deflate' } }, res => {
@@ -16,7 +28,11 @@ var downloadFollowingRedirect = function(url, resolve, reject) {
         } else if (res.statusCode >= 400) {
             reject(new Error(`Unable to download '${url}' : ${res.statusCode}-'${res.statusMessage}'`));
         } else {
-            res.pipe(unzip.Extract({ path: path.normalize(binPath) })).on('error', reject).on('end', resolve);
+            const chunks = [];
+            res
+                .on('data', chunk => chunks.push(chunk))
+                .on('end', () => resolve(Buffer.concat(chunks)))
+                .on('error', reject);
         }
     });
 };
@@ -32,6 +48,7 @@ var downloadAndExtract = function(version) {
             reject(error);
         }
     })
+    .then(extractZipArchive)
 };
 
 install.getVersion(packageJsonPath)
