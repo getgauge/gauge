@@ -12,7 +12,7 @@ const install = require("./install"),
 var downloadFollowingRedirect = function(url, resolve, reject) {
     https.get(url, { headers: { 'accept-encoding': 'gzip,deflate' } }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400) {
-            downloadFollowingRedirect(res.headers.location, reject, resolve);
+            downloadFollowingRedirect(res.headers.location, resolve, reject);
         } else if (res.statusCode > 400) {
             console.error(`Unable to download '${url}' : ${res.statusCode}-'${res.statusMessage}'`);
         } else {
