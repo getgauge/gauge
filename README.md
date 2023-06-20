@@ -6,6 +6,17 @@
 [![Ask at StackOverflow](https://img.shields.io/badge/StackOverflow-getgauge-F5C10E.svg?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAnFBMVEUAAADs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PHs8PG3iEVjAAAAM3RSTlMAAQMGBwkLDA0QExweKS4wMzc4PkdJT1JdY2dvc3WDjpiam6avtcfMz9ng4ubp7fHz9/tqGqSaAAAAfUlEQVQYGV3BBw6CQABFwb/YUOy9IIpgb8i7/92ErBLCjKzGKzAqa185tVTmhCR9/ZmoJy1gY2QN4DIy3oNjXVY3gvu0HfN09dPZwXsdRsqNb8GkY5rblE9NuRWZNF7O9r4sx5sfEjKeJJDlDv2zAwJREAhEQSBQCYgKUfEFJ7oYF2usUEAAAAAASUVORK5CYII=)](https://stackoverflow.com/questions/ask?tags=getgauge)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-v1.4%20adopted-ff69b4.svg)](CODE_OF_CONDUCT.md)
 
+
+## Important note
+
+Gauge's official sponsorship ended in 2021. Despite this, [we](https://github.com/getgauge/gauge/graphs/contributors) strived to maintain the project with our personal resources as best as possible. However, we've reached a point where we can't ensure the same level of dedication.
+
+The core team will only look into issues in our spare time, which means slower response times. We welcome pull requests, but please anticipate significant delays in reviewing and merging.
+
+Moreover, please consider using Gauge only if you're prepared to adopt and support it fully on your own. With our shift to community-driven maintenance, primary responsibility will fall onto individual users and contributors.
+
+We appreciate your understanding, contributions, and continued support.
+
 # Welcome to Gauge
 
 Gauge is a light weight cross-platform test automation tool. It provides the ability to author test cases in the business language.
