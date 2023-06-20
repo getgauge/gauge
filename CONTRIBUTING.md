@@ -1,3 +1,13 @@
+## Important note
+
+Gauge's official sponsorship ended in 2021. Despite this, [we](https://github.com/getgauge/gauge/graphs/contributors) strived to maintain the project with our personal resources as best as possible. However, we've reached a point where we can't ensure the same level of dedication.
+
+The core team will only look into issues in our spare time, which means slower response times. We welcome pull requests, but please anticipate significant delays in reviewing and merging.
+
+Moreover, please consider using Gauge only if you're prepared to adopt and support it fully on your own. With our shift to community-driven maintenance, primary responsibility will fall onto individual users and contributors.
+
+We appreciate your understanding, contributions, and continued support.
+
 ## Contributing to Gauge
 
 Contributions to Gauge are welcome and appreciated. Coding is definitely not the only way you can contribute to Gauge. There are many valuable ways to contribute to the product and to help the growing Gauge community.
