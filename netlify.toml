@@ -1,5 +1,5 @@
 [build]
   command = "go get ./build/man/ && go run build/man/man.go && cp _redirects ./_man/html/_redirects"
-  publish = "/opt/build/repo/_man/html"
+  publish = "_man/html"
 [build.environment]
   GO_VERSION = "1.20"
