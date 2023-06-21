@@ -8,7 +8,6 @@ package util
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -27,7 +26,7 @@ var dir string
 
 func (s *MySuite) SetUpTest(c *C) {
 	var err error
-	dir, err = ioutil.TempDir("", "gaugeTest")
+	dir, err = os.MkdirTemp("", "gaugeTest")
 	c.Assert(err, Equals, nil)
 }
 
@@ -46,7 +45,7 @@ Scenario 1
 	spec1, err := createFileIn(dir, "gaugeSpec1.spec", data)
 	c.Assert(err, Equals, nil)
 
-	dataRead, err := ioutil.ReadFile(spec1)
+	dataRead, err := os.ReadFile(spec1)
 	c.Assert(err, Equals, nil)
 	c.Assert(string(dataRead), Equals, string(data))
 	c.Assert(len(FindSpecFilesIn(dir)), Equals, 1)
@@ -139,7 +138,7 @@ func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 	c.Assert(err, Equals, nil)
 	c.Assert(len(FindConceptFilesIn(dir)), Equals, 1)
 
-	dir1, err := ioutil.TempDir(dir, "gaugeTest1")
+	dir1, err := os.MkdirTemp(dir, "gaugeTest1")
 	c.Assert(err, Equals, nil)
 
 	_, err = createFileIn(dir1, "concept2.cpt", data)
@@ -234,7 +233,7 @@ func (s *MySuite) TestGetPathToFileInGaugeDataDir(c *C) {
 	var path string
 	config.ProjectRoot = "PROJECT_ROOT"
 	oldGaugeDataDirFn := env.GaugeDataDir
-	defer func(fn func() string) {env.GaugeDataDir = fn }(oldGaugeDataDirFn)
+	defer func(fn func() string) { env.GaugeDataDir = fn }(oldGaugeDataDirFn)
 	env.GaugeDataDir = func() string { return "foo" }
 
 	absPath, _ := filepath.Abs("foo.csv")
@@ -246,7 +245,7 @@ func (s *MySuite) TestGetPathToAbsFileWithGaugeDataDir(c *C) {
 	var path string
 	config.ProjectRoot = "PROJECT_ROOT"
 	oldGaugeDataDirFn := env.GaugeDataDir
-	defer func(fn func() string	) {env.GaugeDataDir = fn }(oldGaugeDataDirFn)
+	defer func(fn func() string) { env.GaugeDataDir = fn }(oldGaugeDataDirFn)
 	env.GaugeDataDir = func() string { return "foo" }
 
 	path = GetPathToFile("foo.csv")
@@ -287,12 +286,12 @@ func createFileIn(dir string, fileName string, data []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	err = ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
+	err = os.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
 }
 
 func createDirIn(dir string, dirName string) (string, error) {
-	tempDir, err := ioutil.TempDir(dir, dirName)
+	tempDir, err := os.MkdirTemp(dir, dirName)
 	if err != nil {
 		return "", err
 	}

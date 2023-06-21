@@ -8,7 +8,6 @@ package pluginInfo
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -56,7 +55,7 @@ var GetAllInstalledPluginsWithVersion = func() ([]PluginInfo, error) {
 	}
 	allPlugins := make(map[string]PluginInfo)
 	for _, prefix := range pluginInstallPrefixes {
-		files, err := ioutil.ReadDir(prefix)
+		files, err := os.ReadDir(prefix)
 		if err != nil {
 			return nil, err
 		}
@@ -80,7 +79,7 @@ var GetAllInstalledPluginsWithVersion = func() ([]PluginInfo, error) {
 }
 
 func GetLatestInstalledPlugin(pluginDir string) (*PluginInfo, error) {
-	files, err := ioutil.ReadDir(pluginDir)
+	files, err := os.ReadDir(pluginDir)
 	if err != nil {
 		return nil, fmt.Errorf("Error listing files in plugin directory %s: %s", pluginDir, err.Error())
 	}

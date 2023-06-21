@@ -7,7 +7,6 @@
 package rerun
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,7 +44,7 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	c.Assert(common.FileExists(file), Equals, true)
 	expected := msg
 
-	content, _ := ioutil.ReadFile(file)
+	content, _ := os.ReadFile(file)
 
 	c.Assert(string(content), Equals, expected)
 	os.RemoveAll(filepath.Join(config.ProjectRoot, common.DotGauge))

@@ -8,7 +8,6 @@ package infoGatherer
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -42,7 +41,7 @@ type MySuite struct {
 }
 
 func (s *MySuite) SetUpTest(c *C) {
-	s.projectDir, _ = ioutil.TempDir("_testdata", "gaugeTest")
+	s.projectDir, _ = os.MkdirTemp("_testdata", "gaugeTest")
 	s.specsDir, _ = createDirIn(s.projectDir, specDir)
 	config.ProjectRoot = s.projectDir
 
@@ -551,7 +550,7 @@ func createFileIn(dir string, fileName string, data []byte) (string, error) {
 		return "", fmt.Errorf("unable to create %s: %s", dir, err.Error())
 	}
 
-	err = ioutil.WriteFile(filepath.Join(dir, fileName), data, 0644)
+	err = os.WriteFile(filepath.Join(dir, fileName), data, 0644)
 	return filepath.Join(dir, fileName), err
 }
 
@@ -561,7 +560,7 @@ func renameFileIn(dir string, oldFileName string, newFileName string) (string, e
 }
 
 func createDirIn(dir string, dirName string) (string, error) {
-	tempDir, _ := ioutil.TempDir(dir, dirName)
+	tempDir, _ := os.MkdirTemp(dir, dirName)
 	fullDirName := filepath.Join(dir, dirName)
 	err := os.Rename(tempDir, fullDirName)
 	return fullDirName, err

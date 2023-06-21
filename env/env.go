@@ -19,7 +19,7 @@ import (
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	properties "github.com/magiconair/properties"
+	"github.com/magiconair/properties"
 )
 
 const (

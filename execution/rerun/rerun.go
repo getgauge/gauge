@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -134,7 +133,7 @@ func writeFailedMeta(contents string) {
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(failuresFile, []byte(contents), common.NewFilePermissions)
+	err := os.WriteFile(failuresFile, []byte(contents), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", failuresFile, err.Error())
 	}
@@ -209,7 +208,7 @@ var WritePrevArgs = func(cmdArgs []string) {
 	if err = os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err = ioutil.WriteFile(prevCmdFile, b, common.NewFilePermissions)
+	err = os.WriteFile(prevCmdFile, b, common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
 	}
