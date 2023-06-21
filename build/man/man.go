@@ -18,7 +18,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/cmd"
-	blackfriday "github.com/russross/blackfriday/v2"
+	"github.com/russross/blackfriday/v2"
 	"github.com/spf13/cobra"
 	"github.com/spf13/cobra/doc"
 )

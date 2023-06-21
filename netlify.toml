@@ -1,0 +1,7 @@
+[build]
+  command = "go get ./build/man/ && go run build/man/man.go && cp _redirects ./_man/html/_redirects"
+  commandOrigin: "ui"
+  publish = "/opt/build/repo/_man/html"
+  publishOrigin: "ui"
+[build.environment]
+  GO_VERSION = "1.20"
