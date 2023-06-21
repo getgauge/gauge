@@ -8,7 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/getgauge/common v0.0.0-20200824023809-24587c106922
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20210112094005-73ca40cb5ac4
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.3
 	github.com/magiconair/properties v1.8.5
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
@@ -18,9 +18,9 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.0.0-20200429184054-15c2290dcb37
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/genproto v0.0.0-20210111234610-22ae2b108f89
-	google.golang.org/grpc v1.43.0
-	google.golang.org/protobuf v1.28.0
-	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127
+	google.golang.org/genproto v0.0.0-20230410155749-daa745c078e1
+	google.golang.org/grpc v1.56.0
+	google.golang.org/protobuf v1.30.0
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
 )
