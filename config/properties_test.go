@@ -7,7 +7,6 @@
 package config
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -71,7 +70,7 @@ func TestPropertiesFormat(t *testing.T) {
 func TestMergedProperties(t *testing.T) {
 	want := "false"
 	idFile := filepath.Join("_testData", "config", "gauge.properties")
-	err := ioutil.WriteFile(idFile, []byte("check_updates=false"), common.NewFilePermissions)
+	err := os.WriteFile(idFile, []byte("check_updates=false"), common.NewFilePermissions)
 	if err != nil {
 		t.Error(err)
 	}
@@ -191,7 +190,7 @@ func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	oldEnv := os.Getenv("GAUGE_HOME")
 	os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
 	propFile := filepath.Join("_testData", "config", "gauge.properties")
-	err := ioutil.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
+	err := os.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
 	if err != nil {
 		t.Error(err)
 	}

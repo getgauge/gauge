@@ -9,7 +9,6 @@
 package logger
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -168,7 +167,7 @@ func newLogWriter(loggerID string) *LogWriter {
 }
 
 func assertLogContains(t *testing.T, want []string) {
-	got, err := ioutil.ReadFile(ActiveLogFile)
+	got, err := os.ReadFile(ActiveLogFile)
 	if err != nil {
 		t.Fatalf("Unable to read log file. Error: %s", err.Error())
 	}
@@ -180,7 +179,7 @@ func assertLogContains(t *testing.T, want []string) {
 }
 
 func assertLogDoesNotContains(t *testing.T, want []string) {
-	got, err := ioutil.ReadFile(ActiveLogFile)
+	got, err := os.ReadFile(ActiveLogFile)
 	if err != nil {
 		t.Fatalf("Unable to read log file. Error: %s", err.Error())
 	}

@@ -10,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"io/ioutil"
-
 	"sync"
 
 	"github.com/getgauge/common"
@@ -55,7 +53,7 @@ func writeResult(res *result.SuiteResult) {
 	if err != nil {
 		logger.Errorf(true, "Unable to marshal suite execution result, skipping save. %s", err.Error())
 	}
-	err = ioutil.WriteFile(resultFile, r, common.NewFilePermissions)
+	err = os.WriteFile(resultFile, r, common.NewFilePermissions)
 	if err != nil {
 		logger.Errorf(true, "Failed to write to %s. Reason: %s", resultFile, err.Error())
 	} else {
