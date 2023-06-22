@@ -218,7 +218,7 @@ jobs:
           $Env:GAUGE_VERSION | Set-Content version
           cd gauge
           ./package.ps1
-          choco push "gauge.$Env:GAUGE_VERSION.nupkg" -k $Env:API_KEY
+          choco push "gauge.$Env:GAUGE_VERSION.nupkg" --apikey=$Env:API_KEY --source=https://push.chocolatey.org/
 
   brew-release:
     needs: [github-release]
@@ -228,9 +228,9 @@ jobs:
       - run: git fetch --prune --unshallow
 
       - name: Set up Ruby 2.6.x
-        uses: actions/setup-ruby@v1
+        uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.6.x
+          ruby-version: 3.2.x
 
       - name: Fetch gauge version
         uses: actions/download-artifact@v1
