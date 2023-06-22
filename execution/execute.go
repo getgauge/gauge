@@ -4,20 +4,22 @@
  *  See LICENSE in the project root for license information.
  *----------------------------------------------------------------*/
 
-/*Package execution handles gauge's execution of spec/scenario/steps
-   Execution can be of two types
-	- Simple execution
-	- Paralell execution
+/*
+Package execution handles gauge's execution of spec/scenario/steps
 
-   Execution Flow :
-   	- Checks for updates
-    	- Validation
-    	- Init Registry
-    	- Saving Execution result
+	   Execution can be of two types
+		- Simple execution
+		- Paralell execution
 
-   Strategy
-    	- Lazy : Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
-    	- Eager : Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.
+	   Execution Flow :
+	   	- Checks for updates
+	    	- Validation
+	    	- Init Registry
+	    	- Saving Execution result
+
+	   Strategy
+	    	- Lazy : Lazy is a parallelization strategy for execution. In this case tests assignment will be dynamic during execution, i.e. assign the next spec in line to the stream that has completed it’s previous execution and is waiting for more work.
+	    	- Eager : Eager is a parallelization strategy for execution. In this case tests are distributed before execution, thus making them an equal number based distribution.
 */
 package execution
 
@@ -36,7 +38,6 @@ import (
 	"sync"
 
 	"encoding/json"
-	"io/ioutil"
 	"path/filepath"
 
 	"github.com/getgauge/common"
@@ -143,7 +144,7 @@ func writeExecutionResult(content string) {
 	if err := os.MkdirAll(dotGaugeDir, common.NewDirectoryPermissions); err != nil {
 		logger.Fatalf(true, "Failed to create directory in %s. Reason: %s", dotGaugeDir, err.Error())
 	}
-	err := ioutil.WriteFile(executionStatusFile, []byte(content), common.NewFilePermissions)
+	err := os.WriteFile(executionStatusFile, []byte(content), common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", executionStatusFile, err.Error())
 	}

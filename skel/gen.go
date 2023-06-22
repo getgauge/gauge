@@ -7,7 +7,6 @@
 package skel
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -55,7 +54,7 @@ func writeFile(path, text string, overwrite bool) {
 		}
 	}
 	if !common.FileExists(path) || overwrite {
-		err := ioutil.WriteFile(path, []byte(text), common.NewFilePermissions)
+		err := os.WriteFile(path, []byte(text), common.NewFilePermissions)
 		if err != nil {
 			logger.Debugf(true, "Unable to create file `%s`. Error: %s", path, err.Error())
 		}

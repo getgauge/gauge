@@ -157,7 +157,7 @@ var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
 	for _, path := range paths {
 		if !common.FileExists(path) {
-			exitWithMessage(fmt.Sprintf("Specs directory %s does not exists.", path))
+			exitWithMessage(fmt.Sprintf("Specs directory %s does not exist.", path))
 		}
 		if common.DirExists(path) {
 			specFilesInpath := FindSpecFilesIn(path)

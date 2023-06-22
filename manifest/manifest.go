@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -48,5 +48,5 @@ func (m *Manifest) Save() error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
+	return os.WriteFile(common.ManifestFile, b, common.NewFilePermissions)
 }
