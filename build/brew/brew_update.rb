@@ -2,60 +2,34 @@
 #   Copyright (c) ThoughtWorks, Inc.
 #   Licensed under the Apache License, Version 2.0
 #   See LICENSE.txt in the project root for license information.
-# ----------------------------------------------------------------
+# ----------------------------------------------------------------*/
 
-require 'parser/current'
-require 'net/http'
-require 'uri'
-require 'json'
+#!/bin/bash
+
+set -e
+
+export BRANCH="gauge-$GAUGE_VERSION"
+
+git config --global user.name "$HOMEBREW_GITHUB_USER_NAME"
+git config --global user.email "$HOMEBREW_GITHUB_USER_EMAIL"
 
 
-if ARGV.length < 2
-  puts 'Minimum two arguments required.
-Usage: ruby brew_update.rb <version> <path to file>.
-Example: ruby brew_update.rb 0.3.2 Library/Formula/gauge.rb.
-'
-  exit 1
-end
+(gh repo clone $HOMEBREW_GITHUB_USER_NAME/homebrew-core) || (gh repo clone Homebrew/homebrew-core && cd homebrew-core && gh repo fork)
 
-Parser::Builders::Default.emit_lambda = true # opt-in to most recent AST format
-code = File.read(ARGV[1])
+cd homebrew-core
+git remote add upstream https://github.com/Homebrew/homebrew-core.git
+git fetch upstream
+git checkout master
+git merge upstream/master
 
-class Processor < AST::Processor
-  attr_accessor :old_sha256
+git branch -D $BRANCH || true
+git checkout -b $BRANCH
 
-  def initialize()
-    @last_value = ''
-  end
+gem install parser
+ruby ../brew_update.rb $GAUGE_VERSION ./Formula/gauge.rb
 
-  def on_begin(node)
-    node.children.each { |c| process(c) }
-  end
-
-  def on_class(node)
-    node.children.each { |c| process(c) }
-  end
-
-  def on_block(node)
-    node.children.each { |c| process(c) }
-  end
-
-  def on_send(node)
-    if node.children[1].to_s == 'sha256' and node.children[2].children[0].instance_of? String
-      @old_sha256 = node.children[2].children[0]
-    end
-  end
-end
-
-ast = Processor.new
-ast.process(Parser::CurrentRuby.parse(code))
-
-`curl -O -L https://github.com/getgauge/gauge/archive/v#{ARGV[0]}.tar.gz`
-sha256 = `shasum -a 256 v#{ARGV[0]}.tar.gz`.split[0]
-
-code = code.sub! ast.old_sha256, sha256
-code = code.gsub(%r{(https://github.com/getgauge/gauge/archive/)v\d?.\d?.\d?.tar.gz}, "https://github.com/getgauge/gauge/archive/v#{ARGV[0]}.tar.gz")
-
-File.write(ARGV[1], code)
-
-puts 'Update done.'
+git add ./Formula/gauge.rb
+git commit -m "gauge $GAUGE_VERSION"
+git push "https://$HOMEBREW_GITHUB_USER_NAME:$GITHUB_TOKEN@github.com/$HOMEBREW_GITHUB_USER_NAME/homebrew-core.git" "gauge-$GAUGE_VERSION"
+echo -e "gauge $GAUGE_VERSION \n\n Please cc getgauge/core for any issue." > desc.txt
+gh pr create --base Homebrew:master --head $HOMEBREW_GITHUB_USER_NAME:$BRANCH -F ./desc.txt

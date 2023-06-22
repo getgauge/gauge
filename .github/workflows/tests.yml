@@ -10,6 +10,35 @@ permissions:
   contents: read
 
 jobs:
+  brew-release-test:
+    needs: [ github-release ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: git fetch --prune --unshallow
+
+      - name: Set up Ruby 3.1.4
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 3.1.4
+
+      - name: Fetch gauge version
+        uses: actions/download-artifact@v1
+        with:
+          name: gauge-version
+          path: .
+
+      - name: Set gauge version
+        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
+
+      - name: Update brew formula
+        env:
+          HOMEBREW_GITHUB_USER_NAME: ${{ secrets.HOMEBREW_GITHUB_USER_NAME }}
+          HOMEBREW_GITHUB_USER_EMAIL: ${{ secrets.HOMEBREW_GITHUB_USER_EMAIL }}
+          GITHUB_TOKEN: ${{ secrets.GAUGEBOT_GITHUB_TOKEN }}
+        run: |
+          cd build/brew
+          bash create_brew_pr.sh
   tests:
     name: UTs ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
