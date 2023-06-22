@@ -13,14 +13,14 @@ export BRANCH="gauge-$GAUGE_VERSION"
 git config --global user.name "$HOMEBREW_GITHUB_USER_NAME"
 git config --global user.email "$HOMEBREW_GITHUB_USER_EMAIL"
 
+gh repo sync $HOMEBREW_GITHUB_USER_NAME/homebrew-core \
+  --source Homebrew/homebrew-core \
+  --branch master
 
-(hub clone homebrew-core) || (hub clone Homebrew/homebrew-core && cd homebrew-core && hub fork)
+(gh repo clone $HOMEBREW_GITHUB_USER_NAME/homebrew-core) || (gh repo clone Homebrew/homebrew-core && cd homebrew-core && gh repo fork Homebrew/homebrew-core)
 
 cd homebrew-core
-git remote add upstream https://github.com/Homebrew/homebrew-core.git
-git fetch upstream
 git checkout master
-git merge upstream/master
 
 git branch -D $BRANCH || true
 git checkout -b $BRANCH
@@ -30,6 +30,10 @@ ruby ../brew_update.rb $GAUGE_VERSION ./Formula/gauge.rb
 
 git add ./Formula/gauge.rb
 git commit -m "gauge $GAUGE_VERSION"
-git push "https://$HOMEBREW_GITHUB_USER_NAME:$GITHUB_TOKEN@github.com/$HOMEBREW_GITHUB_USER_NAME/homebrew-core.git" "gauge-$GAUGE_VERSION"
+git push -f "https://$HOMEBREW_GITHUB_USER_NAME:$GITHUB_TOKEN@github.com/$HOMEBREW_GITHUB_USER_NAME/homebrew-core.git" "gauge-$GAUGE_VERSION"
+
 echo -e "gauge $GAUGE_VERSION \n\n Please cc getgauge/core for any issue." > desc.txt
-hub pull-request --base Homebrew:master --head $HOMEBREW_GITHUB_USER_NAME:$BRANCH -F ./desc.txt
+gh pr create --repo Homebrew/homebrew-core \
+  --title "gauge $GAUGE_VERSION" \
+  --body-file ./desc.txt \
+  --head $HOMEBREW_GITHUB_USER_NAME:$BRANCH
