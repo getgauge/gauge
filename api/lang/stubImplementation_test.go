@@ -8,7 +8,6 @@ package lang
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -313,7 +312,7 @@ func TestGenerateConceptInNewFileWhenDefaultExisits(t *testing.T) {
 	testData := filepath.Join(cwd, "_testdata")
 
 	cptFile := filepath.Join(testData, "concept1.cpt")
-	err := ioutil.WriteFile(cptFile, []byte(""), common.NewFilePermissions)
+	err := os.WriteFile(cptFile, []byte(""), common.NewFilePermissions)
 	if err != nil {
 		t.Fatalf("Unable to create Concept %s: %s", cptFile, err.Error())
 	}
