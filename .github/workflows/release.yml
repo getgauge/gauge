@@ -27,7 +27,7 @@ jobs:
           go run build/make.go --distro --all-platforms --skip-windows
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: gauge-non-windows-artifact
           path: ./deploy
@@ -64,7 +64,7 @@ jobs:
           go run build/make.go --distro --bin-dir bin\windows_386
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: gauge-windows-artifact
           path: ./deploy
@@ -94,7 +94,7 @@ jobs:
           echo $version > ../version.txt
       
       - name: upload gauge version
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
           name: gauge-version
           path: ./version.txt
