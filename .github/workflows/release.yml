@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v3
         with:
           name: gauge-non-windows-artifact
           path: ./deploy
@@ -107,18 +107,18 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v3
         with:
           name: gauge-non-windows-artifact
           path: ./deploy
 
-      - uses: actions/download-artifact@v1
+      - uses: actions/download-artifact@v3
         with:
           name: gauge-windows-artifact
           path: ./deploy
       
       - name: Fetch gauge version
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: gauge-version
           path: .
@@ -166,7 +166,7 @@ jobs:
           python-version: 3.7
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: gauge-version
           path: .
@@ -200,7 +200,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: gauge-version
           path: .
@@ -229,7 +229,7 @@ jobs:
       - run: git fetch --prune --unshallow
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: gauge-version
           path: .
@@ -266,7 +266,7 @@ jobs:
           ruby-version: 3.1.4
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v3
         with:
           name: gauge-version
           path: .
