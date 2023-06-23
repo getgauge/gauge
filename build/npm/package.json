@@ -29,6 +29,6 @@
     "sinon": "^6.2.0"
   },
   "dependencies": {
-    "unzipper": "^0.9.3"
+    "adm-zip": "^0.5.10"
   }
 }

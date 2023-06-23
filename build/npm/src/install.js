@@ -25,7 +25,12 @@ var getVersion = function(p) {
             if(err) {
                 reject(err);
             }
-            resolve(JSON.parse(data).version);   
+            const pkg = JSON.parse(data);
+            if (pkg.version) {
+                resolve(pkg.version);
+            } else {
+                reject(new Error("Unable to find version in package.json."));
+            }
         })    
     });
 }
