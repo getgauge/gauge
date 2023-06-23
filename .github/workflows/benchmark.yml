@@ -86,7 +86,7 @@ jobs:
           ref: master
 
       - name: Download benchmark results
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           path: gauge-benchmarks/out/
 
