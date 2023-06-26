@@ -18,7 +18,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -38,7 +38,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -108,7 +108,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -211,7 +211,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -242,7 +242,7 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'

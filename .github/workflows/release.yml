@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
@@ -38,7 +38,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Go 1.20
+      - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
