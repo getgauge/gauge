@@ -196,6 +196,7 @@ jobs:
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: 'build/npm/package-lock.json'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Fetch gauge version
