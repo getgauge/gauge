@@ -28,6 +28,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version-file: 'gauge/go.mod'
+          cache-dependency-path: 'gauge/go.sum'
         id: go
 
       - name: Setup java
