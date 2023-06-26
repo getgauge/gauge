@@ -114,7 +114,8 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v3
         with:
-          java-version: 11
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Build
         run: go run build/make.go --verbose
@@ -244,7 +245,8 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v3
         with:
-          java-version: 11
+          distribution: 'temurin'
+          java-version: '11'
 
       - name: Install Gauge
         run: |
