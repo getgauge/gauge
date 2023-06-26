@@ -4,7 +4,6 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
-  open-pull-requests-limit: 10
   ignore:
   - dependency-name: github.com/spf13/cobra
     versions:
@@ -13,4 +12,9 @@ updates:
   directory: "/"
   schedule: 
     interval: weekly
-  open-pull-requests-limit: 10
+  # Disable rebasing for npm pull requests
+  rebase-strategy: "disabled"
+- package-ecosystem: 'npm'
+  directory: '/build/npm'
+  schedule:
+    interval: 'weekly'
