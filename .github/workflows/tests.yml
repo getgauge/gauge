@@ -45,9 +45,10 @@ jobs:
         id: go
 
       - name: Set up Nodejs
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v3
         with:
-          node-version: '12.x'
+          node-version: 18
+          cache: 'npm'
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v3
