@@ -22,7 +22,7 @@ api  = "https://api.github.com"
 latest_release = URI.join(api, "/repos/#{repo}/releases/latest")
 timestamp = JSON.parse(Net::HTTP.get(latest_release))['published_at']
 
-issues_query = "/search/issues?q=is:pr+repo:#{repo}+is:merged"
+issues_query = "/search/issues?q=is:pr+repo:#{repo}+is:merged+closed"
 
 if not timestamp.nil? || timestamp.empty? 
   issues_query += ":>#{timestamp}"
