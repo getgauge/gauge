@@ -22,7 +22,6 @@ func (s *MySuite) TestDownloadFailureIfFileNotFound(c *C) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 	}
-
 	server := httptest.NewServer(http.HandlerFunc(handler))
 	defer server.Close()
 
