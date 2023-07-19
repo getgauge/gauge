@@ -173,28 +173,35 @@ var GetSpecFiles = func(paths []string) []string {
 	return specFiles
 }
 
-// GetConceptFiles returns the list of concept files present in the PROJECTROOT
+func findConceptFiles(paths []string) []string {
+	var conceptFiles []string
+	for _, path := range paths {
+		absPath, err := filepath.Abs(strings.TrimSpace(path))
+		if err != nil {
+			logger.Fatalf(true, "Error getting absolute concept path. %v", err)
+		}
+		conceptFiles = append(conceptFiles, FindConceptFilesIn(absPath)...)
+	}
+	return conceptFiles
+}
+
+// GetConceptFiles It returns the list of concept files
+// It returns concept files from gauge_concepts_dir if present
+// It returns concept files from projectRoot otherwise
 var GetConceptFiles = func() []string {
+	var conceptPaths = GetConceptsPaths()
+	if len(conceptPaths) > 0 {
+		return removeDuplicateValues(findConceptFiles(conceptPaths))
+	}
 	projRoot := config.ProjectRoot
 	if projRoot == "" {
 		logger.Fatalf(true, "Failed to get project root.")
 	}
-	absPath, err := filepath.Abs(projRoot)
-	if err != nil {
-		logger.Fatalf(true, "Error getting absolute path. %v", err)
-	}
-	files := FindConceptFilesIn(absPath)
-	var specFromProperties = os.Getenv(env.SpecsDir)
-	if specFromProperties == "" {
-		return files
-	}
-	var specDirectories = strings.Split(specFromProperties, ",")
-	for _, dir := range specDirectories {
-		absSpecPath, err := filepath.Abs(strings.TrimSpace(dir))
-		if err != nil {
-			logger.Fatalf(true, "Error getting absolute path. %v", err)
-		}
-		files = append(files, FindConceptFilesIn(absSpecPath)...)
+	files := findConceptFiles([]string{projRoot})
+	var specsDirFromProperties = os.Getenv(env.SpecsDir)
+	if specsDirFromProperties != "" {
+		var specDirectories = strings.Split(specsDirFromProperties, ",")
+		files = append(files, findConceptFiles(specDirectories)...)
 	}
 	return removeDuplicateValues(files)
 }

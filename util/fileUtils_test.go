@@ -147,6 +147,7 @@ func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFiles(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	specsDir, _ := filepath.Abs(filepath.Join("_testdata", "specs"))
 
@@ -164,15 +165,40 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsOutsideProjectRoot(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	os.Setenv(env.SpecsDir, "_testSpecDir")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsWithInProject(c *C) {
+	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	os.Setenv(env.SpecsDir, "_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 2)
+}
+
+func (s *MySuite) TestGetConceptFilesWhenConceptsDirSet(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata/specs"
+	c.Assert(len(GetConceptFiles()), Equals, 2)
+
+	config.ProjectRoot = "_testdata"
+	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "concept1.cpt"))
+	c.Assert(len(GetConceptFiles()), Equals, 1)
+
+	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "subdir"))
+	c.Assert(len(GetConceptFiles()), Equals, 1)
+
+	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "subdir", "concept2.cpt"))
+	c.Assert(len(GetConceptFiles()), Equals, 1)
+}
+
+func (s *MySuite) TestGetConceptFilesWhenConceptDirIsOutsideProjectRoot(c *C) {
+	os.Clearenv()
+	config.ProjectRoot = "_testdata"
+	os.Setenv(env.ConceptsDir, "_testSpecDir,_testdata/specs")
+	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
 func (s *MySuite) TestFindAllNestedDirs(c *C) {

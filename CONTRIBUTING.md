@@ -84,7 +84,7 @@ If you are trying to write plugins for Gauge or trying to contribute to Gauge co
 Ex:
 ```diff
  // CurrentGaugeVersion represents the current version of Gauge
--var CurrentGaugeVersion = &Version{1, 0, 7}
-+var CurrentGaugeVersion = &Version{1, 0, 8}
+-var CurrentGaugeVersion = &Version{1, 5, 0}
++var CurrentGaugeVersion = &Version{1, 5, 1}
 
 ```
