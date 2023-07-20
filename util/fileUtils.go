@@ -198,11 +198,7 @@ var GetConceptFiles = func() []string {
 		logger.Fatalf(true, "Failed to get project root.")
 	}
 	files := findConceptFiles([]string{projRoot})
-	var specsDirFromProperties = os.Getenv(env.SpecsDir)
-	if specsDirFromProperties != "" {
-		var specDirectories = strings.Split(specsDirFromProperties, ",")
-		files = append(files, findConceptFiles(specDirectories)...)
-	}
+	files = append(files, findConceptFiles(GetSpecDirs())...)
 	return removeDuplicateValues(files)
 }
 
