@@ -147,12 +147,13 @@ func IsDir(path string) bool {
 	return fileInfo.IsDir()
 }
 
-// GetSpecFiles returns the list of spec files present at the given path.
-// If the path itself represents a spec file, it returns the same.
 var exitWithMessage = func(message string) {
 	logger.Errorf(true, message)
 	os.Exit(1)
 }
+
+// GetSpecFiles returns the list of spec files present at the given path.
+// If the path itself represents a spec file, it returns the same.
 var GetSpecFiles = func(paths []string) []string {
 	var specFiles []string
 	for _, path := range paths {
@@ -176,9 +177,16 @@ var GetSpecFiles = func(paths []string) []string {
 func findConceptFiles(paths []string) []string {
 	var conceptFiles []string
 	for _, path := range paths {
-		absPath, err := filepath.Abs(strings.TrimSpace(path))
+		var conceptPath = strings.TrimSpace(path)
+		if !filepath.IsAbs(conceptPath) && config.ProjectRoot != conceptPath {
+			conceptPath = filepath.Join(config.ProjectRoot, conceptPath)
+		}
+		absPath, err := filepath.Abs(conceptPath)
 		if err != nil {
 			logger.Fatalf(true, "Error getting absolute concept path. %v", err)
+		}
+		if !common.FileExists(absPath) {
+			exitWithMessage(fmt.Sprintf("No such file or diretory: %s", absPath))
 		}
 		conceptFiles = append(conceptFiles, FindConceptFilesIn(absPath)...)
 	}
@@ -198,7 +206,11 @@ var GetConceptFiles = func() []string {
 		logger.Fatalf(true, "Failed to get project root.")
 	}
 	files := findConceptFiles([]string{projRoot})
-	files = append(files, findConceptFiles(GetSpecDirs())...)
+	var specDirFromProperties = os.Getenv(env.SpecsDir)
+	if specDirFromProperties != "" {
+		var specDirectories = strings.Split(specDirFromProperties, ",")
+		files = append(files, findConceptFiles(specDirectories)...)
+	}
 	return removeDuplicateValues(files)
 }
 
@@ -233,7 +245,7 @@ func GetPathToFile(path string) string {
 	}
 
 	gaugeDataDir := env.GaugeDataDir()
-	if gaugeDataDir != "." && filepath.IsAbs((env.GaugeDataDir())) {
+	if gaugeDataDir != "." && filepath.IsAbs(env.GaugeDataDir()) {
 		logger.Warningf(true, "'gauge_data_dir' property must be relative to Project Root. Found absolute path: %s", gaugeDataDir)
 	}
 

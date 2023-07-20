@@ -167,7 +167,7 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsOutsideProjectRoot(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata"
-	os.Setenv(env.SpecsDir, "_testSpecDir")
+	os.Setenv(env.SpecsDir, "../_testSpecDir")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
@@ -180,24 +180,24 @@ func (s *MySuite) TestGetConceptFilesWhenSpecDirIsWithInProject(c *C) {
 
 func (s *MySuite) TestGetConceptFilesWhenConceptsDirSet(c *C) {
 	os.Clearenv()
-	config.ProjectRoot = "_testdata/specs"
+	config.ProjectRoot = "_testdata"
 	c.Assert(len(GetConceptFiles()), Equals, 2)
 
-	config.ProjectRoot = "_testdata"
-	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "concept1.cpt"))
+	os.Setenv(env.ConceptsDir, filepath.Join("specs", "concept1.cpt"))
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 
-	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "subdir"))
+	os.Setenv(env.ConceptsDir, filepath.Join("specs", "subdir"))
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 
-	os.Setenv(env.ConceptsDir, filepath.Join("_testdata", "specs", "subdir", "concept2.cpt"))
+	conceptPath, _ := filepath.Abs(filepath.Join("_testdata", "specs", "subdir", "concept2.cpt"))
+	os.Setenv(env.ConceptsDir, conceptPath)
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenConceptDirIsOutsideProjectRoot(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata"
-	os.Setenv(env.ConceptsDir, "_testSpecDir,_testdata/specs")
+	os.Setenv(env.ConceptsDir, "../_testSpecDir,../_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
@@ -285,6 +285,25 @@ func (s *MySuite) TestGetSpecFilesWhenSpecsDirDoesNotExists(c *C) {
 	}
 	GetSpecFiles([]string{"dir1"})
 	c.Assert(expectedErrorMessage, Equals, "Specs directory dir1 does not exist.")
+}
+
+func (s *MySuite) TestGetConceptFilesWhenConceptsDirDoesNotExists(c *C) {
+	os.Clearenv()
+	var expectedErrorMessage string
+	exitWithMessage = func(message string) {
+		expectedErrorMessage = message
+	}
+	config.ProjectRoot = "_testdata"
+
+	os.Setenv(env.SpecsDir, "specs2")
+	GetConceptFiles()
+	directory, _ := filepath.Abs(filepath.Join(config.ProjectRoot, "specs2"))
+	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or diretory: %s", directory))
+
+	os.Setenv(env.SpecsDir, "_testSpecsDir,non-exisitng")
+	GetConceptFiles()
+	directory, _ = filepath.Abs(filepath.Join(config.ProjectRoot, "non-exisitng"))
+	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or diretory: %s", directory))
 }
 
 func (s *MySuite) TestGetSpecFilesWhenSpecsDirIsEmpty(c *C) {
