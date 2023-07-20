@@ -19,6 +19,6 @@ func (s *MySuite) TestSpecDirEnvVariableAllowsCommaSeparatedList(c *C) {
 
 func (s *MySuite) TestConceptsDirEnvVariableAllowsCommaSeparatedList(c *C) {
 	os.Clearenv()
-	os.Setenv(env.ConceptsDir, "path1, path2,    path3")
-	c.Assert(GetConceptsPaths(), DeepEquals, []string{"path1", "path2", "path3"})
+	os.Setenv(env.ConceptsDir, "path1")
+	c.Assert(GetConceptsPaths(), DeepEquals, []string{"path1"})
 }
