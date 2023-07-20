@@ -110,6 +110,21 @@ func GetSpecDirs() []string {
 	return []string{common.SpecsDirectoryName}
 }
 
+// GetConceptsPaths returns the concepts directory.
+// It checks whether the environment variable for gauge_concepts_dir is set.
+// It returns specs directories otherwise
+func GetConceptsPaths() []string {
+	var conceptDirs []string
+	var conceptsDirFromProperties = os.Getenv(env.ConceptsDir)
+	if conceptsDirFromProperties != "" {
+		conceptDirs = strings.Split(conceptsDirFromProperties, ",")
+		for index, ele := range conceptDirs {
+			conceptDirs[index] = strings.TrimSpace(ele)
+		}
+	}
+	return conceptDirs
+}
+
 func ListContains(list []string, val string) bool {
 	for _, s := range list {
 		if s == val {

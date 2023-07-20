@@ -25,6 +25,8 @@ import (
 const (
 	// SpecsDir holds the location of spec files
 	SpecsDir = "gauge_specs_dir"
+	// ConceptsDir holds the location of concept files
+	ConceptsDir = "gauge_concepts_dir"
 	// GaugeReportsDir holds the location of reports
 	GaugeReportsDir = "gauge_reports_dir"
 	// GaugeEnvironment holds the name of the current environment
