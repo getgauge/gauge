@@ -114,7 +114,7 @@ jobs:
         with:
           name: gauge-windows-artifact
           path: ./deploy
-      
+
       - name: Fetch gauge version
         uses: actions/download-artifact@v3
         with:
@@ -222,7 +222,7 @@ jobs:
           npm publish --access=public
 
   choco-release:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: [gauge-version]
     steps:
       - uses: actions/checkout@v3
