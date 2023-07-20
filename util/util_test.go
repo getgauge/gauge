@@ -18,8 +18,11 @@ func (s *MySuite) TestSpecDirEnvVariableAllowsCommaSeparatedList(c *C) {
 }
 
 func (s *MySuite) TestConceptsDirEnvVariableAllowsCommaSeparatedList(c *C) {
-	c.Skip("This is causing the net/httptest panic in httpUtils_test fail on windows.")
+	c.Skip("This is causing the net/httptest panic in util/httpUtils_test.go fail on windows.")
 	os.Clearenv()
-	os.Setenv(env.ConceptsDir, "path1")
-	c.Assert(GetConceptsPaths(), DeepEquals, []string{"path1"})
+	config.ProjectRoot = "_testdata/proj1"
+
+	e := env.LoadEnv("multipleSpecs", nil)
+	c.Assert(e, Equals, nil)
+	c.Assert(GetConceptsPaths(), DeepEquals, []string{"dir1", "dir2", "dir3"})
 }
