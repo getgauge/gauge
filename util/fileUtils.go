@@ -178,7 +178,7 @@ func findConceptFiles(paths []string) []string {
 	var conceptFiles []string
 	for _, path := range paths {
 		var conceptPath = strings.TrimSpace(path)
-		if !filepath.IsAbs(conceptPath) && config.ProjectRoot != conceptPath {
+		if !filepath.IsAbs(conceptPath) {
 			conceptPath = filepath.Join(config.ProjectRoot, conceptPath)
 		}
 		absPath, err := filepath.Abs(conceptPath)
@@ -197,7 +197,7 @@ func findConceptFiles(paths []string) []string {
 // It returns concept files from gauge_concepts_dir if present
 // It returns concept files from projectRoot otherwise
 var GetConceptFiles = func() []string {
-	var conceptPaths = GetConceptsPaths()
+	conceptPaths := GetConceptsPaths()
 	if len(conceptPaths) > 0 {
 		return removeDuplicateValues(findConceptFiles(conceptPaths))
 	}
@@ -205,10 +205,11 @@ var GetConceptFiles = func() []string {
 	if projRoot == "" {
 		logger.Fatalf(true, "Failed to get project root.")
 	}
-	files := findConceptFiles([]string{projRoot})
-	var specDirFromProperties = os.Getenv(env.SpecsDir)
+	absProjRoot, _ := filepath.Abs(projRoot)
+	files := findConceptFiles([]string{absProjRoot})
+	specDirFromProperties := os.Getenv(env.SpecsDir)
 	if specDirFromProperties != "" {
-		var specDirectories = strings.Split(specDirFromProperties, ",")
+		specDirectories := strings.Split(specDirFromProperties, ",")
 		files = append(files, findConceptFiles(specDirectories)...)
 	}
 	return removeDuplicateValues(files)
