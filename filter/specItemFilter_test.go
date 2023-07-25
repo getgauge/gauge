@@ -20,13 +20,8 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
-func before()  {
-	os.Clearenv()
+func before() {
 	os.Setenv("allow_case_sensitive_tags", "false")
-}
-
-func after() {
-	os.Clearenv()
 }
 
 func (s *MySuite) TestToEvaluateTagExpressionWithTwoTags(c *C) {
@@ -536,7 +531,6 @@ func (s *MySuite) TestFilterTags(c *C) {
 
 func (s *MySuite) TestFilterMixedCaseTags(c *C) {
 	before()
-	defer after()
 	specTags := []string{"abcd", "foo", "BAR", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & FOO bar")
 	evaluateTrue := tagFilter.filterTags(specTags)
@@ -552,7 +546,6 @@ func (s *MySuite) TestSanitizeTags(c *C) {
 
 func (s *MySuite) TestSanitizeMixedCaseTags(c *C) {
 	before()
-	defer after()
 	specTags := []string{"abcd", "foo", "bar", "foo bar"}
 	tagFilter := NewScenarioFilterBasedOnTags(specTags, "abcd & foo Bar | true")
 	evaluateTrue := tagFilter.filterTags(specTags)
@@ -612,7 +605,6 @@ func (s *MySuite) TestToFilterSpecsByTags(c *C) {
 
 func (s *MySuite) TestToFilterSpecsByMixedCaseTags(c *C) {
 	before()
-	defer after()
 	myTags := []string{"tag1", "TAG2"}
 	scenario1 := &gauge.Scenario{
 		Heading: &gauge.Heading{Value: "First Scenario"},
@@ -701,7 +693,6 @@ func (s *MySuite) TestToFilterScenariosByTag(c *C) {
 
 func (s *MySuite) TestToFilterScenariosByMixedCaseTag(c *C) {
 	before()
-	defer after()
 	myTags := []string{"Tag-1", "tag2"}
 
 	scenario1 := &gauge.Scenario{

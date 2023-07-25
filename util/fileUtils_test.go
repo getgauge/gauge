@@ -33,6 +33,8 @@ func (s *MySuite) SetUpTest(c *C) {
 func (s *MySuite) TearDownTest(c *C) {
 	err := os.RemoveAll(dir)
 	c.Assert(err, Equals, nil)
+	c.Assert(os.Unsetenv(env.SpecsDir), Equals, nil)
+	c.Assert(os.Unsetenv(env.ConceptsDir), Equals, nil)
 }
 
 func (s *MySuite) TestFindAllSpecFiles(c *C) {
@@ -147,7 +149,6 @@ func (s *MySuite) TestFindAllConceptFilesInNestedDir(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFiles(c *C) {
-	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	specsDir, _ := filepath.Abs(filepath.Join("_testdata", "specs"))
 
@@ -165,21 +166,18 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsOutsideProjectRoot(c *C) {
-	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	os.Setenv(env.SpecsDir, "../_testSpecDir")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsWithInProject(c *C) {
-	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	os.Setenv(env.SpecsDir, "_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 2)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenConceptsDirSet(c *C) {
-	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	c.Assert(len(GetConceptFiles()), Equals, 2)
 
@@ -195,7 +193,6 @@ func (s *MySuite) TestGetConceptFilesWhenConceptsDirSet(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFilesWhenConceptDirIsOutsideProjectRoot(c *C) {
-	os.Clearenv()
 	config.ProjectRoot = "_testdata"
 	os.Setenv(env.ConceptsDir, "../_testSpecDir,../_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
@@ -288,7 +285,6 @@ func (s *MySuite) TestGetSpecFilesWhenSpecsDirDoesNotExists(c *C) {
 }
 
 func (s *MySuite) TestGetConceptFilesWhenConceptsDirDoesNotExists(c *C) {
-	os.Clearenv()
 	var expectedErrorMessage string
 	exitWithMessage = func(message string) {
 		expectedErrorMessage = message
