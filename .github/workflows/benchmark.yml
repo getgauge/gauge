@@ -96,6 +96,5 @@ jobs:
           find ./out -name '*.csv' -printf "cat %p >> docs/data/gauge/%f\n" | sh
           git config user.name "Github Actions"
           git config user.email "actions@users.noreply.github.com"
-          git add -a
-          git commit -sm "add benchmark for $GITHUB_SHA"
+          git commit -sam "add benchmark for $GITHUB_SHA"
           git push
