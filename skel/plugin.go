@@ -21,13 +21,12 @@ const (
 	html       = "html-report"
 )
 
-var requiredPlugins = []string{html}
-
 var SetupPlugins = func(silent bool) {
 	installPlugins(getPluginsToInstall(), silent)
 }
 
 func getPluginsToInstall() (plugins []string) {
+	requiredPlugins := []string{html}
 	if screenshotEnabled, err := strconv.ParseBool(strings.TrimSpace(os.Getenv(env.ScreenshotOnFailure))); err == nil && screenshotEnabled {
 		requiredPlugins = append(requiredPlugins, screenshot)
 	}
