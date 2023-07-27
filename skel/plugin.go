@@ -7,9 +7,13 @@
 package skel
 
 import (
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin"
 	"github.com/getgauge/gauge/plugin/install"
+	"os"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -17,13 +21,16 @@ const (
 	html       = "html-report"
 )
 
-var requiredPlugins = []string{screenshot, html}
+var requiredPlugins = []string{html}
 
 var SetupPlugins = func(silent bool) {
 	installPlugins(getPluginsToInstall(), silent)
 }
 
 func getPluginsToInstall() (plugins []string) {
+	if screenshotEnabled, err := strconv.ParseBool(strings.TrimSpace(os.Getenv(env.ScreenshotOnFailure))); err == nil && screenshotEnabled {
+		requiredPlugins = append(requiredPlugins, screenshot)
+	}
 	for _, p := range requiredPlugins {
 		if !plugin.IsPluginInstalled(p, "") {
 			plugins = append(plugins, p)
