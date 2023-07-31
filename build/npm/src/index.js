@@ -25,8 +25,10 @@ var downloadFollowingRedirect = function(url, resolve, reject) {
     https.get(url, { headers: { 'accept-encoding': 'gzip,deflate' } }, res => {
         if (res.statusCode >= 300 && res.statusCode < 400) {
             downloadFollowingRedirect(res.headers.location, resolve, reject);
+            res.resume()
         } else if (res.statusCode >= 400) {
             reject(new Error(`Unable to download '${url}' : ${res.statusCode}-'${res.statusMessage}'`));
+            res.resume()
         } else {
             const chunks = [];
             res
