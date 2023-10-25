@@ -26,7 +26,7 @@
   "devDependencies": {
     "chai": "^4.3.10",
     "mocha": "^10.2.0",
-    "sinon": "^16.1.0"
+    "sinon": "^17.0.0"
   },
   "dependencies": {
     "adm-zip": "^0.5.10"
