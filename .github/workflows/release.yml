@@ -134,22 +134,8 @@ jobs:
           echo -e "Gauge v$GAUGE_VERSION\n\n" > desc.txt
           release_description=$(ruby -e "$(curl -sSfL https://github.com/getgauge/gauge/raw/master/build/create_release_text.rb)" getgauge gauge)
           echo "$release_description" >> desc.txt
-          echo "Creating new draft for release v$GAUGE_VERSION"
-          hub release create -F ./desc.txt "v$GAUGE_VERSION"
-          rm -rf desc.txt
-          sleep 10
+          gh release create --title "Gauge v$GAUGE_VERSION" --notes-file ./desc.txt "v$GAUGE_VERSION" ./gauge-*
 
-          echo "---------------------------"
-          echo "Uploading artifacts"
-          echo "---------------------------"
-
-          for artifact in `ls gauge-*`; do
-            echo $artifact
-            hub release edit -m "" -a $artifact v$GAUGE_VERSION
-            if [ $? -ne 0 ]; then
-                exit 1
-            fi
-          done
 
   pypi-release:
     runs-on: ubuntu-latest
