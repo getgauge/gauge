@@ -50,11 +50,11 @@ end
 ast = Processor.new
 ast.process(Parser::CurrentRuby.parse(code))
 
-`curl -O -L https://github.com/getgauge/gauge/archive/v#{ARGV[0]}.tar.gz`
+`curl -O -L https://github.com/getgauge/gauge/archive/refs/tags/v#{ARGV[0]}.tar.gz`
 sha256 = `shasum -a 256 v#{ARGV[0]}.tar.gz`.split[0]
 
 code = code.sub! ast.old_sha256, sha256
-code = code.gsub(%r{(https://github.com/getgauge/gauge/archive/)v\d?.\d?.\d?.tar.gz}, "https://github.com/getgauge/gauge/archive/v#{ARGV[0]}.tar.gz")
+code = code.gsub(%r{(https://github.com/getgauge/gauge/archive/refs/tags/)v\d?.\d?.\d?.tar.gz}, "https://github.com/getgauge/gauge/archive/refs/tags/v#{ARGV[0]}.tar.gz")
 
 File.write(ARGV[1], code)
 
