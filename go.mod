@@ -1,6 +1,6 @@
 module github.com/getgauge/gauge
 
-go 1.20
+go 1.21
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
@@ -18,19 +18,20 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20231016165738-49dd2c1f3d0b
 	google.golang.org/grpc v1.59.0
 	google.golang.org/protobuf v1.31.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 
 require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/kr/pretty v0.2.1 // indirect
-	github.com/kr/text v0.1.0 // indirect
-	github.com/mattn/go-isatty v0.0.19 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
+	github.com/kr/text v0.2.0 // indirect
+	github.com/mattn/go-isatty v0.0.20 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
