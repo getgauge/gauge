@@ -21,11 +21,10 @@ github.com/envoyproxy/go-control-plane v0.9.7/go.mod h1:cwu0lG7PUMfa9snN8LXBig5y
 github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7+kN2VEUnK/pcBlmesArF7c=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
-github.com/getgauge/common v0.0.0-20211105093448-e0aee1ccb217 h1:eaanWSt7UVhb7ibkVLeAyJe3frTi6ixgv/GPfdnEe2U=
-github.com/getgauge/common v0.0.0-20211105093448-e0aee1ccb217/go.mod h1:e3V+gYeNMZt9gGaHqxwnVAwrewx6uauCqT+IE0vZhM8=
+github.com/getgauge/common v0.0.0-20231026143554-1599dddc7f01 h1:YS9Wlu7GKlfQcPzs1tTQ30nsjeAdJeJUqQq+j35YpVo=
+github.com/getgauge/common v0.0.0-20231026143554-1599dddc7f01/go.mod h1:p/Q0+qO2bLq08PuxaHrxIgkvKlGGYHyXad33+zKIiXU=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20210112094005-73ca40cb5ac4 h1:O4l3hyN9Te1Ij4R8R2tRLBxQmg3OIkY4Zjz6KPdsKU4=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20210112094005-73ca40cb5ac4/go.mod h1:c5LkFFgw86L1TPgx0bhPI86r9QC+mNlJedakpibSNcI=
-github.com/go-check/check v0.0.0-20190902080502-41f04d3bba15/go.mod h1:9ES+weclKsC9YodN5RgxqK/VD9HM9JsCSh7rNhMZE98=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
@@ -59,7 +58,6 @@ github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvK
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
-github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=
