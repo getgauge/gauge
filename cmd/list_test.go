@@ -10,7 +10,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/runner"
 )
 
 func TestOnlyUniqueTagsAreReturned(t *testing.T) {
@@ -32,6 +34,32 @@ func TestOnlyUniqueSpecsAreReturned(t *testing.T) {
 func TestOnlyUniqueSceanriosAreReturned(t *testing.T) {
 	listScenarios([]*gauge.Specification{buildTestSpecification()}, func(res []string) {
 		verifyUniqueness(res, []string{"scenario1"}, t)
+	})
+}
+
+func TestOnlyUniqueStepsAreReturned(t *testing.T) {
+	connectToRunner = func() (runner.Runner, error) {
+		return &mockRunner{
+			response: &gauge_messages.Message{
+				StepNamesResponse: &gauge_messages.StepNamesResponse{
+					Steps: []string{
+						"Vowels are <vowelString>.",
+						"Vowels in English language are <vowelString>.",
+						"The word <word> has <expectedCount> vowels.",
+						"Almost all words have vowels <wordsTable>",
+					},
+				},
+			},
+		}, nil
+	}
+	expected := []string{
+		"Almost all words have vowels <wordsTable>",
+		"The word <word> has <expectedCount> vowels.",
+		"Vowels are <vowelString>.",
+		"Vowels in English language are <vowelString>.",
+	}
+	listSteps([]*gauge.Specification{buildTestSpecification()}, func(res []string) {
+		verifyUniqueness(res, expected, t)
 	})
 }
 
