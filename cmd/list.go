@@ -138,7 +138,7 @@ func uniqueNonEmptyElementsOf(input []string) []string {
 
 func getImplementedStepsWithAliases() []string {
 	r, err := connectToRunner()
-	defer r.Kill()
+	defer func() { _ = r.Kill() }()
 	if err != nil {
 		panic(err)
 	}
