@@ -447,6 +447,10 @@ func (p *plugin) invokeService(m *gauge_messages.Message) error {
 		_, err = p.ReporterClient.NotifyStepExecutionEnding(ctx, m.GetStepExecutionEndingRequest())
 	case gauge_messages.Message_StepExecutionStarting:
 		_, err = p.ReporterClient.NotifyStepExecutionStarting(ctx, m.GetStepExecutionStartingRequest())
+	case gauge_messages.Message_ConceptExecutionEnding:
+		_, err = p.ReporterClient.NotifyConceptExecutionEnding(ctx, m.GetConceptExecutionEndingRequest())
+	case gauge_messages.Message_ConceptExecutionStarting:
+		_, err = p.ReporterClient.NotifyConceptExecutionStarting(ctx, m.GetConceptExecutionStartingRequest())
 	}
 	return err
 }

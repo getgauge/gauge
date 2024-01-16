@@ -141,6 +141,24 @@ func (e *scenarioExecutor) notifyAfterScenarioHook(scenarioResult *result.Scenar
 	e.pluginHandler.NotifyPlugins(message)
 }
 
+func (e *scenarioExecutor) notifyBeforeConcept(conceptResult *result.ScenarioResult) {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionStarting,
+		ConceptExecutionStartingRequest: &gauge_messages.ConceptExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
+	e.pluginHandler.NotifyPlugins(message)
+}
+
+func (e *scenarioExecutor) notifyAfterConcept(conceptResult *result.ScenarioResult) {
+	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionEnding,
+		ConceptExecutionEndingRequest: &gauge_messages.ConceptExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
+	e.pluginHandler.NotifyPlugins(message)
+}
+
+func (e *scenarioExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
+	stepRequest := &gauge_messages.ExecuteStepRequest{ParsedStepText: protoStep.GetParsedText(), ActualStepText: protoStep.GetActualText(), Stream: int32(e.stream)}
+	stepRequest.Parameters = getParameters(protoStep.GetFragments())
+	return stepRequest
+}
+
 func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge_messages.ProtoItem, scenarioResult *result.ScenarioResult) bool {
 	var stepsIndex int
 	for _, protoItem := range protoItems {
@@ -178,8 +196,12 @@ func (e *scenarioExecutor) executeStep(step *gauge.Step, protoItem *gauge_messag
 
 func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_messages.ProtoConcept, scenarioResult *result.ScenarioResult) *result.ConceptResult {
 	cptResult := result.NewConceptResult(protoConcept)
+
+	// Add the Concept step data to the Execution info that is sent to plugins
+	stepRequest := e.createStepRequest(protoConcept.ConceptStep)
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
 	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, e.currentExecutionInfo))
-	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
+	e.notifyBeforeConcept(scenarioResult)
 
 	var conceptStepIndex int
 	for _, protoStep := range protoConcept.Steps {
@@ -197,6 +219,12 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 		}
 	}
 	cptResult.UpdateConceptExecResult()
+
+	// Restore the Concept step to the Execution info that is sent to plugins
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
+	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
+	defer e.notifyAfterConcept(scenarioResult)
+	
 	return cptResult
 }
 
