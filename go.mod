@@ -1,13 +1,13 @@
 module github.com/getgauge/gauge
 
-go 1.21.5
+go 1.21
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/getgauge/common v0.0.0-20231026143554-1599dddc7f01
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240117152029-6ad2c75d5dea
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240122132601-bb92eb77d703
 	github.com/golang/protobuf v1.5.3
 	github.com/magiconair/properties v1.8.7
 	github.com/natefinch/lumberjack v2.0.0+incompatible
