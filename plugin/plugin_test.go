@@ -64,6 +64,14 @@ func (client *mockResultClient) NotifyStepExecutionEnding(c context.Context, r *
 	return nil, nil
 }
 
+func (client *mockResultClient) NotifyConceptExecutionStarting(c context.Context, r *gm.ConceptExecutionStartingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
+func (client *mockResultClient) NotifyConceptExecutionEnding(c context.Context, r *gm.ConceptExecutionEndingRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
+	return nil, nil
+}
+
 func (client *mockResultClient) Kill(c context.Context, r *gm.KillProcessRequest, opts ...grpc.CallOption) (*gm.Empty, error) {
 	return nil, nil
 }
