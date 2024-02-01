@@ -214,6 +214,12 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 				if recoverable {
 					continue
 				}
+				// The concept is finishing after a step failure
+				// Restore the Concept step data in the Execution info that is sent to plugins
+				e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
+				defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
+				defer e.notifyAfterConcept(scenarioResult)
+
 				return cptResult
 			}
 		}
