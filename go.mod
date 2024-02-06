@@ -1,6 +1,6 @@
 module github.com/getgauge/gauge
 
-go 1.21
+go 1.21.0
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
@@ -40,3 +40,5 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/getgauge/gauge-proto/go/gauge_messages => ../gauge-proto/go/gauge_messages
