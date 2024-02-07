@@ -201,7 +201,7 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 
 	// Add the Concept step data to the Execution info that is sent to plugins
 	stepRequest := e.createStepRequest(protoConcept.ConceptStep)
-	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false, IsConcept: true}
 	event.Notify(event.NewExecutionEvent(event.ConceptStart, item, nil, e.stream, e.currentExecutionInfo))
 	e.notifyBeforeConcept(scenarioResult)
 
@@ -218,7 +218,7 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 				}
 				// The concept is finishing after a step failure
 				// Restore the Concept step data in the Execution info that is sent to plugins
-				e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
+				e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false, IsConcept: true}
 				defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
 				defer e.notifyAfterConcept(scenarioResult)
 
@@ -229,7 +229,7 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 	cptResult.UpdateConceptExecResult()
 
 	// Restore the Concept step to the Execution info that is sent to plugins
-	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false, IsConcept: true}
 	defer event.Notify(event.NewExecutionEvent(event.ConceptEnd, nil, cptResult, e.stream, e.currentExecutionInfo))
 	defer e.notifyAfterConcept(scenarioResult)
 	
