@@ -2,7 +2,7 @@ bleach==6.1.0
 certifi==2023.7.22
 charset-normalizer==3.1.0
 docutils==0.20.1
-idna==3.4
+idna==3.6
 importlib-metadata==6.7.0
 jaraco.classes==3.3.1
 keyring==24.2.0
