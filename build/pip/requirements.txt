@@ -4,7 +4,7 @@ charset-normalizer==3.1.0
 docutils==0.20.1
 idna==3.4
 importlib-metadata==6.7.0
-jaraco.classes==3.2.3
+jaraco.classes==3.3.1
 keyring==24.2.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
