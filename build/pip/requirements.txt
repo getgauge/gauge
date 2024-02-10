@@ -15,7 +15,7 @@ readme-renderer==42.0
 requests==2.31.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
-rich==13.4.2
+rich==13.7.0
 six==1.16.0
 twine==4.0.2
 urllib3==2.2.0
