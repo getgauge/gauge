@@ -161,15 +161,14 @@ jobs:
 
       - name: Deploy to pypi
         env:
-          PYPI_USER: ${{ secrets.PYPI_USER }}
           GAUGE_PACKAGE_NAME: getgauge-cli
-          PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           cd build/pip
           pip install -r requirements.txt
           python build.py --dist
           gauge_package=`ls dist/$GAUGE_PACKAGE_NAME-$GAUGE_VERSION.tar.gz`
-          python -m twine upload -u $PYPI_USER -p $PYPI_PASSWORD $gauge_package
+          python -m twine upload --non-interactive $gauge_package
 
   npm-release:
     runs-on: ubuntu-latest
