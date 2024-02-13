@@ -4,17 +4,15 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
-  ignore:
-  - dependency-name: github.com/spf13/cobra
-    versions:
-    - 1.1.2
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule: 
     interval: weekly
-  # Disable rebasing for npm pull requests
-  rebase-strategy: "disabled"
-- package-ecosystem: 'npm'
-  directory: '/build/npm'
+- package-ecosystem: npm
+  directory: "/build/npm"
   schedule:
-    interval: 'weekly'
+    interval: weekly
+- package-ecosystem: pip
+  directory: "build/pip"
+  schedule:
+    interval: weekly

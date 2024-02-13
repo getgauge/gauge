@@ -209,7 +209,7 @@ jobs:
 
   choco-release:
     runs-on: windows-latest
-    needs: [gauge-version]
+    needs: [gauge-version, windows-package]
     steps:
       - uses: actions/checkout@v4
       - run: git fetch --prune --unshallow
@@ -219,6 +219,11 @@ jobs:
         with:
           name: gauge-version
           path: .
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: gauge-windows-artifact
+          path: ./deploy
 
       - name: Set gauge version
         run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
