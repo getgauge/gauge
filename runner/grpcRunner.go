@@ -227,7 +227,7 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 		}
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
-	return res.ExecutionStatusResponse.ExecutionResult
+	if res != nil { return res.ExecutionStatusResponse.ExecutionResult } else { return nil }
 }
 
 // Alive check if the runner process is still alive
