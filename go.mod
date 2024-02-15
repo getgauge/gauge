@@ -6,7 +6,7 @@ require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/getgauge/common v0.0.0-20231026143554-1599dddc7f01
+	github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240215051240-9e50dbd68dfa
 	github.com/golang/protobuf v1.5.3
 	github.com/magiconair/properties v1.8.7
