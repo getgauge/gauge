@@ -4,15 +4,29 @@ updates:
   directory: "/"
   schedule:
     interval: weekly
+  allow:
+    - dependency-type: all
 - package-ecosystem: "github-actions"
   directory: "/"
   schedule: 
     interval: weekly
+  groups:
+    github-actions:
+      patterns:
+        - "*"
 - package-ecosystem: npm
   directory: "/build/npm"
   schedule:
     interval: weekly
+  groups:
+    build-npm:
+      patterns:
+        - "*"
 - package-ecosystem: pip
   directory: "build/pip"
   schedule:
     interval: weekly
+  groups:
+    build-python:
+      patterns:
+        - "*"
