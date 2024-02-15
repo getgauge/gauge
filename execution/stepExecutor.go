@@ -25,7 +25,7 @@ type stepExecutor struct {
 // TODO: stepExecutor should not consume both gauge.Step and gauge_messages.ProtoStep. The usage of ProtoStep should be eliminated.
 func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.ProtoStep) *result.StepResult {
 	stepRequest := e.createStepRequest(protoStep)
-	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false, IsConcept: false}
+	e.currentExecutionInfo.CurrentStep = &gauge_messages.StepInfo{Step: stepRequest, IsFailed: false}
 	stepResult := result.NewStepResult(protoStep)
 	for i := range step.GetFragments() {
 		stepFragmet := step.GetFragments()[i]
