@@ -150,6 +150,12 @@ func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) 
 	case gm.Message_KillProcessRequest:
 		_, _ = r.RunnerClient.Kill(context.Background(), message.KillProcessRequest)
 		return nil, nil
+	case gm.Message_ConceptExecutionStarting:
+		_, err := r.RunnerClient.NotifyConceptExecutionStarting(context.Background(), message.ConceptExecutionStartingRequest)
+		return nil, err
+	case gm.Message_ConceptExecutionEnding:
+		_, err := r.RunnerClient.NotifyConceptExecutionEnding(context.Background(), message.ConceptExecutionEndingRequest)
+		return nil, err
 	default:
 		return nil, nil
 	}
@@ -221,7 +227,7 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 		}
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
-	return res.ExecutionStatusResponse.ExecutionResult
+	if res != nil { return res.ExecutionStatusResponse.ExecutionResult } else { return nil }
 }
 
 // Alive check if the runner process is still alive

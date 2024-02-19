@@ -145,12 +145,18 @@ func (e *scenarioExecutor) notifyBeforeConcept(conceptResult *result.ScenarioRes
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionStarting,
 		ConceptExecutionStartingRequest: &gauge_messages.ConceptExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(message)
+	if (e.runner.Info().ConceptMessages) {
+		_ = e.runner.ExecuteAndGetStatus(message)
+	}
 }
 
 func (e *scenarioExecutor) notifyAfterConcept(conceptResult *result.ScenarioResult) {
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionEnding,
 		ConceptExecutionEndingRequest: &gauge_messages.ConceptExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(message)
+	if (e.runner.Info().ConceptMessages) {
+		_ = e.runner.ExecuteAndGetStatus(message)
+	}
 }
 
 func (e *scenarioExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
