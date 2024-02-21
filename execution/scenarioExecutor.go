@@ -146,7 +146,10 @@ func (e *scenarioExecutor) notifyBeforeConcept(conceptResult *result.ScenarioRes
 		ConceptExecutionStartingRequest: &gauge_messages.ConceptExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(message)
 	if (e.runner.Info().ConceptMessages) {
-		_ = e.runner.ExecuteAndGetStatus(message)
+		res := e.runner.ExecuteAndGetStatus(message)
+		if (res != nil) {
+			logger.Info(true, res.ErrorMessage)
+		}
 	}
 }
 
@@ -155,7 +158,10 @@ func (e *scenarioExecutor) notifyAfterConcept(conceptResult *result.ScenarioResu
 		ConceptExecutionEndingRequest: &gauge_messages.ConceptExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	e.pluginHandler.NotifyPlugins(message)
 	if (e.runner.Info().ConceptMessages) {
-		_ = e.runner.ExecuteAndGetStatus(message)
+		res := e.runner.ExecuteAndGetStatus(message)
+		if (res != nil) {
+			logger.Info(true, res.ErrorMessage)
+		}
 	}
 }
 
