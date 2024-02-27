@@ -151,11 +151,11 @@ func (r *GrpcRunner) invokeServiceFor(message *gm.Message) (*gm.Message, error) 
 		_, _ = r.RunnerClient.Kill(context.Background(), message.KillProcessRequest)
 		return nil, nil
 	case gm.Message_ConceptExecutionStarting:
-		_, err := r.RunnerClient.NotifyConceptExecutionStarting(context.Background(), message.ConceptExecutionStartingRequest)
-		return nil, err
+		response, err := r.RunnerClient.NotifyConceptExecutionStarting(context.Background(), message.ConceptExecutionStartingRequest)
+		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	case gm.Message_ConceptExecutionEnding:
-		_, err := r.RunnerClient.NotifyConceptExecutionEnding(context.Background(), message.ConceptExecutionEndingRequest)
-		return nil, err
+		response, err := r.RunnerClient.NotifyConceptExecutionEnding(context.Background(), message.ConceptExecutionEndingRequest)
+		return &gm.Message{MessageType: gm.Message_ExecutionStatusResponse, ExecutionStatusResponse: response}, err
 	default:
 		return nil, nil
 	}
