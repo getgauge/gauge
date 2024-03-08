@@ -725,9 +725,10 @@ func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {
 
 func TestExecuteScenarioShoulHaveRetriesInfo(t *testing.T) {
 	MaxRetriesCount = 3
-	se := newSpecExecutorForTestsWithRetry()
+	RetryOnlyTags = "tagSce"
 
-	sceResult, _ := se.executeScenario(exampleSpecWithScenarios.Scenarios[0])
+	se := newSpecExecutorForTestsWithRetry()
+	sceResult, _ := se.executeScenario(exampleSpecWithTags.Scenarios[0])
 
 	if sceResult.GetFailed() {
 		t.Errorf("Expect sceResult.GetFailed() = false, got true")
