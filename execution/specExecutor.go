@@ -299,6 +299,10 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			Name:     scenario.Heading.Value,
 			Tags:     getTagValue(scenario.Tags),
 			IsFailed: false,
+			Retries: &gauge_messages.ScenarioRetriesInfo{ 
+				MaxRetries: int32(MaxRetriesCount)-1,
+				CurrentRetry: int32(retriesCount),
+			},
 		}
 
 		scenarioResult = &result.ScenarioResult{

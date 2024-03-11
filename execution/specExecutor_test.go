@@ -722,3 +722,26 @@ func TestExecuteShouldMarkSpecAsSkippedWhenAllScenariosSkipped(t *testing.T) {
 		t.Error("Expect SpecResult.Skipped = true, got false")
 	}
 }
+
+func TestExecuteScenarioShoulHaveRetriesInfo(t *testing.T) {
+	MaxRetriesCount = 3
+	RetryOnlyTags = "tagSce"
+
+	se := newSpecExecutorForTestsWithRetry()
+	sceResult, _ := se.executeScenario(exampleSpecWithTags.Scenarios[0])
+
+	if sceResult.GetFailed() {
+		t.Errorf("Expect sceResult.GetFailed() = false, got true")
+	}
+	if se.currentExecutionInfo.CurrentScenario.Retries.MaxRetries != int32(MaxRetriesCount - 1) {
+		t.Errorf("Expected MaxRetries %d, got %d", 
+			int32(MaxRetriesCount - 1), 
+			se.currentExecutionInfo.CurrentScenario.Retries.MaxRetries)
+	}
+	if se.currentExecutionInfo.CurrentScenario.Retries.CurrentRetry != int32(MaxRetriesCount - 1) {
+		t.Errorf("Expected CurrentRetry %d, got %d", 
+			int32(MaxRetriesCount - 1), 
+			se.currentExecutionInfo.CurrentScenario.Retries.CurrentRetry)
+	}
+}
+
