@@ -8,7 +8,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240305092417-e4088981ee73
-	github.com/golang/protobuf v1.5.3
+	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.7
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
