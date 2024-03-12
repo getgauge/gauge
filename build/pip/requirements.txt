@@ -3,7 +3,7 @@ certifi==2024.2.2
 charset-normalizer==3.3.2
 docutils==0.20.1
 idna==3.6
-importlib-metadata==7.0.1
+importlib-metadata==7.0.2
 jaraco.classes==3.3.1
 keyring==24.3.1
 markdown-it-py==3.0.0
