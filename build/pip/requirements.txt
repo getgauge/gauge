@@ -20,4 +20,4 @@ six==1.16.0
 twine==5.0.0
 urllib3==2.2.1
 webencodings==0.5.1
-zipp==3.17.0
+zipp==3.18.1
