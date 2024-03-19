@@ -29,6 +29,6 @@
     "sinon": "^17.0.1"
   },
   "dependencies": {
-    "adm-zip": "^0.5.10"
+    "adm-zip": "^0.5.12"
   }
 }
