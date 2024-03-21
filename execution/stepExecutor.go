@@ -46,6 +46,9 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 			e.currentExecutionInfo.CurrentStep.StackTrace = stepExecutionStatus.GetStackTrace()
 			setStepFailure(e.currentExecutionInfo)
 			stepResult.SetStepFailure()
+		} else if stepResult.GetSkippedScenario() {
+			e.currentExecutionInfo.CurrentStep.ErrorMessage = stepExecutionStatus.GetErrorMessage()
+			e.currentExecutionInfo.CurrentStep.StackTrace = stepExecutionStatus.GetStackTrace()
 		}
 		stepResult.SetProtoExecResult(stepExecutionStatus)
 	}
@@ -95,3 +98,5 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	m.StepExecutionEndingRequest.StepResult = gauge.ConvertToProtoStepResult(stepResult)
 	e.pluginHandler.NotifyPlugins(m)
 }
+
+
