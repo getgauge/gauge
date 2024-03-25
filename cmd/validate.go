@@ -19,10 +19,11 @@ const (
 
 var (
 	validateCmd = &cobra.Command{
-		Use:     "validate [flags] [args]",
-		Short:   "Check for validation and parse errors",
-		Long:    `Check for validation and parse errors.`,
-		Example: "  gauge validate specs/",
+		Use:   "validate [flags] [args]",
+		Short: "Check for validation and parse errors",
+		Long:  `Check for validation and parse errors.`,
+		Example: `  gauge validate specs/
+  gauge validate --env test specs/`,
 		Run: func(cmd *cobra.Command, args []string) {
 			validation.HideSuggestion = hideSuggestion
 			if err := config.SetProjectRoot(args); err != nil {
@@ -39,5 +40,7 @@ var (
 
 func init() {
 	GaugeCmd.AddCommand(validateCmd)
-	validateCmd.Flags().BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
+	flags := validateCmd.Flags()
+	flags.BoolVarP(&hideSuggestion, "hide-suggestion", "", false, "Prints a step implementation stub for every unimplemented step")
+	flags.StringVarP(&environment, environmentName, "e", environmentDefault, "Specifies the environment to use")
 }
