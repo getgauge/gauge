@@ -88,6 +88,11 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 
 	if scenarioResult.GetSkippedScenario() {
+		if len(scenarioResult.ProtoScenario.PreHookMessages) > 0 {
+			e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(scenarioResult.ProtoScenario.PreHookMessages[0])}, e.errMap.ScenarioErrs[scenario]...)
+		} else {
+			e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(e.currentExecutionInfo.CurrentStep.ErrorMessage)}, e.errMap.ScenarioErrs[scenario]...)
+		}
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 
@@ -131,6 +136,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	}
 	if skippedScenario(res.GetSkipScenario()) {
 		scenarioResult.SetSkippedScenario()
+		scenarioResult.ProtoScenario.PreHookMessages = []string{res.ErrorMessage}
 	}
 	message.ScenarioExecutionStartingRequest.ScenarioResult = gauge.ConvertToProtoScenarioResult(scenarioResult)
 	e.pluginHandler.NotifyPlugins(message)
