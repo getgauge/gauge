@@ -88,11 +88,7 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 
 	if scenarioResult.GetSkippedScenario() {
-		if len(scenarioResult.ProtoScenario.PreHookMessages) > 0 {
-			e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(scenarioResult.ProtoScenario.PreHookMessages[0])}, e.errMap.ScenarioErrs[scenario]...)
-		} else {
-			e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(e.currentExecutionInfo.CurrentStep.ErrorMessage)}, e.errMap.ScenarioErrs[scenario]...)
-		}
+		e.updateErrMap(i, r)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 
@@ -332,4 +328,14 @@ func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Param
 func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setSpecFailure(executionInfo)
 	executionInfo.CurrentScenario.IsFailed = true
+}
+
+func (e *scenarioExecutor) updateErrMap(i gauge.Item, r result.Result) {
+	scenario := i.(*gauge.Scenario)
+	scenarioResult := r.(*result.ScenarioResult)
+	if len(scenarioResult.ProtoScenario.PreHookMessages) > 0 {
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(scenarioResult.ProtoScenario.PreHookMessages[0])}, e.errMap.ScenarioErrs[scenario]...)
+	} else {
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(e.currentExecutionInfo.CurrentStep.ErrorMessage)}, e.errMap.ScenarioErrs[scenario]...)
+	}
 }
