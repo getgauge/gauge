@@ -31,6 +31,14 @@ func (s ScenarioResult) GetFailed() bool {
 	return s.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED
 }
 
+func (s ScenarioResult) SetSkippedScenario() {
+	s.ProtoScenario.ExecutionStatus = gauge_messages.ExecutionStatus_SKIPPED
+}
+
+func (s ScenarioResult) GetSkippedScenario() bool {
+	return s.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED
+}
+
 func (s ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
 	s.ProtoScenario.ScenarioItems = append(s.ProtoScenario.ScenarioItems, protoItems...)
 }
