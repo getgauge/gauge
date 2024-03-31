@@ -1,12 +1,12 @@
 module github.com/getgauge/gauge
 
-go 1.21
+go 1.22
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9
+	github.com/getgauge/common v0.0.0-20240214053023-28ee5a460a1a
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240305092417-e4088981ee73
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.7
@@ -18,7 +18,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240304212257-790db918fca8
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
