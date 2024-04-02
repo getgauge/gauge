@@ -57,12 +57,7 @@ func (s *StepResult) GetStepFailed() bool {
 }
 
 func (s *StepResult) GetSkippedScenario() bool {
-	for _, ok := range s.ProtoStep.StepExecutionResult.ExecutionResult.GetSkipScenario() {
-		if ok {
-			return true
-		}
-	}
-	return false
+	return s.ProtoStep.StepExecutionResult.ExecutionResult.GetSkipScenario() 
 }
 
 // GetStackTrace returns the stacktrace for step failure

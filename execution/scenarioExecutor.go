@@ -88,7 +88,7 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 
 	if scenarioResult.GetSkippedScenario() {
-		e.updateErrMap(i, r)
+		e.skippedScenarioUpdateErrMap(i, r)
 		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 
@@ -130,7 +130,7 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
 	}
-	if skippedScenario(res.GetSkipScenario()) {
+	if res.GetSkipScenario() {
 		scenarioResult.SetSkippedScenario()
 		scenarioResult.ProtoScenario.PreHookMessages = []string{res.ErrorMessage}
 	}
@@ -238,7 +238,7 @@ func (e *scenarioExecutor) executeStep(step *gauge.Step, protoItem *gauge_messag
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, stream: e.stream}
 		res := se.executeStep(step, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
-		if skippedScenario(res.ProtoStepExecResult().ExecutionResult.SkipScenario) {
+		if res.ProtoStepExecResult().ExecutionResult.GetSkipScenario() {
 			scenarioResult.SetSkippedScenario()
 		}
 		failed = res.GetFailed()
@@ -301,15 +301,6 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 	return cptResult
 }
 
-func skippedScenario(result []bool) bool {
-    for _, ok := range result {
-        if ok {
-            return true
-        }
-    }
-    return false
-}
-
 func setStepFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setScenarioFailure(executionInfo)
 	executionInfo.CurrentStep.IsFailed = true
@@ -330,12 +321,14 @@ func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	executionInfo.CurrentScenario.IsFailed = true
 }
 
-func (e *scenarioExecutor) updateErrMap(i gauge.Item, r result.Result) {
+func (e *scenarioExecutor) skippedScenarioUpdateErrMap(i gauge.Item, r result.Result) {
 	scenario := i.(*gauge.Scenario)
 	scenarioResult := r.(*result.ScenarioResult)
 	if len(scenarioResult.ProtoScenario.PreHookMessages) > 0 {
 		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(scenarioResult.ProtoScenario.PreHookMessages[0])}, e.errMap.ScenarioErrs[scenario]...)
+		scenarioResult.ProtoScenario.SkipErrors = scenarioResult.ProtoScenario.PreHookMessages
 	} else {
 		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(e.currentExecutionInfo.CurrentStep.ErrorMessage)}, e.errMap.ScenarioErrs[scenario]...)
+		scenarioResult.ProtoScenario.SkipErrors = []string{e.currentExecutionInfo.CurrentStep.ErrorMessage}
 	}
 }
