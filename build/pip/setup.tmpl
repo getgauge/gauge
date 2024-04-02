@@ -37,7 +37,7 @@ class CustomInstallCommand(install):
         _latest_version = json.loads(self._get(self._base_url).text)[0]['tag_name'].replace('v', '')
 
     def _get_gauge_file(self):
-        if self._os_name is 'win32':
+        if self._os_name == 'win32':
             return 'gauge.exe'
         else:
             return 'gauge'
@@ -63,7 +63,7 @@ class CustomInstallCommand(install):
             os.remove(target_path)
         if os.path.isfile(source_path):
             self.move_file(source_path, target_path)
-            if self._os_name is not "win32":
+            if self._os_name != "win32":
                 if sys.version_info[0] == 3:
                     os.chmod(target_path, 0o755)
                 if sys.version_info[0] < 3:

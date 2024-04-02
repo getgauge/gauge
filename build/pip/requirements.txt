@@ -16,6 +16,7 @@ requests==2.31.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.7.1
+setuptools==69.2.0
 six==1.16.0
 twine==5.0.0
 urllib3==2.2.1
