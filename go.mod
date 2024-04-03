@@ -2,13 +2,11 @@ module github.com/getgauge/gauge
 
 go 1.22
 
-toolchain go1.22.1
-
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.7.0
-	github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9
+	github.com/getgauge/common v0.0.0-20240331100109-225c78ec8f30
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240402072853-303b17b7c486
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.7
@@ -28,7 +26,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.3.2 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.3 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

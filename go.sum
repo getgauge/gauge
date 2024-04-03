@@ -2,8 +2,9 @@ github.com/BurntSushi/toml v1.3.2 h1:o7IhLm0Msx3BaB+n3Ag7L8EVlByGnpq14C4YWiu/gL8
 github.com/BurntSushi/toml v1.3.2/go.mod h1:CxXYINrC8qIiEnFrOxCa7Jy5BFHlXnUU2pbicEuybxQ=
 github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5 h1:VYqcjykqpcq262cDxBAkAelSdg6HETkxgwzQRTS40Aw=
 github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5/go.mod h1:E7x8aDc3AQzDKjEoIZCt+XYheHk2OkP+p2UgeNjecH8=
-github.com/cpuguy83/go-md2man/v2 v2.0.3 h1:qMCsGGgs+MAzDFyp9LpAe1Lqy/fY/qCovCm0qnXZOBM=
 github.com/cpuguy83/go-md2man/v2 v2.0.3/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
+github.com/cpuguy83/go-md2man/v2 v2.0.4 h1:wfIWP927BUkWJb2NmU/kNDYIBTh/ziUX91+lVfRxZq4=
+github.com/cpuguy83/go-md2man/v2 v2.0.4/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/daviddengcn/go-colortext v1.0.0 h1:ANqDyC0ys6qCSvuEK7l3g5RaehL/Xck9EX8ATG8oKsE=
 github.com/daviddengcn/go-colortext v1.0.0/go.mod h1:zDqEI5NVUop5QPpVJUxE9UO10hRnmkD5G4Pmri9+m4c=
@@ -11,8 +12,8 @@ github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 h1:sP2APvSdZ
 github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47/go.mod h1:f2V6964+f0p8Asqy8mIK5cKyyVc6MP9PFzGVNRcnYJQ=
 github.com/fsnotify/fsnotify v1.7.0 h1:8JEhPFa5W2WU7YfeZzPNqzMP6Lwt7L2715Ggo0nosvA=
 github.com/fsnotify/fsnotify v1.7.0/go.mod h1:40Bi/Hjc2AVfZrqy+aj+yEI+/bRxZnMJyTJwOpGvigM=
-github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9 h1:OwggKdL8AeteB2y0xJzloieq9CMhYG7YmKKMh6D8FLs=
-github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9/go.mod h1:p/Q0+qO2bLq08PuxaHrxIgkvKlGGYHyXad33+zKIiXU=
+github.com/getgauge/common v0.0.0-20240331100109-225c78ec8f30 h1:pGrxY3IZb/1wwlSUSKYplmQ9kEh4rRpcAvQYI2WcxX0=
+github.com/getgauge/common v0.0.0-20240331100109-225c78ec8f30/go.mod h1:q7UW1tDojJwCQPUHaE1ny71IZIDuKlsgh3Tyr5wAZDk=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240402072853-303b17b7c486 h1:kb/Ey0fFX+EHPmFcOEZDa0s4bgsRpRF8iDJEcbZPgLU=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240402072853-303b17b7c486/go.mod h1:ZOT57PjvIqY31eGcwhj/LSi/K6ULBE1AhFcIMzWkmPg=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
