@@ -9,7 +9,7 @@ require (
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/getgauge/common v0.0.0-20231211152919-94c93e29f0b9
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240305092417-e4088981ee73
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240402072853-303b17b7c486
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.7
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -20,7 +20,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20240325203815-454cdb8f5daa
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda
 	google.golang.org/grpc v1.62.1
 	google.golang.org/protobuf v1.33.0
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -42,5 +42,3 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/getgauge/gauge-proto/go/gauge_messages => ../gauge-proto/go/gauge_messages
