@@ -15,8 +15,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'go.mod'
-        id: go
 
       - name: Compile gauge
         run: go run build/make.go --all-platforms  --skip-windows
@@ -39,8 +39,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'go.mod'
-        id: go
 
       - name: Prep installer generation
         shell: powershell
