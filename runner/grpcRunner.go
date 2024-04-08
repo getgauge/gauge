@@ -227,7 +227,11 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 		}
 		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
-	if res != nil { return res.ExecutionStatusResponse.ExecutionResult } else { return nil }
+	if res != nil {
+		return res.ExecutionStatusResponse.ExecutionResult
+	} else {
+		return nil
+	}
 }
 
 // Alive check if the runner process is still alive
@@ -333,7 +337,7 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 		return nil, fmt.Errorf("Timed out connecting to %s", m.Language)
 	}
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", host, port),
+	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(oneGB), grpc.MaxCallSendMsgSize(oneGB)),
 		grpc.WithBlock())
