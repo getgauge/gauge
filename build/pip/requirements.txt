@@ -5,7 +5,7 @@ docutils==0.20.1
 idna==3.6
 importlib-metadata==7.1.0
 jaraco.classes==3.4.0
-keyring==25.0.0
+keyring==25.1.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
 more-itertools==10.2.0
