@@ -8,13 +8,14 @@ package filter
 
 import (
 	"errors"
-	"github.com/getgauge/gauge/env"
 	"go/constant"
 	"go/token"
 	"go/types"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/getgauge/gauge/env"
 
 	"fmt"
 
