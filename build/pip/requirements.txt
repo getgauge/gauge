@@ -12,7 +12,7 @@ more-itertools==10.2.0
 pkginfo==1.10.0
 Pygments==2.18.0
 readme-renderer==43.0
-requests==2.31.0
+requests==2.32.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.7.1
