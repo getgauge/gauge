@@ -73,16 +73,23 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 	e.notifyBeforeScenarioHook(scenarioResult)
 
-	if !scenarioResult.GetFailed() {
+	if !(scenarioResult.GetFailed() || scenarioResult.GetSkippedScenario()) {
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
 		// context and steps are not appended together since sometime it cause the issue and the steps in step list and proto step list differs.
 		// This is done to fix https://github.com/getgauge/gauge/issues/1629
 		if e.executeSteps(e.contexts, protoContexts, scenarioResult) {
-			e.executeSteps(scenario.Steps, protoScenItems, scenarioResult)
+			if !scenarioResult.GetSkippedScenario() {
+				e.executeSteps(scenario.Steps, protoScenItems, scenarioResult)
+			}
 		}
 		// teardowns are not appended to previous call to executeSteps to ensure they are run irrespective of context/step failure
 		e.executeSteps(e.teardowns, scenarioResult.ProtoScenario.GetTearDownSteps(), scenarioResult)
+	}
+
+	if scenarioResult.GetSkippedScenario() {
+		e.skippedScenarioUpdateErrMap(i, r)
+		setSkipInfoInResult(scenarioResult, scenario, e.errMap)
 	}
 
 	e.notifyAfterScenarioHook(scenarioResult)
@@ -122,6 +129,10 @@ func (e *scenarioExecutor) notifyBeforeScenarioHook(scenarioResult *result.Scena
 	if res.GetFailed() {
 		setScenarioFailure(e.currentExecutionInfo)
 		handleHookFailure(scenarioResult, res, result.AddPreHook)
+	}
+	if res.GetSkipScenario() {
+		scenarioResult.SetSkippedScenario()
+		scenarioResult.ProtoScenario.PreHookMessages = []string{res.ErrorMessage}
 	}
 	message.ScenarioExecutionStartingRequest.ScenarioResult = gauge.ConvertToProtoScenarioResult(scenarioResult)
 	e.pluginHandler.NotifyPlugins(message)
@@ -205,6 +216,11 @@ func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge
 					return false
 				}
 			}
+			if scenarioResult.GetSkippedScenario() {
+				// The step execution resulted in SkipScenario. 
+				// The rest of steps execution is skipped
+				break;
+			}
 		}
 	}
 	return true
@@ -222,6 +238,9 @@ func (e *scenarioExecutor) executeStep(step *gauge.Step, protoItem *gauge_messag
 		se := &stepExecutor{runner: e.runner, pluginHandler: e.pluginHandler, currentExecutionInfo: e.currentExecutionInfo, stream: e.stream}
 		res := se.executeStep(step, protoItem.GetStep())
 		protoItem.GetStep().StepExecutionResult = res.ProtoStepExecResult()
+		if res.ProtoStepExecResult().ExecutionResult.GetSkipScenario() {
+			scenarioResult.SetSkippedScenario()
+		}
 		failed = res.GetFailed()
 		recoverable = res.ProtoStepExecResult().GetExecutionResult().GetRecoverableError()
 	}
@@ -262,6 +281,11 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 
 				return cptResult
 			}
+			if scenarioResult.GetSkippedScenario() {
+				// The step execution resulted in SkipScenario. 
+				// The rest of steps execution is skipped
+				break;
+			}
 		}
 	}
 	cptResult.UpdateConceptExecResult()
@@ -295,4 +319,16 @@ func getParameters(fragments []*gauge_messages.Fragment) []*gauge_messages.Param
 func setScenarioFailure(executionInfo *gauge_messages.ExecutionInfo) {
 	setSpecFailure(executionInfo)
 	executionInfo.CurrentScenario.IsFailed = true
+}
+
+func (e *scenarioExecutor) skippedScenarioUpdateErrMap(i gauge.Item, r result.Result) {
+	scenario := i.(*gauge.Scenario)
+	scenarioResult := r.(*result.ScenarioResult)
+	if len(scenarioResult.ProtoScenario.PreHookMessages) > 0 {
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(scenarioResult.ProtoScenario.PreHookMessages[0])}, e.errMap.ScenarioErrs[scenario]...)
+		scenarioResult.ProtoScenario.SkipErrors = scenarioResult.ProtoScenario.PreHookMessages
+	} else {
+		e.errMap.ScenarioErrs[scenario] = append([]error{errors.New(e.currentExecutionInfo.CurrentStep.ErrorMessage)}, e.errMap.ScenarioErrs[scenario]...)
+		scenarioResult.ProtoScenario.SkipErrors = []string{e.currentExecutionInfo.CurrentStep.ErrorMessage}
+	}
 }
