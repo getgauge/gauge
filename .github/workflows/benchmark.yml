@@ -27,9 +27,9 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'gauge/go.mod'
           cache-dependency-path: 'gauge/go.sum'
-        id: go
 
       - name: Setup java
         uses: actions/setup-java@v4

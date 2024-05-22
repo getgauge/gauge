@@ -22,9 +22,10 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'go.mod'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v6
         with:
           args: --timeout=10m
         # with:

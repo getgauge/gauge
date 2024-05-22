@@ -15,8 +15,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'go.mod'
-        id: go
 
       - name: Compile gauge
         run: go run build/make.go --all-platforms  --skip-windows
@@ -39,8 +39,8 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
+          check-latest: true
           go-version-file: 'go.mod'
-        id: go
 
       - name: Prep installer generation
         shell: powershell
@@ -167,7 +167,7 @@ jobs:
           cd build/pip
           pip install -r requirements.txt
           python build.py --dist
-          gauge_package=`ls dist/$GAUGE_PACKAGE_NAME-$GAUGE_VERSION.tar.gz`
+          gauge_package=`ls dist/${GAUGE_PACKAGE_NAME//-/_}-$GAUGE_VERSION.tar.gz`
           python -m twine upload --non-interactive $gauge_package
 
   npm-release:
