@@ -12,13 +12,13 @@ more-itertools==10.2.0
 pkginfo==1.10.0
 Pygments==2.18.0
 readme-renderer==43.0
-requests==2.32.1
+requests==2.32.2
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.7.1
-setuptools==69.5.1
+setuptools==70.0.0
 six==1.16.0
 twine==5.1.0
 urllib3==2.2.1
 webencodings==0.5.1
-zipp==3.18.2
+zipp==3.19.0
