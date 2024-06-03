@@ -1,5 +1,5 @@
 bleach==6.1.0
-certifi==2024.2.2
+certifi==2024.6.2
 charset-normalizer==3.3.2
 docutils==0.21.2
 idna==3.7
@@ -9,10 +9,10 @@ keyring==25.2.1
 markdown-it-py==3.0.0
 mdurl==0.1.2
 more-itertools==10.2.0
-pkginfo==1.10.0
+pkginfo==1.11.0
 Pygments==2.18.0
 readme-renderer==43.0
-requests==2.32.2
+requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.7.1
@@ -21,4 +21,4 @@ six==1.16.0
 twine==5.1.0
 urllib3==2.2.1
 webencodings==0.5.1
-zipp==3.19.0
+zipp==3.19.1
