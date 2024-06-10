@@ -8,8 +8,8 @@ jaraco.classes==3.4.0
 keyring==25.2.1
 markdown-it-py==3.0.0
 mdurl==0.1.2
-more-itertools==10.2.0
-pkginfo==1.11.0
+more-itertools==10.3.0
+pkginfo==1.11.1
 Pygments==2.18.0
 readme-renderer==43.0
 requests==2.32.3
@@ -21,4 +21,4 @@ six==1.16.0
 twine==5.1.0
 urllib3==2.2.1
 webencodings==0.5.1
-zipp==3.19.1
+zipp==3.19.2
