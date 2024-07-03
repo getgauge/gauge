@@ -288,3 +288,13 @@ func FormatSpecFilesIn(filesLocation string) {
 		os.Exit(1)
 	}
 }
+
+func FormatConceptFilesIn(filesLocation string) {
+	conceptFiles := util.FindConceptFiles([]string{filesLocation})
+	conceptsDictionary := gauge.NewConceptDictionary()
+	parser.AddConcepts(conceptFiles, conceptsDictionary)
+	conceptMap := FormatConcepts(conceptsDictionary)
+	for file, formatted := range conceptMap {
+		common.SaveFile(file, formatted, true)
+	}
+}
