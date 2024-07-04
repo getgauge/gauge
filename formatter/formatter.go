@@ -292,9 +292,22 @@ func FormatSpecFilesIn(filesLocation string) {
 func FormatConceptFilesIn(filesLocation string) {
 	conceptFiles := util.FindConceptFiles([]string{filesLocation})
 	conceptsDictionary := gauge.NewConceptDictionary()
-	parser.AddConcepts(conceptFiles, conceptsDictionary)
+	if _, errs, e := parser.AddConcepts(conceptFiles, conceptsDictionary); len(errs) > 0 {
+		for _, err := range errs {
+			logger.Errorf(false, "Concept parse failure: %s %s", conceptFiles[0], err)
+		}
+		if e != nil {
+			logger.Errorf(false, "Concept failure: %s %s", conceptFiles[0], e)
+			os.Exit(1)
+		}
+	}
 	conceptMap := FormatConcepts(conceptsDictionary)
 	for file, formatted := range conceptMap {
-		common.SaveFile(file, formatted, true)
+		e := common.SaveFile(file, formatted, true)
+		if e != nil {
+			logger.Errorf(false, "Concept file save failure: %s", e)
+			os.Exit(1)
+		}
+
 	}
 }
