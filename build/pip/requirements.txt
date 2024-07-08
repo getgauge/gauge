@@ -11,7 +11,7 @@ mdurl==0.1.2
 more-itertools==10.3.0
 pkginfo==1.11.1
 Pygments==2.18.0
-readme-renderer==43.0
+readme-renderer==44.0
 requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
