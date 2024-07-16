@@ -71,6 +71,7 @@ func logInfo(req *jsonrpc2.Request, msg string, args ...interface{}) {
 	logToLsp(lsp.Info, m)
 }
 
+//nolint:all TODO: remove if this function will use
 func logWarning(req *jsonrpc2.Request, msg string, args ...interface{}) {
 	m := fmt.Sprintf(getLogFormatFor(req, msg), args...)
 	logger.Warningf(false, m)

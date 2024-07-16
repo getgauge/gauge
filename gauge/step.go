@@ -70,21 +70,6 @@ func (step *Step) GetLineText() string {
 	return step.LineText
 }
 
-func (step *Step) Rename(oldStep *Step, newStep *Step, isRefactored bool, orderMap map[int]int, isConcept *bool) (*StepDiff, bool) {
-	diff := &StepDiff{OldStep: *step}
-	if strings.TrimSpace(step.Value) != strings.TrimSpace(oldStep.Value) {
-		return nil, isRefactored
-	}
-	if step.IsConcept {
-		*isConcept = true
-	}
-	step.Value = newStep.Value
-	diff.IsConcept = *isConcept
-	step.Args = step.getArgsInOrder(newStep, orderMap)
-	diff.NewStep = step
-	return diff, true
-}
-
 func (step *Step) UsesDynamicArgs(args ...string) bool {
 	for _, arg := range args {
 		for _, stepArg := range step.Args {
@@ -105,28 +90,6 @@ func tableUsesDynamicArgs(tableArg *StepArg, arg string) bool {
 		}
 	}
 	return false
-}
-
-func (step *Step) getArgsInOrder(newStep *Step, orderMap map[int]int) []*StepArg {
-	args := make([]*StepArg, len(newStep.Args))
-	for key, value := range orderMap {
-		arg := &StepArg{Value: newStep.Args[key].Value, ArgType: Static}
-		if newStep.Args[key].ArgType == SpecialString || newStep.Args[key].ArgType == SpecialTable {
-			arg = &StepArg{Name: newStep.Args[key].Name, Value: newStep.Args[key].Value, ArgType: newStep.Args[key].ArgType}
-		}
-		if step.IsConcept {
-			name := fmt.Sprintf("arg%d", key)
-			if newStep.Args[key].Value != "" && newStep.Args[key].ArgType != SpecialString {
-				name = newStep.Args[key].Value
-			}
-			arg = &StepArg{Name: name, Value: newStep.Args[key].Value, ArgType: Dynamic}
-		}
-		if value != -1 {
-			arg = step.Args[value]
-		}
-		args[key] = arg
-	}
-	return args
 }
 
 func (step *Step) ReplaceArgsWithDynamic(args []*StepArg) {

@@ -160,17 +160,6 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 		}
 		return val, err
-	case "textDocument/rename":
-		result, err := rename(ctx, conn, req)
-		if err != nil {
-			logDebug(req, err.Error())
-			e := showErrorMessageOnClient(ctx, conn, err)
-			if e != nil {
-				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
-			}
-			return nil, err
-		}
-		return result, nil
 	case "textDocument/documentSymbol":
 		val, err := documentSymbols(req)
 		if err != nil {
