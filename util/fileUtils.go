@@ -193,6 +193,11 @@ func findConceptFiles(paths []string) []string {
 	return conceptFiles
 }
 
+// Exported (public) function that calls the unexported function
+func FindConceptFiles(paths []string) []string {
+	return findConceptFiles(paths)
+}
+
 // GetConceptFiles It returns the list of concept files
 // It returns concept files from gauge_concepts_dir if present
 // It returns concept files from projectRoot otherwise
