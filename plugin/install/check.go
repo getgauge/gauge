@@ -43,10 +43,10 @@ func PrintUpdateInfoWithDetails() {
 	updates := checkUpdates()
 	if len(updates) > 0 {
 		for _, update := range updates {
-			logger.Infof(true, fmt.Sprintf("%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message))
+			logger.Infof(true, "%-10s\t\t%-10s\t%s", update.Name, update.CompatibleVersion, update.Message)
 		}
 	} else {
-		logger.Infof(true, "No Updates available.")
+		logger.Info(true, "No Updates available.")
 	}
 }
 
@@ -76,7 +76,7 @@ func waitToPrint(messageChan chan string, printChan chan bool, message string, w
 	select {
 	case <-printChan:
 		if message != "" {
-			logger.Infof(true, message)
+			logger.Info(true, message)
 		}
 		wg.Done()
 	case message = <-messageChan:

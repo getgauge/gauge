@@ -103,7 +103,7 @@ func (e *scenarioExecutor) initScenarioDataStore() *gauge_messages.ProtoExecutio
 }
 
 func (e *scenarioExecutor) handleScenarioDataStoreFailure(scenarioResult *result.ScenarioResult, scenario *gauge.Scenario, err error) {
-	logger.Errorf(true, err.Error())
+	logger.Error(true, err.Error())
 	validationError := validation.NewStepValidationError(&gauge.Step{LineNo: scenario.Heading.LineNo, LineText: scenario.Heading.Value},
 		err.Error(), e.currentExecutionInfo.CurrentSpec.GetFileName(), nil, "")
 	e.errMap.ScenarioErrs[scenario] = []error{validationError}
@@ -156,7 +156,7 @@ func (e *scenarioExecutor) notifyBeforeConceptHook(conceptResult *result.Scenari
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionStarting,
 		ConceptExecutionStartingRequest: &gauge_messages.ConceptExecutionStartingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	var res *gauge_messages.ProtoExecutionResult = nil
-	if (e.runner.Info().ConceptMessages) {
+	if e.runner.Info().ConceptMessages {
 		res = e.runner.ExecuteAndGetStatus(message)
 		conceptResult.ProtoScenario.PostHookMessages = res.Message
 		conceptResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles
@@ -173,7 +173,7 @@ func (e *scenarioExecutor) notifyAfterConceptHook(conceptResult *result.Scenario
 	message := &gauge_messages.Message{MessageType: gauge_messages.Message_ConceptExecutionEnding,
 		ConceptExecutionEndingRequest: &gauge_messages.ConceptExecutionEndingRequest{CurrentExecutionInfo: e.currentExecutionInfo, Stream: int32(e.stream)}}
 	var res *gauge_messages.ProtoExecutionResult = nil
-	if (e.runner.Info().ConceptMessages) {
+	if e.runner.Info().ConceptMessages {
 		res = e.runner.ExecuteAndGetStatus(message)
 		conceptResult.ProtoScenario.PostHookMessages = res.Message
 		conceptResult.ProtoScenario.PostHookScreenshotFiles = res.ScreenshotFiles
@@ -217,9 +217,9 @@ func (e *scenarioExecutor) executeSteps(steps []*gauge.Step, protoItems []*gauge
 				}
 			}
 			if scenarioResult.GetSkippedScenario() {
-				// The step execution resulted in SkipScenario. 
+				// The step execution resulted in SkipScenario.
 				// The rest of steps execution is skipped
-				break;
+				break
 			}
 		}
 	}
@@ -282,9 +282,9 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 				return cptResult
 			}
 			if scenarioResult.GetSkippedScenario() {
-				// The step execution resulted in SkipScenario. 
+				// The step execution resulted in SkipScenario.
 				// The rest of steps execution is skipped
-				break;
+				break
 			}
 		}
 	}
@@ -297,7 +297,7 @@ func (e *scenarioExecutor) executeConcept(item *gauge.Step, protoConcept *gauge_
 		scenarioResult.SetFailure()
 		cptResult.UpdateConceptExecResult()
 	}
-	
+
 	return cptResult
 }
 

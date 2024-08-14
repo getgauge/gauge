@@ -4,24 +4,26 @@
  *  See LICENSE in the project root for license information.
  *----------------------------------------------------------------*/
 
-/*Package parser parses all the specs in the list of directories given and also de-duplicates all specs passed through `specDirs` before parsing specs.
-  Gets all the specs files in the given directory and generates token for each spec file.
-  While parsing a concept file, concepts are inlined i.e. concept in the spec file is replaced with steps that concept has in the concept file.
-  While creating a specification file parser applies the converter functions.
-  Parsing a spec file gives a specification with parseresult. ParseResult contains ParseErrors, CriticalErrors, Warnings and FileName
+/*
+Package parser parses all the specs in the list of directories given and also de-duplicates all specs passed through `specDirs` before parsing specs.
 
-  Errors can be generated, While
-	- Generating tokens
-	- Applying converters
-	- After Applying converters
+	  Gets all the specs files in the given directory and generates token for each spec file.
+	  While parsing a concept file, concepts are inlined i.e. concept in the spec file is replaced with steps that concept has in the concept file.
+	  While creating a specification file parser applies the converter functions.
+	  Parsing a spec file gives a specification with parseresult. ParseResult contains ParseErrors, CriticalErrors, Warnings and FileName
 
-  If a parse error is found in a spec, only that spec is ignored and others will continue execution.
-  This doesn't invoke the language runner.
-  Eg : Multiple spec headings found in same file.
-       Scenario should be defined after the spec heading.
+	  Errors can be generated, While
+		- Generating tokens
+		- Applying converters
+		- After Applying converters
 
-  Critical error :
-  	Circular reference of concepts - Doesn't parse specs becz it goes in recursion and crashes
+	  If a parse error is found in a spec, only that spec is ignored and others will continue execution.
+	  This doesn't invoke the language runner.
+	  Eg : Multiple spec headings found in same file.
+	       Scenario should be defined after the spec heading.
+
+	  Critical error :
+	  	Circular reference of concepts - Doesn't parse specs becz it goes in recursion and crashes
 */
 package parser
 
@@ -129,7 +131,7 @@ func parseSpec(specFile string, conceptDictionary *gauge.ConceptDictionary) (*ga
 	}
 	spec, parseResult, err := new(SpecParser).Parse(specFileContent, conceptDictionary, specFile)
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatal(true, err.Error())
 	}
 	return spec, parseResult
 }
@@ -278,7 +280,7 @@ func HandleParseResult(results ...*ParseResult) bool {
 	for _, result := range results {
 		if !result.Ok {
 			for _, err := range result.Errors() {
-				logger.Errorf(true, err)
+				logger.Error(true, err)
 			}
 			failed = true
 		}

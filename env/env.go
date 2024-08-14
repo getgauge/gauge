@@ -7,6 +7,7 @@
 package env
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -236,7 +237,7 @@ func isCircular(key, value string) error {
 		}
 		_, err := properties.LoadString(fmt.Sprintf("%s=%s", key, value))
 		if err != nil {
-			return fmt.Errorf(err.Error())
+			return errors.New(err.Error())
 		}
 	}
 	return nil

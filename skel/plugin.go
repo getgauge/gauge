@@ -40,7 +40,7 @@ func getPluginsToInstall() (plugins []string) {
 
 func installPlugins(plugins []string, silent bool) {
 	if len(plugins) > 0 {
-		logger.Infof(true, "Installing required plugins.")
+		logger.Info(true, "Installing required plugins.")
 	}
 	for _, p := range plugins {
 		installPlugin(p, silent)
@@ -51,7 +51,7 @@ func installPlugin(name string, silent bool) {
 	logger.Debugf(true, "Installing plugin '%s'", name)
 	res := install.Plugin(name, "", silent)
 	if res.Error != nil {
-		logger.Debugf(true, res.Error.Error())
+		logger.Debug(true, res.Error.Error())
 	} else if res.Version != "" {
 		logger.Infof(true, "Successfully installed plugin '%s' version %s", name, res.Version)
 	} else {

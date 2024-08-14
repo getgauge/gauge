@@ -321,7 +321,7 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 		err = cmd.Wait()
 		if err != nil {
 			e := fmt.Errorf("Error occurred while waiting for runner process to finish.\nError : %w", err)
-			logger.Errorf(true, e.Error())
+			logger.Error(true, e.Error())
 			errChan <- e
 		}
 		errChan <- nil

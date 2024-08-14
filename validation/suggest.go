@@ -20,10 +20,10 @@ var message = map[gm.StepValidateResponse_ErrorType]string{
 func showSuggestion(validationErrors validationErrors) {
 	if !HideSuggestion {
 		for t, errs := range groupErrors(validationErrors) {
-			logger.Infof(true, getSuggestionMessage(t))
+			logger.Info(true, getSuggestionMessage(t))
 			suggestions := filterDuplicateSuggestions(errs)
 			for _, suggestion := range suggestions {
-				logger.Infof(true, suggestion)
+				logger.Info(true, suggestion)
 			}
 		}
 	}
