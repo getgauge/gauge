@@ -1,4 +1,4 @@
-// +build linux darwin
+//go:build linux || darwin
 
 /*----------------------------------------------------------------
  *  Copyright (c) ThoughtWorks, Inc.
@@ -33,10 +33,10 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			out, err := getDefaultPath()
 			if err != nil {
-				logger.Fatalf(true, "Cannot find the gauge home directory.")
+				logger.Fatal(true, "Cannot find the gauge home directory.")
 			}
 			if err := genManPages(out); err != nil {
-				logger.Fatalf(true, err.Error())
+				logger.Fatal(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,

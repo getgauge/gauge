@@ -7,8 +7,7 @@
 package cmd
 
 import (
-	"fmt"
-
+	"errors"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/spf13/cobra"
@@ -24,24 +23,24 @@ var (
 			if list || machineReadable {
 				text, err := config.List(machineReadable)
 				if err != nil {
-					logger.Fatalf(true, err.Error())
+					logger.Fatal(true, err.Error())
 				}
-				logger.Infof(true, text)
+				logger.Info(true, text)
 				return
 			}
 			if len(args) == 0 {
-				exit(fmt.Errorf("Config command needs argument(s)."), cmd.UsageString())
+				exit(errors.New("Config command needs argument(s)."), cmd.UsageString())
 			}
 			if len(args) == 1 {
 				text, err := config.GetProperty(args[0])
 				if err != nil {
-					logger.Fatalf(true, err.Error())
+					logger.Fatal(true, err.Error())
 				}
-				logger.Infof(true, text)
+				logger.Info(true, text)
 				return
 			}
 			if err := config.Update(args[0], args[1]); err != nil {
-				logger.Fatalf(true, err.Error())
+				logger.Fatal(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,

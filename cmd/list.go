@@ -78,7 +78,7 @@ type handleResult func([]string)
 
 func print(res []string) {
 	for _, element := range res {
-		logger.Infof(true, element)
+		logger.Info(true, element)
 	}
 }
 

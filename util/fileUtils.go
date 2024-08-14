@@ -148,7 +148,7 @@ func IsDir(path string) bool {
 }
 
 var exitWithMessage = func(message string) {
-	logger.Errorf(true, message)
+	logger.Error(true, message)
 	os.Exit(1)
 }
 

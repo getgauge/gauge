@@ -7,20 +7,20 @@
 package cmd
 
 import (
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	gauge "github.com/getgauge/gauge/gauge"
+	"errors"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
+	gauge "github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+	"os"
+	"strconv"
+	"strings"
 )
 
 const (
@@ -129,7 +129,7 @@ func init() {
 	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Execute only the specs and scenarios tagged with given tags in parallel, rest will be run in serial. Applicable only if run in parallel.")
 	err := f.MarkHidden(onlyName)
 	if err != nil {
-		logger.Errorf(false, fmt.Sprintf("Unable to mark '%s' flag as hidden: %s", onlyName, err.Error()))
+		logger.Errorf(false, "Unable to mark '%s' flag as hidden: %s", onlyName, err.Error())
 	}
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
@@ -142,7 +142,7 @@ func init() {
 	f.BoolVarP(&skipCommandSave, skipCommandSaveName, "", skipCommandSaveDefault, "Skip saving last command in lastRunCmd.json")
 	err = f.MarkHidden(skipCommandSaveName)
 	if err != nil {
-		logger.Errorf(false, fmt.Sprintf("Unable to mark '%s' flag as hidden: %s", skipCommandSaveName, err.Error()))
+		logger.Errorf(false, "Unable to mark '%s' flag as hidden: %s", skipCommandSaveName, err.Error())
 	}
 
 	f.StringArrayVar(&scenarios, scenarioName, scenarioNameDefault, "Set scenarios for running specs with scenario name")
@@ -159,12 +159,12 @@ func executeFailed(cmd *cobra.Command) {
 	handleFlags(cmd, append([]string{"gauge"}, lastState...))
 	err = cmd.Flags().Set(skipCommandSaveName, "true")
 	if err != nil {
-		logger.Errorf(false, fmt.Sprintf("Unable to set '%s' flag as 'true': %s", skipCommandSaveName, err.Error()))
+		logger.Errorf(false, "Unable to set '%s' flag as 'true': %s", skipCommandSaveName, err.Error())
 	}
 	logger.Debugf(true, "Executing => %s\n", strings.Join(os.Args, " "))
 	err = cmd.Execute()
 	if err != nil {
-		logger.Errorf(true, fmt.Sprintf("Unable to execute command %s: %s", cmd.Name(), err.Error()))
+		logger.Errorf(true, "Unable to execute command %s: %s", cmd.Name(), err.Error())
 	}
 }
 
@@ -173,7 +173,7 @@ func handleFlags(cmd *cobra.Command, args []string) {
 		if !util.ListContains(overrideRerunFlags, flag.Name) && flag.Changed {
 			err := flag.Value.Set(flag.DefValue)
 			if err != nil {
-				logger.Errorf(false, fmt.Sprintf("Unable to set default value in '%s' flag: %s", flag.Name, err.Error()))
+				logger.Errorf(false, "Unable to set default value in '%s' flag: %s", flag.Name, err.Error())
 			}
 		}
 	})
@@ -251,7 +251,7 @@ var repeatLastExecution = func(cmd *cobra.Command) {
 	logger.Debugf(true, "Executing => %s\n", strings.Join(lastState, " "))
 	err := cmd.Execute()
 	if err != nil {
-		logger.Errorf(true, fmt.Sprintf("Unable to execute command %s: %s", cmd.Name(), err.Error()))
+		logger.Errorf(true, "Unable to execute command %s: %s", cmd.Name(), err.Error())
 	}
 }
 
@@ -263,16 +263,16 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 		}
 	})
 	if repeat && len(args)+flagDiffCount > 1 {
-		return fmt.Errorf("Invalid Command. Usage: gauge run --repeat")
+		return errors.New("Invalid Command. Usage: gauge run --repeat")
 	}
 	if failed && len(args)+flagDiffCount > 1 {
-		return fmt.Errorf("Invalid Command. Usage: gauge run --failed")
+		return errors.New("Invalid Command. Usage: gauge run --failed")
 	}
 	if !parallel && tagsToFilterForParallelRun != "" {
-		return fmt.Errorf("Invalid Command. flag --only can be used only with --parallel")
+		return errors.New("Invalid Command. flag --only can be used only with --parallel")
 	}
 	if maxRetriesCount == 1 && retryOnlyTags != "" {
-		return fmt.Errorf("Invalid Command. flag --retry-only can be used only with --max-retry-count")
+		return errors.New("Invalid Command. flag --retry-only can be used only with --max-retry-count")
 	}
 	return nil
 }

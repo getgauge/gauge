@@ -146,11 +146,11 @@ func Template(name string, silent bool) {
 func fromTemplateName(templateName string, silent bool) {
 	templateURL, err := template.Get(templateName)
 	if err != nil {
-		logger.Fatalf(true, fmt.Errorf("Failed to initialize project. %w", err).Error())
+		logger.Fatal(true, fmt.Errorf("Failed to initialize project. %w", err).Error())
 	}
 	checkURL(templateURL)
 	if err := initializeTemplate(templateURL); err != nil {
-		logger.Fatalf(true, fmt.Errorf("Failed to initialize project. %w", err).Error())
+		logger.Fatal(true, fmt.Errorf("Failed to initialize project. %w", err).Error())
 	}
 	installRunner(silent)
 }

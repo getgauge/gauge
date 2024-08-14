@@ -24,7 +24,7 @@ var (
 			if templateList || machineReadable {
 				text, err := template.List(machineReadable)
 				if err != nil {
-					logger.Fatalf(true, err.Error())
+					logger.Fatal(true, err.Error())
 				}
 				fmt.Println(text)
 				return
@@ -35,14 +35,14 @@ var (
 			if len(args) == 1 {
 				text, err := template.Get(args[0])
 				if err != nil {
-					logger.Fatalf(true, err.Error())
+					logger.Fatal(true, err.Error())
 				}
-				logger.Infof(true, text)
+				logger.Info(true, text)
 				return
 			}
 			err := template.Update(args[0], args[1])
 			if err != nil {
-				logger.Fatalf(true, err.Error())
+				logger.Fatal(true, err.Error())
 			}
 		},
 		DisableAutoGenTag: true,

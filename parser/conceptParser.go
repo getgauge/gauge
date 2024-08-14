@@ -271,7 +271,7 @@ func AddConcepts(conceptFiles []string, conceptDictionary *gauge.ConceptDictiona
 		concepts, parseRes := new(ConceptParser).ParseFile(conceptFile)
 		if parseRes != nil && parseRes.Warnings != nil {
 			for _, warning := range parseRes.Warnings {
-				logger.Warningf(true, warning.String())
+				logger.Warning(true, warning.String())
 			}
 		}
 		parseErrors, err := AddConcept(concepts, conceptFile, conceptDictionary)

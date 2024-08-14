@@ -122,13 +122,13 @@ func RunInBackground(apiPort string, specDirs []string) {
 	if apiPort != "" {
 		port, err = strconv.Atoi(apiPort)
 		if err != nil {
-			logger.Fatalf(true, fmt.Sprintf("Invalid port number: %s", apiPort))
+			logger.Fatalf(true, "Invalid port number: %s", apiPort)
 		}
 		os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {
-			logger.Fatalf(true, fmt.Sprintf("Failed to start API Service. %s \n", err.Error()))
+			logger.Fatalf(true, "Failed to start API Service. %s \n", err.Error())
 		}
 	}
 	runAPIServiceIndefinitely(port, specDirs)
@@ -140,18 +140,18 @@ func Start(specsDir []string) *conn.GaugeConnectionHandler {
 	apiHandler := &gaugeAPIMessageHandler{specInfoGatherer: sig}
 	gaugeConnectionHandler, err := conn.NewGaugeConnectionHandler(0, apiHandler)
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatal(true, err.Error())
 	}
 	errChan := make(chan error)
 	go func() {
 		_, err := gaugeConnectionHandler.AcceptConnection(config.RunnerConnectionTimeout(), errChan)
 		if err != nil {
-			logger.Fatalf(true, err.Error())
+			logger.Fatal(true, err.Error())
 		}
 	}()
 	go func() {
 		e := <-errChan
-		logger.Fatalf(true, e.Error())
+		logger.Fatal(true, e.Error())
 	}()
 	return gaugeConnectionHandler
 }
