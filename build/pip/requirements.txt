@@ -1,5 +1,5 @@
 bleach==6.1.0
-certifi==2024.7.4
+certifi==2024.8.30
 charset-normalizer==3.3.2
 docutils==0.21.2
 idna==3.8
@@ -16,7 +16,7 @@ requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.8.0
-setuptools==73.0.1
+setuptools==74.0.0
 six==1.16.0
 twine==5.1.1
 urllib3==2.2.2
