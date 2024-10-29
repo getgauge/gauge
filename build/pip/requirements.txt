@@ -5,7 +5,7 @@ docutils==0.21.2
 idna==3.10
 importlib-metadata==8.5.0
 jaraco.classes==3.4.0
-keyring==25.4.1
+keyring==25.5.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
 more-itertools==10.5.0
@@ -15,7 +15,7 @@ readme-renderer==44.0
 requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
-rich==13.9.2
+rich==13.9.3
 setuptools==75.2.0
 six==1.16.0
 twine==5.1.1
