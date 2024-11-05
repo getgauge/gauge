@@ -5,7 +5,7 @@ go 1.23
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.8.0
 	github.com/getgauge/common v0.0.0-20240923154736-7ff1ad53db2a
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20240923054742-4ca56c58b781
 	github.com/golang/protobuf v1.5.4
