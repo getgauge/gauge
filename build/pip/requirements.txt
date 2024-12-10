@@ -17,7 +17,7 @@ requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==13.9.4
 setuptools==75.6.0
-six==1.16.0
+six==1.17.0
 twine==6.0.1
 urllib3==2.2.3
 webencodings==0.5.1
