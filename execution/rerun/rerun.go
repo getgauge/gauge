@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/getgauge/common"
@@ -211,5 +212,25 @@ var WritePrevArgs = func(cmdArgs []string) {
 	err = os.WriteFile(prevCmdFile, b, common.NewFilePermissions)
 	if err != nil {
 		logger.Fatalf(true, "Failed to write to %s. Reason: %s", prevCmdFile, err.Error())
+	}
+}
+
+func SaveSingleStepState(args string, specs string) {
+	argSlice := strings.Fields(args)
+	specSlice := strings.Fields(specs)
+
+	isPresent := func(values []string, value string) bool {
+		for _, v := range values {
+			if v == value {
+				return true
+			}
+		}
+		return false
+	}
+
+	for _, a := range argSlice {
+		if !isPresent(specSlice, a) {
+			failedMeta.Args = append(failedMeta.Args, a)
+		}
 	}
 }

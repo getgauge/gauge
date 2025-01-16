@@ -127,6 +127,13 @@ func getSpecsDir(args []string) []string {
 	return util.GetSpecDirs()
 }
 
+func getSpecDir(args string) string {
+	if args != "" {
+		return args
+	}
+	return util.GetSpecDir()
+}
+
 func setGlobalFlags() {
 	util.SetWorkingDir(dir)
 }
