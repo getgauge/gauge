@@ -24,11 +24,11 @@
   },
   "homepage": "https://github.com/getgauge/gauge#readme",
   "devDependencies": {
-    "chai": "^5.1.1",
-    "mocha": "^10.5.2",
-    "sinon": "^18.0.0"
+    "chai": "^5.1.2",
+    "mocha": "^11.1.0",
+    "sinon": "^19.0.2"
   },
   "dependencies": {
-    "adm-zip": "^0.5.14"
+    "adm-zip": "^0.5.16"
   }
 }

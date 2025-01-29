@@ -78,7 +78,7 @@ type handleResult func([]string)
 
 func print(res []string) {
 	for _, element := range res {
-		logger.Infof(true, element)
+		logger.Info(true, element)
 	}
 }
 
@@ -125,7 +125,7 @@ func appendTags(s []string, tags *gauge.Tags) []string {
 
 func uniqueNonEmptyElementsOf(input []string) []string {
 	unique := make(map[string]bool, len(input))
-	us := make([]string, len(unique))
+	us := make([]string, 0, len(input))
 	for _, elem := range input {
 		if len(elem) != 0 && !unique[elem] {
 			us = append(us, elem)

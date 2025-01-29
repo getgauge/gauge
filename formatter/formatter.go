@@ -308,6 +308,5 @@ func FormatConceptFilesIn(filesLocation string) {
 			logger.Errorf(false, "Concept file save failure: %s", e)
 			os.Exit(1)
 		}
-
 	}
 }

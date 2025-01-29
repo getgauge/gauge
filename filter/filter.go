@@ -16,7 +16,7 @@ func FilterSpecs(specs []*gauge.Specification) []*gauge.Specification {
 	if ExecuteTags != "" && len(specs) > 0 {
 		logger.Debugf(true, "The following specifications satisfy filter criteria:")
 		for _, s := range specs {
-			logger.Debugf(true, util.RelPathToProjectRoot(s.FileName))
+			logger.Debug(true, util.RelPathToProjectRoot(s.FileName))
 		}
 	}
 	return specs

@@ -511,7 +511,7 @@ func getRunnerJSONContents(file string) (*runner.RunnerInfo, error) {
 func AllPlugins(silent, languageOnly bool) {
 	manifest, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatal(true, err.Error())
 	}
 	installPluginsFromManifest(manifest, silent, languageOnly)
 }
@@ -521,7 +521,7 @@ func UpdatePlugins(silent bool) {
 	var failedPlugin []string
 	pluginInfos, err := pluginInfo.GetPluginsInfo()
 	if err != nil {
-		logger.Infof(true, err.Error())
+		logger.Info(true, err.Error())
 		os.Exit(0)
 	}
 	for _, pluginInfo := range pluginInfos {
@@ -534,17 +534,17 @@ func UpdatePlugins(silent bool) {
 	if len(failedPlugin) > 0 {
 		logger.Fatalf(true, "Failed to update '%s' plugins.", strings.Join(failedPlugin, ", "))
 	}
-	logger.Infof(true, "Successfully updated all the plugins.")
+	logger.Info(true, "Successfully updated all the plugins.")
 }
 
 // HandleInstallResult handles the result of plugin Installation
 // TODO: Merge both HandleInstallResult and HandleUpdateResult, eliminate boolean exitIfFailure
 func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
 	if result.Info != "" {
-		logger.Debugf(true, result.Info)
+		logger.Debug(true, result.Info)
 	}
 	if result.Warning != "" {
-		logger.Warningf(true, result.Warning)
+		logger.Warning(true, result.Warning)
 	}
 	if result.Skipped {
 		return true
@@ -571,10 +571,10 @@ func HandleInstallResult(result InstallResult, pluginName string, exitIfFailure 
 // HandleUpdateResult handles the result of plugin Installation
 func HandleUpdateResult(result InstallResult, pluginName string, exitIfFailure bool) bool {
 	if result.Info != "" {
-		logger.Debugf(true, result.Info)
+		logger.Debug(true, result.Info)
 	}
 	if result.Warning != "" {
-		logger.Warningf(true, result.Warning)
+		logger.Warning(true, result.Warning)
 	}
 	if result.Skipped {
 		logger.Infof(true, "Plugin '%s' is up to date.", pluginName)

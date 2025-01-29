@@ -29,7 +29,7 @@ type executionInfo struct {
 func newExecutionInfo(s *gauge.SpecCollection, r runner.Runner, ph plugin.Handler, e *gauge.BuildErrors, p bool, stream int) *executionInfo {
 	m, err := manifest.ProjectManifest()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatal(true, err.Error())
 	}
 	return &executionInfo{
 		manifest:        m,

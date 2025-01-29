@@ -92,7 +92,7 @@ type executor interface {
 var ExecuteSpecs = func(specDirs []string) int {
 	err := validateFlags()
 	if err != nil {
-		logger.Fatalf(true, err.Error())
+		logger.Fatal(true, err.Error())
 	}
 	if config.CheckUpdates() {
 		i := &install.UpdateFacade{}

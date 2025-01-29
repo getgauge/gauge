@@ -136,13 +136,13 @@ func (r *LegacyRunner) ExecuteAndGetStatus(message *gauge_messages.Message) *gau
 		executionResult := response.GetExecutionStatusResponse().GetExecutionResult()
 		if executionResult == nil {
 			errMsg := "ProtoExecutionResult obtained is nil"
-			logger.Errorf(true, errMsg)
+			logger.Error(true, errMsg)
 			return errorResult(errMsg)
 		}
 		return executionResult
 	}
 	errMsg := fmt.Sprintf("Expected ExecutionStatusResponse. Obtained: %s", response.GetMessageType())
-	logger.Errorf(true, errMsg)
+	logger.Error(true, errMsg)
 	return errorResult(errMsg)
 }
 
