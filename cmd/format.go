@@ -14,8 +14,8 @@ import (
 
 var formatCmd = &cobra.Command{
 	Use:     "format [flags] [args]",
-	Short:   "Formats the specified spec files",
-	Long:    `Formats the specified spec files.`,
+	Short:   "Formats the specified spec and/or concept files",
+	Long:    `Formats the specified spec and/or concept files.`,
 	Example: "  gauge format specs/",
 	Run: func(cmd *cobra.Command, args []string) {
 		if err := config.SetProjectRoot(args); err != nil {
@@ -23,6 +23,7 @@ var formatCmd = &cobra.Command{
 		}
 		loadEnvAndReinitLogger(cmd)
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])
+		formatter.FormatConceptFilesIn(getSpecsDir(args)[0])
 	},
 	DisableAutoGenTag: true,
 }
