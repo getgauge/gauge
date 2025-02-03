@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var skipEmptyLineInsertions bool
+
 var formatCmd = &cobra.Command{
 	Use:     "format [flags] [args]",
 	Short:   "Formats the specified spec and/or concept files",
@@ -22,6 +24,7 @@ var formatCmd = &cobra.Command{
 			exit(err, cmd.UsageString())
 		}
 		loadEnvAndReinitLogger(cmd)
+		config.SetSkipEmptyLineInsertions(skipEmptyLineInsertions)
 		formatter.FormatSpecFilesIn(getSpecsDir(args)[0])
 		formatter.FormatConceptFilesIn(getSpecsDir(args)[0])
 	},
@@ -30,4 +33,5 @@ var formatCmd = &cobra.Command{
 
 func init() {
 	GaugeCmd.AddCommand(formatCmd)
+	formatCmd.Flags().BoolVarP(&skipEmptyLineInsertions, "skip-empty-line-insertions", "s", false, "Skip insertions of empty lines when formatting spec/concept files")
 }

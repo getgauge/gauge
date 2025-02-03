@@ -18,6 +18,7 @@ import (
 	"github.com/getgauge/gauge/api/infoGatherer"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/config"
 	"github.com/sourcegraph/jsonrpc2"
 )
 
@@ -183,6 +184,17 @@ func (h *LangHandler) Handle(ctx context.Context, conn jsonrpc2.JSONRPC2, req *j
 			logDebug(req, err.Error())
 		}
 		return val, err
+	case "workspace/didChangeConfiguration":
+		err := config.UpdateSettings(req)
+		if err != nil {
+			logDebug(req, err.Error())
+			e := showErrorMessageOnClient(ctx, conn, err)
+			if e != nil {
+				return nil, fmt.Errorf("unable to send '%s' error to LSP server. %s", err.Error(), e.Error())
+			}
+		}
+		logDebug(req, "Updated settings.")
+		return nil, err
 	case "gauge/stepReferences":
 		val, err := stepReferences(req)
 		if err != nil {

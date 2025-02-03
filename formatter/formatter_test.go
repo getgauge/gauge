@@ -14,6 +14,7 @@ import (
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/parser"
+	"github.com/getgauge/gauge/config"
 	. "gopkg.in/check.v1"
 )
 
@@ -23,12 +24,18 @@ type MySuite struct{}
 
 var _ = Suite(&MySuite{})
 
+// Setup method to make sure each test starts with a known configuration
+func (s *MySuite) SetUpTest(c *C) {
+	config.SetSkipEmptyLineInsertions(false)
+}
+
 func (s *MySuite) TestFormatSpecification(c *C) {
 	tokens := []*parser.Token{
 		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
-		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 3, Lines: []string{"Example step"}},
-		&parser.Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 3, Lines: []string{"Step with inline table "}},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"test_tag1", "test_tag2"}, LineNo: 3},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 4, Lines: []string{"Example step"}},
+		&parser.Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 5, Lines: []string{"Step with inline table "}},
 		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"<1>", "foo"}},
 		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
@@ -41,6 +48,9 @@ func (s *MySuite) TestFormatSpecification(c *C) {
 	c.Assert(formatted, Equals,
 		`# Spec Heading
 ## Scenario Heading
+
+tags: test_tag1, test_tag2
+
 * Example step
 * Step with inline table
 
@@ -50,6 +60,38 @@ func (s *MySuite) TestFormatSpecification(c *C) {
    |2  |bar |
 `)
 }
+
+func (s *MySuite) TestFormatSpecificationSkipEmptyLineInsertions(c *C) {
+	config.SetSkipEmptyLineInsertions(true)
+	tokens := []*parser.Token{
+		&parser.Token{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
+		&parser.Token{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 2},
+		&parser.Token{Kind: gauge.TagKind, Args: []string{"test_tag1", "test_tag2"}, LineNo: 3},
+		&parser.Token{Kind: gauge.StepKind, Value: "Example step", LineNo: 4, Lines: []string{"Example step"}},
+		&parser.Token{Kind: gauge.StepKind, Value: "Step with inline table", LineNo: 5, Lines: []string{"Step with inline table "}},
+		&parser.Token{Kind: gauge.TableHeader, Args: []string{"id", "name"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"<1>", "foo"}},
+		&parser.Token{Kind: gauge.TableRow, Args: []string{"2", "bar"}},
+	}
+
+	spec, _, _ := new(parser.SpecParser).CreateSpecification(tokens, gauge.NewConceptDictionary(), "")
+
+	formatted := FormatSpecification(spec)
+
+	c.Assert(formatted, Equals,
+		`# Spec Heading
+## Scenario Heading
+tags: test_tag1, test_tag2
+* Example step
+* Step with inline table
+   |id |name|
+   |---|----|
+   |<1>|foo |
+   |2  |bar |
+`)
+}
+
+
 
 func (s *MySuite) TestFormatTable(c *C) {
 	cell1 := gauge.TableCell{Value: "john", CellType: gauge.Static}
