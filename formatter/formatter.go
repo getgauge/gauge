@@ -19,6 +19,7 @@ import (
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
+	"github.com/getgauge/gauge/config"
 )
 
 const (
@@ -124,7 +125,9 @@ func FormatTable(table *gauge.Table) string {
 
 	var tableStringBuffer bytes.Buffer
 
+	if !config.CurrentGaugeSettings().Format.SkipEmptyLineInsertions {
 	tableStringBuffer.WriteString("\n")
+	}
 
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
 	for i, header := range table.Headers {
