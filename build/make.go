@@ -159,8 +159,9 @@ var (
 		{GOARCH: ARM64, GOOS: linux, CGO_ENABLED: "0"},
 		{GOARCH: X86, GOOS: freebsd, CGO_ENABLED: "0"},
 		{GOARCH: X86_64, GOOS: freebsd, CGO_ENABLED: "0"},
-		{GOARCH: X86, GOOS: windows, CC: "i586-mingw32-gcc", CGO_ENABLED: "1"},
-		{GOARCH: X86_64, GOOS: windows, CC: "x86_64-w64-mingw32-gcc", CGO_ENABLED: "1"},
+		{GOARCH: X86, GOOS: windows, CGO_ENABLED: "0"},
+		{GOARCH: X86_64, GOOS: windows, CGO_ENABLED: "0"},
+		{GOARCH: ARM64, GOOS: windows, CGO_ENABLED: "0"},
 	}
 	osDistroMap = map[string]distroFunc{windows: createWindowsDistro, linux: createLinuxPackage, freebsd: createLinuxPackage, darwin: createDarwinPackage}
 )
