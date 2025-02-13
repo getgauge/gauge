@@ -38,6 +38,20 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 		oldString := getContent(params.TextDocument.URI)
 		textEdit := createTextEdit(newString, 0, 0, len(strings.Split(oldString, "\n")), len(oldString))
 		return []lsp.TextEdit{textEdit}, nil
+	} else if util.IsValidConceptExtension(file) {
+		conceptsDictionary := gauge.NewConceptDictionary()
+		_, parseErrs, err := parser.AddConcepts([]string{file}, conceptsDictionary)
+		if err != nil {
+			return nil, err
+		}
+		if parseErrs != nil {
+			return nil, fmt.Errorf("failed to format document. Fix all the problems first")
+		}
+		conceptMap := formatter.FormatConcepts(conceptsDictionary)
+		newString := conceptMap[file]
+		oldString := getContent(params.TextDocument.URI)
+		textEdit := createTextEdit(newString, 0, 0, len(strings.Split(oldString, "\n")), len(oldString))
+		return []lsp.TextEdit{textEdit}, nil
 	}
-	return nil, fmt.Errorf("failed to format document. %s is not a valid spec file", file)
+	return nil, fmt.Errorf("failed to format document. %s is not a valid spec/cpt file", file)
 }
