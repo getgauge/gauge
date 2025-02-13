@@ -15,11 +15,11 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
 	"github.com/getgauge/gauge/util"
-	"github.com/getgauge/gauge/config"
 )
 
 const (
@@ -71,7 +71,7 @@ func FormatStep(step *gauge.Step) string {
 		} else {
 			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
-		text = strings.Replace(text, stripBeforeArg + gauge.ParameterPlaceholder, formattedArg, 1)
+		text = strings.Replace(text, stripBeforeArg+gauge.ParameterPlaceholder, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
@@ -126,7 +126,7 @@ func FormatTable(table *gauge.Table) string {
 	var tableStringBuffer bytes.Buffer
 
 	if !config.CurrentGaugeSettings().Format.SkipEmptyLineInsertions {
-	tableStringBuffer.WriteString("\n")
+		tableStringBuffer.WriteString("\n")
 	}
 
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
