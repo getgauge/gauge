@@ -16,7 +16,7 @@ require (
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.2.0
-	github.com/spf13/cobra v1.8.1
+	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a
 	google.golang.org/grpc v1.70.0
