@@ -9,8 +9,8 @@ github.com/daviddengcn/go-colortext v1.0.0 h1:ANqDyC0ys6qCSvuEK7l3g5RaehL/Xck9EX
 github.com/daviddengcn/go-colortext v1.0.0/go.mod h1:zDqEI5NVUop5QPpVJUxE9UO10hRnmkD5G4Pmri9+m4c=
 github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47 h1:sP2APvSdZpfBiousrppBZNOvu+TE79Myq4kkmmrtSuI=
 github.com/dmotylev/goproperties v0.0.0-20140630191356-7cbffbaada47/go.mod h1:f2V6964+f0p8Asqy8mIK5cKyyVc6MP9PFzGVNRcnYJQ=
-github.com/fsnotify/fsnotify v1.8.0 h1:dAwr6QBTBZIkG8roQaJjGof0pp0EeF+tNV7YBP3F/8M=
-github.com/fsnotify/fsnotify v1.8.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
+github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S9k=
+github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/getgauge/common v0.0.0-20250301051710-dd2779e622a2 h1:mGEGlsPid5Tx5VYq3P8f2kd+bia6OHFQJ2jjbN9doBQ=
 github.com/getgauge/common v0.0.0-20250301051710-dd2779e622a2/go.mod h1:HReopBbL0DnctnaJeyZvHg5bS/R/p1HOIyg30Uuthxc=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20250301051713-d78888ed1d9b h1:+9RR0FkD6t6Smc0hI9nOy9ioMtVPlDIh+VfYjTiBgKw=
