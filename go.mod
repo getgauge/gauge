@@ -9,7 +9,7 @@ require (
 	github.com/getgauge/common v0.0.0-20250301051710-dd2779e622a2
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20250301051713-d78888ed1d9b
 	github.com/golang/protobuf v1.5.4
-	github.com/magiconair/properties v1.8.9
+	github.com/magiconair/properties v1.8.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday/v2 v2.1.0
