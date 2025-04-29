@@ -1,14 +1,14 @@
 bleach==6.2.0
-certifi==2025.1.31
+certifi==2025.4.26
 charset-normalizer==3.4.1
 docutils==0.21.2
 idna==3.10
-importlib-metadata==8.6.1
+importlib-metadata==8.7.0
 jaraco.classes==3.4.0
 keyring==25.6.0
 markdown-it-py==3.0.0
 mdurl==0.1.2
-more-itertools==10.6.0
+more-itertools==10.7.0
 pkginfo==1.12.1.2
 Pygments==2.19.1
 readme-renderer==44.0
@@ -16,7 +16,7 @@ requests==2.32.3
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==14.0.0
-setuptools==79.0.0
+setuptools==80.0.0
 six==1.17.0
 twine==6.1.0
 urllib3==2.4.0
