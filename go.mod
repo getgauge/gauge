@@ -6,8 +6,8 @@ require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
-	github.com/getgauge/common v0.0.0-20250301051710-dd2779e622a2
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20250301051713-d78888ed1d9b
+	github.com/getgauge/common v0.0.0-20250301053926-ba211b864d31
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20250512061111-192e0e61344e
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -18,7 +18,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.0
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/pflag v1.0.6
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250227231956-55c901821b1e
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250505200425-f936aa4a68b2
 	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
