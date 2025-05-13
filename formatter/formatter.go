@@ -15,6 +15,7 @@ import (
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -70,7 +71,7 @@ func FormatStep(step *gauge.Step) string {
 		} else {
 			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
-		text = strings.Replace(text, stripBeforeArg + gauge.ParameterPlaceholder, formattedArg, 1)
+		text = strings.Replace(text, stripBeforeArg+gauge.ParameterPlaceholder, formattedArg, 1)
 	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
@@ -124,7 +125,9 @@ func FormatTable(table *gauge.Table) string {
 
 	var tableStringBuffer bytes.Buffer
 
-	tableStringBuffer.WriteString("\n")
+	if !config.CurrentGaugeSettings().Format.SkipEmptyLineInsertions {
+		tableStringBuffer.WriteString("\n")
+	}
 
 	tableStringBuffer.WriteString(fmt.Sprintf("%s|", getRepeatedChars(" ", tableLeftSpacing)))
 	for i, header := range table.Headers {
@@ -286,5 +289,27 @@ func FormatSpecFilesIn(filesLocation string) {
 	parseResults := FormatSpecFiles(specFiles...)
 	if parser.HandleParseResult(parseResults...) {
 		os.Exit(1)
+	}
+}
+
+func FormatConceptFilesIn(filesLocation string) {
+	conceptFiles := util.FindConceptFiles([]string{filesLocation})
+	conceptsDictionary := gauge.NewConceptDictionary()
+	if _, errs, e := parser.AddConcepts(conceptFiles, conceptsDictionary); len(errs) > 0 {
+		for _, err := range errs {
+			logger.Errorf(false, "Concept parse failure: %s %s", conceptFiles[0], err)
+		}
+		if e != nil {
+			logger.Errorf(false, "Concept failure: %s %s", conceptFiles[0], e)
+			os.Exit(1)
+		}
+	}
+	conceptMap := FormatConcepts(conceptsDictionary)
+	for file, formatted := range conceptMap {
+		e := common.SaveFile(file, formatted, true)
+		if e != nil {
+			logger.Errorf(false, "Concept file save failure: %s", e)
+			os.Exit(1)
+		}
 	}
 }

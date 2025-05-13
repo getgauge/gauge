@@ -65,8 +65,12 @@ func allImplementedStepValues() ([]gauge.StepValue, error) {
 		return stepValues, fmt.Errorf("failed to get steps from runner. %s", err.Error())
 	}
 	for _, stepText := range res.GetSteps() {
-		stepValue, _ := parser.ExtractStepValueAndParams(stepText, false)
-		stepValues = append(stepValues, *stepValue)
+		stepValue, err := parser.ExtractStepValueAndParams(stepText, false)
+		if err != nil {
+			logError(nil, "Unable to extract StepValueAndParams for step '%s', error : %s", stepText, err.Error())
+		} else {
+			stepValues = append(stepValues, *stepValue)
+		}
 	}
 	return stepValues, nil
 }

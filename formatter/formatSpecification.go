@@ -11,6 +11,7 @@ import (
 
 	"strings"
 
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -31,11 +32,11 @@ func (formatter *formatter) Heading(heading *gauge.Heading) {
 }
 
 func (formatter *formatter) Tags(tags *gauge.Tags) {
-	if !strings.HasSuffix(formatter.buffer.String(), "\n\n") {
+	if !strings.HasSuffix(formatter.buffer.String(), "\n\n") && !config.CurrentGaugeSettings().Format.SkipEmptyLineInsertions {
 		formatter.buffer.WriteString("\n")
 	}
 	formatter.buffer.WriteString(FormatTags(tags))
-	if formatter.itemQueue.Peek() != nil && (formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "") {
+	if formatter.itemQueue.Peek() != nil && (formatter.itemQueue.Peek().Kind() != gauge.CommentKind || strings.TrimSpace(formatter.itemQueue.Peek().(*gauge.Comment).Value) != "") && !config.CurrentGaugeSettings().Format.SkipEmptyLineInsertions {
 		formatter.buffer.WriteString("\n")
 	}
 }

@@ -339,8 +339,7 @@ func StartGrpcRunner(m *manifest.Manifest, stdout, stderr io.Writer, timeout tim
 	logger.Debugf(true, "Attempting to connect to grpc server at port: %s", port)
 	conn, err := grpc.NewClient(fmt.Sprintf("%s:%s", host, port),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(oneGB), grpc.MaxCallSendMsgSize(oneGB)),
-		grpc.WithBlock())
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(oneGB), grpc.MaxCallSendMsgSize(oneGB)))
 	logger.Debugf(true, "Successfully made the connection with runner with port: %s", port)
 	if err != nil {
 		return nil, err

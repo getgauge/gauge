@@ -46,8 +46,7 @@ jobs:
         shell: powershell
         run: |
           Start-Sleep -Milliseconds 1
-          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.06.1/nsis-3.06.1-strlen_8192.zip/download" -UseBasicParsing -UserAgent [Microsoft.PowerShell.Commands.PSUserAgent]::Chrome -Outfile "./nsis.zip"
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.10/nsis-3.10-strlen_8192.zip/download" -UserAgent "PowerShell" -Outfile "./nsis.zip"
           Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
 
       - name: Compile gauge
@@ -242,33 +241,3 @@ jobs:
           cd gauge
           ./package.ps1
           choco push "gauge.$Env:GAUGE_VERSION.nupkg" --apikey=$Env:API_KEY --source=https://push.chocolatey.org/
-
-  brew-release:
-    runs-on: ubuntu-latest
-    needs: [gauge-version]
-    steps:
-      - uses: actions/checkout@v4
-      - run: git fetch --prune --unshallow
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: 3.3
-
-      - name: Fetch gauge version
-        uses: actions/download-artifact@v4
-        with:
-          name: gauge-version
-          path: .
-
-      - name: Set gauge version
-        run: echo "GAUGE_VERSION=`cat version.txt`" >> $GITHUB_ENV
-
-      - name: Update brew formula
-        env:
-          HOMEBREW_GITHUB_USER_NAME: ${{ secrets.HOMEBREW_GITHUB_USER_NAME }}
-          HOMEBREW_GITHUB_USER_EMAIL: ${{ secrets.HOMEBREW_GITHUB_USER_EMAIL }}
-          GITHUB_TOKEN: ${{ secrets.GAUGEBOT_GITHUB_TOKEN }}
-        run: |
-          cd build/brew
-          bash create_brew_pr.sh

@@ -125,7 +125,7 @@ func appendTags(s []string, tags *gauge.Tags) []string {
 
 func uniqueNonEmptyElementsOf(input []string) []string {
 	unique := make(map[string]bool, len(input))
-	us := make([]string, len(unique))
+	us := make([]string, 0, len(input))
 	for _, elem := range input {
 		if len(elem) != 0 && !unique[elem] {
 			us = append(us, elem)
