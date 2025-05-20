@@ -32,7 +32,7 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 			return nil, err
 		}
 		if !parseResult.Ok {
-			return nil, fmt.Errorf("failed to format document. Fix all the problems first")
+			return nil, fmt.Errorf("failed to format %s. Fix all the problems first", file)
 		}
 		newString := formatter.FormatSpecification(spec)
 		oldString := getContent(params.TextDocument.URI)
@@ -40,12 +40,16 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 		return []lsp.TextEdit{textEdit}, nil
 	} else if util.IsValidConceptExtension(file) {
 		conceptsDictionary := gauge.NewConceptDictionary()
-		_, parseErrs, err := parser.AddConcepts([]string{file}, conceptsDictionary)
+		conceptSteps, parseResult := new(parser.ConceptParser).Parse(getContent(params.TextDocument.URI), file)
+		if !parseResult.Ok {
+			return nil, fmt.Errorf("failed to format %s. Fix all the problems first", file)
+		}
+		parseErrs, err := parser.AddConcept(conceptSteps, file, conceptsDictionary)
 		if err != nil {
 			return nil, err
 		}
-		if parseErrs != nil {
-			return nil, fmt.Errorf("failed to format document. Fix all the problems first")
+		if len(parseErrs) > 0 {
+			return nil, fmt.Errorf("failed to format %s. Fix all the problems first", file)
 		}
 		conceptMap := formatter.FormatConcepts(conceptsDictionary)
 		newString := conceptMap[file]
@@ -53,5 +57,5 @@ func format(request *jsonrpc2.Request) (interface{}, error) {
 		textEdit := createTextEdit(newString, 0, 0, len(strings.Split(oldString, "\n")), len(oldString))
 		return []lsp.TextEdit{textEdit}, nil
 	}
-	return nil, fmt.Errorf("failed to format document. %s is not a valid spec/cpt file", file)
+	return nil, fmt.Errorf("failed to format %s. Not a valid spec/cpt file", file)
 }
