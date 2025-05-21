@@ -57,7 +57,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 		if parser.isConceptHeading(token) {
 			if isInState(parser.currentState, conceptScope, stepScope) {
 				if len(parser.currentConcept.ConceptSteps) < 1 {
-					parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
+					parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
 					continue
 				}
 				concepts = append(concepts, parser.currentConcept)
@@ -112,7 +112,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 		}
 	}
 	if parser.currentConcept != nil && len(parser.currentConcept.ConceptSteps) < 1 {
-		parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have atleast one step", LineText: parser.currentConcept.LineText})
+		parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
 		return nil, parseRes
 	}
 

@@ -348,7 +348,7 @@ func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 	_, parseRes := parser.Parse("# my concept with \n", "")
 
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
-	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept should have atleast one step")
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept should have at least one step")
 }
 
 func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
@@ -775,7 +775,7 @@ func (s *MySuite) TestErrorParsingConceptWithNoSteps(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept\n# second concept\n* first step ", "foo.cpt")
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
-	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.cpt:1 Concept should have atleast one step => 'my concept'")
+	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.cpt:1 Concept should have at least one step => 'my concept'")
 }
 
 func containsAny(errs []ParseError, msg string) bool {

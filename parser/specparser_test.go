@@ -286,7 +286,7 @@ func (s *MySuite) TestStepsWithKeywords(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(result, NotNil)
 	c.Assert(result.Ok, Equals, false)
-	c.Assert(result.ParseErrors[0].Message, Equals, "Scenario should have atleast one step")
+	c.Assert(result.ParseErrors[0].Message, Equals, "Scenario should have at least one step")
 	c.Assert(result.ParseErrors[0].LineNo, Equals, 2)
 	c.Assert(result.ParseErrors[1].Message, Equals, "Step text should not have '{static}' or '{dynamic}' or '{special}'")
 	c.Assert(result.ParseErrors[1].LineNo, Equals, 3)

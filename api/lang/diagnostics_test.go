@@ -69,7 +69,7 @@ Scenario Heading
 				Start: lsp.Position{Line: 0, Character: 0},
 				End:   lsp.Position{Line: 1, Character: 21},
 			},
-			Message:  "Spec should have atleast one scenario",
+			Message:  "Spec should have at least one scenario",
 			Severity: 1,
 		},
 		{
@@ -163,7 +163,7 @@ func TestDiagnosticsForConceptParseErrors(t *testing.T) {
 				Start: lsp.Position{Line: 0, Character: 0},
 				End:   lsp.Position{Line: 0, Character: 9},
 			},
-			Message:  "Concept should have atleast one step",
+			Message:  "Concept should have at least one step",
 			Severity: 1,
 		},
 	}

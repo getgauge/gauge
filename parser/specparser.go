@@ -111,11 +111,11 @@ func (parser *SpecParser) validateSpec(specification *gauge.Specification) error
 		return ParseError{FileName: specification.FileName, LineNo: dataTable.LineNo, SpanEnd: dataTable.LineNo, Message: "Data table should have at least 1 data row"}
 	}
 	if len(specification.Scenarios) == 0 {
-		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, SpanEnd: specification.Heading.SpanEnd, Message: "Spec should have atleast one scenario"}
+		return ParseError{FileName: specification.FileName, LineNo: specification.Heading.LineNo, SpanEnd: specification.Heading.SpanEnd, Message: "Spec should have at least one scenario"}
 	}
 	for _, sce := range specification.Scenarios {
 		if len(sce.Steps) == 0 {
-			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, SpanEnd: sce.Heading.SpanEnd, Message: "Scenario should have atleast one step"}
+			return ParseError{FileName: specification.FileName, LineNo: sce.Heading.LineNo, SpanEnd: sce.Heading.SpanEnd, Message: "Scenario should have at least one step"}
 		}
 	}
 	return nil
