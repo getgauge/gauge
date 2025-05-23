@@ -294,6 +294,7 @@ func (s *MySuite) TestParsingSimpleConcept(c *C) {
 	parser := new(ConceptParser)
 	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step ", "")
 
+	c.Assert(parseRes.Ok, Equals, true)
 	c.Assert(len(parseRes.ParseErrors), Equals, 0)
 	c.Assert(len(concepts), Equals, 1)
 
@@ -310,6 +311,7 @@ func (s *MySuite) TestParsingConceptRetainsStepSuffix(c *C) {
 	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step \n\n", "")
 
 	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(parseRes.Ok, Equals, true)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -325,10 +327,12 @@ func (s *MySuite) TestParsingConceptRetainsStepSuffix(c *C) {
 func (s *MySuite) TestErrorParsingConceptHeadingWithStaticOrSpecialParameter(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept with \"parameter\" \n * first step \n * second step ", "foo.spec")
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
 	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.spec:1 Concept heading can have only Dynamic Parameters => 'my concept with \"parameter\"'")
 
 	_, parseRes = parser.Parse("# my concept with <table: foo> \n * first step \n * second step ", "foo2.spec")
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
 	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo2.spec:1 Dynamic parameter <table: foo> could not be resolved => 'my concept with <table: foo>'")
 }
@@ -338,6 +342,7 @@ func (s *MySuite) TestErrorParsingConceptWithoutHeading(c *C) {
 
 	_, parseRes := parser.Parse("* first step \n * second step ", "")
 
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Step is not defined inside a concept heading")
 }
@@ -347,6 +352,7 @@ func (s *MySuite) TestErrorParsingConceptWithoutSteps(c *C) {
 
 	_, parseRes := parser.Parse("# my concept with \n", "")
 
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept should have at least one step")
 }
@@ -356,6 +362,7 @@ func (s *MySuite) TestParsingSimpleConceptWithParameters(c *C) {
 	concepts, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param0> \n * second step using \"value\" and <param1> ", "")
 
 	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(parseRes.Ok, Equals, true)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -386,6 +393,7 @@ func (s *MySuite) TestErrorParsingConceptStepWithInvalidParameters(c *C) {
 	_, parseRes := parser.Parse("# my concept with <param0> and <param1> \n * first step using <param3> \n * second step using \"value\" and <param1> ", "")
 
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Dynamic parameter <param3> could not be resolved")
 }
 
@@ -394,6 +402,7 @@ func (s *MySuite) TestParsingMultipleConcept(c *C) {
 	concepts, parseRes := parser.Parse("# my concept \n * first step \n * second step \n# my second concept \n* next step\n # my third concept <param0>\n * next step <param0> and \"value\"\n  ", "")
 
 	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(parseRes.Ok, Equals, true)
 	c.Assert(len(concepts), Equals, 3)
 
 	firstConcept := concepts[0]
@@ -426,6 +435,7 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	concepts, parseRes := parser.Parse("# my concept <foo> \n * first step with <foo> and inline table\n |id|name|\n|1|vishnu|\n|2|prateek|\n", "")
 
 	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(parseRes.Ok, Equals, true)
 	c.Assert(len(concepts), Equals, 1)
 
 	concept := concepts[0]
@@ -458,6 +468,7 @@ func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	_, parseRes := parser.Parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n", "")
 
 	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table doesn't belong to any step")
 }
 
@@ -667,6 +678,7 @@ func (s *MySuite) TestConceptHavingInvalidSpecialParameters(c *C) {
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Dynamic parameter <table:name> could not be resolved")
+	c.Assert(parseRes.Ok, Equals, false)
 }
 
 func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
@@ -675,6 +687,7 @@ func (s *MySuite) TestConceptHavingStaticParameters(c *C) {
 		step("a step <user:id>").String()
 	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(parseRes.Ok, Equals, false)
 }
 
 func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
@@ -688,11 +701,12 @@ func (s *MySuite) TestConceptFileHavingScenarioHeadingGivesParseError(c *C) {
 	scenarioHeading := newSpecBuilder().
 		scenarioHeading("Scenario Heading").
 		String()
-	_, res := new(ConceptParser).Parse(conceptText, "")
+	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Scenario Heading is not allowed in concept file")
-	c.Assert(res.ParseErrors[0].LineText, Equals, strings.TrimSpace(scenarioHeading))
+	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Scenario Heading is not allowed in concept file")
+	c.Assert(parseRes.ParseErrors[0].LineText, Equals, strings.TrimSpace(scenarioHeading))
 }
 
 func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError(c *C) {
@@ -703,11 +717,12 @@ func (s *MySuite) TestConceptFileHavingStaticParamsInHeadingShouldGiveParseError
 		step("a step1").
 		String()
 
-	_, res := new(ConceptParser).Parse(conceptText, "")
+	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
-	c.Assert(res.ParseErrors[0].LineText, Equals, "testinghjk \"sdf\"")
+	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Concept heading can have only Dynamic Parameters")
+	c.Assert(parseRes.ParseErrors[0].LineText, Equals, "testinghjk \"sdf\"")
 }
 
 func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseError(c *C) {
@@ -721,11 +736,12 @@ func (s *MySuite) TestConceptFileHavingTableAfterConceptHeadingShouldGiveParseEr
 		step("a step1").
 		String()
 
-	_, res := new(ConceptParser).Parse(conceptText, "")
+	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Table doesn't belong to any step")
-	c.Assert(res.ParseErrors[0].LineText, Equals, "|sdfsdf|")
+	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Table doesn't belong to any step")
+	c.Assert(parseRes.ParseErrors[0].LineText, Equals, "|sdfsdf|")
 }
 
 func (s *MySuite) TestMultipleConceptsInAFileHavingErrorsShouldBeConsolidated(c *C) {
@@ -736,11 +752,12 @@ func (s *MySuite) TestMultipleConceptsInAFileHavingErrorsShouldBeConsolidated(c 
 		step("self <werwer>").
 		String()
 
-	_, res := new(ConceptParser).Parse(conceptText, "")
+	_, parseRes := new(ConceptParser).Parse(conceptText, "")
 
-	c.Assert(len(res.ParseErrors), Not(Equals), 0)
-	c.Assert(res.ParseErrors[0].Message, Equals, "Dynamic parameter <werwe1r> could not be resolved")
-	c.Assert(res.ParseErrors[0].LineText, Equals, "self <werwe1r>")
+	c.Assert(len(parseRes.ParseErrors), Not(Equals), 0)
+	c.Assert(parseRes.Ok, Equals, false)
+	c.Assert(parseRes.ParseErrors[0].Message, Equals, "Dynamic parameter <werwe1r> could not be resolved")
+	c.Assert(parseRes.ParseErrors[0].LineText, Equals, "self <werwe1r>")
 }
 
 func (s *MySuite) TestConceptFileHavingItemsWithDuplicateTableHeaders(c *C) {
@@ -775,6 +792,7 @@ func (s *MySuite) TestErrorParsingConceptWithNoSteps(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept\n# second concept\n* first step ", "foo.cpt")
 	c.Assert(len(parseRes.ParseErrors), Equals, 1)
+	c.Assert(parseRes.Ok, Equals, false)
 	c.Assert(parseRes.ParseErrors[0].Error(), Equals, "foo.cpt:1 Concept should have at least one step => 'my concept'")
 }
 

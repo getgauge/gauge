@@ -22,7 +22,7 @@ type ConceptParser struct {
 	currentConcept *gauge.Step
 }
 
-// Parse Generates token for the given concept file and cretes concepts(array of steps) and parse results.
+// Parse Generates token for the given concept file and creates concepts(array of steps) and parse results.
 // concept file can have multiple concept headings.
 func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *ParseResult) {
 	defer parser.resetState()
@@ -30,7 +30,7 @@ func (parser *ConceptParser) Parse(text, fileName string) ([]*gauge.Step, *Parse
 	specParser := new(SpecParser)
 	tokens, errs := specParser.GenerateTokens(text, fileName)
 	concepts, res := parser.createConcepts(tokens, fileName)
-	return concepts, &ParseResult{ParseErrors: append(errs, res.ParseErrors...), Warnings: res.Warnings}
+	return concepts, &ParseResult{ParseErrors: append(errs, res.ParseErrors...), Ok: len(errs) == 0 && res.Ok, Warnings: res.Warnings}
 }
 
 // ParseFile Reads file contents from a give file and parses the file.
@@ -50,14 +50,14 @@ func (parser *ConceptParser) resetState() {
 func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([]*gauge.Step, *ParseResult) {
 	parser.currentState = initial
 	var concepts []*gauge.Step
-	parseRes := &ParseResult{ParseErrors: make([]ParseError, 0)}
+	finalResult := &ParseResult{ParseErrors: make([]ParseError, 0), Ok: true}
 	var preComments []*gauge.Comment
 	addPreComments := false
 	for _, token := range tokens {
 		if parser.isConceptHeading(token) {
 			if isInState(parser.currentState, conceptScope, stepScope) {
 				if len(parser.currentConcept.ConceptSteps) < 1 {
-					parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
+					finalResult.ParseErrors = append(finalResult.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
 					continue
 				}
 				concepts = append(concepts, parser.currentConcept)
@@ -66,7 +66,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			parser.currentConcept, res = parser.processConceptHeading(token, fileName)
 			parser.currentState = initial
 			if len(res.ParseErrors) > 0 {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, res.ParseErrors...)
+				finalResult.ParseErrors = append(finalResult.ParseErrors, res.ParseErrors...)
 				continue
 			}
 			if addPreComments {
@@ -76,22 +76,22 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			addStates(&parser.currentState, conceptScope)
 		} else if parser.isStep(token) {
 			if !isInState(parser.currentState, conceptScope) {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Step is not defined inside a concept heading", LineText: token.LineText()})
+				finalResult.ParseErrors = append(finalResult.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Step is not defined inside a concept heading", LineText: token.LineText()})
 				continue
 			}
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, errs...)
+				finalResult.ParseErrors = append(finalResult.ParseErrors, errs...)
 			}
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
-				parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Table doesn't belong to any step", LineText: token.LineText()})
+				finalResult.ParseErrors = append(finalResult.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Table doesn't belong to any step", LineText: token.LineText()})
 				continue
 			}
 			parser.processTableHeader(token)
 			addStates(&parser.currentState, tableScope)
 		} else if parser.isScenarioHeading(token) {
-			parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText()})
+			finalResult.ParseErrors = append(finalResult.ParseErrors, ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Scenario Heading is not allowed in concept file", LineText: token.LineText()})
 			continue
 		} else if parser.isTableDataRow(token) {
 			if areUnderlined(token.Args) && !isInState(parser.currentState, tableSeparatorScope) {
@@ -112,14 +112,18 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 		}
 	}
 	if parser.currentConcept != nil && len(parser.currentConcept.ConceptSteps) < 1 {
-		parseRes.ParseErrors = append(parseRes.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
-		return nil, parseRes
+		finalResult.ParseErrors = append(finalResult.ParseErrors, ParseError{FileName: fileName, LineNo: parser.currentConcept.LineNo, SpanEnd: parser.currentConcept.LineSpanEnd, Message: "Concept should have at least one step", LineText: parser.currentConcept.LineText})
+		finalResult.Ok = false
+		return nil, finalResult
 	}
 
 	if parser.currentConcept != nil {
 		concepts = append(concepts, parser.currentConcept)
 	}
-	return concepts, parseRes
+	if len(finalResult.ParseErrors) > 0 {
+		finalResult.Ok = false
+	}
+	return concepts, finalResult
 }
 
 func (parser *ConceptParser) isConceptHeading(token *Token) bool {
@@ -152,7 +156,7 @@ func (parser *ConceptParser) processConceptHeading(token *Token, fileName string
 		return nil, parseRes
 	}
 	if !parser.hasOnlyDynamicParams(concept) {
-		parseRes.ParseErrors = []ParseError{ParseError{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Concept heading can have only Dynamic Parameters", LineText: token.LineText()}}
+		parseRes.ParseErrors = []ParseError{{FileName: fileName, LineNo: token.LineNo, SpanEnd: token.SpanEnd, Message: "Concept heading can have only Dynamic Parameters", LineText: token.LineText()}}
 		return nil, parseRes
 	}
 
