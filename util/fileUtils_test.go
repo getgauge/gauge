@@ -294,12 +294,12 @@ func (s *MySuite) TestGetConceptFilesWhenConceptsDirDoesNotExists(c *C) {
 	os.Setenv(env.SpecsDir, "specs2")
 	GetConceptFiles()
 	directory, _ := filepath.Abs(filepath.Join(config.ProjectRoot, "specs2"))
-	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or diretory: %s", directory))
+	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or directory: %s", directory))
 
 	os.Setenv(env.SpecsDir, "_testSpecsDir,non-exisitng")
 	GetConceptFiles()
 	directory, _ = filepath.Abs(filepath.Join(config.ProjectRoot, "non-exisitng"))
-	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or diretory: %s", directory))
+	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or directory: %s", directory))
 }
 
 func (s *MySuite) TestGetSpecFilesWhenSpecsDirIsEmpty(c *C) {

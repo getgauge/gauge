@@ -186,7 +186,7 @@ func findConceptFiles(paths []string) []string {
 			logger.Fatalf(true, "Error getting absolute concept path. %v", err)
 		}
 		if !common.FileExists(absPath) {
-			exitWithMessage(fmt.Sprintf("No such file or diretory: %s", absPath))
+			exitWithMessage(fmt.Sprintf("No such file or directory: %s", absPath))
 		}
 		conceptFiles = append(conceptFiles, FindConceptFilesIn(absPath)...)
 	}
