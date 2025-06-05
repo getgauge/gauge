@@ -90,7 +90,7 @@ type parallelReportWriter struct {
 }
 
 func (p *parallelReportWriter) Write(b []byte) (int, error) {
-	return fmt.Printf("[runner: %d] %s", p.nRunner, string(b))
+	return fmt.Printf("[runner: %2d] %s", p.nRunner, string(b))
 }
 
 // ParallelReporter returns the instance of parallel console reporter
