@@ -51,7 +51,7 @@ func (w Writer) Write(p []byte) (int, error) {
 			}
 		}
 		if w.stream > 0 {
-			m.Message = fmt.Sprintf("[runner: %d] %s", w.stream, m.Message)
+			m.Message = fmt.Sprintf("[runner: %2d] %s", w.stream, m.Message)
 		}
 		switch m.LogLevel {
 		case "debug":
