@@ -295,9 +295,19 @@ func (e *parallelExecution) finish() {
 
 func (e *parallelExecution) aggregateResults(suiteResults []*result.SuiteResult) {
 	r := result.NewSuiteResult(ExecuteTags, e.startTime)
+	if e.suiteResult != nil {
+		r.PreHookMessages = e.suiteResult.PreHookMessages
+		r.PreHookScreenshotFiles = e.suiteResult.PreHookScreenshotFiles
+		r.PostHookMessages = e.suiteResult.PostHookMessages
+		r.PostHookScreenshotFiles = e.suiteResult.PostHookScreenshotFiles
+	}
 	for _, suiteResult := range suiteResults {
 		r.SpecsFailedCount += suiteResult.SpecsFailedCount
 		r.SpecResults = append(r.SpecResults, suiteResult.SpecResults...)
+		r.PreHookMessages = append(r.PreHookMessages, suiteResult.PreHookMessages...)
+		r.PreHookScreenshotFiles = append(r.PreHookScreenshotFiles, suiteResult.PreHookScreenshotFiles...)
+		r.PostHookMessages = append(r.PostHookMessages, suiteResult.PostHookMessages...)
+		r.PostHookScreenshotFiles = append(r.PostHookScreenshotFiles, suiteResult.PostHookScreenshotFiles...)
 		if suiteResult.IsFailed {
 			r.IsFailed = true
 		}
