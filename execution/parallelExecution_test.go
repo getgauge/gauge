@@ -49,9 +49,13 @@ func getValidationErrorMap() *gauge.BuildErrors {
 
 func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	e := parallelExecution{errMaps: getValidationErrorMap()}
-	suiteRes1 := &result.SuiteResult{ExecutionTime: 1, SpecsFailedCount: 1, IsFailed: true, SpecResults: []*result.SpecResult{{}, {}}}
-	suiteRes2 := &result.SuiteResult{ExecutionTime: 3, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{{}, {}}}
-	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{{}, {}}}
+
+	// Start with an initial result (e.g from multi-threaded execution)
+	e.suiteResult = &result.SuiteResult{ExecutionTime: 14, PreHookMessages: []string{"starting"}, PostHookMessages: []string{"stopping"}}
+
+	suiteRes1 := &result.SuiteResult{ExecutionTime: 1, SpecsFailedCount: 1, IsFailed: true, SpecResults: []*result.SpecResult{{}, {}}, PreHookMessages: []string{"Pre-1"}, PostHookMessages: []string{"Post-1"}}
+	suiteRes2 := &result.SuiteResult{ExecutionTime: 3, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{{}, {}}, PreHookMessages: []string{"Pre-2"}, PostHookMessages: []string{"Post-2"}}
+	suiteRes3 := &result.SuiteResult{ExecutionTime: 5, SpecsFailedCount: 0, IsFailed: false, SpecResults: []*result.SpecResult{{}, {}}, PreHookMessages: []string{"Pre-3"}, PostHookMessages: []string{"Post-3"}}
 	var suiteResults []*result.SuiteResult
 	suiteResults = append(suiteResults, suiteRes1, suiteRes2, suiteRes3)
 	e.aggregateResults(suiteResults)
@@ -61,6 +65,8 @@ func (s *MySuite) TestAggregationOfSuiteResult(c *C) {
 	c.Assert(aggregatedRes.IsFailed, Equals, true)
 	c.Assert(len(aggregatedRes.SpecResults), Equals, 6)
 	c.Assert(aggregatedRes.SpecsSkippedCount, Equals, 0)
+	c.Assert(aggregatedRes.PreHookMessages, DeepEquals, []string{"starting", "Pre-1", "Pre-2", "Pre-3"})
+	c.Assert(aggregatedRes.PostHookMessages, DeepEquals, []string{"stopping", "Post-1", "Post-2", "Post-3"})
 }
 
 func (s *MySuite) TestAggregationOfSuiteResultWithUnhandledErrors(c *C) {
