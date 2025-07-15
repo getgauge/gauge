@@ -32,6 +32,7 @@ const (
 	defaultRefactorTimeout         = time.Second * 10
 	defaultRunnerRequestTimeout    = time.Second * 30
 	defaultIdeRequestTimeout       = time.Second * 30
+	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
 var APILog = logging.MustGetLogger("gauge-api")
