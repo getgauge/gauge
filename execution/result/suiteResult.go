@@ -41,7 +41,7 @@ type SuiteResult struct {
 func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
-	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	result.Timestamp = startTime.Format(time.RFC3339Nano)
 	result.ProjectName = filepath.Base(config.ProjectRoot)
 	result.Environment = env.CurrentEnvironments()
 	result.Tags = tags
