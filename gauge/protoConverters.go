@@ -173,6 +173,7 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		Tags:                    suiteResult.Tags,
 		ProjectName:             suiteResult.ProjectName,
 		Timestamp:               suiteResult.Timestamp,
+		TimestampISO:            suiteResult.TimestampISO,
 		SpecsSkippedCount:       int32(suiteResult.SpecsSkippedCount),
 		PreHookMessages:         suiteResult.PreHookMessages,
 		PostHookMessages:        suiteResult.PostHookMessages,
