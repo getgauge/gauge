@@ -28,6 +28,7 @@ type SuiteResult struct {
 	Tags                    string
 	ProjectName             string
 	Timestamp               string
+	TimestampISO            string
 	SpecsSkippedCount       int
 	PreHookMessages         []string
 	PostHookMessages        []string
@@ -42,6 +43,7 @@ func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
 	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	result.TimestampISO = startTime.Format(time.RFC3339Nano)
 	result.ProjectName = filepath.Base(config.ProjectRoot)
 	result.Environment = env.CurrentEnvironments()
 	result.Tags = tags
