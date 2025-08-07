@@ -23,6 +23,7 @@ func mergeDataTableSpecResults(sResult *result.SuiteResult) *result.SuiteResult 
 	suiteRes.PreSuite = sResult.PreSuite
 	suiteRes.UnhandledErrors = sResult.UnhandledErrors
 	suiteRes.Timestamp = sResult.Timestamp
+	suiteRes.TimestampISO = sResult.TimestampISO
 	suiteRes.ProjectName = sResult.ProjectName
 	suiteRes.Environment = sResult.Environment
 	suiteRes.Tags = sResult.Tags

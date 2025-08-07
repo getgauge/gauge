@@ -15,7 +15,7 @@ import (
 	"github.com/getgauge/gauge/env"
 )
 
-// SuitResult represents the result of suit execution
+// SuitResult represents the result of suite execution
 type SuiteResult struct {
 	SpecResults             []*SpecResult
 	PreSuite                *(gauge_messages.ProtoHookFailure)
@@ -28,6 +28,7 @@ type SuiteResult struct {
 	Tags                    string
 	ProjectName             string
 	Timestamp               string
+	TimestampISO            string
 	SpecsSkippedCount       int
 	PreHookMessages         []string
 	PostHookMessages        []string
@@ -37,11 +38,12 @@ type SuiteResult struct {
 	PostHookScreenshots     [][]byte
 }
 
-// NewSuiteResult is a constructor for SuitResult
+// NewSuiteResult is a constructor for SuiteResult
 func NewSuiteResult(tags string, startTime time.Time) *SuiteResult {
 	result := new(SuiteResult)
 	result.SpecResults = make([]*SpecResult, 0)
 	result.Timestamp = startTime.Format(config.LayoutForTimeStamp)
+	result.TimestampISO = startTime.Format(time.RFC3339Nano)
 	result.ProjectName = filepath.Base(config.ProjectRoot)
 	result.Environment = env.CurrentEnvironments()
 	result.Tags = tags
@@ -63,7 +65,7 @@ func (sr *SuiteResult) SetSpecsSkippedCount() {
 	}
 }
 
-// AddUnhandledError adds the unhandled error to suit result.
+// AddUnhandledError adds the unhandled error to suite result.
 func (sr *SuiteResult) AddUnhandledError(err error) {
 	sr.UnhandledErrors = append(sr.UnhandledErrors, err)
 }
@@ -72,7 +74,7 @@ func (sr *SuiteResult) UpdateExecTime(startTime time.Time) {
 	sr.ExecutionTime = int64(time.Since(startTime) / 1e6)
 }
 
-// AddSpecResult adds a specs result to suit result.
+// AddSpecResult adds a specs result to suite result.
 func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	if specResult.IsFailed {
 		sr.IsFailed = true
@@ -82,7 +84,7 @@ func (sr *SuiteResult) AddSpecResult(specResult *SpecResult) {
 	sr.SpecResults = append(sr.SpecResults, specResult)
 }
 
-// AddSpecResults adds multiple spec results to suit result.
+// AddSpecResults adds multiple spec results to suite result.
 func (sr *SuiteResult) AddSpecResults(specResults []*SpecResult) {
 	for _, result := range specResults {
 		sr.AddSpecResult(result)
@@ -111,7 +113,7 @@ func (sr *SuiteResult) AddPostHook(f ...*gauge_messages.ProtoHookFailure) {
 	sr.PostSuite = f[0]
 }
 
-// ExecTime returns the time taken to execute the suit
+// ExecTime returns the time taken to execute the suite
 func (sr *SuiteResult) ExecTime() int64 {
 	return sr.ExecutionTime
 }

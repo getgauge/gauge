@@ -173,6 +173,7 @@ func ConvertToProtoSuiteResult(suiteResult *result.SuiteResult) *gauge_messages.
 		Tags:                    suiteResult.Tags,
 		ProjectName:             suiteResult.ProjectName,
 		Timestamp:               suiteResult.Timestamp,
+		TimestampISO:            suiteResult.TimestampISO,
 		SpecsSkippedCount:       int32(suiteResult.SpecsSkippedCount),
 		PreHookMessages:         suiteResult.PreHookMessages,
 		PostHookMessages:        suiteResult.PostHookMessages,
@@ -229,6 +230,7 @@ func convertToProtoSpecResult(specResult *result.SpecResult) *gauge_messages.Pro
 		ScenarioSkippedCount: int32(specResult.ScenarioSkippedCount),
 		Errors:               specResult.Errors,
 		Timestamp:            time.Now().Format(time.RFC3339),
+		TimestampISO:         time.Now().Format(time.RFC3339Nano),
 	}
 }
 
