@@ -1,6 +1,6 @@
 bleach==6.2.0
-certifi==2025.7.14
-charset-normalizer==3.4.2
+certifi==2025.8.3
+charset-normalizer==3.4.3
 docutils==0.22
 idna==3.10
 importlib-metadata==8.7.0
@@ -12,7 +12,7 @@ more-itertools==10.7.0
 pkginfo==1.12.1.2
 Pygments==2.19.2
 readme-renderer==44.0
-requests==2.32.4
+requests==2.32.5
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==14.1.0
