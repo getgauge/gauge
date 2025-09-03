@@ -2,11 +2,14 @@ name: Poll for Benchmarks on open PRs
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '0 * * * *'
 
 jobs:
   publish_benchmark:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - name: publish benchmark
         uses: getgauge-contrib/artifact_as_comment@master
