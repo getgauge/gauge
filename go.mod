@@ -16,11 +16,11 @@ require (
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
 	github.com/sourcegraph/jsonrpc2 v0.2.1
-	github.com/spf13/cobra v1.9.1
-	github.com/spf13/pflag v1.0.7
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a
-	google.golang.org/grpc v1.74.2
-	google.golang.org/protobuf v1.36.6
+	github.com/spf13/cobra v1.10.1
+	github.com/spf13/pflag v1.0.9
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250707201910-8d1bb00bc6a7
+	google.golang.org/grpc v1.75.0
+	google.golang.org/protobuf v1.36.8
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
 
@@ -33,9 +33,9 @@ require (
 	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
-	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
