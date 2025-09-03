@@ -18,7 +18,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -35,7 +35,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -102,14 +102,14 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           check-latest: true
           go-version-file: 'go.mod'
       - name: Setup java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -201,7 +201,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -229,7 +229,7 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: gauge
       - name: Set up Go
@@ -239,7 +239,7 @@ jobs:
           go-version-file: 'gauge/go.mod'
           cache-dependency-path: 'gauge/go.sum'
       - name: Setup java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -254,7 +254,7 @@ jobs:
         run: gauge install java
 
       - name: Prep benchmark
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
@@ -284,13 +284,13 @@ jobs:
 
     steps:
       - name: Prep benchmark
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
           ref: master
       - name: Download benchmark results
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: gauge-benchmarks/out/
       - name: Generate Comment String

@@ -11,7 +11,7 @@ jobs:
     name: Create package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -35,7 +35,7 @@ jobs:
     name: Create windows package
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -73,9 +73,9 @@ jobs:
     env:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: gauge-non-windows-artifact
           path: ./deploy
@@ -102,20 +102,20 @@ jobs:
     env:
       GITHUB_TOKEN: '${{ secrets.GAUGEBOT_GITHUB_TOKEN }}'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: gauge-non-windows-artifact
           path: ./deploy
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: gauge-windows-artifact
           path: ./deploy
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: gauge-version
           path: .
@@ -140,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [gauge-version]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: git fetch --prune --unshallow
 
       - name: Set up Python
@@ -150,7 +150,7 @@ jobs:
           cache: 'pip' # caching pip dependencies
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: gauge-version
           path: .
@@ -173,7 +173,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [gauge-version]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: git fetch --prune --unshallow
 
       - uses: actions/setup-node@v4
@@ -184,7 +184,7 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: gauge-version
           path: .
@@ -209,16 +209,16 @@ jobs:
     runs-on: windows-latest
     needs: [gauge-version, windows-package]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: git fetch --prune --unshallow
 
       - name: Fetch gauge version
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: gauge-version
           path: .
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v5
         with:
           name: gauge-windows-artifact
           path: ./deploy
