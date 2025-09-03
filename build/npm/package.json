@@ -24,8 +24,8 @@
   },
   "homepage": "https://github.com/getgauge/gauge#readme",
   "devDependencies": {
-    "chai": "^5.2.1",
-    "mocha": "^11.7.1",
+    "chai": "^6.0.1",
+    "mocha": "^11.7.2",
     "sinon": "^21.0.0"
   },
   "dependencies": {
