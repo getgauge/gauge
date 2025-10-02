@@ -1,6 +1,6 @@
 module github.com/getgauge/gauge
 
-go 1.24.7
+go 1.25.1
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
