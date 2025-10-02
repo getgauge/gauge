@@ -15,14 +15,9 @@
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.gauge.org"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
-; MUI 1.67 compatible ------
-!include "MUI.nsh"
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "winmessages.nsh"
-!include "FileFunc.nsh" ;For GetOptions
-!include "WordFunc.nsh"
-!include "nsDialogs.nsh"
 
 !define Explode "!insertmacro Explode"
 
