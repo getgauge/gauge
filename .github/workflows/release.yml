@@ -59,8 +59,8 @@ jobs:
 
       - name: Create Distro
         run: |
+          go run build/make.go --distro --bin-dir bin\windows_arm64
           go run build/make.go --distro --bin-dir bin\windows_amd64
-          go run build/make.go --distro --bin-dir bin\windows_386
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
