@@ -15,7 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, windows-11-arm, ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v5
@@ -33,7 +33,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, windows-11-arm, ubuntu-latest]
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
@@ -59,13 +59,13 @@ jobs:
           npm install
 
       - name: Install Gauge (windows)
-        if: matrix.os == 'windows-latest'
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           go run build/make.go --install --verbose
           echo "C:\\Program Files\\gauge\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Install Gauge (linux)
-        if: matrix.os != 'windows-latest'
+      - name: Install Gauge (linux/macos)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
         run: |
           go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "/tmp/gauge/bin" >> $GITHUB_PATH
@@ -100,7 +100,7 @@ jobs:
       TAGS: js
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, windows-11-arm, ubuntu-latest]
     steps:
       - uses: actions/checkout@v5
       - name: Set up Go
@@ -118,13 +118,13 @@ jobs:
         run: go run build/make.go --verbose
 
       - name: Install Gauge (windows)
-        if: matrix.os == 'windows-latest'
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           go run build/make.go --install --verbose
           echo "C:\\Program Files\\gauge\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Install Gauge (linux)
-        if: matrix.os != 'windows-latest'
+      - name: Install Gauge (linux/macos)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
         run: |
           go run build/make.go --install --prefix=/tmp/gauge --verbose
           echo "/tmp/gauge/bin" >> $GITHUB_PATH
@@ -173,13 +173,13 @@ jobs:
           gauge install
 
       - name: Install gauge and Run FTs (windows)
-        if: matrix.os == 'windows-latest'
+        if: ${{ startsWith(matrix.os, 'windows') }}
         run: |
           cd gauge-tests
           .\gradlew.bat clean jsFT
 
-      - name: Install gauge and Run FTs (linux/osx)
-        if: matrix.os != 'windows-latest'
+      - name: Install gauge and Run FTs (linux/macos)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
         run: |
           cd gauge-tests
           ./gradlew clean jsFT
@@ -197,7 +197,7 @@ jobs:
     needs: [ functional-tests, lsp-tests ]
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, windows-11-arm, ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v5
@@ -209,7 +209,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Install NSIS (windows)
-        if: matrix.os == 'windows-latest'
+        if: ${{ startsWith(matrix.os, 'windows') }}
         env:
           NSIS_VERSION: '3.11'
         run: |
