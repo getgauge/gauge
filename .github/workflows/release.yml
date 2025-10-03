@@ -42,20 +42,22 @@ jobs:
           check-latest: true
           go-version-file: 'go.mod'
 
-      - name: Prep installer generation
-        shell: powershell
-        run: |
-          Start-Sleep -Milliseconds 1
-          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/3.10/nsis-3.10-strlen_8192.zip/download" -UserAgent "PowerShell" -Outfile "./nsis.zip"
-          Expand-Archive -Force -LiteralPath ./nsis.zip -DestinationPath "C:\Program Files (x86)\NSIS\"
-
       - name: Compile gauge
         run: |
           go run build/make.go --verbose --all-platforms
           Get-ChildItem -Recurse .\bin
 
+      - name: Install NSIS
+        env:
+          NSIS_VERSION: '3.11'
+        run: |
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/${env:NSIS_VERSION}/nsis-${env:NSIS_VERSION}.zip/download" -UserAgent "PowerShell" -Outfile "./nsis.zip"
+          Expand-Archive -LiteralPath ./nsis.zip -DestinationPath "${env:ProgramFiles(x86)}\"
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/${env:NSIS_VERSION}/nsis-${env:NSIS_VERSION}-strlen_8192.zip/download" -UserAgent "PowerShell" -Outfile "./nsis-8192.zip"
+          Expand-Archive -Force -LiteralPath ./nsis-8192.zip -DestinationPath "${env:ProgramFiles(x86)}\nsis-${env:NSIS_VERSION}\"
+          echo "${env:ProgramFiles(x86)}\nsis-${env:NSIS_VERSION}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Create Distro
-        shell: pwsh
         run: |
           go run build/make.go --distro --bin-dir bin\windows_amd64
           go run build/make.go --distro --bin-dir bin\windows_386
@@ -232,7 +234,6 @@ jobs:
           git clone https://github.com/getgauge/chocolatey-packages
 
       - name: Deploy to Gauge $GAUGE_VERSION to choco
-        shell: pwsh
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |

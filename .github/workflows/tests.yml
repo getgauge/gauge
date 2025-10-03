@@ -177,7 +177,6 @@ jobs:
         run: |
           cd gauge-tests
           .\gradlew.bat clean jsFT
-        shell: pwsh
 
       - name: Install gauge and Run FTs (linux/osx)
         if: matrix.os != 'windows-latest'
@@ -202,11 +201,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
           check-latest: true
           go-version-file: 'go.mod'
+
+      - name: Install NSIS (windows)
+        if: matrix.os == 'windows-latest'
+        env:
+          NSIS_VERSION: '3.11'
+        run: |
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/${env:NSIS_VERSION}/nsis-${env:NSIS_VERSION}.zip/download" -UserAgent "PowerShell" -Outfile "./nsis.zip"
+          Expand-Archive -LiteralPath ./nsis.zip -DestinationPath "${env:ProgramFiles(x86)}\"
+          Invoke-WebRequest "https://sourceforge.net/projects/nsis/files/NSIS%203/${env:NSIS_VERSION}/nsis-${env:NSIS_VERSION}-strlen_8192.zip/download" -UserAgent "PowerShell" -Outfile "./nsis-8192.zip"
+          Expand-Archive -Force -LiteralPath ./nsis-8192.zip -DestinationPath "${env:ProgramFiles(x86)}\nsis-${env:NSIS_VERSION}\"
+          echo "${env:ProgramFiles(x86)}\nsis-${env:NSIS_VERSION}" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
       - name: Build distro for ${{ matrix.os }}
         run: go run build/make.go  && go run build/make.go --distro
 
