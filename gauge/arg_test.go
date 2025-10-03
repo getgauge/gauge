@@ -6,7 +6,9 @@
 
 package gauge
 
-import . "gopkg.in/check.v1"
+import (
+	. "gopkg.in/check.v1"
+)
 
 func (s *MySuite) TestLookupaddArg(c *C) {
 	lookup := new(ArgLookup)
@@ -128,4 +130,109 @@ func (s *MySuite) TestGetLookupFromTables(c *C) {
 	c.Assert(l.ContainsArg("name1"), Equals, true)
 	c.Assert(l.ContainsArg("id2"), Equals, true)
 	c.Assert(l.ContainsArg("name2"), Equals, true)
+}
+
+func (s *MySuite) TestAddMultilineStringArg(c *C) {
+	lookup := new(ArgLookup)
+	lookup.AddArgName("param1")
+
+	mlValue := `line1
+line2
+line3`
+	err := lookup.AddArgValue("param1", &StepArg{Value: mlValue, ArgType: MultilineString})
+	c.Assert(err, IsNil)
+
+	stepArg, err := lookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.ArgType, Equals, MultilineString)
+	c.Assert(stepArg.Value, Equals, mlValue)
+}
+
+func (s *MySuite) TestMultilineStringArgValueMethod(c *C) {
+	mlValue := `first line
+second line`
+	stepArg := &StepArg{
+		Name:    "mlParam",
+		Value:   mlValue,
+		ArgType: MultilineString,
+	}
+	c.Assert(stepArg.ArgValue(), Equals, mlValue)
+}
+
+func (s *MySuite) TestMultilineStringInCopy(c *C) {
+	originalLookup := new(ArgLookup)
+	mlValue := `a
+b
+c`
+	originalLookup.AddArgName("param1")
+	err := originalLookup.AddArgValue("param1", &StepArg{Value: mlValue, ArgType: MultilineString})
+	c.Assert(err, IsNil)
+
+	copiedLookup, err := originalLookup.GetCopy()
+	c.Assert(err, IsNil)
+
+	stepArg, err := copiedLookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.ArgType, Equals, MultilineString)
+	c.Assert(stepArg.Value, Equals, mlValue)
+
+	// Ensure modifying copy does not affect original
+	stepArg.Value = "modified"
+	origStepArg, err := originalLookup.GetArg("param1")
+	c.Assert(err, IsNil)
+	c.Assert(origStepArg.Value, Equals, mlValue)
+}
+
+func (s *MySuite) TestMultilineStringWithEmptyValue(c *C) {
+	lookup := new(ArgLookup)
+	lookup.AddArgName("emptyParam")
+
+	err := lookup.AddArgValue("emptyParam", &StepArg{Value: "", ArgType: MultilineString})
+	c.Assert(err, IsNil)
+
+	stepArg, err := lookup.GetArg("emptyParam")
+	c.Assert(err, IsNil)
+	c.Assert(stepArg.ArgType, Equals, MultilineString)
+	c.Assert(stepArg.Value, Equals, "")
+}
+
+func (s *MySuite) TestMultilineStringConstantDefinition(c *C) {
+	// Test that MultilineString constant is properly defined
+	c.Assert(MultilineString, Equals, ArgType("multiline_string"))
+}
+
+func (s *MySuite) TestStepArgWithMultilineStringType(c *C) {
+	// Test basic multiline string functionality
+	multilineContent := `First line
+Second line
+Third line`
+	
+	stepArg := &StepArg{
+		Value:   multilineContent,
+		ArgType: MultilineString,
+	}
+
+	c.Assert(stepArg.ArgType, Equals, MultilineString)
+	c.Assert(stepArg.Value, Equals, multilineContent)
+	c.Assert(stepArg.ArgValue(), Equals, multilineContent)
+}
+
+func (s *MySuite) TestArgLookupStoresMultilineString(c *C) {
+	// Test that ArgLookup can store and retrieve multiline strings
+	lookup := new(ArgLookup)
+	lookup.AddArgName("config")
+	
+	multilineValue := `host: localhost
+port: 8080`
+
+	err := lookup.AddArgValue("config", &StepArg{
+		Value:   multilineValue,
+		ArgType: MultilineString,
+	})
+	c.Assert(err, IsNil)
+
+	arg, err := lookup.GetArg("config")
+	c.Assert(err, IsNil)
+	c.Assert(arg.ArgType, Equals, MultilineString)
+	c.Assert(arg.Value, Equals, multilineValue)
 }

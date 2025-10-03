@@ -10,6 +10,7 @@ import (
 	"bufio"
 	"strings"
 
+	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -137,24 +138,62 @@ func createStep(spec *gauge.Specification, scn *gauge.Scenario, stepToken *Token
 // CreateStepUsingLookup generates gauge steps from step token and args lookup.
 func CreateStepUsingLookup(stepToken *Token, lookup *gauge.ArgLookup, specFileName string) (*gauge.Step, *ParseResult) {
 	stepValue, argsType := extractStepValueAndParameterTypes(stepToken.Value)
-	if argsType != nil && len(argsType) != len(stepToken.Args) {
+	
+	// Handle implicit multiline argument - if we have args but no parameter types
+	hasImplicitMultiline := len(stepToken.Args) > 0 && len(argsType) == 0
+	
+	// Only validate if we don't have an implicit multiline argument
+	if !hasImplicitMultiline && argsType != nil && len(argsType) != len(stepToken.Args) {
 		return nil, &ParseResult{ParseErrors: []ParseError{ParseError{specFileName, stepToken.LineNo, stepToken.SpanEnd, "Step text should not have '{static}' or '{dynamic}' or '{special}'", stepToken.LineText()}}, Warnings: nil}
 	}
+
 	lineText := strings.Join(stepToken.Lines, " ")
 	step := &gauge.Step{FileName: specFileName, LineNo: stepToken.LineNo, Value: stepValue, LineText: strings.TrimSpace(lineText), LineSpanEnd: stepToken.SpanEnd}
 	arguments := make([]*gauge.StepArg, 0)
 	var errors []ParseError
 	var warnings []*Warning
-	for i, argType := range argsType {
-		argument, parseDetails := createStepArg(stepToken.Args[i], argType, stepToken, lookup, specFileName)
-		if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
-			errors = append(errors, parseDetails.ParseErrors...)
-		}
-		arguments = append(arguments, argument)
-		if parseDetails != nil && parseDetails.Warnings != nil {
-			warnings = append(warnings, parseDetails.Warnings...)
+	
+	// Handle implicit multiline argument
+	if hasImplicitMultiline {
+		arguments = append(arguments, &gauge.StepArg{ArgType: gauge.SpecialString, Value: stepToken.Args[0]})
+	} else {
+		// Handle regular arguments
+		for i, argType := range argsType {
+			argument, parseDetails := createStepArg(stepToken.Args[i], argType, stepToken, lookup, specFileName)
+			if parseDetails != nil && len(parseDetails.ParseErrors) > 0 {
+				errors = append(errors, parseDetails.ParseErrors...)
+			}
+			arguments = append(arguments, argument)
+			if parseDetails != nil && parseDetails.Warnings != nil {
+				warnings = append(warnings, parseDetails.Warnings...)
+			}
 		}
 	}
+	
 	step.AddArgs(arguments...)
+
+	// Create fragments for implicit multiline argument
+	if hasImplicitMultiline {
+		// First fragment: the step text
+		textFragment := &gauge_messages.Fragment{
+			FragmentType: gauge_messages.Fragment_Text,
+			Text: step.Value,
+		}
+		
+		// Second fragment: the multiline parameter
+		param := &gauge_messages.Parameter{
+			ParameterType: gauge_messages.Parameter_Multiline_String,
+			Value: stepToken.Args[0],
+			Name: "",
+		}
+		paramFragment := &gauge_messages.Fragment{
+			FragmentType: gauge_messages.Fragment_Parameter,
+			Parameter: param,
+		}
+		
+		// Replace the fragments array with both fragments
+		step.Fragments = []*gauge_messages.Fragment{textFragment, paramFragment}
+	}
+	
 	return step, &ParseResult{ParseErrors: errors, Warnings: warnings}
 }
