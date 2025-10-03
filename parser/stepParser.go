@@ -39,9 +39,22 @@ type acceptFn func(rune, int) (int, bool)
 // ExtractStepArgsFromToken extracts step args(Static and Dynamic) from the given step token.
 func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
 	_, argsType := extractStepValueAndParameterTypes(stepToken.Value)
+	
+	// Handle implicit multiline argument - if we have args but no parameter types
+	hasImplicitMultiline := len(stepToken.Args) > 0 && len(argsType) == 0
+	
+	if hasImplicitMultiline {
+		if len(stepToken.Args) != 1 {
+			return nil, fmt.Errorf("Multiline step should have exactly one argument")
+		}
+		return []gauge.StepArg{{ArgType: gauge.SpecialString, Value: stepToken.Args[0]}}, nil
+	}
+	
+	// Original validation
 	if argsType != nil && len(argsType) != len(stepToken.Args) {
 		return nil, fmt.Errorf("Step text should not have '{static}' or '{dynamic}' or '{special}'")
 	}
+	
 	var args []gauge.StepArg
 	for i, argType := range argsType {
 		if gauge.ArgType(argType) == gauge.Static {
@@ -54,7 +67,6 @@ func ExtractStepArgsFromToken(stepToken *Token) ([]gauge.StepArg, error) {
 }
 
 func acceptor(start rune, end rune, onEachChar func(rune, int) int, after func(state int), inState int) acceptFn {
-
 	return func(element rune, currentState int) (int, bool) {
 		currentState = onEachChar(element, currentState)
 		if element == start {
@@ -84,13 +96,19 @@ func processStep(parser *SpecParser, token *Token) ([]error, bool) {
 		return []error{fmt.Errorf("Step should not be blank")}, true
 	}
 
-	stepValue, args, err := processStepText(token.Value)
-	if err != nil {
-		return []error{err}, true
+	// If token has args from multiline content, skip parameter processing
+	if len(token.Args) > 0 {
+		token.Value = strings.TrimSpace(token.Value)
+	} else {
+		// Process regular step with inline parameters
+		stepValue, args, err := processStepText(token.Value)
+		if err != nil {
+			return []error{err}, true
+		}
+		token.Value = stepValue
+		token.Args = args
 	}
 
-	token.Value = stepValue
-	token.Args = args
 	parser.clearState()
 	return []error{}, false
 }
@@ -98,7 +116,6 @@ func processStep(parser *SpecParser, token *Token) ([]error, bool) {
 func processStepText(text string) (string, []string, error) {
 	reservedChars := map[rune]struct{}{'{': {}, '}': {}}
 	var stepValue, argText bytes.Buffer
-
 	var args []string
 
 	curBuffer := func(state int) *bytes.Buffer {
@@ -171,7 +188,7 @@ func processStepText(text string) (string, []string, error) {
 		}
 	}
 
-	// If it is a valid step, the state should be default when the control reaches here
+	// Final validation
 	if currentState == inQuotes {
 		return "", nil, fmt.Errorf("String not terminated")
 	} else if isInState(currentState, inDynamicParam) {
@@ -179,7 +196,6 @@ func processStepText(text string) (string, []string, error) {
 	}
 
 	return strings.TrimSpace(stepValue.String()), args, nil
-
 }
 
 func getEscapedRuneIfValid(element rune) rune {
@@ -199,21 +215,12 @@ func getEscapedRuneIfValid(element rune) rune {
 func extractStepValueAndParameterTypes(stepTokenValue string) (string, []string) {
 	argsType := make([]string, 0)
 	r := regexp.MustCompile("{(dynamic|static|special)}")
-	/*
-		enter {dynamic} and {static}
-		returns
-		[
-		["{dynamic}","dynamic"]
-		["{static}","static"]
-		]
-	*/
 	args := r.FindAllStringSubmatch(stepTokenValue, -1)
 
 	if args == nil {
 		return stepTokenValue, nil
 	}
 	for _, arg := range args {
-		//arg[1] extracts the first group
 		argsType = append(argsType, arg[1])
 	}
 	return r.ReplaceAllString(stepTokenValue, gauge.ParameterPlaceholder), argsType

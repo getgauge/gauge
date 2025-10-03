@@ -213,3 +213,52 @@ func (s *MySuite) TestProtoConvertingExecutionArgs(c *C) {
 
 	c.Assert(actual, DeepEquals, expectedArgs)
 }
+
+// Test multiline string parameter conversion
+func (s *MySuite) TestConvertToProtoParameterForMultilineString(c *C) {
+	multilineArg := &StepArg{
+		ArgType: MultilineString,
+		Value:   "line 1\nline 2\nline 3",
+		Name:    "multiline content",
+	}
+
+	protoParam := convertToProtoParameter(multilineArg)
+
+	c.Assert(protoParam.GetParameterType(), Equals, gauge_messages.Parameter_Multiline_String)
+	c.Assert(protoParam.GetValue(), Equals, "line 1\nline 2\nline 3")
+	c.Assert(protoParam.GetName(), Equals, "multiline content")
+}
+
+// Test empty multiline string parameter conversion
+func (s *MySuite) TestConvertToProtoParameterForEmptyMultilineString(c *C) {
+	multilineArg := &StepArg{
+		ArgType: MultilineString,
+		Value:   "",
+		Name:    "empty multiline",
+	}
+
+	protoParam := convertToProtoParameter(multilineArg)
+
+	c.Assert(protoParam.GetParameterType(), Equals, gauge_messages.Parameter_Multiline_String)
+	c.Assert(protoParam.GetValue(), Equals, "")
+	c.Assert(protoParam.GetName(), Equals, "empty multiline")
+}
+
+// Test that makeParameterCopy handles multiline string parameters
+func (s *MySuite) TestMakeParameterCopyForMultilineString(c *C) {
+	originalParam := &gauge_messages.Parameter{
+		ParameterType: gauge_messages.Parameter_Multiline_String,
+		Value:         "multiline\ncontent",
+		Name:          "test multiline",
+	}
+
+	copiedParam := makeParameterCopy(originalParam)
+
+	c.Assert(copiedParam.GetParameterType(), Equals, gauge_messages.Parameter_Multiline_String)
+	c.Assert(copiedParam.GetValue(), Equals, "multiline\ncontent")
+	c.Assert(copiedParam.GetName(), Equals, "test multiline")
+	
+	// Verify it's a deep copy by modifying original
+	originalParam.Value = "modified"
+	c.Assert(copiedParam.GetValue(), Equals, "multiline\ncontent") // Should remain unchanged
+}

@@ -18,6 +18,7 @@ const (
 	TableArg             ArgType = "table"
 	SpecialString        ArgType = "special_string"
 	SpecialTable         ArgType = "special_table"
+	MultilineString      ArgType = "multiline_string"
 	ParameterPlaceholder         = "{}"
 )
 
@@ -133,6 +134,8 @@ func (stepArg *StepArg) ArgValue() string {
 		return "table"
 	case SpecialString, SpecialTable:
 		return stepArg.Name
+	case MultilineString:
+		return stepArg.Value
 	}
 	return ""
 }

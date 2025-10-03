@@ -238,3 +238,146 @@ func (s *MySuite) TestParsingStepWithTab(c *C) {
 	c.Assert(len(args), Equals, 0)
 	c.Assert(tokenValue, Equals, "step foo \t only")
 }
+
+func (s *MySuite) TestExtractStepArgsFromToken_WithImplicitMultiline(c *C) {
+	token := &Token{
+		Value: "simple step",
+		Args:  []string{"multiline\ncontent"},
+	}
+
+	args, err := ExtractStepArgsFromToken(token)
+	c.Assert(err, IsNil)
+	c.Assert(args, HasLen, 1)
+	c.Assert(args[0].ArgType, Equals, gauge.SpecialString)
+	c.Assert(args[0].Value, Equals, "multiline\ncontent")
+}
+
+func (s *MySuite) TestExtractStepArgsFromToken_InvalidImplicitMultiline(c *C) {
+	token := &Token{
+		Value: "simple step", 
+		Args:  []string{"arg1", "arg2"}, // Multiple args but no parameter types
+	}
+
+	_, err := ExtractStepArgsFromToken(token)
+	c.Assert(err, NotNil)
+	c.Assert(err.Error(), Equals, "Multiline step should have exactly one argument")
+}
+
+func (s *MySuite) TestProcessStep_SkipsParameterProcessingForMultiline(c *C) {
+	parser := &SpecParser{}
+	token := &Token{
+		Value: "step with multiline",
+		Args:  []string{"multiline\ncontent"}, // Has args from lexer
+	}
+
+	errors, shouldContinue := processStep(parser, token)
+	
+	c.Assert(errors, HasLen, 0)
+	c.Assert(shouldContinue, Equals, false)
+	c.Assert(token.Value, Equals, "step with multiline") // Should remain unchanged
+	c.Assert(token.Args, HasLen, 1) // Args should be preserved
+}
+
+func (s *MySuite) TestProcessStep_ProcessesParametersForRegularStep(c *C) {
+	parser := &SpecParser{}
+	token := &Token{
+		Value: `enter user "john"`, // No args from lexer
+		Args:  []string{},
+	}
+
+	errors, shouldContinue := processStep(parser, token)
+	
+	c.Assert(errors, HasLen, 0)
+	c.Assert(shouldContinue, Equals, false)
+	c.Assert(token.Value, Equals, "enter user {static}") // Should be processed
+	c.Assert(token.Args, HasLen, 1)
+	c.Assert(token.Args[0], Equals, "john")
+}
+
+// Integration test for the actual multiline string feature
+// 1. Basic multiline string functionality
+func (s *MySuite) TestParsingStepWithMultilineString(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		specHeading("Spec heading").
+		scenarioHeading("Scenario Heading").
+		step("the multiline step").
+		text(`"""`).
+		text("hello world").
+		text("from multiline").
+		text(`"""`).
+		String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	
+	stepToken := tokens[2]
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
+	c.Assert(stepToken.Value, Equals, "the multiline step")
+	c.Assert(stepToken.Args, HasLen, 1)
+	c.Assert(stepToken.Args[0], Equals, "hello world\nfrom multiline")
+}
+
+// 2. Empty multiline string
+func (s *MySuite) TestParsingStepWithEmptyMultilineString(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		specHeading("Spec heading").
+		scenarioHeading("Scenario Heading").
+		step("empty multiline step").
+		text(`"""`).
+		text(`"""`).
+		String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	
+	stepToken := tokens[2]
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
+	c.Assert(stepToken.Value, Equals, "empty multiline step")
+	c.Assert(stepToken.Args, HasLen, 1)
+	c.Assert(stepToken.Args[0], Equals, "")
+}
+// 3. json file
+func (s *MySuite) TestParsingStepWithJSONMultilineString(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		specHeading("Spec heading").
+		scenarioHeading("Scenario Heading").
+		step("json multiline step").
+		text(`"""`).
+		text(`{"name": "John", "age": 30}`).
+		text(`"""`).
+		String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	
+	stepToken := tokens[2]
+	c.Assert(stepToken.Kind, Equals, gauge.StepKind)
+	c.Assert(stepToken.Value, Equals, "json multiline step")
+	c.Assert(stepToken.Args, HasLen, 1)
+	c.Assert(stepToken.Args[0], Equals, `{"name": "John", "age": 30}`)
+}
+
+
+
+// 4. Multiline string with special characters (edge case)
+func (s *MySuite) TestParsingStepWithSpecialCharsMultilineString(c *C) {
+	parser := new(SpecParser)
+	specText := newSpecBuilder().
+		step("special chars step").
+		text(`"""`).
+		text("line with {braces}").
+		text("line with \"quotes\"").
+		text(`"""`).String()
+
+	tokens, err := parser.GenerateTokens(specText, "")
+	c.Assert(err, IsNil)
+	c.Assert(len(tokens), Equals, 1)
+
+	c.Assert(tokens[0].Kind, Equals, gauge.StepKind)
+	c.Assert(tokens[0].Value, Equals, "special chars step")
+	c.Assert(len(tokens[0].Args), Equals, 1)
+	c.Assert(tokens[0].Args[0], Equals, "line with {braces}\nline with \"quotes\"")
+}
