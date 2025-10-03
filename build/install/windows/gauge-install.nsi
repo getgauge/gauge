@@ -6,7 +6,7 @@
 
 ; HM NIS Edit Wizard helper defines
 !define PRODUCT_NAME "Gauge"
-!define PRODUCT_PUBLISHER "ThoughtWorks Inc."
+!define PRODUCT_PUBLISHER "Gauge Community"
 !define PRODUCT_WEB_SITE "https://gauge.org"
 !define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\gauge.exe"
 !define PRODUCT_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${PRODUCT_NAME}"
@@ -15,14 +15,9 @@
 !define MUI_FINISHPAGE_LINK_LOCATION "https://docs.gauge.org"
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 !define MUI_COMPONENTSPAGE_TEXT_COMPLIST "Additional plugins can be installed using the command 'gauge install <plugin>'"
-; MUI 1.67 compatible ------
-!include "MUI.nsh"
 !include "MUI2.nsh"
 !include "x64.nsh"
 !include "winmessages.nsh"
-!include "FileFunc.nsh" ;For GetOptions
-!include "WordFunc.nsh"
-!include "nsDialogs.nsh"
 
 !define Explode "!insertmacro Explode"
 
