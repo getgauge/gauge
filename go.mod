@@ -7,7 +7,7 @@ require (
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getgauge/common v0.0.0-20251001154240-471505c641c5
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251001160342-f8a6cc1f6987
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251009113823-9780b2b3681a
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
