@@ -14,8 +14,6 @@ github.com/fsnotify/fsnotify v1.9.0 h1:2Ml+OJNzbYCTzsxtv8vKSFD9PbJjmhYF14k/jKC7S
 github.com/fsnotify/fsnotify v1.9.0/go.mod h1:8jBTzvmWwFyi3Pb8djgCCO5IBqzKJ/Jwo8TRcHyHii0=
 github.com/getgauge/common v0.0.0-20251001154240-471505c641c5 h1:jo4x8MD1bXykQckTg8TcC/5maRFkbZS1rULnUWK+lTs=
 github.com/getgauge/common v0.0.0-20251001154240-471505c641c5/go.mod h1:j4ycvkEuUDSM1pYN2HAwjHtT70ErW3gB/tFKIP8znfE=
-github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251001160342-f8a6cc1f6987 h1:mKr6HSwR+rBJa2tY6AJ+K3rqnEfokMww/arEWCdK/ek=
-github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251001160342-f8a6cc1f6987/go.mod h1:a85iQQq5OY9RbinZ1g8d6VYwJJsL9ihktNXijwNhhYg=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251009113823-9780b2b3681a h1:LTslyUJpH+W6uwQ8K54ys3lSgLhJtP+0E1cRizpOR4k=
 github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20251009113823-9780b2b3681a/go.mod h1:a85iQQq5OY9RbinZ1g8d6VYwJJsL9ihktNXijwNhhYg=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=

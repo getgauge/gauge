@@ -48,6 +48,7 @@ type Token struct {
 func (t *Token) LineText() string {
 	return strings.Join(t.Lines, " ")
 }
+
 func (parser *SpecParser) initialize() {
 	parser.processors = make(map[gauge.TokenKind]func(*SpecParser, *Token) ([]error, bool))
 	parser.processors[gauge.SpecKind] = processSpec
@@ -60,92 +61,142 @@ func (parser *SpecParser) initialize() {
 	parser.processors[gauge.DataTableKind] = processDataTable
 	parser.processors[gauge.TearDownKind] = processTearDown
 }
-
 // GenerateTokens gets tokens based on the parsed line.
 func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, []ParseError) {
-	parser.initialize()
-	parser.scanner = bufio.NewScanner(strings.NewReader(specText))
-	parser.currentState = initial
-	var errors []ParseError
-	var newToken *Token
-	var lastTokenErrorCount int
-	for line, hasLine, err := parser.nextLine(); hasLine; line, hasLine, err = parser.nextLine() {
-		if err != nil {
-			errors = append(errors, ParseError{Message: err.Error()})
-			return nil, errors
-		}
-		trimmedLine := strings.TrimSpace(line)
-		if len(trimmedLine) == 0 {
-			addStates(&parser.currentState, newLineScope)
-			if newToken != nil && newToken.Kind == gauge.StepKind {
-				newToken.Suffix = "\n"
-				continue
-			}
-			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: "\n", SpanEnd: parser.lineNo}
-		} else if parser.isScenarioHeading(trimmedLine) {
-			newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[2:]), SpanEnd: parser.lineNo}
-		} else if parser.isSpecHeading(trimmedLine) {
-			newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[1:]), SpanEnd: parser.lineNo}
-		} else if parser.isSpecUnderline(trimmedLine) {
-			if isInState(parser.currentState, commentScope) {
-				newToken = parser.tokens[len(parser.tokens)-1]
-				newToken.Kind = gauge.SpecKind
-				newToken.SpanEnd = parser.lineNo
-				parser.discardLastToken()
-			} else {
-				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
-			}
-		} else if parser.isScenarioUnderline(trimmedLine) {
-			if isInState(parser.currentState, commentScope) {
-				newToken = parser.tokens[len(parser.tokens)-1]
-				newToken.Kind = gauge.ScenarioKind
-				newToken.SpanEnd = parser.lineNo
-				parser.discardLastToken()
-			} else {
-				newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
-			}
-		} else if parser.isStep(trimmedLine) {
-			newToken = &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, Lines: []string{strings.TrimSpace(trimmedLine[1:])}, Value: strings.TrimSpace(trimmedLine[1:]), SpanEnd: parser.lineNo}
-		} else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
-			if isInState(parser.currentState, tagsScope) {
-				startIndex = 0
-			}
-			if parser.isTagEndingWithComma(trimmedLine) {
-				addStates(&parser.currentState, tagsScope)
-			} else {
-				parser.clearState()
-			}
-			newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[startIndex:]), SpanEnd: parser.lineNo}
-		} else if parser.isTableRow(trimmedLine) {
-			kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
-			newToken = &Token{Kind: kind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine), SpanEnd: parser.lineNo}
-		} else if value, found := parser.isDataTable(trimmedLine); found { // skipcq CRT-A0013
-			newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, Lines: []string{line}, Value: value, SpanEnd: parser.lineNo}
-		} else if parser.isTearDown(trimmedLine) {
-			newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, Lines: []string{line}, Value: trimmedLine, SpanEnd: parser.lineNo}
-		} else if env.AllowMultiLineStep() && newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
+    parser.initialize()
+    parser.scanner = bufio.NewScanner(strings.NewReader(specText))
+    parser.currentState = initial
+    var errors []ParseError
+    var newToken *Token
+    var lastTokenErrorCount int
+    
+    // Store lines for multiline detection
+    var allLines []string
+    scanner := bufio.NewScanner(strings.NewReader(specText))
+    for scanner.Scan() {
+        allLines = append(allLines, scanner.Text())
+    }
+    
+    lineIndex := 0
+    parser.scanner = bufio.NewScanner(strings.NewReader(specText))
+    
+    for line, hasLine, err := parser.nextLine(); hasLine; line, hasLine, err = parser.nextLine() {
+        if err != nil {
+            errors = append(errors, ParseError{Message: err.Error()})
+            return nil, errors
+        }
+        trimmedLine := strings.TrimSpace(line)
+        
+        if len(trimmedLine) == 0 {
+            addStates(&parser.currentState, newLineScope)
+            if newToken != nil && newToken.Kind == gauge.StepKind {
+                newToken.Suffix = "\n"
+                lineIndex++
+                continue
+            }
+            newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: "\n", SpanEnd: parser.lineNo}
+        } else if parser.isScenarioHeading(trimmedLine) {
+            newToken = &Token{Kind: gauge.ScenarioKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[2:]), SpanEnd: parser.lineNo}
+        } else if parser.isSpecHeading(trimmedLine) {
+            newToken = &Token{Kind: gauge.SpecKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[1:]), SpanEnd: parser.lineNo}
+        } else if parser.isSpecUnderline(trimmedLine) {
+            if isInState(parser.currentState, commentScope) {
+                newToken = parser.tokens[len(parser.tokens)-1]
+                newToken.Kind = gauge.SpecKind
+                newToken.SpanEnd = parser.lineNo
+                parser.discardLastToken()
+            } else {
+                newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
+            }
+        } else if parser.isScenarioUnderline(trimmedLine) {
+            if isInState(parser.currentState, commentScope) {
+                newToken = parser.tokens[len(parser.tokens)-1]
+                newToken.Kind = gauge.ScenarioKind
+                newToken.SpanEnd = parser.lineNo
+                parser.discardLastToken()
+            } else {
+                newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
+            }
+        } else if parser.isStep(trimmedLine) {
+            stepLine := strings.TrimSpace(trimmedLine[1:])
+            stepToken := &Token{Kind: gauge.StepKind, LineNo: parser.lineNo, Lines: []string{stepLine}, Value: stepLine, SpanEnd: parser.lineNo}
+
+            // Check for multiline strings - use the pre-stored lines
+            if lineIndex+1 < len(allLines) {
+                nextLine := allLines[lineIndex+1]
+                nextTrimmed := strings.TrimSpace(nextLine)
+                if nextTrimmed == `"""` {
+                    if content, found, consumedLines := parser.extractMultilineContent(allLines, lineIndex+1); found {
+                        stepToken.Args = []string{content}
+                        // Advance the scanner past the multiline content
+                         for i := 0; i < consumedLines; i++ {
+							_, _, err := parser.nextLine()
+							if err != nil {
+								errors = append(errors, ParseError{Message: fmt.Sprintf("Error reading multiline content: %s", err.Error())})
+								break
+							}
+							lineIndex++
+                    	}
+                    }
+                }
+            }
+            
+            newToken = stepToken
+        } else if found, startIndex := parser.checkTag(trimmedLine); found || isInState(parser.currentState, tagsScope) {
+            if isInState(parser.currentState, tagsScope) {
+                startIndex = 0
+            }
+            if parser.isTagEndingWithComma(trimmedLine) {
+                addStates(&parser.currentState, tagsScope)
+            } else {
+                parser.clearState()
+            }
+            newToken = &Token{Kind: gauge.TagKind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine[startIndex:]), SpanEnd: parser.lineNo}
+        } else if parser.isTableRow(trimmedLine) {
+            kind := parser.tokenKindBasedOnCurrentState(tableScope, gauge.TableRow, gauge.TableHeader)
+            newToken = &Token{Kind: kind, LineNo: parser.lineNo, Lines: []string{line}, Value: strings.TrimSpace(trimmedLine), SpanEnd: parser.lineNo}
+        } else if value, found := parser.isDataTable(trimmedLine); found {
+            newToken = &Token{Kind: gauge.DataTableKind, LineNo: parser.lineNo, Lines: []string{line}, Value: value, SpanEnd: parser.lineNo}
+        } else if parser.isTearDown(trimmedLine) {
+            newToken = &Token{Kind: gauge.TearDownKind, LineNo: parser.lineNo, Lines: []string{line}, Value: trimmedLine, SpanEnd: parser.lineNo}
+        } else if env.AllowMultiLineStep() && newToken != nil && newToken.Kind == gauge.StepKind && !isInState(parser.currentState, newLineScope) {
 			v := strings.TrimSpace(fmt.Sprintf("%s %s", newToken.LineText(), line))
+			
+			// For classic multiline steps, just merge the text but DON'T set Args
+			// Args will be populated later by processStep parameter processing
 			newToken = parser.tokens[len(parser.tokens)-1]
 			newToken.Value = v
 			newToken.Lines = append(newToken.Lines, line)
 			newToken.SpanEnd = parser.lineNo
+			newToken.Args = []string{} // Ensure Args is empty for parameter processing
 			errors = errors[:lastTokenErrorCount]
 			parser.discardLastToken()
-		} else {
-			newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
-		}
-		pErrs := parser.accept(newToken, fileName)
-		lastTokenErrorCount = len(pErrs)
-		errors = append(errors, pErrs...)
-	}
-	return parser.tokens, errors
+        } else {
+            newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
+        }
+        pErrs := parser.accept(newToken, fileName)
+        lastTokenErrorCount = len(pErrs)
+        errors = append(errors, pErrs...)
+        lineIndex++
+    }
+    return parser.tokens, errors
 }
 
-func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
-	if isInState(parser.currentState, state) {
-		return matchingToken
+// extractMultilineContent extracts content between """ delimiters
+func (parser *SpecParser) extractMultilineContent(lines []string, startIndex int) (string, bool, int) {
+	var content []string
+	consumedLines := 1 // Start by consuming the opening """
+
+	for i := startIndex + 1; i < len(lines); i++ {
+		trimmed := strings.TrimSpace(lines[i])
+		if trimmed == `"""` {
+			return strings.Join(content, "\n"), true, consumedLines + 1 // +1 for closing """
+		}
+		content = append(content, lines[i])
+		consumedLines++
 	}
-	return alternateToken
+
+	return "", false, consumedLines
 }
 
 func (parser *SpecParser) checkTag(text string) (bool, int) {
@@ -250,4 +301,11 @@ func (parser *SpecParser) discardLastToken() {
 		return
 	}
 	parser.tokens = parser.tokens[:len(parser.tokens)-1]
+}
+
+func (parser *SpecParser) tokenKindBasedOnCurrentState(state int, matchingToken gauge.TokenKind, alternateToken gauge.TokenKind) gauge.TokenKind {
+	if isInState(parser.currentState, state) {
+		return matchingToken
+	}
+	return alternateToken
 }
