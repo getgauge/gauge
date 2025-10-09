@@ -129,10 +129,14 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
                     if content, found, consumedLines := parser.extractMultilineContent(allLines, lineIndex+1); found {
                         stepToken.Args = []string{content}
                         // Advance the scanner past the multiline content
-                        for i := 0; i < consumedLines; i++ {
-                            parser.nextLine()
-                            lineIndex++
-                        }
+                         for i := 0; i < consumedLines; i++ {
+							_, _, err := parser.nextLine()
+							if err != nil {
+								errors = append(errors, ParseError{Message: fmt.Sprintf("Error reading multiline content: %s", err.Error())})
+								break
+							}
+							lineIndex++
+                    	}
                     }
                 }
             }
