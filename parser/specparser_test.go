@@ -11,7 +11,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
 
@@ -371,43 +370,33 @@ func TestScenarioWithDataTable(t *testing.T) {
 		return spec.Scenarios[0]
 	}
 
-	t.Run("Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return true }
-		s := subject()
-		if s.DataTable.Table == nil {
-			t.Error("expected scenario datatable to be not nil")
-		}
-		v := len(s.Items)
-		if v != 3 {
-			t.Errorf("expected scenario to have 3 items, got %d", v)
-		}
+	s := subject()
+	if s.DataTable.Table == nil {
+		t.Error("expected scenario datatable to be not nil")
+	}
+	v := len(s.Items)
+	if v != 3 {
+		t.Errorf("expected scenario to have 3 items, got %d", v)
+	}
 
-		idCells, _ := s.DataTable.Table.Get("id")
-		nameCells, _ := s.DataTable.Table.Get("name")
+	idCells, _ := s.DataTable.Table.Get("id")
+	nameCells, _ := s.DataTable.Table.Get("name")
 
-		var assertEqual = func(e, a interface{}) {
-			if e != a {
-				t.Errorf("expected %v got %v", e, a)
-			}
+	var assertEqual = func(e, a interface{}) {
+		if e != a {
+			t.Errorf("expected %v got %v", e, a)
 		}
-		assertEqual(len(idCells), 2)
-		assertEqual(len(nameCells), 2)
-		assertEqual(idCells[0].Value, "1")
-		assertEqual(idCells[0].CellType, gauge.Static)
-		assertEqual(idCells[1].Value, "2")
-		assertEqual(idCells[1].CellType, gauge.Static)
-		assertEqual(nameCells[0].Value, "foo")
-		assertEqual(nameCells[0].CellType, gauge.Static)
-		assertEqual(nameCells[1].Value, "bar")
-		assertEqual(nameCells[1].CellType, gauge.Static)
-	})
-	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return false }
-		s := subject()
-		if s.DataTable.Table.IsInitialized() {
-			t.Error("expected scenario to have no datatable, got one")
-		}
-	})
+	}
+	assertEqual(len(idCells), 2)
+	assertEqual(len(nameCells), 2)
+	assertEqual(idCells[0].Value, "1")
+	assertEqual(idCells[0].CellType, gauge.Static)
+	assertEqual(idCells[1].Value, "2")
+	assertEqual(idCells[1].CellType, gauge.Static)
+	assertEqual(nameCells[0].Value, "foo")
+	assertEqual(nameCells[0].CellType, gauge.Static)
+	assertEqual(nameCells[1].Value, "bar")
+	assertEqual(nameCells[1].CellType, gauge.Static)
 
 }
 
@@ -453,7 +442,6 @@ func (s *MySuite) TestSpecWithDataTableHavingEmptyRowAndNoSeparator(c *C) {
 }
 
 func (s *MySuite) TestSpecWithStepUsingInlineTableWhichUsagesDynamicParamFromScenarioDataTable(c *C) {
-	env.AllowScenarioDatatable = func() bool { return true }
 	specText := `# Specification heading
 
 ## Scenario Heading
@@ -741,7 +729,6 @@ func (s *MySuite) TestErrorOnAddingDynamicParamterWithoutDataTableHeaderValue(c 
 }
 
 func (s *MySuite) TestResolveScenarioDataTableAsDynamicParams(c *C) {
-	env.AllowScenarioDatatable = func() bool { return true }
 	tokens := []*Token{
 		{Kind: gauge.SpecKind, Value: "Spec Heading", LineNo: 1},
 		{Kind: gauge.ScenarioKind, Value: "Scenario Heading", LineNo: 4},
@@ -1134,27 +1121,15 @@ func TestParseScenarioWithDataTable(t *testing.T) {
 		return spec.Scenarios[0]
 	}
 
-	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=True", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return true }
-		s := subject()
-		v := len(s.DataTable.Table.Rows())
-		if v != 5 {
-			t.Errorf("expected scenario to have 5 rows, got %d", v)
-		}
-		v = len(s.DataTable.Table.Columns)
-		if v != 2 {
-			t.Errorf("expected scenario to have 2 columns, got %d", v)
-		}
-	})
-
-	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return false }
-		s := subject()
-		v := len(s.DataTable.Table.Rows())
-		if v != 0 {
-			t.Errorf("expected scenario to have no rows, got %d", v)
-		}
-	})
+	s := subject()
+	v := len(s.DataTable.Table.Rows())
+	if v != 5 {
+		t.Errorf("expected scenario to have 5 rows, got %d", v)
+	}
+	v = len(s.DataTable.Table.Columns)
+	if v != 2 {
+		t.Errorf("expected scenario to have 2 columns, got %d", v)
+	}
 }
 
 func TestParseScenarioWithExternalDataTable(t *testing.T) {
@@ -1177,27 +1152,15 @@ table:testdata/data.csv
 		return spec.Scenarios[0]
 	}
 
-	t.Run("Parse Scenario with external datatable when AllowScenarioDatatable=True", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return true }
-		s := subject()
-		v := len(s.DataTable.Table.Rows())
-		if v != 5 {
-			t.Errorf("expected scenario to have 5 rows, got %d", v)
-		}
-		v = len(s.DataTable.Table.Columns)
-		if v != 2 {
-			t.Errorf("expected scenario to have 2 columns, got %d", v)
-		}
-	})
-
-	t.Run("Parse Scenario with datatable when AllowScenarioDatatable=False", func(t *testing.T) {
-		env.AllowScenarioDatatable = func() bool { return false }
-		s := subject()
-		v := len(s.DataTable.Table.Rows())
-		if v != 0 {
-			t.Errorf("expected scenario to have no rows, got %d", v)
-		}
-	})
+	s := subject()
+	v := len(s.DataTable.Table.Rows())
+	if v != 5 {
+		t.Errorf("expected scenario to have 5 rows, got %d", v)
+	}
+	v = len(s.DataTable.Table.Columns)
+	if v != 2 {
+		t.Errorf("expected scenario to have 2 columns, got %d", v)
+	}
 }
 
 func (s *MySuite) TestParsingWhenTearDownHAsOnlyTable(c *C) {

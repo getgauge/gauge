@@ -150,7 +150,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 		}
 		if isInAnyState(*state, scenarioScope) {
 			scn := spec.LatestScenario()
-			if !scn.DataTable.IsInitialized() && env.AllowScenarioDatatable() {
+			if !scn.DataTable.IsInitialized() {
 				externalTable := &gauge.DataTable{}
 				externalTable.Table = &resolvedArg.Table
 				externalTable.LineNo = token.LineNo
@@ -202,7 +202,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else if isInState(*state, scenarioScope) {
 			scn := spec.LatestScenario()
-			if !scn.DataTable.Table.IsInitialized() && env.AllowScenarioDatatable() {
+			if !scn.DataTable.Table.IsInitialized() {
 				dataTable := &gauge.Table{LineNo: token.LineNo}
 				dataTable.AddHeaders(token.Args)
 				scn.AddDataTable(dataTable)
@@ -263,7 +263,7 @@ func (parser *SpecParser) initializeConverters() []func(*Token, *int, *gauge.Spe
 			}
 		} else {
 			t := spec.DataTable
-			if isInState(*state, scenarioScope) && env.AllowScenarioDatatable() {
+			if isInState(*state, scenarioScope) {
 				t = spec.LatestScenario().DataTable
 			}
 

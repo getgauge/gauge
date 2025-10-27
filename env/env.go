@@ -44,7 +44,6 @@ const (
 	CsvDelimiter                   = "csv_delimiter"
 	allowCaseSensitiveTags         = "allow_case_sensitive_tags"
 	allowMultilineStep             = "allow_multiline_step"
-	allowScenarioDatatable         = "allow_scenario_datatable"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
 	// GaugeScreenshotsDir holds the location of screenshots dir
@@ -117,7 +116,6 @@ func loadDefaultEnvVars() {
 	addEnvVar(saveExecutionResult, "false")
 	addEnvVar(CsvDelimiter, ",")
 	addEnvVar(allowMultilineStep, "false")
-	addEnvVar(allowScenarioDatatable, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	addEnvVar(GaugeScreenshotsDir, defaultScreenshotDir)
@@ -305,11 +303,6 @@ func convertToBool(property string, defaultValue bool) bool {
 // AllowFilteredParallelExecution - feature toggle for filtered parallel execution
 var AllowFilteredParallelExecution = func() bool {
 	return convertToBool(allowFilteredParallelExecution, false)
-}
-
-// AllowScenarioDatatable -feature toggle for datatables in scenario
-var AllowScenarioDatatable = func() bool {
-	return convertToBool(allowScenarioDatatable, false)
 }
 
 // AllowMultiLineStep - feature toggle for newline in step text
