@@ -782,3 +782,78 @@ func (s *MySuite) TestSuiteEndWithBeforeAndAfterHookFailure_JSONConsole(c *C) {
 	jc.SuiteEnd(res)
 	c.Assert(dw.output, Equals, expected)
 }
+
+func (s *MySuite) TestScenarioStartWithScenarioDataTable_JSONConsole(c *C) {
+	dw, jc := setupJSONConsole()
+
+	scenario := &gauge.Scenario{
+		Heading: &gauge.Heading{
+			Value:       "Scenario with data table",
+			LineNo:      2,
+			HeadingType: 1,
+		},
+		Span: &gauge.Span{
+			Start: 2,
+			End:   5,
+		},
+		ScenarioDataTableRow:      *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{{{Value: "value1", CellType: gauge.Static}}}, 0),
+		ScenarioDataTableRowIndex: 0,
+	}
+
+	info := &gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{
+			Name:     "Specification",
+			FileName: "file",
+			IsFailed: false,
+		},
+		CurrentScenario: &gauge_messages.ScenarioInfo{
+			Name:     "Scenario with data table",
+			IsFailed: false,
+		},
+	}
+
+	expected := `{"type":"scenarioStart","id":"file:2","parentId":"file","name":"Scenario with data table","filename":"file","line":2,"result":{"time":0,"table":{"text":"\n   |header|\n   |------|\n   |value1|\n","rowIndex":0}}}
+`
+	jc.ScenarioStart(scenario, info, &result.ScenarioResult{})
+	c.Assert(dw.output, Equals, expected)
+}
+
+func (s *MySuite) TestScenarioEndWithScenarioDataTable_JSONConsole(c *C) {
+	dw, jc := setupJSONConsole()
+
+	protoScenario := &gauge_messages.ProtoScenario{
+		ScenarioHeading: "Scenario with data table",
+		Failed:          false,
+	}
+
+	scenario := &gauge.Scenario{
+		Heading: &gauge.Heading{
+			Value:       "Scenario with data table",
+			LineNo:      2,
+			HeadingType: 1,
+		},
+		Span: &gauge.Span{
+			Start: 2,
+			End:   5,
+		},
+		ScenarioDataTableRow:      *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{{{Value: "value1", CellType: gauge.Static}}}, 0),
+		ScenarioDataTableRowIndex: 0,
+	}
+
+	info := &gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{
+			Name:     "Specification",
+			FileName: "file",
+			IsFailed: false,
+		},
+		CurrentScenario: &gauge_messages.ScenarioInfo{
+			Name:     "Scenario with data table",
+			IsFailed: false,
+		},
+	}
+
+	expected := `{"type":"scenarioEnd","id":"file:2","parentId":"file","name":"Scenario with data table","filename":"file","line":2,"result":{"status":"pass","time":0,"table":{"text":"\n   |header|\n   |------|\n   |value1|\n","rowIndex":0}}}
+`
+	jc.ScenarioEnd(scenario, &result.ScenarioResult{ProtoScenario: protoScenario}, info)
+	c.Assert(dw.output, Equals, expected)
+}

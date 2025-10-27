@@ -311,6 +311,12 @@ func getLineNo(stepCache map[*gm.ScenarioInfo][]*stepInfo, step *gm.ProtoStep, i
 }
 
 func getTable(scenario *gauge.Scenario) *tableInfo {
+	if scenario.ScenarioDataTableRow.IsInitialized() {
+		return &tableInfo{
+			Text: formatter.FormatTable(&scenario.ScenarioDataTableRow),
+			Row:  scenario.ScenarioDataTableRowIndex,
+		}
+	}
 	if scenario.SpecDataTableRow.IsInitialized() {
 		return &tableInfo{
 			Text: formatter.FormatTable(&scenario.SpecDataTableRow),
