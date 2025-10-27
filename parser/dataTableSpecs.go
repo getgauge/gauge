@@ -8,6 +8,7 @@ package parser
 
 import (
 	"github.com/getgauge/gauge/gauge"
+	"github.com/getgauge/gauge/logger"
 )
 
 // GetSpecsForDataTableRows creates a spec for each data table row
@@ -99,6 +100,18 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 	for _, scn := range scenarios {
 		if scn.DataTable.IsInitialized() {
 			usesSpecParams := table.IsInitialized() && scn.UsesArgsInSteps(table.Headers...)
+			scenarioTableRows := scn.DataTable.Table.GetRowCount()
+
+			// Warn about nested tables with large datasets
+			if usesSpecParams && table.GetRowCount() > 0 {
+				specTableRows := table.GetRowCount()
+				totalIterations := specTableRows * scenarioTableRows
+				if totalIterations > 100 {
+					logger.Warningf(true, "Scenario '%s' has nested data tables (spec: %d rows × scenario: %d rows = %d total iterations). This may impact performance and memory usage.",
+						scn.Heading.Value, specTableRows, scenarioTableRows, totalIterations)
+				}
+			}
+
 			for i := range scn.DataTable.Table.Rows() {
 				t := getTableWithOneRow(scn.DataTable.Table, i)
 				scns = append(scns, create(scn, *t, i, usesSpecParams))
