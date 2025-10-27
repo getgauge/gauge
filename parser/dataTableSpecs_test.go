@@ -12,7 +12,6 @@ import (
 	"encoding/json"
 	"reflect"
 
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -140,10 +139,6 @@ func containsScenario(scenarios []*gauge.Scenario, items []gauge.Item) bool {
 }
 
 func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenariosAndItemCollectionForScenarioDataTable(t *testing.T) {
-	old := env.AllowScenarioDatatable
-	env.AllowScenarioDatatable = func() bool {
-		return true
-	}
 	specs := []*gauge.Specification{
 		{
 			Heading: &gauge.Heading{},
@@ -163,15 +158,8 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 		scnJSON, _ := json.Marshal(actualSpecs[0].Scenarios)
 		t.Errorf("Failed: Wanted items:\n\n%s\n\nto contain all scenarios: \n\n%s", itemsJSON, scnJSON)
 	}
-	env.AllowScenarioDatatable = old
 }
 func TestGetSpecsForDataTableRowsWithMixedScenarios(t *testing.T) {
-	old := env.AllowScenarioDatatable
-	env.AllowScenarioDatatable = func() bool {
-		return true
-	}
-	defer func() { env.AllowScenarioDatatable = old }()
-
 	specs := []*gauge.Specification{
 		{
 			Heading: &gauge.Heading{},

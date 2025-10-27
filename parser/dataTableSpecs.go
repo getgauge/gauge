@@ -7,7 +7,6 @@
 package parser
 
 import (
-	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 )
 
@@ -98,7 +97,7 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 		return newScn
 	}
 	for _, scn := range scenarios {
-		if scn.DataTable.IsInitialized() && env.AllowScenarioDatatable() {
+		if scn.DataTable.IsInitialized() {
 			usesSpecParams := table.IsInitialized() && scn.UsesArgsInSteps(table.Headers...)
 			for i := range scn.DataTable.Table.Rows() {
 				t := getTableWithOneRow(scn.DataTable.Table, i)
