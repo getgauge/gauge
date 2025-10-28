@@ -7,6 +7,7 @@
 package parser
 
 import (
+	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 )
@@ -23,18 +24,21 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 				})
 				if len(tableRelatedScenarios) > 0 {
 					s := createSpecsForTableRows(spec, tableRelatedScenarios, errMap)
-					copiedNonTableScenarios := copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap)
+					copiedNonTableScenarios, copiedLazyColls := copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap)
 					s[0].Scenarios = append(s[0].Scenarios, copiedNonTableScenarios...)
+					s[0].LazyScenarios = append(s[0].LazyScenarios, copiedLazyColls...)
 					for _, scn := range copiedNonTableScenarios { // nolint
 						s[0].Items = append(s[0].Items, scn)
 					}
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
+					copiedScns, copiedLazyColls := copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap)
+					specs = append(specs, createSpec(copiedScns, copiedLazyColls, &gauge.Table{}, spec, errMap))
 				}
 			}
 		} else {
-			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
+			copiedScns, copiedLazyColls := copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap)
+			specs = append(specs, createSpec(copiedScns, copiedLazyColls, &gauge.Table{}, spec, errMap))
 		}
 	}
 	return
@@ -43,15 +47,16 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
 		t := getTableWithOneRow(spec.DataTable.Table, i)
-		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), t, spec, errMap)
+		copiedScns, lazyColls := copyScenarios(scns, *t, i, errMap)
+		newSpec := createSpec(copiedScns, lazyColls, t, spec, errMap)
 		specs = append(specs, newSpec)
 	}
 	return
 }
 
-func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specification, errMap *gauge.BuildErrors) *gauge.Specification {
+func createSpec(scns []*gauge.Scenario, lazyColls []*gauge.LazyScenarioCollection, table *gauge.Table, spec *gauge.Specification, errMap *gauge.BuildErrors) *gauge.Specification {
 	dt := &gauge.DataTable{Table: table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
-	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags}
+	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags, LazyScenarios: lazyColls}
 	index := 0
 	for _, item := range spec.Items {
 		if item.Kind() == gauge.DataTableKind {
@@ -74,7 +79,7 @@ func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specific
 	return s
 }
 
-func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap *gauge.BuildErrors) (scns []*gauge.Scenario) {
+func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap *gauge.BuildErrors) (scns []*gauge.Scenario, lazyCollections []*gauge.LazyScenarioCollection) {
 	var create = func(scn *gauge.Scenario, scnTableRow gauge.Table, scnTableRowIndex int, assignSpecTable bool) *gauge.Scenario {
 		newScn := &gauge.Scenario{
 			Steps:    scn.Steps,
@@ -97,6 +102,9 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 		}
 		return newScn
 	}
+
+	isLazy := env.ScenarioInitStrategy() == "lazy"
+
 	for _, scn := range scenarios {
 		if scn.DataTable.IsInitialized() {
 			usesSpecParams := table.IsInitialized() && scn.UsesArgsInSteps(table.Headers...)
@@ -107,14 +115,25 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 				specTableRows := table.GetRowCount()
 				totalIterations := specTableRows * scenarioTableRows
 				if totalIterations > 100 {
-					logger.Warningf(true, "Scenario '%s' has nested data tables (spec: %d rows × scenario: %d rows = %d total iterations). This may impact performance and memory usage.",
+					logger.Warningf(true, "Scenario '%s' has nested data tables (spec: %d rows × scenario: %d rows = %d total iterations). This may impact performance and memory usage. Consider using scenario_init_strategy=lazy for better performance.",
 						scn.Heading.Value, specTableRows, scenarioTableRows, totalIterations)
 				}
 			}
 
-			for i := range scn.DataTable.Table.Rows() {
-				t := getTableWithOneRow(scn.DataTable.Table, i)
-				scns = append(scns, create(scn, *t, i, usesSpecParams))
+			if isLazy {
+				// Create lazy collection instead of eager scenarios
+				var specTable *gauge.Table
+				if table.IsInitialized() {
+					specTable = &table
+				}
+				lazyCollection := gauge.NewLazyScenarioCollection(scn, specTable, scn.DataTable.Table, usesSpecParams, i)
+				lazyCollections = append(lazyCollections, lazyCollection)
+			} else {
+				// Eager mode - create all scenarios upfront
+				for i := range scn.DataTable.Table.Rows() {
+					t := getTableWithOneRow(scn.DataTable.Table, i)
+					scns = append(scns, create(scn, *t, i, usesSpecParams))
+				}
 			}
 		} else {
 			scns = append(scns, create(scn, gauge.Table{}, 0, table.IsInitialized()))
