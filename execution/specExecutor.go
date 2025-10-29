@@ -181,6 +181,28 @@ func (e *specExecutor) executeSpec() error {
 	if err != nil {
 		return err
 	}
+
+	// Execute lazy scenario collections
+	scnMap := make(map[int]bool)
+	for _, scenario := range e.specification.Scenarios {
+		scnMap[scenario.Span.Start] = true
+	}
+	for _, lazyCollection := range e.specification.LazyScenarios {
+		if _, ok := scnMap[lazyCollection.Template.Span.Start]; !ok {
+			scnMap[lazyCollection.Template.Span.Start] = true
+		}
+
+		iterator := lazyCollection.Iterator()
+		for scenario, hasNext := iterator.Next(); hasNext; scenario, hasNext = iterator.Next() {
+			r, err := e.executeScenario(scenario)
+			if err != nil {
+				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+			}
+			e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(scenario.DataTable.Table),
+				scenario.ScenarioDataTableRowIndex, scenario.SpecDataTableRowIndex, scenario.SpecDataTableRow.IsInitialized())
+		}
+	}
+
 	return nil
 }
 
