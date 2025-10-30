@@ -149,7 +149,8 @@ func initPackageFlags() {
 	execution.Verbose = verbose
 	execution.Strategy = strategy
 	filter.ExecuteTags = tags
-	order.Sorted = sort
+	order.SortOrder = sort
+	order.RandomSeed = randomSeed
 	filter.Distribute = group
 	filter.NumberOfExecutionStreams = streams
 	reporter.NumberOfExecutionStreams = streams

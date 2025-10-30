@@ -8,12 +8,16 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"time"
+
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/env"
 	"github.com/getgauge/gauge/execution"
 	"github.com/getgauge/gauge/execution/rerun"
 	gauge "github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
+	"github.com/getgauge/gauge/order"
 	"github.com/getgauge/gauge/plugin/install"
 	"github.com/getgauge/gauge/util"
 	"github.com/spf13/cobra"
@@ -29,7 +33,8 @@ const (
 	failedDefault          = false
 	repeatDefault          = false
 	parallelDefault        = false
-	sortDefault            = false
+	sortDefault            = ""
+	randomSeedDefault      = int64(0)
 	installPluginsDefault  = true
 	environmentDefault     = "default"
 	tagsDefault            = ""
@@ -48,6 +53,7 @@ const (
 	repeatName          = "repeat"
 	parallelName        = "parallel"
 	sortName            = "sort"
+	randomSeedName      = "random-seed"
 	installPluginsName  = "install-plugins"
 	environmentName     = "env"
 	tagsName            = "tags"
@@ -97,7 +103,8 @@ var (
 	failed                     bool
 	repeat                     bool
 	parallel                   bool
-	sort                       bool
+	sort                       string
+	randomSeed                 int64
 	installPlugins             bool
 	environment                string
 	tags                       string
@@ -133,7 +140,10 @@ func init() {
 	}
 	f.IntVarP(&group, groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 	f.StringVarP(&strategy, strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
-	f.BoolVarP(&sort, sortName, "s", sortDefault, "Run specs in Alphabetical Order")
+	f.StringVarP(&sort, sortName, "s", sortDefault, "Set the order of spec execution. Possible options are: `alpha`, `random`")
+	// Set NoOptDefVal to "alpha" for backward compatibility: -s without value = alphabetical sort
+	f.Lookup(sortName).NoOptDefVal = "alpha"
+	f.Int64Var(&randomSeed, randomSeedName, randomSeedDefault, "Random seed for reproducible random execution. Used only when --sort=random")
 	f.BoolVarP(&installPlugins, installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
 	f.BoolVarP(&failed, failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This cannot be used in conjunction with any other argument")
 	f.BoolVarP(&repeat, repeatName, "", repeatDefault, "Repeat last run. This cannot be used in conjunction with any other argument")
@@ -234,8 +244,18 @@ func execute(cmd *cobra.Command, args []string) {
 	specs := getSpecsDir(args)
 	rerun.SaveState(os.Args[1:], specs)
 
+	// Save command args with auto-generated seed if needed
+	cmdArgsToSave := os.Args
+	if sort == "random" && randomSeed == 0 {
+		// Generate seed now so it can be saved for reruns
+		randomSeed = time.Now().UnixNano()
+		order.RandomSeed = randomSeed
+		// Append the seed to the command args for saving
+		cmdArgsToSave = append(os.Args, fmt.Sprintf("--%s=%d", randomSeedName, randomSeed))
+	}
+
 	if !skipCommandSave {
-		rerun.WritePrevArgs(os.Args)
+		rerun.WritePrevArgs(cmdArgsToSave)
 	}
 	installMissingPlugins(installPlugins, false)
 	exitCode := execution.ExecuteSpecs(specs)
