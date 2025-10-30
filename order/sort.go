@@ -47,9 +47,21 @@ func Sort(specs []*gauge.Specification) []*gauge.Specification {
 
 		// Create a new random source with the seed
 		r := rand.New(rand.NewSource(RandomSeed))
+
+		// Shuffle specs
 		r.Shuffle(len(specs), func(i, j int) {
 			specs[i], specs[j] = specs[j], specs[i]
 		})
+
+		// Shuffle scenarios within each spec
+		// Using the same random source ensures reproducibility with the same seed
+		for _, spec := range specs {
+			if len(spec.Scenarios) > 1 {
+				r.Shuffle(len(spec.Scenarios), func(i, j int) {
+					spec.Scenarios[i], spec.Scenarios[j] = spec.Scenarios[j], spec.Scenarios[i]
+				})
+			}
+		}
 	}
 	return specs
 }
