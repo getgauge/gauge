@@ -63,15 +63,16 @@ func FormatStep(step *gauge.Step) string {
 		argument := step.Args[i]
 		var formattedArg string
 		stripBeforeArg := ""
-		if argument.ArgType == gauge.TableArg {
+		switch argument.ArgType {
+		case gauge.TableArg:
 			formattedArg = fmt.Sprintf("\n%s", FormatTable(&argument.Table))
 			stripBeforeArg = " "
-		} else if argument.ArgType == gauge.Dynamic || argument.ArgType == gauge.SpecialString || argument.ArgType == gauge.SpecialTable {
+		case gauge.Dynamic, gauge.SpecialString, gauge.SpecialTable:
 			formattedArg = fmt.Sprintf("<%s>", parser.GetUnescapedString(argument.Name))
-		} else if argument.ArgType == gauge.MultilineString {
-    		formattedArg = fmt.Sprintf("\n\"\"\"\n%s\n\"\"\"\n", argument.Value)
+		case gauge.MultilineString:
+			formattedArg = fmt.Sprintf("\n\"\"\"\n%s\n\"\"\"\n", argument.Value)
 			stripBeforeArg = " "
-		} else {
+		default:
 			formattedArg = fmt.Sprintf("\"%s\"", parser.GetUnescapedString(argument.Value))
 		}
 		text = strings.Replace(text, stripBeforeArg+gauge.ParameterPlaceholder, formattedArg, 1)

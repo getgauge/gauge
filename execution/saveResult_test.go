@@ -25,5 +25,5 @@ func TestIfResultFileIsCreated(t *testing.T) {
 	if !common.FileExists(file) {
 		t.Errorf("Expected file %s to exist", file)
 	}
-	os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
+	_ = os.RemoveAll(filepath.Join(config.ProjectRoot, dotGauge))
 }

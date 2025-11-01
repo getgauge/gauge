@@ -124,7 +124,7 @@ func RunInBackground(apiPort string, specDirs []string) {
 		if err != nil {
 			logger.Fatalf(true, "Invalid port number: %s", apiPort)
 		}
-		os.Setenv(common.APIPortEnvVariableName, apiPort)
+		_ = os.Setenv(common.APIPortEnvVariableName, apiPort)
 	} else {
 		port, err = conn.GetPortFromEnvironmentVariable(common.APIPortEnvVariableName)
 		if err != nil {

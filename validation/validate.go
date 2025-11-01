@@ -8,8 +8,8 @@
 Validation invokes language runner for every step in serial fashion with the StepValidateRequest and runner gets back with the StepValidateResponse.
 
 Step Level validation
-	1. Duplicate step implementation
-	2. Step implementation not found : Prints a step implementation stub for every unimplemented step
+ 1. Duplicate step implementation
+ 2. Step implementation not found : Prints a step implementation stub for every unimplemented step
 
 If there is a validation error it skips that scenario and executes other scenarios in the spec.
 */
@@ -135,7 +135,7 @@ func Validate(args []string) {
 	logger.Infof(true, "No errors found.")
 }
 
-//TODO : duplicate in execute.go. Need to fix runner init.
+// TODO : duplicate in execute.go. Need to fix runner init.
 func startAPI(debug bool) runner.Runner {
 	sc := api.StartAPI(debug)
 	select {
@@ -366,7 +366,7 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 }
 
 func getMessage(message string) string {
-	lower := strings.ToLower(strings.Replace(message, "_", " ", -1))
+	lower := strings.ToLower(strings.ReplaceAll(message, "_", " "))
 	return strings.ToUpper(lower[:1]) + lower[1:]
 }
 

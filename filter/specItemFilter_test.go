@@ -21,7 +21,7 @@ type MySuite struct{}
 var _ = Suite(&MySuite{})
 
 func before() {
-	os.Setenv("allow_case_sensitive_tags", "false")
+	_ = os.Setenv("allow_case_sensitive_tags", "false")
 }
 
 func (s *MySuite) TestToEvaluateTagExpressionWithTwoTags(c *C) {

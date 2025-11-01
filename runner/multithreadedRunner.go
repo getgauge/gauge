@@ -36,7 +36,9 @@ func (r *MultithreadedRunner) SetConnection(c net.Conn) {
 }
 
 func (r *MultithreadedRunner) Kill() error {
-	defer r.r.connection.Close()
+	defer func(connection net.Conn) {
+		_ = connection.Close()
+	}(r.r.connection)
 	err := conn.SendProcessKillMessage(r.r.connection)
 	if err != nil {
 		return err

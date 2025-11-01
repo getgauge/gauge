@@ -139,7 +139,7 @@ func getPrefix(line string) string {
 }
 
 func addPlaceHolders(text string, args []string) string {
-	text = strings.Replace(text, "{}", "\"{}\"", -1)
+	text = strings.ReplaceAll(text, "{}", "\"{}\"")
 	for i, v := range args {
 		value := i + 1
 		if value == len(args) {

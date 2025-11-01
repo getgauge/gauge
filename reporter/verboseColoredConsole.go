@@ -94,7 +94,7 @@ func (c *verboseColoredConsole) StepStart(stepText string) {
 func (c *verboseColoredConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
 	c.writer.Clear()
-	if !(hookFailed(res.GetPreHook) || hookFailed(res.GetPostHook)) {
+	if !hookFailed(res.GetPreHook) && !hookFailed(res.GetPostHook) {
 		if stepRes.GetStepFailed() {
 			c.displayMessage(c.headingBuffer.String()+"\t ...[FAIL]\n", ct.Red)
 		} else {
@@ -179,7 +179,7 @@ func (c *verboseColoredConsole) Write(b []byte) (int, error) {
 func (c *verboseColoredConsole) displayMessage(msg string, color ct.Color) {
 	ct.Foreground(color, false)
 	defer ct.ResetColor()
-	fmt.Fprint(c.writer, msg)
+	_, _ = fmt.Fprint(c.writer, msg)
 	err := c.writer.Print()
 	if err != nil {
 		logger.Error(false, err.Error())

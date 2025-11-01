@@ -29,7 +29,7 @@ func (invalidSpecialParamError invalidSpecialParamError) Error() string {
 	return invalidSpecialParamError.message
 }
 
-//Resolve takes a step, a lookup and updates the target after reconciling the dynamic paramters from the given lookup
+// Resolve takes a step, a lookup and updates the target after reconciling the dynamic paramters from the given lookup
 func Resolve(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLookup, target *gauge_messages.ProtoStep) error {
 	stepParameters, err := getResolvedParams(step, parent, lookup)
 	if err != nil {
@@ -51,10 +51,11 @@ func getResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLo
 	for _, arg := range step.Args {
 		parameter := new(gauge_messages.Parameter)
 		parameter.Name = arg.Name
-		if arg.ArgType == gauge.Static {
+		switch arg.ArgType {
+		case gauge.Static:
 			parameter.ParameterType = gauge_messages.Parameter_Static
 			parameter.Value = arg.Value
-		} else if arg.ArgType == gauge.Dynamic {
+		case gauge.Dynamic:
 			var resolvedArg *gauge.StepArg
 			var err error
 			if parent != nil {
@@ -65,7 +66,6 @@ func getResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLo
 			if err != nil {
 				return nil, err
 			}
-			//In case a special table used in a concept, you will get a dynamic table value which has to be resolved from the concept lookup
 			parameter.Name = resolvedArg.Name
 			if resolvedArg.Table.IsInitialized() {
 				parameter.ParameterType = gauge_messages.Parameter_Special_Table
@@ -78,17 +78,17 @@ func getResolvedParams(step *gauge.Step, parent *gauge.Step, lookup *gauge.ArgLo
 				parameter.ParameterType = gauge_messages.Parameter_Dynamic
 				parameter.Value = resolvedArg.Value
 			}
-		} else if arg.ArgType == gauge.SpecialString {
+		case gauge.SpecialString:
 			parameter.ParameterType = gauge_messages.Parameter_Special_String
 			parameter.Value = arg.Value
-		} else if arg.ArgType == gauge.SpecialTable {
+		case gauge.SpecialTable:
 			parameter.ParameterType = gauge_messages.Parameter_Special_Table
 			table, err := createProtoStepTable(&arg.Table, lookup)
 			if err != nil {
 				return nil, err
 			}
 			parameter.Table = table
-		} else {
+		default:
 			parameter.ParameterType = gauge_messages.Parameter_Table
 			table, err := createProtoStepTable(&arg.Table, lookup)
 			if err != nil {
@@ -115,14 +115,14 @@ func createProtoStepTable(table *gauge.Table, lookup *gauge.ArgLookup) (*gauge_m
 		for _, header := range table.Headers {
 			tableCells, _ := table.Get(header)
 			value := tableCells[i].Value
-			if tableCells[i].CellType == gauge.Dynamic {
-				//if concept has a table with dynamic cell, fetch from datatable
+			switch tableCells[i].CellType {
+			case gauge.Dynamic:
 				arg, err := lookup.GetArg(tableCells[i].Value)
 				if err != nil {
 					return nil, err
 				}
 				value = arg.Value
-			} else if tableCells[i].CellType == gauge.SpecialString {
+			case gauge.SpecialString:
 				resolvedArg, _ := newSpecialTypeResolver().resolve(value)
 				value = resolvedArg.Value
 			}

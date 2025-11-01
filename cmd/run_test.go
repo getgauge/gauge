@@ -35,7 +35,7 @@ func before() {
 }
 
 func after() {
-	os.RemoveAll(projectPath)
+	_ = os.RemoveAll(projectPath)
 }
 
 func TestMain(m *testing.M) {
@@ -433,7 +433,7 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		file.Close()
+		_ = file.Close()
 		executeFailed(runCmd)
 		return
 	}

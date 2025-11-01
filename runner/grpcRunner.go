@@ -15,12 +15,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/manifest"
-	errdetails "google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -200,7 +199,7 @@ func (r *GrpcRunner) ExecuteMessageWithTimeout(message *gm.Message) (*gm.Message
 // ExecuteAndGetStatus executes a given message and response without timeout.
 func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult {
 	if r.Info().Killed {
-		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "Runner is not Alive"}
+		return &gm.ProtoExecutionResult{Failed: true, ErrorMessage: "Runner is not Alive"}
 	}
 	res, err := r.executeMessage(m, 0)
 	if err != nil {
@@ -221,11 +220,11 @@ func (r *GrpcRunner) ExecuteAndGetStatus(m *gm.Message) *gm.ProtoExecutionResult
 			}
 			if e.Code() == codes.Unavailable {
 				r.Info().Killed = true
-				return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
+				return &gm.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
 			}
-			return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
+			return &gm.ProtoExecutionResult{Failed: true, ErrorMessage: message, StackTrace: stackTrace}
 		}
-		return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
+		return &gm.ProtoExecutionResult{Failed: true, ErrorMessage: err.Error()}
 	}
 	if res != nil {
 		return res.ExecutionStatusResponse.ExecutionResult
@@ -256,7 +255,9 @@ func (r *GrpcRunner) Kill() error {
 	if r.conn == nil && r.cmd == nil {
 		return nil
 	}
-	defer r.conn.Close()
+	defer func(conn *grpc.ClientConn) {
+		_ = conn.Close()
+	}(r.conn)
 	if r.Alive() {
 		exited := make(chan bool, 1)
 		go func() {
